@@ -1,4 +1,5 @@
 import { useApi } from '../../../foundation/api/hooks/useApi';
+import { usePlannersContext } from '../services/PlannersProvider';
 import { Event, EventPayload } from '../types';
 import { generateEvent, generateEventPayload } from '../utils';
 
@@ -7,7 +8,8 @@ interface UpdateEventPayload {
 }
 
 const useUpdateEvent = () => {
-    const { error, loading, fetchData } = useApi<UpdateEventPayload, EventPayload, EventPayload, Event>({
+    const { increment, decrement, addError } = usePlannersContext();
+    const { error, loading, callApi } = useApi<UpdateEventPayload, EventPayload, EventPayload, Event>({
         api: 'backend',
         endpoint: '/updateEvent',
         method: 'PUT',
@@ -16,7 +18,18 @@ const useUpdateEvent = () => {
     })
 
     const updateEvent = async (payload: UpdateEventPayload) => {
-        return await fetchData(payload);
+        increment();
+        return await callApi(payload)
+            .then((result) => {
+                return result;
+            })
+            .catch((error) => {
+                addError({ message: error.message || 'An unexpected error occurred' });
+                return null
+            })
+            .finally(() => {
+                decrement();
+            });
     };
 
     return {

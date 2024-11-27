@@ -5,6 +5,7 @@ import Navigator from './src/foundation/navigation/Navigator';
 import { theme } from './src/theme/theme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'react-native';
 
 const App = () => {
   return (
@@ -12,6 +13,7 @@ const App = () => {
       <GestureHandlerRootView>
         <NavigationContainer>
           <SafeAreaProvider >
+            <StatusBar barStyle='light-content' />
             <Navigator />
           </SafeAreaProvider>
         </NavigationContainer>

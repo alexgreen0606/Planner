@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query, Body
+from fastapi import FastAPI, HTTPException, Query, APIRouter
 from pydantic import BaseModel
 import uuid
 from typing import List, Dict, Optional
@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 
 app = FastAPI()
+
+router = APIRouter(prefix="/planners")
 
 class PlannerPayload(BaseModel):
     timestamp: datetime
@@ -101,3 +103,5 @@ def delete_event(event: Event):
             return deleted_event
 
     return None
+
+app.include_router(router)

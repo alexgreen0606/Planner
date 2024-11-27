@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import { useTheme, Snackbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Planner from '../feature/planner/components/Planner';
+import { usePlannersContext } from '../feature/planner/services/PlannersProvider';
 
 const WeeklyPlanner = () => {
   const { colors } = useTheme();
-  const [currentListInEdit, setCurrentListInEdit] = useState<string | undefined>();
+  const { errors, clearErrors } = usePlannersContext();
   const [timestamps, setTimestamps] = useState<string[]>([]);
+  const [error, setError] = useState<string | undefined>();
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   useEffect(() => {
     const buildWeeklyPlanner = () => {
@@ -24,21 +27,40 @@ const WeeklyPlanner = () => {
     buildWeeklyPlanner();
   }, []);
 
+  useEffect(() => {
+    // Watch for errors change
+    if (errors.length > 0) {
+      setError(errors[errors.length - 1].message);  // Save the most recent error
+      setSnackbarVisible(true);  // Show snackbar
+      clearErrors();  // Clear errors from context
+    }
+  }, [errors, clearErrors]);
 
-  const handleUpdateCurrentListInEdit = (timestamp: string) => setCurrentListInEdit(timestamp);
+  const handleSnackbarDismiss = () => {
+    setSnackbarVisible(false);  // Hide snackbar
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'space-between' }}>
-      <SafeAreaView>
+      <SafeAreaView key={errors.length}>
         {timestamps.map((timestamp) =>
           <Planner
             key={`${timestamp}-planner`}
             timestamp={timestamp}
-            currentOpenTextfield={currentListInEdit}
-            handleUpdateCurrentListInEdit={handleUpdateCurrentListInEdit}
           />
         )}
       </SafeAreaView>
+
+      {/* Snackbar for displaying the error */}
+      {error && (
+        <Snackbar
+          visible={snackbarVisible}
+          onDismiss={handleSnackbarDismiss}
+          duration={Snackbar.DURATION_SHORT}
+        >
+          {error}
+        </Snackbar>
+      )}
     </View>
   );
 };

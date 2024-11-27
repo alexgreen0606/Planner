@@ -1,278 +1,297 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TextInput, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { getNewSortId } from '../../../feature/planner/utils';
 import { FontAwesome } from '@expo/vector-icons';
-import { CreateItemPayload, ListItem } from '../types';
+import { ListItem } from '../types';
 import useSortedList from '../hooks/useSortedList';
+import { ItemStatus, ShiftTextfieldDirection } from '../enums';
+import { usePlannersContext } from '../../../feature/planner/services/PlannersProvider';
 
-interface UpdateConfig<T extends ListItem> {
-    type: 'edit' | 'new' | 'drag';
-    initialData?: T;
-    newData?: T; // TODO: set this up
-    parentSortId?: number;
-};
-
-
-const INITIALIZED_LIST_ITEM = {
-    id: '',
-    sortId: 1.0,
-    value: ''
-}
+// TODO: moving the input field of current item - textfield should remain focused
+// TODO: reset deletes when other list is edited?
 
 interface SortableListProps<T extends ListItem> {
     listId: string;
     listItems: T[];
-    currentOpenTextfield: string | undefined;
-    createDbItem: (payload: CreateItemPayload) => Promise<T | null>;
+    createDbItem: (newItem: ListItem) => Promise<T | null>;
     updateDbItem: (data: T) => Promise<T | null>;
     deleteDbItem: (data: T) => Promise<T | null>;
-    handleOpenTextfield: () => void;
+    isLoading: boolean;
 };
-
-const PENDING_ITEM_ID = 'PENDING_ITEM_ID';
-
-// TODO: moving the input field of an edited item should hide the original one - or do we delete it?
-// TODO: prevent editing while update in progress
-// TODO: handle line click ignore if above item is a textfield
-// TODO: refresh list when api fails -> then no need to handle failed api responses?
 
 const SortableList = <T extends ListItem>({
     listItems,
     createDbItem,
     updateDbItem,
     listId,
-    handleOpenTextfield,
     deleteDbItem,
-    currentOpenTextfield
+    isLoading
 }: SortableListProps<T>) => {
     const { colors } = useTheme();
-    const [updateConfig, setUpdateConfig] = useState<UpdateConfig<T> | undefined>(undefined);
-    const [userInput, setUserInput] = useState<string>('');
+    const { currentList, setCurrentList } = usePlannersContext();
     const SortedList = useSortedList<T>(listItems);
+    const pendingDeletes = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-    const resetState = (parentSortId?: number | undefined) => {
-        let newConfig = undefined;
-        if (parentSortId)
-            newConfig = {
-                parentSortId,
-                type: "new"
-            } as UpdateConfig<T>
-        setUpdateConfig(newConfig);
-        setUserInput('');
-    };
-
-    const handleLineClick = (parentSortId: number) => {
-        if (parentSortId !== updateConfig?.parentSortId) {
-            if (updateConfig?.initialData) {
-                // Somehow need to mark that the item has moved: handleListUpdate needs to have the new edit value's sort id???
-            }
-            setUpdateConfig({ type: 'new', initialData: undefined, parentSortId });
-            handleOpenTextfield();
+    /**
+     * When a different list on the screen is being edited, save this list's current textfield.
+     */
+    useEffect(() => {
+        if (currentList !== listId) {
+            rescheduleAllDeletes();
+            handleUpdateList();
         }
-    };
+    }, [currentList]);
 
-    const handleItemClick = async (item: T) => {
-        if (userInput)
-            await handleListUpdate();
-
-        setUpdateConfig({ initialData: item, type: 'edit' });
-        setUserInput(item.value);
-        handleOpenTextfield();
-    };
-
-    const toggleDeleteItem = (item: T, immediate?: boolean) => {
-        const newItem = {
-            ...item,
-            pendingDelete: !item.pendingDelete
-        }
-        SortedList.updateItem(newItem);
-
-        if (newItem.pendingDelete) {
-            setTimeout(async () => {
-                const response = await deleteDbItem(item);
-                if (response === null) {
-                    // If delete failed, revert the item's pendingDelete status
-                    SortedList.updateItem({ ...newItem, pendingDelete: false });
-                } else {
-                    // If delete succeeded, remove the item from the list
-                    SortedList.deleteItem(item.id);
-                }
-            }, immediate ? 0 : 3000);
-        }
-    };
-
-    const handleListUpdate = async () => {
-        let apiResponse: T | null = null;
-        if (updateConfig) {
-            if (updateConfig.initialData) {
-                // We're editing an existing item
-                const originalItem = updateConfig.initialData;
-
-                if (userInput.trim() === '') {
-                    toggleDeleteItem(updateConfig.initialData, true);
-                } else if (userInput !== originalItem.value) {
-                    // Update the existing item if the input has changed
-                    const pendingListItem = {
-                        ...originalItem,
-                        value: userInput
-                    };
-                    const tempListItem = {
-                        ...pendingListItem,
-                        id: PENDING_ITEM_ID
-                    };
-                    SortedList.updateItem(tempListItem, pendingListItem.id);
-                    apiResponse = await updateDbItem(pendingListItem);
-
-                    if (apiResponse === null) {
-                        // If update failed, revert to the original item
-                        SortedList.updateItem(originalItem, PENDING_ITEM_ID);
-                    } else {
-                        // If update succeeded, use the response
-                        SortedList.updateItem(apiResponse, PENDING_ITEM_ID);
+    /**
+     * Updates both the local list and the backend list. If an error occurs in the API, this component will
+     * re-render. API errors do not need to be handled here.
+     */
+    const handleUpdateList = async (shiftTextfieldConfig?: string) => {
+        const currentItem = SortedList.getTextfield();
+        let newBackendItem: T | null = null;
+        let newParentSortId: number | null = null;
+        switch (currentItem?.status) {
+            case 'NEW':
+                if (currentItem.value.trim().length) {
+                    SortedList.updateItem({ ...currentItem, status: ItemStatus.PENDING });
+                    newBackendItem = await createDbItem(currentItem as T);
+                    SortedList.updateItem(newBackendItem as T, true);
+                    if (shiftTextfieldConfig) {
+                        newParentSortId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW ?
+                            currentItem.sortId : SortedList.getParentSortId(currentItem.id);
+                        SortedList.moveTextfield(newParentSortId);
                     }
-                }
-            } else if (!!updateConfig.parentSortId && userInput.trim().length) {
-                // Create a new item (only if input is not empty)
-                const sortId = getNewSortId(updateConfig.parentSortId, SortedList.current)
-                SortedList.createItem({
-                    id: PENDING_ITEM_ID,
-                    sortId,
-                    value: userInput,
-                } as T);
-                apiResponse = await createDbItem({ value: userInput, sortId });
-
-                if (apiResponse === null) {
-                    // If create failed, remove the pending item
-                    SortedList.deleteItem(PENDING_ITEM_ID);
                 } else {
-                    // If create succeeded, update with the actual new item
-                    SortedList.updateItem(apiResponse, PENDING_ITEM_ID);
+                    SortedList.deleteItem(currentItem.id);
                 }
-            }
+                break;
+            case 'EDIT':
+                if (currentItem.value.trim().length) {
+                    SortedList.updateItem({ ...currentItem, status: ItemStatus.PENDING });
+                    newBackendItem = await updateDbItem(currentItem as T);
+                    SortedList.updateItem(newBackendItem as T);
+                    if (shiftTextfieldConfig) {
+                        newParentSortId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW ?
+                            currentItem.sortId : SortedList.getParentSortId(currentItem.id);
+                        SortedList.moveTextfield(newParentSortId);
+                    }
+                } else {
+                    toggleDeleteItem(currentItem, true);
+                }
+                break;
         }
-        resetState(apiResponse?.sortId);
     };
 
-    const handleDragEnd = async ({ data, from, to }: { data: T[]; from: number; to: number }) => {
-        if (from !== to && updateConfig?.initialData) {
-            const movedItem = updateConfig.initialData
-            const originalSortId = movedItem.sortId;
-            const newParentSortId = to > 0 ?
-                data[to - 1]?.sortId :
-                -1
-            const newSortId = getNewSortId(newParentSortId, SortedList.current);
-            const newListItem = {
-                ...movedItem,
-                sortId: newSortId,
-            };
-            SortedList.moveItem(newListItem);
-            const response = await updateDbItem(newListItem);
-
-            if (response === null) {
-                // If update failed, revert the item to its original position
-                SortedList.moveItem({ ...movedItem, sortId: originalSortId });
+    /**
+     * Generates a textfield to create a new item.
+     * 
+     * 1. If a textfield exists: 
+     *  a. if the line clicked is just below the textfield
+     *      i. if the textfield has a value: save the textfield, generate a new textfield just below it, and exit
+     *      ii. otherwise: do nothing and exit
+     *  b. if the line clicked is just above the textfield
+     *      i. if the textfield has a value: save the textfield, then generate a new textfield just above it, and exit
+     *      ii: otherwise: do nothing and exit
+     *  c. otherwise move the textfield to the new position
+     * 
+     * 2. Otherwise: add a new textfield just below the list item with a sort ID that matches the given parent sort ID
+     * 
+     * @param parentSortId - the sort ID of the list item just above this line
+     */
+    const handleLineClick = async (parentSortId: number) => {
+        setCurrentList(listId)
+        const currentItem = SortedList.getTextfield();
+        if (currentItem) {
+            if (parentSortId === currentItem.sortId) {
+                if (currentItem.value.trim().length) {
+                    await handleUpdateList(ShiftTextfieldDirection.BELOW);
+                } else {
+                    return;
+                }
+            } else if (parentSortId === SortedList.getParentSortId(currentItem.id)) {
+                if (currentItem.value.trim().length) {
+                    await handleUpdateList(ShiftTextfieldDirection.ABOVE)
+                } else {
+                    return;
+                }
             } else {
-                // If update succeeded, use the response
-                SortedList.updateItem(response as T);
+                SortedList.moveItem({
+                    ...SortedList.getTextfield(),
+                    sortId: getNewSortId(parentSortId, SortedList.current)
+                } as (T | ListItem));
             }
-            resetState();
+        } else {
+            SortedList.addNewTextfield(parentSortId);
         }
     };
 
-    const handleDragBegin = (index: number) => {
-        setUpdateConfig({
-            initialData: SortedList.current[index],
-            type: 'drag'
-        })
+    /**
+     * Generates a textfield to edit an existing item.
+     * 
+     * 1. The item is deleting: do nothing and exit
+     * 
+     * 2. A textfield exists: save the textfield, then
+     * 
+     * 3. Turn the item into a textfield
+     * 
+     * @param item - the item that was clicked
+     */
+    const handleItemClick = async (item: T) => {
+        setCurrentList(listId)
+        if (item.status === ItemStatus.DELETING)
+            return;
+        if (SortedList.getTextfield())
+            await handleUpdateList();
+
+        SortedList.updateItem({ ...item, status: ItemStatus.EDIT });
+    };
+
+    /**
+     * Clears any pending deletes and re-schedules them 3 seconds into the future.
+     */
+    const rescheduleAllDeletes = () => {
+        pendingDeletes.current.forEach((timeoutId, id) => {
+            clearTimeout(timeoutId);
+            const newTimeoutId = setTimeout(async () => {
+                const currentItem = SortedList.getItemById(id);
+                if (currentItem) {
+                    await deleteDbItem(currentItem as T);
+                    SortedList.deleteItem(id);
+                    pendingDeletes.current.delete(id);
+                }
+            }, 3000);
+            pendingDeletes.current.set(id, newTimeoutId);
+        });
     }
 
     /**
-     * Save the current input and clear the textfield when user opens a new textfield elsewhere.
+     * Toggles an item in and out of deleting. Changing the delete status of 
+     * any item in the list will reset the timeouts for all deleting items. Items are deleted 3 seconds after clicked.
+     * @param item - the item to delete
+     * @param immediate - if true, delete the item without delay
      */
-    useEffect(() => {
-        if (currentOpenTextfield !== listId)
-            handleListUpdate();
-    }, [currentOpenTextfield])
+    const toggleDeleteItem = (item: T | ListItem, immediate?: boolean) => {
+        const wasDeleting = item.status === ItemStatus.DELETING;
+        const updatedStatus = wasDeleting ? undefined : ItemStatus.DELETING;
+        SortedList.updateItem({ ...item, status: updatedStatus } as T);
 
-    const renderClickableLine = (parentSortId: number | null) =>
+        if (!wasDeleting) { // Item deletion being scheduled
+            rescheduleAllDeletes();
+            // Begin delete process of given item
+            const timeoutId = setTimeout(async () => {
+                await deleteDbItem(item as T);
+                SortedList.deleteItem(item.id);
+                pendingDeletes.current.delete(item.id);
+            }, immediate ? 0 : 3000);
+            pendingDeletes.current.set(item.id, timeoutId);
+        } else { // Item deletion being undone
+            // Exit delete process of the item
+            const timeoutId = pendingDeletes.current.get(item.id);
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                pendingDeletes.current.delete(item.id);
+            }
+            // Re-schedule all existing deletes
+            rescheduleAllDeletes();
+        }
+    };
+
+    /**
+     * Places a dragged item into its new location.
+     */
+    const handleDropItem = async ({ data, from, to }: { data: T[]; from: number; to: number }) => {
+        const draggedItem = data[to];
+        if (from !== to) {
+            const newParentSortId = to > 0 ?
+                data[to - 1]?.sortId :
+                -1
+            const newListItem = {
+                ...draggedItem,
+                sortId: getNewSortId(newParentSortId, SortedList.current),
+            };
+            SortedList.moveItem(newListItem);
+            const response = await updateDbItem(newListItem as T);
+            SortedList.updateItem(response as T);
+        }
+        SortedList.updateItem({ ...draggedItem, status: undefined })
+    };
+
+    const renderClickableLine = useCallback((parentSortId: number | null) =>
         <TouchableOpacity style={styles.clickableLine} onPress={parentSortId ? () => handleLineClick(parentSortId) : undefined}>
             <View style={styles.thinLine} />
-        </TouchableOpacity>
+        </TouchableOpacity>, [SortedList.current]);
 
-    const renderInputField = () =>
-        <View>
-            <TextInput
-                mode="flat"
-                autoFocus
-                value={userInput}
-                onChangeText={(text) => setUserInput(text)}
-                selectionColor="white"
-                style={styles.textInput}
-                theme={{
-                    colors: {
-                        text: 'white',
-                        primary: 'transparent',
-                    },
-                }}
-                underlineColor='transparent'
-                textColor='white'
-                onSubmitEditing={() => handleListUpdate()}
-            />
-            {updateConfig?.type === 'new' && renderClickableLine(null)}
-        </View>
+    const renderInputField = useCallback((item: T | ListItem) =>
+        <TextInput
+            mode="flat"
+            key={`${item.id}-textfield`}
+            autoFocus
+            value={item.value}
+            onChangeText={(text) => { if (!isLoading) SortedList.updateItem({ ...item, value: text }) }}
+            selectionColor="white"
+            style={styles.textInput}
+            theme={{
+                colors: {
+                    text: 'white',
+                    primary: 'transparent',
+                },
+            }}
+            underlineColor='transparent'
+            textColor='white'
+            onSubmitEditing={() => handleUpdateList(ShiftTextfieldDirection.BELOW)}
+        />, [SortedList.current]);
 
-    const renderItem = useCallback((item: T, drag: any, isActive: boolean) => {
-        const isFieldBeingEditted = (item.id === updateConfig?.initialData?.id) && (updateConfig?.type === 'edit');
+    const renderItem = useCallback((item: T, drag: any) => {
 
-        return isFieldBeingEditted ?
-            renderInputField() :
+        return item.status && ['EDIT', 'NEW'].includes(item.status) ?
+            renderInputField(item) :
             <Text
                 onLongPress={drag}
                 onPress={() => handleItemClick(item)}
                 style={{
                     ...styles.listItem,
-                    color: (item.id === PENDING_ITEM_ID || item.pendingDelete) ?
+                    color: item.status && ['PENDING', 'DELETING'].includes(item.status) ?
                         colors.outline : colors.secondary,
-                    textDecorationLine: item.pendingDelete ? 'line-through' : undefined
+                    textDecorationLine: item.status === 'DELETING' ? 'line-through' : undefined
                 }}
             >
                 {item.value}
             </Text>
-    }, [updateConfig, SortedList.current, userInput]);
+    }, [SortedList.current]);
 
-    const renderRow = useCallback(({ item, drag, isActive }: RenderItemParams<T>) => {
-        const iconStyle = item.pendingDelete ? 'dot-circle-o' : 'circle-thin'
+    const renderRow = useCallback(({ item, drag }: RenderItemParams<T>) => {
+        const isItemDeleting = item.status === 'DELETING';
+        const iconStyle = isItemDeleting ? 'dot-circle-o' : 'circle-thin';
         return (
-            <View style={{ backgroundColor: updateConfig?.initialData?.id === item.id ? colors.background : undefined }}>
-                {updateConfig?.initialData?.id === item.id && updateConfig.type === 'drag' && renderClickableLine(null)}
+            <View style={{ backgroundColor: item.status === 'DRAG' ? colors.background : undefined }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <FontAwesome
                         name={iconStyle}
                         size={20}
-                        color={item.pendingDelete ? colors.primary : colors.secondary}
+                        color={isItemDeleting ? colors.primary : colors.secondary}
                         style={{ marginLeft: 16 }}
                         onPress={() => toggleDeleteItem(item)}
                     />
-                    {renderItem(item, drag, isActive)}
+                    {renderItem(item, drag)}
                 </View>
                 {renderClickableLine(item.sortId)}
-                {updateConfig?.parentSortId === item.sortId && renderInputField()}
             </View>
         )
-    }, [updateConfig, userInput]);
+    }, [SortedList.current]);
 
     return (
         <View style={{ width: '100%', marginBottom: 37 }}>
             {renderClickableLine(-1)}
-            {updateConfig?.parentSortId === -1 && renderInputField()}
+            {isLoading && <View style={styles.overlay} />}
             <DraggableFlatList
+                // @ts-ignore
                 data={SortedList.current}
                 scrollEnabled={false}
-                onDragEnd={handleDragEnd}
-                onDragBegin={handleDragBegin}
+                onDragEnd={handleDropItem}
+                onDragBegin={SortedList.dragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
@@ -281,6 +300,10 @@ const SortableList = <T extends ListItem>({
 };
 
 const styles = StyleSheet.create({
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 10,
+    },
     clickableLine: {
         width: '100%',
         height: 15,

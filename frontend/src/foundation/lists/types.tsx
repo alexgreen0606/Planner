@@ -1,8 +1,10 @@
+import { ItemStatus } from "./enums";
+
 export interface ListItem {
     id: string;
     sortId: number;
     value: string;
-    pendingDelete?: boolean;
+    status?: ItemStatus
 };
 
 export interface CreateItemPayload {

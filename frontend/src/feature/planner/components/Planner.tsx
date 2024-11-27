@@ -6,24 +6,20 @@ import usePlanner from '../hooks/usePlanner';
 import { Event } from '../types';
 import useCreateEvent from '../hooks/useCreateEvent';
 import useUpdateEvent from '../hooks/useUpdateEvent';
-import { CreateItemPayload } from '../../../foundation/lists/types';
+import { CreateItemPayload, ListItem } from '../../../foundation/lists/types';
 import useDeleteEvent from '../hooks/useDeleteEvent';
+import { usePlannersContext } from '../services/PlannersProvider';
 
 interface PlannerProps {
     timestamp: string;
-    currentOpenTextfield: string | undefined;
-    handleUpdateCurrentListInEdit: (timestamp: string) => void;
 }
 
-const Planner = ({
-    timestamp,
-    currentOpenTextfield,
-    handleUpdateCurrentListInEdit
-}: PlannerProps) => {
+const Planner = ({timestamp}: PlannerProps) => {
     const { planner } = usePlanner(timestamp);
-    const { createEvent } = useCreateEvent();
+    const { createEvent } = useCreateEvent(timestamp);
     const { updateEvent } = useUpdateEvent();
     const { deleteEvent } = useDeleteEvent();
+    const { isLoading } = usePlannersContext();
 
     if (!planner) return
 
@@ -31,13 +27,12 @@ const Planner = ({
         <View>
             <DayBanner timestamp={timestamp} />
             <SortableList<Event>
-                handleOpenTextfield={() => handleUpdateCurrentListInEdit(timestamp)}
-                currentOpenTextfield={currentOpenTextfield}
                 listId={timestamp}
-                createDbItem={(payload: CreateItemPayload) => createEvent({ ...payload, timestamp })}
+                createDbItem={(item: ListItem) => createEvent(item)}
                 updateDbItem={(event: Event) => updateEvent({ event })}
                 deleteDbItem={(event: Event) => deleteEvent({ event })}
                 listItems={planner}
+                isLoading={isLoading}
             />
         </View>
     );
