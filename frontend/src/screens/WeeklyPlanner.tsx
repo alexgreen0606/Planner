@@ -1,16 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
-import { useTheme, Snackbar } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { useTheme, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Planner from '../feature/planner/components/Planner';
-import { usePlannersContext } from '../feature/planner/services/PlannersProvider';
+import { theme } from '../theme/theme';
+import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import globalStyles from '../theme/globalStyles';
+import SortablePlanner from '../feature/planner/components/SortablePlanner';
+
+/**
+ * Recurring modal includes:
+ * 
+ *  - A sortable planner
+ *  - A label: Week Day Routine
+ *  - A description of what this is for:
+ *    - "All events below will be automatically added to every weekday in your planner."
+ *  - need to disable the ability to add these events to calendar
+ */
 
 const WeeklyPlanner = () => {
   const { colors } = useTheme();
-  const { errors, clearErrors } = usePlannersContext();
   const [timestamps, setTimestamps] = useState<string[]>([]);
-  const [error, setError] = useState<string | undefined>();
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
 
   useEffect(() => {
     const buildWeeklyPlanner = () => {
@@ -27,42 +36,65 @@ const WeeklyPlanner = () => {
     buildWeeklyPlanner();
   }, []);
 
-  useEffect(() => {
-    // Watch for errors change
-    if (errors.length > 0) {
-      setError(errors[errors.length - 1].message);  // Save the most recent error
-      setSnackbarVisible(true);  // Show snackbar
-      clearErrors();  // Clear errors from context
-    }
-  }, [errors, clearErrors]);
-
-  const handleSnackbarDismiss = () => {
-    setSnackbarVisible(false);  // Hide snackbar
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'space-between' }}>
-      <SafeAreaView key={errors.length}>
+      <SafeAreaView>
+        <View style={styles.bannerContainer}>
+          <View style={styles.banner}>
+            <View style={styles.label}>
+              <FontAwesome
+                name='book'
+                size={26}
+                color={colors.primary}
+              />
+              <Text adjustsFontSizeToFit style={styles.labelText} numberOfLines={2}>
+                Coming this week
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name='calendar-sync'
+              size={18}
+              color={colors.outline}
+            />
+          </View>
+          <View style={styles.thinLine} />
+        </View>
         {timestamps.map((timestamp) =>
-          <Planner
+          <SortablePlanner
             key={`${timestamp}-planner`}
             timestamp={timestamp}
           />
         )}
       </SafeAreaView>
-
-      {/* Snackbar for displaying the error */}
-      {error && (
-        <Snackbar
-          visible={snackbarVisible}
-          onDismiss={handleSnackbarDismiss}
-          duration={Snackbar.DURATION_SHORT}
-        >
-          {error}
-        </Snackbar>
-      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  bannerContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  banner: {
+    ...globalStyles.spacedApart,
+    paddingHorizontal: 8,
+  },
+  label: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  labelText: {
+    fontSize: 25,
+    color: theme.colors.primary,
+  },
+  thinLine: {
+    width: '100%',
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: theme.colors.outline,
+    marginTop: 8,
+    marginBottom: 16
+  },
+});
 
 export default WeeklyPlanner;

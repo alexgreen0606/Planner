@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import useWeather from '../../../foundation/weather/hooks/useWeather';
@@ -31,12 +31,12 @@ const DayBanner = ({ timestamp }: DayBannerProps) => {
             alignItems: 'flex-end',
         },
         dayOfWeek: {
-            fontSize: 25,
+            fontSize: 22,
             color: colors.primary,
         },
         date: {
             fontSize: 12.5,
-            color: colors.secondary,
+            color: colors.outline,
             marginLeft: 5,
             marginBottom: 3, // Adjust this to align the bottom of the text
         },

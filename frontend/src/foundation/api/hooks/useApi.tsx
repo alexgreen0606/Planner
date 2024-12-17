@@ -22,7 +22,7 @@ interface ApiHookResult<P = void, Req = void, D = any> {
     loading: boolean;
     data: D | null;
     error: Error | null;
-    callApi: (payload?: P | Req) => Promise<D | null>;
+    callApi: (payload?: P | Req, customEndpoint?: string) => Promise<D | null>;
 }
 
 export function useApi<P = void, Req = P, Res = Req, D = Res>(
@@ -33,7 +33,7 @@ export function useApi<P = void, Req = P, Res = Req, D = Res>(
     const [error, setError] = useState<Error | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    const callApi = async (payload?: P | Req) => {
+    const callApi = async (payload?: P | Req, customEndpoint?: string) => {
         setLoading(true);
         setError(null);
         let requestData: Req | P | undefined = payload;
@@ -41,7 +41,7 @@ export function useApi<P = void, Req = P, Res = Req, D = Res>(
             requestData = formatPayload(payload as P);
         }
 
-        const url = apiMap[api] + endpoint
+        const url = apiMap[api] + (customEndpoint || endpoint)
         return await axios({
             ...axiosConfig,
             data: requestData,
