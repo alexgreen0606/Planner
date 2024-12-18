@@ -5,24 +5,15 @@ import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flat
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/lists/hooks/useSortedList';
-import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/lists/enums';
+import { ItemStatus, TOP_OF_LIST_ID, ShiftTextfieldDirection } from '../../../foundation/lists/enums';
 import { FolderItemType } from '../enums';
 import { FolderItem } from '../types';
 import { useFolderContext } from '../services/FolderProvider';
 import { useTabsContext } from '../../../foundation/navigation/services/TabsProvider';
 
-/**
- * TODO:
- * 
- * 
- * 
- *  NEED TO EXECUTE CALLS FOR MODIFYING OTHER FOLDERS AND LISTS
- * 
- */
-
 interface SortableFolderProps {
     listItems: FolderItem[];
-    createItem: (newItem: FolderItem) => void;
+    createItem: (data: FolderItem) => void;
     updateItem: (data: FolderItem, newParentId?: string) => void;
     deleteItem: (data: FolderItem) => void;
     openItem: (id: string, type: FolderItemType) => void;
@@ -42,7 +33,16 @@ const SortableFolder = ({
     const { setCurrentItem } = useFolderContext();
     const { currentTab } = useTabsContext();
 
-    const SortedList = useSortedList<FolderItem>(folderItems, saveFolderItems, { type: FolderItemType.LIST, childrenCount: 0 });
+    const SortedList = useSortedList<FolderItem>(
+        folderItems,
+        saveFolderItems,
+        { type: FolderItemType.LIST, childrenCount: 0 },
+        {
+            create: createItem,
+            update: updateItem,
+            delete: deleteItem
+        }
+    );
     const inputWrapperRef = useRef<View>(null);
     const [transferMode, setTransferMode] = useState(false);
     const [deleteMode, setDeleteMode] = useState(false);
@@ -52,141 +52,34 @@ const SortableFolder = ({
             setCurrentItem(SortedList.getTextfield());
     }, [transferMode]);
 
-    /**
-     * Updates both the local list and the backend list. If an error occurs in the API, this component will
-     * re-render. API errors do not need to be handled here.
-     */
-    const handleUpdateList = async (shiftTextfieldConfig?: string) => {
-
-        // Get the item to be saved
-        const currentItem = SortedList.getTextfield();
-        if (!currentItem?.status) return;
-
-        // Get the storage call to use
-        const storageCall = currentItem.status === ItemStatus.NEW ? createItem : currentItem.status === ItemStatus.EDIT ? updateItem : undefined;
-        if (!storageCall) return;
-
-        if (!!currentItem.value.trim().length) { // the field has entered text
-
-            // Execute the save
-            delete currentItem.status
-            storageCall(currentItem);
-            SortedList.updateItem(currentItem);
-
-            if (shiftTextfieldConfig) { // shift the textfield up or down 
-                const newParentId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
-                    ? currentItem.id
-                    : SortedList.getParentId(currentItem.id);
-                SortedList.moveTextfield(newParentId);
-            }
-        } else { // the field is empty
-            currentItem.status === 'NEW'
-                ? SortedList.deleteItem(currentItem.id)
-                : handleDeleteItem(currentItem);
-        }
+    const customHandleTextfieldSave = () => {
+        SortedList.saveTextfield(ShiftTextfieldDirection.BELOW);
         setTransferMode(false);
-    };
-
-    /**
-     * Generates a textfield to create a new item.
-     * 
-     * 1. If a textfield exists: 
-     *  a. if the line clicked is just below the textfield
-     *      i. if the textfield has a value: save the textfield, generate a new textfield just below it, and exit
-     *      ii. otherwise: do nothing and exit
-     *  b. if the line clicked is just above the textfield
-     *      i. if the textfield has a value: save the textfield, then generate a new textfield just above it, and exit
-     *      ii: otherwise: do nothing and exit
-     *  c. otherwise move the textfield to the new position
-     * 
-     * 2. Otherwise: add a new textfield just below the list item with a sort ID that matches the given parent sort ID
-     * 
-     * @param parentId - the sort ID of the list item just above this line
-     */
-    const handleLineClick = async (parentId: string) => {
-        const currentItem = SortedList.getTextfield();
-        if (currentItem) {
-            if (parentId === currentItem.id) {
-                if (currentItem.value.trim().length) {
-                    await handleUpdateList(ShiftTextfieldDirection.BELOW);
-                } else {
-                    return;
-                }
-            } else if (parentId === SortedList.getParentId(currentItem.id)) {
-                if (currentItem.value.trim().length) {
-                    await handleUpdateList(ShiftTextfieldDirection.ABOVE)
-                } else {
-                    return;
-                }
-            } else {
-                SortedList.moveItem(SortedList.getTextfield() as FolderItem, parentId);
-            }
-        } else {
-            SortedList.addNewTextfield(parentId);
-        }
-    };
+    }
 
     /**
      * Handles clicking a list item. If in transfer mode, the current item will transfer to the clicked item.
      * Otherwise, the current textfield will be saved and the clicked item will be opened.
      * @param item - the item that was clicked
      */
-    const handleItemClick = async (item: FolderItem) => {
+    const handleItemClick = (item: FolderItem) => {
         const currentItem = SortedList.getTextfield();
         if (currentItem && transferMode) {
             if (item.type === FolderItemType.FOLDER) {
                 delete currentItem.status;
-                // SortedList.deleteItem(currentItem.id);
                 SortedList.updateItem({ ...item, childrenCount: item.childrenCount + 1 })
                 updateItem(currentItem, item.id);
                 setTransferMode(false);
-                return
+                return;
             }
         } else if (currentItem) {
-            handleUpdateList();
+            SortedList.saveTextfield();
         }
         openItem(item.id, item.type);
     };
 
-    /**
-     * Initializes a textfield.
-     * @param item - the item that was clicked
-     */
-    const handleBeginEditItem = async (item: FolderItem) => {
-        if (SortedList.getTextfield())
-            await handleUpdateList();
-
-        SortedList.updateItem({ ...item, status: ItemStatus.EDIT });
-    };
-
-    /**
-     * Deletes an item from the list.
-     * @param item - the item to delete
-     * @param immediate - if true, delete the item without delay
-     */
-    const handleDeleteItem = async (item: FolderItem) => {
-        deleteItem(item);
-        SortedList.deleteItem(item.id);
-    };
-
-    /**
-     * Places a dragged item into its new location.
-     */
-    const handleDropItem = async ({ data, from, to }: { data: FolderItem[]; from: number; to: number }) => {
-        const draggedItem = data[to];
-        if (from !== to) {
-            const newParentId = to > 0 ?
-                data[to - 1]?.id :
-                'TODO'
-            SortedList.moveItem(draggedItem, newParentId);
-            updateItem(draggedItem); // TODO: is this right? 
-        }
-        delete draggedItem.status;
-        SortedList.updateItem(draggedItem);
-    };
-
     const renderClickableLine = useCallback((parentId: string | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={parentId ? () => handleLineClick(parentId) : undefined}>
+        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedList.moveTextfield(parentId)}>
             <View style={styles.thinLine} />
         </TouchableOpacity>, [SortedList.current]);
 
@@ -252,10 +145,10 @@ const SortableFolder = ({
                 <View>
                     <View
                         onLayout={handleInputLayout}
+                        key={`${item.id}-${SortedList.current.findIndex(currItem => currItem.id === item.id)}`}
                     >
                         <TextInput
                             mode="flat"
-                            key={`${item.id}`}
                             autoFocus
                             value={item.value}
                             onChangeText={(text) => SortedList.updateItem({ ...item, value: text })}
@@ -269,9 +162,7 @@ const SortableFolder = ({
                             }}
                             underlineColor="transparent"
                             textColor={transferMode ? colors.primary : colors.secondary}
-                            onSubmitEditing={() =>
-                                handleUpdateList(ShiftTextfieldDirection.BELOW)
-                            }
+                            onSubmitEditing={customHandleTextfieldSave}
                         />
                     </View>
                     {!transferMode && currentTab === 'folders' && (
@@ -297,7 +188,7 @@ const SortableFolder = ({
                             <Dialog.Actions>
                                 <View style={styles.deletePopupTextButtons}>
                                     <Button onPress={() => setDeleteMode(false)}>Close</Button>
-                                    <Button onPress={() => handleDeleteItem(item)}>{!!item.childrenCount ? 'Force Delete' : 'Delete'}</Button>
+                                    <Button onPress={() => SortedList.deleteItem(item)}>{!!item.childrenCount ? 'Force Delete' : 'Delete'}</Button>
                                 </View>
                             </Dialog.Actions>
                         </Dialog>
@@ -342,7 +233,7 @@ const SortableFolder = ({
                     {iconStyle && (
                         <FontAwesome
                             onLongPress={drag}
-                            onPress={() => handleBeginEditItem(item)}
+                            onPress={() => SortedList.beginEditItem(item)}
                             name={iconStyle}
                             size={20}
                             color={isBeingMoved ? colors.primary : colors.outline}
@@ -363,11 +254,11 @@ const SortableFolder = ({
 
     return (
         <View style={{ width: '100%', height: '100%' }}>
-            {renderClickableLine('TODO')}
+            {renderClickableLine(TOP_OF_LIST_ID)}
             <DraggableFlatList
                 data={SortedList.current}
                 scrollEnabled={false}
-                onDragEnd={handleDropItem}
+                onDragEnd={SortedList.endDragItem}
                 onDragBegin={SortedList.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}

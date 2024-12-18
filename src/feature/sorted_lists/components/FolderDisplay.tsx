@@ -65,6 +65,7 @@ const FolderDisplay = ({ folderId, onBackClick, onOpenItem }: FolderProps) => {
     const handleParentFolderClick = async () => {
         if (folder) {
             if (currentItem) {
+                delete currentItem.status;
                 handleUpdateItem(currentItem, folder.parentFolderId);
                 onOpenItem(folderId, FolderItemType.FOLDER, true);
             } else {

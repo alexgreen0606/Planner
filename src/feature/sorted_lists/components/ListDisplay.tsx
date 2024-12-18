@@ -33,7 +33,6 @@ const ListDisplay = ({ listId, onBackClick }: ListProps) => {
                 />
                 <SortableList
                     listItems={list.items}
-                    listId={list.id}
                     saveItems={(newItems: ListItem[]) => saveListItems(listId, newItems)}
                 />
             </View>

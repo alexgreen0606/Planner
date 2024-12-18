@@ -1,14 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { theme } from '../../theme/theme';
-import Dashboard from '../../screens/Dashboard';
-import WeeklyPlanner from '../../screens/WeeklyPlanner';
-import Calendar from '../../screens/Calendar';
+import { theme } from '../../../theme/theme';
+import Dashboard from '../../../screens/Dashboard';
+import WeeklyPlanner from '../../../screens/WeeklyPlanner';
+import Calendar from '../../../screens/Calendar';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Money from '../../screens/Money';
-import Lists from '../../screens/Lists';
-import { ListProvider } from '../lists/services/ListProvider';
-import { useTabsContext } from './services/TabsProvider';
+import Money from '../../../screens/Money';
+import Lists from '../../../screens/Lists';
+import { ListProvider } from '../../lists/services/ListProvider';
+import { useTabsContext } from '../services/TabsProvider';
 
 const Tab = createBottomTabNavigator();
 
