@@ -1,4 +1,4 @@
-import { ListItem } from "../../foundation/lists/types";
+import { ListItem } from "../../foundation/sortedLists/types";
 
 export interface Event extends ListItem {
     timestamp: string;

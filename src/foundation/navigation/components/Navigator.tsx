@@ -6,9 +6,9 @@ import WeeklyPlanner from '../../../screens/WeeklyPlanner';
 import Calendar from '../../../screens/Calendar';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Money from '../../../screens/Money';
-import Lists from '../../../screens/Lists';
-import { ListProvider } from '../../lists/services/ListProvider';
-import { useTabsContext } from '../services/TabsProvider';
+import Folders from '../../../screens/Folders';
+import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
+import { useNavigatorContext } from '../services/TabsProvider';
 
 const Tab = createBottomTabNavigator();
 
@@ -21,12 +21,12 @@ const routeIconMap: Record<string, 'coffee' | 'bars' | 'calendar-o' | 'bank' | '
 }
 
 const WeeklyPlannerWithProviders = () =>
-    <ListProvider>
+    <PlannerProvider>
         <WeeklyPlanner />
-    </ListProvider>
+    </PlannerProvider>
 
 const Navigator = () => {
-    const { setCurrentTab } = useTabsContext();
+    const { setCurrentTab } = useNavigatorContext();
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -45,7 +45,7 @@ const Navigator = () => {
             })}
             initialRouteName='dashboard'
         >
-            <Tab.Screen name="folders" component={Lists} listeners={{
+            <Tab.Screen name="folders" component={Folders} listeners={{
                     focus: () => setCurrentTab('folders')
                 }} />
             <Tab.Screen name="money" component={Money} listeners={{

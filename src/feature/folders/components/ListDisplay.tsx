@@ -5,7 +5,7 @@ import LabelBanner from './LabelBanner';
 import { FolderItemType } from '../enums';
 import { getFolder } from '../storage/folderStorage';
 import { getList, saveListItems } from '../storage/listStorage';
-import { ListItem } from '../../../foundation/lists/types';
+import { ListItem } from '../../../foundation/sortedLists/types';
 
 interface ListProps {
     listId: string;

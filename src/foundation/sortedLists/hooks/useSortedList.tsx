@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus, ShiftTextfieldDirection, TOP_OF_LIST_ID } from '../enums';
 import uuid from 'react-native-uuid';
@@ -10,7 +10,7 @@ interface StorageUpdateConfig<T> {
 }
 
 /**
- * Creates and maintains a sorted list of items.
+ * Maintains a sorted list of items.
  * 
  * @param initialItems - sorted by sort ID ascending
  */
@@ -21,6 +21,7 @@ const useSortedList = <T extends ListItem>(
     storageUpdates?: StorageUpdateConfig<T>
 ) => {
     const [current, setCurrent] = useState<T[]>(initialItems);
+    const pendingDeletes = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
     // Generates a new textfield item.
     const initializeTextfield = (): T => ({
@@ -31,8 +32,8 @@ const useSortedList = <T extends ListItem>(
     } as T)
 
     // Returns the current textfield in the list if one exists.
-    const getTextfield = (): T | undefined =>
-        current.find(item => item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status));
+    const getFocusedItem = (): T | undefined =>
+        current.find(item => item.status && [ItemStatus.EDIT, ItemStatus.NEW, ItemStatus.TRANSFER].includes(item.status));
 
     // Returns the item with the given ID if one exists.
     const getItemById = (id: string) =>
@@ -60,44 +61,6 @@ const useSortedList = <T extends ListItem>(
     };
 
     /**
-     * Saves the data entered in the current textfield to the list.
-     * 
-     * @param shiftTextfieldConfig - determines if the textfield should shift above or below the new item
-     */
-    const saveTextfield = async (shiftTextfieldConfig?: string) => {
-
-        // Get the item to be saved
-        const currentItem = getTextfield();
-        if (!currentItem?.status) return;
-
-        // Get the storage call to use
-        const storageCall = !!storageUpdates ? (
-            currentItem.status === ItemStatus.NEW ? storageUpdates.create :
-                currentItem.status === ItemStatus.EDIT ? storageUpdates.update : undefined) : undefined;
-
-        if (!!currentItem.value.trim().length) { // the field contains text
-
-            // Execute the save
-            delete currentItem.status
-            if (storageCall)
-                storageCall(currentItem);
-            updateItem(currentItem);
-
-            if (shiftTextfieldConfig) { // shift the textfield up or down 
-                const newParentId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
-                    ? currentItem.id
-                    : getParentId(currentItem.id);
-                generateTextfield(newParentId); // TODO: verify this works
-            }
-        } else { // the field is empty
-            if (currentItem.status === ItemStatus.EDIT && storageUpdates?.delete) {
-                storageUpdates.delete(currentItem);
-            }
-            deleteItem(currentItem);
-        }
-    };
-
-    /**
      * Generates a textfield to create a new item.
      * 
      * 1. If a textfield exists: 
@@ -115,7 +78,7 @@ const useSortedList = <T extends ListItem>(
      */
     const moveTextfield = (parentId: string | null) => {
         if (!parentId) return;
-        const currentItem = getTextfield();
+        const currentItem = getFocusedItem();
         if (currentItem) {
             if (parentId === currentItem.id) {
                 if (currentItem.value.trim().length) {
@@ -130,7 +93,7 @@ const useSortedList = <T extends ListItem>(
                     return;
                 }
             } else {
-                moveItem(getTextfield() as T, parentId);
+                moveItem(getFocusedItem() as T, parentId);
             }
         } else {
             generateTextfield(parentId);
@@ -138,23 +101,87 @@ const useSortedList = <T extends ListItem>(
     };
 
     /**
-     * Generates a textfield to edit an existing item.
+     * Saves the data entered in the current textfield to the list.
      * 
-     * 1. The item is deleting: do nothing and exit
-     * 
-     * 2. A textfield exists: save the textfield, then
-     * 
-     * 3. Turn the item into a textfield
-     * 
-     * @param item - the item that was clicked
+     * @param shiftTextfieldConfig - determines if the textfield should shift above or below the new item
      */
-    const beginEditItem = async (item: ListItem) => {
-        if (item.status === ItemStatus.DELETING)
-            return;
-        if (getTextfield())
-            saveTextfield();
+    const saveTextfield = async (shiftTextfieldConfig?: string) => {
 
-        updateItem({ ...item, status: ItemStatus.EDIT } as T);
+        // Get the item to be saved
+        const currentItem = getFocusedItem();
+        if (!currentItem?.status) return;
+
+        // Get the storage call to use
+        const storageCall = !!storageUpdates ? (
+            currentItem.status === ItemStatus.NEW ? storageUpdates.create :
+                currentItem.status === ItemStatus.EDIT ? storageUpdates.update : undefined) : undefined;
+
+        if (!!currentItem.value.trim().length) { // the field contains text
+
+            // Execute the save
+            delete currentItem.status
+            if (storageCall) storageCall(currentItem);
+            updateItem(currentItem);
+
+            if (shiftTextfieldConfig) { // shift the textfield up or down
+                const newParentId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
+                    ? currentItem.id
+                    : getParentId(currentItem.id);
+                generateTextfield(newParentId); // TODO: verify this works
+            }
+        } else { // the field is empty
+            if (currentItem.status === ItemStatus.EDIT && storageUpdates?.delete) {
+                storageUpdates.delete(currentItem);
+            }
+            deleteItem(currentItem);
+        }
+    };
+
+    /**
+     * Clears any pending deletes and re-schedules them 3 seconds into the future.
+     */
+    const rescheduleAllDeletes = () => {
+        pendingDeletes.current.forEach((timeoutId, id) => {
+            clearTimeout(timeoutId);
+            const newTimeoutId = setTimeout(async () => {
+                const currentItem = getItemById(id);
+                if (currentItem) {
+                    deleteItem(currentItem);
+                    pendingDeletes.current.delete(id);
+                }
+            }, 3000);
+            pendingDeletes.current.set(id, newTimeoutId);
+        });
+    }
+
+    /**
+     * Toggles an item in and out of deleting. Changing the delete status of 
+     * any item in the list will reset the timeouts for all deleting items. Items are deleted 3 seconds after clicked.
+     * @param item - the item to delete
+     */
+    const toggleDeleteItem = (item: T) => {
+        const wasDeleting = item.status === ItemStatus.DELETE;
+        const updatedStatus = wasDeleting ? undefined : ItemStatus.DELETE;
+        updateItem({ ...item, status: updatedStatus } as T);
+
+        if (!wasDeleting) { // Item deletion being scheduled
+            rescheduleAllDeletes();
+            // Begin delete process of given item
+            const timeoutId = setTimeout(async () => {
+                deleteItem(item);
+                pendingDeletes.current.delete(item.id);
+            }, 3000);
+            pendingDeletes.current.set(item.id, timeoutId);
+        } else { // Item deletion being undone
+            // Exit delete process of the item
+            const timeoutId = pendingDeletes.current.get(item.id);
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                pendingDeletes.current.delete(item.id);
+            }
+            // Re-schedule all existing deletes
+            rescheduleAllDeletes();
+        }
     };
 
     /**
@@ -169,7 +196,7 @@ const useSortedList = <T extends ListItem>(
             if (replaceIndex !== -1) {
                 newList[replaceIndex] = newItem;
             }
-            saveList(newList);
+            // saveList(newList);
             return newList;
         });
     };
@@ -177,7 +204,7 @@ const useSortedList = <T extends ListItem>(
     /**
      * Deletes the item from the list.
      */
-    const deleteItem = (item: T) => {
+    const deleteItem = (item: T, itemTransfered?: boolean) => {
         setCurrent((curr) => {
             const newList = [...curr];
             const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);
@@ -187,7 +214,7 @@ const useSortedList = <T extends ListItem>(
             saveList(newList);
             return newList;
         });
-        if (storageUpdates?.delete) {
+        if (!itemTransfered && storageUpdates?.delete) {
             storageUpdates.delete(item);
         }
     };
@@ -216,6 +243,26 @@ const useSortedList = <T extends ListItem>(
     };
 
     /**
+     * Generates a textfield to edit an existing item.
+     * 
+     * 1. The item is deleting: do nothing and exit
+     * 
+     * 2. A textfield exists: save the textfield, then
+     * 
+     * 3. Turn the item into a textfield
+     * 
+     * @param item - the item that was clicked
+     */
+    const beginEditItem = async (item: ListItem) => {
+        if (item.status === ItemStatus.DELETE)
+            return;
+        if (getFocusedItem())
+            saveTextfield();
+
+        updateItem({ ...item, status: ItemStatus.EDIT } as T);
+    };
+
+    /**
      * Initializes the item at the given index to be dragged.
      */
     const beginDragItem = (index: number) => updateItem({ ...current[index], status: ItemStatus.DRAG });
@@ -234,6 +281,9 @@ const useSortedList = <T extends ListItem>(
         }
         updateItem(draggedItem);
     };
+
+    const beginTransferItem = (item: T) => 
+        updateItem({ ...item, status: ItemStatus.TRANSFER });
 
     /**
      * Save the given list to storage. Filters out the textfield and all statuses.
@@ -254,14 +304,17 @@ const useSortedList = <T extends ListItem>(
         updateItem,
         deleteItem,
         moveItem,
-        getTextfield,
+        getFocusedItem,
         generateTextfield,
         getItemById,
         beginDragItem,
         endDragItem,
         saveTextfield,
         moveTextfield,
-        beginEditItem
+        beginEditItem,
+        toggleDeleteItem,
+        rescheduleAllDeletes,
+        beginTransferItem
     };
 };
 

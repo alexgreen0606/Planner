@@ -6,7 +6,7 @@ import { theme } from './src/theme/theme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
-import { TabsProvider } from './src/foundation/navigation/services/TabsProvider';
+import { NavigatorProvider } from './src/foundation/navigation/services/TabsProvider';
 
 const App = () => {
   return (
@@ -15,9 +15,9 @@ const App = () => {
         <NavigationContainer>
           <SafeAreaProvider >
             <StatusBar barStyle='light-content' />
-            <TabsProvider>
+            <NavigatorProvider>
               <Navigator />
-            </TabsProvider>
+            </NavigatorProvider>
           </SafeAreaProvider>
         </NavigationContainer>
       </GestureHandlerRootView>

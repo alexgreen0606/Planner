@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import globalStyles from '../theme/globalStyles';
-import SortablePlanner from '../feature/planner/components/SortablePlanner';
+import SortablePlanner from '../feature/planners/components/SortablePlanner';
 
 /**
  * Recurring modal includes:

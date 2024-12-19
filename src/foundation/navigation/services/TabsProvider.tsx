@@ -1,30 +1,30 @@
 import React, { createContext, useContext, useState } from 'react';
 
-interface FolderContextValue {
+interface NavigatorContextValue {
     currentTab: string;
     setCurrentTab: (newTab: string) => void;
 }
 
-const TabsContext = createContext<FolderContextValue | null>(null);
+const NavigatorContext = createContext<NavigatorContextValue | null>(null);
 
-export const TabsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const NavigatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentTab, setCurrentTab] = useState<string>('dashboard');
 
     return (
-        <TabsContext.Provider
+        <NavigatorContext.Provider
             value={{
                 currentTab,
                 setCurrentTab
             }}>
             {children}
-        </TabsContext.Provider>
+        </NavigatorContext.Provider>
     );
 };
 
-export const useTabsContext = () => {
-    const context = useContext(TabsContext);
+export const useNavigatorContext = () => {
+    const context = useContext(NavigatorContext);
     if (!context) {
-        throw new Error("useTabsContext must be used within an ApiProvider");
+        throw new Error("useNavigatorContext must be used within a Provider");
     }
     return context;
 };

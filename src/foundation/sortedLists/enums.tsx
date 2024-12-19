@@ -2,8 +2,8 @@ export enum ItemStatus {
     NEW = 'NEW',
     EDIT = 'EDIT',
     DRAG = 'DRAG',
-    DELETING = 'DELETING',
-    PENDING = 'PENDING'
+    DELETE = 'DELETE',
+    TRANSFER = 'TRANSFER'
 }
 
 export enum ShiftTextfieldDirection {

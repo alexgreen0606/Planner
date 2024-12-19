@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Button, Dialog, Portal, TextInput, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
-import useSortedList from '../../../foundation/lists/hooks/useSortedList';
-import { ItemStatus, TOP_OF_LIST_ID, ShiftTextfieldDirection } from '../../../foundation/lists/enums';
-import { useListContext } from '../../../foundation/lists/services/ListProvider';
+import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
+import { ItemStatus, TOP_OF_LIST_ID, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { usePlannerContext } from '../services/PlannerProvider';
 import { Event } from '../types';
 import globalStyles from '../../../theme/globalStyles';
 import DayBanner from './DayBanner';
@@ -38,91 +38,52 @@ const SortablePlanner = ({
     timestamp
 }: SortablePlannerProps) => {
     const { colors } = useTheme();
-    const planner = getPlanner(timestamp);
-    const saveStoragePlanner = (newItems: Event[]) => savePlanner(timestamp, newItems);
-    const { currentList, setCurrentList } = useListContext();
-    const SortedList = useSortedList<Event>(planner, saveStoragePlanner);
-    const pendingDeletes = useRef<Map<string, NodeJS.Timeout>>(new Map());
-
+    const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
     const [timeMode, setTimeMode] = useState(false);
+    const planner = getPlanner(timestamp);
+    const customSavePlanner = (newItems: Event[]) => savePlanner(timestamp, newItems);
+    const SortedList = useSortedList<Event>(planner, customSavePlanner);
 
     /**
-     * When a different list on the screen is being edited, save this list's current textfield.
+     * When a different planner on the screen is focused, save this list's current textfield
+     * and reset the items that are pending delete.
      */
     useEffect(() => {
-        if (currentList.id !== timestamp)
-            customHandleTextfieldSave(undefined, true);
+        if (focusedPlanner.timestamp !== timestamp)
+            SortedList.saveTextfield();
 
-        rescheduleAllDeletes();
-    }, [currentList]);
+        SortedList.rescheduleAllDeletes();
+    }, [focusedPlanner]);
 
-    const customHandleTextfieldSave = (shiftTextfieldConfig?: string, lastUpdate?: boolean) => {
-        SortedList.saveTextfield(shiftTextfieldConfig);
-        if (!lastUpdate)
-            setCurrentList(timestamp);
-    }
-
-    const customHandleUpdateTextfieldPosition = (parentId: string | null) => {
-        setCurrentList(timestamp);
+    /**
+     * Moves the textfield to its new position, and sets this as the focused planner within
+     * the context.
+     */
+    const customMoveTextfield = (parentId: string | null) => {
         SortedList.moveTextfield(parentId);
+        setFocusedPlanner(timestamp);
     };
 
-    const customHandleItemClick = (item: Event) => {
-        setCurrentList(timestamp);
+    /**
+     * Initializes edit mode for the clicked item, and sets this as the focused planner within
+     * the context.
+     */
+    const customBeginEditItem = (item: Event) => {
         SortedList.beginEditItem(item);
+        setFocusedPlanner(timestamp);
     };
 
     /**
-     * Clears any pending deletes and re-schedules them 3 seconds into the future.
+     * Schedules the item for delete, and sets this as the focused planner within
+     * the context.
      */
-    const rescheduleAllDeletes = () => {
-        pendingDeletes.current.forEach((timeoutId, id) => {
-            clearTimeout(timeoutId);
-            const newTimeoutId = setTimeout(async () => {
-                const currentItem = SortedList.getItemById(id);
-                if (currentItem) {
-                    SortedList.deleteItem(currentItem);
-                    pendingDeletes.current.delete(id);
-                }
-            }, 3000);
-            pendingDeletes.current.set(id, newTimeoutId);
-        });
-    }
-
-    /**
-     * Toggles an item in and out of deleting. Changing the delete status of 
-     * any item in the list will reset the timeouts for all deleting items. Items are deleted 3 seconds after clicked.
-     * @param item - the item to delete
-     * @param immediate - if true, delete the item without delay
-     */
-    const toggleDeleteItem = (item: Event, immediate?: boolean) => {
-        const wasDeleting = item.status === ItemStatus.DELETING;
-        const updatedStatus = wasDeleting ? undefined : ItemStatus.DELETING;
-        SortedList.updateItem({ ...item, status: updatedStatus } as Event);
-
-        if (!wasDeleting) { // Item deletion being scheduled
-            rescheduleAllDeletes();
-            // Begin delete process of given item
-            const timeoutId = setTimeout(async () => {
-                SortedList.deleteItem(item);
-                pendingDeletes.current.delete(item.id);
-            }, immediate ? 0 : 3000);
-            pendingDeletes.current.set(item.id, timeoutId);
-        } else { // Item deletion being undone
-            // Exit delete process of the item
-            const timeoutId = pendingDeletes.current.get(item.id);
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                pendingDeletes.current.delete(item.id);
-            }
-            // Re-schedule all existing deletes
-            rescheduleAllDeletes();
-        }
-        setCurrentList(timestamp)
+    const customToggleDeleteItem = (item: Event) => {
+        SortedList.toggleDeleteItem(item);
+        setFocusedPlanner(timestamp);
     };
 
     const renderClickableLine = useCallback((parentId: string | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => customHandleUpdateTextfieldPosition(parentId)}>
+        <TouchableOpacity style={styles.clickableLine} onPress={() => customMoveTextfield(parentId)}>
             <View style={styles.thinLine} />
         </TouchableOpacity>, [SortedList.current]);
 
@@ -143,20 +104,20 @@ const SortablePlanner = ({
             }}
             underlineColor='transparent'
             textColor='white'
-            onSubmitEditing={() => customHandleTextfieldSave(ShiftTextfieldDirection.BELOW)}
+            onSubmitEditing={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
         />, [SortedList.current]);
 
     const renderItem = useCallback((item: Event, drag: any) =>
-        item.status && ['EDIT', 'NEW'].includes(item.status) ?
+        item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status) ?
             renderInputField(item) :
             <Text
                 onLongPress={drag}
-                onPress={() => customHandleItemClick(item)}
+                onPress={() => customBeginEditItem(item)}
                 style={{
                     ...styles.listItem,
-                    color: item.status && ['PENDING', 'DELETING'].includes(item.status) ?
+                    color: item.status && [ItemStatus.DELETE].includes(item.status) ?
                         colors.outline : colors.secondary,
-                    textDecorationLine: item.status === 'DELETING' ? 'line-through' : undefined
+                    textDecorationLine: item.status === ItemStatus.DELETE ? 'line-through' : undefined
                 }}
             >
                 {item.value}
@@ -174,7 +135,7 @@ const SortablePlanner = ({
      */
     const renderRow = useCallback(({ item, drag }: RenderItemParams<Event>) => {
         const isTextfield = !!item.status && [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
-        const isItemDeleting = item.status === 'DELETING';
+        const isItemDeleting = item.status === ItemStatus.DELETE;
         const iconStyle = isItemDeleting ? 'dot-circle-o' : isTextfield ? 'clock-o' : 'circle-thin';
         return (
             <View style={{ backgroundColor: item.status === 'DRAG' ? colors.background : undefined }}>
@@ -184,7 +145,7 @@ const SortablePlanner = ({
                         size={20}
                         color={isItemDeleting ? colors.primary : colors.secondary}
                         style={{ marginLeft: 16 }}
-                        onPress={() => isTextfield ? setTimeMode(true) : toggleDeleteItem(item)}
+                        onPress={() => isTextfield ? setTimeMode(true) : customToggleDeleteItem(item)}
                     />
                     {renderItem(item, drag)}
                 </View>

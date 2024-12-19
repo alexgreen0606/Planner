@@ -1,4 +1,4 @@
-import { ListItem } from "../../foundation/lists/types";
+import { ListItem } from "../../foundation/sortedLists/types";
 import { FolderItemType } from "./enums";
 
 export interface FolderItem extends ListItem {
