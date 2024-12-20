@@ -1,123 +1,74 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, UIManager, findNodeHandle } from 'react-native';
 import { Button, Dialog, IconButton, Portal, TextInput, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, TOP_OF_LIST_ID, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { FolderItemType } from '../enums';
-import { FolderItem } from '../types';
-import { useFolderContext } from '../services/FolderProvider';
+import { Folder, FolderItem } from '../types';
 import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
 import LabelBanner from './LabelBanner';
-import { createFolder, deleteFolder, getFolder, saveFolderItems, updateFolder } from '../storage/folderStorage';
-import { createList, deleteList, updateList } from '../storage/listStorage';
+import { createFolderItem, getFolder, updateFolderItem, getFolderItems, getStorageKey, deleteFolderItem } from '../storage/folderStorage';
+import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import { StorageIds } from '../../../enums';
 
 interface SortableFolderProps {
     folderId: string;
     onBackClick: (parentFolderId: string) => void;
     onOpenItem: (id: string, type: FolderItemType) => void;
-
-    // folderItems: FolderItem[];
-    // createItem: (data: FolderItem) => void;
-    // updateItem: (data: FolderItem, newParentId?: string) => void;
-    // deleteItem: (data: FolderItem) => void;
-    // openItem: (id: string, type: FolderItemType) => void;
-    // saveFolderItems: (newList: FolderItem[]) => void;
-    // manualDeleteItem: FolderItem | undefined;
 };
 
 const SortableFolder = ({
-    // folderItems,
-    // createItem,
-    // updateItem,
-    // deleteItem,
-    // openItem,
-    // saveFolderItems,
-    // manualDeleteItem
     folderId,
     onBackClick,
     onOpenItem
 }: SortableFolderProps) => {
 
-    const handleCreateItem = async (item: FolderItem) => {
-        switch (item.type) {
-            case FolderItemType.FOLDER:
-                createFolder(folderId, item);
-                break;
-            case FolderItemType.LIST:
-                createList(folderId, item);
-                break;
-            default:
-                throw Error('Item does not have a type.');
-        }
-    };
-
-    const handleUpdateItem = (item: FolderItem, newParentId?: string) => {
-        switch (item.type) {
-            case FolderItemType.FOLDER:
-                updateFolder(item, newParentId);
-                break;
-            case FolderItemType.LIST:
-                updateList(item, newParentId);
-                break;
-            default:
-                throw Error('Item does not have a type.');
-        }
-    };
-
-    const handleDeleteItem = (item: FolderItem) => {
-        switch (item.type) {
-            case FolderItemType.FOLDER:
-                deleteFolder(item.id);
-                break;
-            case FolderItemType.LIST:
-                deleteList(item.id);
-                break;
-            default:
-                throw Error('Item does not have a type.');
-        }
-    };
-
-
-    const folder = getFolder(folderId);
-    if (!folder) return;
-
-    const parentFolder = getFolder(folder.parentFolderId)
-
     const { colors } = useTheme();
     const { currentTab } = useNavigatorContext();
-    const [deleteMode, setDeleteMode] = useState(false);
+    const [folderItems, setFolderItems] = useState(getFolderItems(folderId));
+    const skipStorageSync = useRef(false);
     const inputWrapperRef = useRef<View>(null);
+    const folder: Folder = getFolder(folderId);
+    const parentFolder: Folder | null = folder.parentFolderId ? getFolder(folder.parentFolderId) : null;
+    const storage = useMMKV({ id: StorageIds.FOLDER_STORAGE });
+
+    const customCreateNewItem = (newData: FolderItem) => {
+        skipStorageSync.current = true;
+        createFolderItem(folderId, newData);
+    }
+
     const SortedFolder = useSortedList<FolderItem>(
-        folder.items,
-        (newItems: FolderItem[]) => saveFolderItems(folderId, newItems),
-        { type: FolderItemType.LIST, childrenCount: 0 },
+        folderItems,
+        undefined,
+        undefined,
         {
-            create: handleCreateItem,
-            update: handleUpdateItem,
-            delete: handleDeleteItem
+            create: customCreateNewItem,
+            update: updateFolderItem,
+            delete: (item: FolderItem) => deleteFolderItem(item.id, item.type)
         }
     );
 
-    const handleItemTransfer = (destination?: FolderItem) => {
-        const item = SortedFolder.getFocusedItem();
-        if (!item) return;
-        if (!destination && !parentFolder?.id) return;
-        delete item.status;
-
-        // Increment the destination item's child count
-        let destinationId = parentFolder?.id;
-        if (destination) {
-            SortedFolder.updateItem({ ...destination, childrenCount: destination.childrenCount + 1 });
-            destinationId = destination.id;
+    // Sync the sorted list with storage
+    useMMKVListener((key) => {
+        if (key === getStorageKey(folderId)) {
+            if (skipStorageSync.current) {
+                skipStorageSync.current = false;
+            } else {
+                setFolderItems(getFolderItems(folderId));
+            }
         }
-        // Transfer the item to the destination
-        handleUpdateItem(item, destinationId);
+    }, storage)
 
-        // Remove the item from this folder
-        SortedFolder.deleteItem(item, true);
+    const handleItemTransfer = (destination?: FolderItem) => {
+        const focusedItem = SortedFolder.getFocusedItem();
+        if (!destination && !parentFolder?.id || !focusedItem) return;
+        const destinationId = destination ? destination.id : parentFolder?.id;
+
+        // Transfer the item to the destination
+        updateFolderItem({ ...focusedItem, status: ItemStatus.STATIC }, destinationId);
     }
 
     const handleParentFolderClick = () => {
@@ -130,6 +81,10 @@ const SortableFolder = ({
             onBackClick(folder.parentFolderId);
         }
     };
+
+    const handleDeleteItem = (item: FolderItem) => {
+        deleteFolderItem(item.id, item.type);
+    }
 
 
     /**
@@ -150,8 +105,8 @@ const SortableFolder = ({
         onOpenItem(item.id, item.type);
     };
 
-    const renderClickableLine = useCallback((parentId: string | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedFolder.moveTextfield(parentId)}>
+    const renderClickableLine = useCallback((parentSortId: number | null) =>
+        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedFolder.moveTextfield(parentSortId)}>
             <View style={styles.thinLine} />
         </TouchableOpacity>, [SortedFolder.current]);
 
@@ -191,9 +146,9 @@ const SortableFolder = ({
             />
             <IconButton
                 icon="delete-outline"
-                onPress={() => setDeleteMode(true)}
+                onPress={() => SortedFolder.updateItem({ ...item, status: ItemStatus.DELETE })}
                 size={20}
-                iconColor={deleteMode ? colors.outline : colors.outline}
+                iconColor={item.status === ItemStatus.DELETE ? colors.outline : colors.outline}
             />
         </View>
 
@@ -217,7 +172,7 @@ const SortableFolder = ({
                 <View>
                     <View
                         onLayout={handleInputLayout}
-                        key={`${item.id}-${SortedFolder.current.findIndex(currItem => currItem.id === item.id)}`}
+                        key={`${item.id}-${item.sortId}`}
                     >
                         <TextInput
                             mode="flat"
@@ -248,7 +203,7 @@ const SortableFolder = ({
                         </Portal>
                     )}
                     <Portal>
-                        <Dialog style={styles.deletePopup} visible={deleteMode} onDismiss={() => setDeleteMode(false)}>
+                        <Dialog style={styles.deletePopup} visible={item.status === ItemStatus.DELETE} onDismiss={() => SortedFolder.updateItem({ ...item, status: ItemStatus.EDIT })}>
                             <Dialog.Title style={styles.deletePopupHeader}>{!!item.childrenCount ? 'Force delete' : 'Delete'} {itemType}?</Dialog.Title>
                             <Dialog.Content>
                                 {!!item.childrenCount ? (
@@ -259,8 +214,8 @@ const SortableFolder = ({
                             </Dialog.Content>
                             <Dialog.Actions>
                                 <View style={styles.deletePopupTextButtons}>
-                                    <Button onPress={() => setDeleteMode(false)}>Close</Button>
-                                    <Button onPress={() => SortedFolder.deleteItem(item)}>{!!item.childrenCount ? 'Force Delete' : 'Delete'}</Button>
+                                    <Button onPress={() => SortedFolder.updateItem({ ...item, status: ItemStatus.EDIT })}>Close</Button>
+                                    <Button onPress={() => handleDeleteItem(item)}>{!!item.childrenCount ? 'Force Delete' : 'Delete'}</Button>
                                 </View>
                             </Dialog.Actions>
                         </Dialog>
@@ -268,7 +223,7 @@ const SortableFolder = ({
                 </View>
             );
         },
-        [SortedFolder.current, currentTab, deleteMode]
+        [SortedFolder.current, currentTab]
     );
 
     const renderItem = useCallback((item: FolderItem, isTextfield: boolean, transferMode: boolean) =>
@@ -286,11 +241,11 @@ const SortableFolder = ({
             >
                 {item.value}
             </Text>
-        , [SortedFolder.current, currentTab, deleteMode]);
+        , [SortedFolder.current, currentTab]);
 
     const renderRow = useCallback(({ item, drag }: RenderItemParams<FolderItem>) => {
         const isItemTransfering = SortedFolder.getFocusedItem()?.status === ItemStatus.TRANSFER;
-        const isTextfield = !!item.status && [ItemStatus.NEW, ItemStatus.EDIT, ItemStatus.TRANSFER
+        const isTextfield = !!item.status && [ItemStatus.NEW, ItemStatus.EDIT, ItemStatus.TRANSFER, ItemStatus.DELETE
         ].includes(item.status);
         const isBeingMoved = item.status === ItemStatus.TRANSFER;
         const iconStyle =
@@ -321,10 +276,10 @@ const SortableFolder = ({
                         </Text>
                     )}
                 </View>
-                {renderClickableLine(item.id)}
+                {renderClickableLine(item.sortId)}
             </View>
         )
-    }, [SortedFolder.current, currentTab, deleteMode]);
+    }, [SortedFolder.current, currentTab]);
 
     return (
         <View>
@@ -338,7 +293,7 @@ const SortableFolder = ({
                 type={FolderItemType.FOLDER}
             />
             <View style={{ width: '100%', height: '100%' }}>
-                {renderClickableLine(TOP_OF_LIST_ID)}
+                {renderClickableLine(-1)}
                 <DraggableFlatList
                     data={SortedFolder.current}
                     scrollEnabled={false}

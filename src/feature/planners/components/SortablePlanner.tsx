@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Button, Dialog, Portal, TextInput, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, TOP_OF_LIST_ID, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { usePlannerContext } from '../services/PlannerProvider';
 import { Event } from '../types';
 import globalStyles from '../../../theme/globalStyles';
 import DayBanner from './DayBanner';
 import { getPlanner, savePlanner } from '../storage/plannerStorage';
+import { useMMKVListener } from 'react-native-mmkv';
 
 /***
  * UPCOMING CHANGES
@@ -40,7 +41,7 @@ const SortablePlanner = ({
     const { colors } = useTheme();
     const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
     const [timeMode, setTimeMode] = useState(false);
-    const planner = getPlanner(timestamp);
+    const planner = useMemo(() => getPlanner(timestamp), [timestamp]);
     const customSavePlanner = (newItems: Event[]) => savePlanner(timestamp, newItems);
     const SortedList = useSortedList<Event>(planner, customSavePlanner);
 
@@ -49,8 +50,9 @@ const SortablePlanner = ({
      * and reset the items that are pending delete.
      */
     useEffect(() => {
-        if (focusedPlanner.timestamp !== timestamp)
+        if (focusedPlanner.timestamp !== timestamp) {
             SortedList.saveTextfield();
+        }
 
         SortedList.rescheduleAllDeletes();
     }, [focusedPlanner]);
@@ -59,8 +61,8 @@ const SortablePlanner = ({
      * Moves the textfield to its new position, and sets this as the focused planner within
      * the context.
      */
-    const customMoveTextfield = (parentId: string | null) => {
-        SortedList.moveTextfield(parentId);
+    const customMoveTextfield = (parentSortId: number | null) => {
+        SortedList.moveTextfield(parentSortId);
         setFocusedPlanner(timestamp);
     };
 
@@ -82,15 +84,15 @@ const SortablePlanner = ({
         setFocusedPlanner(timestamp);
     };
 
-    const renderClickableLine = useCallback((parentId: string | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => customMoveTextfield(parentId)}>
+    const renderClickableLine = useCallback((parentSortId: number | null) =>
+        <TouchableOpacity style={styles.clickableLine} onPress={() => customMoveTextfield(parentSortId)}>
             <View style={styles.thinLine} />
         </TouchableOpacity>, [SortedList.current]);
 
     const renderInputField = useCallback((item: Event) =>
         <TextInput
             mode="flat"
-            key={`${item.id}-${SortedList.current.findIndex(currItem => currItem.id === item.id)}`}
+            key={`${item.id}-${item.sortId}`}
             autoFocus
             value={item.value}
             onChangeText={(text) => { SortedList.updateItem({ ...item, value: text }) }}
@@ -149,7 +151,7 @@ const SortablePlanner = ({
                     />
                     {renderItem(item, drag)}
                 </View>
-                {renderClickableLine(item.id)}
+                {renderClickableLine(item.sortId)}
                 {isTextfield && (
                     <Portal>
                         <Dialog style={styles.timeDialog} visible={timeMode} onDismiss={() => setTimeMode(false)}>
@@ -174,7 +176,7 @@ const SortablePlanner = ({
         <View>
             <DayBanner timestamp={timestamp} />
             <View style={{ width: '100%', marginBottom: 37 }}>
-                {renderClickableLine(TOP_OF_LIST_ID)}
+                {renderClickableLine(-1)}
                 <DraggableFlatList
                     data={SortedList.current}
                     scrollEnabled={false}

@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ListItem } from '../types';
-import { ItemStatus, ShiftTextfieldDirection, TOP_OF_LIST_ID } from '../enums';
+import { ItemStatus, ShiftTextfieldDirection } from '../enums';
 import uuid from 'react-native-uuid';
+import { generateSortId } from '../utils';
 
 interface StorageUpdateConfig<T> {
     create: (data: T) => void;
@@ -16,17 +17,24 @@ interface StorageUpdateConfig<T> {
  */
 const useSortedList = <T extends ListItem>(
     initialItems: T[],
-    saveListToStorage: (newList: T[]) => void,
+    saveListToStorage?: (newList: T[]) => void, // TODO: document: cannot have this AND storageUpdates
     emptyItem?: Partial<T>,
     storageUpdates?: StorageUpdateConfig<T>
 ) => {
     const [current, setCurrent] = useState<T[]>(initialItems);
     const pendingDeletes = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
+    // Keeps the list in sync with the stored list
+    useEffect(() => {
+        console.log('Here 1')
+        setCurrent(initialItems);
+    }, [initialItems]);
+
     // Generates a new textfield item.
-    const initializeTextfield = (): T => ({
+    const initializeTextfield = (parentSortId: number): T => ({
         ...emptyItem,
         id: uuid.v4(),
+        sortId: generateSortId(parentSortId, current),
         value: '',
         status: ItemStatus.NEW,
     } as T)
@@ -40,24 +48,81 @@ const useSortedList = <T extends ListItem>(
         current.find(item => item.id === id);
 
     // Returns the sort ID of the item above the given item.
-    const getParentId = (id: string) => {
+    const getParentSortId = (id: string) => {
         const itemIndex = current.findIndex(item => item.id === id);
-        return current[itemIndex - 1]?.id || TOP_OF_LIST_ID;
+        return current[itemIndex - 1]?.sortId || -1;
     }
+
+    // Clears any pending deletes and re-schedules them 3 seconds into the future.
+    const rescheduleAllDeletes = () => {
+        pendingDeletes.current.forEach((timeoutId, id) => {
+            clearTimeout(timeoutId);
+            const newTimeoutId = setTimeout(async () => {
+                const currentItem = getItemById(id);
+                if (currentItem) {
+                    deleteItem(currentItem);
+                    pendingDeletes.current.delete(id);
+                }
+            }, 3000);
+            pendingDeletes.current.set(id, newTimeoutId);
+        });
+    }
+
+    useEffect(() => {
+        console.log(current, 'current list')
+    }, [current])
 
     /**
      * Adds a new textfield just under the given sort ID.
      */
-    const generateTextfield = (parentId: string) => {
-        const newTextfield = initializeTextfield();
+    const generateTextfield = (parentSortId: number) => {
+        const newTextfield = initializeTextfield(parentSortId);
+        console.log('Here 2')
         setCurrent(curr => {
             const newList = [...curr];
-            const insertIndex = newList.findIndex(item => item.id === parentId);
+            const insertIndex = newList.findIndex(item => item.sortId > parentSortId);
             insertIndex === -1 ?
                 newList.push(newTextfield) :
-                newList.splice(insertIndex + 1, 0, newTextfield);
+                newList.splice(insertIndex, 0, newTextfield);
             return newList;
         });
+    };
+
+    /**
+     * Saves the focused item to the list.
+     * 
+     * @param shiftTextfieldConfig - determines if the textfield should shift above or below the new item
+     */
+    const saveTextfield = (shiftTextfieldConfig?: string) => {
+
+        // Get the item to be saved
+        const focusedItem = getFocusedItem();
+        if (!focusedItem) return;
+
+        // Get the storage call to use
+        const storageCall = !!storageUpdates ? (
+            focusedItem.status === ItemStatus.NEW ? storageUpdates.create :
+                focusedItem.status === ItemStatus.EDIT ? storageUpdates.update : undefined) : undefined;
+
+        if (!!focusedItem.value.trim().length) { // the field contains text
+            focusedItem.status = ItemStatus.STATIC;
+
+            // Execute the storage save
+            if (storageCall)
+                storageCall(focusedItem);
+
+            // Execute the update for this list
+            updateItem(focusedItem, shiftTextfieldConfig);
+
+        } else { // the field is empty
+            // Delete the item from storage
+            if (focusedItem.status === ItemStatus.EDIT && storageUpdates?.delete) {
+                storageUpdates.delete(focusedItem);
+            } else {
+                // Execute the delete for this list
+                deleteItem(focusedItem);
+            }
+        }
     };
 
     /**
@@ -74,85 +139,31 @@ const useSortedList = <T extends ListItem>(
      * 
      * 2. Otherwise: add a new textfield just below the list item with a sort ID that matches the given parent sort ID
      * 
-     * @param parentId - the ID of the item the textfield should be below
+     * @param newParentSortId - the sort ID of the item the textfield should be below
      */
-    const moveTextfield = (parentId: string | null) => {
-        if (!parentId) return;
-        const currentItem = getFocusedItem();
-        if (currentItem) {
-            if (parentId === currentItem.id) {
-                if (currentItem.value.trim().length) {
+    const moveTextfield = (newParentSortId: number | null) => {
+        if (!newParentSortId) return;
+        const focusedItem = getFocusedItem();
+        if (focusedItem) {
+            if (newParentSortId === focusedItem.sortId) {
+                if (focusedItem.value.trim().length) {
                     saveTextfield(ShiftTextfieldDirection.BELOW);
                 } else {
                     return;
                 }
-            } else if (parentId === getParentId(currentItem.id)) {
-                if (currentItem.value.trim().length) {
+            } else if (newParentSortId === getParentSortId(focusedItem.id)) {
+                if (focusedItem.value.trim().length) {
                     saveTextfield(ShiftTextfieldDirection.ABOVE)
                 } else {
                     return;
                 }
             } else {
-                moveItem(getFocusedItem() as T, parentId);
+                moveItem(focusedItem, newParentSortId);
             }
         } else {
-            generateTextfield(parentId);
+            generateTextfield(newParentSortId);
         }
     };
-
-    /**
-     * Saves the data entered in the current textfield to the list.
-     * 
-     * @param shiftTextfieldConfig - determines if the textfield should shift above or below the new item
-     */
-    const saveTextfield = async (shiftTextfieldConfig?: string) => {
-
-        // Get the item to be saved
-        const currentItem = getFocusedItem();
-        if (!currentItem?.status) return;
-
-        // Get the storage call to use
-        const storageCall = !!storageUpdates ? (
-            currentItem.status === ItemStatus.NEW ? storageUpdates.create :
-                currentItem.status === ItemStatus.EDIT ? storageUpdates.update : undefined) : undefined;
-
-        if (!!currentItem.value.trim().length) { // the field contains text
-
-            // Execute the save
-            delete currentItem.status
-            if (storageCall) storageCall(currentItem);
-            updateItem(currentItem);
-
-            if (shiftTextfieldConfig) { // shift the textfield up or down
-                const newParentId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
-                    ? currentItem.id
-                    : getParentId(currentItem.id);
-                generateTextfield(newParentId); // TODO: verify this works
-            }
-        } else { // the field is empty
-            if (currentItem.status === ItemStatus.EDIT && storageUpdates?.delete) {
-                storageUpdates.delete(currentItem);
-            }
-            deleteItem(currentItem);
-        }
-    };
-
-    /**
-     * Clears any pending deletes and re-schedules them 3 seconds into the future.
-     */
-    const rescheduleAllDeletes = () => {
-        pendingDeletes.current.forEach((timeoutId, id) => {
-            clearTimeout(timeoutId);
-            const newTimeoutId = setTimeout(async () => {
-                const currentItem = getItemById(id);
-                if (currentItem) {
-                    deleteItem(currentItem);
-                    pendingDeletes.current.delete(id);
-                }
-            }, 3000);
-            pendingDeletes.current.set(id, newTimeoutId);
-        });
-    }
 
     /**
      * Toggles an item in and out of deleting. Changing the delete status of 
@@ -187,16 +198,35 @@ const useSortedList = <T extends ListItem>(
     /**
      * Updates the given item.
      */
-    const updateItem = (newItem: T) => {
+    const updateItem = (newItem: T, shiftTextfieldConfig?: string) => {
+        console.log('Here 3')
         setCurrent((curr) => {
             const newList = [...curr];
+
+            // Replace the existing item with the new data
             const replaceIndex = newList.findIndex((item) =>
                 item.id === newItem.id
             );
             if (replaceIndex !== -1) {
                 newList[replaceIndex] = newItem;
             }
-            // saveList(newList);
+
+            // Shift the textfield up or down
+            if (shiftTextfieldConfig) {
+                const newParentSortId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
+                    ? newItem.sortId
+                    : getParentSortId(newItem.id);
+                const newTextfield = initializeTextfield(newParentSortId);
+                const insertIndex = newList.findIndex(item => item.sortId > newParentSortId);
+                insertIndex === -1 ?
+                    newList.push(newTextfield) :
+                    newList.splice(insertIndex, 0, newTextfield);
+            }
+
+            // Save this list to storage
+            if (newItem.status === ItemStatus.STATIC && saveListToStorage) {
+                saveListToStorage(newList.filter(item => item.status != ItemStatus.NEW));
+            }
             return newList;
         });
     };
@@ -204,40 +234,47 @@ const useSortedList = <T extends ListItem>(
     /**
      * Deletes the item from the list.
      */
-    const deleteItem = (item: T, itemTransfered?: boolean) => {
+    const deleteItem = (item: T) => {
+        console.log('Here 4')
         setCurrent((curr) => {
             const newList = [...curr];
             const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);
             if (deleteIndex !== -1) {
                 newList.splice(deleteIndex, 1);
             }
-            saveList(newList);
+            // Save this list to storage
+            if (saveListToStorage)
+                saveListToStorage(newList);
             return newList;
         });
-        if (!itemTransfered && storageUpdates?.delete) {
-            storageUpdates.delete(item);
-        }
     };
 
     /**
      * Move the given item to its new location.
      */
-    const moveItem = (item: T, newParentId: string) => {
+    const moveItem = (item: T, newParentSortId: number) => {
+        const newItem = {
+            ...item,
+            sortId: generateSortId(newParentSortId, current)
+        };
+        console.log('Here 5')
         setCurrent((curr) => {
             const newList = [...curr];
-            const deleteIndex = newList.findIndex((item) => item.id === item.id);
+            const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);
             if (deleteIndex !== -1) {
                 newList.splice(deleteIndex, 1);
             }
-            if (newParentId === TOP_OF_LIST_ID) {
-                newList.unshift(item);
+            if (newParentSortId === -1) {
+                newList.unshift(newItem);
             } else {
-                const insertIndex = newList.findIndex(item => item.id === newParentId);
+                const insertIndex = newList.findIndex(currItem => currItem.sortId > newParentSortId);
                 insertIndex === -1 ?
-                    newList.push(item) :
-                    newList.splice(insertIndex + 1, 0, item);
+                    newList.push(newItem) :
+                    newList.splice(insertIndex, 0, newItem);
             }
-            saveList(newList);
+            // Save this list to storage
+            if (saveListToStorage)
+                saveListToStorage(newList);
             return newList;
         });
     };
@@ -272,32 +309,19 @@ const useSortedList = <T extends ListItem>(
      */
     const endDragItem = ({ data, from, to }: { data: T[]; from: number; to: number }) => {
         const draggedItem = data[to];
-        delete draggedItem.status;
+        draggedItem.status === ItemStatus.STATIC;
         if (from !== to) {
-            const newParentId = to > 0 ?
-                data[to - 1]?.id :
-                TOP_OF_LIST_ID
-            moveItem(draggedItem, newParentId);
+            const newParentSortId = to > 0 ?
+                data[to - 1]?.sortId :
+                -1
+            moveItem(draggedItem, newParentSortId);
+        } else {
+            updateItem(draggedItem);
         }
-        updateItem(draggedItem);
     };
 
-    const beginTransferItem = (item: T) => 
+    const beginTransferItem = (item: T) =>
         updateItem({ ...item, status: ItemStatus.TRANSFER });
-
-    /**
-     * Save the given list to storage. Filters out the textfield and all statuses.
-     */
-    const saveList = (newList: T[]) =>
-        saveListToStorage(
-            newList
-                .filter(item => item.status !== ItemStatus.NEW)
-                .map(item => {
-                    const updatedItem = { ...item };
-                    delete updatedItem.status;
-                    return updatedItem;
-                })
-        );
 
     return {
         current,
@@ -305,7 +329,6 @@ const useSortedList = <T extends ListItem>(
         deleteItem,
         moveItem,
         getFocusedItem,
-        generateTextfield,
         getItemById,
         beginDragItem,
         endDragItem,

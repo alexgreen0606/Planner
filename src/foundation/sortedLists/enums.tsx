@@ -3,12 +3,11 @@ export enum ItemStatus {
     EDIT = 'EDIT',
     DRAG = 'DRAG',
     DELETE = 'DELETE',
-    TRANSFER = 'TRANSFER'
+    TRANSFER = 'TRANSFER',
+    STATIC = 'STATIC'
 }
 
 export enum ShiftTextfieldDirection {
     ABOVE = 'ABOVE',
     BELOW = 'BELOW'
 }
-
-export const TOP_OF_LIST_ID = 'TOP_OF_LIST_ID';

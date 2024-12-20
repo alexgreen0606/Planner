@@ -5,30 +5,35 @@ import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flat
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
 import { ListItem } from '../../../foundation/sortedLists/types';
-import { TOP_OF_LIST_ID, ShiftTextfieldDirection, ItemStatus } from '../../../foundation/sortedLists/enums';
+import { ShiftTextfieldDirection, ItemStatus } from '../../../foundation/sortedLists/enums';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
+import { FolderItemType } from '../enums';
+import LabelBanner from './LabelBanner';
+import { getFolder, getList, updateListItems } from '../storage/folderStorage';
 
-interface SortableListProps<ListItem> {
-    listItems: ListItem[];
-    saveItems: (newItems: ListItem[]) => void
+interface SortableListProps{
+    listId: string;
+    onBackClick: (parentFolderId: string) => void;
 };
 
 const SortableList = ({
-    listItems,
-    saveItems
-}: SortableListProps<ListItem>) => {
+    listId,
+    onBackClick
+}: SortableListProps) => {
     const { colors } = useTheme();
-    const SortedList = useSortedList<ListItem>(listItems, saveItems);
+    const list = getList(listId);
+    const parentFolder = getFolder(list.parentFolderId);
+    const SortedList = useSortedList<ListItem>(list.items, (newItems: ListItem[]) => updateListItems(listId, newItems));
 
-    const renderClickableLine = useCallback((parentId: string | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedList.moveTextfield(parentId)}>
+    const renderClickableLine = useCallback((parentSortId: number | null) =>
+        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedList.moveTextfield(parentSortId)}>
             <View style={styles.thinLine} />
         </TouchableOpacity>, [SortedList.current]);
 
     const renderInputField = useCallback((item: ListItem | ListItem) =>
         <TextInput
             mode="flat"
-            key={`${item.id}-${SortedList.current.findIndex(currItem => currItem.id === item.id)}`}
+            key={`${item.id}-${item.sortId}`}
             autoFocus
             value={item.value}
             onChangeText={(text) => { SortedList.updateItem({ ...item, value: text }) }}
@@ -77,22 +82,33 @@ const SortableList = ({
                     />
                     {renderItem(item, drag)}
                 </View>
-                {renderClickableLine(item.id)}
+                {renderClickableLine(item.sortId)}
             </View>
         )
     }, [SortedList.current]);
 
     return (
-        <View style={{ width: '100%', marginBottom: 37 }}>
-            {renderClickableLine(TOP_OF_LIST_ID)}
-            <DraggableFlatList
-                data={SortedList.current}
-                scrollEnabled={false}
-                onDragEnd={SortedList.endDragItem}
-                onDragBegin={SortedList.beginDragItem}
-                keyExtractor={(item) => item.id}
-                renderItem={renderRow}
+        <View>
+            <LabelBanner
+                label={list.value}
+                backButtonConfig={{
+                    display: !!parentFolder,
+                    label: parentFolder?.value,
+                    onClick: () => onBackClick(list.parentFolderId!)
+                }}
+                type={FolderItemType.LIST}
             />
+            <View style={{ width: '100%', marginBottom: 37 }}>
+                {renderClickableLine(-1)}
+                <DraggableFlatList
+                    data={SortedList.current}
+                    scrollEnabled={false}
+                    onDragEnd={SortedList.endDragItem}
+                    onDragBegin={SortedList.beginDragItem}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderRow}
+                />
+            </View>
         </View>
     );
 };
