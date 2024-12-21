@@ -26,7 +26,6 @@ const useSortedList = <T extends ListItem>(
 
     // Keeps the list in sync with the stored list
     useEffect(() => {
-        console.log('Here 1')
         setCurrent(initialItems);
     }, [initialItems]);
 
@@ -68,16 +67,11 @@ const useSortedList = <T extends ListItem>(
         });
     }
 
-    useEffect(() => {
-        console.log(current, 'current list')
-    }, [current])
-
     /**
      * Adds a new textfield just under the given sort ID.
      */
     const generateTextfield = (parentSortId: number) => {
         const newTextfield = initializeTextfield(parentSortId);
-        console.log('Here 2')
         setCurrent(curr => {
             const newList = [...curr];
             const insertIndex = newList.findIndex(item => item.sortId > parentSortId);
@@ -199,7 +193,6 @@ const useSortedList = <T extends ListItem>(
      * Updates the given item.
      */
     const updateItem = (newItem: T, shiftTextfieldConfig?: string) => {
-        console.log('Here 3')
         setCurrent((curr) => {
             const newList = [...curr];
 
@@ -235,7 +228,6 @@ const useSortedList = <T extends ListItem>(
      * Deletes the item from the list.
      */
     const deleteItem = (item: T) => {
-        console.log('Here 4')
         setCurrent((curr) => {
             const newList = [...curr];
             const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);
@@ -257,7 +249,6 @@ const useSortedList = <T extends ListItem>(
             ...item,
             sortId: generateSortId(newParentSortId, current)
         };
-        console.log('Here 5')
         setCurrent((curr) => {
             const newList = [...curr];
             const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);

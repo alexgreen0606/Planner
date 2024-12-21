@@ -25,3 +25,37 @@ export const weatherCodeToString = (code: number): string => {
 
   return weatherMap[code] || 'Unknown weather';
 };
+
+type WeatherIconMap = Record<
+  number,
+  'lightning' | 'day-showers' | 'day-sunny' | 'day-cloudy' | 'cloudy' | 'fog' | 'day-rain' | 'rain' | 'snowflake-8' | 'day-snow'
+>;
+
+export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] => {
+  const weatherIconMap: WeatherIconMap = {
+    0: 'day-sunny',
+    1: 'day-cloudy',
+    2: 'day-cloudy',
+    3: 'cloudy',
+    45: 'fog',
+    48: 'fog',
+    51: 'day-rain',
+    53: 'rain',
+    55: 'rain',
+    61: 'day-rain',
+    63: 'rain',
+    65: 'rain',
+    71: 'day-snow',
+    73: 'snowflake-8',
+    75: 'snowflake-8',
+    77: 'snowflake-8',
+    81: 'day-showers',
+    82: 'rain',
+    85: 'rain',
+    86: 'day-snow',
+    95: 'lightning',
+  };
+
+  return weatherIconMap[code] || weatherIconMap[0];
+};
+

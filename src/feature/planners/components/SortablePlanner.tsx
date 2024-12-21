@@ -1,17 +1,25 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Button, Dialog, Portal, TextInput, useTheme } from 'react-native-paper';
+import { Checkbox, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { usePlannerContext } from '../services/PlannerProvider';
-import { Event } from '../types';
-import globalStyles from '../../../theme/globalStyles';
+import { Event, TimeDialog } from '../types';
 import DayBanner from './DayBanner';
 import { getPlanner, savePlanner } from '../storage/plannerStorage';
-import { useMMKVListener } from 'react-native-mmkv';
+import { RECURRING_WEEKDAY_PLANNER } from '../enums';
+import { isValidTimestamp } from '../utils';
+import Modal from '../../../foundation/ui/modal/Modal';
+import globalStyles from '../../../theme/globalStyles';
+import { generateTimeOptions } from '../utils';
+import TimeDropdown from '../../../foundation/ui/input/TimeDropdown';
+import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
+import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
+import TimeModal from './TimeModal';
+import CustomText from '../../../foundation/ui/text';
 
 /***
  * UPCOMING CHANGES
@@ -24,34 +32,41 @@ import { useMMKVListener } from 'react-native-mmkv';
  * 
  */
 
-interface TimeDialog {
-    syncCalendar: boolean;
-    allDay: boolean;
-    startTime: string;
-    endTime: string;
-}
-
 interface SortablePlannerProps {
-    timestamp: string;
+    plannerId: string;
+    manualSaveTrigger?: boolean;
 };
 
 const SortablePlanner = ({
-    timestamp
+    plannerId,
+    manualSaveTrigger
 }: SortablePlannerProps) => {
     const { colors } = useTheme();
     const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
-    const [timeMode, setTimeMode] = useState(false);
-    const planner = useMemo(() => getPlanner(timestamp), [timestamp]);
-    const customSavePlanner = (newItems: Event[]) => savePlanner(timestamp, newItems);
+    const [timeModalOpen, setTimeModalOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(isValidTimestamp(plannerId));
+    const planner = useMemo(() => getPlanner(plannerId), []);
+    const recurringWeekdayPlanner = useMemo(() => getPlanner(RECURRING_WEEKDAY_PLANNER), []);
+    const customSavePlanner = (manualSaveTrigger !== undefined) ? undefined : (newItems: Event[]) => savePlanner(plannerId, newItems);
     const SortedList = useSortedList<Event>(planner, customSavePlanner);
+
+    const toggleCollapsed = () => setCollapsed(curr => !curr);
+    const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
+
+    useEffect(() => {
+        if (manualSaveTrigger)
+            savePlanner(plannerId, SortedList.current);
+    }, [manualSaveTrigger])
 
     /**
      * When a different planner on the screen is focused, save this list's current textfield
      * and reset the items that are pending delete.
      */
     useEffect(() => {
-        if (focusedPlanner.timestamp !== timestamp) {
+        if (focusedPlanner.timestamp !== plannerId) {
             SortedList.saveTextfield();
+        } else {
+            setCollapsed(false);
         }
 
         SortedList.rescheduleAllDeletes();
@@ -63,7 +78,7 @@ const SortablePlanner = ({
      */
     const customMoveTextfield = (parentSortId: number | null) => {
         SortedList.moveTextfield(parentSortId);
-        setFocusedPlanner(timestamp);
+        setFocusedPlanner(plannerId);
     };
 
     /**
@@ -72,7 +87,7 @@ const SortablePlanner = ({
      */
     const customBeginEditItem = (item: Event) => {
         SortedList.beginEditItem(item);
-        setFocusedPlanner(timestamp);
+        setFocusedPlanner(plannerId);
     };
 
     /**
@@ -81,37 +96,17 @@ const SortablePlanner = ({
      */
     const customToggleDeleteItem = (item: Event) => {
         SortedList.toggleDeleteItem(item);
-        setFocusedPlanner(timestamp);
+        setFocusedPlanner(plannerId);
     };
-
-    const renderClickableLine = useCallback((parentSortId: number | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => customMoveTextfield(parentSortId)}>
-            <View style={styles.thinLine} />
-        </TouchableOpacity>, [SortedList.current]);
-
-    const renderInputField = useCallback((item: Event) =>
-        <TextInput
-            mode="flat"
-            key={`${item.id}-${item.sortId}`}
-            autoFocus
-            value={item.value}
-            onChangeText={(text) => { SortedList.updateItem({ ...item, value: text }) }}
-            selectionColor="white"
-            style={styles.textInput}
-            theme={{
-                colors: {
-                    text: 'white',
-                    primary: 'transparent',
-                },
-            }}
-            underlineColor='transparent'
-            textColor='white'
-            onSubmitEditing={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
-        />, [SortedList.current]);
 
     const renderItem = useCallback((item: Event, drag: any) =>
         item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status) ?
-            renderInputField(item) :
+            <ListTextfield
+                key={`${item.id}-${item.sortId}`}
+                item={item}
+                onChange={(text) => { SortedList.updateItem({ ...item, value: text }) }}
+                onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
+            /> :
             <Text
                 onLongPress={drag}
                 onPress={() => customBeginEditItem(item)}
@@ -123,7 +118,20 @@ const SortablePlanner = ({
                 }}
             >
                 {item.value}
-            </Text>, [SortedList.current]);
+            </Text>
+        , [SortedList.current]);
+
+    /**
+     * If the list is collapsed, we filter out the recurring events.
+     */
+    const getListContent = useCallback(() => {
+        if (collapsed) {
+            const recurringWeekdayPlannerIds = recurringWeekdayPlanner.map(event => event.id);
+            return SortedList.current.filter(item => !recurringWeekdayPlannerIds.includes(item.id)).slice(0, 3);
+        } else {
+            return SortedList.current;
+        }
+    }, [collapsed, SortedList]);
 
     /***
      * UPCOMING CHANGES
@@ -135,10 +143,11 @@ const SortablePlanner = ({
      *  - box for end time
      * 
      */
-    const renderRow = useCallback(({ item, drag }: RenderItemParams<Event>) => {
+    const renderRow = useCallback(({ item, drag, getIndex }: RenderItemParams<Event>) => {
         const isTextfield = !!item.status && [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
         const isItemDeleting = item.status === ItemStatus.DELETE;
-        const iconStyle = isItemDeleting ? 'dot-circle-o' : isTextfield ? 'clock-o' : 'circle-thin';
+        const iconStyle = isTextfield ? 'clock-o' : plannerId === RECURRING_WEEKDAY_PLANNER ? 'trash' : isItemDeleting ? 'dot-circle-o' : 'circle-thin';
+
         return (
             <View style={{ backgroundColor: item.status === 'DRAG' ? colors.background : undefined }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -146,62 +155,66 @@ const SortablePlanner = ({
                         name={iconStyle}
                         size={20}
                         color={isItemDeleting ? colors.primary : colors.secondary}
-                        style={{ marginLeft: 16 }}
-                        onPress={() => isTextfield ? setTimeMode(true) : customToggleDeleteItem(item)}
+                        onPress={() => isTextfield ? setTimeModalOpen(true) : customToggleDeleteItem(item)}
                     />
                     {renderItem(item, drag)}
                 </View>
-                {renderClickableLine(item.sortId)}
+                <ClickableLine onPress={() => customMoveTextfield(item.sortId)} />
                 {isTextfield && (
-                    <Portal>
-                        <Dialog style={styles.timeDialog} visible={timeMode} onDismiss={() => setTimeMode(false)}>
-                            <Dialog.Title>Manage event time.</Dialog.Title>
-                            <Dialog.Content>
-                                <View />
-                            </Dialog.Content>
-                            <Dialog.Actions>
-                                <View style={globalStyles.spacedApart}>
-                                    <Button onPress={() => setTimeMode(false)}>Close</Button>
-                                    <Button onPress={() => { }}>Save</Button>
-                                </View>
-                            </Dialog.Actions>
-                        </Dialog>
-                    </Portal>
+                    <TimeModal
+                        open={timeModalOpen}
+                        toggleModalOpen={toggleTimeModal}
+                        onSave={() => { }}
+                    />
                 )}
             </View>
         )
-    }, [SortedList.current, timeMode]);
+    }, [SortedList.current, timeModalOpen, collapsed, planner]);
 
     return (
-        <View>
-            <DayBanner timestamp={timestamp} />
+        <View style={{ width: '100%' }}>
+            {isValidTimestamp(plannerId) && (
+                <DayBanner timestamp={plannerId} />
+            )}
             <View style={{ width: '100%', marginBottom: 37 }}>
-                {renderClickableLine(-1)}
+                <ClickableLine onPress={() => customMoveTextfield(-1)} />
                 <DraggableFlatList
-                    data={SortedList.current}
+                    data={getListContent()}
                     scrollEnabled={false}
                     onDragEnd={SortedList.endDragItem}
                     onDragBegin={SortedList.beginDragItem}
                     keyExtractor={(item) => item.id}
                     renderItem={renderRow}
                 />
+                {
+                    !!SortedList.current.length &&
+                    !SortedList.getFocusedItem() &&
+                    isValidTimestamp(plannerId) &&
+                    SortedList.current.length > 3 && (
+                        <TouchableOpacity onPress={toggleCollapsed} style={{ width: '100%', justifyContent: 'flex-start', flexDirection: 'row' }}>
+                            <FontAwesome
+                                name={collapsed ? 'chevron-up' : 'chevron-down'}
+                                size={12}
+                                color={colors.outline}
+                                style={{ marginHorizontal: 8 }}
+                            />
+                            {collapsed && (
+                                <CustomText type='collapseText'>
+                                    {SortedList.current.length - (getListContent().length)} more
+                                </CustomText>
+                            )}
+                        </TouchableOpacity>
+                    )}
             </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    clickableLine: {
-        width: '100%',
-        height: 15,
-        backgroundColor: 'transparent',
-        justifyContent: 'center'
+    row: {
+        backgroundColor: theme.colors.backdrop
     },
-    thinLine: {
-        width: '100%',
-        height: StyleSheet.hairlineWidth,
-        backgroundColor: theme.colors.outline,
-    },
+
     listItem: {
         width: '100%',
         paddingLeft: 16,
@@ -210,20 +223,8 @@ const styles = StyleSheet.create({
         paddingBottom: 4,
         minHeight: 25,
         color: theme.colors.secondary,
-        fontSize: 16
+        fontSize: 16,
     },
-    textInput: {
-        backgroundColor: 'transparent',
-        color: 'white',
-        paddingTop: 1,
-        paddingBottom: 1,
-        width: '100%',
-        height: 25,
-        fontSize: 16
-    },
-    timeDialog: {
-        backgroundColor: theme.colors.background
-    }
 });
 
 export default SortablePlanner;

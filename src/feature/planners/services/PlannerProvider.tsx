@@ -19,7 +19,6 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     })
 
     const setFocusedPlanner = (timestamp: string) => {
-        console.log('setting context')
         if (focusedPlanner.timestamp === timestamp) {
             setFocusedPlannerState({ ...focusedPlanner, numUpdates: focusedPlanner.numUpdates + 1 });
         } else {

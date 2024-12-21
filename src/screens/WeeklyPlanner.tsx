@@ -6,6 +6,14 @@ import { theme } from '../theme/theme';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import globalStyles from '../theme/globalStyles';
 import SortablePlanner from '../feature/planners/components/SortablePlanner';
+import { ScrollView } from 'react-native-gesture-handler';
+import Modal from '../foundation/ui/modal/Modal';
+import { RECURRING_WEEKDAY_PLANNER } from '../feature/planners/enums';
+import { getNextSevenDayTimestamps } from '../feature/planners/utils';
+import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import { StorageIds } from '../enums';
+import { getPlannerKey } from '../feature/planners/storage/plannerStorage';
+import ThinLine from '../foundation/ui/separators/ThinLine';
 
 /**
  * Recurring modal includes:
@@ -20,24 +28,33 @@ import SortablePlanner from '../feature/planners/components/SortablePlanner';
 const WeeklyPlanner = () => {
   const { colors } = useTheme();
   const [timestamps, setTimestamps] = useState<string[]>([]);
+  const [weekdayPlannerOpen, setWeekdayPlannerOpen] = useState(false);
+  const [plannerListKey, setPlannerListKey] = useState('PLANNER_LIST_KEY');
+  const [saveRecurring, setSaveRecurring] = useState(false);
 
   useEffect(() => {
     const buildWeeklyPlanner = () => {
-      const today = new Date();
-      today.setDate(today.getDate() + 1);
-      const timestamps = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        return date.toISOString().split('T')[0];
-      });
+      const timestamps = getNextSevenDayTimestamps();
       setTimestamps(timestamps);
     };
 
     buildWeeklyPlanner();
   }, []);
 
+  const storage = useMMKV({ id: StorageIds.PLANNER_STORAGE });
+
+  // Reload the planner when the recurring planner changes
+  useMMKVListener((key) => {
+    if (key === getPlannerKey(RECURRING_WEEKDAY_PLANNER)) {
+      console.log('RECURRING CHNAGED.');
+      setPlannerListKey(curr => (`${curr}_RERENDER`));
+    }
+  }, storage)
+
+  const toggleWeekdayPlanner = () => setWeekdayPlannerOpen(!weekdayPlannerOpen);
+
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'space-between' }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <SafeAreaView>
         <View style={styles.bannerContainer}>
           <View style={styles.banner}>
@@ -53,18 +70,47 @@ const WeeklyPlanner = () => {
             </View>
             <MaterialCommunityIcons
               name='calendar-sync'
-              size={18}
+              size={20}
               color={colors.outline}
+              onPress={toggleWeekdayPlanner}
             />
           </View>
-          <View style={styles.thinLine} />
-        </View>
-        {timestamps.map((timestamp) =>
-          <SortablePlanner
-            key={`${timestamp}-planner`}
-            timestamp={timestamp}
+          <ThinLine style={{
+            marginTop: 8,
+            marginBottom: 16
+          }}
           />
-        )}
+        </View>
+        <ScrollView
+          key={plannerListKey}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ alignItems: 'center', width: '100%' }}
+        >
+          {timestamps.map((timestamp) =>
+            <View style={{ width: '85%', alignItems: 'center' }} key={`${timestamp}-planner`}>
+              <SortablePlanner
+                plannerId={timestamp}
+              />
+            </View>
+          )}
+        </ScrollView>
+        <Modal
+          title='Recurring Weekday Planner'
+          open={weekdayPlannerOpen}
+          primaryButtonConfig={{
+            onClick: () => {
+              setSaveRecurring(true);
+              toggleWeekdayPlanner();
+            },
+            label: 'Save'
+          }}
+          toggleModalOpen={toggleWeekdayPlanner}
+        >
+          <SortablePlanner
+            plannerId={RECURRING_WEEKDAY_PLANNER}
+            manualSaveTrigger={saveRecurring}
+          />
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -87,13 +133,6 @@ const styles = StyleSheet.create({
   labelText: {
     fontSize: 25,
     color: theme.colors.primary,
-  },
-  thinLine: {
-    width: '100%',
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: theme.colors.outline,
-    marginTop: 8,
-    marginBottom: 16
   },
 });
 

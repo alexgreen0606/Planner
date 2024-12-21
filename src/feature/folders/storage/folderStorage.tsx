@@ -7,7 +7,7 @@ import { ListItem } from "../../../foundation/sortedLists/types";
 
 const storage = new MMKV({ id: StorageIds.FOLDER_STORAGE });
 
-export const getStorageKey = (folderId: string) => (`STORAGE_${folderId}`);
+export const getStorageKey = (folderId: string) => (`FOLDERS_${folderId}`);
 
 export const saveToStorage = (item: Folder | List) =>
     storage.set(getStorageKey(item.id), JSON.stringify(item));

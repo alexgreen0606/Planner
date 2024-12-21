@@ -1,6 +1,6 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, UIManager, findNodeHandle } from 'react-native';
-import { Button, Dialog, IconButton, Portal, TextInput, useTheme } from 'react-native-paper';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, UIManager, findNodeHandle } from 'react-native';
+import { IconButton, Portal, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
@@ -13,6 +13,9 @@ import LabelBanner from './LabelBanner';
 import { createFolderItem, getFolder, updateFolderItem, getFolderItems, getStorageKey, deleteFolderItem } from '../storage/folderStorage';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../../../enums';
+import Modal from '../../../foundation/ui/modal/Modal';
+import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
+import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 
 interface SortableFolderProps {
     folderId: string;
@@ -31,7 +34,7 @@ const SortableFolder = ({
     const [folderItems, setFolderItems] = useState(getFolderItems(folderId));
     const skipStorageSync = useRef(false);
     const inputWrapperRef = useRef<View>(null);
-    const folder: Folder = getFolder(folderId);
+    const folder = useMemo(() => getFolder(folderId), [folderId]);
     const parentFolder: Folder | null = folder.parentFolderId ? getFolder(folder.parentFolderId) : null;
     const storage = useMMKV({ id: StorageIds.FOLDER_STORAGE });
 
@@ -105,11 +108,6 @@ const SortableFolder = ({
         onOpenItem(item.id, item.type);
     };
 
-    const renderClickableLine = useCallback((parentSortId: number | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedFolder.moveTextfield(parentSortId)}>
-            <View style={styles.thinLine} />
-        </TouchableOpacity>, [SortedFolder.current]);
-
     const renderNewItemPopup = (item: FolderItem, popupPosition: { x: number, y: number }) =>
         <View
             style={[
@@ -174,22 +172,10 @@ const SortableFolder = ({
                         onLayout={handleInputLayout}
                         key={`${item.id}-${item.sortId}`}
                     >
-                        <TextInput
-                            mode="flat"
-                            autoFocus
-                            value={item.value}
-                            onChangeText={(text) => SortedFolder.updateItem({ ...item, value: text })}
-                            selectionColor="white"
-                            style={styles.textInput}
-                            theme={{
-                                colors: {
-                                    text: item.status === ItemStatus.TRANSFER ? colors.primary : colors.secondary,
-                                    primary: 'transparent',
-                                },
-                            }}
-                            underlineColor="transparent"
-                            textColor={item.status === ItemStatus.TRANSFER ? colors.primary : colors.secondary}
-                            onSubmitEditing={() => SortedFolder.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                        <ListTextfield
+                            item={item}
+                            onChange={(text) => SortedFolder.updateItem({ ...item, value: text })}
+                            onSubmit={() => SortedFolder.saveTextfield(ShiftTextfieldDirection.BELOW)}
                         />
                     </View>
                     {item.status !== ItemStatus.TRANSFER && currentTab === 'folders' && (
@@ -202,24 +188,22 @@ const SortableFolder = ({
                             )}
                         </Portal>
                     )}
-                    <Portal>
-                        <Dialog style={styles.deletePopup} visible={item.status === ItemStatus.DELETE} onDismiss={() => SortedFolder.updateItem({ ...item, status: ItemStatus.EDIT })}>
-                            <Dialog.Title style={styles.deletePopupHeader}>{!!item.childrenCount ? 'Force delete' : 'Delete'} {itemType}?</Dialog.Title>
-                            <Dialog.Content>
-                                {!!item.childrenCount ? (
-                                    <Text style={styles.deletePopupText}>This {itemType} has {item.childrenCount} items. Deleting is irreversible and will lose all inner contents.</Text>
-                                ) : (
-                                    <Text style={styles.deletePopupText}>Would you like to delete this {itemType}?</Text>
-                                )}
-                            </Dialog.Content>
-                            <Dialog.Actions>
-                                <View style={styles.deletePopupTextButtons}>
-                                    <Button onPress={() => SortedFolder.updateItem({ ...item, status: ItemStatus.EDIT })}>Close</Button>
-                                    <Button onPress={() => handleDeleteItem(item)}>{!!item.childrenCount ? 'Force Delete' : 'Delete'}</Button>
-                                </View>
-                            </Dialog.Actions>
-                        </Dialog>
-                    </Portal>
+                    <Modal
+                        title={`${!!item.childrenCount ? 'Force delete' : 'Delete'} ${itemType}?`}
+                        open={item.status === ItemStatus.DELETE}
+                        toggleModalOpen={() => SortedFolder.updateItem({ ...item, status: item.status === ItemStatus.EDIT ? ItemStatus.DELETE : ItemStatus.EDIT })}
+                        primaryButtonConfig={{
+                            label: !!item.childrenCount ? 'Force Delete' : 'Delete',
+                            onClick: () => handleDeleteItem(item),
+                            color: !!item.childrenCount ? 'red' : colors.primary
+                        }}
+                    >
+                        {!!item.childrenCount ? (
+                            <Text style={styles.deletePopupText}>This {itemType} has {item.childrenCount} items. Deleting is irreversible and will lose all inner contents.</Text>
+                        ) : (
+                            <Text style={styles.deletePopupText}>Would you like to delete this {itemType}?</Text>
+                        )}
+                    </Modal>
                 </View>
             );
         },
@@ -276,7 +260,7 @@ const SortableFolder = ({
                         </Text>
                     )}
                 </View>
-                {renderClickableLine(item.sortId)}
+                <ClickableLine onPress={() => SortedFolder.moveTextfield(item.sortId)} />
             </View>
         )
     }, [SortedFolder.current, currentTab]);
@@ -284,7 +268,7 @@ const SortableFolder = ({
     return (
         <View>
             <LabelBanner
-                label={folder.value}
+                dataId={folder.id}
                 backButtonConfig={{
                     display: !!parentFolder,
                     label: parentFolder?.value,
@@ -293,7 +277,7 @@ const SortableFolder = ({
                 type={FolderItemType.FOLDER}
             />
             <View style={{ width: '100%', height: '100%' }}>
-                {renderClickableLine(-1)}
+                <ClickableLine onPress={() => SortedFolder.moveTextfield(-1)} />
                 <DraggableFlatList
                     data={SortedFolder.current}
                     scrollEnabled={false}
@@ -312,17 +296,6 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         zIndex: 10
     },
-    clickableLine: {
-        width: '100%',
-        height: 15,
-        backgroundColor: 'transparent',
-        justifyContent: 'center'
-    },
-    thinLine: {
-        width: '100%',
-        height: StyleSheet.hairlineWidth,
-        backgroundColor: theme.colors.outline,
-    },
     listItem: {
         width: '85%',
         paddingLeft: 16,
@@ -336,16 +309,6 @@ const styles = StyleSheet.create({
     row: {
         backgroundColor: theme.colors.background,
         position: 'relative'
-    },
-    textInput: {
-        backgroundColor: theme.colors.background,
-        color: 'white',
-        paddingTop: 1,
-        paddingBottom: 1,
-        width: '100%',
-        height: 25,
-        fontSize: 16,
-        zIndex: 2
     },
     popup: {
         position: 'absolute',

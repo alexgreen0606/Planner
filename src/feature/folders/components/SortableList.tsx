@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { TextInput, useTheme } from 'react-native-paper';
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { theme } from '../../../theme/theme';
 import { FontAwesome } from '@expo/vector-icons';
@@ -10,8 +10,10 @@ import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { FolderItemType } from '../enums';
 import LabelBanner from './LabelBanner';
 import { getFolder, getList, updateListItems } from '../storage/folderStorage';
+import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
+import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 
-interface SortableListProps{
+interface SortableListProps {
     listId: string;
     onBackClick: (parentFolderId: string) => void;
 };
@@ -21,38 +23,18 @@ const SortableList = ({
     onBackClick
 }: SortableListProps) => {
     const { colors } = useTheme();
-    const list = getList(listId);
+    const list = useMemo(() => getList(listId), [listId]);
     const parentFolder = getFolder(list.parentFolderId);
     const SortedList = useSortedList<ListItem>(list.items, (newItems: ListItem[]) => updateListItems(listId, newItems));
 
-    const renderClickableLine = useCallback((parentSortId: number | null) =>
-        <TouchableOpacity style={styles.clickableLine} onPress={() => SortedList.moveTextfield(parentSortId)}>
-            <View style={styles.thinLine} />
-        </TouchableOpacity>, [SortedList.current]);
-
-    const renderInputField = useCallback((item: ListItem | ListItem) =>
-        <TextInput
-            mode="flat"
-            key={`${item.id}-${item.sortId}`}
-            autoFocus
-            value={item.value}
-            onChangeText={(text) => { SortedList.updateItem({ ...item, value: text }) }}
-            selectionColor="white"
-            style={styles.textInput}
-            theme={{
-                colors: {
-                    text: 'white',
-                    primary: 'transparent',
-                },
-            }}
-            underlineColor='transparent'
-            textColor='white'
-            onSubmitEditing={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
-        />, [SortedList.current]);
-
     const renderItem = useCallback((item: ListItem, drag: any) =>
         item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status) ?
-            renderInputField(item) :
+            <ListTextfield
+                key={`${item.id}-${item.sortId}`}
+                item={item}
+                onChange={(text) => { SortedList.updateItem({ ...item, value: text }) }}
+                onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
+            /> :
             <Text
                 onLongPress={drag}
                 onPress={() => SortedList.beginEditItem(item)}
@@ -82,7 +64,7 @@ const SortableList = ({
                     />
                     {renderItem(item, drag)}
                 </View>
-                {renderClickableLine(item.sortId)}
+                <ClickableLine onPress={() => SortedList.moveTextfield(item.sortId)} />
             </View>
         )
     }, [SortedList.current]);
@@ -90,7 +72,7 @@ const SortableList = ({
     return (
         <View>
             <LabelBanner
-                label={list.value}
+                dataId={list.id}
                 backButtonConfig={{
                     display: !!parentFolder,
                     label: parentFolder?.value,
@@ -99,7 +81,7 @@ const SortableList = ({
                 type={FolderItemType.LIST}
             />
             <View style={{ width: '100%', marginBottom: 37 }}>
-                {renderClickableLine(-1)}
+                <ClickableLine onPress={() => SortedList.moveTextfield(-1)} />
                 <DraggableFlatList
                     data={SortedList.current}
                     scrollEnabled={false}
@@ -114,17 +96,6 @@ const SortableList = ({
 };
 
 const styles = StyleSheet.create({
-    clickableLine: {
-        width: '100%',
-        height: 15,
-        backgroundColor: 'transparent',
-        justifyContent: 'center'
-    },
-    thinLine: {
-        width: '100%',
-        height: StyleSheet.hairlineWidth,
-        backgroundColor: theme.colors.outline,
-    },
     listItem: {
         width: '100%',
         paddingLeft: 16,
@@ -133,15 +104,6 @@ const styles = StyleSheet.create({
         paddingBottom: 4,
         minHeight: 25,
         color: theme.colors.secondary,
-        fontSize: 16
-    },
-    textInput: {
-        backgroundColor: 'transparent',
-        color: 'white',
-        paddingTop: 1,
-        paddingBottom: 1,
-        width: '100%',
-        height: 25,
         fontSize: 16
     },
 });
