@@ -6,7 +6,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { Event, TimeConfig } from '../types';
-import { getPlanner, saveRecurringPlanner } from '../storage/plannerStorage';
+import { buildPlanner, savePlannerToStorage } from '../storage/plannerStorage';
 import { RECURRING_WEEKDAY_PLANNER } from '../enums';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
@@ -15,7 +15,7 @@ import CustomText from '../../../foundation/ui/text';
 import Time from './Time';
 
 interface SortableRecurringPlannerProps {
-    manualSaveTrigger: boolean;
+    manualSaveTrigger: string;
 };
 
 const SortableRecurringPlanner = ({
@@ -39,7 +39,7 @@ const SortableRecurringPlanner = ({
     // Load in the planner
     useEffect(() => {
         const loadPlanners = async () => {
-            const loadedPlanner = await getPlanner(RECURRING_WEEKDAY_PLANNER);
+            const loadedPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
             setPlanner(loadedPlanner);
         };
         loadPlanners();
@@ -47,8 +47,12 @@ const SortableRecurringPlanner = ({
 
     // Manually triggers the list to update
     useEffect(() => {
-        if (manualSaveTrigger)
-            saveRecurringPlanner(SortedList.current.filter(event => event.status === ItemStatus.STATIC));
+        savePlannerToStorage(
+            RECURRING_WEEKDAY_PLANNER,
+            SortedList.current.filter(event => !!event.value.length).map(event => ({
+                ...event,
+                status: ItemStatus.STATIC
+            })));
     }, [manualSaveTrigger])
 
     const renderItem = useCallback((item: Event, drag: any) =>
@@ -91,7 +95,7 @@ const SortableRecurringPlanner = ({
                         name={iconStyle}
                         size={20}
                         color={isItemDeleting ? colors.secondary : colors.outline}
-                        onPress={() =>SortedList.toggleDeleteItem(item)}
+                        onPress={() => SortedList.toggleDeleteItem(item)}
                     />
                     {renderItem(item, drag)}
                     {!item?.timeConfig?.allDay && !!item.timeConfig?.startDate && (

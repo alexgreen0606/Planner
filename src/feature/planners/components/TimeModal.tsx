@@ -5,8 +5,9 @@ import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../foundation/ui/modal/Modal';
 import { Event, TimeConfig } from '../types';
 import TimeDropdown from '../../../foundation/ui/input/TimeDropdown';
-import { generateGenericTimeOptions, generateTimeOptions, isValidTimestamp, timestampToDayOfWeek } from '../utils';
+import { generateGenericTimeOptions, generateTimeOptions, handleTimestamp, isValidTimestamp, timestampToDayOfWeek } from '../utils';
 import CustomText from '../../../foundation/ui/text';
+import { RECURRING_WEEKDAY_PLANNER } from '../enums';
 
 interface TimeModalProps {
     toggleModalOpen: () => void;
@@ -24,7 +25,8 @@ interface TimeModalSelection {
 };
 
 const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: TimeModalProps) => {
-    const timeOptions = isValidTimestamp(timestamp) ? generateTimeOptions(timestamp) : generateGenericTimeOptions();
+    const timeOptions = useMemo(() => timestamp !== RECURRING_WEEKDAY_PLANNER ?
+        generateTimeOptions(timestamp) : generateGenericTimeOptions(), [timestamp]);
     const defaultStartDate = timeOptions[0].value;
     const defaultEndDate = timeOptions[timeOptions.length - 1].value;
     const { colors } = useTheme();

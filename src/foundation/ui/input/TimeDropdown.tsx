@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import AutocompleteInput from 'react-native-autocomplete-input';
-import { Text, TextInput, useTheme } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
 import { theme } from '../../../theme/theme';
 
 export interface DropdownOption {

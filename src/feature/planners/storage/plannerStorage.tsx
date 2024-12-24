@@ -2,227 +2,43 @@ import { MMKV } from 'react-native-mmkv';
 import { Event } from '../types';
 import { StorageIds } from '../../../enums';
 import { RECURRING_WEEKDAY_PLANNER } from '../enums';
-import { getNextSevenDayTimestamps, isTimestampWeekday, isValidTimestamp } from '../utils';
+import { generateSortIdByTimestamp, getNextSevenDayTimestamps, handleTimestamp, isWeekday } from '../utils';
 import RNCalendarEvents from "react-native-calendar-events";
 import { ItemStatus } from '../../../foundation/sortedLists/enums';
-import { generateSortId } from '../../../foundation/sortedLists/utils';
 import { uuid } from 'expo-modules-core';
 
-// Initialize MMKV storage
 const storage = new MMKV({ id: StorageIds.PLANNER_STORAGE });
+export const getPlannerStorageKey = (plannerId: string) => `PLANNERS_${plannerId}`;
 
-export const getPlannerStorageKey = (timestamp: string) => {
-    return `PLANNERS_${timestamp}`;
-}
-
-const getLocalPlanner = (plannerId: string): Event[] => {
+/**
+ * Fetches the planner with the given ID from storage.
+ * @param plannerId 
+ */
+const getPlannerFromStorage = (plannerId: string): Event[] => {
     const eventsString = storage.getString(getPlannerStorageKey(plannerId));
     if (eventsString)
         return JSON.parse(eventsString);
 
     return [];
-}
-
-export const getPlanner = async (plannerId: string): Promise<Event[]> => {
-    // TODO: delete any planners that exist in the past
-
-    let planner: Event[] = getLocalPlanner(plannerId);
-
-    // Return the recurring weekday planner
-    if (plannerId === RECURRING_WEEKDAY_PLANNER)
-        return planner;
-
-    // Sync the planner with the recurring weekday planner
-    if (isTimestampWeekday(plannerId)) {
-        const recurringPlanner = await getPlanner(RECURRING_WEEKDAY_PLANNER);
-        planner = syncPlanners(planner, recurringPlanner, false);
-    }
-
-    // Sync the planner with the apple calendar
-    const calendarEvents = await getCalendarEvents(plannerId);
-    planner = syncPlanners(planner, calendarEvents, true);
-
-    // Sort the planner and return
-    planner.sort((a, b) => a.sortId - b.sortId);
-    return planner;
-}
-
-/**
- * Finds a spot in the list for a new event where it will be 
- * @param event 
- * @param planner 
- * @returns 
- */
-const findTimedEventSortId = (event: Event, planner: Event[]) => {
-    if (!event.timeConfig) return event.sortId;
-
-    planner.sort((a, b) => a.sortId - b.sortId);
-
-    // Find the first event whose startDate is after or equal to the event's startDate
-    const newEventChildIndex = planner.findIndex(
-        (existingEvent) =>
-            event.timeConfig &&
-            existingEvent.timeConfig?.startDate &&
-            new Date(event.timeConfig.startDate) <= new Date(existingEvent.timeConfig.startDate)
-    );
-
-    if (newEventChildIndex !== -1) {
-        let newParentSortId = -1;
-        if (newEventChildIndex > 0)
-            newParentSortId = planner[newEventChildIndex - 1].sortId;
-        return generateSortId(newParentSortId, planner);
-    }
-
-    // If no such event exists, return the event's original sortId
-    return event.sortId;
 };
 
-
 /**
- * Creates a new event with a specified time. 
- * @param newEvent 
- * @returns - the id of the new event
+ * Sorts a planner and saves it to storage.
+ * @param plannerId
+ * @param newPlanner
  */
-export const createEvent = async (event: Event): Promise<Event> => {
-    let newPlanner = await getPlanner(event.plannerId);
-    let newEvent = { ...event };
-
-    // The event has a specified time
-    if (!!newEvent.timeConfig) {
-
-        // The event is an apple event -> sync the calendar
-        if (newEvent.timeConfig.isAppleEvent) {
-            const calendarEventDetails = {
-                calendarId: await getPrimaryCalendarId(),
-                title: newEvent.value,
-                startDate: newEvent.timeConfig.startDate,
-                endDate: newEvent.timeConfig.endDate,
-                allDay: newEvent.timeConfig.allDay,
-                id: newEvent.timeConfig.appleId
-            };
-            const appleEventId = await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails);
-            newEvent = {
-                ...newEvent,
-                timeConfig: {
-                    ...newEvent.timeConfig,
-                    appleId: appleEventId
-                }
-            }
-        }
-
-        // Move the new event so it doesn't break the logic of the event times
-        const newSortId = findTimedEventSortId(newEvent, newPlanner);
-        newEvent.sortId = newSortId;
-    }
-
-    // Add the new event
-    newPlanner.push(newEvent);
-
-    // Sort
+export const savePlannerToStorage = (plannerId: string, newPlanner: Event[]) => {
     newPlanner.sort((a, b) => a.sortId - b.sortId);
-
-    // Save
-    savePlanner(newEvent.plannerId, newPlanner);
-
-    return newEvent;
-}
-
-export const saveRecurringPlanner = async (newEvents: Event[]) => {
-    const nextSevenDays = getNextSevenDayTimestamps();
-    nextSevenDays.map(async (plannerId) => {
-        let newPlanner = getLocalPlanner(plannerId);
-        newPlanner = newPlanner.reduce<Event[]>((accumulator, currentEvent) => {
-
-            // The event isn't linked to the recurring planner
-            if (!currentEvent.recurringConfig) {
-                return [...accumulator, currentEvent];
-            }
-
-            // The event still exists -> update it
-            const newRecurringEvent = newEvents.find(event => event.id === currentEvent.recurringConfig?.recurringId);
-            if (newRecurringEvent) {
-                return [...accumulator, { ...newRecurringEvent, sortId: currentEvent.sortId }];
-            }
-
-            // The event has been removed -> delete it
-            return [...accumulator];
-
-        }, []);
-
-        newEvents.forEach(async (newEvent) => {
-            if (!newPlanner.find(event => event.id === newEvent.id)) {
-                await createEvent({
-                    ...newEvent,
-                    id: uuid.v4(),
-                    plannerId: plannerId,
-                    recurringConfig: {
-                        recurringId: newEvent.id
-                    }
-                });
-            }
-        })
-    })
-}
-
-const syncPlanners = (existingPlanner: Event[], linkedPlanner: Event[], isCalendar: boolean): Event[] => {
-    // Sync the planner with the recurring weekday planner
-    const newPlanner = existingPlanner.reduce<Event[]>((accumulator, currentEvent) => {
-        const linkedEvent = linkedPlanner.find(event => (isCalendar ? event.timeConfig?.appleId : event.recurringConfig?.recurringId) === currentEvent.id);
-        if (linkedEvent) { // the event is recurring and hasn't been customized
-            return [...accumulator, { ...linkedEvent, sortId: currentEvent.sortId }];
-        }
-
-        // Exclude any events linked to a calendar that have now been deleted
-        if (currentEvent.timeConfig?.isAppleEvent && isCalendar && !linkedEvent) {
-            return [...accumulator];
-        }
-
-        // the event is custom, so keep it
-        return [...accumulator, currentEvent];
-    }, []);
-
-    // Add any new events from the linked planner -> only for calendar events
-    if (isCalendar)
-        linkedPlanner.forEach(linkedEvent => {
-            if (!newPlanner.find(event => event.timeConfig?.appleId === linkedEvent.id))
-                newPlanner.push({
-                    ...linkedEvent,
-                    sortId: findTimedEventSortId(linkedEvent, newPlanner)
-                });
-        });
-
-    return newPlanner;
+    storage.set(getPlannerStorageKey(plannerId), JSON.stringify(newPlanner));
 };
 
-const getCalendarEvents = async (timestamp: string): Promise<Event[]> => {
-    if (!isValidTimestamp(timestamp)) return [];
-
-    const localStart = new Date(`${timestamp}T00:00:00`).toISOString();
-    const localEnd = new Date(`${timestamp}T23:59:59`).toISOString();
-
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(localStart, localEnd, [await getPrimaryCalendarId()]);
-
-    return calendarEvents.map(event => ({
-        id: uuid.v4(),
-        value: event.title,
-        sortId: 1,
-        plannerId: timestamp,
-        timeConfig: {
-            appleId: event.id,
-            startDate: event.startDate ?? localStart,
-            isAppleEvent: true,
-            endDate: event.endDate ?? localEnd,
-            allDay: event.allDay ?? false
-        },
-        status: ItemStatus.STATIC
-    }))
-}
-
-export const savePlanner = (plannerId: string, newPlanner: Event[]) => {
-    storage.set(getPlannerStorageKey(plannerId), JSON.stringify(newPlanner));
-}
-
+/**
+ * Fetches the primary calendar for this device and returns its ID.
+ * @returns - the ID of the primary calendar
+ */
 const getPrimaryCalendarId = async (): Promise<string> => {
+
+    // Ensure access to the device calendar
     const permissions = await RNCalendarEvents.checkPermissions();
     if (permissions !== 'authorized') {
         const status = await RNCalendarEvents.requestPermissions();
@@ -231,16 +47,204 @@ const getPrimaryCalendarId = async (): Promise<string> => {
         }
     }
 
+    // Load in the primary calendar
     const calendars = await RNCalendarEvents.findCalendars();
     const primaryCalendar = calendars.find(calendar => calendar.isPrimary);
-
     if (!primaryCalendar) throw new Error('Primary calendar does not exist!');
 
+    // Return the calendar's ID
     return primaryCalendar.id;
+};
+
+/**
+ * Fetches a calendar from the device representing all events for the given planner ID.
+ * @param plannerId 
+ */
+const getCalendarEvents = async (plannerId: string): Promise<Event[]> => {
+    const startDate = new Date(`${plannerId}T00:00:00`).toISOString();
+    const endDate = new Date(`${plannerId}T23:59:59`).toISOString();
+
+    // Load in the calendar events and format them into a planner
+    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [await getPrimaryCalendarId()]);
+    return calendarEvents.map(calendarEvent => ({
+        id: '1', // temporary id -> will be overwritten
+        value: calendarEvent.title,
+        sortId: 1, // temporary sort id -> will be overwritten
+        plannerId,
+        timeConfig: {
+            appleId: calendarEvent.id,
+            startDate: calendarEvent.startDate,
+            isAppleEvent: true,
+            endDate: calendarEvent.endDate ?? endDate,
+            allDay: calendarEvent.allDay ?? false
+        },
+        status: ItemStatus.STATIC
+    }));
+};
+
+/**
+ * Builds a new event for the given planner ID representing a recurring weekday event.
+ * @param recurringEvent 
+ * @param plannerId 
+ * @returns - the new event
+ */
+const generateRecurringEventRecord = (recurringEvent: Event, plannerId: string): Event => {
+    const newEvent = {
+        ...recurringEvent,
+        id: uuid.v4(),
+        plannerId,
+        recurringConfig: {
+            recurringId: recurringEvent.id
+        },
+        sortId: 1
+    };
+    if (recurringEvent.timeConfig) {
+        const startTime = handleTimestamp(plannerId, recurringEvent.timeConfig.startDate);
+        const endTime = handleTimestamp(plannerId, recurringEvent.timeConfig.endDate);
+        const newTimeConfig = {
+            allDay: false,
+            startDate: startTime,
+            endDate: endTime,
+            isAppleEvent: false
+        }
+        newEvent.timeConfig = newTimeConfig;
+    }
+    return newEvent;
+};
+
+/**
+ * Builds a new event for the given planner ID representing an event from the device calendar.
+ * @param calendarEvent 
+ * @param plannerId 
+ * @returns 
+ */
+const generateCalendarEventRecord = (calendarEvent: Event, plannerId: string): Event => ({
+    ...calendarEvent,
+    id: uuid.v4(),
+    plannerId,
+    sortId: 1,
+});
+
+/**
+ * Syncs a calendar 
+ * @param linkedPlanner 
+ * @param plannerId 
+ * @returns 
+ */
+const syncPlanners = (linkedPlanner: Event[], currentPlanner: Event[], plannerId: string) => {
+    const isCalendar = plannerId !== RECURRING_WEEKDAY_PLANNER;
+
+    // Loop over the existing planner, removing any linked events that no longer exist
+    // in the new linked planner. All linked events will also be updated to reflect the
+    // linked planner.
+    const newPlanner = currentPlanner.reduce<Event[]>((accumulator, currentEvent) => {
+
+        // This event isn't related to the linked planner -> keep it
+        if (
+            (isCalendar && !currentEvent.timeConfig?.isAppleEvent) ||
+            (!isCalendar && !currentEvent.recurringConfig)
+        ) {
+            return [...accumulator, currentEvent];
+        }
+
+        // This event is linked to the planner and still exists -> update it
+        const newRecurringEvent = linkedPlanner.find(event =>
+            (!isCalendar && event.id === currentEvent.recurringConfig?.recurringId) ||
+            (isCalendar && event.timeConfig?.appleId === currentEvent.timeConfig?.appleId)
+        );
+        if (newRecurringEvent) {
+            return [...accumulator, { ...newRecurringEvent, sortId: currentEvent.sortId, id: currentEvent.id }];
+        }
+
+        // This event is linked to the planner and has been removed -> delete it
+        return [...accumulator];
+
+    }, []);
+
+    // Find any new events in the linked planner and add these to the new planner
+    linkedPlanner.forEach(linkedEvent => {
+        if (!newPlanner.find(existingNewEvent =>
+            (!isCalendar && existingNewEvent.recurringConfig?.recurringId === linkedEvent.id) ||
+            (isCalendar && existingNewEvent.timeConfig?.appleId === linkedEvent.id)
+        )) {
+            const newEvent = isCalendar ?
+                generateCalendarEventRecord(linkedEvent, plannerId) :
+                generateRecurringEventRecord(linkedEvent, plannerId);
+            newEvent.sortId = generateSortIdByTimestamp(linkedEvent, newPlanner);
+            newPlanner.push(newEvent);
+        }
+    })
+    return newPlanner;
 }
 
+/**
+ * Builds a planner for the given ID out of the storage, calendar, and recurring weekly planner.
+ * @param plannerId 
+ */
+export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
+    // TODO: delete any planners that exist in the past
+
+    let planner = getPlannerFromStorage(plannerId);
+
+    // Return the recurring weekday planner
+    if (plannerId === RECURRING_WEEKDAY_PLANNER)
+        return planner;
+
+    // Sync the planner with the recurring weekday planner
+    if (isWeekday(plannerId)) {
+        const recurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
+        planner = syncPlanners(recurringPlanner, planner, plannerId);
+    }
+
+    // Sync the planner with the apple calendar
+    const calendarEvents = await getCalendarEvents(plannerId);
+    planner = syncPlanners(calendarEvents, planner,  plannerId);
+
+    // Sort the planner and return
+    planner.sort((a, b) => a.sortId - b.sortId);
+    return planner;
+};
+
+/**
+ * Creates or updates an event. Persists to the device calendar if needed.
+ * @param newEvent 
+ * @returns - the newly generated event
+ */
+export const persistEvent = async (event: Event): Promise<Event> => {
+    let newPlanner = await buildPlanner(event.plannerId);
+    let newEvent = { ...event };
+
+    // The event is a calendar event -> sync the calendar
+    if (newEvent.timeConfig?.isAppleEvent) {
+        const calendarEventDetails = {
+            calendarId: await getPrimaryCalendarId(),
+            title: newEvent.value,
+            startDate: newEvent.timeConfig.startDate,
+            endDate: newEvent.timeConfig.endDate,
+            allDay: newEvent.timeConfig.allDay,
+            id: newEvent.timeConfig.appleId
+        };
+        newEvent = {
+            ...newEvent,
+            timeConfig: {
+                ...newEvent.timeConfig,
+                appleId: await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails)
+            }
+        }
+    }
+
+    // Save the new event
+    newPlanner.push(newEvent);
+    savePlannerToStorage(newEvent.plannerId, newPlanner);
+    return newEvent;
+};
+
+/**
+ * Deletes an event. Removes it from the device calendar if needed.
+ * @param eventToDelete 
+ */
 export const deleteEvent = async (eventToDelete: Event) => {
-    let newPlanner = getLocalPlanner(eventToDelete.plannerId);
+    let newPlanner = getPlannerFromStorage(eventToDelete.plannerId);
 
     // The event is an apple event -> remove from the calendar
     if (eventToDelete.timeConfig?.isAppleEvent && eventToDelete.timeConfig.appleId) {
@@ -257,11 +261,11 @@ export const deleteEvent = async (eventToDelete: Event) => {
     if (eventToDelete.plannerId === RECURRING_WEEKDAY_PLANNER) {
         const nextSevenDays = getNextSevenDayTimestamps();
         nextSevenDays.map(plannerId => {
-            let upcomingPlanner = getLocalPlanner(plannerId);
+            let upcomingPlanner = getPlannerFromStorage(plannerId);
             const deprecatedEventIndex = upcomingPlanner.findIndex(event => eventToDelete.id === event.id);
             if (deprecatedEventIndex !== -1) {
                 upcomingPlanner = upcomingPlanner.splice(deprecatedEventIndex, 1);
-                savePlanner(plannerId, upcomingPlanner);
+                savePlannerToStorage(plannerId, upcomingPlanner);
             }
         })
     }
@@ -270,5 +274,5 @@ export const deleteEvent = async (eventToDelete: Event) => {
     const eventIndex = newPlanner.findIndex(existingEvent => existingEvent.id === eventToDelete.id);
     if (eventIndex !== -1)
         newPlanner = newPlanner.splice(eventIndex, 1);
-    savePlanner(eventToDelete.plannerId, newPlanner);
-}
+    savePlannerToStorage(eventToDelete.plannerId, newPlanner);
+};

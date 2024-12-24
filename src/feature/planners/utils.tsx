@@ -1,3 +1,4 @@
+import { generateSortId } from "../../foundation/sortedLists/utils";
 import { DropdownOption } from "../../foundation/ui/input/TimeDropdown";
 import { Event } from "./types";
 
@@ -20,7 +21,7 @@ export const isValidTimestamp = (timestamp: string) => {
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-export const isTimestampWeekday = (timestamp: string) => {
+export const isWeekday = (timestamp: string) => {
     if (!isValidTimestamp(timestamp)) return false;
     return WEEKDAYS.includes(timestampToDayOfWeek(timestamp));
 }
@@ -77,7 +78,7 @@ export const generateGenericTimeOptions = (): DropdownOption[] => {
             const formattedHour = hour % 12 === 0 ? 12 : hour % 12; // Convert 0 to 12 for midnight and 12-hour format
             const formattedMinute = minute.toString().padStart(2, "0");
             const label = `${formattedHour}:${formattedMinute} ${period}`;
-            
+
             // Create a generic time string
             const timeValue = `${hour.toString().padStart(2, "0")}:${formattedMinute}`;
 
@@ -115,7 +116,7 @@ export const formatToLocalDateTime = (isoTimestamp: string) => {
     let formattedTime = date.toLocaleTimeString(undefined, timeOptions);
 
     if (date.getMinutes() === 0) {
-        formattedTime =formattedTime.replace(':00', '')
+        formattedTime = formattedTime.replace(':00', '')
     }
 
     return formattedTime;
@@ -129,3 +130,34 @@ export function getPlannerIdFromTimestamp(isoTimestamp: string) {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 }
+
+/**
+ * Finds a spot in the list for a new event where it will be 
+ * @param event 
+ * @param planner 
+ * @returns 
+ */
+export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
+    if (!event.timeConfig) return event.sortId;
+
+    planner.sort((a, b) => a.sortId - b.sortId);
+
+    // Find the first event whose startDate is after or equal to the event's startDate
+    const newEventChildIndex = planner.findIndex(
+        (existingEvent) =>
+            event.timeConfig &&
+            existingEvent.timeConfig?.startDate &&
+            new Date(event.timeConfig.startDate) <= new Date(existingEvent.timeConfig.startDate)
+    );
+
+    
+    if (newEventChildIndex !== -1) {
+        let newParentSortId = -1;
+        if (newEventChildIndex > 0)
+            newParentSortId = planner[newEventChildIndex - 1].sortId;
+        return generateSortId(newParentSortId, planner);
+    }
+
+    // If no such event exists, return the event's original sortId
+    return event.sortId;
+};

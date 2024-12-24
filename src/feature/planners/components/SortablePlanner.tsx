@@ -8,7 +8,7 @@ import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedL
 import { usePlannerContext } from '../services/PlannerProvider';
 import { Event, TimeConfig } from '../types';
 import DayBanner from './DayBanner';
-import { createEvent, deleteEvent, getPlanner, getPlannerStorageKey } from '../storage/plannerStorage';
+import { persistEvent, deleteEvent, buildPlanner, getPlannerStorageKey } from '../storage/plannerStorage';
 import { RECURRING_WEEKDAY_PLANNER } from '../enums';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
@@ -17,6 +17,7 @@ import CustomText from '../../../foundation/ui/text';
 import Time from './Time';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../../../enums';
+import { generateSortIdByTimestamp } from '../utils';
 
 interface SortablePlannerProps {
     plannerId: string;
@@ -36,12 +37,12 @@ const SortablePlanner = ({
 
     const customCreateNewItem = (event: Event) => {
         skipStorageSync.current = true;
-        return createEvent(event);
+        return persistEvent(event);
     }
 
     const storageUpdates = {
         create: customCreateNewItem,
-        update: createEvent,
+        update: persistEvent,
         delete: deleteEvent
     }
 
@@ -64,7 +65,7 @@ const SortablePlanner = ({
     const customMoveTextfield = (parentSortId: number | null) => {
         let customParentSortId = parentSortId;
         if (collapsed)
-            customParentSortId = SortedList.current[SortedList.current.length - 1].sortId;
+            customParentSortId = SortedList.current[SortedList.current.length - 1]?.sortId || -1;
         SortedList.moveTextfield(customParentSortId);
         setFocusedPlanner(plannerId);
     };
@@ -92,8 +93,7 @@ const SortablePlanner = ({
      */
     const filterPlanner = useCallback(() => {
         if (collapsed) {
-            const recurringWeekdayPlannerIds = recurringPlanner?.map(event => event.id) ?? [];
-            return SortedList.current.filter(item => !recurringWeekdayPlannerIds.includes(item.id)).slice(0, 3);
+            return SortedList.current.filter(item => !item.recurringConfig).slice(0, 3);
         } else {
             return SortedList.current;
         }
@@ -102,8 +102,8 @@ const SortablePlanner = ({
     // Load in the initial planners
     useEffect(() => {
         const loadPlanners = async () => {
-            const loadedPlanner = await getPlanner(plannerId);
-            const loadedRecurringPlanner = await getPlanner(RECURRING_WEEKDAY_PLANNER);
+            const loadedPlanner = await buildPlanner(plannerId);
+            const loadedRecurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
             setPlanner(loadedPlanner);
             setRecurringPlanner(loadedRecurringPlanner);
         };
@@ -114,13 +114,13 @@ const SortablePlanner = ({
     useMMKVListener(async (key) => {
         if (key === getPlannerStorageKey(plannerId)) {
             if (!skipStorageSync) {
-                const loadedPlanner = await getPlanner(plannerId);
+                const loadedPlanner = await buildPlanner(plannerId);
                 setPlanner(loadedPlanner);
             } else {
                 skipStorageSync.current = false;
             }
         } else if (key === getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER)) {
-            const loadedRecurringPlanner = await getPlanner(RECURRING_WEEKDAY_PLANNER);
+            const loadedRecurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
             setRecurringPlanner(loadedRecurringPlanner);
         }
     }, storage)
@@ -142,7 +142,7 @@ const SortablePlanner = ({
     const renderItem = useCallback((item: Event, drag: any) =>
         item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status) ?
             <ListTextfield
-                key={`${item.id}-${item.sortId}-${timeModalOpen}-${item.status}-${item.timeConfig?.startDate}-${item.timeConfig?.endDate}`}
+                key={`${item.id}-${item.sortId}`}
                 item={item}
                 onChange={(text) => { SortedList.updateItem({ ...item, value: text }) }}
                 onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
@@ -207,6 +207,7 @@ const SortablePlanner = ({
                                 ...item,
                                 timeConfig
                             };
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedList.current);
                             SortedList.updateItem(newEvent);
                             toggleTimeModal();
                         }}
@@ -218,7 +219,7 @@ const SortablePlanner = ({
 
     return (
         <View style={{ width: '100%' }}>
-                <DayBanner timestamp={plannerId} />
+            <DayBanner timestamp={plannerId} />
             <View style={{ width: '100%', marginBottom: 37 }}>
                 <ClickableLine onPress={() => customMoveTextfield(-1)} />
                 <DraggableFlatList

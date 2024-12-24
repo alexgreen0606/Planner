@@ -6,7 +6,7 @@ import { generateSortId } from '../utils';
 
 interface StorageUpdateConfig<T> {
     create: (data: T) => Promise<T> | T;
-    update: (data: T, newParentId?: string) =>Promise<T> | T;
+    update: (data: T, newParentId?: string) => Promise<T> | T;
     delete: (data: T) => void;
 }
 
@@ -135,7 +135,7 @@ const useSortedList = <T extends ListItem>(
      * @param newParentSortId - the sort ID of the item the textfield should be below
      */
     const moveTextfield = (newParentSortId: number | null) => {
-        if (!newParentSortId) return;
+        if (newParentSortId === null) return;
         const focusedItem = getFocusedItem();
         if (focusedItem) {
             if (newParentSortId === focusedItem.sortId) {
@@ -192,7 +192,6 @@ const useSortedList = <T extends ListItem>(
      * Updates the given item.
      */
     const updateItem = (newItem: T, shiftTextfieldConfig?: string) => {
-        console.log(newItem.sortId, 'new sort id from event')
         setCurrent((curr) => {
             const newList = [...curr];
 
@@ -209,20 +208,18 @@ const useSortedList = <T extends ListItem>(
                 const newParentSortId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
                     ? newItem.sortId
                     : getParentSortId(newItem.id, newList);
-                    console.log(newParentSortId, 'new parent sort id')
                 const newTextfield = initializeTextfield(newParentSortId, newList);
-                console.log(newTextfield, 'new textfield')
                 const insertIndex = newList.findIndex(item => item.sortId > newParentSortId);
                 insertIndex === -1 ?
                     newList.push(newTextfield) :
                     newList.splice(insertIndex, 0, newTextfield);
-                console.log(insertIndex, 'insert')
             }
 
             // Save this list to storage
             if (newItem.status === ItemStatus.STATIC && saveListToStorage) {
                 saveListToStorage(newList.filter(item => item.status != ItemStatus.NEW));
             }
+            newList.sort((a, b) => a.sortId - b.sortId);
             return newList;
         });
     };

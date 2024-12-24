@@ -31,7 +31,7 @@ const WeeklyPlanner = () => {
   const [timestamps, setTimestamps] = useState<string[]>([]);
   const [weekdayPlannerOpen, setWeekdayPlannerOpen] = useState(false);
   const [plannerListKey, setPlannerListKey] = useState('PLANNER_LIST_KEY');
-  const [saveRecurring, setSaveRecurring] = useState(false);
+  const [saveRecurringTrigger, setSaveRecurringTrigger] = useState('TRIGGER');
 
   useEffect(() => {
     const buildWeeklyPlanner = () => {
@@ -47,7 +47,6 @@ const WeeklyPlanner = () => {
   // Reload the planner when the recurring planner changes
   useMMKVListener((key) => {
     if (key === getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER)) {
-      console.log('RECURRING CHNAGED.');
       setPlannerListKey(curr => (`${curr}_RERENDER`));
     }
   }, storage)
@@ -100,7 +99,7 @@ const WeeklyPlanner = () => {
           open={weekdayPlannerOpen}
           primaryButtonConfig={{
             onClick: () => {
-              setSaveRecurring(true);
+              setSaveRecurringTrigger(`${saveRecurringTrigger}_AGAIN`);
               toggleWeekdayPlanner();
             },
             label: 'Save'
@@ -108,7 +107,7 @@ const WeeklyPlanner = () => {
           toggleModalOpen={toggleWeekdayPlanner}
         >
           <SortableRecurringPlanner
-            manualSaveTrigger={saveRecurring}
+            manualSaveTrigger={saveRecurringTrigger}
           />
         </Modal>
       </SafeAreaView>
