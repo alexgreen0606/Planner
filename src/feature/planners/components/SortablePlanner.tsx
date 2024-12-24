@@ -8,9 +8,8 @@ import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedL
 import { usePlannerContext } from '../services/PlannerProvider';
 import { Event, TimeConfig } from '../types';
 import DayBanner from './DayBanner';
-import { createEvent, deleteEvent, getPlanner, getPlannerStorageKey, savePlanner } from '../storage/plannerStorage';
+import { createEvent, deleteEvent, getPlanner, getPlannerStorageKey } from '../storage/plannerStorage';
 import { RECURRING_WEEKDAY_PLANNER } from '../enums';
-import { isValidTimestamp } from '../utils';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 import TimeModal from './TimeModal';
@@ -21,18 +20,15 @@ import { StorageIds } from '../../../enums';
 
 interface SortablePlannerProps {
     plannerId: string;
-    manualSaveTrigger?: boolean;
 };
 
 const SortablePlanner = ({
-    plannerId,
-    manualSaveTrigger
+    plannerId
 }: SortablePlannerProps) => {
-    const isRecurringPlanner = plannerId === RECURRING_WEEKDAY_PLANNER;
     const { colors } = useTheme();
     const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(isValidTimestamp(plannerId));
+    const [collapsed, setCollapsed] = useState(true);
     const [planner, setPlanner] = useState<Event[]>([]);
     const [recurringPlanner, setRecurringPlanner] = useState<Event[]>([]);
     const storage = useMMKV({ id: StorageIds.PLANNER_STORAGE });
@@ -129,12 +125,6 @@ const SortablePlanner = ({
         }
     }, storage)
 
-    // Manually triggers the list to update
-    useEffect(() => {
-        if (manualSaveTrigger)
-            savePlanner(plannerId, SortedList.current.filter(event => event.status === ItemStatus.STATIC));
-    }, [manualSaveTrigger])
-
     /**
      * When a different planner on the screen is focused, save this list's current textfield
      * and reset the items that are pending delete.
@@ -228,9 +218,7 @@ const SortablePlanner = ({
 
     return (
         <View style={{ width: '100%' }}>
-            {isValidTimestamp(plannerId) && (
                 <DayBanner timestamp={plannerId} />
-            )}
             <View style={{ width: '100%', marginBottom: 37 }}>
                 <ClickableLine onPress={() => customMoveTextfield(-1)} />
                 <DraggableFlatList
@@ -244,7 +232,6 @@ const SortablePlanner = ({
                 {
                     !!SortedList.current.length &&
                     !SortedList.getFocusedItem() &&
-                    isValidTimestamp(plannerId) &&
                     SortedList.current.length > 3 && (
                         <TouchableOpacity onPress={toggleCollapsed} style={{ width: '100%', justifyContent: 'flex-start', flexDirection: 'row' }}>
                             <FontAwesome

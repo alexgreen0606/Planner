@@ -14,6 +14,7 @@ import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../enums';
 import { getPlannerStorageKey } from '../feature/planners/storage/plannerStorage';
 import ThinLine from '../foundation/ui/separators/ThinLine';
+import SortableRecurringPlanner from '../feature/planners/components/SortableRecurringPlanner';
 
 /**
  * Recurring modal includes:
@@ -106,8 +107,7 @@ const WeeklyPlanner = () => {
           }}
           toggleModalOpen={toggleWeekdayPlanner}
         >
-          <SortablePlanner
-            plannerId={RECURRING_WEEKDAY_PLANNER}
+          <SortableRecurringPlanner
             manualSaveTrigger={saveRecurring}
           />
         </Modal>

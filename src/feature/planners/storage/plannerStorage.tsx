@@ -127,6 +127,43 @@ export const createEvent = async (event: Event): Promise<Event> => {
     return newEvent;
 }
 
+export const saveRecurringPlanner = async (newEvents: Event[]) => {
+    const nextSevenDays = getNextSevenDayTimestamps();
+    nextSevenDays.map(async (plannerId) => {
+        let newPlanner = getLocalPlanner(plannerId);
+        newPlanner = newPlanner.reduce<Event[]>((accumulator, currentEvent) => {
+
+            // The event isn't linked to the recurring planner
+            if (!currentEvent.recurringConfig) {
+                return [...accumulator, currentEvent];
+            }
+
+            // The event still exists -> update it
+            const newRecurringEvent = newEvents.find(event => event.id === currentEvent.recurringConfig?.recurringId);
+            if (newRecurringEvent) {
+                return [...accumulator, { ...newRecurringEvent, sortId: currentEvent.sortId }];
+            }
+
+            // The event has been removed -> delete it
+            return [...accumulator];
+
+        }, []);
+
+        newEvents.forEach(async (newEvent) => {
+            if (!newPlanner.find(event => event.id === newEvent.id)) {
+                await createEvent({
+                    ...newEvent,
+                    id: uuid.v4(),
+                    plannerId: plannerId,
+                    recurringConfig: {
+                        recurringId: newEvent.id
+                    }
+                });
+            }
+        })
+    })
+}
+
 const syncPlanners = (existingPlanner: Event[], linkedPlanner: Event[], isCalendar: boolean): Event[] => {
     // Sync the planner with the recurring weekday planner
     const newPlanner = existingPlanner.reduce<Event[]>((accumulator, currentEvent) => {
@@ -202,26 +239,26 @@ const getPrimaryCalendarId = async (): Promise<string> => {
     return primaryCalendar.id;
 }
 
-export const deleteEvent = async (event: Event) => {
-    let newPlanner = getLocalPlanner(event.plannerId);
+export const deleteEvent = async (eventToDelete: Event) => {
+    let newPlanner = getLocalPlanner(eventToDelete.plannerId);
 
     // The event is an apple event -> remove from the calendar
-    if (event.timeConfig?.isAppleEvent && event.timeConfig.appleId) {
+    if (eventToDelete.timeConfig?.isAppleEvent && eventToDelete.timeConfig.appleId) {
 
 
         // TODO: dont delete if the event is from today
 
 
         await getPrimaryCalendarId();
-        await RNCalendarEvents.removeEvent(event.timeConfig.appleId);
+        await RNCalendarEvents.removeEvent(eventToDelete.timeConfig.appleId);
     }
 
     //  The event is a recurring event -> remove from upcoming planners
-    if (event.recurringConfig) {
+    if (eventToDelete.plannerId === RECURRING_WEEKDAY_PLANNER) {
         const nextSevenDays = getNextSevenDayTimestamps();
         nextSevenDays.map(plannerId => {
             let upcomingPlanner = getLocalPlanner(plannerId);
-            const deprecatedEventIndex = upcomingPlanner.findIndex(event => event.recurringConfig?.recurringId === event.id);
+            const deprecatedEventIndex = upcomingPlanner.findIndex(event => eventToDelete.id === event.id);
             if (deprecatedEventIndex !== -1) {
                 upcomingPlanner = upcomingPlanner.splice(deprecatedEventIndex, 1);
                 savePlanner(plannerId, upcomingPlanner);
@@ -230,20 +267,8 @@ export const deleteEvent = async (event: Event) => {
     }
 
     // Delete the event
-    const eventIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id);
+    const eventIndex = newPlanner.findIndex(existingEvent => existingEvent.id === eventToDelete.id);
     if (eventIndex !== -1)
         newPlanner = newPlanner.splice(eventIndex, 1);
-    savePlanner(event.plannerId, newPlanner);
-}
-
-
-
-
-
-export const createRecurringEvent = () => {
-
-}
-
-export const updateRecurringEvent = () => {
-
+    savePlanner(eventToDelete.plannerId, newPlanner);
 }

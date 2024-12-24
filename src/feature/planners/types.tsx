@@ -7,7 +7,7 @@ export interface Event extends ListItem {
 };
 
 export interface RecurringConfig {
-  recurringId: string;
+  recurringId?: string; // both can never be true
 }
 
 export interface TimeConfig {
