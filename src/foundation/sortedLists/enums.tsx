@@ -4,7 +4,7 @@ export enum ItemStatus {
     DRAG = 'DRAG',
     DELETE = 'DELETE',
     TRANSFER = 'TRANSFER',
-    STATIC = 'STATIC'
+    STATIC = 'STATIC',
 }
 
 export enum ShiftTextfieldDirection {

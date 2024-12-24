@@ -81,8 +81,8 @@ export const getFolderItems = (folderId: string) => {
 /**
  * Creates a folder and adds it to its parent.
  */
-export const createFolderItem = (parentId: string, newData: FolderItem) => {
-    if (newData.status !== ItemStatus.STATIC) throw new Error(`Cannot create "${newData.value}" with status "${newData.status}"`)
+export const createFolderItem = (parentId: string, newData: FolderItem): FolderItem => {
+    newData.status = ItemStatus.STATIC;
     const parentFolder = getFolder(parentId);
     const newItem = {
         ...newData,
@@ -108,6 +108,8 @@ export const createFolderItem = (parentId: string, newData: FolderItem) => {
 
     // Add the item to its parent
     saveToStorage(parentFolder);
+
+    return newItem;
 };
 
 /**
@@ -118,8 +120,8 @@ export const createFolderItem = (parentId: string, newData: FolderItem) => {
  * 
  *  The lists within this folder item will not be edited. (see updateFolderItems)
  */
-export const updateFolderItem = (newData: FolderItem, newParentId?: string) => {
-    if (newData.status !== ItemStatus.STATIC) throw new Error(`Item "${newData.value}" must be static. Currently: ${newData.status}`);
+export const updateFolderItem = (newData: FolderItem, newParentId?: string): FolderItem => {
+    newData.status = ItemStatus.STATIC;
     const existingItem = newData.type === FolderItemType.FOLDER ? getFolder(newData.id) : getList(newData.id);
     const newItem = {
         ...existingItem,
@@ -146,6 +148,8 @@ export const updateFolderItem = (newData: FolderItem, newParentId?: string) => {
     }
     // Update the item
     saveToStorage(newItem);
+
+    return newItem;
 };
 
 /**
@@ -153,8 +157,14 @@ export const updateFolderItem = (newData: FolderItem, newParentId?: string) => {
  */
 export const deleteFolderItem = (itemId: string, type: FolderItemType) => {
 
+    let item;
+    try {
+        item = type === FolderItemType.FOLDER ? getFolder(itemId) : getList(itemId);
+    } catch (error) {
+        return;
+    }
+
     // Remove the item from its parent
-    const item = type === FolderItemType.FOLDER ? getFolder(itemId) : getList(itemId);
     if (item.parentFolderId) {
         const folderListKey = type === FolderItemType.FOLDER ? "folderIds" : "listIds";
         const parentFolder = getFolder(item.parentFolderId);

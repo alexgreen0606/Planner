@@ -40,7 +40,7 @@ const SortableFolder = ({
 
     const customCreateNewItem = (newData: FolderItem) => {
         skipStorageSync.current = true;
-        createFolderItem(folderId, newData);
+        return createFolderItem(folderId, newData);
     }
 
     const SortedFolder = useSortedList<FolderItem>(

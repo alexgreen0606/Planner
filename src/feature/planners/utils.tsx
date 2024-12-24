@@ -44,9 +44,9 @@ export const eventsAreEqual = (oldEvent: Event, newEvent: Event) => { // TODO: e
     )
 }
 
-export const generateTimeOptions = (): DropdownOption[] => {
+export const generateTimeOptions = (baseDate: string): DropdownOption[] => {
     const options = [];
-    let value = 1;
+    const [year, month, day] = baseDate.split('-').map(Number);
 
     for (let hour = 0; hour < 24; hour++) {
         for (let minute = 0; minute < 60; minute += 5) {
@@ -54,9 +54,78 @@ export const generateTimeOptions = (): DropdownOption[] => {
             const formattedHour = hour % 12 === 0 ? 12 : hour % 12; // Convert 0 to 12 for midnight and 12-hour format
             const formattedMinute = minute.toString().padStart(2, "0");
             const label = `${formattedHour}:${formattedMinute} ${period}`;
-            options.push({ value: String(value++), label });
+
+            // Create a date object in local time
+            const localDate = new Date(year, month - 1, day, hour, minute);
+
+            // Convert to UTC timestamp
+            const isoTime = localDate.toISOString();
+
+            options.push({ value: isoTime, label });
         }
     }
 
     return options;
 };
+
+export const generateGenericTimeOptions = (): DropdownOption[] => {
+    const options = [];
+
+    for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 5) {
+            const period = hour < 12 ? "AM" : "PM";
+            const formattedHour = hour % 12 === 0 ? 12 : hour % 12; // Convert 0 to 12 for midnight and 12-hour format
+            const formattedMinute = minute.toString().padStart(2, "0");
+            const label = `${formattedHour}:${formattedMinute} ${period}`;
+            
+            // Create a generic time string
+            const timeValue = `${hour.toString().padStart(2, "0")}:${formattedMinute}`;
+
+            options.push({ value: timeValue, label });
+        }
+    }
+
+    return options;
+};
+
+export const handleTimestamp = (baseDate: string, timeValue: string): string => {
+    const [year, month, day] = baseDate.split('-').map(Number);
+    const [hour, minute] = timeValue.split(':').map(Number);
+
+    const localDate = new Date(year, month - 1, day, hour, minute);
+    return localDate.toISOString();
+};
+
+
+
+
+
+export const formatToLocalDateTime = (isoTimestamp: string) => {
+    const date = new Date(isoTimestamp);
+
+    const timeOptions: Intl.DateTimeFormatOptions = {
+        hour: 'numeric', // e.g., "2 PM" or "14"
+        minute: 'numeric', // e.g., "30"
+        hour12: true, // Use 12-hour format (set to false for 24-hour)
+        timeStyle: 'short'
+    };
+
+    console.log(date.getMinutes())
+
+    let formattedTime = date.toLocaleTimeString(undefined, timeOptions);
+
+    if (date.getMinutes() === 0) {
+        formattedTime =formattedTime.replace(':00', '')
+    }
+
+    return formattedTime;
+};
+
+// get the planner for the event
+export function getPlannerIdFromTimestamp(isoTimestamp: string) {
+    const date = new Date(isoTimestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}

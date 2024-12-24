@@ -5,8 +5,8 @@ import uuid from 'react-native-uuid';
 import { generateSortId } from '../utils';
 
 interface StorageUpdateConfig<T> {
-    create: (data: T) => void;
-    update: (data: T, newParentId?: string) => void;
+    create: (data: T) => Promise<T> | T;
+    update: (data: T, newParentId?: string) =>Promise<T> | T;
     delete: (data: T) => void;
 }
 
@@ -18,10 +18,10 @@ interface StorageUpdateConfig<T> {
 const useSortedList = <T extends ListItem>(
     initialItems: T[],
     saveListToStorage?: (newList: T[]) => void, // TODO: document: cannot have this AND storageUpdates
-    emptyItem?: Partial<T>,
+    formatNewTextfield?: (newItem: T) => T,
     storageUpdates?: StorageUpdateConfig<T>
 ) => {
-    const [current, setCurrent] = useState<T[]>(initialItems);
+    const [current, setCurrent] = useState<T[]>([]);
     const pendingDeletes = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
     // Keeps the list in sync with the stored list
@@ -30,13 +30,17 @@ const useSortedList = <T extends ListItem>(
     }, [initialItems]);
 
     // Generates a new textfield item.
-    const initializeTextfield = (parentSortId: number): T => ({
-        ...emptyItem,
-        id: uuid.v4(),
-        sortId: generateSortId(parentSortId, current),
-        value: '',
-        status: ItemStatus.NEW,
-    } as T)
+    const initializeTextfield = (parentSortId: number, customList?: T[]): T => {
+        let newTextfield = {
+            id: uuid.v4(),
+            sortId: generateSortId(parentSortId, customList ?? current),
+            value: '',
+            status: ItemStatus.NEW,
+        } as T
+        if (formatNewTextfield)
+            newTextfield = formatNewTextfield(newTextfield);
+        return newTextfield;
+    }
 
     // Returns the current textfield in the list if one exists.
     const getFocusedItem = (): T | undefined =>
@@ -47,8 +51,8 @@ const useSortedList = <T extends ListItem>(
         current.find(item => item.id === id);
 
     // Returns the sort ID of the item above the given item.
-    const getParentSortId = (id: string) => {
-        const itemIndex = current.findIndex(item => item.id === id);
+    const getParentSortId = (id: string, customList?: T[]) => {
+        const itemIndex = (customList ?? current).findIndex(item => item.id === id);
         return current[itemIndex - 1]?.sortId || -1;
     }
 
@@ -87,15 +91,15 @@ const useSortedList = <T extends ListItem>(
      * 
      * @param shiftTextfieldConfig - determines if the textfield should shift above or below the new item
      */
-    const saveTextfield = (shiftTextfieldConfig?: string) => {
+    const saveTextfield = async (shiftTextfieldConfig?: string) => {
 
         // Get the item to be saved
-        const focusedItem = getFocusedItem();
+        let focusedItem = getFocusedItem();
         if (!focusedItem) return;
 
         // Get the storage call to use
         const storageCall = !!storageUpdates ? (
-            focusedItem.status === ItemStatus.NEW ? storageUpdates.create :
+            [ItemStatus.NEW].includes(focusedItem.status) ? storageUpdates.create :
                 focusedItem.status === ItemStatus.EDIT ? storageUpdates.update : undefined) : undefined;
 
         if (!!focusedItem.value.trim().length) { // the field contains text
@@ -103,19 +107,14 @@ const useSortedList = <T extends ListItem>(
 
             // Execute the storage save
             if (storageCall)
-                storageCall(focusedItem);
+                focusedItem = await storageCall(focusedItem);
 
             // Execute the update for this list
             updateItem(focusedItem, shiftTextfieldConfig);
 
         } else { // the field is empty
-            // Delete the item from storage
-            if (focusedItem.status === ItemStatus.EDIT && storageUpdates?.delete) {
-                storageUpdates.delete(focusedItem);
-            } else {
-                // Execute the delete for this list
-                deleteItem(focusedItem);
-            }
+            // Execute the delete for this list
+            deleteItem(focusedItem);
         }
     };
 
@@ -193,6 +192,7 @@ const useSortedList = <T extends ListItem>(
      * Updates the given item.
      */
     const updateItem = (newItem: T, shiftTextfieldConfig?: string) => {
+        console.log(newItem.sortId, 'new sort id from event')
         setCurrent((curr) => {
             const newList = [...curr];
 
@@ -208,12 +208,15 @@ const useSortedList = <T extends ListItem>(
             if (shiftTextfieldConfig) {
                 const newParentSortId = shiftTextfieldConfig === ShiftTextfieldDirection.BELOW
                     ? newItem.sortId
-                    : getParentSortId(newItem.id);
-                const newTextfield = initializeTextfield(newParentSortId);
+                    : getParentSortId(newItem.id, newList);
+                    console.log(newParentSortId, 'new parent sort id')
+                const newTextfield = initializeTextfield(newParentSortId, newList);
+                console.log(newTextfield, 'new textfield')
                 const insertIndex = newList.findIndex(item => item.sortId > newParentSortId);
                 insertIndex === -1 ?
                     newList.push(newTextfield) :
                     newList.splice(insertIndex, 0, newTextfield);
+                console.log(insertIndex, 'insert')
             }
 
             // Save this list to storage
@@ -231,12 +234,19 @@ const useSortedList = <T extends ListItem>(
         setCurrent((curr) => {
             const newList = [...curr];
             const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);
-            if (deleteIndex !== -1) {
+
+            // Delete the item from the list
+            if (deleteIndex !== -1)
                 newList.splice(deleteIndex, 1);
-            }
+
+            // Call the handler for deletes
+            if (storageUpdates?.delete && item.status !== ItemStatus.NEW)
+                storageUpdates.delete(item);
+
             // Save this list to storage
             if (saveListToStorage)
                 saveListToStorage(newList);
+
             return newList;
         });
     };

@@ -12,6 +12,7 @@ interface ModalProps {
         label: string;
         onClick: () => void;
         color?: string;
+        disabled?: boolean;
     };
     children: ReactNode;
     open: boolean;
@@ -42,7 +43,13 @@ const Modal = ({
                             <View style={globalStyles.spacedApart}>
                                 <Button textColor={colors.outline} onPress={toggleModalOpen}>Cancel</Button>
                                 {primaryButtonConfig && (
-                                    <Button textColor={primaryButtonConfig.color || colors.primary} onPress={primaryButtonConfig.onClick}>{primaryButtonConfig.label}</Button>
+                                    <Button
+                                        disabled={primaryButtonConfig.disabled}
+                                        textColor={primaryButtonConfig.color || colors.primary}
+                                        onPress={primaryButtonConfig.onClick}
+                                    >
+                                        {primaryButtonConfig.label}
+                                    </Button>
                                 )}
                             </View>
                         </Dialog.Actions>

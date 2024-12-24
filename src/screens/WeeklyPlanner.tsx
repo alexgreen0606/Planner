@@ -12,7 +12,7 @@ import { RECURRING_WEEKDAY_PLANNER } from '../feature/planners/enums';
 import { getNextSevenDayTimestamps } from '../feature/planners/utils';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../enums';
-import { getPlannerKey } from '../feature/planners/storage/plannerStorage';
+import { getPlannerStorageKey } from '../feature/planners/storage/plannerStorage';
 import ThinLine from '../foundation/ui/separators/ThinLine';
 
 /**
@@ -45,7 +45,7 @@ const WeeklyPlanner = () => {
 
   // Reload the planner when the recurring planner changes
   useMMKVListener((key) => {
-    if (key === getPlannerKey(RECURRING_WEEKDAY_PLANNER)) {
+    if (key === getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER)) {
       console.log('RECURRING CHNAGED.');
       setPlannerListKey(curr => (`${curr}_RERENDER`));
     }

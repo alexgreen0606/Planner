@@ -62,7 +62,6 @@ const DayBanner = ({ timestamp }: DayBannerProps) => {
                     <View style={styles.divider} />
                     <Text style={styles.lowTemp}>{Math.round(forecast.temperatureMin)}°</Text>
                     <Fontisto
-                        // @ts-ignore
                         name={weatherCodeToFontistoIcon(forecast.weatherCode)}
                         size={18}
                         color={colors.secondary}

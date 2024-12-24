@@ -28,7 +28,7 @@ export const weatherCodeToString = (code: number): string => {
 
 type WeatherIconMap = Record<
   number,
-  'lightning' | 'day-showers' | 'day-sunny' | 'day-cloudy' | 'cloudy' | 'fog' | 'day-rain' | 'rain' | 'snowflake-8' | 'day-snow'
+  'lightning' | 'day-sunny' | 'day-cloudy' | 'cloudy' | 'fog' | 'day-rain' | 'rain' | 'snowflake-8' | 'day-snow'
 >;
 
 export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] => {
@@ -49,7 +49,7 @@ export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] 
     73: 'snowflake-8',
     75: 'snowflake-8',
     77: 'snowflake-8',
-    81: 'day-showers',
+    81: 'day-rain',
     82: 'rain',
     85: 'rain',
     86: 'day-snow',
