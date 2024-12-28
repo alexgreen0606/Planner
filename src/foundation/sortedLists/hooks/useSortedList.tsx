@@ -219,6 +219,7 @@ const useSortedList = <T extends ListItem>(
             if (newItem.status === ItemStatus.STATIC && saveListToStorage) {
                 saveListToStorage(newList.filter(item => item.status != ItemStatus.NEW));
             }
+            
             newList.sort((a, b) => a.sortId - b.sortId);
             return newList;
         });
@@ -291,7 +292,10 @@ const useSortedList = <T extends ListItem>(
     const beginEditItem = async (item: ListItem) => {
         if (item.status === ItemStatus.DELETE)
             return;
-        if (getFocusedItem())
+        const focusedItem = getFocusedItem();
+        if (focusedItem?.id === item.id) {
+            return;
+        } else if (focusedItem)
             saveTextfield();
 
         updateItem({ ...item, status: ItemStatus.EDIT } as T);

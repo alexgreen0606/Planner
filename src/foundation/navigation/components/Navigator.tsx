@@ -3,21 +3,25 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { theme } from '../../../theme/theme';
 import Dashboard from '../../../screens/Dashboard';
 import WeeklyPlanner from '../../../screens/WeeklyPlanner';
-import Calendar from '../../../screens/Calendar';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import Money from '../../../screens/Money';
 import Folders from '../../../screens/Folders';
 import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { useNavigatorContext } from '../services/TabsProvider';
+import { useTheme } from 'react-native-paper';
+import GenericIcon from '../../ui/icons/GenericIcon';
+
+interface IconSpecification {
+    type: any;
+    name: 'coffee' | 'calendar-number-sharp' | 'calendar' | 'bank' | 'folder';
+}
 
 const Tab = createBottomTabNavigator();
 
-const routeIconMap: Record<string, 'coffee' | 'bars' | 'calendar-o' | 'bank' | 'folder-o'> = {
-    dashboard: 'coffee',
-    planner: 'bars',
-    calendar: 'calendar-o',
-    money: 'bank',
-    folders: 'folder-o'
+const routeIconMap: Record<string, IconSpecification> = {
+    dashboard: { type: 'FontAwesome', name: 'coffee' },
+    planner: { type: 'Ionicons', name: 'calendar-number-sharp' },
+    calendar: { type: 'FontAwesome', name: 'coffee' },
+    money: { type: 'FontAwesome', name: 'coffee' },
+    folders: { type: 'Entypo', name: 'folder' }
 }
 
 const WeeklyPlannerWithProviders = () =>
@@ -27,15 +31,21 @@ const WeeklyPlannerWithProviders = () =>
 
 const Navigator = () => {
     const { setCurrentTab } = useNavigatorContext();
+    const { colors } = useTheme();
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
-                tabBarIcon: ({ color, size }) => <FontAwesome name={routeIconMap[route.name]} size={size} style={{ color }} />,
+                tabBarIcon: ({ color, size }) => <GenericIcon
+                    type={routeIconMap[route.name].type}
+                    name={routeIconMap[route.name].name}
+                    size={size}
+                    color={color}
+                />,
                 tabBarActiveTintColor: theme.colors.primary,
                 tabBarInactiveTintColor: theme.colors.outline,
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: theme.colors.background,
+                    backgroundColor: colors.backdrop,
                     shadowOpacity: 0,
                     borderTopWidth: 0
                 },
@@ -46,20 +56,20 @@ const Navigator = () => {
             initialRouteName='dashboard'
         >
             <Tab.Screen name="folders" component={Folders} listeners={{
-                    focus: () => setCurrentTab('folders')
-                }} />
-            <Tab.Screen name="money" component={Money} listeners={{
-                    focus: () => setCurrentTab('money')
-                }} />
+                focus: () => setCurrentTab('folders')
+            }} />
             <Tab.Screen name="dashboard" component={Dashboard} listeners={{
-                    focus: () => setCurrentTab('dashboard')
-                }} />
+                focus: () => setCurrentTab('dashboard')
+            }} />
             <Tab.Screen name="planner" component={WeeklyPlannerWithProviders} listeners={{
-                    focus: () => setCurrentTab('planner')
-                }} />
-            <Tab.Screen name="calendar" component={Calendar} listeners={{
+                focus: () => setCurrentTab('planner')
+            }} />
+            {/* <Tab.Screen name="money" component={Money} listeners={{
+                focus: () => setCurrentTab('money')
+            }} /> */}
+            {/* <Tab.Screen name="calendar" component={Calendar} listeners={{
                     focus: () => setCurrentTab('calendar')
-                }} />
+                }} /> */}
         </Tab.Navigator>
     );
 };

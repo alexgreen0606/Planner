@@ -7,8 +7,9 @@ export const theme: MD3Theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: '#16f3ff', // cyan
-    background: '#1A1A1A', // dark grey
+    background: 'rgb(15, 15, 15)', // dark grey
     outline: '#808080', // grey
     secondary: '#FFFFFF', // white
+    backdrop: 'rgb(10, 10, 10)'
   },
 };

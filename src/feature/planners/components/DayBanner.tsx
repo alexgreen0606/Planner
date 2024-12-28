@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import useWeather from '../../../foundation/weather/hooks/useWeather';
-import { Fontisto } from '@expo/vector-icons';
 import { weatherCodeToFontistoIcon } from '../../../foundation/weather/utils';
 import { timestampToDayOfWeek, timestampToMonthDate } from '../utils';
 import globalStyles from '../../../theme/globalStyles';
+import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 
 interface DayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -14,6 +14,8 @@ interface DayBannerProps {
 const DayBanner = ({ timestamp }: DayBannerProps) => {
     const { colors } = useTheme();
     const { forecast, loading } = useWeather(timestamp);
+
+    console.log(forecast)
 
     const styles = StyleSheet.create({
         dayContainer: {
@@ -33,10 +35,11 @@ const DayBanner = ({ timestamp }: DayBannerProps) => {
         weatherContainer: {
             flexDirection: 'row',
             alignItems: 'center',
+            height: '100%'
         },
         highTemp: {
             fontSize: 18,
-            color: colors.primary,
+            color: colors.secondary,
         },
         divider: {
             width: StyleSheet.hairlineWidth,
@@ -45,8 +48,8 @@ const DayBanner = ({ timestamp }: DayBannerProps) => {
             marginHorizontal: 4,
         },
         lowTemp: {
-            fontSize: 12,
-            color: colors.primary,
+            fontSize: 14,
+            color: colors.outline,
         },
     });
 
@@ -61,12 +64,16 @@ const DayBanner = ({ timestamp }: DayBannerProps) => {
                     <Text style={styles.highTemp}>{Math.round(forecast.temperatureMax)}°</Text>
                     <View style={styles.divider} />
                     <Text style={styles.lowTemp}>{Math.round(forecast.temperatureMin)}°</Text>
-                    <Fontisto
-                        name={weatherCodeToFontistoIcon(forecast.weatherCode)}
-                        size={18}
-                        color={colors.secondary}
-                        style={{ marginLeft: 12 }}
-                    />
+                    <View
+                        style={{ marginLeft: 8 }}
+                    >
+                        <GenericIcon
+                            type={weatherCodeToFontistoIcon(forecast.weatherCode).type}
+                            name={weatherCodeToFontistoIcon(forecast.weatherCode).name}
+                            size={18}
+                            color={colors.secondary}
+                        />
+                    </View>
                 </View>
             )}
         </View>

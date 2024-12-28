@@ -7,29 +7,14 @@ export interface Event extends ListItem {
 };
 
 export interface RecurringConfig {
-  recurringId?: string; // both can never be true
+  recurringId?: string; // links this event to one within the recurring weekday planner
+  deleted?: boolean;
 }
 
 export interface TimeConfig {
-  appleId?: string;
+  calendarEventId?: string; // links this event to one within the device calendar
   allDay: boolean;
-  startDate: string;
-  endDate: string;
-  isAppleEvent: boolean;
-};
-
-type AppleCalendarEvent = {
-  id: string; // Unique identifier for the event
-  calendarId: string; // ID of the calendar containing the event
-  title: string; // Event title
-  startDate: string; // Start date in ISO 8601 format
-  endDate: string; // End date in ISO 8601 format
-  location?: string; // Optional: Event location
-  allDay?: boolean; // Optional: Indicates if the event is an all-day event
-  notes?: string; // Optional: Notes or description for the event
-  attendees?: {
-    name?: string; // Attendee's name
-    email?: string; // Attendee's email
-    status?: string; // e.g., "accepted", "declined", "tentative"
-  }[]; // Optional: Array of attendees
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+  isCalendarEvent: boolean;
 };

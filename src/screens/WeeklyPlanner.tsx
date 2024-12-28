@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useTheme, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
-import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import globalStyles from '../theme/globalStyles';
 import SortablePlanner from '../feature/planners/components/SortablePlanner';
 import { ScrollView } from 'react-native-gesture-handler';
 import Modal from '../foundation/ui/modal/Modal';
 import { RECURRING_WEEKDAY_PLANNER } from '../feature/planners/enums';
-import { getNextSevenDayTimestamps } from '../feature/planners/utils';
+import { generateNextSevenDayTimestamps } from '../feature/planners/utils';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../enums';
 import { getPlannerStorageKey } from '../feature/planners/storage/plannerStorage';
-import ThinLine from '../foundation/ui/separators/ThinLine';
 import SortableRecurringPlanner from '../feature/planners/components/SortableRecurringPlanner';
+import GenericIcon from '../foundation/ui/icons/GenericIcon';
 
 /**
  * Recurring modal includes:
@@ -35,7 +34,7 @@ const WeeklyPlanner = () => {
 
   useEffect(() => {
     const buildWeeklyPlanner = () => {
-      const timestamps = getNextSevenDayTimestamps();
+      const timestamps = generateNextSevenDayTimestamps();
       setTimestamps(timestamps);
     };
 
@@ -54,42 +53,42 @@ const WeeklyPlanner = () => {
   const toggleWeekdayPlanner = () => setWeekdayPlannerOpen(!weekdayPlannerOpen);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.backdrop }}>
       <SafeAreaView>
         <View style={styles.bannerContainer}>
           <View style={styles.banner}>
             <View style={styles.label}>
-              <FontAwesome
-                name='book'
+              <GenericIcon
+                type='Ionicons'
+                name='calendar-number-sharp'
                 size={26}
                 color={colors.primary}
               />
               <Text adjustsFontSizeToFit style={styles.labelText} numberOfLines={2}>
-                Coming this week
+                Planner
               </Text>
             </View>
-            <MaterialCommunityIcons
-              name='calendar-sync'
-              size={20}
-              color={colors.outline}
+            <TouchableOpacity
               onPress={toggleWeekdayPlanner}
-            />
+            >
+              <GenericIcon
+                type='MaterialCommunityIcons'
+                name='calendar-sync'
+                size={20}
+                color={colors.outline}
+              />
+            </TouchableOpacity>
           </View>
-          <ThinLine style={{
-            marginTop: 8,
-            marginBottom: 16
-          }}
-          />
         </View>
         <ScrollView
           key={plannerListKey}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ alignItems: 'center', width: '100%' }}
+          contentContainerStyle={{ alignItems: 'center', width: '100%', marginTop: 30}}
         >
           {timestamps.map((timestamp) =>
-            <View style={{ width: '85%', alignItems: 'center' }} key={`${timestamp}-planner`}>
+            <View style={{ width: '90%', alignItems: 'center', marginBottom: 80 }} key={`${timestamp}-planner`}>
               <SortablePlanner
-                plannerId={timestamp}
+                timestamp={timestamp}
               />
             </View>
           )}
@@ -131,7 +130,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontSize: 25,
-    color: theme.colors.primary,
+    color: theme.colors.secondary,
   },
 });
 

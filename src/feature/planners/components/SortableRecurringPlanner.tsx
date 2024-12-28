@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { Event, TimeConfig } from '../types';
@@ -13,6 +12,8 @@ import ListTextfield from '../../../foundation/sortedLists/components/ListTextfi
 import TimeModal from './TimeModal';
 import CustomText from '../../../foundation/ui/text';
 import Time from './Time';
+import { generateSortIdByTimestamp } from '../utils';
+import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 
 interface SortableRecurringPlannerProps {
     manualSaveTrigger: string;
@@ -25,14 +26,15 @@ const SortableRecurringPlanner = ({
     const [timeModalOpen, setTimeModalOpen] = useState(false);
     const [planner, setPlanner] = useState<Event[]>([]);
 
-    const formatNewEvent = (newEvent: Event) => {
-        return {
-            ...newEvent,
-            plannerId: RECURRING_WEEKDAY_PLANNER
+    const formatNewEvent = (newEvent: Event) => ({
+        ...newEvent,
+        plannerId: RECURRING_WEEKDAY_PLANNER,
+        recurringConfig: {
+            recurringId: newEvent.id
         }
-    }
+    } as Event)
 
-    const SortedList = useSortedList<Event>(planner, undefined, formatNewEvent);
+    const SortedPlanner = useSortedList<Event>(planner, undefined, formatNewEvent);
 
     const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
 
@@ -49,23 +51,25 @@ const SortableRecurringPlanner = ({
     useEffect(() => {
         savePlannerToStorage(
             RECURRING_WEEKDAY_PLANNER,
-            SortedList.current.filter(event => !!event.value.length).map(event => ({
-                ...event,
-                status: ItemStatus.STATIC
-            })));
+            SortedPlanner.current
+                .filter(event => !!event.value.length)
+                .map(event => ({
+                    ...event,
+                    status: ItemStatus.STATIC
+                })));
     }, [manualSaveTrigger])
 
     const renderItem = useCallback((item: Event, drag: any) =>
         item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status) ?
             <ListTextfield
-                key={`${item.id}-${item.sortId}-${timeModalOpen}-${item.status}-${item.timeConfig?.startDate}-${item.timeConfig?.endDate}`}
+                key={`${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
                 item={item}
-                onChange={(text) => { SortedList.updateItem({ ...item, value: text }) }}
-                onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                onChange={(text) => { SortedPlanner.updateItem({ ...item, value: text }) }}
+                onSubmit={() => SortedPlanner.saveTextfield(ShiftTextfieldDirection.BELOW)}
             /> :
             <TouchableOpacity
                 onLongPress={drag}
-                onPress={() => SortedList.beginEditItem(item)}
+                onPress={() => SortedPlanner.beginEditItem(item)}
                 style={styles.listItem}
             >
                 <CustomText
@@ -79,38 +83,45 @@ const SortableRecurringPlanner = ({
                     {item.value}
                 </CustomText>
             </TouchableOpacity>
-        , [SortedList.current, timeModalOpen]);
+        , [SortedPlanner.current, timeModalOpen]);
 
     const renderRow = useCallback(({ item, drag }: RenderItemParams<Event>) => {
         const isTextfield = !!item.status && [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
         const isItemDeleting = item.status === ItemStatus.DELETE;
-        const iconStyle = 'trash';
-
-        const hasTime = !item?.timeConfig?.allDay && !!item.timeConfig?.startDate;
 
         return (
             <View style={{ backgroundColor: item.status === 'DRAG' ? colors.background : undefined }}>
                 <View style={styles.row}>
-                    <FontAwesome
-                        name={iconStyle}
-                        size={20}
-                        color={isItemDeleting ? colors.secondary : colors.outline}
-                        onPress={() => SortedList.toggleDeleteItem(item)}
-                    />
-                    {renderItem(item, drag)}
-                    {!item?.timeConfig?.allDay && !!item.timeConfig?.startDate && (
-                        <Time timestamp={item.timeConfig?.startDate} />
-                    )}
-                    {!hasTime && isTextfield && (
-                        <FontAwesome
-                            name='clock-o'
+                    {!isTextfield && (
+                    <TouchableOpacity onPress={() => SortedPlanner.toggleDeleteItem(item)}>
+                        <GenericIcon
+                            type='MaterialCommunityIcons'
+                            name={isItemDeleting ? 'trash-can' : 'trash-can-outline'}
                             size={20}
-                            color={colors.outline}
-                            onPress={() => setTimeModalOpen(true)}
+                            color={isItemDeleting ? colors.secondary : colors.outline}
                         />
+                    </TouchableOpacity>
+                    )}
+                    {renderItem(item, drag)}
+                    {!item?.timeConfig?.allDay && !!item.timeConfig?.startTime ? (
+                        <TouchableOpacity onPress={() => {
+                            SortedPlanner.beginEditItem(item)
+                            setTimeModalOpen(true);
+                        }}>
+                            <Time timestamp={item.timeConfig?.startTime} />
+                        </TouchableOpacity>
+                    ) : isTextfield && (
+                        <TouchableOpacity onPress={toggleTimeModal}>
+                            <GenericIcon
+                                type='MaterialCommunityIcons'
+                                name='clock-plus-outline'
+                                size={20}
+                                color={colors.outline}
+                            />
+                        </TouchableOpacity>
                     )}
                 </View>
-                <ClickableLine onPress={() => SortedList.moveTextfield(item.sortId)} />
+                <ClickableLine onPress={() => SortedPlanner.moveTextfield(item.sortId)} />
                 {isTextfield && (
                     <TimeModal
                         open={timeModalOpen}
@@ -122,24 +133,25 @@ const SortableRecurringPlanner = ({
                                 ...item,
                                 timeConfig
                             };
-                            SortedList.updateItem(newEvent);
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
+                            SortedPlanner.updateItem(newEvent);
                             toggleTimeModal();
                         }}
                     />
                 )}
             </View>
         )
-    }, [SortedList.current, timeModalOpen, planner]);
+    }, [SortedPlanner.current, timeModalOpen, planner]);
 
     return (
         <View style={{ width: '100%' }}>
             <View style={{ width: '100%', marginBottom: 37 }}>
-                <ClickableLine onPress={() => SortedList.moveTextfield(-1)} />
+                <ClickableLine onPress={() => SortedPlanner.moveTextfield(-1)} />
                 <DraggableFlatList
-                    data={SortedList.current}
+                    data={SortedPlanner.current}
                     scrollEnabled={false}
-                    onDragEnd={SortedList.endDragItem}
-                    onDragBegin={SortedList.beginDragItem}
+                    onDragEnd={SortedPlanner.endDragItem}
+                    onDragBegin={SortedPlanner.beginDragItem}
                     keyExtractor={(item) => item.id}
                     renderItem={renderRow}
                 />

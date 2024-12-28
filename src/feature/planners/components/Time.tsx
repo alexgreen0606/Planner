@@ -1,33 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '../../../theme/theme';
-import { isValidTimestamp } from '../utils';
 
 interface TimeProps {
     timestamp: string;
 }
 
 const Time = ({ timestamp }: TimeProps) => {
-
     const [time, setTime] = useState('');
     const [indicator, setIndicator] = useState('');
 
     useEffect(() => {
-        if (isValidTimestamp(timestamp)) {
-            const date = new Date(timestamp);
-            let hour = date.getHours();
-            setIndicator(hour >= 12 ? 'PM' : 'AM');
-            hour = hour >= 12 ? hour - 12 : hour;
-            hour = hour === 0 ? 12 : hour;
-            const minutes = date.getMinutes();
-            setTime(`${hour}${minutes !== 0 ? `:${minutes}` : ''}`);
-        } else {
-            let [hour, minute] = timestamp.split(':').map(Number);
-            setIndicator(hour >= 12 ? 'PM' : 'AM');
-            hour = hour >= 12 ? hour - 12 : hour;
-            hour = hour === 0 ? 12 : hour;
-            setTime(`${hour}${minute !== 0 ? `:${minute}` : ''}`);
-        }
+        let [hour, minute] = timestamp.split(':').map(Number);
+        setIndicator(hour >= 12 ? 'PM' : 'AM');
+        hour = hour >= 12 ? hour - 12 : hour;
+        hour = hour === 0 ? 12 : hour;
+        setTime(`${hour}${minute !== 0 ? `:${minute}` : ''}`);
     }, [])
 
     return (

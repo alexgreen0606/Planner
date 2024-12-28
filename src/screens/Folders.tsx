@@ -21,7 +21,7 @@ const Folders = () => {
     setPageConfig({ id: parentFolderId, type: FolderItemType.FOLDER });
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.backdrop }}>
       <SafeAreaView key={pageConfig.id}>
         {pageConfig.type === FolderItemType.FOLDER ? (
           <SortableFolder

@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import { Text, useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import { FontAwesome } from '@expo/vector-icons';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { usePlannerContext } from '../services/PlannerProvider';
@@ -18,13 +17,18 @@ import Time from './Time';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../../../enums';
 import { generateSortIdByTimestamp } from '../utils';
+import globalStyles from '../../../theme/globalStyles';
+import HolidayChip from './HolidayChip';
+import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
+import BirthdayChip from './BirthdayChip';
+import ThinLine from '../../../foundation/ui/separators/ThinLine';
 
 interface SortablePlannerProps {
-    plannerId: string;
+    timestamp: string;
 };
 
 const SortablePlanner = ({
-    plannerId
+    timestamp
 }: SortablePlannerProps) => {
     const { colors } = useTheme();
     const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
@@ -33,78 +37,37 @@ const SortablePlanner = ({
     const [planner, setPlanner] = useState<Event[]>([]);
     const [recurringPlanner, setRecurringPlanner] = useState<Event[]>([]);
     const storage = useMMKV({ id: StorageIds.PLANNER_STORAGE });
-    const skipStorageSync = useRef(false);
+    const skipStorageSync = useRef(true);
 
     const customCreateNewItem = (event: Event) => {
         skipStorageSync.current = true;
         return persistEvent(event);
     }
 
-    const storageUpdates = {
-        create: customCreateNewItem,
-        update: persistEvent,
-        delete: deleteEvent
-    }
-
-    const formatNewEvent = (newEvent: Event) => {
+    const generateNewEvent = (newEvent: Event) => {
         return {
             ...newEvent,
-            plannerId
+            plannerId: timestamp
         }
     }
 
-    const SortedList = useSortedList<Event>(planner, undefined, formatNewEvent, storageUpdates);
-
-    const toggleCollapsed = () => setCollapsed(curr => !curr);
-    const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
-
-    /**
-     * Moves the textfield to its new position, and sets this as the focused planner within
-     * the context.
-     */
-    const customMoveTextfield = (parentSortId: number | null) => {
-        let customParentSortId = parentSortId;
-        if (collapsed)
-            customParentSortId = SortedList.current[SortedList.current.length - 1]?.sortId || -1;
-        SortedList.moveTextfield(customParentSortId);
-        setFocusedPlanner(plannerId);
-    };
-
-    /**
-     * Initializes edit mode for the clicked item, and sets this as the focused planner within
-     * the context.
-     */
-    const customBeginEditItem = (item: Event) => {
-        SortedList.beginEditItem(item);
-        setFocusedPlanner(plannerId);
-    };
-
-    /**
-     * Schedules the item for delete, and sets this as the focused planner within
-     * the context.
-     */
-    const customToggleDeleteItem = (item: Event) => {
-        SortedList.toggleDeleteItem(item);
-        setFocusedPlanner(plannerId);
-    };
-
-    /**
-     * If the list is collapsed, we filter out the recurring events.
-     */
-    const filterPlanner = useCallback(() => {
-        if (collapsed) {
-            return SortedList.current.filter(item => !item.recurringConfig).slice(0, 3);
-        } else {
-            return SortedList.current;
+    const SortedPlanner = useSortedList<Event>(
+        planner,
+        undefined,
+        generateNewEvent,
+        {
+            create: customCreateNewItem,
+            update: persistEvent,
+            delete: deleteEvent
         }
-    }, [collapsed, SortedList, recurringPlanner, planner]);
+    );
 
     // Load in the initial planners
     useEffect(() => {
         const loadPlanners = async () => {
-            const loadedPlanner = await buildPlanner(plannerId);
+            const loadedPlanner = await buildPlanner(timestamp);
             const loadedRecurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
-            setPlanner(loadedPlanner);
+            setPlanner(loadedPlanner.filter(event => !event.recurringConfig?.deleted));
             setRecurringPlanner(loadedRecurringPlanner);
         };
         loadPlanners();
@@ -112,9 +75,9 @@ const SortablePlanner = ({
 
     // Sync the sorted list with storage
     useMMKVListener(async (key) => {
-        if (key === getPlannerStorageKey(plannerId)) {
+        if (key === getPlannerStorageKey(timestamp)) {
             if (!skipStorageSync) {
-                const loadedPlanner = await buildPlanner(plannerId);
+                const loadedPlanner = await buildPlanner(timestamp);
                 setPlanner(loadedPlanner);
             } else {
                 skipStorageSync.current = false;
@@ -130,22 +93,67 @@ const SortablePlanner = ({
      * and reset the items that are pending delete.
      */
     useEffect(() => {
-        if (focusedPlanner.timestamp !== plannerId) {
-            SortedList.saveTextfield();
+        if (focusedPlanner.timestamp !== timestamp) {
+            SortedPlanner.saveTextfield();
         } else {
             setCollapsed(false);
         }
 
-        SortedList.rescheduleAllDeletes();
+        SortedPlanner.rescheduleAllDeletes();
     }, [focusedPlanner]);
+
+    const toggleCollapsed = () => setCollapsed(curr => !curr);
+    const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
+
+    /**
+     * Moves the textfield to its new position, and sets this as the focused planner within
+     * the context.
+     */
+    const customMoveTextfield = (parentSortId: number | null) => {
+        let customParentSortId = parentSortId;
+        if (collapsed)
+            customParentSortId = SortedPlanner.current[SortedPlanner.current.length - 1]?.sortId || -1;
+        SortedPlanner.moveTextfield(customParentSortId);
+        setFocusedPlanner(timestamp);
+    };
+
+    /**
+     * Initializes edit mode for the clicked item, and sets this as the focused planner within
+     * the context.
+     */
+    const customBeginEditItem = (item: Event) => {
+        SortedPlanner.beginEditItem(item);
+        setFocusedPlanner(timestamp);
+    };
+
+    /**
+     * Schedules the item for delete, and sets this as the focused planner within
+     * the context.
+     */
+    const customToggleDeleteItem = (item: Event) => {
+        SortedPlanner.toggleDeleteItem(item);
+        setFocusedPlanner(timestamp);
+    };
+
+    /**
+     * If the list is collapsed, we filter out the recurring events.
+     */
+    const filterPlanner = useCallback(() => {
+        if (collapsed) {
+            return []
+            //SortedList.current.filter(item => !item.recurringConfig).slice(0, 3);
+        } else {
+            return SortedPlanner.current;
+        }
+    }, [collapsed, SortedPlanner, recurringPlanner, planner]);
 
     const renderItem = useCallback((item: Event, drag: any) =>
         item.status && [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status) ?
             <ListTextfield
-                key={`${item.id}-${item.sortId}`}
+                key={`${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                 item={item}
-                onChange={(text) => { SortedList.updateItem({ ...item, value: text }) }}
-                onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                onChange={(text) => { SortedPlanner.updateItem({ ...item, value: text }) }}
+                onSubmit={() => SortedPlanner.saveTextfield(ShiftTextfieldDirection.BELOW)}
             /> :
             <TouchableOpacity
                 onLongPress={drag}
@@ -153,7 +161,7 @@ const SortablePlanner = ({
                 style={styles.listItem}
             >
                 <CustomText
-                    type='list'
+                    type='standard'
                     style={{
                         color: item.status && [ItemStatus.DELETE].includes(item.status) ?
                             colors.outline : colors.secondary,
@@ -163,36 +171,41 @@ const SortablePlanner = ({
                     {item.value}
                 </CustomText>
             </TouchableOpacity>
-        , [SortedList.current, timeModalOpen]);
+        , [SortedPlanner.current, timeModalOpen]);
 
     const renderRow = useCallback(({ item, drag }: RenderItemParams<Event>) => {
         const isTextfield = !!item.status && [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
         const isItemDeleting = item.status === ItemStatus.DELETE;
-        const iconStyle = plannerId === RECURRING_WEEKDAY_PLANNER ? 'trash' : isItemDeleting ? 'dot-circle-o' : 'circle-thin';
-
-        const hasTime = !item?.timeConfig?.allDay && !!item.timeConfig?.startDate;
-
+        const iconStyle = isItemDeleting ? 'circle' : 'circle-thin';
 
         return (
             <View style={{ backgroundColor: item.status === 'DRAG' ? colors.background : undefined }}>
                 <View style={styles.row}>
-                    <FontAwesome
-                        name={iconStyle}
-                        size={20}
-                        color={isItemDeleting ? colors.secondary : colors.outline}
-                        onPress={() => customToggleDeleteItem(item)}
-                    />
-                    {renderItem(item, drag)}
-                    {!item?.timeConfig?.allDay && !!item.timeConfig?.startDate && (
-                        <Time timestamp={item.timeConfig?.startDate} />
-                    )}
-                    {!hasTime && isTextfield && (
-                        <FontAwesome
-                            name='clock-o'
+                    <TouchableOpacity onPress={() => customToggleDeleteItem(item)}>
+                        <GenericIcon
+                            type='FontAwesome'
+                            name={iconStyle}
                             size={20}
                             color={colors.outline}
-                            onPress={() => setTimeModalOpen(true)}
                         />
+                    </TouchableOpacity>
+                    {renderItem(item, drag)}
+                    {!item?.timeConfig?.allDay && !!item.timeConfig?.startTime ? (
+                        <TouchableOpacity onPress={() => {
+                            SortedPlanner.beginEditItem(item)
+                            toggleTimeModal();
+                        }}>
+                            <Time timestamp={item.timeConfig?.startTime} />
+                        </TouchableOpacity>
+                    ) : isTextfield && !!item.value.length && (
+                        <TouchableOpacity onPress={toggleTimeModal}>
+                            <GenericIcon
+                                type='MaterialCommunityIcons'
+                                name='clock-plus-outline'
+                                size={20}
+                                color={colors.outline}
+                            />
+                        </TouchableOpacity>
                     )}
                 </View>
                 <ClickableLine onPress={() => customMoveTextfield(item.sortId)} />
@@ -201,53 +214,80 @@ const SortablePlanner = ({
                         open={timeModalOpen}
                         toggleModalOpen={toggleTimeModal}
                         event={item}
-                        timestamp={plannerId}
+                        timestamp={timestamp}
                         onSaveItem={(timeConfig: TimeConfig) => {
                             const newEvent: Event = {
                                 ...item,
                                 timeConfig
                             };
-                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedList.current);
-                            SortedList.updateItem(newEvent);
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
+                            SortedPlanner.updateItem(newEvent);
                             toggleTimeModal();
                         }}
                     />
                 )}
             </View>
         )
-    }, [SortedList.current, timeModalOpen, collapsed, planner]);
+    }, [SortedPlanner.current, timeModalOpen, collapsed, planner]);
 
     return (
         <View style={{ width: '100%' }}>
-            <DayBanner timestamp={plannerId} />
-            <View style={{ width: '100%', marginBottom: 37 }}>
-                <ClickableLine onPress={() => customMoveTextfield(-1)} />
-                <DraggableFlatList
-                    data={filterPlanner()}
-                    scrollEnabled={false}
-                    onDragEnd={SortedList.endDragItem}
-                    onDragBegin={SortedList.beginDragItem}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderRow}
-                />
-                {
-                    !!SortedList.current.length &&
-                    !SortedList.getFocusedItem() &&
-                    SortedList.current.length > 3 && (
-                        <TouchableOpacity onPress={toggleCollapsed} style={{ width: '100%', justifyContent: 'flex-start', flexDirection: 'row' }}>
-                            <FontAwesome
-                                name={collapsed ? 'chevron-up' : 'chevron-down'}
-                                size={12}
-                                color={colors.outline}
-                                style={{ marginHorizontal: 8 }}
-                            />
-                            {collapsed && (
-                                <CustomText type='collapseText'>
-                                    {SortedList.current.length - (filterPlanner().length)} more
-                                </CustomText>
-                            )}
-                        </TouchableOpacity>
-                    )}
+            <DayBanner timestamp={timestamp} />
+            <ClickableLine onPress={() => null} />
+            <View>
+                {!!SortedPlanner.current.length ? (
+                    <TouchableOpacity style={styles.row}
+                        onPress={toggleCollapsed}>
+                        <GenericIcon
+                            type='Entypo'
+                            name={collapsed ? 'chevron-right' : 'chevron-down'}
+                            size={16}
+                            color={colors.outline}
+                        />
+                        <View style={styles.listItem}>
+                            <CustomText
+                                type='collapseText'
+                                style={{
+                                    color: colors.outline,
+                                    width: '100%',
+                                    textAlign: 'right'
+                                }}
+                            >
+                                {SortedPlanner.current.filter(item => item.status !== ItemStatus.NEW).length}
+                            </CustomText>
+                        </View>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity onPress={() => customMoveTextfield(-1)} style={styles.listItem}>
+                        <CustomText
+                            type='collapseText'
+                            style={{
+                                color: colors.outline,
+                                width: '100%',
+                                textAlign: 'center'
+                            }}
+                        >
+                            no plans
+                        </CustomText>
+                    </TouchableOpacity>
+                )}
+            </View>
+            <ClickableLine onPress={() => collapsed ? null : customMoveTextfield(-1)} />
+            <DraggableFlatList
+                data={filterPlanner()}
+                scrollEnabled={false}
+                onDragEnd={SortedPlanner.endDragItem}
+                onDragBegin={SortedPlanner.beginDragItem}
+                keyExtractor={(item) => item.id}
+                renderItem={renderRow}
+            />
+            <View style={{ ...globalStyles.spacedApart }}>
+                <View style={{ flex: 1 }}>
+                    <BirthdayChip timestamp={timestamp} />
+                </View>
+                <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                    <HolidayChip timestamp={timestamp} />
+                </View>
             </View>
         </View>
     );

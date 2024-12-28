@@ -8,20 +8,24 @@ const styles = StyleSheet.create({
         color: theme.colors.outline,
         fontSize: 14
     },
-    list: {
+    standard: {
         color: theme.colors.secondary,
         fontSize: 16,
+    },
+    soft: {
+        color: theme.colors.outline,
+        fontSize: 14,
     }
 });
 
-interface TextProps {
+interface TextProps extends React.ComponentProps<typeof Text> {
     type: keyof typeof styles;
     children: React.ReactNode;
     style?: TextStyle;
 }
 
-const CustomText = ({ type, children, style: customStyle }: TextProps) =>
-    <Text style={{ ...styles[type], ...customStyle }} >
+const CustomText = ({ type, children, style: customStyle, ...rest }: TextProps) =>
+    <Text style={{ ...styles[type], ...customStyle }} {...rest} >
         {children}
     </Text>
 

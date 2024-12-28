@@ -5,7 +5,7 @@ import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../foundation/ui/modal/Modal';
 import { Event, TimeConfig } from '../types';
 import TimeDropdown from '../../../foundation/ui/input/TimeDropdown';
-import { generateGenericTimeOptions, generateTimeOptions, handleTimestamp, isValidTimestamp, timestampToDayOfWeek } from '../utils';
+import { generateGenericTimeOptions, generateTimeOptions, timeValueToIso, isTimestampValid, timestampToDayOfWeek } from '../utils';
 import CustomText from '../../../foundation/ui/text';
 import { RECURRING_WEEKDAY_PLANNER } from '../enums';
 
@@ -19,48 +19,47 @@ interface TimeModalProps {
 
 interface TimeModalSelection {
     allDay: boolean;
-    startDate?: string;
-    endDate?: string;
-    isAppleEvent: boolean;
+    startTime?: string;
+    endTime?: string;
+    isCalendarEvent: boolean;
 };
 
 const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: TimeModalProps) => {
-    const timeOptions = useMemo(() => timestamp !== RECURRING_WEEKDAY_PLANNER ?
-        generateTimeOptions(timestamp) : generateGenericTimeOptions(), [timestamp]);
-    const defaultStartDate = timeOptions[0].value;
-    const defaultEndDate = timeOptions[timeOptions.length - 1].value;
+    const timeOptions = useMemo(() => generateGenericTimeOptions(), [timestamp]);
+    const defaultStartTime = timeOptions[0].value;
+    const defaultEndTime = timeOptions[timeOptions.length - 1].value;
     const { colors } = useTheme();
     const [dropdownInFocus, setDropdownInFocus] = useState(event.timeConfig ? '' : 'Start Time');
     const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(event.timeConfig ?? {
-        isAppleEvent: false,
+        isCalendarEvent: false,
         allDay: false,
-        startDate: undefined,
-        endDate: undefined,
+        startTime: undefined,
+        endTime: undefined,
     });
 
     const onSaveInput = () => {
-        const startDate = (timeModalData.allDay ? defaultStartDate : timeModalData.startDate) || defaultStartDate;
-        const endDate = (timeModalData.allDay ? defaultEndDate : timeModalData.endDate) || defaultEndDate;
+        const startTime = (timeModalData.allDay ? defaultStartTime : timeModalData.startTime) || defaultStartTime;
+        const endTime = (timeModalData.allDay ? defaultEndTime : timeModalData.endTime) || defaultEndTime;
         onSaveItem({
             ...timeModalData,
-            startDate,
-            endDate
+            startTime: startTime,
+            endTime: endTime
         });
     }
 
-    const startDateOptionIndex = useMemo(() => {
-        const index = timeOptions.findIndex(option => option.value === timeModalData.startDate);
-        return index >= 0 ? index + 1 : 0; // Ensure fallback to 0 only when index is not found
+    const startTimeOptionIndex = useMemo(() => {
+        const index = timeOptions.findIndex(option => option.value === timeModalData.startTime);
+        return index >= 0 ? index + 1 : 0;
     }, [timeOptions, timeModalData]);
 
     const validData =
-        (!timeModalData.isAppleEvent && !!timeModalData.startDate) ||
-        (timeModalData.isAppleEvent && timeModalData.allDay) ||
-        (timeModalData.isAppleEvent && !!timeModalData.startDate && !!timeModalData.endDate);
+        (!timeModalData.isCalendarEvent && !!timeModalData.startTime) ||
+        (timeModalData.isCalendarEvent && timeModalData.allDay) ||
+        (timeModalData.isCalendarEvent && !!timeModalData.startTime && !!timeModalData.endTime);
 
     return (
         <Modal
-            title={`${isValidTimestamp(timestamp) ? `${timestampToDayOfWeek(timestamp)} - ` : ''}${event.value}`}
+            title={`${isTimestampValid(timestamp) ? `${timestampToDayOfWeek(timestamp)} - ` : ''}${event.value}`}
             toggleModalOpen={toggleModalOpen}
             open={open}
             primaryButtonConfig={{
@@ -72,13 +71,13 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
             <View style={styles.container}>
                 <View style={globalStyles.spacedApart}>
                     <View style={{ width: '46%' }}>
-                        {isValidTimestamp(timestamp) && (
+                        {isTimestampValid(timestamp) && (
                             <>
                                 <CustomText type='collapseText'>Calendar Event</CustomText>
                                 <Checkbox
-                                    status={timeModalData.isAppleEvent ? 'checked' : 'unchecked'}
+                                    status={timeModalData.isCalendarEvent ? 'checked' : 'unchecked'}
                                     onPress={() => {
-                                        setTimeModalData({ ...timeModalData, isAppleEvent: !timeModalData.isAppleEvent })
+                                        setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent })
                                     }}
                                     color={colors.primary}
                                     uncheckedColor={colors.outline}
@@ -87,7 +86,7 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                         )}
                     </View>
                     <View style={{ width: '46%' }}>
-                        {timeModalData.isAppleEvent && (
+                        {timeModalData.isCalendarEvent && (
                             <>
                                 <CustomText type='collapseText'>All Day</CustomText>
                                 <Checkbox
@@ -110,7 +109,7 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                 onChange={(newVal: string | undefined) => {
                                     setTimeModalData({
                                         ...timeModalData,
-                                        startDate: newVal
+                                        startTime: newVal
                                     })
                                     if (newVal)
                                         setDropdownInFocus('End Time');
@@ -120,19 +119,19 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                 options={timeOptions}
                                 dropdownInFocus={dropdownInFocus}
                                 placeholder='Start Time'
-                                currTimestamp={timeModalData.startDate}
+                                currTimestamp={timeModalData.startTime}
                                 minOptionIndex={0}
                             />
                         </View>
                     )}
-                    {!timeModalData.allDay && timeModalData.isAppleEvent && (
+                    {!timeModalData.allDay && timeModalData.isCalendarEvent && (
                         <View style={{ width: '46%' }}>
                             <CustomText type='collapseText'>End Time</CustomText>
                             <TimeDropdown
                                 onChange={(newVal: string | undefined) => {
                                     setTimeModalData({
                                         ...timeModalData,
-                                        endDate: newVal
+                                        endTime: newVal
                                     })
                                     if (newVal)
                                         setDropdownInFocus('');
@@ -142,8 +141,8 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                 beginFocus={() => setDropdownInFocus('End Time')}
                                 endFocus={() => setDropdownInFocus('')}
                                 placeholder='End Time'
-                                currTimestamp={timeModalData.endDate}
-                                minOptionIndex={startDateOptionIndex}
+                                currTimestamp={timeModalData.endTime}
+                                minOptionIndex={startTimeOptionIndex}
                             />
                         </View>
                     )}

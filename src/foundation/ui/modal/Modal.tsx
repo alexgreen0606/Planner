@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Button, Dialog, Portal, Text, useTheme } from 'react-native-paper';
+import { Button, Dialog, Portal, useTheme } from 'react-native-paper';
 import { theme } from '../../../theme/theme';
 import globalStyles from '../../../theme/globalStyles';
 import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
