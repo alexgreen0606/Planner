@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import AutocompleteInput from 'react-native-autocomplete-input';
 import { Text, TextInput } from 'react-native-paper';
 import { theme } from '../../../theme/theme';
+import { TimeDropdownType } from '../../../feature/planners/enums';
 
 export interface DropdownOption {
     value: string;
@@ -13,7 +14,7 @@ interface TimeDropdownProps {
     onChange: (newTimestamp: string | undefined) => void;
     options: DropdownOption[];
     placeholder: string;
-    dropdownInFocus: string;
+    dropdownInFocus: TimeDropdownType | undefined;
     beginFocus: () => void;
     endFocus: () => void;
     currTimestamp: string | undefined;

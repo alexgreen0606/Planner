@@ -10,7 +10,7 @@ import { useNavigatorContext } from '../../../foundation/navigation/services/Tab
 import FolderItemBanner from './FolderItemBanner';
 import {
     createFolderItem,
-    getFolder,
+    getFolderFromStorage,
     updateFolderItem,
     getFolderItems,
     getStorageKey,
@@ -41,8 +41,8 @@ const SortableFolder = ({
     const [initialFolderItems, setInitialFolderItems] = useState(getFolderItems(folderId));
     const skipStorageSync = useRef(false);
     const inputWrapperRef = useRef<View>(null);
-    const folderData = useMemo(() => getFolder(folderId), [folderId]);
-    const parentFolderData = useMemo(() => folderData.parentFolderId ? getFolder(folderData.parentFolderId) : null, [folderData]);
+    const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
+    const parentFolderData = useMemo(() => folderData.parentFolderId ? getFolderFromStorage(folderData.parentFolderId) : null, [folderData]);
     const folderStorage = useMMKV({ id: StorageIds.FOLDER_STORAGE });
 
     // Creates a new item in storage, and ensures the component re-render is skipped
@@ -126,7 +126,6 @@ const SortableFolder = ({
         deleteFolderItem(item.id, item.type);
     };
 
-
     /**
      * Handles clicking a list item. In transfer mode, the textfield item will transfer to the clicked item.
      * Otherwise, the focused item will be saved and the clicked item will be opened.
@@ -150,7 +149,7 @@ const SortableFolder = ({
      * @param item - the item being created
      * @param popupPosition - the position on the screen of the popup
      */
-    const renderNewItemPopup = (item: FolderItem, popupPosition: { x: number, y: number }) =>
+    const renderNewItemPopover = (item: FolderItem, popupPosition: { x: number, y: number }) =>
         <View
             style={[
                 styles.popup,
@@ -180,7 +179,7 @@ const SortableFolder = ({
      * @param item - the item being edited
      * @param popupPosition - the position on the screen of the popup
      */
-    const renderEditItemPopup = (
+    const renderEditItemPopover = (
         popupPosition: { x: number, y: number },
         item: FolderItem,
         isItemTransfering: boolean,
@@ -260,10 +259,10 @@ const SortableFolder = ({
                 {!isItemTransfering && currentTab === 'folders' && (
                     <Portal>
                         {item.status === ItemStatus.NEW && (
-                            renderNewItemPopup(item, popupPosition)
+                            renderNewItemPopover(item, popupPosition)
                         )}
                         {item.status === ItemStatus.EDIT && (
-                            renderEditItemPopup(popupPosition, item, isItemTransfering, isItemDeleting)
+                            renderEditItemPopover(popupPosition, item, isItemTransfering, isItemDeleting)
                         )}
                     </Portal>
                 )}
@@ -292,37 +291,6 @@ const SortableFolder = ({
             </View>
         );
     }
-
-    /**
-     * Displays the item based on its state. If being edited, a textfield is displayed.
-     * Otherwise, the item is displayed as a string.
-     * @param item - the item data
-     * @param isItemEditing - true if the item is being modified
-     * @param transferMode - true if any item in the list is being transferred
-     * @param isItemTransferring - true if this item is being transferred
-     * @param isItemDeleting - true if the item is being deleted
-     */
-    const renderItem = (
-        item: FolderItem,
-        isItemEditing: boolean,
-        transferMode: boolean,
-        isItemTransferring: boolean,
-        isItemDeleting: boolean
-    ) =>
-        isItemEditing ?
-            renderInputField(item, isItemTransferring, isItemDeleting) :
-            <Text
-                onPress={() => handleItemClick(item)}
-                style={{
-                    ...globalStyles.listItem,
-                    color: (transferMode && item.type === FolderItemType.LIST) ? colors.outline :
-                        isItemDeleting ?
-                            colors.outline : colors.secondary,
-                    textDecorationLine: isItemDeleting ? 'line-through' : undefined
-                }}
-            >
-                {item.value}
-            </Text>
 
     /**
      * Displays a row representing an item within the folder. A row includes an edit icon, the data,
@@ -356,7 +324,21 @@ const SortableFolder = ({
                     </TouchableOpacity>
 
                     {/* Row Data */}
-                    {renderItem(item, isItemEditing, transferMode, isItemTransferring, isItemDeleting)}
+                    {isItemEditing ? (
+                        renderInputField(item, isItemTransferring, isItemDeleting)) :
+                        <Text
+                            onPress={() => handleItemClick(item)}
+                            style={{
+                                ...globalStyles.listItem,
+                                color: (transferMode && item.type === FolderItemType.LIST) ? colors.outline :
+                                    isItemDeleting ?
+                                        colors.outline : colors.secondary,
+                                textDecorationLine: isItemDeleting ? 'line-through' : undefined
+                            }}
+                        >
+                            {item.value}
+                        </Text>
+                    }
 
                     {/* Item Count Marker */}
                     {!isItemEditing && (

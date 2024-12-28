@@ -5,9 +5,9 @@ import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../foundation/ui/modal/Modal';
 import { Event, TimeConfig } from '../types';
 import TimeDropdown from '../../../foundation/ui/input/TimeDropdown';
-import { generateGenericTimeOptions, generateTimeOptions, timeValueToIso, isTimestampValid, timestampToDayOfWeek } from '../utils';
+import { generateGenericTimeOptions, isTimestampValid, timestampToDayOfWeek } from '../utils';
 import CustomText from '../../../foundation/ui/text';
-import { RECURRING_WEEKDAY_PLANNER } from '../enums';
+import { TimeDropdownType } from '../enums';
 
 interface TimeModalProps {
     toggleModalOpen: () => void;
@@ -26,10 +26,10 @@ interface TimeModalSelection {
 
 const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: TimeModalProps) => {
     const timeOptions = useMemo(() => generateGenericTimeOptions(), [timestamp]);
-    const defaultStartTime = timeOptions[0].value;
-    const defaultEndTime = timeOptions[timeOptions.length - 1].value;
     const { colors } = useTheme();
-    const [dropdownInFocus, setDropdownInFocus] = useState(event.timeConfig ? '' : 'Start Time');
+    const [dropdownInFocus, setDropdownInFocus] = useState<TimeDropdownType | undefined>(
+        event.timeConfig ? undefined : TimeDropdownType.START
+    );
     const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(event.timeConfig ?? {
         isCalendarEvent: false,
         allDay: false,
@@ -37,6 +37,12 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
         endTime: undefined,
     });
 
+    const defaultStartTime = timeOptions[0].value;
+    const defaultEndTime = timeOptions[timeOptions.length - 1].value;
+
+    /**
+     * Saves the user input to the event.
+     */
     const onSaveInput = () => {
         const startTime = (timeModalData.allDay ? defaultStartTime : timeModalData.startTime) || defaultStartTime;
         const endTime = (timeModalData.allDay ? defaultEndTime : timeModalData.endTime) || defaultEndTime;
@@ -45,13 +51,17 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
             startTime: startTime,
             endTime: endTime
         });
-    }
+    };
 
+    /**
+     * Determines the first option available within the dropdown list.
+     */
     const startTimeOptionIndex = useMemo(() => {
         const index = timeOptions.findIndex(option => option.value === timeModalData.startTime);
         return index >= 0 ? index + 1 : 0;
     }, [timeOptions, timeModalData]);
 
+    // Determines if the user input is savable or not.
     const validData =
         (!timeModalData.isCalendarEvent && !!timeModalData.startTime) ||
         (timeModalData.isCalendarEvent && timeModalData.allDay) ||
@@ -69,7 +79,11 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
             }}
         >
             <View style={styles.container}>
+
+                {/* Calendar Controls */}
                 <View style={globalStyles.spacedApart}>
+
+                    {/* Calendar Toggle */}
                     <View style={{ width: '46%' }}>
                         {isTimestampValid(timestamp) && (
                             <>
@@ -85,6 +99,8 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                             </>
                         )}
                     </View>
+
+                    {/* All Day Control */}
                     <View style={{ width: '46%' }}>
                         {timeModalData.isCalendarEvent && (
                             <>
@@ -101,7 +117,11 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                         )}
                     </View>
                 </View>
+
+                {/* Time Controls */}
                 <View style={globalStyles.spacedApart}>
+
+                    {/* Start Time */}
                     {!timeModalData.allDay && (
                         <View style={{ width: '46%' }}>
                             <CustomText type='collapseText'>Start Time</CustomText>
@@ -112,10 +132,10 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                         startTime: newVal
                                     })
                                     if (newVal)
-                                        setDropdownInFocus('End Time');
+                                        setDropdownInFocus(TimeDropdownType.END);
                                 }}
-                                beginFocus={() => setDropdownInFocus('Start Time')}
-                                endFocus={() => setDropdownInFocus('')}
+                                beginFocus={() => setDropdownInFocus(TimeDropdownType.START)}
+                                endFocus={() => setDropdownInFocus(undefined)}
                                 options={timeOptions}
                                 dropdownInFocus={dropdownInFocus}
                                 placeholder='Start Time'
@@ -124,6 +144,8 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                             />
                         </View>
                     )}
+
+                    {/* End Time */}
                     {!timeModalData.allDay && timeModalData.isCalendarEvent && (
                         <View style={{ width: '46%' }}>
                             <CustomText type='collapseText'>End Time</CustomText>
@@ -134,12 +156,12 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                         endTime: newVal
                                     })
                                     if (newVal)
-                                        setDropdownInFocus('');
+                                        setDropdownInFocus(undefined);
                                 }}
                                 dropdownInFocus={dropdownInFocus}
                                 options={timeOptions}
-                                beginFocus={() => setDropdownInFocus('End Time')}
-                                endFocus={() => setDropdownInFocus('')}
+                                beginFocus={() => setDropdownInFocus(TimeDropdownType.END)}
+                                endFocus={() => setDropdownInFocus(undefined)}
                                 placeholder='End Time'
                                 currTimestamp={timeModalData.endTime}
                                 minOptionIndex={startTimeOptionIndex}
@@ -154,8 +176,7 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
 
 const styles = StyleSheet.create({
     container: {
-        height: 'auto',
-        gap: 10
+        gap: 16
     }
 });
 

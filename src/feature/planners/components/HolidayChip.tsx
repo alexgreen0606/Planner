@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { Chip, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { getHoliday } from '../storage/plannerStorage';
 import { theme } from '../../../theme/theme';
 
@@ -11,6 +11,7 @@ interface HolidayChipProps {
 const HolidayChip = ({ timestamp }: HolidayChipProps) => {
     const [holiday, setHoliday] = useState<string | undefined>();
 
+    // Load in the first holiday for this date
     useEffect(() => {
         const loadHoliday = async () => {
             setHoliday(await getHoliday(timestamp));

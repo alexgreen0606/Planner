@@ -5,7 +5,7 @@ import { theme } from '../../../theme/theme';
 import { FolderItemType } from '../enums';
 import globalStyles from '../../../theme/globalStyles';
 import { FolderItem } from '../types';
-import { getFolder, getList, getStorageKey, updateFolderItem } from '../storage/folderStorage';
+import { getFolderFromStorage, getListFromStorage, getStorageKey, updateFolderItem } from '../storage/folderStorage';
 import { ItemStatus } from '../../../foundation/sortedLists/enums';
 import CustomText from '../../../foundation/ui/text';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
@@ -34,7 +34,7 @@ const FolderItemBanner = ({
     // Builds the folder item data from storage
     const loadItemData = () => {
         if (itemType === FolderItemType.FOLDER) {
-            const data = getFolder(itemId);
+            const data = getFolderFromStorage(itemId);
             setItem({
                 id: data.id,
                 value: data.value,
@@ -44,7 +44,7 @@ const FolderItemBanner = ({
                 childrenCount: data.folderIds.length + data.listIds.length,
             } as FolderItem);
         } else {
-            const data = getList(itemId);
+            const data = getListFromStorage(itemId);
             setItem({
                 id: data.id,
                 value: data.value,

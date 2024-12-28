@@ -83,7 +83,7 @@ const WeeklyPlanner = () => {
         <ScrollView
           key={plannerListKey}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ alignItems: 'center', width: '100%', marginTop: 30}}
+          contentContainerStyle={{ alignItems: 'center', width: '100%'}}
         >
           {timestamps.map((timestamp) =>
             <View style={{ width: '90%', alignItems: 'center', marginBottom: 80 }} key={`${timestamp}-planner`}>
@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
   bannerContainer: {
     flexDirection: 'column',
     alignItems: 'flex-start',
+    paddingBottom: 20
   },
   banner: {
     ...globalStyles.spacedApart,

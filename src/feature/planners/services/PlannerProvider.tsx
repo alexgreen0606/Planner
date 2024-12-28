@@ -18,11 +18,15 @@ export const PlannerProvider: React.FC<{ children: React.ReactNode }> = ({ child
         numUpdates: 0
     })
 
-    const setFocusedPlanner = (timestamp: string) => {
-        if (focusedPlanner.timestamp === timestamp) {
+    /**
+     * Marks the planner with the given ID as focused.
+     * @param plannerId 
+     */
+    const setFocusedPlanner = (plannerId: string) => {
+        if (focusedPlanner.timestamp === plannerId) {
             setFocusedPlannerState({ ...focusedPlanner, numUpdates: focusedPlanner.numUpdates + 1 });
         } else {
-            setFocusedPlannerState({ timestamp, numUpdates: 0 });
+            setFocusedPlannerState({ timestamp: plannerId, numUpdates: 0 });
         }
     };
 

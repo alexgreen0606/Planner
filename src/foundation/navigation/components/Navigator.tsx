@@ -35,19 +35,24 @@ const Navigator = () => {
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
-                tabBarIcon: ({ color, size }) => <GenericIcon
-                    type={routeIconMap[route.name].type}
-                    name={routeIconMap[route.name].name}
-                    size={size}
-                    color={color}
-                />,
+                tabBarIcon: ({ color, size }) => {
+                    const iconConfig = routeIconMap[route.name];
+                    return (
+                        <GenericIcon
+                            type={iconConfig.type}
+                            name={iconConfig.name}
+                            size={size}
+                            color={color}
+                        />
+                    )
+                },
                 tabBarActiveTintColor: theme.colors.primary,
                 tabBarInactiveTintColor: theme.colors.outline,
                 headerShown: false,
                 tabBarStyle: {
                     backgroundColor: colors.backdrop,
                     shadowOpacity: 0,
-                    borderTopWidth: 0
+                    borderTopWidth: 0,
                 },
                 tabBarLabelStyle: {
                     display: 'none'

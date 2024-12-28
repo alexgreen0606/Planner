@@ -11,11 +11,12 @@ interface BirthdayChipProps {
 const BirthdayChip = ({ timestamp }: BirthdayChipProps) => {
     const [birthday, setBirthday] = useState<string | undefined>();
 
+    // Load in the first birthday for this date
     useEffect(() => {
-        const loadHoliday = async () => {
+        const loadBirthday = async () => {
             setBirthday(await getBirthday(timestamp));
         }
-        loadHoliday();
+        loadBirthday();
     }, [])
 
     if (!birthday) return;

@@ -3,15 +3,16 @@ import { View, Text, StyleSheet } from 'react-native';
 import { theme } from '../../../theme/theme';
 
 interface TimeProps {
-    timestamp: string;
+    timeValue: string; // HH:MM
 }
 
-const Time = ({ timestamp }: TimeProps) => {
+const Time = ({ timeValue: timeValue }: TimeProps) => {
     const [time, setTime] = useState('');
     const [indicator, setIndicator] = useState('');
 
+    // Calculate the time, minutes, and indicator for the given time
     useEffect(() => {
-        let [hour, minute] = timestamp.split(':').map(Number);
+        let [hour, minute] = timeValue.split(':').map(Number);
         setIndicator(hour >= 12 ? 'PM' : 'AM');
         hour = hour >= 12 ? hour - 12 : hour;
         hour = hour === 0 ? 12 : hour;
@@ -19,11 +20,9 @@ const Time = ({ timestamp }: TimeProps) => {
     }, [])
 
     return (
-        <View style={styles.parent}>
-            <View style={styles.container}>
-                <Text style={styles.time}>{time}</Text>
-                <Text style={styles.indicator}>{indicator}</Text>
-            </View>
+        <View style={styles.container}>
+            <Text style={styles.time}>{time}</Text>
+            <Text style={styles.indicator}>{indicator}</Text>
         </View>
     );
 };
@@ -31,12 +30,7 @@ const Time = ({ timestamp }: TimeProps) => {
 
 const styles = StyleSheet.create({
     container: {
-        justifyContent: 'flex-start',
         flexDirection: 'row',
-    },
-    parent: {
-        justifyContent: 'center',
-        marginLeft: 16
     },
     time: {
         fontSize: 16,

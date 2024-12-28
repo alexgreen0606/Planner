@@ -8,6 +8,7 @@ type GlobalStyles = {
   listItem: TextStyle;
   verticallyCentered: ViewStyle;
   listRow: ViewStyle;
+  fullWidth: ViewStyle;
 }
 
 const globalStyles: GlobalStyles = {
@@ -41,6 +42,9 @@ const globalStyles: GlobalStyles = {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8
+  },
+  fullWidth: {
+    width: '100%'
   }
 };
 

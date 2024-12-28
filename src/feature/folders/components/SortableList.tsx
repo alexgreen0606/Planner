@@ -7,7 +7,7 @@ import { ShiftTextfieldDirection, ItemStatus } from '../../../foundation/sortedL
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { FolderItemType } from '../enums';
 import FolderItemBanner from './FolderItemBanner';
-import { getFolder, getList, updateListItems } from '../storage/folderStorage';
+import { getFolderFromStorage, getListFromStorage, updateListItems } from '../storage/folderStorage';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
@@ -23,40 +23,14 @@ const SortableList = ({
     onBackClick
 }: SortableListProps) => {
     const { colors } = useTheme();
-    const initialListData = useMemo(() => getList(listId), [listId]);
-    const parentFolderData = useMemo(() => getFolder(initialListData.parentFolderId), [initialListData]);
+    const initialListData = useMemo(() => getListFromStorage(listId), [listId]);
+    const parentFolderData = useMemo(() => getFolderFromStorage(initialListData.parentFolderId), [initialListData]);
 
     // Stores the current list and all handler functions to update it
     const SortedList = useSortedList<ListItem>(
         initialListData.items,
         (newItems: ListItem[]) => updateListItems(listId, newItems)
     );
-
-    /**
-     * Displays the item based on its state. If being edited, a textfield is displayed.
-     * Otherwise, a draggable string is displayed.
-     * @param item - the item being displayed
-     * @param drag - a function to begin dragging the item
-     */
-    const renderItem = (item: ListItem, drag: any, isItemDeleting: boolean, isItemEditing: boolean) =>
-        isItemEditing ?
-            <ListTextfield
-                key={`${item.id}-${item.sortId}`}
-                item={item}
-                onChange={(text) => SortedList.updateItem({ ...item, value: text })}
-                onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
-            /> :
-            <Text
-                onLongPress={drag}
-                onPress={() => SortedList.beginEditItem(item)}
-                style={{
-                    ...globalStyles.listItem,
-                    color: isItemDeleting ? colors.outline : colors.secondary,
-                    textDecorationLine: isItemDeleting ? 'line-through' : undefined
-                }}
-            >
-                {item.value}
-            </Text>
 
     /**
      * Displays a row in the list. An radio button is rendered on the left allowing for deleting items.
@@ -68,7 +42,7 @@ const SortableList = ({
         return (
             <View style={globalStyles.backdrop}>
                 <View style={globalStyles.listRow}>
-                    
+
                     {/* Toggle Delete Button */}
                     <TouchableOpacity
                         onPress={() => SortedList.toggleDeleteItem(item)}
@@ -82,7 +56,26 @@ const SortableList = ({
                     </TouchableOpacity>
 
                     {/* Row data */}
-                    {renderItem(item, drag, isItemDeleting, isItemEditing)}
+                    {isItemEditing ? (
+                        <ListTextfield
+                            key={`${item.id}-${item.sortId}`}
+                            item={item}
+                            onChange={(text) => SortedList.updateItem({ ...item, value: text })}
+                            onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                        />
+                    ) : (
+                        <Text
+                            onLongPress={drag}
+                            onPress={() => SortedList.beginEditItem(item)}
+                            style={{
+                                ...globalStyles.listItem,
+                                color: isItemDeleting ? colors.outline : colors.secondary,
+                                textDecorationLine: isItemDeleting ? 'line-through' : undefined
+                            }}
+                        >
+                            {item.value}
+                        </Text>
+                    )}
                 </View>
 
                 {/* Separator line */}
