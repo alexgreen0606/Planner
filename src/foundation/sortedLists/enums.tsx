@@ -11,3 +11,9 @@ export enum ShiftTextfieldDirection {
     ABOVE = 'ABOVE',
     BELOW = 'BELOW'
 }
+
+export enum ListStorageMode {
+    FULL_SYNC = 'FULL_SYNC',
+    ITEM_SYNC = 'ITEM_SYNC',
+    CUSTOM_SYNC = 'CUSTOM_SYNC'
+}

@@ -1,5 +1,5 @@
 import { TextStyle, ViewStyle } from "react-native";
-import { theme } from "./theme";
+import colors from "./colors";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;
@@ -19,10 +19,10 @@ const globalStyles: GlobalStyles = {
     width: '100%'
   },
   backdrop: {
-    backgroundColor: theme.colors.backdrop
+    backgroundColor: colors.black
   },
   background: {
-    backgroundColor: theme.colors.background
+    backgroundColor: colors.background
   },
   listItem: {
     flex: 1,
@@ -31,7 +31,6 @@ const globalStyles: GlobalStyles = {
     paddingTop: 4,
     paddingBottom: 4,
     minHeight: 25,
-    color: theme.colors.secondary,
     fontSize: 16,
   },
   verticallyCentered: {

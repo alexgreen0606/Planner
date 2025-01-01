@@ -1,5 +1,11 @@
 import { ListItem } from "./types";
 
+/**
+ * Generates a new sort id for an item below the item with the given sort ID.
+ * @param parentSortId - -1 if at the top of the list, otherwise the sort ID of the item above the new item
+ * @param listItems - the current list
+ * @returns - a new sort id that places an item below its parent
+ */
 export function generateSortId(
     parentSortId: number,
     listItems: ListItem[],

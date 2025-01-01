@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Checkbox, useTheme } from 'react-native-paper';
+import { Checkbox } from 'react-native-paper';
 import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../foundation/ui/modal/Modal';
 import { Event, TimeConfig } from '../types';
-import TimeDropdown from '../../../foundation/ui/input/TimeDropdown';
-import { generateGenericTimeOptions, isTimestampValid, timestampToDayOfWeek } from '../utils';
+import { generateGenericTimeOptions, generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../utils';
 import CustomText from '../../../foundation/ui/text';
-import { TimeDropdownType } from '../enums';
+import TimeSelector from '../../../foundation/ui/input/TimeSelector';
+import colors from '../../../theme/colors';
 
 interface TimeModalProps {
     toggleModalOpen: () => void;
@@ -26,10 +26,7 @@ interface TimeModalSelection {
 
 const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: TimeModalProps) => {
     const timeOptions = useMemo(() => generateGenericTimeOptions(), [timestamp]);
-    const { colors } = useTheme();
-    const [dropdownInFocus, setDropdownInFocus] = useState<TimeDropdownType | undefined>(
-        event.timeConfig ? undefined : TimeDropdownType.START
-    );
+    const newTimeOptions = useMemo(() => generateTimeArrays(), [timestamp]);
     const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(event.timeConfig ?? {
         isCalendarEvent: false,
         allDay: false,
@@ -53,14 +50,6 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
         });
     };
 
-    /**
-     * Determines the first option available within the dropdown list.
-     */
-    const startTimeOptionIndex = useMemo(() => {
-        const index = timeOptions.findIndex(option => option.value === timeModalData.startTime);
-        return index >= 0 ? index + 1 : 0;
-    }, [timeOptions, timeModalData]);
-
     // Determines if the user input is savable or not.
     const validData =
         (!timeModalData.isCalendarEvent && !!timeModalData.startTime) ||
@@ -69,13 +58,19 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
 
     return (
         <Modal
-            title={`${isTimestampValid(timestamp) ? `${timestampToDayOfWeek(timestamp)} - ` : ''}${event.value}`}
+            title={event.value}
             toggleModalOpen={toggleModalOpen}
+            subTitle={timestampToDayOfWeek(timestamp)}
             open={open}
             primaryButtonConfig={{
                 label: 'Save',
                 onClick: onSaveInput,
                 disabled: !validData
+            }}
+            iconConfig={{
+                type: 'MaterialCommunityIcons',
+                name: 'clock-outline',
+                color: colors.blue
             }}
         >
             <View style={styles.container}>
@@ -84,34 +79,35 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                 <View style={globalStyles.spacedApart}>
 
                     {/* Calendar Toggle */}
-                    <View style={{ width: '46%' }}>
+                    <View style={{ width: '50%' }}>
                         {isTimestampValid(timestamp) && (
                             <>
-                                <CustomText type='collapseText'>Calendar Event</CustomText>
-                                <Checkbox
+                                <CustomText type='label'>Calendar Event</CustomText>
+                                <Checkbox.Android
                                     status={timeModalData.isCalendarEvent ? 'checked' : 'unchecked'}
                                     onPress={() => {
                                         setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent })
                                     }}
-                                    color={colors.primary}
-                                    uncheckedColor={colors.outline}
+                                    color={colors.blue}
+                                    uncheckedColor={colors.grey}
+
                                 />
                             </>
                         )}
                     </View>
 
                     {/* All Day Control */}
-                    <View style={{ width: '46%' }}>
+                    <View style={{ width: '50%' }}>
                         {timeModalData.isCalendarEvent && (
                             <>
-                                <CustomText type='collapseText'>All Day</CustomText>
-                                <Checkbox
+                                <CustomText type='label'>All Day</CustomText>
+                                <Checkbox.Android
                                     status={timeModalData.allDay ? 'checked' : 'unchecked'}
                                     onPress={() => {
                                         setTimeModalData({ ...timeModalData, allDay: !timeModalData.allDay })
                                     }}
-                                    color={colors.primary}
-                                    uncheckedColor={colors.outline}
+                                    color={colors.blue}
+                                    uncheckedColor={colors.grey}
                                 />
                             </>
                         )}
@@ -119,55 +115,44 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                 </View>
 
                 {/* Time Controls */}
-                <View style={globalStyles.spacedApart}>
+                <View>
 
                     {/* Start Time */}
                     {!timeModalData.allDay && (
-                        <View style={{ width: '46%' }}>
-                            <CustomText type='collapseText'>Start Time</CustomText>
-                            <TimeDropdown
-                                onChange={(newVal: string | undefined) => {
+                        <View style={{ width: '100%' }}>
+                            <CustomText type='label'>Start Time</CustomText>
+                            <TimeSelector
+                                onChange={(newVal: string) => {
                                     setTimeModalData({
                                         ...timeModalData,
                                         startTime: newVal
                                     })
-                                    if (newVal)
-                                        setDropdownInFocus(TimeDropdownType.END);
                                 }}
-                                beginFocus={() => setDropdownInFocus(TimeDropdownType.START)}
-                                endFocus={() => setDropdownInFocus(undefined)}
-                                options={timeOptions}
-                                dropdownInFocus={dropdownInFocus}
-                                placeholder='Start Time'
-                                currTimestamp={timeModalData.startTime}
-                                minOptionIndex={0}
+                                options={newTimeOptions}
+                                initialTimeValue={timeModalData.startTime || defaultStartTime}
                             />
                         </View>
                     )}
 
                     {/* End Time */}
                     {!timeModalData.allDay && timeModalData.isCalendarEvent && (
-                        <View style={{ width: '46%' }}>
-                            <CustomText type='collapseText'>End Time</CustomText>
-                            <TimeDropdown
-                                onChange={(newVal: string | undefined) => {
+                        <View style={{ width: '100%' }}>
+                            <CustomText type='label'>End Time</CustomText>
+                            <TimeSelector
+                                onChange={(newVal: string) => {
+                                    console.log(newVal)
                                     setTimeModalData({
                                         ...timeModalData,
                                         endTime: newVal
                                     })
-                                    if (newVal)
-                                        setDropdownInFocus(undefined);
                                 }}
-                                dropdownInFocus={dropdownInFocus}
-                                options={timeOptions}
-                                beginFocus={() => setDropdownInFocus(TimeDropdownType.END)}
-                                endFocus={() => setDropdownInFocus(undefined)}
-                                placeholder='End Time'
-                                currTimestamp={timeModalData.endTime}
-                                minOptionIndex={startTimeOptionIndex}
+                                options={newTimeOptions}
+                                initialTimeValue={timeModalData.endTime || defaultEndTime}
                             />
                         </View>
                     )}
+                </View>
+                <View>
                 </View>
             </View>
         </Modal>
@@ -176,7 +161,9 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
 
 const styles = StyleSheet.create({
     container: {
-        gap: 16
+        marginTop: 20,
+        gap: 40,
+        height: 600
     }
 });
 

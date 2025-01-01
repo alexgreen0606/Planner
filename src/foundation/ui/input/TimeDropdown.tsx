@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import AutocompleteInput from 'react-native-autocomplete-input';
 import { Text, TextInput } from 'react-native-paper';
-import { theme } from '../../../theme/theme';
-import { TimeDropdownType } from '../../../feature/planners/enums';
+import colors from '../../../theme/colors';
 
 export interface DropdownOption {
     value: string;
@@ -14,7 +13,7 @@ interface TimeDropdownProps {
     onChange: (newTimestamp: string | undefined) => void;
     options: DropdownOption[];
     placeholder: string;
-    dropdownInFocus: TimeDropdownType | undefined;
+    dropdownInFocus: boolean;
     beginFocus: () => void;
     endFocus: () => void;
     currTimestamp: string | undefined;
@@ -65,9 +64,8 @@ const TimeDropdown = ({
     }, [userInput, minOptionIndex])
 
     const renderDropdownOption = ({ item }: { item: any }) => {
-        if (dropdownInFocus !== placeholder) {
+        if (!dropdownInFocus)
             return null;
-        }
 
         return (
             <Text
@@ -95,7 +93,7 @@ const TimeDropdown = ({
             renderTextInput={() =>
                 <TextInput
                     mode="flat"
-                    autoFocus={dropdownInFocus === placeholder}
+                    autoFocus={dropdownInFocus}
                     value={currSelection?.label || userInput}
                     onChangeText={(text) => {
                         setUserInput(text);
@@ -134,12 +132,12 @@ const styles = StyleSheet.create({
     },
     flatList: {
         maxHeight: 140,
-        borderColor: theme.colors.background,
+        borderColor: colors.background,
         backgroundColor: 'transparent',
     },
     option: {
-        backgroundColor: theme.colors.background,
-        color: theme.colors.secondary,
+        backgroundColor: colors.background,
+        color: colors.white,
         height: 25,
         textAlign: 'center',
     }

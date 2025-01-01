@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../../../theme/theme';
+import colors from '../../../theme/colors';
 
 interface TimeProps {
     timeValue: string; // HH:MM
@@ -34,12 +34,12 @@ const styles = StyleSheet.create({
     },
     time: {
         fontSize: 16,
-        color: theme.colors.primary
+        color: colors.orange
     },
     indicator: {
         marginLeft: 2,
         fontSize: 10,
-        color: theme.colors.secondary
+        color: colors.white
     }
 });
 

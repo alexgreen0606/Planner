@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { Event, TimeConfig } from '../types';
-import { buildPlanner, savePlannerToStorage } from '../storage/plannerStorage';
+import { getPlannerFromStorage, savePlannerToStorage } from '../storage/plannerStorage';
 import { RECURRING_WEEKDAY_PLANNER } from '../enums';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
@@ -15,6 +14,7 @@ import Time from './Time';
 import { generateSortIdByTimestamp } from '../utils';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 import globalStyles from '../../../theme/globalStyles';
+import colors from '../../../theme/colors';
 
 interface SortableRecurringPlannerProps {
     manualSaveTrigger: string;
@@ -23,43 +23,41 @@ interface SortableRecurringPlannerProps {
 const SortableRecurringPlanner = ({
     manualSaveTrigger
 }: SortableRecurringPlannerProps) => {
-    const { colors } = useTheme();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const [initialPlanner, setInitialPlanner] = useState<Event[]>([]);
+    const initialPlanner = useMemo(() => getPlannerFromStorage(RECURRING_WEEKDAY_PLANNER), []);
+    const savePlanner = useRef(false);
+
+    const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
 
     // Creates a new textfield linked to the recurring planner
-    const customCreateNewTextfield = (newEvent: Event) => ({
+    const initializeNewEvent = (newEvent: Event) => ({
         ...newEvent,
         plannerId: RECURRING_WEEKDAY_PLANNER,
         recurringConfig: {
             recurringId: newEvent.id
         }
-    } as Event)
+    } as Event);
 
     // Stores the current recurring weekday planner and all handler functions to update it
-    const SortedPlanner = useSortedList<Event>(initialPlanner, undefined, customCreateNewTextfield);
-
-    const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
-
-    // Load in the recurring weekday planner
-    useEffect(() => {
-        const loadRecurringPlanner = async () => {
-            const loadedPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
-            setInitialPlanner(loadedPlanner);
-        };
-        loadRecurringPlanner();
-    }, []);
+    const SortedPlanner = useSortedList<Event>(initialPlanner, {
+        storageMode: ListStorageMode.CUSTOM_SYNC,
+        initializeNewItem: initializeNewEvent
+    });
 
     // Manually trigger the list to update
     useEffect(() => {
-        savePlannerToStorage(
-            RECURRING_WEEKDAY_PLANNER,
-            SortedPlanner.current
-                .filter(event => !!event.value.length)
-                .map(event => ({
-                    ...event,
-                    status: ItemStatus.STATIC
-                })));
+        if (savePlanner.current)
+            savePlannerToStorage(
+                RECURRING_WEEKDAY_PLANNER,
+                SortedPlanner.current
+                    .filter(event => !!event.value.length)
+                    .map(event => ({
+                        ...event,
+                        status: ItemStatus.STATIC
+                    })));
+
+        else
+            savePlanner.current = true;
     }, [manualSaveTrigger]);
 
     /**
@@ -81,7 +79,7 @@ const SortableRecurringPlanner = ({
                             type='MaterialCommunityIcons'
                             name={isItemDeleting ? 'trash-can' : 'trash-can-outline'}
                             size={20}
-                            color={isItemDeleting ? colors.secondary : colors.outline}
+                            color={isItemDeleting ? colors.white : colors.grey}
                         />
                     </TouchableOpacity>
 
@@ -102,7 +100,7 @@ const SortableRecurringPlanner = ({
                                 type='standard'
                                 style={{
                                     color: item.status && [ItemStatus.DELETE].includes(item.status) ?
-                                        colors.outline : colors.secondary,
+                                        colors.grey : colors.white,
                                     textDecorationLine: item.status === ItemStatus.DELETE ? 'line-through' : undefined
                                 }}
                             >
@@ -125,41 +123,43 @@ const SortableRecurringPlanner = ({
                                 type='MaterialCommunityIcons'
                                 name='clock-plus-outline'
                                 size={20}
-                                color={colors.outline}
+                                color={colors.grey}
                             />
                         </TouchableOpacity>
                     )}
                 </View>
 
                 {/* Separator Line */}
-                <ClickableLine onPress={() => SortedPlanner.moveTextfield(item.sortId)} />
+                <ClickableLine onPress={() => SortedPlanner.createOrMoveTextfield(item.sortId)} />
 
                 {/* Time Modal */}
-                <TimeModal
-                    open={timeModalOpen}
-                    toggleModalOpen={toggleTimeModal}
-                    event={item}
-                    timestamp={RECURRING_WEEKDAY_PLANNER}
-                    onSaveItem={(timeConfig: TimeConfig) => {
-                        const newEvent: Event = {
-                            ...item,
-                            timeConfig
-                        };
-                        newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
-                        SortedPlanner.updateItem(newEvent);
-                        toggleTimeModal();
-                    }}
-                />
+                {isItemEditing && (
+                    <TimeModal
+                        open={timeModalOpen}
+                        toggleModalOpen={toggleTimeModal}
+                        event={item}
+                        timestamp={RECURRING_WEEKDAY_PLANNER}
+                        onSaveItem={(timeConfig: TimeConfig) => {
+                            const newEvent: Event = {
+                                ...item,
+                                timeConfig
+                            };
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
+                            SortedPlanner.updateItem(newEvent);
+                            toggleTimeModal();
+                        }}
+                    />
+                )}
             </View>
         )
     };
 
     return (
-        <View>
-            <ClickableLine onPress={() => SortedPlanner.moveTextfield(-1)} />
+        <View style={styles.container}>
+            <ClickableLine onPress={() => SortedPlanner.createOrMoveTextfield(-1)} />
             <DraggableFlatList
                 data={SortedPlanner.current}
-                scrollEnabled={false}
+                nestedScrollEnabled
                 onDragEnd={SortedPlanner.endDragItem}
                 onDragBegin={SortedPlanner.beginDragItem}
                 keyExtractor={(item) => item.id}
@@ -168,5 +168,11 @@ const SortableRecurringPlanner = ({
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        height: 400
+    }
+});
 
 export default SortableRecurringPlanner;

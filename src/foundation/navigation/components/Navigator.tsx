@@ -1,13 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { theme } from '../../../theme/theme';
 import Dashboard from '../../../screens/Dashboard';
 import WeeklyPlanner from '../../../screens/WeeklyPlanner';
 import Folders from '../../../screens/Folders';
 import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { useNavigatorContext } from '../services/TabsProvider';
-import { useTheme } from 'react-native-paper';
 import GenericIcon from '../../ui/icons/GenericIcon';
+import colors from '../../../theme/colors';
 
 interface IconSpecification {
     type: any;
@@ -19,8 +18,8 @@ const Tab = createBottomTabNavigator();
 const routeIconMap: Record<string, IconSpecification> = {
     dashboard: { type: 'FontAwesome', name: 'coffee' },
     planner: { type: 'Ionicons', name: 'calendar-number-sharp' },
-    calendar: { type: 'FontAwesome', name: 'coffee' },
-    money: { type: 'FontAwesome', name: 'coffee' },
+    // calendar: { type: 'FontAwesome', name: 'coffee' },
+    // money: { type: 'FontAwesome', name: 'coffee' },
     folders: { type: 'Entypo', name: 'folder' }
 }
 
@@ -31,7 +30,6 @@ const WeeklyPlannerWithProviders = () =>
 
 const Navigator = () => {
     const { setCurrentTab } = useNavigatorContext();
-    const { colors } = useTheme();
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
@@ -46,13 +44,15 @@ const Navigator = () => {
                         />
                     )
                 },
-                tabBarActiveTintColor: theme.colors.primary,
-                tabBarInactiveTintColor: theme.colors.outline,
+                tabBarActiveTintColor: colors.blue,
+                tabBarInactiveTintColor: colors.grey,
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: colors.backdrop,
+                    backgroundColor: colors.black,
                     shadowOpacity: 0,
                     borderTopWidth: 0,
+                    height: 80,
+                    paddingTop: 10
                 },
                 tabBarLabelStyle: {
                     display: 'none'

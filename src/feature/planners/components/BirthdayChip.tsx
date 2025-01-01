@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { getBirthday } from '../storage/plannerStorage';
-import { theme } from '../../../theme/theme';
+import colors from '../../../theme/colors';
 
 interface BirthdayChipProps {
     timestamp: string; // YYYY-MM-DD
@@ -35,7 +35,7 @@ const BirthdayChip = ({ timestamp }: BirthdayChipProps) => {
 const styles = StyleSheet.create({
     text: {
         fontSize: 12,
-        color: theme.colors.secondary
+        color: colors.purple
     },
 });
 

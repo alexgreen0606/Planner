@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { TextInput, useTheme } from 'react-native-paper';
-import { theme } from '../../../theme/theme';
+import { TextInput } from 'react-native-paper';
 import { FolderItemType } from '../enums';
 import globalStyles from '../../../theme/globalStyles';
 import { FolderItem } from '../types';
@@ -11,6 +10,7 @@ import CustomText from '../../../foundation/ui/text';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../../../enums';
+import colors from '../../../theme/colors';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -27,7 +27,6 @@ const FolderItemBanner = ({
     backButtonConfig,
     itemType
 }: FolderItemBannerProps) => {
-    const { colors } = useTheme();
     const [item, setItem] = useState<FolderItem>();
     const folderStorage = useMMKV({ id: StorageIds.FOLDER_STORAGE });
 
@@ -85,7 +84,7 @@ const FolderItemBanner = ({
                     type='Entypo'
                     name={itemType === FolderItemType.FOLDER ? 'folder' : 'list'}
                     size={26}
-                    color={colors.primary}
+                    color={colors.blue}
                 />
 
                 {/* Item Name */}
@@ -101,7 +100,7 @@ const FolderItemBanner = ({
                                 primary: 'transparent'
                             }
                         }}
-                        textColor={colors.secondary}
+                        textColor={colors.white}
                         onSubmitEditing={saveItem}
                         contentStyle={{ paddingLeft: 0 }}
                     />
@@ -126,13 +125,13 @@ const FolderItemBanner = ({
                             type='MaterialIcons'
                             name='chevron-left'
                             size={16}
-                            color={colors.secondary}
+                            color={colors.white}
                         />
                         <CustomText
                             numberOfLines={1}
                             ellipsizeMode='tail'
                             style={styles.backButton}
-                            type='collapseText'
+                            type='label'
                         >
                             {backButtonConfig.label}
                         </CustomText>
@@ -151,7 +150,7 @@ const styles = StyleSheet.create({
     },
     labelText: {
         fontSize: 25,
-        color: theme.colors.secondary,
+        color: colors.white,
         flex: 1
     },
     textInput: {
@@ -161,7 +160,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     backButton: {
-        color: theme.colors.secondary,
+        color: colors.white,
         marginLeft: 2,
         maxWidth: 80,
     }

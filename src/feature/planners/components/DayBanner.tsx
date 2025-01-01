@@ -1,23 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import useWeather from '../../../foundation/weather/hooks/useWeather';
 import { weatherCodeToFontistoIcon } from '../../../foundation/weather/utils';
 import { timestampToDayOfWeek, timestampToMonthDate } from '../utils';
 import globalStyles from '../../../theme/globalStyles';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
-import { theme } from '../../../theme/theme';
+import colors from '../../../theme/colors';
 
 interface DayBannerProps {
     timestamp: string; // YYYY-MM-DD
 }
 
 const DayBanner = ({ timestamp }: DayBannerProps) => {
-    const { colors } = useTheme();
     const { forecast, loading } = useWeather(timestamp);
 
     return (
-        <View style={globalStyles.spacedApart}>
+        <View style={{...globalStyles.spacedApart, paddingHorizontal: 16, paddingTop: 8 }}>
 
             {/* Date */}
             <View style={styles.dayContainer}>
@@ -38,7 +36,7 @@ const DayBanner = ({ timestamp }: DayBannerProps) => {
                             type={weatherCodeToFontistoIcon(forecast.weatherCode).type}
                             name={weatherCodeToFontistoIcon(forecast.weatherCode).name}
                             size={18}
-                            color={colors.secondary}
+                            color={weatherCodeToFontistoIcon(forecast.weatherCode).color}
                         />
                     </View>
                 </View>
@@ -54,11 +52,11 @@ const styles = StyleSheet.create({
     },
     dayOfWeek: {
         fontSize: 22,
-        color: theme.colors.primary,
+        color: colors.white
     },
     date: {
         fontSize: 12.5,
-        color: theme.colors.outline,
+        color: colors.blue,
         marginLeft: 5,
         marginBottom: 2,
     },
@@ -68,17 +66,17 @@ const styles = StyleSheet.create({
     },
     highTemp: {
         fontSize: 18,
-        color: theme.colors.secondary,
+        color: colors.white,
     },
     divider: {
         width: StyleSheet.hairlineWidth,
         height: '80%',
-        backgroundColor: theme.colors.outline,
+        backgroundColor: colors.grey,
         marginHorizontal: 4,
     },
     lowTemp: {
         fontSize: 14,
-        color: theme.colors.outline,
+        color: colors.grey,
     },
 });
 

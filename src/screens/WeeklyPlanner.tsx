@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useTheme, Text } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../theme/theme';
 import globalStyles from '../theme/globalStyles';
 import SortablePlanner from '../feature/planners/components/SortablePlanner';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -14,19 +13,16 @@ import { StorageIds } from '../enums';
 import { getPlannerStorageKey } from '../feature/planners/storage/plannerStorage';
 import SortableRecurringPlanner from '../feature/planners/components/SortableRecurringPlanner';
 import GenericIcon from '../foundation/ui/icons/GenericIcon';
+import colors from '../theme/colors';
 
 /**
- * Recurring modal includes:
+ * TODO:
  * 
- *  - A sortable planner
- *  - A label: Week Day Routine
- *  - A description of what this is for:
- *    - "All events below will be automatically added to every weekday in your planner."
- *  - need to disable the ability to add these events to calendar
+ * problem with adding in recurring planner when events already exist. Need to maintain the recurring, and add in the
+ * existing events one at a time.
  */
 
 const WeeklyPlanner = () => {
-  const { colors } = useTheme();
   const [timestamps, setTimestamps] = useState<string[]>([]);
   const [weekdayPlannerOpen, setWeekdayPlannerOpen] = useState(false);
   const [plannerListKey, setPlannerListKey] = useState('PLANNER_LIST_KEY');
@@ -47,13 +43,14 @@ const WeeklyPlanner = () => {
   useMMKVListener((key) => {
     if (key === getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER)) {
       setPlannerListKey(curr => (`${curr}_RERENDER`));
+      toggleWeekdayPlanner();
     }
   }, storage)
 
   const toggleWeekdayPlanner = () => setWeekdayPlannerOpen(!weekdayPlannerOpen);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.backdrop }}>
+    <View style={{ flex: 1, backgroundColor: colors.black }}>
       <SafeAreaView>
         <View style={styles.bannerContainer}>
           <View style={styles.banner}>
@@ -62,7 +59,7 @@ const WeeklyPlanner = () => {
                 type='Ionicons'
                 name='calendar-number-sharp'
                 size={26}
-                color={colors.primary}
+                color={colors.blue}
               />
               <Text adjustsFontSizeToFit style={styles.labelText} numberOfLines={2}>
                 Planner
@@ -75,7 +72,7 @@ const WeeklyPlanner = () => {
                 type='MaterialCommunityIcons'
                 name='calendar-sync'
                 size={20}
-                color={colors.outline}
+                color={colors.grey}
               />
             </TouchableOpacity>
           </View>
@@ -86,7 +83,7 @@ const WeeklyPlanner = () => {
           contentContainerStyle={{ alignItems: 'center', width: '100%'}}
         >
           {timestamps.map((timestamp) =>
-            <View style={{ width: '90%', alignItems: 'center', marginBottom: 80 }} key={`${timestamp}-planner`}>
+            <View style={{ width: '90%', alignItems: 'center', marginBottom: 20, backgroundColor: colors.background, borderRadius: 12 }} key={`${timestamp}-planner`}>
               <SortablePlanner
                 timestamp={timestamp}
               />
@@ -97,13 +94,15 @@ const WeeklyPlanner = () => {
           title='Recurring Weekday Planner'
           open={weekdayPlannerOpen}
           primaryButtonConfig={{
-            onClick: () => {
-              setSaveRecurringTrigger(`${saveRecurringTrigger}_AGAIN`);
-              toggleWeekdayPlanner();
-            },
+            onClick: () => setSaveRecurringTrigger(`${saveRecurringTrigger}_AGAIN`),
             label: 'Save'
           }}
           toggleModalOpen={toggleWeekdayPlanner}
+          iconConfig={{
+            type: 'MaterialCommunityIcons',
+            name: 'calendar-sync',
+            color: colors.blue
+          }}
         >
           <SortableRecurringPlanner
             manualSaveTrigger={saveRecurringTrigger}
@@ -131,7 +130,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontSize: 25,
-    color: theme.colors.secondary,
+    color: colors.white,
   },
 });
 

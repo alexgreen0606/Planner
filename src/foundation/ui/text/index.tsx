@@ -1,20 +1,24 @@
 import React from 'react';
 import { StyleSheet, TextStyle } from 'react-native';
-import { theme } from '../../../theme/theme';
 import { Text } from 'react-native-paper';
+import colors from '../../../theme/colors';
 
 const styles = StyleSheet.create({
-    collapseText: {
-        color: theme.colors.outline,
+    label: {
+        color: colors.grey,
         fontSize: 14
     },
     standard: {
-        color: theme.colors.secondary,
+        color: colors.white,
         fontSize: 16,
     },
     soft: {
-        color: theme.colors.outline,
+        color: colors.grey,
         fontSize: 14,
+    },
+    header: {
+        color: colors.white,
+        fontSize: 20
     }
 });
 

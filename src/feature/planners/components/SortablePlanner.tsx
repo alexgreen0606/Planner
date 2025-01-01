@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { usePlannerContext } from '../services/PlannerProvider';
 import { Event, TimeConfig } from '../types';
 import DayBanner from './DayBanner';
@@ -20,6 +19,7 @@ import globalStyles from '../../../theme/globalStyles';
 import HolidayChip from './HolidayChip';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 import BirthdayChip from './BirthdayChip';
+import colors from '../../../theme/colors';
 
 interface SortablePlannerProps {
     timestamp: string;
@@ -28,7 +28,6 @@ interface SortablePlannerProps {
 const SortablePlanner = ({
     timestamp
 }: SortablePlannerProps) => {
-    const { colors } = useTheme();
     const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -37,7 +36,10 @@ const SortablePlanner = ({
     const plannerStorage = useMMKV({ id: StorageIds.PLANNER_STORAGE });
     const skipStorageSync = useRef(true);
 
-    const toggleCollapsed = () => setCollapsed(curr => !curr);
+    const toggleCollapsed = () => {
+        SortedPlanner.saveTextfield();
+        setCollapsed(curr => !curr);
+    }
     const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
 
     // Creates a new event in storage, and ensures the component re-render is skipped
@@ -47,7 +49,7 @@ const SortablePlanner = ({
     };
 
     // Creates a new textfield linked to this planner
-    const customCreateNewTextfield = (newEvent: Event) => {
+    const initializeNewEvent = (newEvent: Event) => {
         return {
             ...newEvent,
             plannerId: timestamp
@@ -57,13 +59,15 @@ const SortablePlanner = ({
     // Stores the current planner and all handler functions to update it
     const SortedPlanner = useSortedList<Event>(
         planner,
-        undefined,
-        customCreateNewTextfield,
         {
-            create: customCreateNewItem,
-            update: persistEvent,
-            delete: deleteEvent
-        }
+            storageMode: ListStorageMode.ITEM_SYNC,
+            storageUpdates: {
+                create: customCreateNewItem,
+                update: persistEvent,
+                delete: deleteEvent
+            },
+            initializeNewItem: initializeNewEvent
+        },
     );
 
     // Load in the initial planner and recurring weekday planner
@@ -105,11 +109,11 @@ const SortablePlanner = ({
      * Moves the textfield to its new position, and sets this as the focused planner within
      * the context.
      */
-    const customMoveTextfield = (parentSortId: number | null) => {
+    const customMoveTextfield = (parentSortId: number | null, grabLastItem?: boolean) => {
         let customParentSortId = parentSortId;
-        if (collapsed)
+        if (grabLastItem)
             customParentSortId = SortedPlanner.current[SortedPlanner.current.length - 1]?.sortId || -1;
-        SortedPlanner.moveTextfield(customParentSortId);
+        SortedPlanner.createOrMoveTextfield(customParentSortId);
         setFocusedPlanner(timestamp);
     };
 
@@ -142,8 +146,8 @@ const SortablePlanner = ({
         const isItemDeleting = item.status === ItemStatus.DELETE;
         const iconStyle = isItemDeleting ? 'circle' : 'circle-thin';
         return (
-            <View style={globalStyles.backdrop}>
-                <View style={globalStyles.spacedApart}>
+            <View style={globalStyles.background}>
+                <View style={globalStyles.listRow}>
 
                     {/* Toggle Delete Icon */}
                     <TouchableOpacity onPress={() => customToggleDeleteItem(item)}>
@@ -151,7 +155,7 @@ const SortablePlanner = ({
                             type='FontAwesome'
                             name={iconStyle}
                             size={20}
-                            color={colors.outline}
+                            color={isItemDeleting ? colors.blue : colors.grey}
                         />
                     </TouchableOpacity>
 
@@ -172,7 +176,7 @@ const SortablePlanner = ({
                                 type='standard'
                                 style={{
                                     color: item.status && [ItemStatus.DELETE].includes(item.status) ?
-                                        colors.outline : colors.secondary,
+                                        colors.grey : colors.white,
                                     textDecorationLine: item.status === ItemStatus.DELETE ? 'line-through' : undefined
                                 }}
                             >
@@ -195,7 +199,7 @@ const SortablePlanner = ({
                                 type='MaterialCommunityIcons'
                                 name='clock-plus-outline'
                                 size={20}
-                                color={colors.outline}
+                                color={colors.grey}
                             />
                         </TouchableOpacity>
                     )}
@@ -205,21 +209,23 @@ const SortablePlanner = ({
                 <ClickableLine onPress={() => customMoveTextfield(item.sortId)} />
 
                 {/* Time Modal */}
-                <TimeModal
-                    open={timeModalOpen}
-                    toggleModalOpen={toggleTimeModal}
-                    event={item}
-                    timestamp={timestamp}
-                    onSaveItem={(timeConfig: TimeConfig) => {
-                        const newEvent: Event = {
-                            ...item,
-                            timeConfig
-                        };
-                        newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
-                        SortedPlanner.updateItem(newEvent);
-                        toggleTimeModal();
-                    }}
-                />
+                {isItemEditing && (
+                    <TimeModal
+                        open={timeModalOpen}
+                        toggleModalOpen={toggleTimeModal}
+                        event={item}
+                        timestamp={timestamp}
+                        onSaveItem={(timeConfig: TimeConfig) => {
+                            const newEvent: Event = {
+                                ...item,
+                                timeConfig
+                            };
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
+                            SortedPlanner.updateItem(newEvent);
+                            toggleTimeModal();
+                        }}
+                    />
+                )}
             </View>
         )
     };
@@ -231,66 +237,67 @@ const SortablePlanner = ({
             <DayBanner timestamp={timestamp} />
 
             {/* Separator Line */}
-            <ClickableLine onPress={() => customMoveTextfield(-1)} />
+            <ClickableLine onPress={() => collapsed ? setCollapsed(false) : customMoveTextfield(-1)} />
 
             {/* Planner Event List */}
             <DraggableFlatList
                 data={collapsed ? [] : SortedPlanner.current}
-                scrollEnabled={false}
+                nestedScrollEnabled
                 onDragEnd={SortedPlanner.endDragItem}
                 onDragBegin={SortedPlanner.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
+                style={{ maxHeight: 420 }}
             />
 
             {/* Collapse Control */}
             {!!SortedPlanner.current.length ? (
-                <TouchableOpacity style={globalStyles.spacedApart}
-                    onPress={toggleCollapsed}>
+                <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8 }} onPress={toggleCollapsed}>
                     <GenericIcon
                         type='Entypo'
                         name={collapsed ? 'chevron-right' : 'chevron-up'}
+                        color={colors.grey}
                         size={16}
-                        color={colors.outline}
                     />
-                    <View style={globalStyles.listItem}>
-                        <CustomText
-                            type='collapseText'
-                            style={{
-                                color: colors.outline,
-                                width: '100%',
-                                textAlign: 'right'
-                            }}
-                        >
-                            {SortedPlanner.current.filter(item => item.status !== ItemStatus.NEW).length}
-                        </CustomText>
-                    </View>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity onPress={() => customMoveTextfield(-1)} style={globalStyles.listItem}>
                     <CustomText
-                        type='collapseText'
+                        type='label'
                         style={{
-                            color: colors.outline,
-                            width: '100%',
-                            textAlign: 'center'
+                            color: colors.grey,
                         }}
                     >
-                        no plans
+                        {collapsed ? 'View ' : 'Hide '}
+                        {SortedPlanner.current.filter(item => item.status !== ItemStatus.NEW).length} plans
+                    </CustomText>
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity style={{ ...globalStyles.verticallyCentered, paddingLeft: 8, gap: 8 }} onPress={() => customMoveTextfield(-1)}>
+                    <GenericIcon
+                        type='Fontisto'
+                        name='plus-a'
+                        color={colors.grey}
+                        size={10}
+                    />
+                    <CustomText
+                        type='label'
+                        style={{
+                            color: colors.grey,
+                        }}
+                    >
+                        Add plans
                     </CustomText>
                 </TouchableOpacity>
             )}
 
             {/* Separator Line */}
-            <ClickableLine onPress={() => customMoveTextfield(-1)} />
+            <ClickableLine onPress={toggleCollapsed} />
 
             {/* All Day Event Chips */}
-            <View style={{ ...globalStyles.spacedApart }}>
+            <View style={{ ...globalStyles.spacedApart, paddingHorizontal: 16, paddingBottom: 8 }}>
                 <View style={{ flex: 1 }}>
-                    <BirthdayChip timestamp={timestamp} />
+                    <HolidayChip timestamp={timestamp} />
                 </View>
                 <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                    <HolidayChip timestamp={timestamp} />
+                    <BirthdayChip timestamp={timestamp} />
                 </View>
             </View>
         </View>

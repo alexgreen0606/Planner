@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, UIManager, findNodeHandle, TouchableOpacity } from 'react-native';
-import { Portal, useTheme } from 'react-native-paper';
+import { Portal } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { FolderItemType } from '../enums';
 import { FolderItem } from '../types';
 import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
@@ -24,6 +24,7 @@ import ListTextfield from '../../../foundation/sortedLists/components/ListTextfi
 import GenericIcon, { IconType } from '../../../foundation/ui/icons/GenericIcon';
 import globalStyles from '../../../theme/globalStyles';
 import CustomText from '../../../foundation/ui/text';
+import colors from '../../../theme/colors';
 
 interface SortableFolderProps {
     folderId: string;
@@ -36,7 +37,6 @@ const SortableFolder = ({
     onBackClick,
     onOpenItem
 }: SortableFolderProps) => {
-    const { colors } = useTheme();
     const { currentTab } = useNavigatorContext();
     const [initialFolderItems, setInitialFolderItems] = useState(getFolderItems(folderId));
     const skipStorageSync = useRef(false);
@@ -52,7 +52,7 @@ const SortableFolder = ({
     };
 
     // Creates a new textfield with initial item count set to 0
-    const customCreateNewTextfield = (newItem: FolderItem) => {
+    const initializeFolderItem = (newItem: FolderItem) => {
         return {
             ...newItem,
             childrenCount: 0
@@ -70,13 +70,15 @@ const SortableFolder = ({
     // Stores the current folder and all handler functions to update it
     const SortedFolder = useSortedList<FolderItem>(
         initialFolderItems,
-        undefined,
-        customCreateNewTextfield,
         {
-            create: customCreateNewItem,
-            update: updateFolderItem,
-            delete: (item: FolderItem) => deleteFolderItem(item.id, item.type)
-        }
+            storageMode: ListStorageMode.ITEM_SYNC,
+            storageUpdates: {
+                create: customCreateNewItem,
+                update: updateFolderItem,
+                delete: (item: FolderItem) => deleteFolderItem(item.id, item.type)
+            },
+            initializeNewItem: initializeFolderItem
+        },
     );
 
     // Sync the sorted list with storage
@@ -136,8 +138,8 @@ const SortableFolder = ({
         if (currentItem && currentItem.status === ItemStatus.TRANSFER) {
             if (item.type === FolderItemType.FOLDER) {
                 handleItemTransfer(item);
-                return;
             }
+            return;
         } else if (currentItem) {
             SortedFolder.saveTextfield();
         }
@@ -161,7 +163,7 @@ const SortableFolder = ({
                     type='MaterialIcons'
                     name='folder-open'
                     size={20}
-                    color={item.type === FolderItemType.FOLDER ? colors.primary : colors.outline}
+                    color={item.type === FolderItemType.FOLDER ? colors.blue : colors.grey}
                 />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.LIST })}>
@@ -169,7 +171,7 @@ const SortableFolder = ({
                     type='Ionicons'
                     name='list-outline'
                     size={20}
-                    color={item.type === FolderItemType.LIST ? colors.primary : colors.outline}
+                    color={item.type === FolderItemType.LIST ? colors.blue : colors.grey}
                 />
             </TouchableOpacity>
         </View>
@@ -183,7 +185,6 @@ const SortableFolder = ({
         popupPosition: { x: number, y: number },
         item: FolderItem,
         isItemTransfering: boolean,
-        isItemDeleting: boolean
     ) =>
         <View
             style={[
@@ -198,7 +199,7 @@ const SortableFolder = ({
                     type='MaterialCommunityIcons'
                     name='arrow-down-right'
                     size={20}
-                    color={isItemTransfering ? colors.primary : colors.outline}
+                    color={isItemTransfering ? colors.blue : colors.grey}
                 />
             </TouchableOpacity>
             <TouchableOpacity
@@ -208,7 +209,7 @@ const SortableFolder = ({
                     type='Entypo'
                     name='trash'
                     size={20}
-                    color={isItemDeleting ? colors.outline : colors.outline}
+                    color={colors.grey}
                 />
             </TouchableOpacity>
         </View>
@@ -262,7 +263,7 @@ const SortableFolder = ({
                             renderNewItemPopover(item, popupPosition)
                         )}
                         {item.status === ItemStatus.EDIT && (
-                            renderEditItemPopover(popupPosition, item, isItemTransfering, isItemDeleting)
+                            renderEditItemPopover(popupPosition, item, isItemTransfering)
                         )}
                     </Portal>
                 )}
@@ -275,7 +276,12 @@ const SortableFolder = ({
                     primaryButtonConfig={{
                         label: !!item.childrenCount ? 'Force Delete' : 'Delete',
                         onClick: () => handleDeleteItem(item),
-                        color: !!item.childrenCount ? 'red' : colors.primary
+                        color: !!item.childrenCount ? 'red' : colors.blue
+                    }}
+                    iconConfig={{
+                        type: 'Entypo',
+                        name: 'trash',
+                        color: 'red'
                     }}
                 >
                     {!!item.childrenCount ? (
@@ -319,7 +325,7 @@ const SortableFolder = ({
                             type={iconStyle.type}
                             name={iconStyle.name}
                             size={20}
-                            color={isItemTransferring ? colors.primary : colors.outline}
+                            color={isItemTransferring ? colors.blue : item.type === FolderItemType.FOLDER ? colors.yellow : colors.grey}
                         />
                     </TouchableOpacity>
 
@@ -330,9 +336,9 @@ const SortableFolder = ({
                             onPress={() => handleItemClick(item)}
                             style={{
                                 ...globalStyles.listItem,
-                                color: (transferMode && item.type === FolderItemType.LIST) ? colors.outline :
+                                color: (transferMode && item.type === FolderItemType.LIST) ? colors.grey :
                                     isItemDeleting ?
-                                        colors.outline : colors.secondary,
+                                        colors.grey : colors.white,
                                 textDecorationLine: isItemDeleting ? 'line-through' : undefined
                             }}
                         >
@@ -342,14 +348,14 @@ const SortableFolder = ({
 
                     {/* Item Count Marker */}
                     {!isItemEditing && (
-                        <Text style={{ color: colors.outline }}>
+                        <Text style={{ color: colors.grey }}>
                             {item.childrenCount}
                         </Text>
                     )}
                 </View>
 
                 {/* Separator Line */}
-                <ClickableLine onPress={() => SortedFolder.moveTextfield(item.sortId)} />
+                <ClickableLine onPress={() => SortedFolder.createOrMoveTextfield(item.sortId)} />
             </View>
         )
     }
@@ -365,7 +371,7 @@ const SortableFolder = ({
                 }}
                 itemType={FolderItemType.FOLDER}
             />
-            <ClickableLine onPress={() => SortedFolder.moveTextfield(-1)} />
+            <ClickableLine onPress={() => SortedFolder.createOrMoveTextfield(-1)} />
             <DraggableFlatList
                 data={SortedFolder.current}
                 scrollEnabled={false}

@@ -22,7 +22,7 @@ export const getPlannerStorageKey = (plannerId: string) => `PLANNERS_${plannerId
  * Fetches the planner with the given ID from storage.
  * @param plannerId 
  */
-const getPlannerFromStorage = (plannerId: string): Event[] => {
+export const getPlannerFromStorage = (plannerId: string): Event[] => {
     const eventsString = storage.getString(getPlannerStorageKey(plannerId));
     if (eventsString)
         return JSON.parse(eventsString);
@@ -321,6 +321,8 @@ export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
     deletePastPlanners();
 
     let planner = getPlannerFromStorage(plannerId);
+
+    console.log(planner, 'loaded in')
 
     // Return the recurring weekday planner
     if (plannerId === RECURRING_WEEKDAY_PLANNER)

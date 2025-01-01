@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import { FolderItemType } from '../feature/folders/enums';
 import SortableFolder from '../feature/folders/components/SortableFolder';
 import SortableList from '../feature/folders/components/SortableList';
+import colors from '../theme/colors';
 
 interface PageConfig {
   id: string;
@@ -11,7 +11,6 @@ interface PageConfig {
 }
 
 const Folders = () => {
-  const { colors } = useTheme();
   const [pageConfig, setPageConfig] = useState<PageConfig>({
     id: 'root',
     type: FolderItemType.FOLDER
@@ -21,7 +20,7 @@ const Folders = () => {
     setPageConfig({ id: parentFolderId, type: FolderItemType.FOLDER });
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.backdrop }}>
+    <View style={{ flex: 1, backgroundColor: colors.black }}>
       <SafeAreaView key={pageConfig.id}>
         {pageConfig.type === FolderItemType.FOLDER ? (
           <SortableFolder

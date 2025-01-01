@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useTheme } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { ListItem } from '../../../foundation/sortedLists/types';
-import { ShiftTextfieldDirection, ItemStatus } from '../../../foundation/sortedLists/enums';
+import { ShiftTextfieldDirection, ItemStatus, ListStorageMode } from '../../../foundation/sortedLists/enums';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { FolderItemType } from '../enums';
 import FolderItemBanner from './FolderItemBanner';
@@ -12,6 +11,7 @@ import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 import globalStyles from '../../../theme/globalStyles';
+import colors from '../../../theme/colors';
 
 interface SortableListProps {
     listId: string;
@@ -22,14 +22,16 @@ const SortableList = ({
     listId,
     onBackClick
 }: SortableListProps) => {
-    const { colors } = useTheme();
     const initialListData = useMemo(() => getListFromStorage(listId), [listId]);
     const parentFolderData = useMemo(() => getFolderFromStorage(initialListData.parentFolderId), [initialListData]);
 
     // Stores the current list and all handler functions to update it
     const SortedList = useSortedList<ListItem>(
         initialListData.items,
-        (newItems: ListItem[]) => updateListItems(listId, newItems)
+        {
+            storageMode: ListStorageMode.FULL_SYNC,
+            saveListToStorage: (newItems: ListItem[]) => updateListItems(listId, newItems)
+        }
     );
 
     /**
@@ -51,7 +53,7 @@ const SortableList = ({
                             type='FontAwesome'
                             name={isItemDeleting ? 'circle' : 'circle-thin'}
                             size={20}
-                            color={colors.outline}
+                            color={colors.grey}
                         />
                     </TouchableOpacity>
 
@@ -69,7 +71,7 @@ const SortableList = ({
                             onPress={() => SortedList.beginEditItem(item)}
                             style={{
                                 ...globalStyles.listItem,
-                                color: isItemDeleting ? colors.outline : colors.secondary,
+                                color: isItemDeleting ? colors.grey : colors.white,
                                 textDecorationLine: isItemDeleting ? 'line-through' : undefined
                             }}
                         >
@@ -79,7 +81,7 @@ const SortableList = ({
                 </View>
 
                 {/* Separator line */}
-                <ClickableLine onPress={() => SortedList.moveTextfield(item.sortId)} />
+                <ClickableLine onPress={() => SortedList.createOrMoveTextfield(item.sortId)} />
             </View>
         )
     }
@@ -95,7 +97,7 @@ const SortableList = ({
                 }}
                 itemType={FolderItemType.LIST}
             />
-            <ClickableLine onPress={() => SortedList.moveTextfield(-1)} />
+            <ClickableLine onPress={() => SortedList.createOrMoveTextfield(-1)} />
             <DraggableFlatList
                 data={SortedList.current}
                 scrollEnabled={false}

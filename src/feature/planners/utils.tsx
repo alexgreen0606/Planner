@@ -200,35 +200,6 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
 };
 
 /**
- * Generates a list of dropdown options for hours and minutes of the given day in 5-minute intervals.
- * @param baseDate - the date for the option timestamps
- * @returns - list of dropdown options of the format: { label: 3:15 AM, value: YYYY-MM-DDT00:00:00 }
- */
-export const generateTimeOptions = (baseDate: string): DropdownOption[] => {
-    const options = [];
-    const [year, month, day] = baseDate.split('-').map(Number);
-
-    for (let hour = 0; hour < 24; hour++) {
-        for (let minute = 0; minute < 60; minute += 5) {
-            const period = hour < 12 ? "AM" : "PM";
-            const formattedHour = hour % 12 === 0 ? 12 : hour % 12; // Convert 0 to 12 for midnight and 12-hour format
-            const formattedMinute = minute.toString().padStart(2, "0");
-            const label = `${formattedHour}:${formattedMinute} ${period}`;
-
-            // Create a date object in local time
-            const localDate = new Date(year, month - 1, day, hour, minute);
-
-            // Convert to UTC timestamp
-            const isoTime = localDate.toISOString();
-
-            options.push({ value: isoTime, label });
-        }
-    }
-
-    return options;
-};
-
-/**
  * Generates a list of generic dropdown options for hours and minutes of any given day in 5-minute intervals.
  * @returns - list of dropdown options of the format: { label: 3:15 AM, value: HH:MM }
  */
@@ -250,4 +221,34 @@ export const generateGenericTimeOptions = (): DropdownOption[] => {
     }
 
     return options;
+};
+
+export interface TimeObject{
+    indicator: string[];
+    hour: string[];
+    minute: string[];
+}
+
+/**
+ * Generates an object with arrays for indicators, hours, and minutes.
+ * @returns - an object with arrays for indicators, hours, and minutes
+ */
+export const generateTimeArrays = (): TimeObject => {
+    const timeObject: TimeObject = {
+        indicator: ["AM", "PM"], // Two possible values: "AM" and "PM"
+        hour: [], // Hours from 12 to 12
+        minute: [], // Minutes in 5-minute intervals
+    };
+
+    // Populate the hour array with values from 12 to 12, padded with zeros
+    for (let hour = 1; hour <= 12; hour++) {
+        timeObject.hour.push(hour.toString());
+    }
+    
+    // Populate the minute array with 5-minute intervals (00, 05, 10, ..., 55), padded with zeros
+    for (let minute = 0; minute < 60; minute += 5) {
+        timeObject.minute.push(minute.toString().padStart(2, '0'));
+    }
+
+    return timeObject;
 };
