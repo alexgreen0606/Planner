@@ -1,20 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
-import { Event, TimeConfig } from '../types';
-import { getPlannerFromStorage, savePlannerToStorage } from '../storage/plannerStorage';
-import { RECURRING_WEEKDAY_PLANNER } from '../enums';
-import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
-import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
-import TimeModal from './TimeModal';
-import CustomText from '../../../foundation/ui/text';
-import Time from './Time';
-import { generateSortIdByTimestamp } from '../utils';
-import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
-import globalStyles from '../../../theme/globalStyles';
-import colors from '../../../theme/colors';
+import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
+import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../../foundation/sortedLists/enums';
+import { Event, TimeConfig } from '../../types';
+import { getPlannerFromStorage, savePlannerToStorage } from '../../storage/plannerStorage';
+import { RECURRING_WEEKDAY_PLANNER } from '../../enums';
+import ClickableLine from '../../../../foundation/ui/separators/ClickableLine';
+import ListTextfield from '../../../../foundation/sortedLists/components/ListTextfield';
+import TimeModal from '../modal/TimeModal';
+import CustomText from '../../../../foundation/ui/text/CustomText';
+import Time from '../info/Time';
+import { generateSortIdByTimestamp } from '../../utils';
+import GenericIcon from '../../../../foundation/ui/icons/GenericIcon';
+import globalStyles from '../../../../foundation/theme/globalStyles';
+import colors from '../../../../foundation/theme/colors';
+import EmptyLabel from '../../../../foundation/sortedLists/components/EmptyLabel';
 
 interface SortableRecurringPlannerProps {
     manualSaveTrigger: string;
@@ -165,13 +166,20 @@ const SortableRecurringPlanner = ({
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
+            {!SortedPlanner.current.length && (
+                <EmptyLabel
+                    label='No Recurring Plans'
+                    onPress={() => SortedPlanner.createOrMoveTextfield(-1)}
+                    style={{ flex: 1 }}
+                />
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        height: 400
+        height: 600
     }
 });
 

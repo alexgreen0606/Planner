@@ -1,12 +1,12 @@
 import React, { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Dialog, Portal } from 'react-native-paper';
-import globalStyles from '../../../theme/globalStyles';
+import globalStyles from '../../theme/globalStyles';
 import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GenericIcon, { IconType } from '../icons/GenericIcon';
-import CustomText from '../text';
-import colors from '../../../theme/colors';
+import CustomText from '../text/CustomText';
+import colors from '../../theme/colors';
 
 interface ModalProps {
     title: string;

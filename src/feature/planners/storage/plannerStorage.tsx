@@ -113,10 +113,10 @@ const getCalendarEvents = async (plannerId: string): Promise<Event[]> => {
 };
 
 /**
- * Fetches the first holiday for the given timestamp.
+ * TODO: Fetches the first holiday for the given timestamp.
  * @param timestamp - YYYY-MM-DD
  */
-export const getHoliday = async (timestamp: string): Promise<string | undefined> => {
+export const getHolidays = async (timestamps: string[]): Promise<Record<string, string[]>> => {
 
     await getCalendarAccess();
     // Load in the primary calendar
@@ -126,20 +126,30 @@ export const getHoliday = async (timestamp: string): Promise<string | undefined>
 
     if (!holidayCalendar) throw new Error('Holiday calendar does not exist!');
 
-    const startDate = new Date(`${timestamp}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamp}T23:59:59`).toISOString();
+    // Find the overall date range
+    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
+    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
 
-    // Load in the calendar events and format them into a planner
+    // Fetch all events in the date range
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [holidayCalendar.id]);
 
-    return calendarEvents[0]?.title;
+    // Group events by date
+    const holidayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
+        const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
+        map[timestamp] = calendarEvents
+            .filter(event => new Date(event.startDate).toISOString().split('T')[0] === dateKey)
+            .map(event => event.title);
+        return map;
+    }, {} as Record<string, string[]>);
+
+    return holidayMap;
 };
 
 /**
  * Fetches the first birthday for the given timestamp.
  * @param timestamp - YYYY_MM_DD
  */
-export const getBirthday = async (timestamp: string): Promise<string | undefined> => {
+export const getBirthdays = async (timestamps: string[]): Promise<Record<string, string[]>> => {
 
     await getCalendarAccess();
 
@@ -149,13 +159,23 @@ export const getBirthday = async (timestamp: string): Promise<string | undefined
 
     if (!birthdayCalendar) throw new Error('Birthday calendar does not exist!');
 
-    const startDate = new Date(`${timestamp}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamp}T23:59:59`).toISOString();
+    // Find the overall date range
+    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
+    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
 
-    // Load in the calendar events and format them into a planner
-    const birthdayEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [birthdayCalendar.id]);
+    // Fetch all events in the date range
+    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [birthdayCalendar.id]);
 
-    return birthdayEvents[0]?.title;
+    // Group events by date
+    const birthdayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
+        const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
+        map[timestamp] = calendarEvents
+            .filter(event => new Date(event.startDate).toISOString().split('T')[0] === dateKey)
+            .map(event => event.title);
+        return map;
+    }, {} as Record<string, string[]>);
+
+    return birthdayMap;
 };
 
 /**
@@ -242,72 +262,59 @@ const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], cur
  */
 const syncPlannerWithRecurring = (recurringPlanner: Event[], currentPlanner: Event[], currentPlannerId: string) => {
 
-    console.log('--------------------')
-    console.log('Syncing with recurring.')
-    console.log(currentPlanner, 'current planner')
-    console.log(recurringPlanner, 'syncing with')
-
-    // Loop over the existing planner, removing any recurring events that no longer exist. 
-    // All linked events will also be updated to reflect the linked planner.
-    const newPlanner = currentPlanner.reduce<Event[]>((accumulator, currentEvent) => {
-
-        // This event isn't recurring -> keep it
-        if (!currentEvent.recurringConfig || currentEvent.recurringConfig?.deleted) {
-            console.log(currentEvent, 'keeping this event -> it is custom')
-            return [...accumulator, currentEvent];
-        }
-
-        // This event is recurring and still exists -> update it
-        const linkedEvent = recurringPlanner.find(recEvent =>
-            recEvent.id === currentEvent.recurringConfig?.recurringId
+    // Build the new planner out of the recurring planner. All recurring events will prioritize the
+    // recurring planner's values.
+    const newPlanner = recurringPlanner.reduce<Event[]>((accumulator, recEvent) => {
+        const linkedEvent = currentPlanner.find(curEvent =>
+            curEvent.recurringConfig?.recurringId === recEvent.id
         );
-        if (linkedEvent) {
 
-            // Generate an updated record of the recurring event
+        // This event is in the current planner -> update it
+        if (linkedEvent && !linkedEvent.recurringConfig?.deleted) {
             const updatedEvent = {
-                ...linkedEvent,
+                ...recEvent,
+                id: linkedEvent.id,
                 plannerId: currentPlannerId,
             };
+            updatedEvent.timeConfig = linkedEvent.timeConfig ?? recEvent.timeConfig;
 
-            // Persist the event's time if specified
-            if (currentEvent.timeConfig) {
-                updatedEvent.timeConfig = currentEvent.timeConfig;
-            }
-
-            // Add the updated event to the current planner
             const updatedPlanner = [...accumulator, updatedEvent];
-
-            // Generate the updated event's new position in the list
             updatedEvent.sortId = generateSortIdByTimestamp(updatedEvent, updatedPlanner);
-            console.log(updatedEvent, 'updating this event')
             return updatedPlanner;
-        }
 
-        // This event is linked to the planner and has been removed -> delete it
-        console.log(currentEvent, 'deleting this event -> no longer in linked planner')
-        return [...accumulator];
+            // This event has been manually deleted -> keep it (it won't be displayed in the UI)
+        } else if (linkedEvent && linkedEvent.recurringConfig?.deleted) {
+            return [...accumulator, linkedEvent];
 
-    }, []);
-
-    // Find any new events in the linked planner and add these to the new planner
-    recurringPlanner.forEach(recEvent => {
-        if (!newPlanner.find(existingEvent => existingEvent.recurringConfig?.recurringId === recEvent.id)) {
-
-            // Generate a new record of the recurring event
+            // This recurring event hasn't been added to the planner yet -> add it 
+        } else {
             const newEvent = {
                 ...recEvent,
                 id: uuid.v4(),
-                plannerId: currentPlannerId,
+                plannerId: currentPlannerId
             };
+            const updatedPlanner = [...accumulator, newEvent];
+            newEvent.sortId = generateSortIdByTimestamp(newEvent, updatedPlanner);
+            return updatedPlanner;
+        }
+    }, []);
 
-            // Add the new event to the planner and generate its position within the list
+    // Add in any existing events that aren't recurring
+    currentPlanner.forEach(curEvent => {
+        // This existing event isn't recurring
+        if (!newPlanner.find(newEvent => newEvent.id === curEvent.id)) {
+
+            // This event was recurring but has been deleted from the recurring planner -> don't add it
+            if (curEvent.recurringConfig) return;
+
+            // Add the existing event
+            const newEvent = {
+                ...curEvent,
+            }
             newPlanner.push(newEvent);
             newEvent.sortId = generateSortIdByTimestamp(newEvent, newPlanner);
         }
-    })
-
-    console.log(newPlanner, 'updated planner')
-    console.log('--------------------')
+    });
     return newPlanner;
 }
 
@@ -321,8 +328,6 @@ export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
     deletePastPlanners();
 
     let planner = getPlannerFromStorage(plannerId);
-
-    console.log(planner, 'loaded in')
 
     // Return the recurring weekday planner
     if (plannerId === RECURRING_WEEKDAY_PLANNER)
@@ -366,25 +371,21 @@ export const persistEvent = async (event: Event): Promise<Event> => {
             allDay: newEvent.timeConfig.allDay,
             id: newEvent.timeConfig.calendarEventId
         };
-        newEvent = {
-            ...newEvent,
-            timeConfig: {
-                ...newEvent.timeConfig,
-                calendarEventId: await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails)
-            }
+        newEvent.timeConfig = {
+            ...newEvent.timeConfig,
+            calendarEventId: await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails)
         }
     }
 
-    // Update the list's event if it already exists
+    // Update the list with the new event
     const existingIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id)
     if (existingIndex !== -1) {
         newPlanner.splice(existingIndex, 1, newEvent);
-        savePlannerToStorage(newEvent.plannerId, newPlanner);
-        return newEvent;
+    } else {
+        newPlanner.push(newEvent);
     }
 
-    // Save the new event
-    newPlanner.push(newEvent);
+    // Save the new planner
     savePlannerToStorage(newEvent.plannerId, newPlanner);
     return newEvent;
 };

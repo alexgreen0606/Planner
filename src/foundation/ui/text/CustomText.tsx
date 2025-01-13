@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, TextStyle } from 'react-native';
 import { Text } from 'react-native-paper';
-import colors from '../../../theme/colors';
+import colors from '../../theme/colors';
 
 const styles = StyleSheet.create({
     label: {

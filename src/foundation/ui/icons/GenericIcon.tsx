@@ -1,5 +1,5 @@
 import React from 'react';
-import { FontAwesome, Feather, Ionicons, MaterialIcons, Entypo, FontAwesome5, Foundation, MaterialCommunityIcons, Fontisto } from '@expo/vector-icons';
+import { FontAwesome, Feather, Ionicons, MaterialIcons, Entypo, FontAwesome5, Foundation, MaterialCommunityIcons, Fontisto, SimpleLineIcons, FontAwesome6 } from '@expo/vector-icons';
 
 const IconSets = {
     FontAwesome,
@@ -8,14 +8,16 @@ const IconSets = {
     MaterialIcons,
     Foundation,
     FontAwesome5,
+    SimpleLineIcons,
     Ionicons,
     MaterialCommunityIcons,
-    Fontisto
+    Fontisto,
+    FontAwesome6
 };
 
 export type IconType = keyof typeof IconSets;
 
-interface GenericIconProps {
+export interface GenericIconProps {
     type: IconType;
     name: string;
     size?: number;
@@ -32,7 +34,7 @@ const GenericIcon: React.FC<GenericIconProps> = ({
     const IconComponent = IconSets[type];
 
     //@ts-ignore
-    return <IconComponent name={name} size={size} color={color} {...props} />;
+    return  <IconComponent name={name} size={size} color={color} {...props} />;
 };
 
 export default GenericIcon;

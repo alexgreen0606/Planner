@@ -4,6 +4,7 @@ import { FolderItemType } from "../enums";
 import { ItemStatus } from "../../../foundation/sortedLists/enums";
 import { StorageIds } from "../../../enums";
 import { ListItem } from "../../../foundation/sortedLists/types";
+import colors from "../../../foundation/theme/colors";
 
 const storage = new MMKV({ id: StorageIds.FOLDER_STORAGE });
 export const getStorageKey = (folderId: string) => (`FOLDERS_${folderId}`);
@@ -29,6 +30,7 @@ export const getFolderFromStorage = (folderId: string) => {
             value: 'Lists',
             sortId: 1,
             parentFolderId: null,
+            color: 'blue'
         } as Folder;
         saveItemToStorage(initialRootFolder)
         return initialRootFolder;
@@ -67,10 +69,11 @@ export const getFolderItems = (folderId: string) => {
             id: currFolder.id,
             value: currFolder.value,
             sortId: currFolder.sortId,
+            color: currFolder.color,
             status: ItemStatus.STATIC,
             type: FolderItemType.FOLDER,
             childrenCount: currFolder.folderIds.length + currFolder.listIds.length,
-        } as FolderItem
+        };
     });
     const listItems = folder.listIds.map(currListId => {
         const currList = getListFromStorage(currListId);
@@ -78,10 +81,11 @@ export const getFolderItems = (folderId: string) => {
             id: currList.id,
             value: currList.value,
             sortId: currList.sortId,
+            color: currList.color,
             status: ItemStatus.STATIC,
             type: FolderItemType.LIST,
             childrenCount: currList.items.length,
-        } as FolderItem
+        };
     });
     const allFolderItems = [...folderItems, ...listItems];
     allFolderItems.sort((a, b) => a.sortId - b.sortId);
@@ -121,7 +125,7 @@ export const createFolderItem = (parentId: string, newData: FolderItem): FolderI
             ...newItem,
             items: [],
             parentFolderId: parentId
-        });
+        } as List);
         parentFolder.listIds.push(newData.id);
     }
 

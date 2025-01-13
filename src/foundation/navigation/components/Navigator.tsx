@@ -6,11 +6,12 @@ import Folders from '../../../screens/Folders';
 import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { useNavigatorContext } from '../services/TabsProvider';
 import GenericIcon from '../../ui/icons/GenericIcon';
-import colors from '../../../theme/colors';
+import colors from '../../theme/colors';
+import { StyleSheet } from 'react-native';
 
 interface IconSpecification {
     type: any;
-    name: 'coffee' | 'calendar-number-sharp' | 'calendar' | 'bank' | 'folder';
+    name: 'coffee' | 'calendar-number-sharp' | 'archive';
 }
 
 const Tab = createBottomTabNavigator();
@@ -18,9 +19,7 @@ const Tab = createBottomTabNavigator();
 const routeIconMap: Record<string, IconSpecification> = {
     dashboard: { type: 'FontAwesome', name: 'coffee' },
     planner: { type: 'Ionicons', name: 'calendar-number-sharp' },
-    // calendar: { type: 'FontAwesome', name: 'coffee' },
-    // money: { type: 'FontAwesome', name: 'coffee' },
-    folders: { type: 'Entypo', name: 'folder' }
+    folders: { type: 'Entypo', name: 'archive' }
 }
 
 const WeeklyPlannerWithProviders = () =>
@@ -50,9 +49,9 @@ const Navigator = () => {
                 tabBarStyle: {
                     backgroundColor: colors.black,
                     shadowOpacity: 0,
-                    borderTopWidth: 0,
-                    height: 80,
-                    paddingTop: 10
+                    paddingTop: 8,
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: colors.grey,
                 },
                 tabBarLabelStyle: {
                     display: 'none'
@@ -69,12 +68,6 @@ const Navigator = () => {
             <Tab.Screen name="planner" component={WeeklyPlannerWithProviders} listeners={{
                 focus: () => setCurrentTab('planner')
             }} />
-            {/* <Tab.Screen name="money" component={Money} listeners={{
-                focus: () => setCurrentTab('money')
-            }} /> */}
-            {/* <Tab.Screen name="calendar" component={Calendar} listeners={{
-                    focus: () => setCurrentTab('calendar')
-                }} /> */}
         </Tab.Navigator>
     );
 };

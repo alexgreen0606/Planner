@@ -9,6 +9,7 @@ type GlobalStyles = {
   verticallyCentered: ViewStyle;
   listRow: ViewStyle;
   fullWidth: ViewStyle;
+  horizontallyCentered: ViewStyle;
 }
 
 const globalStyles: GlobalStyles = {
@@ -35,6 +36,10 @@ const globalStyles: GlobalStyles = {
   },
   verticallyCentered: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  horizontallyCentered: {
+    flexDirection: 'column',
     alignItems: 'center',
   },
   listRow: {

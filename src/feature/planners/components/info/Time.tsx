@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import colors from '../../../theme/colors';
+import colors from '../../../../foundation/theme/colors';
 
 interface TimeProps {
     timeValue: string; // HH:MM
 }
 
-const Time = ({ timeValue: timeValue }: TimeProps) => {
+const Time = ({ timeValue }: TimeProps) => {
     const [time, setTime] = useState('');
     const [indicator, setIndicator] = useState('');
 
@@ -17,7 +17,7 @@ const Time = ({ timeValue: timeValue }: TimeProps) => {
         hour = hour >= 12 ? hour - 12 : hour;
         hour = hour === 0 ? 12 : hour;
         setTime(`${hour}${minute !== 0 ? `:${minute}` : ''}`);
-    }, [])
+    }, [timeValue])
 
     return (
         <View style={styles.container}>

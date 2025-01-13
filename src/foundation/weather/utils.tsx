@@ -1,4 +1,6 @@
-import { IconType } from "../ui/icons/GenericIcon";
+import Geolocation from "@react-native-community/geolocation";
+import { WeatherForecast } from "./types";
+import { fetchWeatherApi } from "openmeteo";
 
 export const weatherCodeToString = (code: number): string => {
   const weatherMap: { [key: number]: string } = {
@@ -31,44 +33,109 @@ export const weatherCodeToString = (code: number): string => {
 type WeatherIconMap = Record<
   number,
   {
-    type: IconType,
-    name: 'lightning' | 'day-sunny' | 'day-cloudy' | 'cloudy' | 'weather-fog' | 'day-rain' | 'rain' | 'snowflake-8',
-    color: string;
+    name: any,
   }
 >;
 
-const weatherColors = {
-  grey: 'rgb(210,210,200)',
-  white: 'rgb(160, 200, 240)',
-  yellow: 'rgb(250, 220, 120)',
-  blue: 'rgb(90, 190, 220)'
+export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] => {
+  switch (code) {
+    case 0:
+    case 1:
+      return { name: 'sun.max.fill' }; // sunny
+    case 2:
+      return { name: 'cloud.sun.fill' }; // sunny with clouds
+    case 3:
+      return { name: 'cloud.fill' }; // cloudy
+    case 45:
+    case 48:
+      return { name: 'cloud.fog.fill' }; // foggy
+    case 51:
+    case 61:
+    case 81:
+      return { name: 'cloud.sun.rain.fill' }; // rainy with sun
+    case 53:
+    case 55:
+    case 63:
+    case 65:
+    case 82:
+    case 85:
+      return { name: 'cloud.rain.fill' }; // rain
+    case 71:
+    case 73:
+    case 75:
+    case 77:
+    case 86:
+      return { name: 'snowflake' }; // snow
+    case 95:
+      return { name: 'cloud.bolt.rain.fill' }; // thunderstorm
+    default:
+      throw new Error('Weather code not valid.')
+  }
 };
 
-export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] => {
-  const weatherIconMap: WeatherIconMap = {
-    0: { type: 'Fontisto', name: 'day-sunny', color: weatherColors.yellow },
-    1: { type: 'Fontisto', name: 'day-cloudy', color: weatherColors.yellow },
-    2: { type: 'Fontisto', name: 'day-cloudy', color: weatherColors.yellow },
-    3: { type: 'Fontisto', name: 'cloudy', color: weatherColors.grey },
-    45: { type: 'MaterialCommunityIcons', name: 'weather-fog', color: weatherColors.grey },
-    48: { type: 'MaterialCommunityIcons', name: 'weather-fog', color: weatherColors.grey },
-    51: { type: 'Fontisto', name: 'day-rain', color: weatherColors.blue },
-    53: { type: 'Fontisto', name: 'rain', color: weatherColors.blue },
-    55: { type: 'Fontisto', name: 'rain', color: weatherColors.blue },
-    61: { type: 'Fontisto', name: 'day-rain', color: weatherColors.blue },
-    63: { type: 'Fontisto', name: 'rain', color: weatherColors.blue },
-    65: { type: 'Fontisto', name: 'rain', color: weatherColors.blue },
-    71: { type: 'Fontisto', name: 'snowflake-8', color: weatherColors.white },
-    73: { type: 'Fontisto', name: 'snowflake-8', color: weatherColors.white },
-    75: { type: 'Fontisto', name: 'snowflake-8', color: weatherColors.white },
-    77: { type: 'Fontisto', name: 'snowflake-8', color: weatherColors.white },
-    81: { type: 'Fontisto', name: 'day-rain', color: weatherColors.blue },
-    82: { type: 'Fontisto', name: 'rain', color: weatherColors.blue },
-    85: { type: 'Fontisto', name: 'rain', color: weatherColors.blue },
-    86: { type: 'Fontisto', name: 'snowflake-8', color: weatherColors.white },
-    95: { type: 'Fontisto', name: 'lightning', color: weatherColors.yellow },
+export const getWeather = async (timestamps: string[]): Promise<Record<string, WeatherForecast>> => {
+  const forecast: Record<string, WeatherForecast> = {};
+
+  // Properly typed wrapper for Geolocation.getCurrentPosition
+  const getCurrentPosition = (): Promise<GeolocationPosition> =>
+    new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        // @ts-ignore
+        (position: GeolocationPosition) => resolve(position),
+        (error: GeolocationPositionError) => reject(error),
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+        }
+      );
+    });
+
+  const info = await getCurrentPosition();
+
+  const { latitude, longitude } = info.coords;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const params = {
+    latitude,
+    longitude,
+    daily: [
+      "weather_code",
+      "temperature_2m_max",
+      "temperature_2m_min",
+      "precipitation_sum",
+      "precipitation_probability_max"
+    ],
+    temperature_unit: "fahrenheit",
+    precipitation_unit: "inch",
+    timezone,
+    start_date: timestamps[0],
+    end_date: timestamps[timestamps.length - 1]
   };
 
-  return weatherIconMap[code] || weatherIconMap[0];
-};
+  const url = "https://api.open-meteo.com/v1/forecast";
 
+  const responses = await fetchWeatherApi(url, params);
+  const response = responses[0];
+  const daily = response.daily()!;
+
+  // Ensure we have data for the requested date
+  if (daily.time() < 0) {
+    throw new Error('No weather data available for the requested date');
+  }
+
+  timestamps.forEach((timestamp, i) => {
+    const formattedForecast: WeatherForecast = {
+      date: timestamp,
+      weatherCode: daily.variables(0)!.valuesArray()![i],
+      weatherDescription: weatherCodeToString(daily.variables(0)!.valuesArray()![i]),
+      temperatureMax: Math.floor(daily.variables(1)!.valuesArray()![i]),
+      temperatureMin: Math.floor(daily.variables(2)!.valuesArray()![i]),
+      precipitationSum: Number(daily.variables(3)!.valuesArray()![i].toFixed(2)),
+      precipitationProbabilityMax: daily.variables(4)!.valuesArray()![i],
+    };
+    forecast[timestamp] = formattedForecast;
+  })
+
+  return forecast;
+}

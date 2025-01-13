@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Checkbox } from 'react-native-paper';
-import globalStyles from '../../../theme/globalStyles';
-import Modal from '../../../foundation/ui/modal/Modal';
-import { Event, TimeConfig } from '../types';
-import { generateGenericTimeOptions, generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../utils';
-import CustomText from '../../../foundation/ui/text';
-import TimeSelector from '../../../foundation/ui/input/TimeSelector';
-import colors from '../../../theme/colors';
+import globalStyles from '../../../../foundation/theme/globalStyles';
+import Modal from '../../../../foundation/ui/modal/Modal';
+import { Event, TimeConfig } from '../../types';
+import { generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../../utils';
+import CustomText from '../../../../foundation/ui/text/CustomText';
+import TimeSelector from '../../../../foundation/ui/input/TimeSelector';
+import colors from '../../../../foundation/theme/colors';
 
 interface TimeModalProps {
     toggleModalOpen: () => void;
@@ -19,36 +19,22 @@ interface TimeModalProps {
 
 interface TimeModalSelection {
     allDay: boolean;
-    startTime?: string;
-    endTime?: string;
+    startTime: string;
+    endTime: string;
     isCalendarEvent: boolean;
 };
 
 const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: TimeModalProps) => {
-    const timeOptions = useMemo(() => generateGenericTimeOptions(), [timestamp]);
+
     const newTimeOptions = useMemo(() => generateTimeArrays(), [timestamp]);
+    const defaultStartTime = '00:00';
+    const defaultEndTime = '23:55';
     const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(event.timeConfig ?? {
         isCalendarEvent: false,
         allDay: false,
-        startTime: undefined,
-        endTime: undefined,
+        startTime: defaultStartTime,
+        endTime: defaultEndTime,
     });
-
-    const defaultStartTime = timeOptions[0].value;
-    const defaultEndTime = timeOptions[timeOptions.length - 1].value;
-
-    /**
-     * Saves the user input to the event.
-     */
-    const onSaveInput = () => {
-        const startTime = (timeModalData.allDay ? defaultStartTime : timeModalData.startTime) || defaultStartTime;
-        const endTime = (timeModalData.allDay ? defaultEndTime : timeModalData.endTime) || defaultEndTime;
-        onSaveItem({
-            ...timeModalData,
-            startTime: startTime,
-            endTime: endTime
-        });
-    };
 
     // Determines if the user input is savable or not.
     const validData =
@@ -64,7 +50,7 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
             open={open}
             primaryButtonConfig={{
                 label: 'Save',
-                onClick: onSaveInput,
+                onClick: () => onSaveItem(timeModalData),
                 disabled: !validData
             }}
             iconConfig={{
@@ -86,7 +72,13 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                 <Checkbox.Android
                                     status={timeModalData.isCalendarEvent ? 'checked' : 'unchecked'}
                                     onPress={() => {
-                                        setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent })
+                                        const [currentStartHour, currentStartMinute] = timeModalData.startTime.split(':');
+                                        let newEndTime = Number(currentStartHour) < 23 ?
+                                            String(Number(currentStartHour) + 1) + ':' + currentStartMinute :
+                                            null;
+                                        if (!newEndTime) newEndTime = '23:55';
+                                        setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent, endTime: newEndTime });
+
                                     }}
                                     color={colors.blue}
                                     uncheckedColor={colors.grey}
@@ -96,7 +88,7 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                         )}
                     </View>
 
-                    {/* All Day Control */}
+                    {/* All Day Toggle */}
                     <View style={{ width: '50%' }}>
                         {timeModalData.isCalendarEvent && (
                             <>
@@ -104,7 +96,12 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                 <Checkbox.Android
                                     status={timeModalData.allDay ? 'checked' : 'unchecked'}
                                     onPress={() => {
-                                        setTimeModalData({ ...timeModalData, allDay: !timeModalData.allDay })
+                                        setTimeModalData({
+                                            ...timeModalData,
+                                            allDay: !timeModalData.allDay,
+                                            startTime: defaultStartTime,
+                                            endTime: defaultEndTime
+                                        })
                                     }}
                                     color={colors.blue}
                                     uncheckedColor={colors.grey}
@@ -127,9 +124,10 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                         ...timeModalData,
                                         startTime: newVal
                                     })
+                                    console.log(newVal)
                                 }}
                                 options={newTimeOptions}
-                                initialTimeValue={timeModalData.startTime || defaultStartTime}
+                                initialTimeValue={timeModalData.startTime}
                             />
                         </View>
                     )}
@@ -147,7 +145,7 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                     })
                                 }}
                                 options={newTimeOptions}
-                                initialTimeValue={timeModalData.endTime || defaultEndTime}
+                                initialTimeValue={timeModalData.endTime}
                             />
                         </View>
                     )}

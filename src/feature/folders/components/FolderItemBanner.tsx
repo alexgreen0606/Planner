@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { FolderItemType } from '../enums';
-import globalStyles from '../../../theme/globalStyles';
+import globalStyles from '../../../foundation/theme/globalStyles';
 import { FolderItem } from '../types';
 import { getFolderFromStorage, getListFromStorage, getStorageKey, updateFolderItem } from '../storage/folderStorage';
 import { ItemStatus } from '../../../foundation/sortedLists/enums';
-import CustomText from '../../../foundation/ui/text';
+import CustomText from '../../../foundation/ui/text/CustomText';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../../../enums';
-import colors from '../../../theme/colors';
+import colors from '../../../foundation/theme/colors';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -38,6 +38,7 @@ const FolderItemBanner = ({
                 id: data.id,
                 value: data.value,
                 sortId: data.sortId,
+                color: data.color,
                 status: ItemStatus.STATIC,
                 type: FolderItemType.FOLDER,
                 childrenCount: data.folderIds.length + data.listIds.length,
@@ -48,6 +49,7 @@ const FolderItemBanner = ({
                 id: data.id,
                 value: data.value,
                 sortId: data.sortId,
+                color: data.color,
                 status: ItemStatus.STATIC,
                 type: FolderItemType.LIST,
                 childrenCount: data.items.length,
@@ -75,16 +77,40 @@ const FolderItemBanner = ({
 
     const isItemEditing = item.status === ItemStatus.EDIT;
 
+
+    const styles = StyleSheet.create({
+        label: {
+            ...globalStyles.verticallyCentered,
+            gap: 8,
+            flex: 1,
+        },
+        labelText: {
+            fontSize: 25,
+            color: colors.white,
+            flex: 1
+        },
+        textInput: {
+            ...globalStyles.background,
+            height: 25,
+            fontSize: 25,
+            flex: 1
+        },
+        backButton: {
+            color: colors.blue,
+            maxWidth: 80,
+        }
+    });
+
     return (
-        <View style={globalStyles.listRow}>
+        <View style={{...globalStyles.spacedApart, paddingHorizontal: 8}}>
             <View style={styles.label}>
 
                 {/* Type Icon */}
                 <GenericIcon
-                    type='Entypo'
-                    name={itemType === FolderItemType.FOLDER ? 'folder' : 'list'}
-                    size={26}
-                    color={colors.blue}
+                    type={itemType === FolderItemType.FOLDER ? 'Entypo' : 'Ionicons' }
+                    name={itemType === FolderItemType.FOLDER ? 'folder' : 'list-outline'}
+                    size={28}
+                    color={colors[item.color as keyof typeof colors]}
                 />
 
                 {/* Item Name */}
@@ -109,7 +135,8 @@ const FolderItemBanner = ({
                         onPress={beginEditItem}
                         adjustsFontSizeToFit
                         style={styles.labelText}
-                        numberOfLines={1}>
+                        numberOfLines={1}
+                    >
                         {item.value}
                     </Text>
                 )}
@@ -125,7 +152,7 @@ const FolderItemBanner = ({
                             type='MaterialIcons'
                             name='chevron-left'
                             size={16}
-                            color={colors.white}
+                            color={colors.blue} // TODO: use the color of the previous
                         />
                         <CustomText
                             numberOfLines={1}
@@ -141,29 +168,5 @@ const FolderItemBanner = ({
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    label: {
-        ...globalStyles.verticallyCentered,
-        gap: 8,
-        flex: 1
-    },
-    labelText: {
-        fontSize: 25,
-        color: colors.white,
-        flex: 1
-    },
-    textInput: {
-        ...globalStyles.backdrop,
-        height: 25,
-        fontSize: 25,
-        flex: 1
-    },
-    backButton: {
-        color: colors.white,
-        marginLeft: 2,
-        maxWidth: 80,
-    }
-});
 
 export default FolderItemBanner;

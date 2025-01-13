@@ -1,45 +1,56 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
-import { usePlannerContext } from '../services/PlannerProvider';
-import { Event, TimeConfig } from '../types';
-import DayBanner from './DayBanner';
-import { persistEvent, deleteEvent, buildPlanner, getPlannerStorageKey } from '../storage/plannerStorage';
-import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
-import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
-import TimeModal from './TimeModal';
-import CustomText from '../../../foundation/ui/text';
-import Time from './Time';
+import { View, TouchableOpacity, PanResponder } from 'react-native';
+import DraggableFlatList, { NestableDraggableFlatList, RenderItemParams } from 'react-native-draggable-flatlist';
+import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
+import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../../foundation/sortedLists/enums';
+import { usePlannerContext } from '../../services/PlannerProvider';
+import { Event, TimeConfig } from '../../types';
+import DayBanner from '../banner/DayBanner';
+import { persistEvent, deleteEvent, buildPlanner, getPlannerStorageKey } from '../../storage/plannerStorage';
+import ClickableLine from '../../../../foundation/ui/separators/ClickableLine';
+import ListTextfield from '../../../../foundation/sortedLists/components/ListTextfield';
+import TimeModal from '../modal/TimeModal';
+import CustomText from '../../../../foundation/ui/text/CustomText';
+import Time from '../info/Time';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { StorageIds } from '../../../enums';
-import { generateSortIdByTimestamp } from '../utils';
-import globalStyles from '../../../theme/globalStyles';
-import HolidayChip from './HolidayChip';
-import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
-import BirthdayChip from './BirthdayChip';
-import colors from '../../../theme/colors';
+import { StorageIds } from '../../../../enums';
+import { extractTimeValue, generateSortIdByTimestamp } from '../../utils';
+import globalStyles from '../../../../foundation/theme/globalStyles';
+import GenericIcon from '../../../../foundation/ui/icons/GenericIcon';
+import colors from '../../../../foundation/theme/colors';
+import Card from '../../../../foundation/ui/card';
+import EmptyLabel from '../../../../foundation/sortedLists/components/EmptyLabel';
+import Chip from '../info/Chip';
+import { WeatherForecast } from '../../../../foundation/weather/types';
+import { Gesture } from 'react-native-gesture-handler';
 
 interface SortablePlannerProps {
     timestamp: string;
+    birthdays: string[];
+    holidays: string[];
+    forecast: WeatherForecast;
+    // isParentHandlingGesture: () => boolean;
 };
 
 const SortablePlanner = ({
-    timestamp
+    timestamp,
+    birthdays,
+    holidays,
+    forecast,
+   //  isParentHandlingGesture
 }: SortablePlannerProps) => {
     const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
-
     const [timeModalOpen, setTimeModalOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(true);
     const [planner, setPlanner] = useState<Event[]>([]);
+    const [allDayEvents, setAllDayEvents] = useState<Event[]>([]);
     const plannerStorage = useMMKV({ id: StorageIds.PLANNER_STORAGE });
     const skipStorageSync = useRef(true);
 
     const toggleCollapsed = () => {
         SortedPlanner.saveTextfield();
         setCollapsed(curr => !curr);
-    }
+    };
     const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
 
     // Creates a new event in storage, and ensures the component re-render is skipped
@@ -74,7 +85,10 @@ const SortablePlanner = ({
     useEffect(() => {
         const loadPlanner = async () => {
             const loadedPlanner = await buildPlanner(timestamp);
-            setPlanner(loadedPlanner.filter(event => !event.recurringConfig?.deleted));
+            const allDayEvents = loadedPlanner.filter(event => event.timeConfig?.allDay);
+            setAllDayEvents(allDayEvents);
+            const filteredPlanner = loadedPlanner.filter(event => !event.recurringConfig?.deleted && !event.timeConfig?.allDay);
+            setPlanner(filteredPlanner);
         };
         loadPlanner();
     }, []);
@@ -90,6 +104,8 @@ const SortablePlanner = ({
             }
         }
     }, plannerStorage);
+
+    // TODO: update synchronous when other textfield becomes focused
 
     /**
      * When a different planner on the screen is focused, save this list's current textfield
@@ -164,7 +180,21 @@ const SortablePlanner = ({
                         <ListTextfield
                             key={`${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                             item={item}
-                            onChange={(text) => { SortedPlanner.updateItem({ ...item, value: text }) }}
+                            onChange={(text) => {
+                                const newEvent = {
+                                    ...item,
+                                    value: text,
+                                };
+                                if (!item.timeConfig?.isCalendarEvent) {
+                                    const { timeConfig, updatedText } = extractTimeValue(text);
+                                    if (timeConfig) {
+                                        newEvent.timeConfig = timeConfig;
+                                        newEvent.value = updatedText;
+                                        newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
+                                    }
+                                }
+                                SortedPlanner.updateItem(newEvent);
+                            }}
                             onSubmit={() => SortedPlanner.saveTextfield(ShiftTextfieldDirection.BELOW)}
                         /> :
                         <TouchableOpacity
@@ -216,7 +246,7 @@ const SortablePlanner = ({
                         event={item}
                         timestamp={timestamp}
                         onSaveItem={(timeConfig: TimeConfig) => {
-                            const newEvent: Event = {
+                            const newEvent = {
                                 ...item,
                                 timeConfig
                             };
@@ -230,24 +260,115 @@ const SortablePlanner = ({
         )
     };
 
-    return (
-        <View style={{ width: '100%' }}>
+    const childPanResponder = useRef(
+        PanResponder.create({
+          onStartShouldSetPanResponder: () => true,
+          onMoveShouldSetPanResponder: (evt, gestureState) => {
+            // Child-specific gesture handling logic
+            return true;
+          },
+          onPanResponderMove: (_, gestureState) => {
+            // Handle the gesture in the child
+            console.log('Child is handling the gesture:', gestureState);
+          },
+          onPanResponderRelease: () => {
+            console.log('Gesture released in the child');
+          },
+        })
+      ).current;
+      
 
-            {/* Date Details */}
-            <DayBanner timestamp={timestamp} />
+    return (
+        <Card
+            header={<DayBanner forecast={forecast} timestamp={timestamp} />}
+            footer={
+                <View style={{
+                    ...globalStyles.verticallyCentered,
+                    width: '100%',
+                    flexWrap: 'wrap',
+                    gap: 8
+                }}>
+                    {allDayEvents.map(event =>
+                        <Chip
+                            label={event.value}
+                            iconConfig={{
+                                type: 'Entypo',
+                                name: 'megaphone',
+                                size: 10,
+                                color: colors.red
+                            }}
+                            color={colors.red}
+                            key={event.id}
+                        />
+                    )}
+                    {holidays.map(holiday =>
+                        <Chip
+                            label={holiday}
+                            iconConfig={{
+                                type: 'Entypo',
+                                name: 'globe',
+                                size: 10,
+                                color: colors.purple
+                            }}
+                            color={colors.purple}
+                            key={holiday}
+                        />
+                    )}
+                    {birthdays.map(birthday =>
+                        <Chip
+                            label={birthday}
+                            iconConfig={{
+                                type: 'FontAwesome',
+                                name: 'birthday-cake',
+                                size: 10,
+                                color: colors.green
+                            }}
+                            color={colors.green}
+                            key={birthday}
+                        />
+                    )}
+                </View>}
+        >
 
             {/* Separator Line */}
             <ClickableLine onPress={() => collapsed ? setCollapsed(false) : customMoveTextfield(-1)} />
 
-            {/* Planner Event List */}
+            {/* Collapse Control */}
+            {SortedPlanner.current.length > 5 && !collapsed && (
+                <View>
+                    <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8 }} onPress={toggleCollapsed}>
+                        <GenericIcon
+                            type='Entypo'
+                            name={'chevron-down'}
+                            color={colors.grey}
+                            size={16}
+                        />
+                        <CustomText
+                            type='label'
+                            style={{
+                                color: colors.grey,
+                            }}
+                        >
+                            {collapsed ? 'View ' : 'Hide '}
+                            {SortedPlanner.current.filter(item => item.status !== ItemStatus.NEW).length} plans
+                        </CustomText>
+                    </TouchableOpacity>
+                    <ClickableLine onPress={toggleCollapsed} />
+                </View>
+            )}
+
+            {/* Planner List */}
             <DraggableFlatList
                 data={collapsed ? [] : SortedPlanner.current}
-                nestedScrollEnabled
                 onDragEnd={SortedPlanner.endDragItem}
-                onDragBegin={SortedPlanner.beginDragItem}
+                onDragBegin={(config) => {
+                    // if (!isParentHandlingGesture)
+                        SortedPlanner.beginDragItem(config)
+                }}
                 keyExtractor={(item) => item.id}
+                // nestedScrollEnabled
+                scrollEnabled={false}
                 renderItem={renderRow}
-                style={{ maxHeight: 420 }}
             />
 
             {/* Collapse Control */}
@@ -270,37 +391,22 @@ const SortablePlanner = ({
                     </CustomText>
                 </TouchableOpacity>
             ) : (
-                <TouchableOpacity style={{ ...globalStyles.verticallyCentered, paddingLeft: 8, gap: 8 }} onPress={() => customMoveTextfield(-1)}>
-                    <GenericIcon
-                        type='Fontisto'
-                        name='plus-a'
-                        color={colors.grey}
-                        size={10}
-                    />
-                    <CustomText
-                        type='label'
-                        style={{
-                            color: colors.grey,
-                        }}
-                    >
-                        Add plans
-                    </CustomText>
-                </TouchableOpacity>
+                <EmptyLabel
+                    label='No Plans!'
+                    iconConfig={{
+                        type: 'MaterialCommunityIcons',
+                        name: 'party-popper',
+                        color: colors.grey,
+                        size: 16
+                    }}
+                    onPress={() => customMoveTextfield(-1)}
+                />
             )}
 
             {/* Separator Line */}
             <ClickableLine onPress={toggleCollapsed} />
 
-            {/* All Day Event Chips */}
-            <View style={{ ...globalStyles.spacedApart, paddingHorizontal: 16, paddingBottom: 8 }}>
-                <View style={{ flex: 1 }}>
-                    <HolidayChip timestamp={timestamp} />
-                </View>
-                <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                    <BirthdayChip timestamp={timestamp} />
-                </View>
-            </View>
-        </View>
+        </Card>
     );
 };
 

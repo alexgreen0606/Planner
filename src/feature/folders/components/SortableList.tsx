@@ -10,8 +10,10 @@ import { getFolderFromStorage, getListFromStorage, updateListItems } from '../st
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
-import globalStyles from '../../../theme/globalStyles';
-import colors from '../../../theme/colors';
+import globalStyles from '../../../foundation/theme/globalStyles';
+import colors from '../../../foundation/theme/colors';
+import Card from '../../../foundation/ui/card';
+import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
 
 interface SortableListProps {
     listId: string;
@@ -106,6 +108,20 @@ const SortableList = ({
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
+            {!SortedList.current.length && (
+                <EmptyLabel
+                    label={"It's a ghost town in here."}
+                    iconConfig={{
+                        type: 'FontAwesome6',
+                        name: 'ghost',
+                        size: 26,
+                        color: colors.white,
+                    }}
+                    customFontSize={14}
+                    onPress={() => SortedList.createOrMoveTextfield(-1)}
+                    style={{ height: '90%', flexDirection: 'column' }}
+                />
+            )}
         </View>
     );
 };

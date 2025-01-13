@@ -1,6 +1,5 @@
 import { generateSortId } from "../../foundation/sortedLists/utils";
-import { DropdownOption } from "../../foundation/ui/input/TimeDropdown";
-import { Event } from "./types";
+import { Event, TimeConfig } from "./types";
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -61,11 +60,14 @@ export const isoToTimeValue = (isoTimestamp: string): string => {
  * @returns - A negative number if time1 is earlier, 0 if equal, positive if time1 is later.
  */
 export const compareTimeValues = (time1: string, time2: string): number => {
+    console.log(`${time1} and ${time2}`, 'comparing time values')
     const [hour1, minute1] = time1.split(':').map(Number);
     const [hour2, minute2] = time2.split(':').map(Number);
 
     const totalMinutes1 = hour1 * 60 + minute1;
     const totalMinutes2 = hour2 * 60 + minute2;
+
+    console.log(totalMinutes1 - totalMinutes2, 'result')
 
     return totalMinutes1 - totalMinutes2;
 };
@@ -125,7 +127,7 @@ export const generateTomorrowTimestamp = () => {
 export const generateNextSevenDayTimestamps = () => {
     const today = new Date();
     today.setDate(today.getDate() + 1);
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: 14 }, (_, i) => {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         const year = date.getFullYear();
@@ -142,9 +144,17 @@ export const generateNextSevenDayTimestamps = () => {
  * @returns - the new sort ID for the event
  */
 export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
-    if (!event.timeConfig) return event.sortId;
+    const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
+    if (!event.timeConfig) return event.sortId === -1 ?
+        generateSortId(-1, plannerWithoutEvent) :
+        event.sortId;
+
+    console.log('**********')
+    console.log(event, 'adding event with new time sort')
 
     planner.sort((a, b) => a.sortId - b.sortId);
+
+    console.log([...planner], 'current planner')
 
     // Check if the event conflicts at its current position
     const eventsWithTimes = planner.filter(existingEvent => !!existingEvent.timeConfig || (existingEvent.id === event.id));
@@ -158,30 +168,32 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
             (!prevEvent || (prevEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, prevEvent.timeConfig.startTime) >= 0)) &&
             (!nextEvent || (nextEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, nextEvent.timeConfig.startTime) < 0));
 
-        if (hasNoConflict) return event.sortId;
+        console.log(hasNoConflict, 'has no conflict')
+        if (hasNoConflict) return event.sortId === -1 ? generateSortId(-1, plannerWithoutEvent) : event.sortId;
     } else {
         throw new Error('generateSortIdByTimestamp: Event does not exist in the planner.');
     }
 
     // Find the first event that starts after or during the new event
     const eventThatStartsAfterIndex = planner.findIndex(existingEvent => {
-        if (!existingEvent.timeConfig || !event.timeConfig) return false;
+        if (!existingEvent.timeConfig || !event.timeConfig || existingEvent.id === event.id) return false;
         return compareTimeValues(event.timeConfig.startTime, existingEvent.timeConfig.startTime) <= 0;
     });
 
     // Place the new event before the event that starts after it
     if (eventThatStartsAfterIndex !== -1) {
+        console.log(eventThatStartsAfterIndex, 'Placing it before the first event that starts after it')
         const newParentSortId = eventThatStartsAfterIndex > 0
             ? planner[eventThatStartsAfterIndex - 1].sortId
             : -1;
-        return generateSortId(newParentSortId, planner);
+        return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 
     // Find the last event that starts before the current event
     let eventThatStartsBeforeIndex = -1;
     for (let i = planner.length - 1; i >= 0; i--) {
         const existingEvent = planner[i];
-        if (!existingEvent.timeConfig) continue;
+        if (!existingEvent.timeConfig || existingEvent.id === event.id) continue;
 
         // This event starts before the current event
         if (compareTimeValues(event.timeConfig.startTime, existingEvent.timeConfig.startTime) > 0) {
@@ -192,63 +204,81 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
 
     // Place the new event after the event that starts before it
     if (eventThatStartsBeforeIndex !== -1) {
+        console.log(eventThatStartsBeforeIndex, 'Placing it after the last event that starts before it')
         const newParentSortId = planner[eventThatStartsBeforeIndex].sortId;
-        return generateSortId(newParentSortId, planner);
+        return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 
-    return event.sortId;
+    throw new Error('An error occurred during sort ID generation.')
 };
 
-/**
- * Generates a list of generic dropdown options for hours and minutes of any given day in 5-minute intervals.
- * @returns - list of dropdown options of the format: { label: 3:15 AM, value: HH:MM }
- */
-export const generateGenericTimeOptions = (): DropdownOption[] => {
-    const options = [];
-
-    for (let hour = 0; hour < 24; hour++) {
-        for (let minute = 0; minute < 60; minute += 5) {
-            const period = hour < 12 ? "AM" : "PM";
-            const formattedHour = hour % 12 === 0 ? 12 : hour % 12; // Convert 0 to 12 for midnight and 12-hour format
-            const formattedMinute = minute.toString().padStart(2, "0");
-            const label = `${formattedHour}:${formattedMinute} ${period}`;
-
-            // Create a generic time string
-            const timeValue = `${hour.toString().padStart(2, "0")}:${formattedMinute}`;
-
-            options.push({ value: timeValue, label });
-        }
-    }
-
-    return options;
-};
-
-export interface TimeObject{
+export interface TimeObject {
     indicator: string[];
-    hour: string[];
-    minute: string[];
+    hour: number[];
+    minute: number[];
 }
 
 /**
- * Generates an object with arrays for indicators, hours, and minutes.
+ * TODO: fix comments Generates an object with arrays for indicators, hours, and minutes.
  * @returns - an object with arrays for indicators, hours, and minutes
  */
 export const generateTimeArrays = (): TimeObject => {
     const timeObject: TimeObject = {
         indicator: ["AM", "PM"], // Two possible values: "AM" and "PM"
-        hour: [], // Hours from 12 to 12
+        hour: [], // Hours from 1 to 12
         minute: [], // Minutes in 5-minute intervals
     };
 
     // Populate the hour array with values from 12 to 12, padded with zeros
-    for (let hour = 1; hour <= 12; hour++) {
-        timeObject.hour.push(hour.toString());
+    for (let hour = 0; hour <= 11; hour++) {
+        timeObject.hour.push(hour);
     }
-    
+
     // Populate the minute array with 5-minute intervals (00, 05, 10, ..., 55), padded with zeros
     for (let minute = 0; minute < 60; minute += 5) {
-        timeObject.minute.push(minute.toString().padStart(2, '0'));
+        timeObject.minute.push(minute);
     }
 
     return timeObject;
 };
+
+export const extractTimeValue = (text: string) => {
+    // Use regex to find a time value typed in (HH:MM (PM or AM))
+    const timeRegex = /\b(1[0-2]|[1-9])(?::(0[0-5]|[1-5][0-9]))?\s?(AM|PM|am|pm|Am|aM|pM|Pm)\b/;
+    const match = text.match(timeRegex);
+
+    let timeConfig = null;
+    let updatedText = text;
+
+    if (match) {
+        // Extract the matched time and remove it from the text
+        const timeValue = match[0];
+        updatedText = text.replace(timeValue, "").trim();
+
+        console.log(match)
+
+        // Convert timeValue to 24-hour format (HH:MM)
+        let hours = parseInt(match[1], 10); // Group 1: Hours
+        const minutes = match[2] ? parseInt(match[2], 10) : 0; // Group 2: Minutes (default to 0 if not present)
+        const period = match[3].toUpperCase(); // Group 3: AM/PM
+
+        if (period === "PM" && hours !== 12) {
+            hours += 12; // Convert PM hours to 24-hour format
+        } else if (period === "AM" && hours === 12) {
+            hours = 0; // Convert 12 AM to 0
+        }
+
+        // Format hours and minutes as HH:MM
+        const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
+        // Create a timeConfig object
+        timeConfig = {
+            startTime: formattedTime,
+            endTime: "23:55",
+            isCalendarEvent: false,
+            allDay: false,
+        };
+    }
+
+    return {timeConfig, updatedText};
+}

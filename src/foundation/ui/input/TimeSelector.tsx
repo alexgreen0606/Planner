@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { TimeObject } from '../../../feature/planners/utils';
-import globalStyles from '../../../theme/globalStyles';
-import colors from '../../../theme/colors';
+import globalStyles from '../../theme/globalStyles';
+import colors from '../../theme/colors';
 
 interface TimeSelectorProps {
     onChange: (newTimeValue: string) => void;
@@ -16,30 +16,29 @@ const TimeSelector = ({
     options,
     initialTimeValue
 }: TimeSelectorProps) => {
-    const [hour, setHour] = useState('0');
-    const [minute, setMinute] = useState('00');
-    const [indicator, setIndicator] = useState('PM');
+    const [hour, setHour] = useState(0);
+    const [minute, setMinute] = useState(0);
+    const [indicator, setIndicator] = useState('AM');
 
     useEffect(() => {
-        let [initialHour, initialMinute] = initialTimeValue.split(':');
-        initialHour = initialHour.replace(/^0+/, '');
-        initialMinute = initialMinute.padStart(2, '0')
+        let [initialHourString, initialMinuteString] = initialTimeValue.split(':');
+        const initialHour = Number(initialHourString);
+        const initialMinute = Number(initialMinuteString);
 
-        setHour(String(Number(initialHour) >= 12 ? Number(initialHour) - 12 : initialHour));
+        setHour(initialHour >= 12 ? initialHour - 12 : initialHour);
         setMinute(initialMinute);
-        setIndicator(Number(initialHour) >= 12 ? 'PM' : 'AM');
+        setIndicator(initialHour >= 12 ? 'PM' : 'AM');
     }, []);
 
     useEffect(() => {
-        console.log(hour, minute, indicator)
-        onChange(`${indicator === 'PM' ? Number(hour) + 12 : hour}:${minute}`);
+        onChange(`${String(indicator === 'PM' && hour !== 12 ? hour + 12 : hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
     }, [hour, minute, indicator]);
 
     return (
         <View style={{ ...globalStyles.spacedApart }}>
             <Picker style={{ width: '30%' }}
                 selectedValue={hour}
-                onValueChange={(itemValue) => setHour(itemValue.toString())}
+                onValueChange={(itemValue) => setHour(Number(itemValue))}
                 itemStyle={styles.item}
                 selectionColor={colors.blue}
             >
@@ -47,7 +46,7 @@ const TimeSelector = ({
                     <Picker.Item
                         color={hour === hourOption ? colors.blue : colors.grey}
                         key={hourOption}
-                        label={`${hourOption === '0' ? '12' : hourOption}`}
+                        label={String(hourOption === 0 ? 12 : hourOption)}
                         value={hourOption}
                     />
                 ))}
@@ -61,7 +60,7 @@ const TimeSelector = ({
                     <Picker.Item
                         color={minute === minuteOption ? colors.blue : colors.grey}
                         key={minuteOption}
-                        label={minuteOption}
+                        label={String(minuteOption).padStart(2, '0')}
                         value={minuteOption}
                     />
                 ))}

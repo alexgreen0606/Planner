@@ -22,9 +22,12 @@ import Modal from '../../../foundation/ui/modal/Modal';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 import GenericIcon, { IconType } from '../../../foundation/ui/icons/GenericIcon';
-import globalStyles from '../../../theme/globalStyles';
-import CustomText from '../../../foundation/ui/text';
-import colors from '../../../theme/colors';
+import globalStyles from '../../../foundation/theme/globalStyles';
+import CustomText from '../../../foundation/ui/text/CustomText';
+import colors from '../../../foundation/theme/colors';
+import { selectableColors } from '../../../foundation/consts';
+import ThinLine from '../../../foundation/ui/separators/ThinLine';
+import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
 
 interface SortableFolderProps {
     folderId: string;
@@ -53,10 +56,13 @@ const SortableFolder = ({
 
     // Creates a new textfield with initial item count set to 0
     const initializeFolderItem = (newItem: FolderItem) => {
-        return {
+        const initializedItem = {
             ...newItem,
-            childrenCount: 0
-        }
+            childrenCount: 0,
+            type: FolderItemType.FOLDER,
+            color: 'yellow'
+        };
+        return initializedItem;
     };
 
     // Toggles an item in and out of delete status
@@ -158,22 +164,37 @@ const SortableFolder = ({
                 { top: popupPosition.y, left: popupPosition.x },
             ]}
         >
-            <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.FOLDER })}>
-                <GenericIcon
-                    type='MaterialIcons'
-                    name='folder-open'
-                    size={20}
-                    color={item.type === FolderItemType.FOLDER ? colors.blue : colors.grey}
-                />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.LIST })}>
-                <GenericIcon
-                    type='Ionicons'
-                    name='list-outline'
-                    size={20}
-                    color={item.type === FolderItemType.LIST ? colors.blue : colors.grey}
-                />
-            </TouchableOpacity>
+            <View style={styles.popoverRow}>
+                <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.FOLDER })}>
+                    <GenericIcon
+                        type='MaterialIcons'
+                        name='folder-open'
+                        size={20}
+                        color={item.type === FolderItemType.FOLDER ? colors.blue : colors.grey}
+                    />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.LIST })}>
+                    <GenericIcon
+                        type='Ionicons'
+                        name='list-outline'
+                        size={20}
+                        color={item.type === FolderItemType.LIST ? colors.blue : colors.grey}
+                    />
+                </TouchableOpacity>
+            </View>
+            <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
+            <View style={styles.popoverRow}>
+                {selectableColors.map(color =>
+                    <TouchableOpacity key={color} onPress={() => SortedFolder.updateItem({ ...item, color })}>
+                        <GenericIcon
+                            type='FontAwesome'
+                            name={item.color === color ? 'circle' : 'circle-thin'}
+                            size={20}
+                            color={colors[color as keyof typeof colors]}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
 
     /**
@@ -202,6 +223,7 @@ const SortableFolder = ({
                     color={isItemTransfering ? colors.blue : colors.grey}
                 />
             </TouchableOpacity>
+            <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
             <TouchableOpacity
                 onPress={() => customToggleItemDelete(item, false)}
             >
@@ -212,6 +234,19 @@ const SortableFolder = ({
                     color={colors.grey}
                 />
             </TouchableOpacity>
+            <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
+            <View style={styles.popoverRow}>
+                {selectableColors.map(color =>
+                    <TouchableOpacity key={color} onPress={() => SortedFolder.updateItem({ ...item, color })}>
+                        <GenericIcon
+                            type='FontAwesome'
+                            name={item.color === color ? 'circle' : 'circle-thin'}
+                            size={20}
+                            color={colors[color as keyof typeof colors]}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
 
     /**
@@ -223,8 +258,7 @@ const SortableFolder = ({
      */
     const renderInputField = (
         item: FolderItem,
-        isItemTransfering: boolean,
-        isItemDeleting: boolean
+        isItemTransfering: boolean
     ) => {
         const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
         const itemType = item.type === FolderItemType.FOLDER ? 'folder' : 'list';
@@ -325,13 +359,13 @@ const SortableFolder = ({
                             type={iconStyle.type}
                             name={iconStyle.name}
                             size={20}
-                            color={isItemTransferring ? colors.blue : item.type === FolderItemType.FOLDER ? colors.yellow : colors.grey}
+                            color={isItemTransferring ? colors.blue : (item.type === FolderItemType.LIST && transferMode) ? colors.grey : colors[item.color as keyof typeof colors]}
                         />
                     </TouchableOpacity>
 
                     {/* Row Data */}
                     {isItemEditing ? (
-                        renderInputField(item, isItemTransferring, isItemDeleting)) :
+                        renderInputField(item, isItemTransferring)) :
                         <Text
                             onPress={() => handleItemClick(item)}
                             style={{
@@ -380,17 +414,37 @@ const SortableFolder = ({
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
+            {!SortedFolder.current.length && (
+                <EmptyLabel
+                    label={"It's a ghost town in here."}
+                    iconConfig={{
+                        type: 'FontAwesome6',
+                        name: 'ghost',
+                        size: 26,
+                        color: colors.grey,
+                    }}
+                    customFontSize={14}
+                    onPress={() => SortedFolder.createOrMoveTextfield(-1)}
+                    style={{ height: '90%', flexDirection: 'column' }}
+                />
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     popup: {
-        ...globalStyles.verticallyCentered,
-        ...globalStyles.background,
-        borderRadius: 4,
+        ...globalStyles.horizontallyCentered,
+        ...globalStyles.backdrop,
         elevation: 4,
         padding: 12,
+        gap: 8,
+        flexShrink: 1,
+        alignSelf: 'flex-start',
+        alignItems: 'flex-start'
+    },
+    popoverRow: {
+        flexDirection: 'row',
         gap: 16
     }
 });

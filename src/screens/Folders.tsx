@@ -3,7 +3,8 @@ import { SafeAreaView, View } from 'react-native';
 import { FolderItemType } from '../feature/folders/enums';
 import SortableFolder from '../feature/folders/components/SortableFolder';
 import SortableList from '../feature/folders/components/SortableList';
-import colors from '../theme/colors';
+import colors from '../foundation/theme/colors';
+import PageLabel from '../foundation/ui/text/PageLabel';
 
 interface PageConfig {
   id: string;
@@ -22,6 +23,15 @@ const Folders = () => {
   return (
     <View style={{ flex: 1, backgroundColor: colors.black }}>
       <SafeAreaView key={pageConfig.id}>
+        {/* <PageLabel
+          label='Lists'
+          iconConfig={{
+            type: 'Entypo',
+            name: 'folder',
+            size: 26,
+            color: colors.blue
+          }}
+        /> */}
         {pageConfig.type === FolderItemType.FOLDER ? (
           <SortableFolder
             folderId={pageConfig.id}

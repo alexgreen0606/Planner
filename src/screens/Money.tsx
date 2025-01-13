@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import colors from '../theme/colors';
+import colors from '../foundation/theme/colors';
 
 const Money = () => {
   return (
