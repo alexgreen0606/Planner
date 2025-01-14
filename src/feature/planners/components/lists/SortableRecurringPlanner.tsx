@@ -4,7 +4,7 @@ import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flat
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../../foundation/sortedLists/enums';
 import { Event, TimeConfig } from '../../types';
-import { getPlannerFromStorage, savePlannerToStorage } from '../../storage/plannerStorage';
+import { getPlannerFromStorage, getPlannerStorageKey, savePlannerToStorage } from '../../storage/plannerStorage';
 import { RECURRING_WEEKDAY_PLANNER } from '../../enums';
 import ClickableLine from '../../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../../foundation/sortedLists/components/ListTextfield';
@@ -16,6 +16,7 @@ import GenericIcon from '../../../../foundation/ui/icons/GenericIcon';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import colors from '../../../../foundation/theme/colors';
 import EmptyLabel from '../../../../foundation/sortedLists/components/EmptyLabel';
+import { StorageIds } from '../../../../enums';
 
 interface SortableRecurringPlannerProps {
     manualSaveTrigger: string;
@@ -25,7 +26,7 @@ const SortableRecurringPlanner = ({
     manualSaveTrigger
 }: SortableRecurringPlannerProps) => {
     const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const initialPlanner = useMemo(() => getPlannerFromStorage(RECURRING_WEEKDAY_PLANNER), []);
+    // const initialPlanner = useMemo(() => getPlannerFromStorage(RECURRING_WEEKDAY_PLANNER), []);
     const savePlanner = useRef(false);
 
     const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
@@ -40,17 +41,20 @@ const SortableRecurringPlanner = ({
     } as Event);
 
     // Stores the current recurring weekday planner and all handler functions to update it
-    const SortedPlanner = useSortedList<Event>(initialPlanner, {
-        storageMode: ListStorageMode.CUSTOM_SYNC,
-        initializeNewItem: initializeNewEvent
-    });
+    const SortedPlanner = useSortedList<Event, Event[]>(
+        getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER),
+        StorageIds.PLANNER_STORAGE,
+        (events) => events,
+        (events) => events,
+        initializeNewEvent
+    );
 
     // Manually trigger the list to update
     useEffect(() => {
         if (savePlanner.current)
             savePlannerToStorage(
                 RECURRING_WEEKDAY_PLANNER,
-                SortedPlanner.current
+                SortedPlanner.items
                     .filter(event => !!event.value.length)
                     .map(event => ({
                         ...event,
@@ -145,7 +149,7 @@ const SortableRecurringPlanner = ({
                                 ...item,
                                 timeConfig
                             };
-                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.current);
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedPlanner.items);
                             SortedPlanner.updateItem(newEvent);
                             toggleTimeModal();
                         }}
@@ -159,14 +163,14 @@ const SortableRecurringPlanner = ({
         <View style={styles.container}>
             <ClickableLine onPress={() => SortedPlanner.createOrMoveTextfield(-1)} />
             <DraggableFlatList
-                data={SortedPlanner.current}
+                data={SortedPlanner.items}
                 nestedScrollEnabled
                 onDragEnd={SortedPlanner.endDragItem}
                 onDragBegin={SortedPlanner.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
-            {!SortedPlanner.current.length && (
+            {!SortedPlanner.items.length && (
                 <EmptyLabel
                     label='No Recurring Plans'
                     onPress={() => SortedPlanner.createOrMoveTextfield(-1)}

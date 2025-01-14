@@ -60,14 +60,11 @@ export const isoToTimeValue = (isoTimestamp: string): string => {
  * @returns - A negative number if time1 is earlier, 0 if equal, positive if time1 is later.
  */
 export const compareTimeValues = (time1: string, time2: string): number => {
-    console.log(`${time1} and ${time2}`, 'comparing time values')
     const [hour1, minute1] = time1.split(':').map(Number);
     const [hour2, minute2] = time2.split(':').map(Number);
 
     const totalMinutes1 = hour1 * 60 + minute1;
     const totalMinutes2 = hour2 * 60 + minute2;
-
-    console.log(totalMinutes1 - totalMinutes2, 'result')
 
     return totalMinutes1 - totalMinutes2;
 };
@@ -149,12 +146,7 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
         generateSortId(-1, plannerWithoutEvent) :
         event.sortId;
 
-    console.log('**********')
-    console.log(event, 'adding event with new time sort')
-
     planner.sort((a, b) => a.sortId - b.sortId);
-
-    console.log([...planner], 'current planner')
 
     // Check if the event conflicts at its current position
     const eventsWithTimes = planner.filter(existingEvent => !!existingEvent.timeConfig || (existingEvent.id === event.id));
@@ -168,7 +160,6 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
             (!prevEvent || (prevEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, prevEvent.timeConfig.startTime) >= 0)) &&
             (!nextEvent || (nextEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, nextEvent.timeConfig.startTime) < 0));
 
-        console.log(hasNoConflict, 'has no conflict')
         if (hasNoConflict) return event.sortId === -1 ? generateSortId(-1, plannerWithoutEvent) : event.sortId;
     } else {
         throw new Error('generateSortIdByTimestamp: Event does not exist in the planner.');
@@ -182,7 +173,6 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
 
     // Place the new event before the event that starts after it
     if (eventThatStartsAfterIndex !== -1) {
-        console.log(eventThatStartsAfterIndex, 'Placing it before the first event that starts after it')
         const newParentSortId = eventThatStartsAfterIndex > 0
             ? planner[eventThatStartsAfterIndex - 1].sortId
             : -1;
@@ -204,7 +194,6 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
 
     // Place the new event after the event that starts before it
     if (eventThatStartsBeforeIndex !== -1) {
-        console.log(eventThatStartsBeforeIndex, 'Placing it after the last event that starts before it')
         const newParentSortId = planner[eventThatStartsBeforeIndex].sortId;
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
@@ -254,8 +243,6 @@ export const extractTimeValue = (text: string) => {
         // Extract the matched time and remove it from the text
         const timeValue = match[0];
         updatedText = text.replace(timeValue, "").trim();
-
-        console.log(match)
 
         // Convert timeValue to 24-hour format (HH:MM)
         let hours = parseInt(match[1], 10); // Group 1: Hours

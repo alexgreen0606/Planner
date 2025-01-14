@@ -7,7 +7,7 @@ export interface FolderItem extends ListItem {
     color: string;
 };
 
-export interface Folder extends Omit<ListItem, 'status'> {
+export interface Folder extends ListItem {
     folderIds: string[];
     listIds: string[];
     color: string;

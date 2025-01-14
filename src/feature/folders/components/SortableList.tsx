@@ -2,11 +2,11 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import { ListItem } from '../../../foundation/sortedLists/types';
-import { ShiftTextfieldDirection, ItemStatus, ListStorageMode } from '../../../foundation/sortedLists/enums';
+import { ShiftTextfieldDirection, ItemStatus } from '../../../foundation/sortedLists/enums';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { FolderItemType } from '../enums';
 import FolderItemBanner from './FolderItemBanner';
-import { getFolderFromStorage, getListFromStorage, updateListItems } from '../storage/folderStorage';
+import { getFolderFromStorage, getListFromStorage, getStorageKey } from '../storage/folderStorage';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
 import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
@@ -14,6 +14,8 @@ import globalStyles from '../../../foundation/theme/globalStyles';
 import colors from '../../../foundation/theme/colors';
 import Card from '../../../foundation/ui/card';
 import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
+import { StorageIds } from '../../../enums';
+import { List } from '../types';
 
 interface SortableListProps {
     listId: string;
@@ -28,12 +30,11 @@ const SortableList = ({
     const parentFolderData = useMemo(() => getFolderFromStorage(initialListData.parentFolderId), [initialListData]);
 
     // Stores the current list and all handler functions to update it
-    const SortedList = useSortedList<ListItem>(
-        initialListData.items,
-        {
-            storageMode: ListStorageMode.FULL_SYNC,
-            saveListToStorage: (newItems: ListItem[]) => updateListItems(listId, newItems)
-        }
+    const SortedList = useSortedList<ListItem, List>(
+        `${getStorageKey(listId)}`,
+        StorageIds.FOLDER_STORAGE,
+        (storageObject: List) => storageObject.items,
+        (newItems: ListItem[], currentList: List) => ({...currentList, items: newItems})
     );
 
     /**
@@ -55,7 +56,7 @@ const SortableList = ({
                             type='FontAwesome'
                             name={isItemDeleting ? 'circle' : 'circle-thin'}
                             size={20}
-                            color={colors.grey}
+                            color={isItemDeleting ? colors.blue : colors.grey}
                         />
                     </TouchableOpacity>
 
@@ -101,21 +102,21 @@ const SortableList = ({
             />
             <ClickableLine onPress={() => SortedList.createOrMoveTextfield(-1)} />
             <DraggableFlatList
-                data={SortedList.current}
+                data={SortedList.items.sort((a,b) => a.sortId - b.sortId)}
                 scrollEnabled={false}
                 onDragEnd={SortedList.endDragItem}
                 onDragBegin={SortedList.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
-            {!SortedList.current.length && (
+            {!SortedList.items.length && (
                 <EmptyLabel
                     label={"It's a ghost town in here."}
                     iconConfig={{
                         type: 'FontAwesome6',
                         name: 'ghost',
                         size: 26,
-                        color: colors.white,
+                        color: colors.grey,
                     }}
                     customFontSize={14}
                     onPress={() => SortedList.createOrMoveTextfield(-1)}

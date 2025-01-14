@@ -3,20 +3,20 @@ import { View, Text, StyleSheet, UIManager, findNodeHandle, TouchableOpacity } f
 import { Portal } from 'react-native-paper';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ListStorageMode, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
+import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
 import { FolderItemType } from '../enums';
-import { FolderItem } from '../types';
+import { Folder, FolderItem } from '../types';
 import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
 import FolderItemBanner from './FolderItemBanner';
 import {
     createFolderItem,
     getFolderFromStorage,
     updateFolderItem,
-    getFolderItems,
     getStorageKey,
-    deleteFolderItem
+    deleteFolderItem,
+    newGetFolderItems,
+    buildFolderFromItems
 } from '../storage/folderStorage';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { StorageIds } from '../../../enums';
 import Modal from '../../../foundation/ui/modal/Modal';
 import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
@@ -41,18 +41,9 @@ const SortableFolder = ({
     onOpenItem
 }: SortableFolderProps) => {
     const { currentTab } = useNavigatorContext();
-    const [initialFolderItems, setInitialFolderItems] = useState(getFolderItems(folderId));
-    const skipStorageSync = useRef(false);
     const inputWrapperRef = useRef<View>(null);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
     const parentFolderData = useMemo(() => folderData.parentFolderId ? getFolderFromStorage(folderData.parentFolderId) : null, [folderData]);
-    const folderStorage = useMMKV({ id: StorageIds.FOLDER_STORAGE });
-
-    // Creates a new item in storage, and ensures the component re-render is skipped
-    const customCreateNewItem = (newData: FolderItem) => {
-        skipStorageSync.current = true;
-        return createFolderItem(folderId, newData);
-    };
 
     // Creates a new textfield with initial item count set to 0
     const initializeFolderItem = (newItem: FolderItem) => {
@@ -74,29 +65,22 @@ const SortableFolder = ({
     }
 
     // Stores the current folder and all handler functions to update it
-    const SortedFolder = useSortedList<FolderItem>(
-        initialFolderItems,
+    const SortedFolder = useSortedList<FolderItem, Folder>(
+        getStorageKey(folderId),
+        StorageIds.FOLDER_STORAGE,
+        newGetFolderItems,
+        buildFolderFromItems,
+        initializeFolderItem,
         {
-            storageMode: ListStorageMode.ITEM_SYNC,
-            storageUpdates: {
-                create: customCreateNewItem,
-                update: updateFolderItem,
-                delete: (item: FolderItem) => deleteFolderItem(item.id, item.type)
-            },
-            initializeNewItem: initializeFolderItem
+            create: (newItem) => createFolderItem(folderId, newItem),
+            update: (newItem) => updateFolderItem(newItem),
+            delete: (item) => deleteFolderItem(item.id, item.type)
         },
     );
 
-    // Sync the sorted list with storage
-    useMMKVListener((key) => {
-        if (key === getStorageKey(folderId)) {
-            if (skipStorageSync.current) {
-                skipStorageSync.current = false;
-            } else {
-                setInitialFolderItems(getFolderItems(folderId));
-            }
-        }
-    }, folderStorage);
+    const beginItemTransfer = (item: FolderItem) => {
+        SortedFolder.updateItem({ ...item, status: ItemStatus.TRANSFER })
+    }
 
     /**
      * Transfers the focused item to a new folder.
@@ -214,7 +198,7 @@ const SortableFolder = ({
             ]}
         >
             <TouchableOpacity
-                onPress={() => SortedFolder.beginTransferItem(item)}
+                onPress={() => beginItemTransfer(item)}
             >
                 <GenericIcon
                     type='MaterialCommunityIcons'
@@ -407,14 +391,14 @@ const SortableFolder = ({
             />
             <ClickableLine onPress={() => SortedFolder.createOrMoveTextfield(-1)} />
             <DraggableFlatList
-                data={SortedFolder.current}
+                data={SortedFolder.items}
                 scrollEnabled={false}
                 onDragEnd={SortedFolder.endDragItem}
                 onDragBegin={SortedFolder.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
-            {!SortedFolder.current.length && (
+            {!SortedFolder.items.length && (
                 <EmptyLabel
                     label={"It's a ghost town in here."}
                     iconConfig={{

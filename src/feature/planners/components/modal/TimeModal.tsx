@@ -124,7 +124,6 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                                         ...timeModalData,
                                         startTime: newVal
                                     })
-                                    console.log(newVal)
                                 }}
                                 options={newTimeOptions}
                                 initialTimeValue={timeModalData.startTime}
@@ -138,7 +137,6 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
                             <CustomText type='label'>End Time</CustomText>
                             <TimeSelector
                                 onChange={(newVal: string) => {
-                                    console.log(newVal)
                                     setTimeModalData({
                                         ...timeModalData,
                                         endTime: newVal

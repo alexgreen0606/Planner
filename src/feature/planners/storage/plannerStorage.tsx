@@ -11,7 +11,7 @@ import {
     isoToTimeValue,
     generateTomorrowTimestamp
 } from '../utils';
-import RNCalendarEvents from "react-native-calendar-events";
+import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
 import { ItemStatus } from '../../../foundation/sortedLists/enums';
 import { uuid } from 'expo-modules-core';
 
@@ -96,7 +96,7 @@ const getCalendarEvents = async (plannerId: string): Promise<Event[]> => {
 
     // Load in the calendar events and format them into a planner
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [await getPrimaryCalendarId()]);
-    return calendarEvents.map(calendarEvent => ({
+    return calendarEvents.filter(event => !event.allDay).map(calendarEvent => ({
         id: calendarEvent.id,
         value: calendarEvent.title,
         sortId: 1, // temporary sort id -> will be overwritten
@@ -178,6 +178,73 @@ export const getBirthdays = async (timestamps: string[]): Promise<Record<string,
     return birthdayMap;
 };
 
+// TODO: comment
+// export const getAllDayEvents = async (timestamps: string[]): Promise<Record<string, string[]>> => {
+
+//     await getCalendarAccess();
+//     const primaryCalendarId = await getPrimaryCalendarId();
+
+//     // Find the overall date range
+//     const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
+//     const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
+
+//     // Fetch all events in the date range
+//     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [primaryCalendarId]);
+
+//     console.log(calendarEvents.length, '')
+
+//     // Group events by date
+//     const allDayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
+//         const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
+//         map[timestamp] = calendarEvents
+//             .filter(event => event.allDay && new Date(event.startDate).toISOString().split('T')[0] === dateKey)
+//             .map(event => event.title);
+//         console.log(map)
+//         return map;
+//     }, {} as Record<string, string[]>);
+
+//     return allDayMap;
+// };
+export const getAllDayEvents = async (timestamps: string[]): Promise<Record<string, string[]>> => {
+    await getCalendarAccess();
+    const primaryCalendarId = await getPrimaryCalendarId();
+
+    // Find the overall date range
+    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
+    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
+
+    // Fetch all events in the date range
+    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [primaryCalendarId]);
+
+    // Group events by date
+    const allDayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
+        const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
+        map[timestamp] = calendarEvents
+            .filter(event => event.allDay && isEventOnDate(event, dateKey))
+            .map(event => event.title);
+        return map;
+    }, {} as Record<string, string[]>);
+
+    return allDayMap;
+};
+
+// Helper function to determine if an event falls on a specific date
+const isEventOnDate = (event: CalendarEventReadable, dateKey: string): boolean => {
+    const eventStart = new Date(event.startDate).toISOString().split('T')[0];
+
+    // Adjust the end date for all-day events to make it exclusive
+    let eventEnd = new Date(event.endDate);
+    if (event.allDay) {
+        eventEnd.setDate(eventEnd.getDate() - 1);
+    }
+    eventEnd = eventEnd.toISOString().split('T')[0];
+
+    return dateKey >= eventStart && dateKey <= eventEnd;
+};
+
+
+
+
 /**
  * Syncs an existing planner with a calendar. Calendars have final say on the state of the events.
  * @param calendar - the events to sync within the existing planner
@@ -187,10 +254,6 @@ export const getBirthdays = async (timestamps: string[]): Promise<Record<string,
  */
 const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], currentPlannerId: string) => {
 
-    console.log('--------------------')
-    console.log('Syncing with Calendar')
-    console.log(currentPlanner, 'current planner')
-    console.log(calendar, 'syncing with')
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
     // calendar.
@@ -198,7 +261,6 @@ const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], cur
 
         // This event isn't related to the calendar -> keep it
         if (!currentEvent.timeConfig?.isCalendarEvent) {
-            console.log(currentEvent, 'keeping this event -> it is not a calendar event')
             return [...accumulator, currentEvent];
         }
 
@@ -218,12 +280,10 @@ const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], cur
 
             // Generate the updated event's new position in the list
             updatedEvent.sortId = generateSortIdByTimestamp(updatedEvent, updatedPlanner);
-            console.log(updatedEvent, 'updating this event')
             return updatedPlanner;
         }
 
         // This event is linked to the calendar but has been removed -> delete it
-        console.log(currentEvent, 'deleting this event -> no longer in linked planner')
         return [...accumulator];
 
     }, []);
@@ -246,8 +306,6 @@ const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], cur
         }
     })
 
-    console.log(newPlanner, 'updated planner')
-    console.log('--------------------')
     return newPlanner;
 }
 
@@ -349,7 +407,7 @@ export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
     // Save the planner now that external events have been linked
     savePlannerToStorage(plannerId, planner);
 
-    return planner;
+    return planner.filter(event => !event.recurringConfig?.deleted && !event.timeConfig?.allDay);
 };
 
 /**
@@ -357,7 +415,7 @@ export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
  * @param newEvent 
  * @returns - the newly generated event
  */
-export const persistEvent = async (event: Event): Promise<Event> => {
+export const persistEvent = async (event: Event) => {
     let newPlanner = getPlannerFromStorage(event.plannerId);
     let newEvent = { ...event };
 
@@ -387,7 +445,6 @@ export const persistEvent = async (event: Event): Promise<Event> => {
 
     // Save the new planner
     savePlannerToStorage(newEvent.plannerId, newPlanner);
-    return newEvent;
 };
 
 /**
