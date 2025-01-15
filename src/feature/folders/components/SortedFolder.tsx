@@ -35,7 +35,7 @@ interface SortableFolderProps {
     onOpenItem: (id: string, type: FolderItemType) => void;
 };
 
-const SortableFolder = ({
+const SortedFolder = ({
     folderId,
     onBackClick,
     onOpenItem
@@ -58,14 +58,14 @@ const SortableFolder = ({
 
     // Toggles an item in and out of delete status
     const customToggleItemDelete = (item: FolderItem, isModalOpen: boolean) => {
-        SortedFolder.updateItem({
+        SortedItems.updateItem({
             ...item,
             status: isModalOpen ? ItemStatus.EDIT : ItemStatus.DELETE
         })
     }
 
     // Stores the current folder and all handler functions to update it
-    const SortedFolder = useSortedList<FolderItem, Folder>(
+    const SortedItems = useSortedList<FolderItem, Folder>(
         getStorageKey(folderId),
         StorageIds.FOLDER_STORAGE,
         newGetFolderItems,
@@ -79,7 +79,7 @@ const SortableFolder = ({
     );
 
     const beginItemTransfer = (item: FolderItem) => {
-        SortedFolder.updateItem({ ...item, status: ItemStatus.TRANSFER })
+        SortedItems.updateItem({ ...item, status: ItemStatus.TRANSFER })
     }
 
     /**
@@ -87,7 +87,7 @@ const SortableFolder = ({
      * @param destination - the folder being transferred to
      */
     const handleItemTransfer = (destination?: FolderItem) => {
-        const focusedItem = SortedFolder.getFocusedItem();
+        const focusedItem = SortedItems.getFocusedItem();
         if (!destination && !parentFolderData?.id || !focusedItem) return;
         const destinationId = destination ? destination.id : parentFolderData?.id;
 
@@ -100,7 +100,7 @@ const SortableFolder = ({
      * Otherwise, open the parent folder.
      */
     const handleParentFolderClick = () => {
-        const focusedItem = SortedFolder.getFocusedItem();
+        const focusedItem = SortedItems.getFocusedItem();
         if (focusedItem?.status === ItemStatus.TRANSFER) {
             handleItemTransfer();
             return;
@@ -124,14 +124,14 @@ const SortableFolder = ({
      * @param item - the item that was clicked
      */
     const handleItemClick = (item: FolderItem) => {
-        const currentItem = SortedFolder.getFocusedItem();
+        const currentItem = SortedItems.getFocusedItem();
         if (currentItem && currentItem.status === ItemStatus.TRANSFER) {
             if (item.type === FolderItemType.FOLDER) {
                 handleItemTransfer(item);
             }
             return;
         } else if (currentItem) {
-            SortedFolder.saveTextfield();
+            SortedItems.saveTextfield();
         }
         onOpenItem(item.id, item.type);
     };
@@ -149,7 +149,7 @@ const SortableFolder = ({
             ]}
         >
             <View style={styles.popoverRow}>
-                <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.FOLDER })}>
+                <TouchableOpacity onPress={() => SortedItems.updateItem({ ...item, type: FolderItemType.FOLDER })}>
                     <GenericIcon
                         type='MaterialIcons'
                         name='folder-open'
@@ -157,7 +157,7 @@ const SortableFolder = ({
                         color={item.type === FolderItemType.FOLDER ? colors.blue : colors.grey}
                     />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => SortedFolder.updateItem({ ...item, type: FolderItemType.LIST })}>
+                <TouchableOpacity onPress={() => SortedItems.updateItem({ ...item, type: FolderItemType.LIST })}>
                     <GenericIcon
                         type='Ionicons'
                         name='list-outline'
@@ -169,7 +169,7 @@ const SortableFolder = ({
             <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
             <View style={styles.popoverRow}>
                 {selectableColors.map(color =>
-                    <TouchableOpacity key={color} onPress={() => SortedFolder.updateItem({ ...item, color })}>
+                    <TouchableOpacity key={color} onPress={() => SortedItems.updateItem({ ...item, color })}>
                         <GenericIcon
                             type='FontAwesome'
                             name={item.color === color ? 'circle' : 'circle-thin'}
@@ -221,7 +221,7 @@ const SortableFolder = ({
             <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
             <View style={styles.popoverRow}>
                 {selectableColors.map(color =>
-                    <TouchableOpacity key={color} onPress={() => SortedFolder.updateItem({ ...item, color })}>
+                    <TouchableOpacity key={color} onPress={() => SortedItems.updateItem({ ...item, color })}>
                         <GenericIcon
                             type='FontAwesome'
                             name={item.color === color ? 'circle' : 'circle-thin'}
@@ -269,8 +269,8 @@ const SortableFolder = ({
                     {/* Textfield */}
                     <ListTextfield
                         item={item}
-                        onChange={(text) => SortedFolder.updateItem({ ...item, value: text })}
-                        onSubmit={() => SortedFolder.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                        onChange={(text) => SortedItems.updateItem({ ...item, value: text })}
+                        onSubmit={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
                     />
                 </View>
 
@@ -322,7 +322,7 @@ const SortableFolder = ({
      * @param param0 - the item data and the drag function for sorting
      */
     const renderRow = ({ item, drag }: RenderItemParams<FolderItem>) => {
-        const transferMode = SortedFolder.getFocusedItem()?.status === ItemStatus.TRANSFER;
+        const transferMode = SortedItems.getFocusedItem()?.status === ItemStatus.TRANSFER;
         const isItemEditing = [ItemStatus.NEW, ItemStatus.EDIT, ItemStatus.TRANSFER, ItemStatus.DELETE].includes(item.status);
         const isItemTransferring = item.status === ItemStatus.TRANSFER;
         const isItemDeleting = item.status === ItemStatus.DELETE;
@@ -337,7 +337,7 @@ const SortableFolder = ({
                     {/* Edit Icon */}
                     <TouchableOpacity
                         onLongPress={drag}
-                        onPress={() => SortedFolder.beginEditItem(item)}
+                        onPress={() => SortedItems.beginEditItem(item)}
                     >
                         <GenericIcon
                             type={iconStyle.type}
@@ -373,7 +373,7 @@ const SortableFolder = ({
                 </View>
 
                 {/* Separator Line */}
-                <ClickableLine onPress={() => SortedFolder.createOrMoveTextfield(item.sortId)} />
+                <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(item.sortId)} />
             </View>
         )
     }
@@ -389,16 +389,16 @@ const SortableFolder = ({
                 }}
                 itemType={FolderItemType.FOLDER}
             />
-            <ClickableLine onPress={() => SortedFolder.createOrMoveTextfield(-1)} />
+            <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(-1)} />
             <DraggableFlatList
-                data={SortedFolder.items}
+                data={SortedItems.items}
                 scrollEnabled={false}
-                onDragEnd={SortedFolder.endDragItem}
-                onDragBegin={SortedFolder.beginDragItem}
+                onDragEnd={SortedItems.endDragItem}
+                onDragBegin={SortedItems.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
-            {!SortedFolder.items.length && (
+            {!SortedItems.items.length && (
                 <EmptyLabel
                     label={"It's a ghost town in here."}
                     iconConfig={{
@@ -408,7 +408,7 @@ const SortableFolder = ({
                         color: colors.grey,
                     }}
                     customFontSize={14}
-                    onPress={() => SortedFolder.createOrMoveTextfield(-1)}
+                    onPress={() => SortedItems.createOrMoveTextfield(-1)}
                     style={{ height: '90%', flexDirection: 'column' }}
                 />
             )}
@@ -433,4 +433,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default SortableFolder;
+export default SortedFolder;

@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import SortablePlanner from '../feature/planners/components/lists/SortablePlanner';
+import SortedPlanner from '../feature/planners/components/lists/SortedPlanner';
 import Modal from '../foundation/ui/modal/Modal';
-import { RECURRING_WEEKDAY_PLANNER } from '../feature/planners/enums';
 import { generateNextSevenDayTimestamps } from '../feature/planners/utils';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { StorageIds } from '../enums';
-import { getAllDayEvents, getBirthdays, getHolidays, getPlannerStorageKey } from '../feature/planners/storage/plannerStorage';
-import SortableRecurringPlanner from '../feature/planners/components/lists/SortableRecurringPlanner';
+import { getAllDayEvents, getBirthdays, getHolidays } from '../feature/planners/storage/plannerStorage';
+import SortedRecurringPlanner from '../feature/planners/components/lists/SortedRecurringPlanner';
 import colors from '../foundation/theme/colors';
 import PageLabel from '../foundation/ui/text/PageLabel';
 import { ActivityIndicator } from 'react-native-paper';
 import { WeatherForecast } from '../foundation/weather/types';
 import { getWeather } from '../foundation/weather/utils';
-import { DraggableListProvider } from '../foundation/sortedLists/services/DraggableListProvider';
+import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 
 const WeeklyPlanner = () => {
   const [timestamps, setTimestamps] = useState<string[]>([]);
@@ -23,8 +20,8 @@ const WeeklyPlanner = () => {
   const [holidays, setHolidays] = useState<Record<string, string[]>>();
   const [allDayEvents, setAllDayEvents] = useState<Record<string, string[]>>();
   const [weekdayPlannerOpen, setWeekdayPlannerOpen] = useState(false);
-  const [plannerListKey, setPlannerListKey] = useState('PLANNER_LIST_KEY');
-  const [saveRecurringTrigger, setSaveRecurringTrigger] = useState('TRIGGER');
+
+  const toggleWeekdayPlanner = () => setWeekdayPlannerOpen(!weekdayPlannerOpen);
 
   useEffect(() => {
     const buildWeeklyPlanner = async () => {
@@ -42,30 +39,6 @@ const WeeklyPlanner = () => {
 
     buildWeeklyPlanner();
   }, []);
-
-  const storage = useMMKV({ id: StorageIds.PLANNER_STORAGE });
-
-  // Reload the planner when the recurring planner changes
-  useMMKVListener((key) => {
-    if (key === getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER)) {
-      setPlannerListKey(curr => (`${curr}_RERENDER`));
-      toggleWeekdayPlanner();
-    }
-  }, storage)
-
-  const toggleWeekdayPlanner = () => setWeekdayPlannerOpen(!weekdayPlannerOpen);
-
-  if (!timestamps || !birthdays || !holidays || !forecasts || !allDayEvents)
-    return (
-      <SafeAreaView style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.black
-      }}>
-        <ActivityIndicator color={colors.blue} />
-      </SafeAreaView>
-    );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.black }}>
@@ -86,27 +59,33 @@ const WeeklyPlanner = () => {
           }}
           control={toggleWeekdayPlanner}
         />
-        <DraggableListProvider>
-          <View key={plannerListKey} style={{ padding: 16 }}>
-            {timestamps.map((timestamp) =>
-              <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }} key={`${timestamp}-planner`}>
-                <SortablePlanner
-                  timestamp={timestamp}
-                  holidays={holidays[timestamp]}
-                  birthdays={birthdays[timestamp]}
-                  forecast={forecasts[timestamp]}
-                  allDayEvents={allDayEvents[timestamp]}
-                />
+        <View style={{ width: '100%', height: '100%', justifyContent: 'center' }}>
+          {!timestamps || !birthdays || !holidays || !forecasts || !allDayEvents ? (
+            <ActivityIndicator color={colors.blue} />
+          ) : (
+            <SortableListProvider>
+              <View key={`${weekdayPlannerOpen}-weekday-modal-open`} style={{ padding: 16 }}>
+                {timestamps.map((timestamp) =>
+                  <View style={{ width: '100%', alignItems: 'center', marginBottom: 16 }} key={`${timestamp}-planner`}>
+                    <SortedPlanner
+                      timestamp={timestamp}
+                      holidays={holidays[timestamp]}
+                      birthdays={birthdays[timestamp]}
+                      forecast={forecasts[timestamp]}
+                      allDayEvents={allDayEvents[timestamp]}
+                    />
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-        </DraggableListProvider>
+            </SortableListProvider>
+          )}
+        </View>
         <Modal
           title='Recurring Weekday Planner'
           open={weekdayPlannerOpen}
           primaryButtonConfig={{
-            onClick: () => setSaveRecurringTrigger(`${saveRecurringTrigger}_AGAIN`),
-            label: 'Save'
+            onClick: toggleWeekdayPlanner,
+            label: 'Close'
           }}
           toggleModalOpen={toggleWeekdayPlanner}
           iconConfig={{
@@ -115,9 +94,7 @@ const WeeklyPlanner = () => {
             color: colors.blue
           }}
         >
-          <SortableRecurringPlanner
-            manualSaveTrigger={saveRecurringTrigger}
-          />
+          <SortedRecurringPlanner />
         </Modal>
       </SafeAreaView>
     </View>

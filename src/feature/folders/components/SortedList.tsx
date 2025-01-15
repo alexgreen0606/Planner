@@ -22,7 +22,7 @@ interface SortableListProps {
     onBackClick: (parentFolderId: string) => void;
 };
 
-const SortableList = ({
+const SortedList = ({
     listId,
     onBackClick
 }: SortableListProps) => {
@@ -30,7 +30,7 @@ const SortableList = ({
     const parentFolderData = useMemo(() => getFolderFromStorage(initialListData.parentFolderId), [initialListData]);
 
     // Stores the current list and all handler functions to update it
-    const SortedList = useSortedList<ListItem, List>(
+    const SortedItems = useSortedList<ListItem, List>(
         `${getStorageKey(listId)}`,
         StorageIds.FOLDER_STORAGE,
         (storageObject: List) => storageObject.items,
@@ -50,7 +50,7 @@ const SortableList = ({
 
                     {/* Toggle Delete Button */}
                     <TouchableOpacity
-                        onPress={() => SortedList.toggleDeleteItem(item)}
+                        onPress={() => SortedItems.toggleDeleteItem(item)}
                     >
                         <GenericIcon
                             type='FontAwesome'
@@ -65,13 +65,13 @@ const SortableList = ({
                         <ListTextfield
                             key={`${item.id}-${item.sortId}`}
                             item={item}
-                            onChange={(text) => SortedList.updateItem({ ...item, value: text })}
-                            onSubmit={() => SortedList.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                            onChange={(text) => SortedItems.updateItem({ ...item, value: text })}
+                            onSubmit={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
                         />
                     ) : (
                         <Text
                             onLongPress={drag}
-                            onPress={() => SortedList.beginEditItem(item)}
+                            onPress={() => SortedItems.beginEditItem(item)}
                             style={{
                                 ...globalStyles.listItem,
                                 color: isItemDeleting ? colors.grey : colors.white,
@@ -84,7 +84,7 @@ const SortableList = ({
                 </View>
 
                 {/* Separator line */}
-                <ClickableLine onPress={() => SortedList.createOrMoveTextfield(item.sortId)} />
+                <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(item.sortId)} />
             </View>
         )
     }
@@ -100,16 +100,16 @@ const SortableList = ({
                 }}
                 itemType={FolderItemType.LIST}
             />
-            <ClickableLine onPress={() => SortedList.createOrMoveTextfield(-1)} />
+            <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(-1)} />
             <DraggableFlatList
-                data={SortedList.items.sort((a,b) => a.sortId - b.sortId)}
+                data={SortedItems.items.sort((a,b) => a.sortId - b.sortId)}
                 scrollEnabled={false}
-                onDragEnd={SortedList.endDragItem}
-                onDragBegin={SortedList.beginDragItem}
+                onDragEnd={SortedItems.endDragItem}
+                onDragBegin={SortedItems.beginDragItem}
                 keyExtractor={(item) => item.id}
                 renderItem={renderRow}
             />
-            {!SortedList.items.length && (
+            {!SortedItems.items.length && (
                 <EmptyLabel
                     label={"It's a ghost town in here."}
                     iconConfig={{
@@ -119,7 +119,7 @@ const SortableList = ({
                         color: colors.grey,
                     }}
                     customFontSize={14}
-                    onPress={() => SortedList.createOrMoveTextfield(-1)}
+                    onPress={() => SortedItems.createOrMoveTextfield(-1)}
                     style={{ height: '90%', flexDirection: 'column' }}
                 />
             )}
@@ -127,4 +127,4 @@ const SortableList = ({
     );
 };
 
-export default SortableList;
+export default SortedList;

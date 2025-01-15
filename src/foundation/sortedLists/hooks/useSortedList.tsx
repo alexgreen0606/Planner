@@ -296,17 +296,9 @@ const useSortedList = <T extends ListItem, S>(
      * Handles dropping an item in a new location.
      * @param param0 - the item data, its old location, and its new location
      */
-    const endDragItem = ({ data, from, to }: { data: T[]; from: number; to: number }) => {
-        const draggedItem = data[to];
-        draggedItem.status === ItemStatus.STATIC;
-        if (from !== to) {
-            const newParentSortId = to > 0 ?
-                data[to - 1]?.sortId :
-                -1;
-            draggedItem.sortId = generateSortId(newParentSortId, items);
-
-        }
-        updateItem(draggedItem);
+    const endDragItem = (item: T, newParentSortId: number) => {
+        item.sortId = generateSortId(newParentSortId, items);
+        updateItem(item);
     };
 
     /**

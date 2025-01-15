@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import { FolderItemType } from '../feature/folders/enums';
-import SortableFolder from '../feature/folders/components/SortableFolder';
-import SortableList from '../feature/folders/components/SortableList';
+import SortedFolder from '../feature/folders/components/SortedFolder';
+import SortedList from '../feature/folders/components/SortedList';
 import colors from '../foundation/theme/colors';
 import PageLabel from '../foundation/ui/text/PageLabel';
 
@@ -33,7 +33,7 @@ const Folders = () => {
           }}
         /> */}
         {pageConfig.type === FolderItemType.FOLDER ? (
-          <SortableFolder
+          <SortedFolder
             folderId={pageConfig.id}
             onBackClick={onBackClick}
             onOpenItem={(id: string, type: FolderItemType) =>
@@ -41,7 +41,7 @@ const Folders = () => {
             }
           />
         ) : (
-          <SortableList
+          <SortedList
             listId={pageConfig.id}
             onBackClick={onBackClick}
           />
