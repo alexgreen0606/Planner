@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Animated, PanResponder, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { Animated, TouchableOpacity, View } from 'react-native';
 import { ListItem } from '../types';
 import { useDraggableListContext } from '../services/DraggableListProvider';
 import GenericIcon, { GenericIconProps } from '../../ui/icons/GenericIcon';
@@ -9,9 +9,8 @@ import { ItemStatus } from '../enums';
 import ListTextfield from './ListTextfield';
 import CustomText from '../../ui/text/CustomText';
 import colors from '../../theme/colors';
-import { runOnJS, useAnimatedGestureHandler, useAnimatedScrollHandler } from 'react-native-reanimated';
-import { PanGesture } from 'react-native-gesture-handler/lib/typescript/handlers/gestures/panGesture';
-import { Gesture, GestureDetector, PanGestureHandler, TapGestureHandler } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS, useSharedValue } from 'react-native-reanimated';
 
 interface IconConfig {
     icon: GenericIconProps;
@@ -52,108 +51,38 @@ const DraggableList = <T extends ListItem>({
     renderItemModal
 }: DraggableListProps<T>) => {
     const { scroll, beginClickingItem, endClickingItem } = useDraggableListContext();
-
-    const gestureTimeout = useRef<NodeJS.Timeout | null>(null);
-    const isScrolling = useRef(true);
-    const draggingItemRef = useRef<T | null>(null);
-
-    const panGesture = Gesture.Pan().onStart(() => {
-        
-    }).onUpdate((event) => {
-        
-        runOnJS(scroll)(event.translationY);
-    })
-
-    // const scrollHandler = useAnimatedScrollHandler({
-    //     onScroll: (event) => {
-    //         if (gestureTimeout.current) {
-    //             console.log('Mouse moved before drag began. Maintaining scroll.');
-    //             clearTimeout(gestureTimeout.current);
-    //             gestureTimeout.current = null;
-    //         }
-
-    //         // Scroll the container
-    //         if (isScrolling.current) {
-    //             scroll(event.contentOffset.y);
-    //         } else {
-    //             // TODO: drag the item
-    //         }
-    //     },
-    //     onBeginDrag: (e) => {
-    //         console.log('Cancelling the parent control.')
-    //         beginClickingItem();
-    //         isScrolling.current = true; // Start in scrolling mode
-    //         if (gestureTimeout.current) clearTimeout(gestureTimeout.current);
-
-    //         // Switch to dragging mode if no movement occurs within the timeout
-    //         gestureTimeout.current = setTimeout(() => {
-    //             console.log('Mouse didn’t move. Cancelling scroll and beginning drag.');
-    //             isScrolling.current = false; // Transition to dragging
-    //             gestureTimeout.current = null;
-    //         }, 300);
-    //     },
-    //     onEndDrag: (e) => {
-    //         // TODO: if the scrolling and dragging never occured (no movement), click the item
-
-    //         //endClickingItem();
-    //         if (gestureTimeout.current) clearTimeout(gestureTimeout.current);
-    //         isScrolling.current = true;
-    //     },
-    // });
-
-    // const panResponder = useRef(
-    //     PanResponder.create({
-    //         onStartShouldSetPanResponder: () => true,
-    //         onMoveShouldSetPanResponder: (_, gestureState) => {
-    //             return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
-    //         },
-    //         onPanResponderGrant: () => {
-    //             console.log('Item clicked in list.');
-    //             beginClickingItem();
-    //             isScrolling.current = true; // Start in scrolling mode
-    //             if (gestureTimeout.current) clearTimeout(gestureTimeout.current);
-
-    //             // Switch to dragging mode if no movement occurs within the timeout
-    //             gestureTimeout.current = setTimeout(() => {
-    //                 console.log('Mouse didn’t move. Cancelling scroll and beginning drag.');
-    //                 isScrolling.current = false; // Transition to dragging
-    //                 gestureTimeout.current = null;
-    //             }, 300);
-    //         },
-    //         onPanResponderMove: (_, gestureState) => { // movement occurs
-    //             console.log('Moving within the list.')
-    //             if (gestureTimeout.current) {
-    //                 console.log('Mouse moved before drag began. Maintaining scroll.');
-    //                 clearTimeout(gestureTimeout.current);
-    //                 gestureTimeout.current = null;
-    //             }
-
-    //             // Scroll the container
-    //             if (isScrolling.current) {
-    //                 // scroll(gestureState.dy);
-    //             } else {
-    //                 // TODO: drag the item
-    //             }
-    //         },
-    //         onPanResponderRelease: (_, gestureState) => {
-    //             console.log('Pan release in child.')
-
-    //             // TODO: if the scrolling and dragging never occured (no movement), click the item
-
-    //             //endClickingItem();
-    //             if (gestureTimeout.current) clearTimeout(gestureTimeout.current);
-    //             isScrolling.current = true;
-    //         },
-    //         onPanResponderTerminate: (_, gestureState) => {
-    //             console.log('Pan terminate.')
-    //             // endClickingItem();
-    //             if (gestureTimeout.current) clearTimeout(gestureTimeout.current);
-    //             isScrolling.current = true;
-    //         },
-    //     })
-    // ).current;
+    const initialGestureTime = useSharedValue(-1);
+    const scrollMode = useSharedValue(true);
 
     const isItemEditing = (item: T) => [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
+
+    const panGesture = Gesture.Pan()
+        .onTouchesDown(() => {
+            runOnJS(beginClickingItem)();
+            initialGestureTime.value = Date.now();
+            scrollMode.value = true;
+        }).onStart(() => {
+
+            // Initiate drag mode for long press
+            const currentTime = Date.now();
+            if (initialGestureTime.value && currentTime - initialGestureTime.value > 300) {
+                scrollMode.value = false;
+                initialGestureTime.value = -1;
+            }
+
+        }).onUpdate((event) => {
+            if (scrollMode.value) { // scroll the page
+                runOnJS(scroll)(event.translationY);
+            } else { // drag the item
+
+            }
+        }).onTouchesUp(() => {
+
+            // TODO: Click item
+
+            scrollMode.value = true;
+            runOnJS(endClickingItem)();
+        });
 
     return (
         <View style={{
@@ -162,7 +91,10 @@ const DraggableList = <T extends ListItem>({
             width: '100%'
         }}>
             {items.sort((a, b) => a.sortId - b.sortId).map((item, i) =>
-                <View key={`${item.value}-row-${extractTextfieldKey(item)}`} style={{ height: 40, width: '100%', position: 'absolute', top: i * 40 }}>
+                <View
+                    key={`${item.value}-row-${extractTextfieldKey(item)}`}
+                    style={{ height: 40, width: '100%', position: 'absolute', top: i * 40 }}
+                >
                     <View
                         key={item.id}
                         style={{
@@ -188,22 +120,19 @@ const DraggableList = <T extends ListItem>({
                                 onSubmit={onSubmitTextfield}
                             /> :
                             <GestureDetector gesture={panGesture}>
-                                <Animated.View
-                                    // onLongPress={drag}
-                                    // onPress={() => onRowClick(item)}
-                                    style={globalStyles.listItem}
-                                // {...panResponder.panHandlers}
-                                >
+                                <View style={globalStyles.listItem}>
                                     <CustomText
                                         type='standard'
                                         style={{
-                                            color: [ItemStatus.DELETE].includes(item.status) ? colors.grey : colors.white,
-                                            textDecorationLine: item.status === ItemStatus.DELETE ? 'line-through' : undefined,
+                                            color: [ItemStatus.DELETE].includes(item.status) ?
+                                                colors.grey : colors.white,
+                                            textDecorationLine: item.status === ItemStatus.DELETE ?
+                                                'line-through' : undefined,
                                         }}
                                     >
                                         {item.value}
                                     </CustomText>
-                                </Animated.View>
+                                </View>
                             </GestureDetector>
                         }
 
