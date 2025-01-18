@@ -4,7 +4,7 @@ import { weatherCodeToFontistoIcon } from '../../../../foundation/weather/utils'
 import { timestampToDayOfWeek, timestampToMonthDate } from '../../utils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import colors from '../../../../foundation/theme/colors';
-import AppleIcon from '../../../../foundation/ui/icons/AppleIcon';
+import AppleIcon from '../../../../foundation/components/icons/AppleIcon';
 import { WeatherForecast } from '../../../../foundation/weather/types';
 
 interface DayBannerProps {

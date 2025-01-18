@@ -1,33 +1,28 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, UIManager, findNodeHandle, TouchableOpacity } from 'react-native';
-import { Portal } from 'react-native-paper';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text } from 'react-native';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/enums';
-import { FolderItemType } from '../enums';
-import { Folder, FolderItem } from '../types';
 import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
 import FolderItemBanner from './FolderItemBanner';
 import {
     createFolderItem,
     getFolderFromStorage,
     updateFolderItem,
-    getStorageKey,
     deleteFolderItem,
-    newGetFolderItems,
+    getFolderItems,
     buildFolderFromItems
 } from '../storage/folderStorage';
-import { StorageIds } from '../../../enums';
-import Modal from '../../../foundation/ui/modal/Modal';
-import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
-import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
-import GenericIcon, { IconType } from '../../../foundation/ui/icons/GenericIcon';
+import Modal from '../../../foundation/components/modal/Modal';
+import ClickableLine from '../../../foundation/sortedLists/components/ClickableLine';
 import globalStyles from '../../../foundation/theme/globalStyles';
-import CustomText from '../../../foundation/ui/text/CustomText';
+import CustomText from '../../../foundation/components/text/CustomText';
 import colors from '../../../foundation/theme/colors';
-import { selectableColors } from '../../../foundation/consts';
-import ThinLine from '../../../foundation/ui/separators/ThinLine';
 import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
+import SortableList from '../../../foundation/sortedLists/components/SortableList';
+import Popover from './FolderItemPopover';
+import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../utils';
+import { isItemEditing, ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/utils';
+import { Pages } from '../../../foundation/navigation/utils';
+import DeleteModal from './DeleteModal';
 
 interface SortableFolderProps {
     folderId: string;
@@ -41,7 +36,6 @@ const SortedFolder = ({
     onOpenItem
 }: SortableFolderProps) => {
     const { currentTab } = useNavigatorContext();
-    const inputWrapperRef = useRef<View>(null);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
     const parentFolderData = useMemo(() => folderData.parentFolderId ? getFolderFromStorage(folderData.parentFolderId) : null, [folderData]);
 
@@ -66,9 +60,9 @@ const SortedFolder = ({
 
     // Stores the current folder and all handler functions to update it
     const SortedItems = useSortedList<FolderItem, Folder>(
-        getStorageKey(folderId),
-        StorageIds.FOLDER_STORAGE,
-        newGetFolderItems,
+        folderId,
+        FOLDER_STORAGE_ID,
+        getFolderItems,
         buildFolderFromItems,
         initializeFolderItem,
         {
@@ -136,250 +130,73 @@ const SortedFolder = ({
         onOpenItem(item.id, item.type);
     };
 
-    /**
-     * Displays the popup for creating a new item, allowing for setting its type as a folder or a list.
-     * @param item - the item being created
-     * @param popupPosition - the position on the screen of the popup
-     */
-    const renderNewItemPopover = (item: FolderItem, popupPosition: { x: number, y: number }) =>
-        <View
-            style={[
-                styles.popup,
-                { top: popupPosition.y, left: popupPosition.x },
-            ]}
-        >
-            <View style={styles.popoverRow}>
-                <TouchableOpacity onPress={() => SortedItems.updateItem({ ...item, type: FolderItemType.FOLDER })}>
-                    <GenericIcon
-                        type='MaterialIcons'
-                        name='folder-open'
-                        size={20}
-                        color={item.type === FolderItemType.FOLDER ? colors.blue : colors.grey}
-                    />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => SortedItems.updateItem({ ...item, type: FolderItemType.LIST })}>
-                    <GenericIcon
-                        type='Ionicons'
-                        name='list-outline'
-                        size={20}
-                        color={item.type === FolderItemType.LIST ? colors.blue : colors.grey}
-                    />
-                </TouchableOpacity>
-            </View>
-            <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
-            <View style={styles.popoverRow}>
-                {selectableColors.map(color =>
-                    <TouchableOpacity key={color} onPress={() => SortedItems.updateItem({ ...item, color })}>
-                        <GenericIcon
-                            type='FontAwesome'
-                            name={item.color === color ? 'circle' : 'circle-thin'}
-                            size={20}
-                            color={colors[color as keyof typeof colors]}
-                        />
-                    </TouchableOpacity>
-                )}
-            </View>
-        </View>
-
-    /**
-     * Displays the popup for editing an item, allowing for transfering or deleting it.
-     * @param item - the item being edited
-     * @param popupPosition - the position on the screen of the popup
-     */
-    const renderEditItemPopover = (
-        popupPosition: { x: number, y: number },
-        item: FolderItem,
-        isItemTransfering: boolean,
-    ) =>
-        <View
-            style={[
-                styles.popup,
-                { top: popupPosition.y, left: popupPosition.x },
-            ]}
-        >
-            <TouchableOpacity
-                onPress={() => beginItemTransfer(item)}
-            >
-                <GenericIcon
-                    type='MaterialCommunityIcons'
-                    name='arrow-down-right'
-                    size={20}
-                    color={isItemTransfering ? colors.blue : colors.grey}
+    const editItemPopoverConfig = (item: FolderItem) => {
+        return {
+            open: currentTab === Pages.LISTS && item.status === ItemStatus.EDIT,
+            popover:
+                <Popover
+                    item={item}
+                    icons={[[{
+                        onClick: () => beginItemTransfer(item),
+                        icon: {
+                            type: 'transfer',
+                            size: 20,
+                            color: isItemTransfering(item) ? colors.blue : colors.grey
+                        }
+                    }],
+                    [{
+                        onClick: () => customToggleItemDelete(item, false),
+                        icon: {
+                            type: 'trash',
+                            size: 20,
+                            color: colors.grey
+                        }
+                    }]]}
+                    saveNewColor={color => SortedItems.updateItem({ ...item, color })}
                 />
-            </TouchableOpacity>
-            <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
-            <TouchableOpacity
-                onPress={() => customToggleItemDelete(item, false)}
-            >
-                <GenericIcon
-                    type='Entypo'
-                    name='trash'
-                    size={20}
-                    color={colors.grey}
-                />
-            </TouchableOpacity>
-            <ThinLine style={{ alignSelf: 'stretch', width: undefined }} />
-            <View style={styles.popoverRow}>
-                {selectableColors.map(color =>
-                    <TouchableOpacity key={color} onPress={() => SortedItems.updateItem({ ...item, color })}>
-                        <GenericIcon
-                            type='FontAwesome'
-                            name={item.color === color ? 'circle' : 'circle-thin'}
-                            size={20}
-                            color={colors[color as keyof typeof colors]}
-                        />
-                    </TouchableOpacity>
-                )}
-            </View>
-        </View>
-
-    /**
-     * Displays the textfield for editing and creating an item, as well as 
-     * the delete popup and edit popovers.
-     * @param item - the item being modified
-     * @param isItemTransfering - true if the item is being moved to a new parent
-     * @param isItemDeleting - true if the item is being deleted
-     */
-    const renderInputField = (
-        item: FolderItem,
-        isItemTransfering: boolean
-    ) => {
-        const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-        const itemType = item.type === FolderItemType.FOLDER ? 'folder' : 'list';
-
-        // Calculates the position of the popover
-        const handleInputLayout = () => {
-            if (inputWrapperRef.current) {
-                UIManager.measure(
-                    findNodeHandle(inputWrapperRef.current)!,
-                    (_, __, ___, height, pageX, pageY) => {
-                        setPopupPosition({ x: pageX + 7, y: pageY + height });
-                    }
-                );
-            }
-        };
-
-        return (
-            <View>
-                <View
-                    onLayout={handleInputLayout}
-                    key={`${item.id}-${item.sortId}`}
-                >
-
-                    {/* Textfield */}
-                    <ListTextfield
-                        item={item}
-                        onChange={(text) => SortedItems.updateItem({ ...item, value: text })}
-                        onSubmit={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
-                    />
-                </View>
-
-                {/* Edit Popovers */}
-                {!isItemTransfering && currentTab === 'folders' && (
-                    <Portal>
-                        {item.status === ItemStatus.NEW && (
-                            renderNewItemPopover(item, popupPosition)
-                        )}
-                        {item.status === ItemStatus.EDIT && (
-                            renderEditItemPopover(popupPosition, item, isItemTransfering)
-                        )}
-                    </Portal>
-                )}
-
-                {/* Delete popup */}
-                <Modal
-                    title={`${!!item.childrenCount ? 'Force delete' : 'Delete'} ${itemType}?`}
-                    open={item.status === ItemStatus.DELETE}
-                    toggleModalOpen={() => customToggleItemDelete(item, true)}
-                    primaryButtonConfig={{
-                        label: !!item.childrenCount ? 'Force Delete' : 'Delete',
-                        onClick: () => handleDeleteItem(item),
-                        color: !!item.childrenCount ? 'red' : colors.blue
-                    }}
-                    iconConfig={{
-                        type: 'Entypo',
-                        name: 'trash',
-                        color: 'red'
-                    }}
-                >
-                    {!!item.childrenCount ? (
-                        <CustomText type='standard'>
-                            This {itemType} has {item.childrenCount} items. Deleting is irreversible and will lose all inner contents.
-                        </CustomText>
-                    ) : (
-                        <CustomText type='standard'>
-                            Would you like to delete this {itemType}?
-                        </CustomText>
-                    )}
-                </Modal>
-            </View>
-        );
+        }
     }
 
-    /**
-     * Displays a row representing an item within the folder. A row includes an edit icon, the data,
-     * and a line allowing for creating new items below it.
-     * @param param0 - the item data and the drag function for sorting
-     */
-    const renderRow = ({ item, drag }: RenderItemParams<FolderItem>) => {
-        const transferMode = SortedItems.getFocusedItem()?.status === ItemStatus.TRANSFER;
-        const isItemEditing = [ItemStatus.NEW, ItemStatus.EDIT, ItemStatus.TRANSFER, ItemStatus.DELETE].includes(item.status);
-        const isItemTransferring = item.status === ItemStatus.TRANSFER;
-        const isItemDeleting = item.status === ItemStatus.DELETE;
-        const iconStyle: { type: IconType, name: string } | undefined =
-            isItemTransferring ? { type: 'MaterialCommunityIcons', name: 'arrow-down-right' } :
-                item.type === FolderItemType.FOLDER ? { type: 'MaterialIcons', name: 'folder-open' } :
-                    { type: 'Ionicons', name: 'list-outline' };
-        return (
-            <View ref={isItemEditing ? inputWrapperRef : undefined}>
-                <View style={globalStyles.listRow}>
-
-                    {/* Edit Icon */}
-                    <TouchableOpacity
-                        onLongPress={drag}
-                        onPress={() => SortedItems.beginEditItem(item)}
-                    >
-                        <GenericIcon
-                            type={iconStyle.type}
-                            name={iconStyle.name}
-                            size={20}
-                            color={isItemTransferring ? colors.blue : (item.type === FolderItemType.LIST && transferMode) ? colors.grey : colors[item.color as keyof typeof colors]}
-                        />
-                    </TouchableOpacity>
-
-                    {/* Row Data */}
-                    {isItemEditing ? (
-                        renderInputField(item, isItemTransferring)) :
-                        <Text
-                            onPress={() => handleItemClick(item)}
-                            style={{
-                                ...globalStyles.listItem,
-                                color: (transferMode && item.type === FolderItemType.LIST) ? colors.grey :
-                                    isItemDeleting ?
-                                        colors.grey : colors.white,
-                                textDecorationLine: isItemDeleting ? 'line-through' : undefined
-                            }}
-                        >
-                            {item.value}
-                        </Text>
-                    }
-
-                    {/* Item Count Marker */}
-                    {!isItemEditing && (
-                        <Text style={{ color: colors.grey }}>
-                            {item.childrenCount}
-                        </Text>
-                    )}
-                </View>
-
-                {/* Separator Line */}
-                <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(item.sortId)} />
-            </View>
-        )
+    const newItemPopoverConfig = (item: FolderItem) => {
+        return {
+            open: currentTab === Pages.LISTS && item.status === ItemStatus.NEW,
+            popover:
+                <Popover
+                    item={item}
+                    icons={[[{
+                        onClick: () => SortedItems.updateItem({ ...item, type: FolderItemType.FOLDER }),
+                        icon: {
+                            type: 'folder',
+                            size: 20,
+                            color: item.type === FolderItemType.FOLDER ? colors.blue : colors.grey
+                        }
+                    },
+                    {
+                        onClick: () => SortedItems.updateItem({ ...item, type: FolderItemType.LIST }),
+                        icon: {
+                            type: 'list',
+                            size: 20,
+                            color: item.type === FolderItemType.LIST ? colors.blue : colors.grey
+                        }
+                    }]]}
+                    saveNewColor={color => SortedItems.updateItem({ ...item, color })}
+                />
+        }
     }
+
+    const isItemTransfering = (item: FolderItem) => item.status === ItemStatus.TRANSFER;
+    const isTransferMode = () => SortedItems.getFocusedItem()?.status === ItemStatus.TRANSFER;
+    const isItemDeleting = (item: FolderItem) => item.status === ItemStatus.DELETE;
+    const getIconType = (item: FolderItem) =>
+        isItemTransfering(item) ? 'transfer' :
+            item.type === FolderItemType.FOLDER ? 'folder' :
+                'list';
+    const getIconColor = (item: FolderItem) => isItemTransfering(item) ?
+        colors.blue : (item.type === FolderItemType.LIST && isTransferMode()) ?
+            colors.grey : colors[item.color as keyof typeof colors]
 
     return (
-        <View>
+        <View style={globalStyles.backdrop}>
             <FolderItemBanner
                 itemId={folderData.id}
                 backButtonConfig={{
@@ -390,47 +207,58 @@ const SortedFolder = ({
                 itemType={FolderItemType.FOLDER}
             />
             <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(-1)} />
-            <DraggableFlatList
-                data={SortedItems.items}
-                scrollEnabled={false}
-                onDragEnd={SortedItems.endDragItem}
-                onDragBegin={SortedItems.beginDragItem}
-                keyExtractor={(item) => item.id}
-                renderItem={renderRow}
-            />
-            {!SortedItems.items.length && (
-                <EmptyLabel
-                    label={"It's a ghost town in here."}
-                    iconConfig={{
-                        type: 'FontAwesome6',
-                        name: 'ghost',
-                        size: 26,
-                        color: colors.grey,
-                    }}
-                    customFontSize={14}
-                    onPress={() => SortedItems.createOrMoveTextfield(-1)}
-                    style={{ height: '90%', flexDirection: 'column' }}
-                />
-            )}
+            <View style={{ flex: 1, justifyContent: 'center' }}>
+                {SortedItems.items.length !== 0 ? (
+                    <SortableList<FolderItem>
+                        items={SortedItems.items}
+                        endDrag={SortedItems.endDragItem}
+                        extractTextfieldKey={item => `${item.id}-${item.sortId}`}
+                        onChangeTextfield={(text, item) => SortedItems.updateItem({ ...item, value: text })}
+                        onSubmitTextfield={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                        onGetItemPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
+                        onGetRowTextColor={item =>
+                            (isTransferMode() && item.type === FolderItemType.LIST) ||
+                                isItemDeleting(item) ? colors.grey : colors.white}
+                        renderRightIcon={item => ({
+                            hideIcon: !isItemEditing(item),
+                            customIcon:
+                                <Text style={{ color: colors.grey }}>
+                                    {item.childrenCount}
+                                </Text>
+                        })}
+                        onContentClick={item => handleItemClick(item)}
+                        onLineClick={item => SortedItems.createOrMoveTextfield(item.sortId)}
+                        renderItemModal={item =>
+                            <DeleteModal
+                                item={item}
+                                toggleModalOpen={() => customToggleItemDelete(item, true)}
+                                deleteItem={() => handleDeleteItem(item)}
+                            />
+                        }
+                        renderLeftIcon={item => ({
+                            icon: {
+                                type: getIconType(item),
+                                color: getIconColor(item)
+                            },
+                            onClick: () => SortedItems.beginEditItem(item)
+                        })}
+                    />
+                ) : (
+                    <EmptyLabel
+                        label="It's a ghost town in here."
+                        iconConfig={{
+                            type: 'ghost',
+                            size: 26,
+                            color: colors.grey,
+                        }}
+                        customFontSize={14}
+                        onPress={() => SortedItems.createOrMoveTextfield(-1)}
+                        style={{ flexDirection: 'column' }}
+                    />
+                )}
+            </View>
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    popup: {
-        ...globalStyles.horizontallyCentered,
-        ...globalStyles.backdrop,
-        elevation: 4,
-        padding: 12,
-        gap: 8,
-        flexShrink: 1,
-        alignSelf: 'flex-start',
-        alignItems: 'flex-start'
-    },
-    popoverRow: {
-        flexDirection: 'row',
-        gap: 16
-    }
-});
 
 export default SortedFolder;

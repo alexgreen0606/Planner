@@ -4,7 +4,7 @@ import { Button, Dialog, Portal } from 'react-native-paper';
 import globalStyles from '../../theme/globalStyles';
 import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import GenericIcon, { IconType } from '../icons/GenericIcon';
+import GenericIcon, { GenericIconProps, IconType } from '../icons/GenericIcon';
 import CustomText from '../text/CustomText';
 import colors from '../../theme/colors';
 
@@ -20,11 +20,7 @@ interface ModalProps {
     children: ReactNode;
     open: boolean;
     toggleModalOpen: () => void;
-    iconConfig?: {
-        type: IconType;
-        name: string;
-        color: string;
-    }
+    iconConfig?: GenericIconProps;
 }
 
 const Modal = ({
@@ -39,15 +35,13 @@ const Modal = ({
     <Portal>
         <GestureHandlerRootView>
             <PlannerProvider>
-                <Dialog theme={{colors: {backdrop: 'black'}}} style={styles.container} visible={open} onDismiss={toggleModalOpen}>
+                <Dialog theme={{ colors: { backdrop: 'black' } }} style={styles.container} visible={open} onDismiss={toggleModalOpen}>
                     <Dialog.Title>
                         <View style={styles.label}>
                             {iconConfig && (
                                 <GenericIcon
-                                    type={iconConfig.type}
-                                    name={iconConfig.name}
+                                    {...iconConfig}
                                     size={20}
-                                    color={iconConfig.color}
                                 />
                             )}
                             <CustomText type='header'>

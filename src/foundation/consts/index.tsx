@@ -1,1 +1,0 @@
-export const selectableColors = ['yellow', 'green', 'red', 'purple', 'orange'];

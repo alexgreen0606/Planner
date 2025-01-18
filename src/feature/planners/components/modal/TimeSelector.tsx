@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { TimeObject } from '../../../feature/planners/utils';
-import globalStyles from '../../theme/globalStyles';
-import colors from '../../theme/colors';
+import { TimeObject } from '../../utils';
+import globalStyles from '../../../../foundation/theme/globalStyles';
+import colors from '../../../../foundation/theme/colors';
 
 interface TimeSelectorProps {
     onChange: (newTimeValue: string) => void;

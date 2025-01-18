@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import ThinLine from './ThinLine';
+import ThinLine from '../../components/separators/ThinLine';
 
 interface ClickableLineProps {
     onPress: () => void;

@@ -1,8 +1,35 @@
-import { generateSortId } from "../../foundation/sortedLists/utils";
-import { Event, TimeConfig } from "./types";
+import { generateSortId, ListItem } from "../../foundation/sortedLists/utils";
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
+
+export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
+
+export interface Event extends ListItem {
+    plannerId: string;
+    timeConfig?: TimeConfig;
+    recurringConfig?: RecurringConfig;
+};
+
+export interface RecurringConfig {
+    recurringId?: string; // links this event to one within the recurring weekday planner
+    deleted?: boolean;
+}
+
+export interface TimeConfig {
+    calendarEventId?: string; // links this event to one within the device calendar
+    allDay: boolean;
+    startTime: string; // HH:MM
+    endTime: string; // HH:MM
+    isCalendarEvent: boolean;
+};
+
+export enum TimeDropdownType {
+    START = 'START',
+    END = 'END'
+}
 
 /**
  * Determines if the given timestamp is valid.
@@ -124,7 +151,7 @@ export const generateTomorrowTimestamp = () => {
 export const generateNextSevenDayTimestamps = () => {
     const today = new Date();
     today.setDate(today.getDate() + 1);
-    return Array.from({ length: 14 }, (_, i) => {
+    return Array.from({ length: 7 }, (_, i) => {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
         const year = date.getFullYear();
@@ -141,15 +168,16 @@ export const generateNextSevenDayTimestamps = () => {
  * @returns - the new sort ID for the event
  */
 export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
-    const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
+    const plannerCopy = [...planner];
+    const plannerWithoutEvent = plannerCopy.filter(curr => curr.id !== event.id);
     if (!event.timeConfig) return event.sortId === -1 ?
         generateSortId(-1, plannerWithoutEvent) :
         event.sortId;
 
-    planner.sort((a, b) => a.sortId - b.sortId);
+    plannerCopy.sort((a, b) => a.sortId - b.sortId);
 
     // Check if the event conflicts at its current position
-    const eventsWithTimes = planner.filter(existingEvent => !!existingEvent.timeConfig || (existingEvent.id === event.id));
+    const eventsWithTimes = plannerCopy.filter(existingEvent => !!existingEvent.timeConfig || (existingEvent.id === event.id));
     const currentIndex = eventsWithTimes.findIndex(e => e.id === event.id);
     if (currentIndex !== -1) {
 
@@ -166,7 +194,7 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
     }
 
     // Find the first event that starts after or during the new event
-    const eventThatStartsAfterIndex = planner.findIndex(existingEvent => {
+    const eventThatStartsAfterIndex = plannerCopy.findIndex(existingEvent => {
         if (!existingEvent.timeConfig || !event.timeConfig || existingEvent.id === event.id) return false;
         return compareTimeValues(event.timeConfig.startTime, existingEvent.timeConfig.startTime) <= 0;
     });
@@ -174,15 +202,15 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
     // Place the new event before the event that starts after it
     if (eventThatStartsAfterIndex !== -1) {
         const newParentSortId = eventThatStartsAfterIndex > 0
-            ? planner[eventThatStartsAfterIndex - 1].sortId
+            ? plannerCopy[eventThatStartsAfterIndex - 1].sortId
             : -1;
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 
     // Find the last event that starts before the current event
     let eventThatStartsBeforeIndex = -1;
-    for (let i = planner.length - 1; i >= 0; i--) {
-        const existingEvent = planner[i];
+    for (let i = plannerCopy.length - 1; i >= 0; i--) {
+        const existingEvent = plannerCopy[i];
         if (!existingEvent.timeConfig || existingEvent.id === event.id) continue;
 
         // This event starts before the current event
@@ -194,7 +222,7 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
 
     // Place the new event after the event that starts before it
     if (eventThatStartsBeforeIndex !== -1) {
-        const newParentSortId = planner[eventThatStartsBeforeIndex].sortId;
+        const newParentSortId = plannerCopy[eventThatStartsBeforeIndex].sortId;
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 
@@ -267,5 +295,5 @@ export const extractTimeValue = (text: string) => {
         };
     }
 
-    return {timeConfig, updatedText};
+    return { timeConfig, updatedText };
 }

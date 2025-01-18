@@ -1,13 +1,12 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 import globalStyles from '../../theme/globalStyles';
-import GenericIcon, { GenericIconProps } from '../../ui/icons/GenericIcon';
-import CustomText from '../../ui/text/CustomText';
+import GenericIcon, { GenericIconProps } from '../../components/icons/GenericIcon';
+import CustomText from '../../components/text/CustomText';
 import colors from '../../theme/colors';
 
 interface EmptyLabelProps {
     label: string;
-    onPress: () => void;
     iconConfig?: GenericIconProps;
     style?: ViewStyle;
     customFontSize?: number;
@@ -15,12 +14,11 @@ interface EmptyLabelProps {
 
 const EmptyLabel = ({
     label,
-    onPress,
     iconConfig,
     style,
     customFontSize = 14
 }: EmptyLabelProps) =>
-    <TouchableOpacity style={{ ...styles.container, ...style }} onPress={onPress}>
+    <View style={{ ...styles.container, ...style }}>
         {iconConfig && (
             <GenericIcon
                 {...iconConfig}
@@ -35,7 +33,7 @@ const EmptyLabel = ({
         >
             {label}
         </CustomText>
-    </TouchableOpacity>
+    </View>
 
 const styles = StyleSheet.create({
     container: {

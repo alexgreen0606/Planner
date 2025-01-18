@@ -1,7 +1,4 @@
 import { MMKV } from 'react-native-mmkv';
-import { Event } from '../types';
-import { StorageIds } from '../../../enums';
-import { RECURRING_WEEKDAY_PLANNER } from '../enums';
 import {
     generateSortIdByTimestamp,
     timeValueToIso,
@@ -9,37 +6,35 @@ import {
     isTimestampValid,
     generateTodayTimestamp,
     isoToTimeValue,
-    generateTomorrowTimestamp
+    generateTomorrowTimestamp,
+    PLANNER_STORAGE_ID,
+    Event,
+    RECURRING_WEEKDAY_PLANNER_KEY
 } from '../utils';
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
-import { ItemStatus } from '../../../foundation/sortedLists/enums';
 import { uuid } from 'expo-modules-core';
+import { ItemStatus } from '../../../foundation/sortedLists/utils';
 
-const storage = new MMKV({ id: StorageIds.PLANNER_STORAGE });
-export const getPlannerStorageKey = (plannerId: string) => `PLANNERS_${plannerId}`;
+const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
 /**
  * Fetches the planner with the given ID from storage.
  * @param plannerId 
  */
 export const getPlannerFromStorage = (plannerId: string): Event[] => {
-    const eventsString = storage.getString(getPlannerStorageKey(plannerId));
+    const eventsString = storage.getString(plannerId);
     if (eventsString)
         return JSON.parse(eventsString);
-
     return [];
 };
 
 /**
- * Sorts a planner and saves it to storage.
+ * Saves a planner to storage.
  * @param plannerId
  * @param newPlanner
  */
 export const savePlannerToStorage = (plannerId: string, newPlanner: Event[]) => {
-    newPlanner.sort((a, b) => a.sortId - b.sortId);
-    if (newPlanner.some(event => event.plannerId !== plannerId)) throw new Error('All planner events must have the same plannerId.');
-
-    storage.set(getPlannerStorageKey(plannerId), JSON.stringify(newPlanner));
+    storage.set(plannerId, JSON.stringify(newPlanner));
 };
 
 /**
@@ -47,10 +42,9 @@ export const savePlannerToStorage = (plannerId: string, newPlanner: Event[]) => 
  */
 const deletePastPlanners = () => {
     const allStorageKeys = storage.getAllKeys();
-    allStorageKeys.map(key => {
-        const timestamp = key.replace('PLANNERS_', '');
+    allStorageKeys.map(timestamp => {
         if (isTimestampValid(timestamp) && (new Date(timestamp) < new Date(generateTodayTimestamp()))) {
-            storage.delete(key);
+            storage.delete(timestamp);
         }
     });
 };
@@ -59,12 +53,11 @@ const deletePastPlanners = () => {
  * Grants access to the device calendar.
  */
 const getCalendarAccess = async () => {
-    // Ensure access to the device calendar
     const permissions = await RNCalendarEvents.checkPermissions();
     if (permissions !== 'authorized') {
         const status = await RNCalendarEvents.requestPermissions();
         if (status !== 'authorized') {
-            throw new Error('Access denied to calendars.');
+            throw new Error('Access denied to calendars.'); // TODO: just skip calendars if denied?
         }
     }
 }
@@ -74,25 +67,20 @@ const getCalendarAccess = async () => {
  * @returns - the ID of the primary calendar
  */
 const getPrimaryCalendarId = async (): Promise<string> => {
-
     await getCalendarAccess();
-
-    // Load in the primary calendar
     const calendars = await RNCalendarEvents.findCalendars();
     const primaryCalendar = calendars.find(calendar => calendar.isPrimary);
     if (!primaryCalendar) throw new Error('Primary calendar does not exist!');
-
-    // Return the calendar's ID
     return primaryCalendar.id;
 };
 
 /**
- * Fetches a calendar from the device representing all events for the given planner ID.
- * @param plannerId 
+ * Fetches all primary events from the device calendar.
+ * @param timestamp - timestamp of the requested date
  */
-const getCalendarEvents = async (plannerId: string): Promise<Event[]> => {
-    const startDate = new Date(`${plannerId}T00:00:00`).toISOString();
-    const endDate = new Date(`${plannerId}T23:59:59`).toISOString();
+const getCalendarEvents = async (timestamp: string): Promise<Event[]> => {
+    const startDate = new Date(`${timestamp}T00:00:00`).toISOString();
+    const endDate = new Date(`${timestamp}T23:59:59`).toISOString();
 
     // Load in the calendar events and format them into a planner
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [await getPrimaryCalendarId()]);
@@ -100,7 +88,7 @@ const getCalendarEvents = async (plannerId: string): Promise<Event[]> => {
         id: calendarEvent.id,
         value: calendarEvent.title,
         sortId: 1, // temporary sort id -> will be overwritten
-        plannerId,
+        plannerId: timestamp,
         timeConfig: {
             calendarEventId: calendarEvent.id,
             startTime: isoToTimeValue(calendarEvent.startDate),
@@ -113,24 +101,19 @@ const getCalendarEvents = async (plannerId: string): Promise<Event[]> => {
 };
 
 /**
- * TODO: Fetches the first holiday for the given timestamp.
+ * Fetches all holidays for the given timestamp.
  * @param timestamp - YYYY-MM-DD
  */
 export const getHolidays = async (timestamps: string[]): Promise<Record<string, string[]>> => {
-
     await getCalendarAccess();
-    // Load in the primary calendar
+
+    // Load in the US Holiday calendar
     const calendars = await RNCalendarEvents.findCalendars();
-
     const holidayCalendar = calendars.find(calendar => calendar.title === 'US Holidays');
-
     if (!holidayCalendar) throw new Error('Holiday calendar does not exist!');
 
-    // Find the overall date range
     const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
     const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
-
-    // Fetch all events in the date range
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [holidayCalendar.id]);
 
     // Group events by date
@@ -146,27 +129,20 @@ export const getHolidays = async (timestamps: string[]): Promise<Record<string, 
 };
 
 /**
- * Fetches the first birthday for the given timestamp.
- * @param timestamp - YYYY_MM_DD
+ * Fetches all birthdays for the given timestamp.
+ * @param timestamp - YYYY-MM-DD
  */
 export const getBirthdays = async (timestamps: string[]): Promise<Record<string, string[]>> => {
-
     await getCalendarAccess();
 
     const calendars = await RNCalendarEvents.findCalendars();
-
     const birthdayCalendar = calendars.find(calendar => calendar.title === 'Birthdays');
-
     if (!birthdayCalendar) throw new Error('Birthday calendar does not exist!');
 
-    // Find the overall date range
+    // Fetch all birthdays and format
     const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
     const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
-
-    // Fetch all events in the date range
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [birthdayCalendar.id]);
-
-    // Group events by date
     const birthdayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
         const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
         map[timestamp] = calendarEvents
@@ -174,38 +150,10 @@ export const getBirthdays = async (timestamps: string[]): Promise<Record<string,
             .map(event => event.title);
         return map;
     }, {} as Record<string, string[]>);
-
     return birthdayMap;
 };
 
-// TODO: comment
-// export const getAllDayEvents = async (timestamps: string[]): Promise<Record<string, string[]>> => {
-
-//     await getCalendarAccess();
-//     const primaryCalendarId = await getPrimaryCalendarId();
-
-//     // Find the overall date range
-//     const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
-//     const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
-
-//     // Fetch all events in the date range
-//     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [primaryCalendarId]);
-
-//     console.log(calendarEvents.length, '')
-
-//     // Group events by date
-//     const allDayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
-//         const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
-//         map[timestamp] = calendarEvents
-//             .filter(event => event.allDay && new Date(event.startDate).toISOString().split('T')[0] === dateKey)
-//             .map(event => event.title);
-//         console.log(map)
-//         return map;
-//     }, {} as Record<string, string[]>);
-
-//     return allDayMap;
-// };
-export const getAllDayEvents = async (timestamps: string[]): Promise<Record<string, string[]>> => {
+export const getFullDayEvents = async (timestamps: string[]): Promise<Record<string, string[]>> => {
     await getCalendarAccess();
     const primaryCalendarId = await getPrimaryCalendarId();
 
@@ -213,10 +161,8 @@ export const getAllDayEvents = async (timestamps: string[]): Promise<Record<stri
     const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
     const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
 
-    // Fetch all events in the date range
+    // Fetch all events in the date range and format
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [primaryCalendarId]);
-
-    // Group events by date
     const allDayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
         const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
         map[timestamp] = calendarEvents
@@ -224,26 +170,22 @@ export const getAllDayEvents = async (timestamps: string[]): Promise<Record<stri
             .map(event => event.title);
         return map;
     }, {} as Record<string, string[]>);
-
     return allDayMap;
 };
 
 // Helper function to determine if an event falls on a specific date
 const isEventOnDate = (event: CalendarEventReadable, dateKey: string): boolean => {
     const eventStart = new Date(event.startDate).toISOString().split('T')[0];
+    if (!event.endDate) return false;
 
-    // Adjust the end date for all-day events to make it exclusive
     let eventEnd = new Date(event.endDate);
     if (event.allDay) {
         eventEnd.setDate(eventEnd.getDate() - 1);
     }
-    eventEnd = eventEnd.toISOString().split('T')[0];
-
-    return dateKey >= eventStart && dateKey <= eventEnd;
+    eventEnd = new Date(eventEnd.toISOString().split('T')[0]);
+    const dateKeyDate = new Date(dateKey);
+    return dateKeyDate >= new Date(eventStart) && dateKeyDate <= eventEnd;
 };
-
-
-
 
 /**
  * Syncs an existing planner with a calendar. Calendars have final say on the state of the events.
@@ -388,12 +330,12 @@ export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
     let planner = getPlannerFromStorage(plannerId);
 
     // Return the recurring weekday planner
-    if (plannerId === RECURRING_WEEKDAY_PLANNER)
+    if (plannerId === RECURRING_WEEKDAY_PLANNER_KEY)
         return planner;
 
     // Sync the planner with the recurring weekday planner
     if (isTimestampWeekday(plannerId) && plannerId === generateTomorrowTimestamp()) {
-        const recurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER);
+        const recurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER_KEY);
         planner = syncPlannerWithRecurring(recurringPlanner, planner, plannerId);
     }
 
@@ -429,10 +371,7 @@ export const persistEvent = async (event: Event) => {
             allDay: newEvent.timeConfig.allDay,
             id: newEvent.timeConfig.calendarEventId
         };
-        newEvent.timeConfig = {
-            ...newEvent.timeConfig,
-            calendarEventId: await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails)
-        }
+        newEvent.timeConfig.calendarEventId = await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails);
     }
 
     // Update the list with the new event

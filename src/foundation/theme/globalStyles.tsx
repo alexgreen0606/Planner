@@ -20,7 +20,8 @@ const globalStyles: GlobalStyles = {
     width: '100%'
   },
   backdrop: {
-    backgroundColor: colors.black
+    backgroundColor: colors.black,
+    flex: 1
   },
   background: {
     backgroundColor: colors.background

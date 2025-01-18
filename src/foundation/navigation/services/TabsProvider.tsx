@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState } from 'react';
+import { Pages } from '../utils';
 
 interface NavigatorContextValue {
     currentTab: string;
-    setCurrentTab: (newTab: string) => void;
+    setCurrentTab: (newTab: Pages) => void;
 }
 
 const NavigatorContext = createContext<NavigatorContextValue | null>(null);
 
 export const NavigatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [currentTab, setCurrentTab] = useState<string>('dashboard');
+    const [currentTab, setCurrentTab] = useState<Pages>(Pages.DASHBOARD);
 
     return (
         <NavigatorContext.Provider

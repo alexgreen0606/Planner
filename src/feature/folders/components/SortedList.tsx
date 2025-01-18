@@ -1,21 +1,17 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
-import { ListItem } from '../../../foundation/sortedLists/types';
-import { ShiftTextfieldDirection, ItemStatus } from '../../../foundation/sortedLists/enums';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { FolderItemType } from '../enums';
 import FolderItemBanner from './FolderItemBanner';
-import { getFolderFromStorage, getListFromStorage, getStorageKey } from '../storage/folderStorage';
-import ClickableLine from '../../../foundation/ui/separators/ClickableLine';
+import { getFolderFromStorage, getListFromStorage } from '../storage/folderStorage';
+import ClickableLine from '../../../foundation/sortedLists/components/ClickableLine';
 import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
-import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
+import GenericIcon from '../../../foundation/components/icons/GenericIcon';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import colors from '../../../foundation/theme/colors';
-import Card from '../../../foundation/ui/card';
 import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
-import { StorageIds } from '../../../enums';
-import { List } from '../types';
+import { ItemStatus, ListItem, ShiftTextfieldDirection } from '../../../foundation/sortedLists/utils';
+import { FOLDER_STORAGE_ID, FolderItemType, List } from '../utils';
 
 interface SortableListProps {
     listId: string;
@@ -31,8 +27,8 @@ const SortedList = ({
 
     // Stores the current list and all handler functions to update it
     const SortedItems = useSortedList<ListItem, List>(
-        `${getStorageKey(listId)}`,
-        StorageIds.FOLDER_STORAGE,
+        listId,
+        FOLDER_STORAGE_ID,
         (storageObject: List) => storageObject.items,
         (newItems: ListItem[], currentList: List) => ({...currentList, items: newItems})
     );
@@ -113,8 +109,7 @@ const SortedList = ({
                 <EmptyLabel
                     label={"It's a ghost town in here."}
                     iconConfig={{
-                        type: 'FontAwesome6',
-                        name: 'ghost',
+                        type: 'ghost',
                         size: 26,
                         color: colors.grey,
                     }}

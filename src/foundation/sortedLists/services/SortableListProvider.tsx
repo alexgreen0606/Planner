@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
@@ -6,14 +6,26 @@ import Animated, {
     useAnimatedRef,
     useDerivedValue,
 } from 'react-native-reanimated';
+import { ListItem } from '../utils';
 
-interface SortableListContextValue {
-    scroll: (distance: number) => void;
+interface CurrentList {
+    id: string;
+    numUpdates: number;
 }
 
-const SortableListContext = createContext<SortableListContextValue | null>(null);
+interface SortableListContextValue<T extends ListItem> {
+    scroll: (distance: number) => void;
+    currentTextfieldItem: T | undefined;
+    setCurrentTextfieldItem: React.Dispatch<React.SetStateAction<T | undefined>>;
+    currentList: CurrentList | undefined;
+    setCurrentList: (listId: string) => void;
+}
 
-export const SortableListProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
+
+export const SortableListProvider: React.FC<{ children: React.ReactNode }> = <T extends ListItem>({ children }: { children: React.ReactNode }) => {
+    const [currentTextfieldItem, setCurrentTextfieldItem] = useState<T>();
+    const [currentList, setCurrentListState] = useState<CurrentList>();
     const animatedRef = useAnimatedRef<Animated.ScrollView>();
     const scrollPosition = useSharedValue(0);
 
@@ -32,12 +44,25 @@ export const SortableListProvider: React.FC<{ children: React.ReactNode }> = ({ 
         scrollPosition.value -= distance;
     };
 
+    const setCurrentList = (listId: string) => {
+        if (currentList?.id === listId) {
+            setCurrentListState({ ...currentList, numUpdates: currentList.numUpdates + 1 });
+        } else {
+            setCurrentListState({ id: listId, numUpdates: 0 });
+        }
+    };
+
     return (
-        <SortableListContext.Provider
-            value={{ scroll }}>
+        <SortableListContext.Provider value={{
+            scroll,
+            currentTextfieldItem,
+            setCurrentTextfieldItem,
+            currentList,
+            setCurrentList
+        }}>
             <Animated.ScrollView
                 ref={animatedRef}
-                style={{ width: '100%', height: '100%' }}
+                style={{ flex: 1 }}
                 onScroll={scrollHandler}
             >
                 {children}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { TextInput } from 'react-native-paper';
-import { ListItem } from '../types';
+import { ListItem } from '../utils';
 
 interface ListTextfieldProps<T extends ListItem> {
     item: T;

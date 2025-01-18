@@ -12,7 +12,7 @@ const App = () => {
     <PaperProvider>
       <GestureHandlerRootView>
         <NavigationContainer>
-          <SafeAreaProvider >
+          <SafeAreaProvider>
             <StatusBar barStyle='light-content' />
             <NavigatorProvider>
               <Navigator />

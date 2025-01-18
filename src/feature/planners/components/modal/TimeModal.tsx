@@ -2,29 +2,35 @@ import React, { useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import Modal from '../../../../foundation/ui/modal/Modal';
-import { Event, TimeConfig } from '../../types';
-import { generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../../utils';
-import CustomText from '../../../../foundation/ui/text/CustomText';
-import TimeSelector from '../../../../foundation/ui/input/TimeSelector';
+import Modal from '../../../../foundation/components/modal/Modal';
+import { Event, generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../../utils';
+import CustomText from '../../../../foundation/components/text/CustomText';
+import TimeSelector from './TimeSelector';
 import colors from '../../../../foundation/theme/colors';
+import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
 
-interface TimeModalProps {
+export interface TimeModalProps extends ListItemUpdateComponentProps<Event> {
     toggleModalOpen: () => void;
     open: boolean;
     event: Event;
     timestamp: string;
-    onSaveItem: (data: TimeConfig) => void;
 }
 
-interface TimeModalSelection {
+type TimeModalSelection = {
     allDay: boolean;
     startTime: string;
     endTime: string;
     isCalendarEvent: boolean;
 };
 
-const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: TimeModalProps) => {
+const TimeModal = ({ 
+    toggleModalOpen, 
+    open, 
+    event, 
+    timestamp, 
+    onSave, 
+    item 
+}: TimeModalProps) => {
 
     const newTimeOptions = useMemo(() => generateTimeArrays(), [timestamp]);
     const defaultStartTime = '00:00';
@@ -35,6 +41,14 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
         startTime: defaultStartTime,
         endTime: defaultEndTime,
     });
+
+    const handleSave = () => {
+        const newEvent = {
+            ...item,
+            timeConfig: timeModalData
+        };
+        onSave(newEvent);
+    }
 
     // Determines if the user input is savable or not.
     const validData =
@@ -50,12 +64,11 @@ const TimeModal = ({ toggleModalOpen, open, event, timestamp, onSaveItem }: Time
             open={open}
             primaryButtonConfig={{
                 label: 'Save',
-                onClick: () => onSaveItem(timeModalData),
+                onClick: handleSave,
                 disabled: !validData
             }}
             iconConfig={{
-                type: 'MaterialCommunityIcons',
-                name: 'clock-outline',
+                type: 'clock',
                 color: colors.blue
             }}
         >

@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-paper';
-import { FolderItemType } from '../enums';
 import globalStyles from '../../../foundation/theme/globalStyles';
-import { FolderItem } from '../types';
-import { getFolderFromStorage, getListFromStorage, getStorageKey, updateFolderItem } from '../storage/folderStorage';
-import { ItemStatus } from '../../../foundation/sortedLists/enums';
-import CustomText from '../../../foundation/ui/text/CustomText';
-import GenericIcon from '../../../foundation/ui/icons/GenericIcon';
+import { getFolderItem, updateFolderItem } from '../storage/folderStorage';
+import CustomText from '../../../foundation/components/text/CustomText';
+import GenericIcon from '../../../foundation/components/icons/GenericIcon';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { StorageIds } from '../../../enums';
 import colors from '../../../foundation/theme/colors';
+import { FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../utils';
+import { ItemStatus } from '../../../foundation/sortedLists/utils';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -28,55 +26,31 @@ const FolderItemBanner = ({
     itemType
 }: FolderItemBannerProps) => {
     const [item, setItem] = useState<FolderItem>();
-    const folderStorage = useMMKV({ id: StorageIds.FOLDER_STORAGE });
+    const folderStorage = useMMKV({ id: FOLDER_STORAGE_ID });
 
     // Builds the folder item data from storage
     const loadItemData = () => {
-        if (itemType === FolderItemType.FOLDER) {
-            const data = getFolderFromStorage(itemId);
-            setItem({
-                id: data.id,
-                value: data.value,
-                sortId: data.sortId,
-                color: data.color,
-                status: ItemStatus.STATIC,
-                type: FolderItemType.FOLDER,
-                childrenCount: data.folderIds.length + data.listIds.length,
-            } as FolderItem);
-        } else {
-            const data = getListFromStorage(itemId);
-            setItem({
-                id: data.id,
-                value: data.value,
-                sortId: data.sortId,
-                color: data.color,
-                status: ItemStatus.STATIC,
-                type: FolderItemType.LIST,
-                childrenCount: data.items.length,
-            } as FolderItem);
-        }
-    }
+        setItem(getFolderItem(itemId, itemType));
+    };
 
     // Load in the initial data
     useEffect(() => {
         loadItemData();
-    }, [])
+    }, []);
 
     // Keep the data in sync with storage
     useMMKVListener((key) => {
-        if (key === getStorageKey(itemId)) {
+        if (key === itemId) {
             loadItemData();
         }
-    }, folderStorage)
+    }, folderStorage);
 
     if (!item) return;
 
     const beginEditItem = () => setItem({ ...item, status: ItemStatus.EDIT });
     const updateItem = (text: string) => setItem({ ...item, value: text });
     const saveItem = () => updateFolderItem({ ...item, status: ItemStatus.STATIC });
-
     const isItemEditing = item.status === ItemStatus.EDIT;
-
 
     const styles = StyleSheet.create({
         label: {
@@ -90,7 +64,7 @@ const FolderItemBanner = ({
             flex: 1
         },
         textInput: {
-            ...globalStyles.background,
+            ...globalStyles.backdrop,
             height: 25,
             fontSize: 25,
             flex: 1
@@ -102,13 +76,12 @@ const FolderItemBanner = ({
     });
 
     return (
-        <View style={{...globalStyles.spacedApart, paddingHorizontal: 8}}>
+        <View style={{ ...globalStyles.spacedApart, paddingHorizontal: 8 }}>
             <View style={styles.label}>
 
                 {/* Type Icon */}
                 <GenericIcon
-                    type={itemType === FolderItemType.FOLDER ? 'Entypo' : 'Ionicons' }
-                    name={itemType === FolderItemType.FOLDER ? 'folder' : 'list-outline'}
+                    type={itemType === FolderItemType.FOLDER ? 'open-folder' : 'list'}
                     size={28}
                     color={colors[item.color as keyof typeof colors]}
                 />
@@ -149,8 +122,7 @@ const FolderItemBanner = ({
                 >
                     <View style={globalStyles.verticallyCentered}>
                         <GenericIcon
-                            type='MaterialIcons'
-                            name='chevron-left'
+                            type='chevron-left'
                             size={16}
                             color={colors.blue} // TODO: use the color of the previous
                         />

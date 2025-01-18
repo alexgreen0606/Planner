@@ -1,21 +1,17 @@
 import { MMKV } from "react-native-mmkv";
-import { Folder, FolderItem, List } from "../types";
-import { FolderItemType } from "../enums";
-import { ItemStatus } from "../../../foundation/sortedLists/enums";
-import { StorageIds } from "../../../enums";
+import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, List } from "../utils";
+import { ItemStatus } from "../../../foundation/sortedLists/utils";
 
-const storage = new MMKV({ id: StorageIds.FOLDER_STORAGE });
-export const getStorageKey = (folderId: string) => (`FOLDERS_${folderId}`);
+const storage = new MMKV({ id: FOLDER_STORAGE_ID });
 
 /**
  * Fetches a folder from storage with the given ID.
  * @param folderId
  */
 export const getFolderFromStorage = (folderId: string) => {
-    const storageKey = getStorageKey(folderId);
 
     // Fetch the folder for the given id from MMKV storage
-    const folderString = storage.getString(storageKey);
+    const folderString = storage.getString(folderId);
 
     if (folderString) {
         const foundFolder: Folder = JSON.parse(folderString);
@@ -31,7 +27,7 @@ export const getFolderFromStorage = (folderId: string) => {
             color: 'blue',
             status: ItemStatus.STATIC
         } as Folder;
-        saveItemToStorage(initialRootFolder)
+        saveToStorage(initialRootFolder)
         return initialRootFolder;
     }
     throw new Error(`Folder not found for id: ${folderId}`);
@@ -42,10 +38,7 @@ export const getFolderFromStorage = (folderId: string) => {
  * @param listId
  */
 export const getListFromStorage = (listId: string) => {
-    const storageKey = getStorageKey(listId);
-
-    // Fetch the list for the given id from MMKV storage
-    const listString = storage.getString(storageKey);
+    const listString = storage.getString(listId);
 
     if (listString) {
         const foundList: List = JSON.parse(listString);
@@ -54,95 +47,66 @@ export const getListFromStorage = (listId: string) => {
     throw new Error('List not found!')
 };
 
-/**
- * Fetches a folder's items from storage and formats them into a list of 
- * folder items.
- * @param folderId 
- * @returns - a list of folder items
- */
-// export const getFolderItems = (folderId: string) => {
-//     const folder = getFolderFromStorage(folderId);
-//     const folderItems = folder.folderIds.map(currFolderId => {
-//         const currFolder = getFolderFromStorage(currFolderId);
-//         return {
-//             id: currFolder.id,
-//             value: currFolder.value,
-//             sortId: currFolder.sortId,
-//             color: currFolder.color,
-//             status: currFolder.status,
-//             type: FolderItemType.FOLDER,
-//             childrenCount: currFolder.folderIds.length + currFolder.listIds.length,
-//         };
-//     });
-//     const listItems = folder.listIds.map(currListId => {
-//         const currList = getListFromStorage(currListId);
-//         return {
-//             id: currList.id,
-//             value: currList.value,
-//             sortId: currList.sortId,
-//             color: currList.color,
-//             status: currList.status,
-//             type: FolderItemType.LIST,
-//             childrenCount: currList.items.length,
-//         };
-//     });
-//     const allFolderItems = [...folderItems, ...listItems];
-//     allFolderItems.sort((a, b) => a.sortId - b.sortId);
-//     return allFolderItems;
-// }
-
-// TODO: comment
-export const newGetFolderItems = (folder: Folder) => {
-    const folderItems = folder.folderIds.map(currFolderId => {
-        const currFolder = getFolderFromStorage(currFolderId);
+export const getFolderItem = (itemId: string, type: FolderItemType): FolderItem => {
+    if (type === FolderItemType.FOLDER) {
+        const data = getFolderFromStorage(itemId);
         return {
-            id: currFolder.id,
-            value: currFolder.value,
-            sortId: currFolder.sortId,
-            color: currFolder.color,
-            status: currFolder.status,
+            id: data.id,
+            value: data.value,
+            sortId: data.sortId,
+            color: data.color,
+            status: data.status,
             type: FolderItemType.FOLDER,
-            childrenCount: currFolder.folderIds.length + currFolder.listIds.length,
+            childrenCount: data.folderIds.length + data.listIds.length,
         };
-    });
-    const listItems = folder.listIds.map(currListId => {
-        const currList = getListFromStorage(currListId);
+    } else {
+        const data = getListFromStorage(itemId);
         return {
-            id: currList.id,
-            value: currList.value,
-            sortId: currList.sortId,
-            color: currList.color,
-            status: currList.status,
+            id: data.id,
+            value: data.value,
+            sortId: data.sortId,
+            color: data.color,
+            status: data.status,
             type: FolderItemType.LIST,
-            childrenCount: currList.items.length,
+            childrenCount: data.items.length,
         };
-    });
-    const allFolderItems = [...folderItems, ...listItems];
-    allFolderItems.sort((a, b) => a.sortId - b.sortId);
-    return allFolderItems;
+    }
 }
 
 /**
- * Saves a folder or list to storage.
- * @param item - the item being saved
+ * Builds a collection of all folder and lists within a folder.
+ * @param folder - the folder to build from
+ * @returns - a list representing all items within a folder
  */
-export const saveItemToStorage = (item: Folder | List) =>
-    storage.set(getStorageKey(item.id), JSON.stringify(item));
+export const getFolderItems = (folder: Folder): FolderItem[] => {
+    return [
+        ...folder.folderIds.map(currFolderId => getFolderItem(currFolderId, FolderItemType.FOLDER)),
+        ...folder.listIds.map(currListId => getFolderItem(currListId, FolderItemType.LIST))
+    ]
+};
+
+/**
+ * Saves a folder or list to storage.
+ * @param item - the item to save
+ */
+export const saveToStorage = (item: Folder | List) => {
+    storage.set(item.id, JSON.stringify(item));
+};
 
 /**
  * Creates a new folder item and adds it to its parent folder.
- * @param parentId
- * @param newData
+ * @param parentId - ID of the folder containing the item
+ * @param newData - data to build the item
  */
 export const createFolderItem = (parentId: string, newData: FolderItem) => {
     const parentFolder = getFolderFromStorage(parentId);
     const newItem = {
         ...newData,
         parentFolderId: parentId
-    }
+    };
     if (newData.type === FolderItemType.FOLDER) {
         // Save the new folder
-        saveItemToStorage({
+        saveToStorage({
             ...newItem,
             folderIds: [],
             listIds: [],
@@ -150,23 +114,23 @@ export const createFolderItem = (parentId: string, newData: FolderItem) => {
         parentFolder.folderIds.push(newData.id);
     } else {
         // Save the new list
-        saveItemToStorage({
+        saveToStorage({
             ...newItem,
             items: [],
             parentFolderId: parentId
-        } as List);
+        });
         parentFolder.listIds.push(newData.id);
     }
 
     // Add the item to its parent
-    saveItemToStorage(parentFolder);
+    saveToStorage(parentFolder);
 };
 
 /**
  * Updates a folder item.
  * If the folder item has been transfered, remove it from the old parent and add it 
  * to the new parent.
- *  The lists within this folder item will not be edited. (see updateFolderItems)
+ *  The lists within thiese items will not be edited.
  * @param newData 
  * @param newParentId 
  * @returns - the new item that was saved
@@ -178,21 +142,16 @@ export const updateFolderItem = (newData: FolderItem, newParentId?: string) => {
         ...newData
     } as List | Folder;
 
-    if (newData.type === FolderItemType.LIST) {
+    // Toggle the item between list and folder
+    if (newData.type === FolderItemType.LIST && newData.status === ItemStatus.NEW) {
         delete newItem.listIds;
         delete newItem.folderIds;
-        if (newData.status === ItemStatus.NEW) {
-            newItem.items = [];
-        }
-    } else {
+        newItem.items = [];
+    } else if (newData.type === FolderItemType.FOLDER && newData.status === ItemStatus.NEW) {
         delete newItem.items;
-        if (newData.status === ItemStatus.NEW) {
-            newItem.folderIds = [];
-            newItem.listIds = [];
-        }
+        newItem.folderIds = [];
+        newItem.listIds = [];
     }
-
-    console.log(newItem, 'new')
 
     // Item is being transfered (root folder may not be transfered)
     if (newParentId && existingItem.parentFolderId) {
@@ -201,25 +160,24 @@ export const updateFolderItem = (newData: FolderItem, newParentId?: string) => {
         // Add this item to its new parent
         const parentFolder = getFolderFromStorage(newParentId);
         const parentList = [...parentFolder[folderListKey], newData.id]
-        saveItemToStorage({
+        saveToStorage({
             ...parentFolder,
             [folderListKey]: parentList,
         });
         // Remove this item from its old parent
         const oldParentFolder = getFolderFromStorage(existingItem.parentFolderId);
         const oldParentList = oldParentFolder[folderListKey].filter(currFolderId => currFolderId !== newData.id);
-        saveItemToStorage({
+        saveToStorage({
             ...oldParentFolder,
             [folderListKey]: oldParentList
         });
     }
     // Update the item
-    saveItemToStorage(newItem);
+    saveToStorage(newItem);
 
-    // Refresh the parent folder
+    // Update the parent folder
     if (newItem.parentFolderId) {
         const parent = getFolderFromStorage(newItem.parentFolderId);
-
         if (!!existingItem.listIds && newData.type === FolderItemType.LIST) {
             parent.folderIds = parent.folderIds.filter(id => id !== newData.id);
             parent.listIds = [...parent.listIds, newData.id];
@@ -227,19 +185,9 @@ export const updateFolderItem = (newData: FolderItem, newParentId?: string) => {
             parent.listIds = parent.listIds.filter(id => id !== newData.id);
             parent.folderIds = [...parent.folderIds, newData.id];
         }
-        saveItemToStorage(parent);
+        saveToStorage(parent);
     }
 };
-
-// TODO: comment
-export const buildFolderFromItems = (newItems: FolderItem[], currentFolder: Folder) => {
-    const newFolder = {
-        ...currentFolder,
-        folderIds: newItems.filter(item => item.type === FolderItemType.FOLDER).map(item => item.id),
-        listIds: newItems.filter(item => item.type === FolderItemType.LIST).map(item => item.id),
-    };
-    return newFolder;
-}
 
 /**
  * Deletes a folder item and its children. Also removes it from its parent.
@@ -258,7 +206,7 @@ export const deleteFolderItem = (itemId: string, type: FolderItemType) => {
     if (item.parentFolderId) {
         const folderListKey = type === FolderItemType.FOLDER ? "folderIds" : "listIds";
         const parentFolder = getFolderFromStorage(item.parentFolderId);
-        saveItemToStorage({
+        saveToStorage({
             ...parentFolder,
             [folderListKey]: parentFolder[folderListKey].filter(currId => currId !== itemId)
         });
@@ -272,22 +220,5 @@ export const deleteFolderItem = (itemId: string, type: FolderItemType) => {
     }
 
     // Delete the item
-    storage.delete(getStorageKey(itemId));
+    storage.delete(itemId);
 };
-
-/**
- * Special function that syncs a list's items with the sorted UI.
- * @param listId
- * @param newListItems
- */
-// export const updateListItems = (listId: string, newListItems: ListItem[]) => {
-//     const listKey = getStorageKey(listId);
-//     const list = getListFromStorage(listId);
-//     storage.set(
-//         listKey,
-//         JSON.stringify({
-//             ...list,
-//             items: newListItems
-//         })
-//     );
-// };

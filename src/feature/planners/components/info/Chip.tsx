@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import GenericIcon, { GenericIconProps } from '../../../../foundation/ui/icons/GenericIcon';
+import GenericIcon, { GenericIconProps } from '../../../../foundation/components/icons/GenericIcon';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 
 interface ChipProps {

@@ -1,19 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
-import { ItemStatus, ShiftTextfieldDirection } from '../../../../foundation/sortedLists/enums';
-import { Event, TimeConfig } from '../../types';
-import { getPlannerStorageKey, savePlannerToStorage } from '../../storage/plannerStorage';
-import { RECURRING_WEEKDAY_PLANNER } from '../../enums';
-import ClickableLine from '../../../../foundation/ui/separators/ClickableLine';
+import ClickableLine from '../../../../foundation/sortedLists/components/ClickableLine';
 import TimeModal from '../modal/TimeModal';
 import Time from '../info/Time';
-import { generateSortIdByTimestamp } from '../../utils';
+import { Event, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY, TimeConfig } from '../../utils';
 import colors from '../../../../foundation/theme/colors';
 import EmptyLabel from '../../../../foundation/sortedLists/components/EmptyLabel';
-import { StorageIds } from '../../../../enums';
 import SortableList from '../../../../foundation/sortedLists/components/SortableList';
 import { SortableListProvider } from '../../../../foundation/sortedLists/services/SortableListProvider';
+import { ItemStatus, ShiftTextfieldDirection } from '../../../../foundation/sortedLists/utils';
 
 const SortedRecurringPlanner = () => {
     const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -23,7 +19,7 @@ const SortedRecurringPlanner = () => {
     // Creates a new textfield linked to the recurring planner
     const initializeNewEvent = (newEvent: Event) => ({
         ...newEvent,
-        plannerId: RECURRING_WEEKDAY_PLANNER,
+        plannerId: RECURRING_WEEKDAY_PLANNER_KEY,
         recurringConfig: {
             recurringId: newEvent.id
         }
@@ -31,8 +27,8 @@ const SortedRecurringPlanner = () => {
 
     // Stores the current recurring weekday planner and all handler functions to update it
     const SortedEvents = useSortedList<Event, Event[]>(
-        getPlannerStorageKey(RECURRING_WEEKDAY_PLANNER),
-        StorageIds.PLANNER_STORAGE,
+        RECURRING_WEEKDAY_PLANNER_KEY,
+        PLANNER_STORAGE_ID,
         (events) => events,
         (events) => events,
         initializeNewEvent
@@ -145,8 +141,7 @@ const SortedRecurringPlanner = () => {
                 endDrag={SortedEvents.endDragItem}
                 renderLeftIcon={item => ({
                     icon: {
-                        type: 'MaterialCommunityIcons',
-                        name: item.status === ItemStatus.DELETE ? 'trash-can' : 'trash-can-outline',
+                        type: 'trash',
                         color: item.status === ItemStatus.DELETE ? colors.white : colors.grey
                     },
                     onClick: () => SortedEvents.toggleDeleteItem(item)
@@ -154,12 +149,11 @@ const SortedRecurringPlanner = () => {
                 extractTextfieldKey={item => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
                 onChangeTextfield={(text, item) => SortedEvents.updateItem({ ...item, value: text })}
                 onSubmitTextfield={() => SortedEvents.saveTextfield(ShiftTextfieldDirection.BELOW)}
-                onRowClick={item => SortedEvents.beginEditItem(item)}
+                onContentClick={item => SortedEvents.beginEditItem(item)}
                 renderRightIcon={item => ({
                     hideIcon: !(!item?.timeConfig?.allDay && !!item.timeConfig?.startTime) || item.status !== ItemStatus.EDIT,
                     icon: {
-                        type: 'MaterialCommunityIcons',
-                        name: 'clock-plus-outline',
+                        type: 'clock',
                         color: colors.grey
                     },
                     onClick: !item?.timeConfig?.allDay && !!item.timeConfig?.startTime ? () => {
@@ -168,13 +162,13 @@ const SortedRecurringPlanner = () => {
                     } : toggleTimeModal,
                     customIcon: !item?.timeConfig?.allDay && !!item.timeConfig?.startTime ? <Time timeValue={item.timeConfig?.startTime} /> : undefined
                 })}
-                handleSeparatorClick={item => SortedEvents.createOrMoveTextfield(item.sortId)}
+                onLineClick={item => SortedEvents.createOrMoveTextfield(item.sortId)}
                 renderItemModal={item =>
                     <TimeModal
                         open={timeModalOpen}
                         toggleModalOpen={toggleTimeModal}
                         event={item}
-                        timestamp={RECURRING_WEEKDAY_PLANNER}
+                        timestamp={RECURRING_WEEKDAY_PLANNER_KEY}
                         onSaveItem={(timeConfig: TimeConfig) => {
                             const newEvent: Event = {
                                 ...item,
