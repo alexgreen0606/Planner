@@ -1,15 +1,18 @@
 import { GenericIconProps } from "../components/icons/GenericIcon";
 
+export const LIST_ITEM_HEIGHT = 40;
+
 export interface ListItem {
     id: string;
     value: string;
     sortId: number;
     status: ItemStatus
+    listId: string;
 };
 
 export interface ListItemUpdateComponentProps<T extends ListItem> {
     item: T;
-    onSave: (updatedItem: T) => T;
+    onSave: (item: T) => T;
 }
 
 export type ListItemUpdateComponentConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
@@ -17,9 +20,9 @@ export type ListItemUpdateComponentConfig<T extends ListItem, P extends ListItem
     props: any;
     onSave: (item: T) => T
 }
-export type RowIconConfig = {
+export type RowIconConfig<T extends ListItem> = {
     icon?: GenericIconProps;
-    onClick?: () => void;
+    onClick?: (item: T) => void;
     customIcon?: React.ReactNode;
     hideIcon?: boolean;
 }

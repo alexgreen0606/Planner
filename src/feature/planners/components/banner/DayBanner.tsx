@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { weatherCodeToFontistoIcon } from '../../../../foundation/weather/utils';
-import { timestampToDayOfWeek, timestampToMonthDate } from '../../utils';
+import { timestampToDayOfWeek, timestampToMonthDate } from '../../timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import colors from '../../../../foundation/theme/colors';
 import AppleIcon from '../../../../foundation/components/icons/AppleIcon';

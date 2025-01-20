@@ -8,7 +8,6 @@ export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
 export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
 
 export interface Event extends ListItem {
-    plannerId: string;
     timeConfig?: TimeConfig;
     recurringConfig?: RecurringConfig;
 };

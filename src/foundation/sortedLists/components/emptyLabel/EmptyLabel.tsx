@@ -1,9 +1,9 @@
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import globalStyles from '../../theme/globalStyles';
-import GenericIcon, { GenericIconProps } from '../../components/icons/GenericIcon';
-import CustomText from '../../components/text/CustomText';
-import colors from '../../theme/colors';
+import GenericIcon, { GenericIconProps } from '../../../components/icons/GenericIcon';
+import CustomText from '../../../components/text/CustomText';
+import colors from '../../../theme/colors';
+import globalStyles from '../../../theme/globalStyles';
 
 interface EmptyLabelProps {
     label: string;

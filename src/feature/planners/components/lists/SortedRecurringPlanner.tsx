@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
-import ClickableLine from '../../../../foundation/sortedLists/components/ClickableLine';
 import TimeModal from '../modal/TimeModal';
 import Time from '../info/Time';
-import { Event, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY, TimeConfig } from '../../utils';
+import { Event, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY, TimeConfig } from '../../timeUtils';
 import colors from '../../../../foundation/theme/colors';
-import EmptyLabel from '../../../../foundation/sortedLists/components/EmptyLabel';
-import SortableList from '../../../../foundation/sortedLists/components/SortableList';
+import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { SortableListProvider } from '../../../../foundation/sortedLists/services/SortableListProvider';
 import { ItemStatus, ShiftTextfieldDirection } from '../../../../foundation/sortedLists/utils';
+import ClickableLine from '../../../../foundation/sortedLists/components/separator/ClickableLine';
+import EmptyLabel from '../../../../foundation/sortedLists/components/emptyLabel/EmptyLabel';
 
 const SortedRecurringPlanner = () => {
     const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -139,18 +139,18 @@ const SortedRecurringPlanner = () => {
             <SortableList<Event>
                 items={SortedEvents.items}
                 endDrag={SortedEvents.endDragItem}
-                renderLeftIcon={item => ({
+                getLeftIconConfig={item => ({
                     icon: {
                         type: 'trash',
                         color: item.status === ItemStatus.DELETE ? colors.white : colors.grey
                     },
                     onClick: () => SortedEvents.toggleDeleteItem(item)
                 })}
-                extractTextfieldKey={item => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
-                onChangeTextfield={(text, item) => SortedEvents.updateItem({ ...item, value: text })}
-                onSubmitTextfield={() => SortedEvents.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                getTextfieldKey={item => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
+                handleValueChange={(text, item) => SortedEvents.persistItemToStorage({ ...item, value: text })}
+                onSaveTextfield={() => SortedEvents.saveTextfield(ShiftTextfieldDirection.BELOW)}
                 onContentClick={item => SortedEvents.beginEditItem(item)}
-                renderRightIcon={item => ({
+                getRightIconConfig={item => ({
                     hideIcon: !(!item?.timeConfig?.allDay && !!item.timeConfig?.startTime) || item.status !== ItemStatus.EDIT,
                     icon: {
                         type: 'clock',
@@ -163,7 +163,7 @@ const SortedRecurringPlanner = () => {
                     customIcon: !item?.timeConfig?.allDay && !!item.timeConfig?.startTime ? <Time timeValue={item.timeConfig?.startTime} /> : undefined
                 })}
                 onLineClick={item => SortedEvents.createOrMoveTextfield(item.sortId)}
-                renderItemModal={item =>
+                getModal={item =>
                     <TimeModal
                         open={timeModalOpen}
                         toggleModalOpen={toggleTimeModal}
@@ -175,7 +175,7 @@ const SortedRecurringPlanner = () => {
                                 timeConfig
                             };
                             newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedEvents.items);
-                            SortedEvents.updateItem(newEvent);
+                            SortedEvents.persistItemToStorage(newEvent);
                             toggleTimeModal();
                         }}
                     />

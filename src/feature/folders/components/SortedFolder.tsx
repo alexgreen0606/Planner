@@ -9,20 +9,18 @@ import {
     updateFolderItem,
     deleteFolderItem,
     getFolderItems,
-    buildFolderFromItems
 } from '../storage/folderStorage';
 import Modal from '../../../foundation/components/modal/Modal';
-import ClickableLine from '../../../foundation/sortedLists/components/ClickableLine';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import CustomText from '../../../foundation/components/text/CustomText';
 import colors from '../../../foundation/theme/colors';
-import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
-import SortableList from '../../../foundation/sortedLists/components/SortableList';
+import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import Popover from './FolderItemPopover';
 import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../utils';
 import { isItemEditing, ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/utils';
 import { Pages } from '../../../foundation/navigation/utils';
 import DeleteModal from './DeleteModal';
+import ClickableLine from '../../../foundation/sortedLists/components/separator/ClickableLine';
 
 interface SortableFolderProps {
     folderId: string;
@@ -52,7 +50,7 @@ const SortedFolder = ({
 
     // Toggles an item in and out of delete status
     const customToggleItemDelete = (item: FolderItem, isModalOpen: boolean) => {
-        SortedItems.updateItem({
+        SortedItems.persistItemToStorage({
             ...item,
             status: isModalOpen ? ItemStatus.EDIT : ItemStatus.DELETE
         })
@@ -73,7 +71,7 @@ const SortedFolder = ({
     );
 
     const beginItemTransfer = (item: FolderItem) => {
-        SortedItems.updateItem({ ...item, status: ItemStatus.TRANSFER })
+        SortedItems.persistItemToStorage({ ...item, status: ItemStatus.TRANSFER })
     }
 
     /**
@@ -152,7 +150,7 @@ const SortedFolder = ({
                             color: colors.grey
                         }
                     }]]}
-                    saveNewColor={color => SortedItems.updateItem({ ...item, color })}
+                    saveNewColor={color => SortedItems.persistItemToStorage({ ...item, color })}
                 />
         }
     }
@@ -164,7 +162,7 @@ const SortedFolder = ({
                 <Popover
                     item={item}
                     icons={[[{
-                        onClick: () => SortedItems.updateItem({ ...item, type: FolderItemType.FOLDER }),
+                        onClick: () => SortedItems.persistItemToStorage({ ...item, type: FolderItemType.FOLDER }),
                         icon: {
                             type: 'folder',
                             size: 20,
@@ -172,14 +170,14 @@ const SortedFolder = ({
                         }
                     },
                     {
-                        onClick: () => SortedItems.updateItem({ ...item, type: FolderItemType.LIST }),
+                        onClick: () => SortedItems.persistItemToStorage({ ...item, type: FolderItemType.LIST }),
                         icon: {
                             type: 'list',
                             size: 20,
                             color: item.type === FolderItemType.LIST ? colors.blue : colors.grey
                         }
                     }]]}
-                    saveNewColor={color => SortedItems.updateItem({ ...item, color })}
+                    saveNewColor={color => SortedItems.persistItemToStorage({ ...item, color })}
                 />
         }
     }
@@ -212,14 +210,14 @@ const SortedFolder = ({
                     <SortableList<FolderItem>
                         items={SortedItems.items}
                         endDrag={SortedItems.endDragItem}
-                        extractTextfieldKey={item => `${item.id}-${item.sortId}`}
-                        onChangeTextfield={(text, item) => SortedItems.updateItem({ ...item, value: text })}
-                        onSubmitTextfield={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
-                        onGetItemPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
-                        onGetRowTextColor={item =>
+                        getTextfieldKey={item => `${item.id}-${item.sortId}`}
+                        handleValueChange={(text, item) => SortedItems.persistItemToStorage({ ...item, value: text })}
+                        onSaveTextfield={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
+                        getPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
+                        getRowTextColor={item =>
                             (isTransferMode() && item.type === FolderItemType.LIST) ||
                                 isItemDeleting(item) ? colors.grey : colors.white}
-                        renderRightIcon={item => ({
+                        getRightIconConfig={item => ({
                             hideIcon: !isItemEditing(item),
                             customIcon:
                                 <Text style={{ color: colors.grey }}>
@@ -228,14 +226,14 @@ const SortedFolder = ({
                         })}
                         onContentClick={item => handleItemClick(item)}
                         onLineClick={item => SortedItems.createOrMoveTextfield(item.sortId)}
-                        renderItemModal={item =>
+                        getModal={item =>
                             <DeleteModal
                                 item={item}
                                 toggleModalOpen={() => customToggleItemDelete(item, true)}
                                 deleteItem={() => handleDeleteItem(item)}
                             />
                         }
-                        renderLeftIcon={item => ({
+                        getLeftIconConfig={item => ({
                             icon: {
                                 type: getIconType(item),
                                 color: getIconColor(item)

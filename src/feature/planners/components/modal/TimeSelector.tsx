@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { TimeObject } from '../../utils';
+import { TimeObject } from '../../timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import colors from '../../../../foundation/theme/colors';
 

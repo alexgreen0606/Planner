@@ -5,23 +5,22 @@ import {
     isTimestampWeekday,
     isTimestampValid,
     generateTodayTimestamp,
-    isoToTimeValue,
     generateTomorrowTimestamp,
     PLANNER_STORAGE_ID,
     Event,
     RECURRING_WEEKDAY_PLANNER_KEY
-} from '../utils';
-import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
+} from '../timeUtils';
+import RNCalendarEvents from "react-native-calendar-events";
 import { uuid } from 'expo-modules-core';
 import { ItemStatus } from '../../../foundation/sortedLists/utils';
+import { getCalendarEvents, getPrimaryCalendarId } from '../calendarUtils';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
 /**
  * Fetches the planner with the given ID from storage.
- * @param plannerId 
  */
-export const getPlannerFromStorage = (plannerId: string): Event[] => {
+function getPlannerFromStorage(plannerId: string): Event[] {
     const eventsString = storage.getString(plannerId);
     if (eventsString)
         return JSON.parse(eventsString);
@@ -30,17 +29,16 @@ export const getPlannerFromStorage = (plannerId: string): Event[] => {
 
 /**
  * Saves a planner to storage.
- * @param plannerId
- * @param newPlanner
  */
-export const savePlannerToStorage = (plannerId: string, newPlanner: Event[]) => {
+function savePlannerToStorage(plannerId: string, newPlanner: Event[]) {
     storage.set(plannerId, JSON.stringify(newPlanner));
 };
 
 /**
  * Deletes all the planners from before today's date.
  */
-const deletePastPlanners = () => {
+function deletePastPlanners() {
+    // TODO: grab yesterday's events and add them to today if any exist
     const allStorageKeys = storage.getAllKeys();
     allStorageKeys.map(timestamp => {
         if (isTimestampValid(timestamp) && (new Date(timestamp) < new Date(generateTodayTimestamp()))) {
@@ -50,151 +48,13 @@ const deletePastPlanners = () => {
 };
 
 /**
- * Grants access to the device calendar.
- */
-const getCalendarAccess = async () => {
-    const permissions = await RNCalendarEvents.checkPermissions();
-    if (permissions !== 'authorized') {
-        const status = await RNCalendarEvents.requestPermissions();
-        if (status !== 'authorized') {
-            throw new Error('Access denied to calendars.'); // TODO: just skip calendars if denied?
-        }
-    }
-}
-
-/**
- * Fetches the primary calendar for this device and returns its ID.
- * @returns - the ID of the primary calendar
- */
-const getPrimaryCalendarId = async (): Promise<string> => {
-    await getCalendarAccess();
-    const calendars = await RNCalendarEvents.findCalendars();
-    const primaryCalendar = calendars.find(calendar => calendar.isPrimary);
-    if (!primaryCalendar) throw new Error('Primary calendar does not exist!');
-    return primaryCalendar.id;
-};
-
-/**
- * Fetches all primary events from the device calendar.
- * @param timestamp - timestamp of the requested date
- */
-const getCalendarEvents = async (timestamp: string): Promise<Event[]> => {
-    const startDate = new Date(`${timestamp}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamp}T23:59:59`).toISOString();
-
-    // Load in the calendar events and format them into a planner
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [await getPrimaryCalendarId()]);
-    return calendarEvents.filter(event => !event.allDay).map(calendarEvent => ({
-        id: calendarEvent.id,
-        value: calendarEvent.title,
-        sortId: 1, // temporary sort id -> will be overwritten
-        plannerId: timestamp,
-        timeConfig: {
-            calendarEventId: calendarEvent.id,
-            startTime: isoToTimeValue(calendarEvent.startDate),
-            endTime: isoToTimeValue(calendarEvent.endDate ?? endDate),
-            isCalendarEvent: true,
-            allDay: calendarEvent.allDay ?? false
-        },
-        status: ItemStatus.STATIC
-    }));
-};
-
-/**
- * Fetches all holidays for the given timestamp.
- * @param timestamp - YYYY-MM-DD
- */
-export const getHolidays = async (timestamps: string[]): Promise<Record<string, string[]>> => {
-    await getCalendarAccess();
-
-    // Load in the US Holiday calendar
-    const calendars = await RNCalendarEvents.findCalendars();
-    const holidayCalendar = calendars.find(calendar => calendar.title === 'US Holidays');
-    if (!holidayCalendar) throw new Error('Holiday calendar does not exist!');
-
-    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [holidayCalendar.id]);
-
-    // Group events by date
-    const holidayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
-        const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
-        map[timestamp] = calendarEvents
-            .filter(event => new Date(event.startDate).toISOString().split('T')[0] === dateKey)
-            .map(event => event.title);
-        return map;
-    }, {} as Record<string, string[]>);
-
-    return holidayMap;
-};
-
-/**
- * Fetches all birthdays for the given timestamp.
- * @param timestamp - YYYY-MM-DD
- */
-export const getBirthdays = async (timestamps: string[]): Promise<Record<string, string[]>> => {
-    await getCalendarAccess();
-
-    const calendars = await RNCalendarEvents.findCalendars();
-    const birthdayCalendar = calendars.find(calendar => calendar.title === 'Birthdays');
-    if (!birthdayCalendar) throw new Error('Birthday calendar does not exist!');
-
-    // Fetch all birthdays and format
-    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [birthdayCalendar.id]);
-    const birthdayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
-        const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
-        map[timestamp] = calendarEvents
-            .filter(event => new Date(event.startDate).toISOString().split('T')[0] === dateKey)
-            .map(event => event.title);
-        return map;
-    }, {} as Record<string, string[]>);
-    return birthdayMap;
-};
-
-export const getFullDayEvents = async (timestamps: string[]): Promise<Record<string, string[]>> => {
-    await getCalendarAccess();
-    const primaryCalendarId = await getPrimaryCalendarId();
-
-    // Find the overall date range
-    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
-
-    // Fetch all events in the date range and format
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, [primaryCalendarId]);
-    const allDayMap: Record<string, string[]> = timestamps.reduce((map, timestamp) => {
-        const dateKey = new Date(`${timestamp}T00:00:00`).toISOString().split('T')[0];
-        map[timestamp] = calendarEvents
-            .filter(event => event.allDay && isEventOnDate(event, dateKey))
-            .map(event => event.title);
-        return map;
-    }, {} as Record<string, string[]>);
-    return allDayMap;
-};
-
-// Helper function to determine if an event falls on a specific date
-const isEventOnDate = (event: CalendarEventReadable, dateKey: string): boolean => {
-    const eventStart = new Date(event.startDate).toISOString().split('T')[0];
-    if (!event.endDate) return false;
-
-    let eventEnd = new Date(event.endDate);
-    if (event.allDay) {
-        eventEnd.setDate(eventEnd.getDate() - 1);
-    }
-    eventEnd = new Date(eventEnd.toISOString().split('T')[0]);
-    const dateKeyDate = new Date(dateKey);
-    return dateKeyDate >= new Date(eventStart) && dateKeyDate <= eventEnd;
-};
-
-/**
  * Syncs an existing planner with a calendar. Calendars have final say on the state of the events.
  * @param calendar - the events to sync within the existing planner
  * @param currentPlanner - the planner being updated
  * @param currentPlannerId
  * @returns - the new planner synced with the calendar
  */
-const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], currentPlannerId: string) => {
+function syncPlannerWithCalendar(calendar: Event[], currentPlanner: Event[], currentPlannerId: string) {
 
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
@@ -260,7 +120,7 @@ const syncPlannerWithCalendar = (calendar: Event[], currentPlanner: Event[], cur
  * @param currentPlannerId
  * @returns - the new planner synced with the recurring events
  */
-const syncPlannerWithRecurring = (recurringPlanner: Event[], currentPlanner: Event[], currentPlannerId: string) => {
+function syncPlannerWithRecurring(recurringPlanner: Event[], currentPlanner: Event[], currentPlannerId: string) {
 
     // Build the new planner out of the recurring planner. All recurring events will prioritize the
     // recurring planner's values.
@@ -319,10 +179,9 @@ const syncPlannerWithRecurring = (recurringPlanner: Event[], currentPlanner: Eve
 }
 
 /**
- * Builds a planner for the given ID out of the storage, calendar, and recurring weekly planner.
- * @param plannerId 
+ * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
  */
-export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
+export async function buildPlanner(plannerId: string): Promise<Event[]> {
 
     // Keep the storage clean by deleting any past planners
     deletePastPlanners();
@@ -353,12 +212,11 @@ export const buildPlanner = async (plannerId: string): Promise<Event[]> => {
 };
 
 /**
- * Creates or updates an event. Persists to the device calendar if needed.
- * @param newEvent 
+ * Creates or updates an event. Updates it in the device calendar if needed.
  * @returns - the newly generated event
  */
-export const persistEvent = async (event: Event) => {
-    let newPlanner = getPlannerFromStorage(event.plannerId);
+export async function persistEvent(event: Event) {
+    let newPlanner = getPlannerFromStorage(event.listId);
     let newEvent = { ...event };
 
     // The event is a calendar event -> sync the calendar
@@ -366,38 +224,37 @@ export const persistEvent = async (event: Event) => {
         const calendarEventDetails = {
             calendarId: await getPrimaryCalendarId(),
             title: newEvent.value,
-            startDate: timeValueToIso(event.plannerId, newEvent.timeConfig.startTime),
-            endDate: timeValueToIso(newEvent.plannerId, newEvent.timeConfig.endTime),
+            startDate: timeValueToIso(event.listId, newEvent.timeConfig.startTime),
+            endDate: timeValueToIso(newEvent.listId, newEvent.timeConfig.endTime),
             allDay: newEvent.timeConfig.allDay,
             id: newEvent.timeConfig.calendarEventId
         };
         newEvent.timeConfig.calendarEventId = await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails);
+        console.log('Calendar event created.')
     }
 
     // Update the list with the new event
     const existingIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id)
-    if (existingIndex !== -1) {
+    if (existingIndex !== -1)
         newPlanner.splice(existingIndex, 1, newEvent);
-    } else {
+    else
         newPlanner.push(newEvent);
-    }
 
     // Save the new planner
-    savePlannerToStorage(newEvent.plannerId, newPlanner);
+    savePlannerToStorage(newEvent.listId, newPlanner);
 };
 
 /**
  * Deletes an event. Removes it from the device calendar if needed.
- * @param eventToDelete 
  */
-export const deleteEvent = async (eventToDelete: Event) => {
-    let newPlanner = getPlannerFromStorage(eventToDelete.plannerId);
+export async function deleteEvent(eventToDelete: Event) {
+    let newPlanner = getPlannerFromStorage(eventToDelete.listId);
 
     // The event is an apple event in the future -> remove from the calendar
     if (
         eventToDelete.timeConfig?.isCalendarEvent &&
         eventToDelete.timeConfig.calendarEventId &&
-        eventToDelete.plannerId !== generateTodayTimestamp()
+        eventToDelete.listId !== generateTodayTimestamp()
     ) {
         await getPrimaryCalendarId();
         await RNCalendarEvents.removeEvent(eventToDelete.timeConfig.calendarEventId);
@@ -409,7 +266,7 @@ export const deleteEvent = async (eventToDelete: Event) => {
         if (existingEventIndex !== -1 && newPlanner[existingEventIndex].recurringConfig) {
             newPlanner[existingEventIndex].recurringConfig.deleted = true;
             newPlanner[existingEventIndex].status = ItemStatus.STATIC;
-            savePlannerToStorage(eventToDelete.plannerId, newPlanner);
+            savePlannerToStorage(eventToDelete.listId, newPlanner);
             return;
         }
     }
@@ -419,5 +276,5 @@ export const deleteEvent = async (eventToDelete: Event) => {
     if (eventIndex !== -1)
         newPlanner.splice(eventIndex, 1);
 
-    savePlannerToStorage(eventToDelete.plannerId, newPlanner);
+    savePlannerToStorage(eventToDelete.listId, newPlanner);
 };

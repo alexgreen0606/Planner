@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import Modal from '../../../../foundation/components/modal/Modal';
-import { Event, generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../../utils';
+import { Event, generateTimeArrays, isTimestampValid, timestampToDayOfWeek } from '../../timeUtils';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import TimeSelector from './TimeSelector';
 import colors from '../../../../foundation/theme/colors';

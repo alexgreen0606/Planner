@@ -1,22 +1,16 @@
-import { useRef } from 'react';
 import { ItemStatus, ListItem } from '../utils';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { useSortableListContext } from '../services/SortableListProvider';
 
 export enum StorageConfigType {
     HANDLERS = "HANDLERS",
     DIRECT = "DIRECT",
 };
 
-export enum HandlerType {
-    SYNC = "SYNC",
-    ASYNC = "ASYNC",
-};
-
 interface StorageHandlers<T extends ListItem> {
-    type: HandlerType;
-    update: HandlerType extends HandlerType.ASYNC ? (item: T) => Promise<void> : (item: T) => void;
-    create: HandlerType extends HandlerType.ASYNC ? (item: T) => Promise<void> : (item: T) => void;
-    delete: HandlerType extends HandlerType.ASYNC ? (item: T) => Promise<void> : (item: T) => void;
+    update: (item: T) => Promise<void> | void;
+    create: (item: T) => Promise<void> | void;
+    delete: (item: T) => Promise<void> | void;
 };
 
 interface StorageSaveOptions<S, T extends ListItem> {
@@ -26,7 +20,6 @@ interface StorageSaveOptions<S, T extends ListItem> {
 
 interface CustomStorageHandlers<T extends ListItem> {
     type: StorageConfigType.HANDLERS;
-    handlerType: HandlerType;
     customStorageHandlers: StorageHandlers<T>;
 };
 
@@ -36,13 +29,10 @@ type StorageConfig<S, T extends ListItem> =
 
 /**
  * Maintains a list of sorted items.
- * @param storageKey - key of the object holding the list in storage
+ * @param storageKey - key of object holding the list in storage
  * @param storageId - ID of storage holding the list
  * @param getItemsFromStorageObject - helper function to retrieve the list from the storage object
- * @param saveItemsToStorageObject - helper function to add the list back to the storage object
- * @param initializeNewItem - helper function to initialize a new item in the list
- * @param customStorageHandlers - for lists representing other storage objects, these helper functions will handle
- *  saving the updated values to storage
+ * @param storageConfig - determines how the list will be saved to storage
  */
 const useSortedList = <T extends ListItem, S>(
     storageKey: string,
@@ -50,94 +40,84 @@ const useSortedList = <T extends ListItem, S>(
     getItemsFromStorageObject: (storageObject: S) => T[],
     storageConfig: StorageConfig<S, T>
 ) => {
+    const { currentTextfield, setCurrentTextfield, pendingDeletes } = useSortableListContext();
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const items: T[] = storageObject ? getItemsFromStorageObject(storageObject) : [];
     const saveItems = (newItems: T[]) =>
         storageObject && storageConfig.type === StorageConfigType.DIRECT ?
             setStorageObject(storageConfig.saveItemsToStorageObject(newItems, storageObject)) : null;
-    const pendingDeletes = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
     /**
-     * Fetches the current textfield in the list.
-     * @returns - focused item, otherwise undefined
+     * Converts an item into a textfield. If a textfield already exists, it will be saved first.
      */
-    const getFocusedItem = (): T | undefined => {
-        return items.find(item => [ItemStatus.EDIT, ItemStatus.NEW, ItemStatus.TRANSFER].includes(item.status));
+    async function convertItemToTextfield(item: T) {
+        if (item.status === ItemStatus.DELETE) return;
+        else if (currentTextfield && currentTextfield.value.trim() !== '')
+            await persistItemToStorage(currentTextfield);
+        setCurrentTextfield({ ...item, status: ItemStatus.EDIT });
     };
 
     /**
-     * Saves the textfield item to the list.
-     * @param shiftTextfieldConfig - shifts the textfield above or below the saved item
-     * @param newTextfieldParentSortId - sort ID above where the new textfield should be
+     * Updates or creates an item in storage. The item will default to the textfield if no item is provided, and set its status back
+     * to static.
      */
-    const saveTextfield = async (item?: T, shiftTextfieldConfig?: string, newTextfieldParentSortId?: number) => {
-        const focusedItem = item ?? getFocusedItem();
-        if (!focusedItem) return;
+    async function persistItemToStorage(item: T | undefined) {
+        const updatedItem = item ?? { ...currentTextfield, status: ItemStatus.STATIC };
+        if (!updatedItem) return;
 
-        if (focusedItem.value !== '') {
-            // Save the item
-            await updateItem({ ...focusedItem, status: ItemStatus.STATIC }, shiftTextfieldConfig, newTextfieldParentSortId);
-        } else {
-            // Delete the empty item
-            await deleteItem(focusedItem);
-        }
-    };
-
-    /**
-     * Updates an item in the list. If needed, the textfield will also be moved.
-     * @param newItem - new data to save
-     * @param shiftTextfieldConfig - shifts the textfield above or below the updated item
-     * @param newTextfieldParentSortId - sort ID above where the new textfield should be
-     */
-    const updateItem = async (newItem: T, shiftTextfieldConfig?: string, newTextfieldParentSortId?: number) => {
-        const newList = [...items];
-
-        // Replace the existing item with the new data
-        const replaceIndex = newList.findIndex((item) =>
-            item.id === newItem.id
-        );
-        if (replaceIndex !== -1)
-            newList[replaceIndex] = newItem;
-
-        // Save the list
         if (storageConfig.type === StorageConfigType.HANDLERS) {
-            await storageConfig.customStorageHandlers.update(newItem);
+            // Handle the storage update directly
+            if (updatedItem.status === ItemStatus.NEW) {
+                await storageConfig.customStorageHandlers.create(updatedItem);
+            } else {
+                await storageConfig.customStorageHandlers.update(updatedItem);
+            }
         } else {
-            saveItems(newList);
+            // Update the list with the new item and save
+            const updatedList = [...items];
+            const replaceIndex = updatedList.findIndex((existingItem) =>
+                existingItem.id === updatedItem.id
+            );
+            if (replaceIndex !== -1) {
+                updatedList[replaceIndex] = updatedItem;
+            } else {
+                updatedList.push(updatedItem);
+            }
+            saveItems(updatedList);
         }
     };
 
     /**
-     * Deletes an item from the list.
-     * @param item - item to delete
+     * Deletes an item from storage. The item will default to the textfield if no item is provided.
      */
-    const deleteItem = async (item: T) => {
-        const newList = [...items];
+    async function deleteItemFromStorage(item: T | undefined) {
+        const updatedItem = item ?? currentTextfield;
+        if (!updatedItem) return;
 
-        // Delete the item from the list
-        const deleteIndex = newList.findIndex(currItem => currItem.id === item.id);
-        if (deleteIndex !== -1)
-            newList.splice(deleteIndex, 1);
-
-        // Save the list
-        if (storageConfig.type === StorageConfigType.HANDLERS) {
-            await storageConfig.customStorageHandlers.delete(item);
-        } else {
-            saveItems(newList);
+        if (storageConfig.type === StorageConfigType.HANDLERS)
+            // Handle the storage delete directly
+            await storageConfig.customStorageHandlers.delete(updatedItem);
+        else {
+            // Remove the item from the list and save
+            const updatedList = [...items];
+            const deleteIndex = updatedList.findIndex(existingItem => existingItem.id === updatedItem.id);
+            if (deleteIndex !== -1)
+                updatedList.splice(deleteIndex, 1);
+            saveItems(updatedList);
         }
     };
 
     /**
-     * Clear any pending deletes and re-schedules them 3 seconds into the future.
+     * Clears any pending deletes and re-schedules them 3 seconds into the future.
      */
-    const rescheduleAllDeletes = () => {
+    function rescheduleAllDeletes() {
         pendingDeletes.current.forEach((timeoutId, id) => {
             clearTimeout(timeoutId);
             const newTimeoutId = setTimeout(() => {
                 const currentItem = items.find(item => item.id === id);
                 if (currentItem) {
-                    deleteItem(currentItem);
+                    deleteItemFromStorage(currentItem);
                     pendingDeletes.current.delete(id);
                 }
             }, 3000);
@@ -146,24 +126,20 @@ const useSortedList = <T extends ListItem, S>(
     };
 
     /**
-     * Toggles an item in and out of deleting. Changing the delete status of 
-     * any item in the list will reset the timeouts for all deleting items. Items are fully deleted
-     * after 3 seconds.
-     * @param item - item to toggle
+     * Toggles an item in and out of deleting. The item will default to the textfield if no item is provided.
+     * Changing the delete status of any item will reset the timeouts for all deleting items. Items are fully 
+     * deleted after 3 seconds.
      */
-    const toggleDeleteItem = async (item: T) => {
-        const wasDeleting = item.status === ItemStatus.DELETE;
-        const updatedStatus = wasDeleting ? ItemStatus.STATIC : ItemStatus.DELETE;
-        await updateItem({ ...item, status: updatedStatus });
+    async function toggleDeleteItem(item: T) {
+        const updatedStatus = item.status === ItemStatus.DELETE ? ItemStatus.STATIC : ItemStatus.DELETE;
 
-        if (!wasDeleting) {
+        if (updatedStatus === ItemStatus.DELETE) {
             // Schedule item delete
             const timeoutId = setTimeout(() => {
-                deleteItem(item);
+                deleteItemFromStorage(item);
                 pendingDeletes.current.delete(item.id);
             }, 3000);
             pendingDeletes.current.set(item.id, timeoutId);
-            rescheduleAllDeletes();
         } else {
             // Unschedule item delete
             const timeoutId = pendingDeletes.current.get(item.id);
@@ -171,17 +147,18 @@ const useSortedList = <T extends ListItem, S>(
                 clearTimeout(timeoutId);
                 pendingDeletes.current.delete(item.id);
             }
-            rescheduleAllDeletes();
         }
+        rescheduleAllDeletes();
+        await persistItemToStorage({ ...item, status: updatedStatus });
     };
 
     return {
         items,
-        updateItem,
-        getFocusedItem,
-        saveTextfield,
+        persistItemToStorage,
         toggleDeleteItem,
         rescheduleAllDeletes,
+        convertItemToTextfield,
+        deleteItemFromStorage
     };
 };
 

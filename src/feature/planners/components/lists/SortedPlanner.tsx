@@ -1,24 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import useSortedList, { HandlerType, StorageConfigType } from '../../../../foundation/sortedLists/hooks/useSortedList';
-import { usePlannerContext } from '../../services/PlannerProvider';
+import useSortedList, { StorageConfigType } from '../../../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from '../banner/DayBanner';
 import { persistEvent, deleteEvent } from '../../storage/plannerStorage';
-import ClickableLine from '../../../../foundation/sortedLists/components/ClickableLine';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import Time from '../info/Time';
-import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../utils';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icons/GenericIcon';
 import colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
-import EmptyLabel from '../../../../foundation/sortedLists/components/EmptyLabel';
 import Chip from '../info/Chip';
 import { WeatherForecast } from '../../../../foundation/weather/types';
-import SortableList from '../../../../foundation/sortedLists/components/SortableList';
-import { RowControl, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
-import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
+import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
+import { ItemStatus } from '../../../../foundation/sortedLists/utils';
+import ClickableLine from '../../../../foundation/sortedLists/components/separator/ClickableLine';
+import EmptyLabel from '../../../../foundation/sortedLists/components/emptyLabel/EmptyLabel';
 
 interface SortablePlannerProps {
     timestamp: string;
@@ -35,22 +33,11 @@ const SortedPlanner = ({
     forecast,
     allDayEvents
 }: SortablePlannerProps) => {
-    // const { focusedPlanner, setFocusedPlanner } = usePlannerContext();
-    const { currentList } = useSortableListContext();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
 
-    const toggleCollapsed = () => {
-        SortedEvents.saveTextfield();
-        setCollapsed(curr => !curr);
-    };
+    const toggleCollapsed = () => setCollapsed(curr => !curr);
     const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
-
-    // Creates a new textfield linked to this planner
-    const initializeNewEvent = (newEvent: ListItem) => ({
-        ...newEvent,
-        plannerId: timestamp
-    } as Event);
 
     // Stores the current planner and all handler functions to update it
     const SortedEvents = useSortedList<Event, Event[]>(
@@ -59,39 +46,13 @@ const SortedPlanner = ({
         (planner) => planner,
         {
             type: StorageConfigType.HANDLERS,
-            handlerType: HandlerType.ASYNC,
             customStorageHandlers: {
-                type: HandlerType.ASYNC,
                 create: persistEvent,
                 update: persistEvent,
                 delete: deleteEvent
             }
         }
     );
-
-    // TODO: update list when other textfield becomes focused
-
-    /**
-     * When a different planner on the screen is focused, save this list's current textfield
-     * and reset the items that are pending delete.
-     */
-    useEffect(() => {
-        if (currentList?.id !== timestamp) {
-            SortedEvents.saveTextfield();
-        }
-        SortedEvents.rescheduleAllDeletes();
-    }, [currentList]);
-
-    // TODO set focused planner on new item creation
-
-    /**
-     * Schedules the item for delete, and sets this as the focused planner within
-     * the context.
-     */
-    const customToggleDeleteItem = (item: Event) => {
-        SortedEvents.toggleDeleteItem(item);
-        // setFocusedPlanner(timestamp);
-    };
 
     return (
         <Card
@@ -142,6 +103,7 @@ const SortedPlanner = ({
                 </View>
             }
         >
+
             {/* Collapse Control */}
             {SortedEvents.items.length > 15 && !collapsed && (
                 <View>
@@ -164,26 +126,28 @@ const SortedPlanner = ({
                     <ClickableLine onPress={toggleCollapsed} />
                 </View>
             )}
+
             {/* Planner List */}
             <SortableList<Event, TimeModalProps>
                 listId={timestamp}
-                items={collapsed ? [] : SortedEvents.items}
-                renderLeftIcon={item => ({
+                items={SortedEvents.items}
+                getLeftIconConfig={item => ({
                     icon: {
                         type: item.status === ItemStatus.DELETE ? 'circle-filled' : 'circle',
                         color: item.status === ItemStatus.DELETE ? colors.blue : colors.grey
                     },
-                    onClick: () => customToggleDeleteItem(item)
+                    onClick: SortedEvents.toggleDeleteItem
                 })}
-                initializeNewItem={initializeNewEvent}
-                editItemControl={RowControl.CONTENT}
-                extractTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
-                onChangeTextfield={(text, item) => {
+                onDeleteItem={SortedEvents.deleteItemFromStorage}
+                hideList={collapsed}
+                onContentClick={SortedEvents.convertItemToTextfield}
+                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
+                handleValueChange={(text, item) => {
                     const newEvent = {
                         ...item,
                         value: text,
                     };
-                    if (!item.timeConfig?.isCalendarEvent) {
+                    if (!item.timeConfig) {
                         const { timeConfig, updatedText } = extractTimeValue(text);
                         if (timeConfig) {
                             newEvent.timeConfig = timeConfig;
@@ -193,8 +157,8 @@ const SortedPlanner = ({
                     }
                     return newEvent;
                 }}
-                onSubmitTextfield={(newEvent: Event) => SortedEvents.saveTextfield(newEvent)}
-                renderRightIcon={item => ({
+                onSaveTextfield={SortedEvents.persistItemToStorage}
+                getRightIconConfig={item => ({
                     hideIcon: item.status === ItemStatus.STATIC && !item.timeConfig,
                     icon: {
                         type: 'clock',
@@ -203,7 +167,7 @@ const SortedPlanner = ({
                     onClick: toggleTimeModal,
                     customIcon: !!item.timeConfig?.startTime ? <Time timeValue={item.timeConfig?.startTime} /> : undefined
                 })}
-                renderItemModal={item => ({
+                getModal={item => ({
                     component: TimeModal,
                     props: {
                         open: timeModalOpen,
@@ -212,12 +176,13 @@ const SortedPlanner = ({
                         timestamp: timestamp
                     },
                     onSave: (updatedItem: Event) => {
-                        updatedItem.sortId = generateSortIdByTimestamp(updatedItem, SortedEvents.items);
+                        updatedItem.sortId = generateSortIdByTimestamp(updatedItem, [...SortedEvents.items, updatedItem]);
                         toggleTimeModal();
                         return updatedItem;
                     }
                 })}
             />
+
             {/* Collapse Control */}
             {!!SortedEvents.items.length ? (
                 <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8 }} onPress={toggleCollapsed}>
@@ -244,6 +209,7 @@ const SortedPlanner = ({
                     }}
                 />
             )}
+
             {/* Separator Line */}
             <ClickableLine onPress={toggleCollapsed} />
         </Card>

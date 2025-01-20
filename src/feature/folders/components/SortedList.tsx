@@ -4,14 +4,14 @@ import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flat
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import FolderItemBanner from './FolderItemBanner';
 import { getFolderFromStorage, getListFromStorage } from '../storage/folderStorage';
-import ClickableLine from '../../../foundation/sortedLists/components/ClickableLine';
-import ListTextfield from '../../../foundation/sortedLists/components/ListTextfield';
+import ListTextfield from '../../../foundation/sortedLists/components/textfield/ListTextfield';
 import GenericIcon from '../../../foundation/components/icons/GenericIcon';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import colors from '../../../foundation/theme/colors';
-import EmptyLabel from '../../../foundation/sortedLists/components/EmptyLabel';
 import { ItemStatus, ListItem, ShiftTextfieldDirection } from '../../../foundation/sortedLists/utils';
 import { FOLDER_STORAGE_ID, FolderItemType, List } from '../utils';
+import ClickableLine from '../../../foundation/sortedLists/components/separator/ClickableLine';
+import EmptyLabel from '../../../foundation/sortedLists/components/emptyLabel/EmptyLabel';
 
 interface SortableListProps {
     listId: string;
@@ -61,7 +61,7 @@ const SortedList = ({
                         <ListTextfield
                             key={`${item.id}-${item.sortId}`}
                             item={item}
-                            onChange={(text) => SortedItems.updateItem({ ...item, value: text })}
+                            onChange={(text) => SortedItems.persistItemToStorage({ ...item, value: text })}
                             onSubmit={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
                         />
                     ) : (

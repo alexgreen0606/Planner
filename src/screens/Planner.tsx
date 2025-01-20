@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import SortedPlanner from '../feature/planners/components/lists/SortedPlanner';
 import Modal from '../foundation/components/modal/Modal';
-import { generateNextSevenDayTimestamps } from '../feature/planners/utils';
-import { getFullDayEvents, getBirthdays, getHolidays } from '../feature/planners/storage/plannerStorage';
+import { generateNextSevenDayTimestamps } from '../feature/planners/timeUtils';
+import { getFullDayEvents, getBirthdays, getHolidays } from '../feature/planners/calendarUtils';
 import SortedRecurringPlanner from '../feature/planners/components/lists/SortedRecurringPlanner';
 import colors from '../foundation/theme/colors';
 import PageLabel from '../foundation/components/text/PageLabel';
@@ -19,12 +19,13 @@ const WeeklyPlanner = () => {
   const [birthdays, setBirthdays] = useState<Record<string, string[]>>();
   const [holidays, setHolidays] = useState<Record<string, string[]>>();
   const [allDayEvents, setAllDayEvents] = useState<Record<string, string[]>>();
-  const [weekdayPlannerOpen, setWeekdayPlannerOpen] = useState(false);
+  const [recurringPlannerModalOpen, setRecurringPlannerModalOpen] = useState(false);
 
-  const toggleWeekdayPlanner = () => setWeekdayPlannerOpen(!weekdayPlannerOpen);
+  const toggleRecurringPlannerModal = () => setRecurringPlannerModalOpen(curr => !curr);
 
+  // Build a collection of the next 7 days of planners
   useEffect(() => {
-    const buildWeeklyPlanner = async () => {
+    const buildPlanners = async () => {
       const timestamps = generateNextSevenDayTimestamps();
       const holidayMap = await getHolidays(timestamps);
       const birthdayMap = await getBirthdays(timestamps);
@@ -36,12 +37,13 @@ const WeeklyPlanner = () => {
       setForecasts(forecastMap);
       setAllDayEvents(allDayEvents);
     };
-
-    buildWeeklyPlanner();
+    buildPlanners();
   }, []);
 
   return (
     <View style={globalStyles.backdrop}>
+
+      {/* Page Label */}
       <PageLabel
         label='Planner'
         iconConfig={{
@@ -54,14 +56,16 @@ const WeeklyPlanner = () => {
           size: 20,
           color: colors.grey
         }}
-        control={toggleWeekdayPlanner}
+        control={toggleRecurringPlannerModal}
       />
+
+      {/* Planners */}
       <View style={{ flex: 1, justifyContent: 'center' }}>
         {!timestamps || !birthdays || !holidays || !forecasts || !allDayEvents ? (
           <ActivityIndicator color={colors.blue} />
         ) : (
           <SortableListProvider>
-            <View key={`${weekdayPlannerOpen}-weekday-modal-open`} style={{ padding: 16 }}>
+            <View key={`${recurringPlannerModalOpen}-weekday-modal-open`} style={{ padding: 16 }}>
               {timestamps.map((timestamp) =>
                 <View style={{ marginBottom: 16 }} key={`${timestamp}-planner`}>
                   <SortedPlanner
@@ -77,14 +81,16 @@ const WeeklyPlanner = () => {
           </SortableListProvider>
         )}
       </View>
+
+      {/* Recurring Planner Modal */}
       <Modal
         title='Recurring Weekday Planner'
-        open={weekdayPlannerOpen}
+        open={recurringPlannerModalOpen}
         primaryButtonConfig={{
-          onClick: toggleWeekdayPlanner,
+          onClick: toggleRecurringPlannerModal,
           label: 'Close'
         }}
-        toggleModalOpen={toggleWeekdayPlanner}
+        toggleModalOpen={toggleRecurringPlannerModal}
         iconConfig={{
           type: 'recurring-calendar',
           color: colors.blue
