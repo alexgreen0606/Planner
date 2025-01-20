@@ -1,0 +1,5 @@
+Interface: Props
+
+Function: All functions -> always show return type if exists
+
+Order of files: exported last! const, enum, type, interface, function

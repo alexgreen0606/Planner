@@ -1,41 +1,44 @@
 import { generateSortId, ListItem } from "../../foundation/sortedLists/utils";
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
-
 export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
 
-export interface Event extends ListItem {
-    timeConfig?: TimeConfig;
-    recurringConfig?: RecurringConfig;
-};
-
+// Links an event to one within the recurring weekday planner
 export interface RecurringConfig {
-    recurringId?: string; // links this event to one within the recurring weekday planner
+    recurringId?: string;
     deleted?: boolean;
 }
 
+// Links an event to one within the device calendar
 export interface TimeConfig {
-    calendarEventId?: string; // links this event to one within the device calendar
+    calendarEventId?: string;
     allDay: boolean;
     startTime: string; // HH:MM
     endTime: string; // HH:MM
     isCalendarEvent: boolean;
 };
 
-export enum TimeDropdownType {
-    START = 'START',
-    END = 'END'
+export interface Event extends ListItem {
+    timeConfig?: TimeConfig;
+    recurringConfig?: RecurringConfig;
+};
+
+export interface TimeSelectorOptions {
+    indicator: string[];
+    hour: number[];
+    minute: number[];
 }
 
 /**
- * Determines if the given timestamp is valid.
+ * Determines if the given string is a valid timestamp.
  * @param timestamp - YYYY-MM-DD
  * @returns - true if valid, else false
  */
-export const isTimestampValid = (timestamp: string) => {
+export function isTimestampValid(timestamp: string): boolean {
     const date = new Date(timestamp);
     return !isNaN(date.getTime());
 }
@@ -45,11 +48,10 @@ export const isTimestampValid = (timestamp: string) => {
  * @param timestamp - YYYY-MM-DD
  * @returns - true if a weekday, else false
  */
-export const isTimestampWeekday = (timestamp: string) => {
+export function isTimestampWeekday(timestamp: string): boolean {
     if (!isTimestampValid(timestamp)) return false;
     return WEEKDAYS.includes(timestampToDayOfWeek(timestamp));
 }
-
 
 /**
  * Combines a generic hour/minute combo with a given generic timestamp and returns a valid timestamp.
@@ -57,10 +59,9 @@ export const isTimestampWeekday = (timestamp: string) => {
  * @param timeValue - HH:MM
  * @returns - YYYY-MM-DDT00:00:00
  */
-export const timeValueToIso = (baseDate: string, timeValue: string): string => {
+export function timeValueToIso(baseDate: string, timeValue: string): string {
     const [year, month, day] = baseDate.split('-').map(Number);
     const [hour, minute] = timeValue.split(':').map(Number);
-
     const localDate = new Date(year, month - 1, day, hour, minute);
     return localDate.toISOString();
 };
@@ -70,12 +71,10 @@ export const timeValueToIso = (baseDate: string, timeValue: string): string => {
  * @param isoTimestamp - YYYY-MM-DDTHH:mm:ss.sssZ
  * @returns - HH:MM (in local time)
  */
-export const isoToTimeValue = (isoTimestamp: string): string => {
+export function isoToTimeValue(isoTimestamp: string): string {
     const date = new Date(isoTimestamp);
-
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
-
     return `${hours}:${minutes}`;
 };
 
@@ -85,23 +84,20 @@ export const isoToTimeValue = (isoTimestamp: string): string => {
  * @param time2 - The second time value (HH:MM).
  * @returns - A negative number if time1 is earlier, 0 if equal, positive if time1 is later.
  */
-export const compareTimeValues = (time1: string, time2: string): number => {
+export function compareTimeValues(time1: string, time2: string): number {
     const [hour1, minute1] = time1.split(':').map(Number);
     const [hour2, minute2] = time2.split(':').map(Number);
-
     const totalMinutes1 = hour1 * 60 + minute1;
     const totalMinutes2 = hour2 * 60 + minute2;
-
     return totalMinutes1 - totalMinutes2;
 };
-
 
 /**
  * Converts a timestamp to the day of the week for that date.
  * @param timestamp - YYYY-MM-DD
- * @returns - the day of the week
+ * @returns - the day of the week as a string
  */
-export const timestampToDayOfWeek = (timestamp: string) => {
+export function timestampToDayOfWeek(timestamp: string): string {
     const date = new Date(timestamp + 'T00:00:00');
     return DAYS_OF_WEEK[date.getDay()];
 }
@@ -111,18 +107,16 @@ export const timestampToDayOfWeek = (timestamp: string) => {
  * @param timestamp - YYYY-MM-DD
  * @returns - month and day of the format:  January 5
  */
-export const timestampToMonthDate = (timestamp: string) => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+export function timestampToMonthDate(timestamp: string): string {
     const date = new Date(timestamp + 'T00:00:00');
-    return `${months[date.getMonth()]} ${date.getDate()}`;
+    return `${MONTHS[date.getMonth()]} ${date.getDate()}`;
 }
-
 
 /**
  * Generates the timestamp for today's date in YYYY-MM-DD format.
  * @returns - today's timestamp YYYY-MM-DD
  */
-export const generateTodayTimestamp = () => {
+export function generateTodayTimestamp(): string {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -134,7 +128,7 @@ export const generateTodayTimestamp = () => {
  * Generates the timestamp for tomorrow's date in YYYY-MM-DD format.
  * @returns - tomorrow's timestamp YYYY-MM-DD
  */
-export const generateTomorrowTimestamp = () => {
+export function generateTomorrowTimestamp(): string {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1); // Move to the next day
     const year = tomorrow.getFullYear();
@@ -147,7 +141,7 @@ export const generateTomorrowTimestamp = () => {
  * Builds a list of timestamps for the next seven days from tomorrow to tomorrow + 6.
  * @returns - list of timestamps YYYY-MM-DD
  */
-export const generateNextSevenDayTimestamps = () => {
+export function generateNextSevenDayTimestamps(): string[] {
     const today = new Date();
     today.setDate(today.getDate() + 1);
     return Array.from({ length: 7 }, (_, i) => {
@@ -166,7 +160,7 @@ export const generateNextSevenDayTimestamps = () => {
  * @param planner - the planner containing the event
  * @returns - the new sort ID for the event
  */
-export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
+export function generateSortIdByTimestamp(event: Event, planner: Event[]): number {
     const plannerCopy = [...planner];
     const plannerWithoutEvent = plannerCopy.filter(curr => curr.id !== event.id);
     if (!event.timeConfig) return event.sortId === -1 ?
@@ -228,64 +222,55 @@ export const generateSortIdByTimestamp = (event: Event, planner: Event[]) => {
     throw new Error('An error occurred during sort ID generation.')
 };
 
-export interface TimeObject {
-    indicator: string[];
-    hour: number[];
-    minute: number[];
-}
-
 /**
- * TODO: fix comments Generates an object with arrays for indicators, hours, and minutes.
+ * Generates an object with arrays for indicators, hours, and minutes.
  * @returns - an object with arrays for indicators, hours, and minutes
  */
-export const generateTimeArrays = (): TimeObject => {
-    const timeObject: TimeObject = {
-        indicator: ["AM", "PM"], // Two possible values: "AM" and "PM"
-        hour: [], // Hours from 1 to 12
-        minute: [], // Minutes in 5-minute intervals
+export function generateTimeSelectorOptions(): TimeSelectorOptions {
+    const timeObject: TimeSelectorOptions = {
+        indicator: ["AM", "PM"],
+        hour: [], // Hours from 0 to 11
+        minute: [], // Minutes in 5-minute intervals (0 to 55)
     };
-
-    // Populate the hour array with values from 12 to 12, padded with zeros
     for (let hour = 0; hour <= 11; hour++) {
         timeObject.hour.push(hour);
-    }
-
-    // Populate the minute array with 5-minute intervals (00, 05, 10, ..., 55), padded with zeros
+    };
     for (let minute = 0; minute < 60; minute += 5) {
         timeObject.minute.push(minute);
-    }
-
+    };
     return timeObject;
 };
 
-export const extractTimeValue = (text: string) => {
+/**
+ * Parses the given text to find any time values. If one exists, it will be removed and a time object
+ * will be generated representing this time of day.
+ * @param text - user input
+ * @returns - the text with the time value removed, and a time object representing the time value
+ */
+export function extractTimeValue(text: string): { timeConfig: TimeConfig | undefined, updatedText: string } {
+    let timeConfig = undefined;
+    let updatedText = text;
+
     // Use regex to find a time value typed in (HH:MM (PM or AM))
     const timeRegex = /\b(1[0-2]|[1-9])(?::(0[0-5]|[1-5][0-9]))?\s?(AM|PM|am|pm|Am|aM|pM|Pm)\b/;
     const match = text.match(timeRegex);
-
-    let timeConfig = null;
-    let updatedText = text;
-
     if (match) {
         // Extract the matched time and remove it from the text
         const timeValue = match[0];
         updatedText = text.replace(timeValue, "").trim();
 
         // Convert timeValue to 24-hour format (HH:MM)
-        let hours = parseInt(match[1], 10); // Group 1: Hours
-        const minutes = match[2] ? parseInt(match[2], 10) : 0; // Group 2: Minutes (default to 0 if not present)
-        const period = match[3].toUpperCase(); // Group 3: AM/PM
-
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+        const period = match[3].toUpperCase();
         if (period === "PM" && hours !== 12) {
-            hours += 12; // Convert PM hours to 24-hour format
+            hours += 12;
         } else if (period === "AM" && hours === 12) {
-            hours = 0; // Convert 12 AM to 0
+            hours = 0;
         }
-
-        // Format hours and minutes as HH:MM
         const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
-        // Create a timeConfig object
+        // Build the object representing this time
         timeConfig = {
             startTime: formattedTime,
             endTime: "23:55",
@@ -293,6 +278,5 @@ export const extractTimeValue = (text: string) => {
             allDay: false,
         };
     }
-
     return { timeConfig, updatedText };
 }
