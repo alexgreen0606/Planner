@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import useSortedList, { StorageConfigType } from '../../../../foundation/sortedLists/hooks/useSortedList';
+import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from '../banner/DayBanner';
-import { persistEvent, deleteEvent } from '../../storage/plannerStorage';
+import { persistEvent, deleteEvent, buildPlanner } from '../../storage/plannerStorage';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import Time from '../info/Time';
@@ -14,9 +14,8 @@ import Card from '../../../../foundation/components/card/Card';
 import Chip from '../info/Chip';
 import { WeatherForecast } from '../../../../foundation/weather/types';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
-import { ItemStatus } from '../../../../foundation/sortedLists/utils';
+import { isItemDeleting, ItemStatus } from '../../../../foundation/sortedLists/utils';
 import ClickableLine from '../../../../foundation/sortedLists/components/separator/ClickableLine';
-import EmptyLabel from '../../../../foundation/sortedLists/components/emptyLabel/EmptyLabel';
 
 interface SortablePlannerProps {
     timestamp: string;
@@ -37,15 +36,18 @@ const SortedPlanner = ({
     const [collapsed, setCollapsed] = useState(false);
 
     const toggleCollapsed = () => setCollapsed(curr => !curr);
-    const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
+
+    const toggleTimeModal = async (item: Event) => {
+        await SortedEvents.convertItemToTextfield(item);
+        setTimeModalOpen(curr => !curr);
+    };
 
     // Stores the current planner and all handler functions to update it
     const SortedEvents = useSortedList<Event, Event[]>(
         timestamp,
         PLANNER_STORAGE_ID,
-        (planner) => planner,
+        (planner) => buildPlanner(timestamp, planner),
         {
-            type: StorageConfigType.HANDLERS,
             customStorageHandlers: {
                 create: persistEvent,
                 update: persistEvent,
@@ -128,13 +130,14 @@ const SortedPlanner = ({
             )}
 
             {/* Planner List */}
-            <SortableList<Event, TimeModalProps>
+            <SortableList<Event, never, TimeModalProps>
                 listId={timestamp}
+                loading={SortedEvents.loading}
                 items={SortedEvents.items}
                 getLeftIconConfig={item => ({
                     icon: {
-                        type: item.status === ItemStatus.DELETE ? 'circle-filled' : 'circle',
-                        color: item.status === ItemStatus.DELETE ? colors.blue : colors.grey
+                        type: isItemDeleting(item) ? 'circle-filled' : 'circle',
+                        color: isItemDeleting(item) ? colors.blue : colors.grey
                     },
                     onClick: SortedEvents.toggleDeleteItem
                 })}
@@ -150,9 +153,11 @@ const SortedPlanner = ({
                     if (!item.timeConfig) {
                         const { timeConfig, updatedText } = extractTimeValue(text);
                         if (timeConfig) {
+                            const eventsWithItem = item.status === ItemStatus.EDIT ?
+                                SortedEvents.items : [...SortedEvents.items, item];
                             newEvent.timeConfig = timeConfig;
                             newEvent.value = updatedText;
-                            newEvent.sortId = generateSortIdByTimestamp(newEvent, SortedEvents.items);
+                            newEvent.sortId = generateSortIdByTimestamp(newEvent, eventsWithItem);
                         }
                     }
                     return newEvent;
@@ -176,15 +181,17 @@ const SortedPlanner = ({
                         timestamp: timestamp
                     },
                     onSave: (updatedItem: Event) => {
-                        updatedItem.sortId = generateSortIdByTimestamp(updatedItem, [...SortedEvents.items, updatedItem]);
-                        toggleTimeModal();
+                        const eventsWithItem = updatedItem.status === ItemStatus.EDIT ?
+                                SortedEvents.items : [...SortedEvents.items, updatedItem];
+                        updatedItem.sortId = generateSortIdByTimestamp(updatedItem, eventsWithItem);
+                        toggleTimeModal(updatedItem);
                         return updatedItem;
                     }
                 })}
             />
 
             {/* Collapse Control */}
-            {!!SortedEvents.items.length ? (
+            {!!SortedEvents.items.length && (
                 <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8 }} onPress={toggleCollapsed}>
                     <GenericIcon
                         type={collapsed ? 'chevron-right' : 'chevron-up'}
@@ -199,19 +206,7 @@ const SortedPlanner = ({
                         {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
                     </CustomText>
                 </TouchableOpacity>
-            ) : (
-                <EmptyLabel
-                    label='No Plans!'
-                    iconConfig={{
-                        type: 'celebrate',
-                        color: colors.grey,
-                        size: 16
-                    }}
-                />
             )}
-
-            {/* Separator Line */}
-            <ClickableLine onPress={toggleCollapsed} />
         </Card>
     );
 };

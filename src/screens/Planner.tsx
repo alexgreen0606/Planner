@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import SortedPlanner from '../feature/planners/components/lists/SortedPlanner';
 import Modal from '../foundation/components/modal/Modal';
 import { generateNextSevenDayTimestamps } from '../feature/planners/timeUtils';
@@ -96,10 +96,20 @@ const WeeklyPlanner = () => {
           color: colors.blue
         }}
       >
-        <SortedRecurringPlanner />
+        <View style={styles.container}>
+          <SortableListProvider>
+            <SortedRecurringPlanner />
+          </SortableListProvider>
+        </View>
       </Modal>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    height: 600
+  }
+});
 
 export default WeeklyPlanner;

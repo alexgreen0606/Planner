@@ -79,6 +79,10 @@ export function generateSortId(
     throw new Error('Error generating sort ID.')
 }
 
-export function isItemEditing(item: ListItem) {
-    return item.status !== ItemStatus.STATIC;
+export function isItemTextfield(item: ListItem) {
+    return [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
+};
+
+export function isItemDeleting(item: ListItem) {
+    return item.status === ItemStatus.DELETE;
 };

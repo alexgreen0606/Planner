@@ -14,14 +14,14 @@
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>For weather</string>
     <key>CFBundleName</key>
     <string>$(PRODUCT_NAME)</string>
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0.0</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>When in use or always.</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -46,6 +46,11 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>UIAppFonts</key>
+    <array>
+      <string>Jersey15-Regular.ttf</string>
+      <string>Orbitron-VariableFont_wght.ttf</string>
+    </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

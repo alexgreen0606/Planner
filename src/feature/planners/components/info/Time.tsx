@@ -7,22 +7,28 @@ interface TimeProps {
 }
 
 const Time = ({ timeValue }: TimeProps) => {
-    const [time, setTime] = useState('');
+    const [hour, setHour] = useState('');
+    const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
 
     // Calculate the time, minutes, and indicator for the given time
     useEffect(() => {
         let [hour, minute] = timeValue.split(':').map(Number);
+        const minuteString = String(minute).padStart(2, '0');
         setIndicator(hour >= 12 ? 'PM' : 'AM');
         hour = hour >= 12 ? hour - 12 : hour;
         hour = hour === 0 ? 12 : hour;
-        setTime(`${hour}${minute !== 0 ? `:${minute}` : ''}`);
+        setHour(String(hour));
+        setMinute(minute !== 0 ? `:${minuteString}` : '')
     }, [timeValue])
 
     return (
         <View style={styles.container}>
-            <Text style={styles.time}>{time}</Text>
-            <Text style={styles.indicator}>{indicator}</Text>
+            <Text style={styles.hour}>{hour}</Text>
+            <View style={styles.details}>
+                <Text style={styles.minute}>{minute}</Text>
+                <Text style={styles.indicator}>{indicator}</Text>
+            </View>
         </View>
     );
 };
@@ -32,14 +38,33 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
     },
-    time: {
-        fontSize: 16,
-        color: colors.orange
+    hour: {
+        fontSize: 24,
+        fontFamily: 'Jersey15-Regular',
+        color: colors.orange,
+        height: 25
+    },
+    details: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%'
+    },
+    minute: {
+        fontSize: 14,
+        paddingTop: 2,
+        fontFamily: 'Jersey15-Regular',
+        color: colors.orange,
+        height: '50%',
+        textAlignVertical: 'bottom'
     },
     indicator: {
-        marginLeft: 2,
-        fontSize: 10,
-        color: colors.white
+        fontSize: 7.5,
+        height: '50%',
+        color: colors.white,
+        textAlignVertical: 'bottom',
+        width: '100%',
+        textAlign: 'right',
+        fontWeight: 600
     }
 });
 

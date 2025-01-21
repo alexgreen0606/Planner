@@ -14,14 +14,19 @@ import {
 } from '../../utils';
 import ClickableLine from '../separator/ClickableLine';
 import DraggableRow from './DraggableRow';
+import EmptyLabel from '../emptyLabel/EmptyLabel';
+import colors from '../../../theme/colors';
 
-// TODO: handle height of long texts
-
-export interface DraggableListProps<T extends ListItem, P extends ListItemUpdateComponentProps<T>> {
+export interface DraggableListProps<
+    T extends ListItem,
+    P extends ListItemUpdateComponentProps<T> = never,
+    M extends ListItemUpdateComponentProps<T> = never,
+> {
     listId: string;
     items: T[];
-    hideList: boolean;
-    onSaveTextfield: (updatedItem?: T) => Promise<void> | void;
+    hideList?: boolean;
+    loading: boolean;
+    onSaveTextfield: (updatedItem: T) => Promise<void> | void;
     onDeleteItem: (item: T) => Promise<void> | void;
     onContentClick: (item: T) => void;
     getLeftIconConfig?: (item: T) => RowIconConfig<T>;
@@ -30,14 +35,14 @@ export interface DraggableListProps<T extends ListItem, P extends ListItemUpdate
     handleValueChange?: (text: string, item: T) => T;
     getRowTextColor?: (item: T) => string;
     getPopovers?: (item: T) => ListItemUpdateComponentConfig<T, P>[];
-    getModal?: (item: T) => ListItemUpdateComponentConfig<T, P>;
+    getModal?: (item: T) => ListItemUpdateComponentConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
 }
 
 /**
  * Builds a map linking each item to its index in the list.
  */
-function buildItemPositions<T extends ListItem>(currentList: T[]) {
+function buildItemPositions<T extends ListItem>(currentList: T[]): Record<string, number> {
     'worklet';
     return [...currentList]
         .sort((a, b) => a.sortId - b.sortId)
@@ -47,16 +52,23 @@ function buildItemPositions<T extends ListItem>(currentList: T[]) {
         }, {});
 };
 
-const SortableList = <T extends ListItem, M extends ListItemUpdateComponentProps<T>>(props: DraggableListProps<T, M>) => {
+const SortableList = <
+    T extends ListItem,
+    P extends ListItemUpdateComponentProps<T>,
+    M extends ListItemUpdateComponentProps<T>
+>(props: DraggableListProps<T, P, M>) => {
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
 
     /**
      * Saves the existing textfield to storage and generates a new one at the requested position.
      * @param parentSortId - the sort ID of the item the new textfield must go below
      */
-    const saveTextfieldAndCreateNew = async (parentSortId: number) => {
-        if (currentTextfield && currentTextfield.value.trim() !== '')
-            await props.onSaveTextfield();
+    async function saveTextfieldAndCreateNew(parentSortId: number) {
+        if (currentTextfield && currentTextfield.value.trim() !== '') {
+            const staticItem = { ...currentTextfield, status: ItemStatus.STATIC };
+            setCurrentTextfield(undefined);
+            await props.onSaveTextfield(staticItem);
+        }
         let newTextfield = {
             id: uuid.v4(),
             sortId: generateSortId(parentSortId, currentList),
@@ -77,7 +89,7 @@ const SortableList = <T extends ListItem, M extends ListItemUpdateComponentProps
         )
             fullList.push(currentTextfield);
         return fullList;
-    }, [currentTextfield, props.items]);
+    }, [currentTextfield, props.items, props.loading]);
 
     // Derive positions out of the current list
     const positions = useDerivedValue(() => buildItemPositions<T>(currentList), [currentList]);
@@ -91,7 +103,7 @@ const SortableList = <T extends ListItem, M extends ListItemUpdateComponentProps
                     position: 'relative',
                 }}>
                     {currentList.map((item) =>
-                        <DraggableRow<T, M>
+                        <DraggableRow<T, P, M>
                             key={`${item.id}-row`}
                             item={item}
                             positions={positions}
@@ -102,6 +114,16 @@ const SortableList = <T extends ListItem, M extends ListItemUpdateComponentProps
                         />
                     )}
                 </View>
+            )}
+            {currentList.length === 0 && (
+                <EmptyLabel
+                    label='Empty Placeholder'
+                    iconConfig={{
+                        type: 'celebrate',
+                        color: colors.grey,
+                        size: 16
+                    }}
+                />
             )}
         </View>
     )

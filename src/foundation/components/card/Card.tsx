@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         paddingHorizontal: 16,
-        paddingBottom: 8
+        paddingVertical: 8
     }
 });
 

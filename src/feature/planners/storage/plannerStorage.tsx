@@ -181,20 +181,14 @@ function syncPlannerWithRecurring(recurringPlanner: Event[], currentPlanner: Eve
 /**
  * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
  */
-export async function buildPlanner(plannerId: string): Promise<Event[]> {
+export async function buildPlanner(plannerId: string, planner: Event[]): Promise<Event[]> {
 
     // Keep the storage clean by deleting any past planners
     deletePastPlanners();
 
-    let planner = getPlannerFromStorage(plannerId);
-
-    // Return the recurring weekday planner
-    if (plannerId === RECURRING_WEEKDAY_PLANNER_KEY)
-        return planner;
-
     // Sync the planner with the recurring weekday planner
     if (isTimestampWeekday(plannerId) && plannerId === generateTomorrowTimestamp()) {
-        const recurringPlanner = await buildPlanner(RECURRING_WEEKDAY_PLANNER_KEY);
+        const recurringPlanner = getPlannerFromStorage(RECURRING_WEEKDAY_PLANNER_KEY);
         planner = syncPlannerWithRecurring(recurringPlanner, planner, plannerId);
     }
 

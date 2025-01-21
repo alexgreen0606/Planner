@@ -3,3 +3,7 @@ Interface: Props
 Function: All functions -> always show return type if exists
 
 Order of files: exported last! const, enum, type, interface, function
+
+Comments: always preceded by an empty line
+
+Interfaces and Types: if props, always in pertaining file.
