@@ -2,9 +2,8 @@ import React, { ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button, Dialog, Portal } from 'react-native-paper';
 import globalStyles from '../../theme/globalStyles';
-import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import GenericIcon, { GenericIconProps, IconType } from '../icons/GenericIcon';
+import GenericIcon, { GenericIconProps } from '../icons/GenericIcon';
 import CustomText from '../text/CustomText';
 import colors from '../../theme/colors';
 
@@ -34,45 +33,43 @@ const Modal = ({
 }: ModalProps) =>
     <Portal>
         <GestureHandlerRootView>
-            <PlannerProvider>
-                <Dialog theme={{ colors: { backdrop: 'black' } }} style={styles.container} visible={open} onDismiss={toggleModalOpen}>
-                    <Dialog.Title>
-                        <View style={styles.label}>
-                            {iconConfig && (
-                                <GenericIcon
-                                    {...iconConfig}
-                                    size={20}
-                                />
-                            )}
-                            <CustomText type='header'>
-                                {title}
+            <Dialog theme={{ colors: { backdrop: 'black' } }} style={styles.container} visible={open} onDismiss={toggleModalOpen}>
+                <Dialog.Title>
+                    <View style={styles.label}>
+                        {iconConfig && (
+                            <GenericIcon
+                                {...iconConfig}
+                                size={20}
+                            />
+                        )}
+                        <CustomText type='header'>
+                            {title}
+                        </CustomText>
+                        <View style={styles.subTitle}>
+                            <CustomText type='label'>
+                                {subTitle}
                             </CustomText>
-                            <View style={styles.subTitle}>
-                                <CustomText type='label'>
-                                    {subTitle}
-                                </CustomText>
-                            </View>
                         </View>
-                    </Dialog.Title>
-                    <Dialog.Content style={{ marginHorizontal: 16 }}>
-                        {children}
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <View style={globalStyles.spacedApart}>
-                            <Button textColor={colors.grey} onPress={toggleModalOpen}>Cancel</Button>
-                            {primaryButtonConfig && (
-                                <Button
-                                    disabled={primaryButtonConfig.disabled}
-                                    textColor={primaryButtonConfig.color || colors.blue}
-                                    onPress={primaryButtonConfig.onClick}
-                                >
-                                    {primaryButtonConfig.label}
-                                </Button>
-                            )}
-                        </View>
-                    </Dialog.Actions>
-                </Dialog>
-            </PlannerProvider>
+                    </View>
+                </Dialog.Title>
+                <Dialog.Content style={{ marginHorizontal: 16 }}>
+                    {children}
+                </Dialog.Content>
+                <Dialog.Actions>
+                    <View style={globalStyles.spacedApart}>
+                        <Button textColor={colors.grey} onPress={toggleModalOpen}>Cancel</Button>
+                        {primaryButtonConfig && (
+                            <Button
+                                disabled={primaryButtonConfig.disabled}
+                                textColor={primaryButtonConfig.color || colors.blue}
+                                onPress={primaryButtonConfig.onClick}
+                            >
+                                {primaryButtonConfig.label}
+                            </Button>
+                        )}
+                    </View>
+                </Dialog.Actions>
+            </Dialog>
         </GestureHandlerRootView>
     </Portal>
 

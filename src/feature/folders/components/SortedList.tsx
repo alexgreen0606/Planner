@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import FolderItemBanner from './FolderItemBanner';
 import { getFolderFromStorage, getListFromStorage } from '../storage/folderStorage';

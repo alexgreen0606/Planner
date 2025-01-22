@@ -1,4 +1,4 @@
-import { generateSortId, ListItem } from "../../foundation/sortedLists/utils";
+import { generateSortId, getParentSortId, ListItem } from "../../foundation/sortedLists/utils";
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -157,20 +157,48 @@ export function generateNextSevenDayTimestamps(): string[] {
 /**
  * Generate a new sort ID for the event that maintains time logic within the planner.
  * @param event - the event to place
- * @param planner - the planner containing the event
+ * @param planner - the planner (MUST contain the event)
  * @returns - the new sort ID for the event
  */
-export function generateSortIdByTimestamp(event: Event, planner: Event[]): number {
-    const plannerCopy = [...planner];
-    const plannerWithoutEvent = plannerCopy.filter(curr => curr.id !== event.id);
-    if (!event.timeConfig) return event.sortId === -1 ?
-        generateSortId(-1, plannerWithoutEvent) :
-        event.sortId;
+export function generateSortIdByTimestamp(event: Event, planner: Event[], fallbackSortId?: number): number {
+    const existingPlannerEvents = planner.filter(event => !event.recurringConfig?.deleted && !event.timeConfig?.allDay);
+    const plannerWithoutEvent = existingPlannerEvents.filter(curr => curr.id !== event.id);
 
-    plannerCopy.sort((a, b) => a.sortId - b.sortId);
+    // Handler for situations where the item can remain in its position.
+    const persistEventPosition = () => {
+        if (event.sortId === -1) {
+
+            // Event will be at the top of the list
+            return generateSortId(-1, plannerWithoutEvent);
+        } 
+        // else if (!existingPlannerEvents.find(item => item.id === event.id)) {
+
+        //     // Event will be removed. Return its sort ID to replace it with a new item.
+        //     console.log(`Returning same sort ID for textfield because ${event.value} will be removed.`);
+        //     return event.sortId;
+
+        //     // generateSortId(getParentSortId(event, planner), existingPlannerEvents);
+        // } else 
+        
+        if (plannerWithoutEvent.find(item => item.sortId === event.sortId)) {
+
+            // Event has a duplicate sort ID. Generate a new one.
+            console.log(`Generating new sort ID for ${event.value}`);
+            return generateSortId(getParentSortId(event, existingPlannerEvents), plannerWithoutEvent);
+        } else {
+
+            // Use the event's current position.
+            return event.sortId;
+        }
+    }
+
+    // The event does not need to account for a timestamp
+    if (!event.timeConfig || event.timeConfig.allDay) return persistEventPosition();
+
+    existingPlannerEvents.sort((a, b) => a.sortId - b.sortId);
 
     // Check if the event conflicts at its current position
-    const eventsWithTimes = plannerCopy.filter(existingEvent => !!existingEvent.timeConfig || (existingEvent.id === event.id));
+    const eventsWithTimes = existingPlannerEvents.filter(existingEvent => !!existingEvent.timeConfig || (existingEvent.id === event.id));
     const currentIndex = eventsWithTimes.findIndex(e => e.id === event.id);
     if (currentIndex !== -1) {
 
@@ -181,13 +209,16 @@ export function generateSortIdByTimestamp(event: Event, planner: Event[]): numbe
             (!prevEvent || (prevEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, prevEvent.timeConfig.startTime) >= 0)) &&
             (!nextEvent || (nextEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, nextEvent.timeConfig.startTime) < 0));
 
-        if (hasNoConflict) return event.sortId === -1 ? generateSortId(-1, plannerWithoutEvent) : event.sortId;
+        console.log(hasNoConflict, 'has no conflict')
+        if (hasNoConflict) return persistEventPosition();
     } else {
-        throw new Error('generateSortIdByTimestamp: Event does not exist in the planner.');
+        throw new Error(`Event ${event.value} does not exist in the given planner.`);
     }
 
+    if (fallbackSortId) return fallbackSortId;
+
     // Find the first event that starts after or during the new event
-    const eventThatStartsAfterIndex = plannerCopy.findIndex(existingEvent => {
+    const eventThatStartsAfterIndex = existingPlannerEvents.findIndex(existingEvent => {
         if (!existingEvent.timeConfig || !event.timeConfig || existingEvent.id === event.id) return false;
         return compareTimeValues(event.timeConfig.startTime, existingEvent.timeConfig.startTime) <= 0;
     });
@@ -195,15 +226,15 @@ export function generateSortIdByTimestamp(event: Event, planner: Event[]): numbe
     // Place the new event before the event that starts after it
     if (eventThatStartsAfterIndex !== -1) {
         const newParentSortId = eventThatStartsAfterIndex > 0
-            ? plannerCopy[eventThatStartsAfterIndex - 1].sortId
+            ? existingPlannerEvents[eventThatStartsAfterIndex - 1].sortId
             : -1;
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 
     // Find the last event that starts before the current event
     let eventThatStartsBeforeIndex = -1;
-    for (let i = plannerCopy.length - 1; i >= 0; i--) {
-        const existingEvent = plannerCopy[i];
+    for (let i = existingPlannerEvents.length - 1; i >= 0; i--) {
+        const existingEvent = existingPlannerEvents[i];
         if (!existingEvent.timeConfig || existingEvent.id === event.id) continue;
 
         // This event starts before the current event
@@ -215,7 +246,7 @@ export function generateSortIdByTimestamp(event: Event, planner: Event[]): numbe
 
     // Place the new event after the event that starts before it
     if (eventThatStartsBeforeIndex !== -1) {
-        const newParentSortId = plannerCopy[eventThatStartsBeforeIndex].sortId;
+        const newParentSortId = existingPlannerEvents[eventThatStartsBeforeIndex].sortId;
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 

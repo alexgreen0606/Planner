@@ -31,7 +31,7 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/Jersey15-Regular.ttf",
+            "./assets/fonts/Jersey15-Regular.ttf"
           ]
         }
       ]

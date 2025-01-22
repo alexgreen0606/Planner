@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import TimeModal from '../modal/TimeModal';
 import Time from '../info/Time';
-import { Event, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../timeUtils';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../timeUtils';
 import colors from '../../../../foundation/theme/colors';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
+import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
 
-const SortedRecurringPlanner = () => {
+interface SortedRecurringPlannerProps {
+    modalOpen: boolean;
+}
+
+const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
+    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     const toggleTimeModal = () => setTimeModalOpen(curr => !curr);
 
     // Creates a new textfield linked to the recurring planner
-    function initializeNewEvent(item: ListItem) {
+    function initializeNewEvent(item: ListItem): Event {
         return {
             ...item,
             recurringConfig: {
@@ -28,10 +34,17 @@ const SortedRecurringPlanner = () => {
         PLANNER_STORAGE_ID,
     );
 
+    // Save the textfield when the modal closes
+    useEffect(() => {
+        if (!modalOpen && currentTextfield) {
+            SortedEvents.persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
+            setCurrentTextfield(undefined);
+        }
+    }, [modalOpen]);
+
     return (
         <SortableList<Event, never, never>
             items={SortedEvents.items}
-            loading={SortedEvents.loading}
             listId={RECURRING_WEEKDAY_PLANNER_KEY}
             getLeftIconConfig={item => ({
                 icon: {
@@ -44,6 +57,7 @@ const SortedRecurringPlanner = () => {
             getTextfieldKey={item => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
             onSaveTextfield={SortedEvents.persistItemToStorage}
             onDeleteItem={SortedEvents.deleteItemFromStorage}
+            onDragEnd={async (item) => {await SortedEvents.persistItemToStorage(item)}}
             onContentClick={SortedEvents.convertItemToTextfield}
             getRightIconConfig={item => ({
                 hideIcon: item.status === ItemStatus.STATIC && !item.timeConfig,
@@ -52,8 +66,25 @@ const SortedRecurringPlanner = () => {
                     color: colors.grey
                 },
                 onClick: toggleTimeModal,
-                customIcon: !!item.timeConfig?.startTime ? <Time timeValue={item.timeConfig?.startTime} /> : undefined
+                customIcon: !!item.timeConfig?.startTime ? <Time allDay={false} timeValue={item.timeConfig?.startTime} /> : undefined
             })}
+            handleValueChange={(text, item) => {
+                const newEvent = {
+                    ...item,
+                    value: text,
+                };
+                if (!item.timeConfig) {
+                    const { timeConfig, updatedText } = extractTimeValue(text);
+                    if (timeConfig) {
+                        const eventsWithItem = item.status === ItemStatus.EDIT ?
+                            SortedEvents.items : [...SortedEvents.items, item];
+                        newEvent.timeConfig = timeConfig;
+                        newEvent.value = updatedText;
+                        newEvent.sortId = generateSortIdByTimestamp(newEvent, eventsWithItem);
+                    }
+                }
+                return newEvent;
+            }}
             getModal={item => ({
                 component: TimeModal,
                 props: {

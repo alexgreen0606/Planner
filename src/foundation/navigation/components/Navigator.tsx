@@ -1,9 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Dashboard from '../../../screens/Dashboard';
-import WeeklyPlanner from '../../../screens/Planner';
+import Planner from '../../../screens/Planner';
 import Lists from '../../../screens/Lists';
-import { PlannerProvider } from '../../../feature/planners/services/PlannerProvider';
 import { useNavigatorContext } from '../services/TabsProvider';
 import GenericIcon from '../../components/icons/GenericIcon';
 import colors from '../../theme/colors';
@@ -18,11 +17,6 @@ const routeIconMap: Record<string, string> = {
     [Pages.PLANNER]: 'planner',
     [Pages.LISTS]: 'lists'
 }
-
-const WeeklyPlannerWithProviders = () =>
-    <PlannerProvider>
-        <WeeklyPlanner />
-    </PlannerProvider>
 
 const Navigator = () => {
     const { setCurrentTab } = useNavigatorContext();
@@ -59,7 +53,7 @@ const Navigator = () => {
                 <Tab.Screen name={Pages.DASHBOARD} component={Dashboard} listeners={{
                     focus: () => setCurrentTab(Pages.DASHBOARD)
                 }} />
-                <Tab.Screen name={Pages.PLANNER} component={WeeklyPlannerWithProviders} listeners={{
+                <Tab.Screen name={Pages.PLANNER} component={Planner} listeners={{
                     focus: () => setCurrentTab(Pages.PLANNER)
                 }} />
             </Tab.Navigator>

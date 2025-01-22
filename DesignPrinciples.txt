@@ -7,3 +7,5 @@ Order of files: exported last! const, enum, type, interface, function
 Comments: always preceded by an empty line
 
 Interfaces and Types: if props, always in pertaining file.
+
+Naming: 'get' for things that exist, 'generate' for creating new things

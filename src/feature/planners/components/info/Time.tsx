@@ -4,9 +4,10 @@ import colors from '../../../../foundation/theme/colors';
 
 interface TimeProps {
     timeValue: string; // HH:MM
+    allDay: boolean;
 }
 
-const Time = ({ timeValue }: TimeProps) => {
+const Time = ({ timeValue, allDay }: TimeProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
@@ -22,7 +23,7 @@ const Time = ({ timeValue }: TimeProps) => {
         setMinute(minute !== 0 ? `:${minuteString}` : '')
     }, [timeValue])
 
-    return (
+    return !allDay ? (
         <View style={styles.container}>
             <Text style={styles.hour}>{hour}</Text>
             <View style={styles.details}>
@@ -30,7 +31,12 @@ const Time = ({ timeValue }: TimeProps) => {
                 <Text style={styles.indicator}>{indicator}</Text>
             </View>
         </View>
-    );
+    ) : (
+        <View>
+            <Text style={styles.all}>ALL</Text>
+            <Text style={styles.day}>DAY</Text>
+        </View>
+    )
 };
 
 
@@ -65,6 +71,21 @@ const styles = StyleSheet.create({
         width: '100%',
         textAlign: 'right',
         fontWeight: 600
+    },
+    all: {
+        height: '50%',
+        fontSize: 15,
+        color: colors.orange,
+        textAlign: 'center',
+        letterSpacing: .6,
+        fontFamily: 'Jersey15-Regular',
+    },
+    day: {
+        height: '50%',
+        fontSize: 15,
+        color: colors.orange,
+        textAlign: 'center',
+        fontFamily: 'Jersey15-Regular',
     }
 });
 

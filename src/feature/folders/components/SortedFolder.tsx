@@ -17,7 +17,6 @@ import colors from '../../../foundation/theme/colors';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import Popover from './FolderItemPopover';
 import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../utils';
-import { isItemEditing, ItemStatus, ShiftTextfieldDirection } from '../../../foundation/sortedLists/utils';
 import { Pages } from '../../../foundation/navigation/utils';
 import DeleteModal from './DeleteModal';
 import ClickableLine from '../../../foundation/sortedLists/components/separator/ClickableLine';
@@ -206,7 +205,6 @@ const SortedFolder = ({
             />
             <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(-1)} />
             <View style={{ flex: 1, justifyContent: 'center' }}>
-                {SortedItems.items.length !== 0 ? (
                     <SortableList<FolderItem>
                         items={SortedItems.items}
                         endDrag={SortedItems.endDragItem}
@@ -241,19 +239,17 @@ const SortedFolder = ({
                             onClick: () => SortedItems.beginEditItem(item)
                         })}
                     />
-                ) : (
-                    <EmptyLabel
-                        label="It's a ghost town in here."
-                        iconConfig={{
-                            type: 'ghost',
-                            size: 26,
-                            color: colors.grey,
-                        }}
-                        customFontSize={14}
-                        onPress={() => SortedItems.createOrMoveTextfield(-1)}
-                        style={{ flexDirection: 'column' }}
-                    />
-                )}
+                    {/* // <EmptyLabel
+                    //     label="It's a ghost town in here."
+                    //     iconConfig={{
+                    //         type: 'ghost',
+                    //         size: 26,
+                    //         color: colors.grey,
+                    //     }}
+                    //     customFontSize={14}
+                    //     onPress={() => SortedItems.createOrMoveTextfield(-1)}
+                    //     style={{ flexDirection: 'column' }}
+                    // /> */}
             </View>
         </View>
     );

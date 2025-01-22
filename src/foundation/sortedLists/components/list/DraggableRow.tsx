@@ -1,8 +1,16 @@
-import Animated, { runOnJS, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from "react-native-reanimated";
-import { generateSortId, isItemTextfield, ItemStatus, LIST_ITEM_HEIGHT, ListItem, ListItemUpdateComponentProps } from "../../utils";
+import Animated, { runOnJS, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue } from "react-native-reanimated";
+import {
+    generateSortId,
+    isItemDeleting,
+    isItemTextfield,
+    ItemStatus,
+    LIST_ITEM_HEIGHT,
+    ListItem,
+    ListItemUpdateComponentProps
+} from "../../utils";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
@@ -15,7 +23,7 @@ interface RowProps<
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T> = never,
     M extends ListItemUpdateComponentProps<T> = never
-> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'hideList' | 'listId'> {
+> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield'> {
     item: T;
     positions: SharedValue<Record<string, number>>;
     saveTextfieldAndCreateNew: (parentSortId: number) => Promise<void>;
@@ -44,17 +52,20 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     getRightIconConfig,
     getModal,
     handleValueChange,
-    onSaveTextfield,
     getRowTextColor,
     onContentClick,
     getPopovers,
     onDeleteItem,
     saveTextfieldAndCreateNew,
-    listLength
+    listLength,
+    onDragEnd
 }: RowProps<T, P, M>) => {
     const { scroll } = useSortableListContext();
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
-    const item = useMemo(() => currentTextfield?.id === staticItem.id ? currentTextfield : staticItem, [currentTextfield, staticItem]);
+    const item = useMemo(() =>
+        currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
+        [currentTextfield, staticItem]
+    );
     const isDragging = useSharedValue(false);
     const top = useSharedValue(positions.value[item.id] * LIST_ITEM_HEIGHT);
     const initialGestureTime = useSharedValue(-1);
@@ -70,7 +81,9 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     const modalConfig = useMemo(() => getModal?.(item), [item, getModal]);
     const popoverConfigs = useMemo(() => getPopovers?.(item), [item, getPopovers]);
     const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
-    const Popovers = useMemo(() => popoverConfigs?.map(config => config.component), [popoverConfigs]);
+    const Popovers = useMemo(() => popoverConfigs?.map(config => config.component),
+        [popoverConfigs]
+    );
 
     /**
      * Resets the state of the row back to default.
@@ -164,7 +177,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                 // end row drag
                 const newParentSortId = getParentSortId(item, positions, items);
                 const newSortId = generateSortId(newParentSortId, items);
-                runOnJS(onSaveTextfield)({ ...item, sortId: newSortId });
+                runOnJS(onDragEnd)({ ...item, sortId: newSortId });
             }
             resetGestureValues();
         });
@@ -193,8 +206,8 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     // Set the row's position
     useDerivedValue(() => {
         if (!isDragging.value)
-            top.value = item.status === ItemStatus.NEW ? positions.value[item.id] * LIST_ITEM_HEIGHT : withSpring(positions.value[item.id] * LIST_ITEM_HEIGHT);
-    }, [positions]);
+            top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
+    }, [positions.value, item]);
 
     // Animate the row's position
     const rowPositionStyle = useAnimatedStyle(() => {
@@ -204,7 +217,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
             position: 'absolute',
             top: top.value,
         }
-    }, [top]);
+    }, [top.value]);
 
     return (
         <Animated.View style={rowPositionStyle}>
@@ -239,10 +252,11 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                                 type='standard'
                                 style={{
                                     color: customTextColor ??
-                                        item.status === ItemStatus.DELETE ? colors.grey :
+                                        isItemDeleting(item) ? colors.grey :
                                         colors.white,
-                                    textDecorationLine: item.status === ItemStatus.DELETE ?
+                                    textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
+                                    height: 25
                                 }}
                             >
                                 {item.value}
@@ -301,12 +315,9 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingTop: 4,
-        paddingBottom: 4,
-        minHeight: 25,
-        fontSize: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 4,
+        height: '100%',
     },
     row: {
         flexDirection: 'row',

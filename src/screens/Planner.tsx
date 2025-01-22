@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import SortedPlanner from '../feature/planners/components/lists/SortedPlanner';
 import Modal from '../foundation/components/modal/Modal';
-import { generateNextSevenDayTimestamps } from '../feature/planners/timeUtils';
+import { generateNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../feature/planners/timeUtils';
 import { getFullDayEvents, getBirthdays, getHolidays } from '../feature/planners/calendarUtils';
 import SortedRecurringPlanner from '../feature/planners/components/lists/SortedRecurringPlanner';
 import colors from '../foundation/theme/colors';
@@ -12,8 +12,9 @@ import { WeatherForecast } from '../foundation/weather/types';
 import { getWeather } from '../foundation/weather/utils';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 import globalStyles from '../foundation/theme/globalStyles';
+import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 
-const WeeklyPlanner = () => {
+const Planner = () => {
   const [timestamps, setTimestamps] = useState<string[]>([]);
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>();
   const [birthdays, setBirthdays] = useState<Record<string, string[]>>();
@@ -23,22 +24,44 @@ const WeeklyPlanner = () => {
 
   const toggleRecurringPlannerModal = () => setRecurringPlannerModalOpen(curr => !curr);
 
+  /**
+   * Reset all state variable to trigger page load.
+   */
+  const resetState = () => {
+    setTimestamps([]);
+    setHolidays(undefined);
+    setBirthdays(undefined);
+    setForecasts(undefined);
+    setAllDayEvents(undefined);
+  }
+
   // Build a collection of the next 7 days of planners
+  const buildPlanners = async (reloadPage: boolean) => {
+    if (reloadPage) resetState();
+    const timestamps = generateNextSevenDayTimestamps();
+    const holidayMap = await getHolidays(timestamps);
+    const birthdayMap = await getBirthdays(timestamps);
+    const forecastMap = await getWeather(timestamps);
+    const allDayEvents = await getFullDayEvents(timestamps);
+    setTimestamps(timestamps);
+    setHolidays(holidayMap);
+    setBirthdays(birthdayMap);
+    setForecasts(forecastMap);
+    setAllDayEvents(allDayEvents);
+  };
+
+  // Load in the initial planners
   useEffect(() => {
-    const buildPlanners = async () => {
-      const timestamps = generateNextSevenDayTimestamps();
-      const holidayMap = await getHolidays(timestamps);
-      const birthdayMap = await getBirthdays(timestamps);
-      const forecastMap = await getWeather(timestamps);
-      const allDayEvents = await getFullDayEvents(timestamps);
-      setTimestamps(timestamps);
-      setHolidays(holidayMap);
-      setBirthdays(birthdayMap);
-      setForecasts(forecastMap);
-      setAllDayEvents(allDayEvents);
-    };
-    buildPlanners();
+    buildPlanners(false);
   }, []);
+
+  // Reload the planners whenever the recurring planner changes
+  const recurringPlannerStorage = useMMKV({ id: PLANNER_STORAGE_ID });
+  useMMKVListener((key) =>
+    key === RECURRING_WEEKDAY_PLANNER_KEY &&
+    !recurringPlannerModalOpen &&
+    buildPlanners(true),
+    recurringPlannerStorage);
 
   return (
     <View style={globalStyles.backdrop}>
@@ -70,6 +93,7 @@ const WeeklyPlanner = () => {
                 <View style={{ marginBottom: 16 }} key={`${timestamp}-planner`}>
                   <SortedPlanner
                     timestamp={timestamp}
+                    reloadChips={() => buildPlanners(false)}
                     holidays={holidays[timestamp]}
                     birthdays={birthdays[timestamp]}
                     forecast={forecasts[timestamp]}
@@ -98,7 +122,7 @@ const WeeklyPlanner = () => {
       >
         <View style={styles.container}>
           <SortableListProvider>
-            <SortedRecurringPlanner />
+            <SortedRecurringPlanner modalOpen={recurringPlannerModalOpen} />
           </SortableListProvider>
         </View>
       </Modal>
@@ -112,4 +136,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default WeeklyPlanner;
+export default Planner;

@@ -98,7 +98,7 @@ function syncPlannerWithCalendar(calendar: Event[], currentPlanner: Event[], cur
             const newEvent = {
                 ...calEvent,
                 id: uuid.v4(),
-                plannerId: currentPlannerId,
+                listId: currentPlannerId,
                 timeConfig: calEvent.timeConfig
             };
 
@@ -134,7 +134,8 @@ function syncPlannerWithRecurring(recurringPlanner: Event[], currentPlanner: Eve
             const updatedEvent = {
                 ...recEvent,
                 id: linkedEvent.id,
-                plannerId: currentPlannerId,
+                listId: currentPlannerId,
+                status: linkedEvent.status
             };
             updatedEvent.timeConfig = linkedEvent.timeConfig ?? recEvent.timeConfig;
 
@@ -142,8 +143,8 @@ function syncPlannerWithRecurring(recurringPlanner: Event[], currentPlanner: Eve
             updatedEvent.sortId = generateSortIdByTimestamp(updatedEvent, updatedPlanner);
             return updatedPlanner;
 
-            // This event has been manually deleted -> keep it (it won't be displayed in the UI)
         } else if (linkedEvent && linkedEvent.recurringConfig?.deleted) {
+            // This event has been manually deleted -> keep it deleted
             return [...accumulator, linkedEvent];
 
             // This recurring event hasn't been added to the planner yet -> add it 
@@ -151,7 +152,7 @@ function syncPlannerWithRecurring(recurringPlanner: Event[], currentPlanner: Eve
             const newEvent = {
                 ...recEvent,
                 id: uuid.v4(),
-                plannerId: currentPlannerId
+                listId: currentPlannerId
             };
             const updatedPlanner = [...accumulator, newEvent];
             newEvent.sortId = generateSortIdByTimestamp(newEvent, updatedPlanner);
@@ -196,18 +197,12 @@ export async function buildPlanner(plannerId: string, planner: Event[]): Promise
     const calendarEvents = await getCalendarEvents(plannerId);
     planner = syncPlannerWithCalendar(calendarEvents, planner, plannerId);
 
-    // Sort the planner 
-    planner.sort((a, b) => a.sortId - b.sortId);
-
-    // Save the planner now that external events have been linked
-    savePlannerToStorage(plannerId, planner);
-
     return planner.filter(event => !event.recurringConfig?.deleted && !event.timeConfig?.allDay);
 };
 
 /**
  * Creates or updates an event. Updates it in the device calendar if needed.
- * @returns - the newly generated event
+ * @returns - true if the item was persisted, else false
  */
 export async function persistEvent(event: Event) {
     let newPlanner = getPlannerFromStorage(event.listId);
@@ -224,7 +219,12 @@ export async function persistEvent(event: Event) {
             id: newEvent.timeConfig.calendarEventId
         };
         newEvent.timeConfig.calendarEventId = await RNCalendarEvents.saveEvent(newEvent.value, calendarEventDetails);
-        console.log('Calendar event created.')
+
+        // Remove the event if it is an all-day event
+        if (event.timeConfig?.allDay) {
+            const plannerWithoutEvent = newPlanner.filter(existingEvent => existingEvent.id !== event.id);
+            savePlannerToStorage(newEvent.listId, plannerWithoutEvent);
+        }
     }
 
     // Update the list with the new event

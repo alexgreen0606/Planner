@@ -1,7 +1,7 @@
-import { ItemStatus, ListItem } from '../utils';
+import { isItemDeleting, ItemStatus, ListItem } from '../utils';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSortableListContext } from '../services/SortableListProvider';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface StorageHandlers<T extends ListItem> {
     update: (item: T) => Promise<void> | void;
@@ -30,17 +30,13 @@ const useSortedList = <T extends ListItem, S>(
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
-    const [loading, setLoading] = useState(true);
 
     // Build the list from the storage object
     useEffect(() => {
         const buildList = async () => {
-            setLoading(true);
             const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
-            setItems(fetchedItems ?? []);
-            setLoading(false);
+            setItems(fetchedItems ?? storageObject as T[] ?? []);
         };
-
         buildList();
     }, [storageObject]);
 
@@ -51,12 +47,13 @@ const useSortedList = <T extends ListItem, S>(
     async function convertItemToTextfield(item: T) {
         if (item.status === ItemStatus.DELETE || item.id === currentTextfield?.id) return;
         else if (currentTextfield && currentTextfield.value.trim() !== '')
-            await persistItemToStorage(currentTextfield);
+            await persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
         setCurrentTextfield({ ...item, status: ItemStatus.EDIT });
     };
 
     /**
      * Updates or creates an item in storage.
+     * @returns - true if the item still exists in the list, else false
      */
     async function persistItemToStorage(item: T) {
         if (storageConfig) {
@@ -106,16 +103,13 @@ const useSortedList = <T extends ListItem, S>(
      * Clears any pending deletes and re-schedules them 3 seconds into the future.
      */
     function rescheduleAllDeletes() {
-        pendingDeletes.current.forEach((timeoutId, id) => {
-            clearTimeout(timeoutId);
-            const newTimeoutId = setTimeout(() => {
-                const currentItem = items.find(item => item.id === id);
-                if (currentItem) {
-                    deleteItemFromStorage(currentItem);
-                    pendingDeletes.current.delete(id);
-                }
+        pendingDeletes.current.forEach((pendingDelete, id) => {
+            clearTimeout(pendingDelete.timeout);
+            const timeout = setTimeout(() => {
+                deleteItemFromStorage(pendingDelete.item);
+                pendingDeletes.current.delete(id);
             }, 3000);
-            pendingDeletes.current.set(id, newTimeoutId);
+            pendingDeletes.current.set(id, { timeout, item: pendingDelete.item });
         });
     };
 
@@ -125,21 +119,30 @@ const useSortedList = <T extends ListItem, S>(
      * deleted after 3 seconds.
      */
     async function toggleDeleteItem(item: T) {
-        const updatedStatus = item.status === ItemStatus.DELETE ? ItemStatus.STATIC : ItemStatus.DELETE;
+
+        // Handle textfield delete
+        if (item.id === currentTextfield?.id) {
+            setCurrentTextfield(undefined);
+            if (item.value.trim() === '') {
+                deleteItemFromStorage(item);
+                return;
+            }
+        }
+        const updatedStatus = isItemDeleting(item) ? ItemStatus.STATIC : ItemStatus.DELETE;
         if (updatedStatus === ItemStatus.DELETE) {
 
             // Schedule item delete
-            const timeoutId = setTimeout(() => {
+            const timeout = setTimeout(() => {
                 deleteItemFromStorage(item);
                 pendingDeletes.current.delete(item.id);
             }, 3000);
-            pendingDeletes.current.set(item.id, timeoutId);
+            pendingDeletes.current.set(item.id, { timeout, item });
         } else {
 
             // Unschedule item delete
-            const timeoutId = pendingDeletes.current.get(item.id);
-            if (timeoutId) {
-                clearTimeout(timeoutId);
+            const pendingDelete = pendingDeletes.current.get(item.id);
+            if (pendingDelete) {
+                clearTimeout(pendingDelete.timeout);
                 pendingDeletes.current.delete(item.id);
             }
         }
@@ -149,7 +152,6 @@ const useSortedList = <T extends ListItem, S>(
 
     return {
         items,
-        loading,
         persistItemToStorage,
         toggleDeleteItem,
         rescheduleAllDeletes,

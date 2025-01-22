@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import globalStyles from '../../../../foundation/theme/globalStyles';
@@ -10,7 +10,7 @@ import colors from '../../../../foundation/theme/colors';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
 
 export interface TimeModalProps extends ListItemUpdateComponentProps<Event> {
-    toggleModalOpen: () => void;
+    toggleModalOpen: (event: Event) => void;
     open: boolean;
     event: Event;
     timestamp: string;
@@ -31,7 +31,6 @@ const TimeModal = ({
     onSave, 
     item 
 }: TimeModalProps) => {
-
     const newTimeOptions = useMemo(() => generateTimeSelectorOptions(), [timestamp]);
     const defaultStartTime = '00:00';
     const defaultEndTime = '23:55';
@@ -41,6 +40,15 @@ const TimeModal = ({
         startTime: defaultStartTime,
         endTime: defaultEndTime,
     });
+
+    useEffect(() => {
+        setTimeModalData(event.timeConfig ?? {
+            isCalendarEvent: false,
+            allDay: false,
+            startTime: defaultStartTime,
+            endTime: defaultEndTime,
+        });
+    }, [event]);
 
     const handleSave = () => {
         const newEvent = {
@@ -59,7 +67,7 @@ const TimeModal = ({
     return (
         <Modal
             title={event.value}
-            toggleModalOpen={toggleModalOpen}
+            toggleModalOpen={() => toggleModalOpen(event)}
             subTitle={timestampToDayOfWeek(timestamp)}
             open={open}
             primaryButtonConfig={{

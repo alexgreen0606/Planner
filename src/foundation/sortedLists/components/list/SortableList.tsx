@@ -10,7 +10,7 @@ import {
     ListItemUpdateComponentProps,
     RowIconConfig,
     generateSortId,
-    LIST_ITEM_HEIGHT
+    LIST_ITEM_HEIGHT,
 } from '../../utils';
 import ClickableLine from '../separator/ClickableLine';
 import DraggableRow from './DraggableRow';
@@ -25,9 +25,9 @@ export interface DraggableListProps<
     listId: string;
     items: T[];
     hideList?: boolean;
-    loading: boolean;
     onSaveTextfield: (updatedItem: T) => Promise<void> | void;
     onDeleteItem: (item: T) => Promise<void> | void;
+    onDragEnd: (updatedItem: T) => Promise<void> | void;
     onContentClick: (item: T) => void;
     getLeftIconConfig?: (item: T) => RowIconConfig<T>;
     getRightIconConfig?: (item: T) => RowIconConfig<T>;
@@ -45,7 +45,6 @@ export interface DraggableListProps<
 function buildItemPositions<T extends ListItem>(currentList: T[]): Record<string, number> {
     'worklet';
     return [...currentList]
-        .sort((a, b) => a.sortId - b.sortId)
         .reduce<Record<string, number>>((acc, item, index) => {
             acc[item.id] = index;
             return acc;
@@ -56,8 +55,32 @@ const SortableList = <
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T>,
     M extends ListItemUpdateComponentProps<T>
->(props: DraggableListProps<T, P, M>) => {
+>({
+    listId,
+    items,
+    hideList,
+    onSaveTextfield,
+    initializeItem,
+    ...rest
+}: DraggableListProps<T, P, M>) => {
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
+
+    /**
+     * Builds the list out of the existing items and the textfield.
+     */
+    function buildFullList() {
+        const fullList = [...items];
+        if (currentTextfield?.listId === listId) {
+            if (currentTextfield?.status === ItemStatus.NEW)
+                fullList.push(currentTextfield);
+            else {
+                const textfieldIndex = fullList.findIndex(item => item.id === currentTextfield.id);
+                if (textfieldIndex !== -1)
+                    fullList[textfieldIndex] = currentTextfield;
+            }
+        }
+        return fullList.sort((a, b) => a.sortId - b.sortId);
+    };
 
     /**
      * Saves the existing textfield to storage and generates a new one at the requested position.
@@ -65,39 +88,41 @@ const SortableList = <
      */
     async function saveTextfieldAndCreateNew(parentSortId: number) {
         if (currentTextfield && currentTextfield.value.trim() !== '') {
-            const staticItem = { ...currentTextfield, status: ItemStatus.STATIC };
-            setCurrentTextfield(undefined);
-            await props.onSaveTextfield(staticItem);
+
+            // Save the current textfield before creating a new one.
+            await onSaveTextfield({ ...currentTextfield, status: ItemStatus.STATIC });
         }
         let newTextfield = {
             id: uuid.v4(),
             sortId: generateSortId(parentSortId, currentList),
             value: '',
             status: ItemStatus.NEW,
-            listId: props.listId
+            listId: listId
         } as ListItem;
-        newTextfield = props.initializeItem?.(newTextfield) ?? newTextfield;
+        newTextfield = initializeItem?.(newTextfield) ?? newTextfield;
         setCurrentTextfield(newTextfield);
     };
 
     // Derive the current list out of the list and textfield
-    const currentList = useMemo(() => {
-        const fullList = [...props.items];
-        if (
-            currentTextfield?.status === ItemStatus.NEW
-            && currentTextfield.listId === props.listId
-        )
-            fullList.push(currentTextfield);
-        return fullList;
-    }, [currentTextfield, props.items, props.loading]);
+    const currentList = useMemo(() =>
+        buildFullList(),
+        [currentTextfield?.id, currentTextfield?.sortId, items]
+    );
 
     // Derive positions out of the current list
-    const positions = useDerivedValue(() => buildItemPositions<T>(currentList), [currentList]);
+    const positions = useDerivedValue(() =>
+        buildItemPositions<T>(currentList),
+        [currentList]
+    );
 
     return (
         <View>
+
+            {/* Upper Item Creator */}
             <ClickableLine onPress={() => saveTextfieldAndCreateNew(-1)} />
-            {!props.hideList && (
+
+            {/* List */}
+            {!hideList && (
                 <View style={{
                     height: currentList.length * LIST_ITEM_HEIGHT,
                     position: 'relative',
@@ -109,12 +134,14 @@ const SortableList = <
                             positions={positions}
                             saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
                             listLength={currentList.length}
-                            {...props}
+                            {...rest}
                             items={currentList}
                         />
                     )}
                 </View>
             )}
+
+            {/* Empty Label */}
             {currentList.length === 0 && (
                 <EmptyLabel
                     label='Empty Placeholder'

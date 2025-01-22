@@ -14,8 +14,7 @@ import Card from '../../../../foundation/components/card/Card';
 import Chip from '../info/Chip';
 import { WeatherForecast } from '../../../../foundation/weather/types';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
-import { isItemDeleting, ItemStatus } from '../../../../foundation/sortedLists/utils';
-import ClickableLine from '../../../../foundation/sortedLists/components/separator/ClickableLine';
+import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/utils';
 
 interface SortablePlannerProps {
     timestamp: string;
@@ -23,6 +22,7 @@ interface SortablePlannerProps {
     holidays: string[];
     forecast: WeatherForecast;
     allDayEvents: string[];
+    reloadChips: () => void;
 };
 
 const SortedPlanner = ({
@@ -30,7 +30,8 @@ const SortedPlanner = ({
     birthdays,
     holidays,
     forecast,
-    allDayEvents
+    allDayEvents,
+    reloadChips
 }: SortablePlannerProps) => {
     const [timeModalOpen, setTimeModalOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
@@ -109,7 +110,7 @@ const SortedPlanner = ({
             {/* Collapse Control */}
             {SortedEvents.items.length > 15 && !collapsed && (
                 <View>
-                    <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8 }} onPress={toggleCollapsed}>
+                    <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8, paddingTop: 8 }} onPress={toggleCollapsed}>
                         <GenericIcon
                             type='chevron-down'
                             color={colors.grey}
@@ -125,14 +126,12 @@ const SortedPlanner = ({
                             {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
                         </CustomText>
                     </TouchableOpacity>
-                    <ClickableLine onPress={toggleCollapsed} />
                 </View>
             )}
 
             {/* Planner List */}
             <SortableList<Event, never, TimeModalProps>
                 listId={timestamp}
-                loading={SortedEvents.loading}
                 items={SortedEvents.items}
                 getLeftIconConfig={item => ({
                     icon: {
@@ -162,15 +161,38 @@ const SortedPlanner = ({
                     }
                     return newEvent;
                 }}
-                onSaveTextfield={SortedEvents.persistItemToStorage}
+                onSaveTextfield={async (updatedItem) => {
+                    await SortedEvents.persistItemToStorage(updatedItem);
+                    if (updatedItem.timeConfig?.allDay) 
+                        reloadChips();
+                }}
+                onDragEnd={async (updatedItem) => {
+                    if (updatedItem.timeConfig) {
+                        const currentItemIndex = SortedEvents.items.findIndex(item => item.id === updatedItem.id);
+                        if (currentItemIndex !== -1) {
+                            const initialSortId = SortedEvents.items[currentItemIndex].sortId;
+                            const updatedItems = [...SortedEvents.items]
+                            updatedItems[currentItemIndex] = updatedItem;
+                            const newSortId = generateSortIdByTimestamp(updatedItem, updatedItems, initialSortId);
+                            if (newSortId === initialSortId) {
+
+                                // The item has a time conflict. Cancel drag.
+                                return; // TODO needs to reload list
+                            } else {
+                                updatedItem.sortId = newSortId;
+                            }
+                        }
+                    }
+                    await SortedEvents.persistItemToStorage(updatedItem);
+                }}
                 getRightIconConfig={item => ({
-                    hideIcon: item.status === ItemStatus.STATIC && !item.timeConfig,
+                    hideIcon: !item.timeConfig && !isItemTextfield(item),
                     icon: {
                         type: 'clock',
                         color: colors.grey
                     },
                     onClick: toggleTimeModal,
-                    customIcon: !!item.timeConfig?.startTime ? <Time timeValue={item.timeConfig?.startTime} /> : undefined
+                    customIcon: item.timeConfig ? <Time allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined
                 })}
                 getModal={item => ({
                     component: TimeModal,
@@ -182,7 +204,7 @@ const SortedPlanner = ({
                     },
                     onSave: (updatedItem: Event) => {
                         const eventsWithItem = updatedItem.status === ItemStatus.EDIT ?
-                                SortedEvents.items : [...SortedEvents.items, updatedItem];
+                            SortedEvents.items : [...SortedEvents.items, updatedItem];
                         updatedItem.sortId = generateSortIdByTimestamp(updatedItem, eventsWithItem);
                         toggleTimeModal(updatedItem);
                         return updatedItem;
