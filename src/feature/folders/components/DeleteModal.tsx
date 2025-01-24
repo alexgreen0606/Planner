@@ -3,29 +3,29 @@ import colors from '../../../foundation/theme/colors';
 import { FolderItem, FolderItemType } from '../utils';
 import Modal from '../../../foundation/components/modal/Modal';
 import CustomText from '../../../foundation/components/text/CustomText';
-import { ItemStatus } from '../../../foundation/sortedLists/utils';
+import { ListItemUpdateComponentProps } from '../../../foundation/sortedLists/utils';
 
-interface PopoverProps {
-    item: FolderItem;
-    deleteItem: () => void;
+export interface DeleteModalProps extends ListItemUpdateComponentProps<FolderItem> {
+    open: boolean;
     toggleModalOpen: () => void;
 }
 
 const DeleteModal = ({
     item,
-    deleteItem,
+    onSave,
+    open,
     toggleModalOpen
-}: PopoverProps) => {
+}: DeleteModalProps) => {
     const getItemType = (item: FolderItem) => item.type === FolderItemType.FOLDER ? 'folder' : 'list';
 
     return (
         <Modal
             title={`${!!item.childrenCount ? 'Force delete' : 'Delete'} ${getItemType(item)}?`}
-            open={item.status === ItemStatus.DELETE}
+            open={open}
             toggleModalOpen={toggleModalOpen}
             primaryButtonConfig={{
                 label: !!item.childrenCount ? 'Force Delete' : 'Delete',
-                onClick: deleteItem,
+                onClick: () => onSave(item),
                 color: !!item.childrenCount ? 'red' : colors.blue
             }}
             iconConfig={{

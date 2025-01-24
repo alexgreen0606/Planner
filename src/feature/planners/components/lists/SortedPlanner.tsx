@@ -48,6 +48,7 @@ const SortedPlanner = ({
         timestamp,
         PLANNER_STORAGE_ID,
         (planner) => buildPlanner(timestamp, planner),
+        undefined,
         {
             customStorageHandlers: {
                 create: persistEvent,
@@ -163,7 +164,7 @@ const SortedPlanner = ({
                 }}
                 onSaveTextfield={async (updatedItem) => {
                     await SortedEvents.persistItemToStorage(updatedItem);
-                    if (updatedItem.timeConfig?.allDay) 
+                    if (updatedItem.timeConfig?.allDay)
                         reloadChips();
                 }}
                 onDragEnd={async (updatedItem) => {
@@ -174,12 +175,11 @@ const SortedPlanner = ({
                             const updatedItems = [...SortedEvents.items]
                             updatedItems[currentItemIndex] = updatedItem;
                             const newSortId = generateSortIdByTimestamp(updatedItem, updatedItems, initialSortId);
+                            updatedItem.sortId = newSortId;
                             if (newSortId === initialSortId) {
 
                                 // The item has a time conflict. Cancel drag.
-                                return; // TODO needs to reload list
-                            } else {
-                                updatedItem.sortId = newSortId;
+                                SortedEvents.refetchItems();
                             }
                         }
                     }
@@ -194,21 +194,21 @@ const SortedPlanner = ({
                     onClick: toggleTimeModal,
                     customIcon: item.timeConfig ? <Time allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined
                 })}
-                getModal={item => ({
+                getModal={(item: Event) => ({
                     component: TimeModal,
                     props: {
                         open: timeModalOpen,
                         toggleModalOpen: toggleTimeModal,
-                        event: item,
-                        timestamp: timestamp
+                        timestamp,
+                        onSave: (updatedItem: Event) => {
+                            const eventsWithItem = updatedItem.status === ItemStatus.EDIT ?
+                                SortedEvents.items : [...SortedEvents.items, updatedItem];
+                            updatedItem.sortId = generateSortIdByTimestamp(updatedItem, eventsWithItem);
+                            toggleTimeModal(updatedItem);
+                            return updatedItem;
+                        },
+                        item
                     },
-                    onSave: (updatedItem: Event) => {
-                        const eventsWithItem = updatedItem.status === ItemStatus.EDIT ?
-                            SortedEvents.items : [...SortedEvents.items, updatedItem];
-                        updatedItem.sortId = generateSortIdByTimestamp(updatedItem, eventsWithItem);
-                        toggleTimeModal(updatedItem);
-                        return updatedItem;
-                    }
                 })}
             />
 

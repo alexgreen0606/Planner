@@ -12,7 +12,7 @@ import {
 } from '../timeUtils';
 import RNCalendarEvents from "react-native-calendar-events";
 import { uuid } from 'expo-modules-core';
-import { ItemStatus } from '../../../foundation/sortedLists/utils';
+import { isItemTextfield, ItemStatus } from '../../../foundation/sortedLists/utils';
 import { getCalendarEvents, getPrimaryCalendarId } from '../calendarUtils';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
@@ -206,7 +206,7 @@ export async function buildPlanner(plannerId: string, planner: Event[]): Promise
  */
 export async function persistEvent(event: Event) {
     let newPlanner = getPlannerFromStorage(event.listId);
-    let newEvent = { ...event };
+    let newEvent = { ...event, status: isItemTextfield(event) ? ItemStatus.STATIC : event.status };
 
     // The event is a calendar event -> sync the calendar
     if (newEvent.timeConfig?.isCalendarEvent) {

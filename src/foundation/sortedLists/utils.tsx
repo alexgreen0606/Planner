@@ -12,13 +12,13 @@ export interface ListItem {
 
 export interface ListItemUpdateComponentProps<T extends ListItem> {
     item: T;
-    onSave: (item: T) => T;
+    onSave: (item: T) => T | undefined;
 }
 
-export type ListItemUpdateComponentConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
+export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
     component: React.ComponentType<P>;
-    props: any;
-    onSave: (item: T) => T
+    props: P; // will be passed directly by the list component
+    // onSave: (item: T) => T | undefined; // returns the updated item
 }
 export type RowIconConfig<T extends ListItem> = {
     icon?: GenericIconProps;

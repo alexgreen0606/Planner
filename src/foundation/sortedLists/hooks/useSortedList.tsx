@@ -1,4 +1,4 @@
-import { isItemDeleting, ItemStatus, ListItem } from '../utils';
+import { isItemDeleting, isItemTextfield, ItemStatus, ListItem } from '../utils';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSortableListContext } from '../services/SortableListProvider';
 import { useEffect, useState } from 'react';
@@ -24,6 +24,7 @@ const useSortedList = <T extends ListItem, S>(
     storageKey: string,
     storageId: string,
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[],
+    setItemsInStorageObject?: (items: T[], currentObject: S) => S,
     storageConfig?: CustomStorageHandlers<T>
 ) => {
     const { currentTextfield, setCurrentTextfield, pendingDeletes } = useSortableListContext();
@@ -31,12 +32,13 @@ const useSortedList = <T extends ListItem, S>(
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
 
+    const buildList = async () => {
+        const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
+        setItems(fetchedItems ?? storageObject as T[] ?? []);
+    };
+
     // Build the list from the storage object
     useEffect(() => {
-        const buildList = async () => {
-            const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
-            setItems(fetchedItems ?? storageObject as T[] ?? []);
-        };
         buildList();
     }, [storageObject]);
 
@@ -49,6 +51,8 @@ const useSortedList = <T extends ListItem, S>(
         else if (currentTextfield && currentTextfield.value.trim() !== '')
             await persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
         setCurrentTextfield({ ...item, status: ItemStatus.EDIT });
+
+        // TODO: use as a toggle
     };
 
     /**
@@ -76,7 +80,7 @@ const useSortedList = <T extends ListItem, S>(
             } else {
                 updatedList.push(item);
             }
-            setStorageObject(updatedList as S);
+            setStorageObject(storageObject && setItemsInStorageObject ? setItemsInStorageObject(updatedList, storageObject) : updatedList as S);
         }
     };
 
@@ -152,6 +156,7 @@ const useSortedList = <T extends ListItem, S>(
 
     return {
         items,
+        refetchItems: buildList,
         persistItemToStorage,
         toggleDeleteItem,
         rescheduleAllDeletes,

@@ -6,7 +6,7 @@ import { useDerivedValue } from 'react-native-reanimated';
 import {
     ItemStatus,
     ListItem,
-    ListItemUpdateComponentConfig,
+    ModifyItemConfig,
     ListItemUpdateComponentProps,
     RowIconConfig,
     generateSortId,
@@ -34,8 +34,8 @@ export interface DraggableListProps<
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
     getRowTextColor?: (item: T) => string;
-    getPopovers?: (item: T) => ListItemUpdateComponentConfig<T, P>[];
-    getModal?: (item: T) => ListItemUpdateComponentConfig<T, M>;
+    getPopovers?: (item: T) => ModifyItemConfig<T, P>[];
+    getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
 }
 
@@ -90,7 +90,7 @@ const SortableList = <
         if (currentTextfield && currentTextfield.value.trim() !== '') {
 
             // Save the current textfield before creating a new one.
-            await onSaveTextfield({ ...currentTextfield, status: ItemStatus.STATIC });
+            await onSaveTextfield(currentTextfield);
         }
         let newTextfield = {
             id: uuid.v4(),

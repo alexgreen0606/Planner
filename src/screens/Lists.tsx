@@ -4,7 +4,7 @@ import SortedFolder from '../feature/folders/components/SortedFolder';
 import SortedList from '../feature/folders/components/SortedList';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 import globalStyles from '../foundation/theme/globalStyles';
-import { FolderItemType } from '../feature/folders/utils';
+import { FolderItemType, ROOT_FOLDER_ID } from '../feature/folders/utils';
 
 interface PageConfig {
   id: string;
@@ -13,12 +13,12 @@ interface PageConfig {
 
 const Lists = () => {
   const [pageConfig, setPageConfig] = useState<PageConfig>({
-    id: 'root',
+    id: ROOT_FOLDER_ID,
     type: FolderItemType.FOLDER
   });
 
-  const onBackClick = (parentFolderId: string) =>
-    setPageConfig({ id: parentFolderId, type: FolderItemType.FOLDER });
+  const onBackClick = (listId: string) =>
+    setPageConfig({ id: listId, type: FolderItemType.FOLDER });
 
   return (
     <View key={pageConfig.id} style={globalStyles.backdrop}>
@@ -33,10 +33,12 @@ const Lists = () => {
           />
         </SortableListProvider>
       ) : (
-        <SortedList
-          listId={pageConfig.id}
-          onBackClick={onBackClick}
-        />
+        <SortableListProvider>
+          <SortedList
+            listId={pageConfig.id}
+            onBackClick={onBackClick}
+          />
+        </SortableListProvider>
       )}
     </View>
   );

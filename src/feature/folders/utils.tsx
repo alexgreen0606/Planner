@@ -2,6 +2,9 @@ import { ListItem } from "../../foundation/sortedLists/utils";
 
 export const selectableColors = ['yellow', 'green', 'red', 'purple', 'orange'];
 
+export const NULL = 'NULL';
+export const ROOT_FOLDER_ID = 'ROOT_FOLDER_ID';
+
 export interface FolderItem extends ListItem {
     type: FolderItemType
     childrenCount: number;
@@ -11,12 +14,11 @@ export interface FolderItem extends ListItem {
 export interface Folder extends ColoredListItem {
     folderIds: string[];
     listIds: string[];
-    parentFolderId: string | null; // ONLY the root folder will be null
 };
 
 export interface List extends ColoredListItem {
     items: ListItem[];
-    parentFolderId: string;
+    listId: string;
 };
 
 export enum FolderItemType {

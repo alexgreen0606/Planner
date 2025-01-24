@@ -12,7 +12,6 @@ import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists
 export interface TimeModalProps extends ListItemUpdateComponentProps<Event> {
     toggleModalOpen: (event: Event) => void;
     open: boolean;
-    event: Event;
     timestamp: string;
 }
 
@@ -26,7 +25,6 @@ type TimeModalSelection = {
 const TimeModal = ({ 
     toggleModalOpen, 
     open, 
-    event, 
     timestamp, 
     onSave, 
     item 
@@ -34,7 +32,7 @@ const TimeModal = ({
     const newTimeOptions = useMemo(() => generateTimeSelectorOptions(), [timestamp]);
     const defaultStartTime = '00:00';
     const defaultEndTime = '23:55';
-    const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(event.timeConfig ?? {
+    const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(item.timeConfig ?? {
         isCalendarEvent: false,
         allDay: false,
         startTime: defaultStartTime,
@@ -42,13 +40,13 @@ const TimeModal = ({
     });
 
     useEffect(() => {
-        setTimeModalData(event.timeConfig ?? {
+        setTimeModalData(item.timeConfig ?? {
             isCalendarEvent: false,
             allDay: false,
             startTime: defaultStartTime,
             endTime: defaultEndTime,
         });
-    }, [event]);
+    }, [item]);
 
     const handleSave = () => {
         const newEvent = {
@@ -66,8 +64,8 @@ const TimeModal = ({
 
     return (
         <Modal
-            title={event.value}
-            toggleModalOpen={() => toggleModalOpen(event)}
+            title={item.value}
+            toggleModalOpen={() => toggleModalOpen(item)}
             subTitle={timestampToDayOfWeek(timestamp)}
             open={open}
             primaryButtonConfig={{

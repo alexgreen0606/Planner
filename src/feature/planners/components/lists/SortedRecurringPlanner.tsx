@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
-import TimeModal from '../modal/TimeModal';
+import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import Time from '../info/Time';
 import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../timeUtils';
 import colors from '../../../../foundation/theme/colors';
@@ -43,7 +43,7 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
     }, [modalOpen]);
 
     return (
-        <SortableList<Event, never, never>
+        <SortableList<Event, never, TimeModalProps>
             items={SortedEvents.items}
             listId={RECURRING_WEEKDAY_PLANNER_KEY}
             getLeftIconConfig={item => ({
@@ -85,19 +85,19 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
                 }
                 return newEvent;
             }}
-            getModal={item => ({
+            getModal={(item: Event) => ({
                 component: TimeModal,
                 props: {
                     open: timeModalOpen,
                     toggleModalOpen: toggleTimeModal,
-                    event: item,
-                    timestamp: RECURRING_WEEKDAY_PLANNER_KEY
+                    timestamp: RECURRING_WEEKDAY_PLANNER_KEY,
+                    onSave: (updatedItem: Event) => {
+                        updatedItem.sortId = generateSortIdByTimestamp(updatedItem, [...SortedEvents.items, updatedItem]);
+                        toggleTimeModal();
+                        return updatedItem;
+                    },
+                    item
                 },
-                onSave: (updatedItem: Event) => {
-                    updatedItem.sortId = generateSortIdByTimestamp(updatedItem, [...SortedEvents.items, updatedItem]);
-                    toggleTimeModal();
-                    return updatedItem;
-                }
             })}
         />
     );

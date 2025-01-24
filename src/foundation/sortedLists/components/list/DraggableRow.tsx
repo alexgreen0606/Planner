@@ -1,4 +1,4 @@
-import Animated, { runOnJS, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue } from "react-native-reanimated";
+import Animated, { runOnJS, SharedValue, useAnimatedRef, useAnimatedStyle, useDerivedValue, useSharedValue } from "react-native-reanimated";
 import {
     generateSortId,
     isItemDeleting,
@@ -10,7 +10,7 @@ import {
 } from "../../utils";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { useMemo, useRef } from "react";
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
@@ -18,11 +18,12 @@ import colors from "../../../theme/colors";
 import ListTextfield from "../textfield/ListTextfield";
 import GenericIcon from "../../../components/icons/GenericIcon";
 import ClickableLine from "../separator/ClickableLine";
+import { Portal } from "react-native-paper";
 
 interface RowProps<
     T extends ListItem,
-    P extends ListItemUpdateComponentProps<T> = never,
-    M extends ListItemUpdateComponentProps<T> = never
+    P extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>,
+    M extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>
 > extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield'> {
     item: T;
     positions: SharedValue<Record<string, number>>;
@@ -74,8 +75,12 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     const prevY = useSharedValue(0);
     const dragInitialPosition = useSharedValue(0);
 
+
+    // TODO: calculate this using the position in the list, plus the scroll position
+    const rowYAbsolutePosition = useSharedValue<number>(0);
+
     // Extract row configs
-    const customTextColor = useMemo(() => getRowTextColor?.(item), [item]);
+    const customTextColor = useMemo(() => getRowTextColor?.(item), [item, getRowTextColor]);
     const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item]);
     const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item]);
     const modalConfig = useMemo(() => getModal?.(item), [item, getModal]);
@@ -219,6 +224,12 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
         }
     }, [top.value]);
 
+    const popoverPositionStyle = useAnimatedStyle(() => ({
+        left: 4,
+        position: 'absolute',
+        top: rowYAbsolutePosition.value
+    }), [rowYAbsolutePosition.value]);
+
     return (
         <Animated.View style={rowPositionStyle}>
             <View
@@ -251,9 +262,8 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                             <CustomText
                                 type='standard'
                                 style={{
-                                    color: customTextColor ??
-                                        isItemDeleting(item) ? colors.grey :
-                                        colors.white,
+                                    color: customTextColor ||
+                                        (isItemDeleting(item) ? colors.grey : colors.white),
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
                                     height: 25
@@ -289,23 +299,20 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
             {isItemTextfield(item) && modalConfig && Modal && (
                 <Modal
                     {...modalConfig.props}
-                    item={item}
-                    onSave={(newItem: T) => setCurrentTextfield(modalConfig.onSave(newItem))}
+                    onSave={(newItem: T) => setCurrentTextfield(modalConfig.props.onSave(newItem))}
                 />
             )}
 
             {/* Row Popovers */}
             {isItemTextfield(item) && popoverConfigs && Popovers && Popovers.map((Popover, i) => (
-                <View key={`${item.id}-popover-${i}`} style={{
-                    top: LIST_ITEM_HEIGHT,
-                    left: 0,
-                    position: 'absolute'
-                }}>
-                    <Popover
-                        {...popoverConfigs[i].props}
-                        onSave={(newItem: T) => setCurrentTextfield(popoverConfigs[i].onSave(newItem))}
-                    />
-                </View>
+                <Portal key={`${item.id}-popover-${i}`}>
+                    <Animated.View style={popoverPositionStyle}>
+                        <Popover
+                            {...popoverConfigs[i].props}
+                            onSave={(newItem: T) => setCurrentTextfield(popoverConfigs[i].props.onSave(newItem))}
+                        />
+                    </Animated.View>
+                </Portal>
             ))
             }
         </Animated.View>

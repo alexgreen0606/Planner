@@ -1,20 +1,16 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View } from 'react-native';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import FolderItemBanner from './FolderItemBanner';
 import { getFolderFromStorage, getListFromStorage } from '../storage/folderStorage';
-import ListTextfield from '../../../foundation/sortedLists/components/textfield/ListTextfield';
-import GenericIcon from '../../../foundation/components/icons/GenericIcon';
-import globalStyles from '../../../foundation/theme/globalStyles';
 import colors from '../../../foundation/theme/colors';
-import { ItemStatus, ListItem, ShiftTextfieldDirection } from '../../../foundation/sortedLists/utils';
+import { isItemDeleting, isItemTextfield, ItemStatus, ListItem } from '../../../foundation/sortedLists/utils';
 import { FOLDER_STORAGE_ID, FolderItemType, List } from '../utils';
-import ClickableLine from '../../../foundation/sortedLists/components/separator/ClickableLine';
-import EmptyLabel from '../../../foundation/sortedLists/components/emptyLabel/EmptyLabel';
+import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 
 interface SortableListProps {
     listId: string;
-    onBackClick: (parentFolderId: string) => void;
+    onBackClick: (listId: string) => void;
 };
 
 const SortedList = ({
@@ -22,67 +18,15 @@ const SortedList = ({
     onBackClick
 }: SortableListProps) => {
     const initialListData = useMemo(() => getListFromStorage(listId), [listId]);
-    const parentFolderData = useMemo(() => getFolderFromStorage(initialListData.parentFolderId), [initialListData]);
+    const parentFolderData = useMemo(() => getFolderFromStorage(initialListData.listId), [initialListData]);
 
     // Stores the current list and all handler functions to update it
     const SortedItems = useSortedList<ListItem, List>(
         listId,
         FOLDER_STORAGE_ID,
         (storageObject: List) => storageObject.items,
-        (newItems: ListItem[], currentList: List) => ({...currentList, items: newItems})
+        (newItems: ListItem[], currentObject: List) => ({ ...currentObject, items: newItems }),
     );
-
-    /**
-     * Displays a row in the list. An radio button is rendered on the left allowing for deleting items.
-     * @param param0 - the item data and the drag function for sorting
-     */
-    const renderRow = ({ item, drag }: RenderItemParams<ListItem>) => {
-        const isItemDeleting = item.status === ItemStatus.DELETE;
-        const isItemEditing = [ItemStatus.EDIT, ItemStatus.NEW].includes(item.status);
-        return (
-            <View style={globalStyles.backdrop}>
-                <View style={globalStyles.listRow}>
-
-                    {/* Toggle Delete Button */}
-                    <TouchableOpacity
-                        onPress={() => SortedItems.toggleDeleteItem(item)}
-                    >
-                        <GenericIcon
-                            type='FontAwesome'
-                            name={isItemDeleting ? 'circle' : 'circle-thin'}
-                            size={20}
-                            color={isItemDeleting ? colors.blue : colors.grey}
-                        />
-                    </TouchableOpacity>
-
-                    {/* Row data */}
-                    {isItemEditing ? (
-                        <ListTextfield
-                            key={`${item.id}-${item.sortId}`}
-                            item={item}
-                            onChange={(text) => SortedItems.persistItemToStorage({ ...item, value: text })}
-                            onSubmit={() => SortedItems.saveTextfield(ShiftTextfieldDirection.BELOW)}
-                        />
-                    ) : (
-                        <Text
-                            onLongPress={drag}
-                            onPress={() => SortedItems.beginEditItem(item)}
-                            style={{
-                                ...globalStyles.listItem,
-                                color: isItemDeleting ? colors.grey : colors.white,
-                                textDecorationLine: isItemDeleting ? 'line-through' : undefined
-                            }}
-                        >
-                            {item.value}
-                        </Text>
-                    )}
-                </View>
-
-                {/* Separator line */}
-                <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(item.sortId)} />
-            </View>
-        )
-    }
 
     return (
         <View>
@@ -91,20 +35,30 @@ const SortedList = ({
                 backButtonConfig={{
                     display: !!parentFolderData,
                     label: parentFolderData?.value,
-                    onClick: () => onBackClick(initialListData.parentFolderId!)
+                    onClick: () => onBackClick(initialListData.listId!)
                 }}
                 itemType={FolderItemType.LIST}
             />
-            <ClickableLine onPress={() => SortedItems.createOrMoveTextfield(-1)} />
-            <DraggableFlatList
-                data={SortedItems.items.sort((a,b) => a.sortId - b.sortId)}
-                scrollEnabled={false}
-                onDragEnd={SortedItems.endDragItem}
-                onDragBegin={SortedItems.beginDragItem}
-                keyExtractor={(item) => item.id}
-                renderItem={renderRow}
+            <SortableList<ListItem, never, never>
+                listId={listId}
+                items={SortedItems.items}
+                onDragEnd={SortedItems.persistItemToStorage}
+                onSaveTextfield={(updatedItem: ListItem) => {
+                    const item = {...updatedItem, status: isItemTextfield(updatedItem) ? ItemStatus.STATIC : updatedItem.status }
+                    SortedItems.persistItemToStorage(item);
+                }}
+                onContentClick={SortedItems.convertItemToTextfield}
+                onDeleteItem={SortedItems.deleteItemFromStorage}
+                getTextfieldKey={item => `${item.id}-${item.sortId}`}
+                getLeftIconConfig={item => ({
+                    icon: {
+                        type: isItemDeleting(item) ? 'circle-filled' : 'circle',
+                        color: isItemDeleting(item) ? colors.blue : colors.grey
+                    },
+                    onClick: SortedItems.toggleDeleteItem
+                })}
             />
-            {!SortedItems.items.length && (
+            {/* {!SortedItems.items.length && (
                 <EmptyLabel
                     label={"It's a ghost town in here."}
                     iconConfig={{
@@ -116,7 +70,7 @@ const SortedList = ({
                     onPress={() => SortedItems.createOrMoveTextfield(-1)}
                     style={{ height: '90%', flexDirection: 'column' }}
                 />
-            )}
+            )} */}
         </View>
     );
 };
