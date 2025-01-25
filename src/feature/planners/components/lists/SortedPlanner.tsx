@@ -66,7 +66,6 @@ const SortedPlanner = ({
                     ...globalStyles.verticallyCentered,
                     width: '100%',
                     flexWrap: 'wrap',
-                    gap: 8
                 }}>
                     {allDayEvents.map((allDayEvent, i) =>
                         <Chip
@@ -111,7 +110,7 @@ const SortedPlanner = ({
             {/* Collapse Control */}
             {SortedEvents.items.length > 15 && !collapsed && (
                 <View>
-                    <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8, paddingTop: 8 }} onPress={toggleCollapsed}>
+                    <TouchableOpacity style={{ ...globalStyles.verticallyCentered, paddingLeft: 8, paddingTop: 8 }} onPress={toggleCollapsed}>
                         <GenericIcon
                             type='chevron-down'
                             color={colors.grey}
@@ -210,11 +209,19 @@ const SortedPlanner = ({
                         item
                     },
                 })}
+                emptyLabelConfig={{
+                    label: 'Empty Placeholder',
+                    iconConfig: {
+                        type: 'celebrate',
+                        color: colors.grey,
+                        size: 16,
+                    }
+                }}
             />
 
             {/* Collapse Control */}
             {!!SortedEvents.items.length && (
-                <TouchableOpacity style={{ ...globalStyles.verticallyCentered, gap: 8, paddingLeft: 8 }} onPress={toggleCollapsed}>
+                <TouchableOpacity style={{ ...globalStyles.verticallyCentered, paddingLeft: 8 }} onPress={toggleCollapsed}>
                     <GenericIcon
                         type={collapsed ? 'chevron-right' : 'chevron-up'}
                         color={colors.grey}

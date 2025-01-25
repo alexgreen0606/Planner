@@ -54,7 +54,8 @@ const Popover = ({
 
 const styles = StyleSheet.create({
     popup: {
-        ...globalStyles.background,
+        ...globalStyles.blackFilledSpace,
+        flex: undefined,
         padding: 12,
         alignSelf: 'flex-start',
         alignItems: 'flex-start',

@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
-import FolderItemBanner from './FolderItemBanner';
 import {
     createFolderItem,
     getFolderFromStorage,
@@ -25,12 +24,14 @@ interface SortableFolderProps {
     folderId: string;
     onBackClick: (listId: string) => void;
     onOpenItem: (id: string, type: FolderItemType) => void;
+    parentClickTrigger: number;
 };
 
 const SortedFolder = ({
     folderId,
     onBackClick,
-    onOpenItem
+    onOpenItem,
+    parentClickTrigger
 }: SortableFolderProps) => {
     const { currentTab } = useNavigatorContext();
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
@@ -98,6 +99,12 @@ const SortedFolder = ({
             onBackClick(folderData.listId);
         }
     };
+
+    useEffect(() => {
+        if (parentClickTrigger > 0) {
+            handleParentFolderClick();
+        }
+    }, [parentClickTrigger])
 
     /**
      * Handles clicking a list item. In transfer mode, the textfield item will transfer to the clicked item.
@@ -186,16 +193,7 @@ const SortedFolder = ({
             colors.grey : colors[item.color as keyof typeof colors]
 
     return (
-        <View style={globalStyles.backdrop}>
-            <FolderItemBanner
-                itemId={folderData.id}
-                backButtonConfig={{
-                    display: !!parentFolderData,
-                    label: parentFolderData?.value,
-                    onClick: handleParentFolderClick
-                }}
-                itemType={FolderItemType.FOLDER}
-            />
+        <View style={globalStyles.blackFilledSpace}>
             <SortableList<FolderItem, PopoverProps, DeleteModalProps>
                 listId={folderId}
                 items={SortedItems.items}
@@ -235,18 +233,17 @@ const SortedFolder = ({
                     },
                     onClick: SortedItems.convertItemToTextfield
                 })}
+                emptyLabelConfig={{
+                    label: "It's a ghost town in here.",
+                    iconConfig: {
+                        type: 'ghost',
+                        size: 20,
+                        color: colors.grey,
+                    },
+                    customFontSize: 14,
+                    style: { height: '90%' }
+                }}
             />
-            {/* // <EmptyLabel
-                    //     label="It's a ghost town in here."
-                    //     iconConfig={{
-                    //         type: 'ghost',
-                    //         size: 26,
-                    //         color: colors.grey,
-                    //     }}
-                    //     customFontSize={14}
-                    //     onPress={() => SortedItems.createOrMoveTextfield(-1)}
-                    //     style={{ flexDirection: 'column' }}
-                    // /> */}
         </View>
     );
 };

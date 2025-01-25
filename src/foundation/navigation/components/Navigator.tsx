@@ -21,7 +21,7 @@ const routeIconMap: Record<string, string> = {
 const Navigator = () => {
     const { setCurrentTab } = useNavigatorContext();
     return (
-        <SafeAreaView style={globalStyles.backdrop}>
+        <SafeAreaView style={globalStyles.blackFilledSpace}>
             <Tab.Navigator
                 screenOptions={({ route }) => ({
                     tabBarIcon: ({ color, size }) =>

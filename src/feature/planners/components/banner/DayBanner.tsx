@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     },
     weatherContainer: {
         ...globalStyles.verticallyCentered,
+        gap: 0,
         height: '100%'
     },
     highTemp: {

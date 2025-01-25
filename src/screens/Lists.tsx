@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import SortedFolder from '../feature/folders/components/SortedFolder';
 import SortedList from '../feature/folders/components/SortedList';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
+import { FolderItemType, NULL, ROOT_FOLDER_ID } from '../feature/folders/utils';
 import globalStyles from '../foundation/theme/globalStyles';
-import { FolderItemType, ROOT_FOLDER_ID } from '../feature/folders/utils';
+import FolderItemBanner from '../feature/folders/components/FolderItemBanner';
+import { getFolderFromStorage, getListFromStorage } from '../feature/folders/storage/folderStorage';
 
 interface PageConfig {
   id: string;
@@ -17,27 +19,58 @@ const Lists = () => {
     type: FolderItemType.FOLDER
   });
 
-  const onBackClick = (listId: string) =>
+  const [parentClickTrigger, setParentClickTrigger] = useState(0);
+
+  const pageData = useMemo(() =>
+    pageConfig.type === FolderItemType.FOLDER ?
+      getFolderFromStorage(pageConfig.id) : getListFromStorage(pageConfig.id),
+    [pageConfig]
+  );
+  const parentFolderData = useMemo(() => pageData.listId !== NULL ? getFolderFromStorage(pageData.listId) : null, [pageData]);
+
+
+  const onBackClick = (listId: string) => {
     setPageConfig({ id: listId, type: FolderItemType.FOLDER });
+  }
+
+  const onOpenItem = (id: string, type: FolderItemType) => {
+    setParentClickTrigger(0);
+    setPageConfig({ id, type });
+  }
+
+  const clickParent = () => {
+    setParentClickTrigger(curr => curr + 1);
+  }
 
   return (
-    <View key={pageConfig.id} style={globalStyles.backdrop}>
+    <View key={pageConfig.id} style={globalStyles.blackFilledSpace}>
+
+      {/* Page Label */}
+      <FolderItemBanner
+        itemId={pageConfig.id}
+        backButtonConfig={{
+          display: !!parentFolderData,
+          label: parentFolderData?.value,
+          onClick: pageConfig.type === FolderItemType.LIST ?
+            () => onBackClick(parentFolderData!.listId!) : clickParent
+        }}
+        itemType={pageConfig.type}
+      />
+
+      {/* List */}
       {pageConfig.type === FolderItemType.FOLDER ? (
         <SortableListProvider>
           <SortedFolder
             folderId={pageConfig.id}
             onBackClick={onBackClick}
-            onOpenItem={(id: string, type: FolderItemType) =>
-              setPageConfig({ id, type })
-            }
+            onOpenItem={onOpenItem}
+            parentClickTrigger={parentClickTrigger}
+
           />
         </SortableListProvider>
       ) : (
         <SortableListProvider>
-          <SortedList
-            listId={pageConfig.id}
-            onBackClick={onBackClick}
-          />
+          <SortedList listId={pageConfig.id} />
         </SortableListProvider>
       )}
     </View>

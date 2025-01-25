@@ -5,7 +5,7 @@ import CustomText from '../../../components/text/CustomText';
 import colors from '../../../theme/colors';
 import globalStyles from '../../../theme/globalStyles';
 
-interface EmptyLabelProps {
+export interface EmptyLabelProps {
     label: string;
     iconConfig?: GenericIconProps;
     style?: ViewStyle;
@@ -19,28 +19,28 @@ const EmptyLabel = ({
     customFontSize = 14
 }: EmptyLabelProps) =>
     <View style={{ ...styles.container, ...style }}>
-        {iconConfig && (
-            <GenericIcon
-                {...iconConfig}
-            />
-        )}
-        <CustomText
-            type='label'
-            style={{
-                color: colors.grey,
-                fontSize: customFontSize
-            }}
-        >
-            {label}
-        </CustomText>
+        <View style={globalStyles.verticallyCentered}>
+            <CustomText
+                type='label'
+                style={{
+                    color: colors.grey,
+                    fontSize: customFontSize
+                }}
+            >
+                {label}
+            </CustomText>
+            {iconConfig && (
+                <GenericIcon
+                    {...iconConfig}
+                />
+            )}
+        </View>
     </View>
 
 const styles = StyleSheet.create({
     container: {
-        ...globalStyles.verticallyCentered,
-        padding: 4,
-        gap: 4,
         justifyContent: 'center',
+        alignItems: 'center'
     },
 });
 

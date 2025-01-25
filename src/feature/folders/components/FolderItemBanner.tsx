@@ -55,7 +55,6 @@ const FolderItemBanner = ({
     const styles = StyleSheet.create({
         label: {
             ...globalStyles.verticallyCentered,
-            gap: 8,
             flex: 1,
         },
         labelText: {
@@ -64,10 +63,9 @@ const FolderItemBanner = ({
             flex: 1
         },
         textInput: {
-            ...globalStyles.backdrop,
+            ...globalStyles.blackFilledSpace,
             height: 25,
             fontSize: 25,
-            flex: 1
         },
         backButton: {
             color: colors.blue,

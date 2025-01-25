@@ -1,4 +1,4 @@
-import Animated, { runOnJS, SharedValue, useAnimatedRef, useAnimatedStyle, useDerivedValue, useSharedValue } from "react-native-reanimated";
+import Animated, { runOnJS, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from "react-native-reanimated";
 import {
     generateSortId,
     isItemDeleting,
@@ -10,7 +10,7 @@ import {
 } from "../../utils";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
@@ -24,7 +24,7 @@ interface RowProps<
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>,
     M extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>
-> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield'> {
+> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig'> {
     item: T;
     positions: SharedValue<Record<string, number>>;
     saveTextfieldAndCreateNew: (parentSortId: number) => Promise<void>;
@@ -61,7 +61,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     listLength,
     onDragEnd
 }: RowProps<T, P, M>) => {
-    const { scroll } = useSortableListContext();
+    const { scroll, scrollPosition } = useSortableListContext();
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
     const item = useMemo(() =>
         currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
@@ -74,10 +74,6 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     const didScroll = useSharedValue(false);
     const prevY = useSharedValue(0);
     const dragInitialPosition = useSharedValue(0);
-
-
-    // TODO: calculate this using the position in the list, plus the scroll position
-    const rowYAbsolutePosition = useSharedValue<number>(0);
 
     // Extract row configs
     const customTextColor = useMemo(() => getRowTextColor?.(item), [item, getRowTextColor]);
@@ -224,11 +220,12 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
         }
     }, [top.value]);
 
+    // Animate the popover's position
     const popoverPositionStyle = useAnimatedStyle(() => ({
         left: 4,
         position: 'absolute',
-        top: rowYAbsolutePosition.value
-    }), [rowYAbsolutePosition.value]);
+        top: scrollPosition + top.value + LIST_ITEM_HEIGHT
+    }), [positions.value, top.value]);
 
     return (
         <Animated.View style={rowPositionStyle}>

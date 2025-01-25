@@ -1,13 +1,10 @@
-import { TextStyle, ViewStyle } from "react-native";
+import { ViewStyle } from "react-native";
 import colors from "./colors";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;
-  backdrop: ViewStyle;
-  background: ViewStyle;
   verticallyCentered: ViewStyle;
-  fullWidth: ViewStyle;
-  horizontallyCentered: ViewStyle;
+  blackFilledSpace: ViewStyle;
 }
 
 const globalStyles: GlobalStyles = {
@@ -17,24 +14,15 @@ const globalStyles: GlobalStyles = {
     flexDirection: 'row',
     width: '100%'
   },
-  backdrop: {
-    backgroundColor: colors.black,
-    flex: 1
-  },
-  background: {
-    backgroundColor: colors.background
+  blackFilledSpace: {
+    flex: 1,
+    backgroundColor: colors.black
   },
   verticallyCentered: {
     flexDirection: 'row',
+    gap: 8,
     alignItems: 'center',
   },
-  horizontallyCentered: {
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  fullWidth: {
-    width: '100%'
-  }
 };
 
 export default globalStyles;

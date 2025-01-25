@@ -64,7 +64,7 @@ const Planner = () => {
     recurringPlannerStorage);
 
   return (
-    <View style={globalStyles.backdrop}>
+    <View style={globalStyles.blackFilledSpace}>
 
       {/* Page Label */}
       <PageLabel
@@ -90,7 +90,7 @@ const Planner = () => {
           <SortableListProvider>
             <View key={`${recurringPlannerModalOpen}-weekday-modal-open`} style={{ padding: 16 }}>
               {timestamps.map((timestamp) =>
-                <View style={{ marginBottom: 16 }} key={`${timestamp}-planner`}>
+                <View style={{ marginBottom: 24 }} key={`${timestamp}-planner`}>
                   <SortedPlanner
                     timestamp={timestamp}
                     reloadChips={() => buildPlanners(false)}

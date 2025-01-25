@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View } from 'react-native';
+import { View, ViewStyle } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import { useDerivedValue } from 'react-native-reanimated';
@@ -14,8 +14,7 @@ import {
 } from '../../utils';
 import ClickableLine from '../separator/ClickableLine';
 import DraggableRow from './DraggableRow';
-import EmptyLabel from '../emptyLabel/EmptyLabel';
-import colors from '../../../theme/colors';
+import EmptyLabel, { EmptyLabelProps } from '../emptyLabel/EmptyLabel';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -25,6 +24,7 @@ export interface DraggableListProps<
     listId: string;
     items: T[];
     hideList?: boolean;
+    fillSpace?: boolean;
     onSaveTextfield: (updatedItem: T) => Promise<void> | void;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd: (updatedItem: T) => Promise<void> | void;
@@ -37,6 +37,7 @@ export interface DraggableListProps<
     getPopovers?: (item: T) => ModifyItemConfig<T, P>[];
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
+    emptyLabelConfig: EmptyLabelProps;
 }
 
 /**
@@ -61,6 +62,8 @@ const SortableList = <
     hideList,
     onSaveTextfield,
     initializeItem,
+    emptyLabelConfig,
+    fillSpace,
     ...rest
 }: DraggableListProps<T, P, M>) => {
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
@@ -116,7 +119,7 @@ const SortableList = <
     );
 
     return (
-        <View>
+        <View style={{flex: fillSpace ? 1 : 0}}>
 
             {/* Upper Item Creator */}
             <ClickableLine onPress={() => saveTextfieldAndCreateNew(-1)} />
@@ -144,12 +147,7 @@ const SortableList = <
             {/* Empty Label */}
             {currentList.length === 0 && (
                 <EmptyLabel
-                    label='Empty Placeholder'
-                    iconConfig={{
-                        type: 'celebrate',
-                        color: colors.grey,
-                        size: 16
-                    }}
+                    {...emptyLabelConfig}
                 />
             )}
         </View>

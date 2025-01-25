@@ -21,7 +21,6 @@ const Chip = ({ label, iconConfig, color }: ChipProps) => {
             ...globalStyles.verticallyCentered,
             width: 'auto',
             height: 20,
-            gap: 4,
             justifyContent: 'center',
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: color,

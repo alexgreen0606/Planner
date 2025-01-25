@@ -7,6 +7,7 @@ import Animated, {
     useDerivedValue,
 } from 'react-native-reanimated';
 import { ListItem } from '../utils';
+import globalStyles from '../../theme/globalStyles';
 
 interface PendingDelete<T extends ListItem> {
     timeout: NodeJS.Timeout;
@@ -18,6 +19,7 @@ interface SortableListContextValue<T extends ListItem> {
     currentTextfield: T | undefined;
     setCurrentTextfield: React.Dispatch<React.SetStateAction<T | undefined>>;
     pendingDeletes: React.MutableRefObject<Map<string, PendingDelete<T>>>;
+    scrollPosition: number;
 }
 
 const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
@@ -27,6 +29,10 @@ export const SortableListProvider: React.FC<{ children: React.ReactNode }> = <T 
     const animatedRef = useAnimatedRef<Animated.ScrollView>();
     const pendingDeletes = useRef<Map<string, PendingDelete<T>>>(new Map());
     const scrollPosition = useSharedValue(0);
+
+    const scrollPositionConstant = useDerivedValue(() => {
+        return scrollPosition.value + 100;
+    });
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -49,11 +55,13 @@ export const SortableListProvider: React.FC<{ children: React.ReactNode }> = <T 
             currentTextfield,
             setCurrentTextfield,
             pendingDeletes,
+            scrollPosition: scrollPositionConstant.value
         }}>
             <Animated.ScrollView
                 ref={animatedRef}
-                style={{ flex: 1 }}
+                style={{flex: 1}}
                 onScroll={scrollHandler}
+                contentContainerStyle={globalStyles.blackFilledSpace}
             >
                 {children}
             </Animated.ScrollView>

@@ -57,7 +57,7 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
             getTextfieldKey={item => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
             onSaveTextfield={SortedEvents.persistItemToStorage}
             onDeleteItem={SortedEvents.deleteItemFromStorage}
-            onDragEnd={async (item) => {await SortedEvents.persistItemToStorage(item)}}
+            onDragEnd={async (item) => { await SortedEvents.persistItemToStorage(item) }}
             onContentClick={SortedEvents.convertItemToTextfield}
             getRightIconConfig={item => ({
                 hideIcon: item.status === ItemStatus.STATIC && !item.timeConfig,
@@ -99,6 +99,10 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
                     item
                 },
             })}
+            emptyLabelConfig={{
+                label: 'No recurring weekday plans',
+                style: { height: 400 }
+            }}
         />
     );
 };
