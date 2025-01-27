@@ -33,7 +33,7 @@ const useSortedList = <T extends ListItem, S>(
     const [items, setItems] = useState<T[]>([]);
 
     const buildList = async () => {
-        const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
+        const fetchedItems = await getItemsFromStorageObject?.(storageObject as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);
     };
 
@@ -43,16 +43,21 @@ const useSortedList = <T extends ListItem, S>(
     }, [storageObject]);
 
     /**
-     * Converts an item into a textfield. 
-     * If a textfield already exists, it will be saved first.
+     * Toggles an item between a textfield and static.
+     * If another textfield exists, it will be saved first.
      */
-    async function convertItemToTextfield(item: T) {
-        if (item.status === ItemStatus.DELETE || item.id === currentTextfield?.id) return;
-        else if (currentTextfield && currentTextfield.value.trim() !== '')
+    async function toggleItemEdit(item: T) {
+        if (item.status === ItemStatus.DELETE) return;
+        const togglingItem = currentTextfield?.id === item.id;
+        if (currentTextfield && currentTextfield.value.trim() !== '') {
             await persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
-        setCurrentTextfield({ ...item, status: ItemStatus.EDIT });
+        }
+        if (!togglingItem) {
+            setCurrentTextfield({ ...item, status: ItemStatus.EDIT });
+        } else {
+            setCurrentTextfield(undefined);
+        }
 
-        // TODO: use as a toggle
     };
 
     /**
@@ -80,7 +85,8 @@ const useSortedList = <T extends ListItem, S>(
             } else {
                 updatedList.push(item);
             }
-            setStorageObject(storageObject && setItemsInStorageObject ? setItemsInStorageObject(updatedList, storageObject) : updatedList as S);
+            const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, {...storageObject}) : updatedList;
+            setStorageObject(objectToSave as S);
         }
     };
 
@@ -95,11 +101,15 @@ const useSortedList = <T extends ListItem, S>(
         else {
 
             // Remove the item from the list and save
-            const updatedList = [...items];
+            const updatedList = [...items].filter(existingItem => existingItem.status !== ItemStatus.DELETE || existingItem.id === item.id);
             const deleteIndex = updatedList.findIndex(existingItem => existingItem.id === item.id);
-            if (deleteIndex !== -1)
+            if (deleteIndex !== -1) {
                 updatedList.splice(deleteIndex, 1);
-            setStorageObject(updatedList as S);
+            } else {
+                return;
+            }
+            const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, storageObject) : updatedList;
+            setStorageObject(objectToSave as S);
         }
     };
 
@@ -122,7 +132,7 @@ const useSortedList = <T extends ListItem, S>(
      * Changing the delete status of any item will reset the timeouts for all deleting items. Items are fully 
      * deleted after 3 seconds.
      */
-    async function toggleDeleteItem(item: T) {
+    async function toggleItemDelete(item: T) {
 
         // Handle textfield delete
         if (item.id === currentTextfield?.id) {
@@ -158,9 +168,9 @@ const useSortedList = <T extends ListItem, S>(
         items,
         refetchItems: buildList,
         persistItemToStorage,
-        toggleDeleteItem,
+        toggleItemDelete,
         rescheduleAllDeletes,
-        convertItemToTextfield,
+        toggleItemEdit,
         deleteItemFromStorage
     };
 };

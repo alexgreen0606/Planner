@@ -48,32 +48,30 @@ export const getListFromStorage = (listId: string) => {
 };
 
 export const getFolderItem = (itemId: string, type: FolderItemType): FolderItem => {
-    if (type === FolderItemType.FOLDER) {
-        const data = getFolderFromStorage(itemId);
-        return {
-            id: data.id,
-            value: data.value,
-            listId: data.listId,
-            sortId: data.sortId,
-            color: data.color,
-            status: data.status,
-            type: FolderItemType.FOLDER,
-            childrenCount: data.folderIds.length + data.listIds.length,
-        };
-    } else {
-        const data = getListFromStorage(itemId);
-        return {
-            id: data.id,
-            value: data.value,
-            listId: data.listId,
-            sortId: data.sortId,
-            color: data.color,
-            status: data.status,
-            type: FolderItemType.LIST,
-            childrenCount: data.items.length,
-        };
-    }
-}
+    const data =
+        type === FolderItemType.FOLDER
+            ? getFolderFromStorage(itemId)
+            : getListFromStorage(itemId);
+
+    if (!data) throw new Error(`${type} does not exist with id ${itemId}`)
+
+    const newItem = {
+        id: data.id,
+        value: data.value,
+        listId: data.listId,
+        sortId: data.sortId,
+        color: data.color,
+        status: data.status,
+        type,
+        childrenCount:
+            type === FolderItemType.FOLDER
+                ? (data as Folder).folderIds.length + (data as Folder).listIds.length
+                : (data as List).items.length,
+    };
+
+    return newItem;
+};
+
 
 /**
  * Builds a collection of all folder and lists within a folder.
@@ -102,22 +100,25 @@ export const saveToStorage = (item: Folder | List) => {
  */
 export const createFolderItem = (newItem: FolderItem) => {
     const parentFolder = getFolderFromStorage(newItem.listId);
-    const staticItem = { ...newItem, status: ItemStatus.STATIC };
-    if (staticItem.type === FolderItemType.FOLDER) {
+    const { childrenCount, ...sharedData } = {
+        ...newItem,
+        status: ItemStatus.STATIC,
+      };
+    if (newItem.type === FolderItemType.FOLDER) {
         // Save the new folder
         saveToStorage({
-            ...staticItem,
+            ...sharedData,
             folderIds: [],
             listIds: [],
         });
-        parentFolder.folderIds.push(staticItem.id);
+        parentFolder.folderIds.push(newItem.id);
     } else {
         // Save the new list
         saveToStorage({
-            ...staticItem,
+            ...sharedData,
             items: [],
         });
-        parentFolder.listIds.push(staticItem.id);
+        parentFolder.listIds.push(newItem.id);
     }
 
     // Add the item to its parent

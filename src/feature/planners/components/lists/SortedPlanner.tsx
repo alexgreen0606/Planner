@@ -39,7 +39,8 @@ const SortedPlanner = ({
     const toggleCollapsed = () => setCollapsed(curr => !curr);
 
     const toggleTimeModal = async (item: Event) => {
-        await SortedEvents.convertItemToTextfield(item);
+        if (!isItemTextfield(item))
+            await SortedEvents.toggleItemEdit(item);
         setTimeModalOpen(curr => !curr);
     };
 
@@ -138,11 +139,11 @@ const SortedPlanner = ({
                         type: isItemDeleting(item) ? 'circle-filled' : 'circle',
                         color: isItemDeleting(item) ? colors.blue : colors.grey
                     },
-                    onClick: SortedEvents.toggleDeleteItem
+                    onClick: SortedEvents.toggleItemDelete
                 })}
                 onDeleteItem={SortedEvents.deleteItemFromStorage}
                 hideList={collapsed}
-                onContentClick={SortedEvents.convertItemToTextfield}
+                onContentClick={SortedEvents.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                 handleValueChange={(text, item) => {
                     const newEvent = {
@@ -210,12 +211,7 @@ const SortedPlanner = ({
                     },
                 })}
                 emptyLabelConfig={{
-                    label: 'Empty Placeholder',
-                    iconConfig: {
-                        type: 'celebrate',
-                        color: colors.grey,
-                        size: 16,
-                    }
+                    label: 'No Plans',
                 }}
             />
 

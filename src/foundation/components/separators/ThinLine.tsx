@@ -14,7 +14,7 @@ const ThinLine = ({ style }: ThinLineProps) => {
             backgroundColor: colors.grey,
             ...style,
         },
-        clickableLine: {
+        lineContainer: {
             width: '100%',
             height: 15,
             backgroundColor: 'transparent',
@@ -22,7 +22,7 @@ const ThinLine = ({ style }: ThinLineProps) => {
         },
     });
     return (
-        <View style={styles.clickableLine}>
+        <View style={styles.lineContainer}>
             <View style={styles.thinLine} />
         </View>
     )

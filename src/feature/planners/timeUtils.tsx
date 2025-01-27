@@ -165,32 +165,21 @@ export function generateSortIdByTimestamp(event: Event, planner: Event[], fallba
     const plannerWithoutEvent = existingPlannerEvents.filter(curr => curr.id !== event.id);
 
     // Handler for situations where the item can remain in its position.
-    const persistEventPosition = () => {
+    function persistEventPosition() {
         if (event.sortId === -1) {
 
             // Event will be at the top of the list
             return generateSortId(-1, plannerWithoutEvent);
-        } 
-        // else if (!existingPlannerEvents.find(item => item.id === event.id)) {
-
-        //     // Event will be removed. Return its sort ID to replace it with a new item.
-        //     console.log(`Returning same sort ID for textfield because ${event.value} will be removed.`);
-        //     return event.sortId;
-
-        //     // generateSortId(getParentSortId(event, planner), existingPlannerEvents);
-        // } else 
-        
-        if (plannerWithoutEvent.find(item => item.sortId === event.sortId)) {
+        } else if (plannerWithoutEvent.find(item => item.sortId === event.sortId)) {
 
             // Event has a duplicate sort ID. Generate a new one.
-            console.log(`Generating new sort ID for ${event.value}`);
             return generateSortId(getParentSortId(event, existingPlannerEvents), plannerWithoutEvent);
         } else {
 
             // Use the event's current position.
             return event.sortId;
         }
-    }
+    };
 
     // The event does not need to account for a timestamp
     if (!event.timeConfig || event.timeConfig.allDay) return persistEventPosition();
@@ -209,7 +198,6 @@ export function generateSortIdByTimestamp(event: Event, planner: Event[], fallba
             (!prevEvent || (prevEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, prevEvent.timeConfig.startTime) >= 0)) &&
             (!nextEvent || (nextEvent.timeConfig && compareTimeValues(event.timeConfig.startTime, nextEvent.timeConfig.startTime) < 0));
 
-        console.log(hasNoConflict, 'has no conflict')
         if (hasNoConflict) return persistEventPosition();
     } else {
         throw new Error(`Event ${event.value} does not exist in the given planner.`);

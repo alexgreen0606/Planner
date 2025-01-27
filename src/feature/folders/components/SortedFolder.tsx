@@ -74,7 +74,7 @@ const SortedFolder = ({
     }
 
     /**
-     * Transfers the focused item to a new folder.
+     * Transfers the textfield item to a new folder.
      * @param destination - the folder being transferred to
      */
     const handleItemTransfer = (destination?: FolderItem) => {
@@ -90,19 +90,17 @@ const SortedFolder = ({
      * If the focused item is being transferred, transfer it to the parent folder.
      * Otherwise, open the parent folder.
      */
-    const handleParentFolderClick = () => {
-        if (currentTextfield?.status === ItemStatus.TRANSFER) {
-            handleItemTransfer();
-            return;
-
-        } else if (folderData.listId) {
-            onBackClick(folderData.listId);
-        }
-    };
-
     useEffect(() => {
         if (parentClickTrigger > 0) {
-            handleParentFolderClick();
+
+            // Handle parent folder click
+            if (currentTextfield?.status === ItemStatus.TRANSFER) {
+                handleItemTransfer();
+                return;
+
+            } else if (folderData.listId) {
+                onBackClick(folderData.listId);
+            }
         }
     }, [parentClickTrigger])
 
@@ -193,58 +191,56 @@ const SortedFolder = ({
             colors.grey : colors[item.color as keyof typeof colors]
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
-            <SortableList<FolderItem, PopoverProps, DeleteModalProps>
-                listId={folderId}
-                items={SortedItems.items}
-                onDragEnd={SortedItems.persistItemToStorage}
-                getTextfieldKey={item => `${item.id}-${item.sortId}`}
-                onSaveTextfield={SortedItems.persistItemToStorage}
-                onDeleteItem={SortedItems.deleteItemFromStorage}
-                getPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
-                getRowTextColor={item => isItemTransfering(item) ? colors.blue :
-                    (isTransferMode() && item.type === FolderItemType.LIST) ? colors.grey : colors.white}
-                initializeItem={initializeFolderItem}
-                getRightIconConfig={item => ({
-                    hideIcon: isItemTextfield(item),
-                    customIcon:
-                        <CustomText type='soft' style={{ color: colors.grey }}>
-                            {item.childrenCount}
-                        </CustomText>
-                })}
-                onContentClick={handleItemClick}
-                getModal={(item: FolderItem) => ({
-                    component: DeleteModal,
-                    props: {
-                        open: deleteModalOpen,
-                        toggleModalOpen: toggleDeleteModal,
-                        onSave: (updatedItem: FolderItem) => {
-                            SortedItems.deleteItemFromStorage(updatedItem);
-                            toggleDeleteModal();
-                            return undefined;
-                        },
-                        item
+        <SortableList<FolderItem, PopoverProps, DeleteModalProps>
+            listId={folderId}
+            items={SortedItems.items}
+            fillSpace
+            onDragEnd={SortedItems.persistItemToStorage}
+            getTextfieldKey={item => `${item.id}-${item.sortId}`}
+            onSaveTextfield={SortedItems.persistItemToStorage}
+            onDeleteItem={SortedItems.deleteItemFromStorage}
+            getPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
+            getRowTextColor={item => isItemTransfering(item) ? colors.blue :
+                (isTransferMode() && item.type === FolderItemType.LIST) ? colors.grey : colors.white}
+            initializeItem={initializeFolderItem}
+            getRightIconConfig={item => ({
+                customIcon:
+                    <CustomText type='soft' style={{ color: colors.grey }}>
+                        {item.childrenCount}
+                    </CustomText>
+            })}
+            onContentClick={handleItemClick}
+            getModal={(item: FolderItem) => ({
+                component: DeleteModal,
+                props: {
+                    open: deleteModalOpen,
+                    toggleModalOpen: toggleDeleteModal,
+                    onSave: (updatedItem: FolderItem) => {
+                        SortedItems.deleteItemFromStorage(updatedItem);
+                        toggleDeleteModal();
+                        return undefined;
                     },
-                })}
-                getLeftIconConfig={item => ({
-                    icon: {
-                        type: getIconType(item),
-                        color: getIconColor(item)
-                    },
-                    onClick: SortedItems.convertItemToTextfield
-                })}
-                emptyLabelConfig={{
-                    label: "It's a ghost town in here.",
-                    iconConfig: {
-                        type: 'ghost',
-                        size: 20,
-                        color: colors.grey,
-                    },
-                    customFontSize: 14,
-                    style: { height: '90%' }
-                }}
-            />
-        </View>
+                    item
+                },
+            })}
+            getLeftIconConfig={item => ({
+                icon: {
+                    type: getIconType(item),
+                    color: getIconColor(item)
+                },
+                onClick: SortedItems.toggleItemEdit
+            })}
+            emptyLabelConfig={{
+                label: "It's a ghost town in here.",
+                iconConfig: {
+                    type: 'ghost',
+                    size: 20,
+                    color: colors.grey,
+                },
+                customFontSize: 14,
+                style: { height: '90%' }
+            }}
+        />
     );
 };
 

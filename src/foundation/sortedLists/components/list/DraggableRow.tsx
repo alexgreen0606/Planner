@@ -11,14 +11,14 @@ import {
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
 import { useMemo } from "react";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
 import colors from "../../../theme/colors";
 import ListTextfield from "../textfield/ListTextfield";
 import GenericIcon from "../../../components/icons/GenericIcon";
-import ClickableLine from "../separator/ClickableLine";
 import { Portal } from "react-native-paper";
+import ThinLine from "../../../components/separators/ThinLine";
 
 interface RowProps<
     T extends ListItem,
@@ -67,18 +67,19 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
         currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
         [currentTextfield, staticItem]
     );
+
+    // Drag vs Scroll Controls
     const isDragging = useSharedValue(false);
     const top = useSharedValue(positions.value[item.id] * LIST_ITEM_HEIGHT);
-    const initialGestureTime = useSharedValue(-1);
-    const scrollMode = useSharedValue(true);
-    const didScroll = useSharedValue(false);
+    const isScrolling = useSharedValue(false);
     const prevY = useSharedValue(0);
     const dragInitialPosition = useSharedValue(0);
+    const beginDragTimeout = useSharedValue<NodeJS.Timeout | undefined>(undefined);
 
     // Extract row configs
     const customTextColor = useMemo(() => getRowTextColor?.(item), [item, getRowTextColor]);
-    const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item]);
-    const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item]);
+    const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
+    const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
     const modalConfig = useMemo(() => getModal?.(item), [item, getModal]);
     const popoverConfigs = useMemo(() => getPopovers?.(item), [item, getPopovers]);
     const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
@@ -90,14 +91,13 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
      * Resets the state of the row back to default.
      */
     const resetGestureValues = () => {
-        'worklet';
-        scrollMode.value = true;
-        didScroll.value = false;
-        prevY.value = 0;
-        initialGestureTime.value = -1;
+        isScrolling.value = false;
         isDragging.value = false;
+        prevY.value = 0;
         dragInitialPosition.value = 0;
         top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
+        clearTimeout(beginDragTimeout.value);
+        beginDragTimeout.value = undefined;
     };
 
     /**
@@ -125,27 +125,32 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
         }
     };
 
-    const itemGesture = Gesture.Pan()
+    const contentGesture = Gesture.Pan()
         .onTouchesDown(() => {
-            initialGestureTime.value = Date.now();
-            scrollMode.value = true;
-        }).onStart(() => {
-            didScroll.value = true;
-            const currentTime = Date.now();
-            if (initialGestureTime.value && currentTime - initialGestureTime.value > 500 && positions) {
-                // long press -> begin row drag
-                scrollMode.value = false;
+            beginDragTimeout.value = setTimeout(() => {
+                isScrolling.value = false;
                 isDragging.value = true;
                 dragInitialPosition.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
+                beginDragTimeout.value = undefined;
+            }, 500);
+        }).onStart(() => {
+            if (!isDragging.value) {
+
+                // Begin scroll
+                clearTimeout(beginDragTimeout.value);
+                beginDragTimeout.value = undefined;
+                isScrolling.value = true;
             }
         }).onUpdate((event) => {
-            if (scrollMode.value) {
-                // scroll the page
+            if (isScrolling.value) {
+
+                // Scroll the page
                 const newY = prevY.value - event.translationY;
                 scroll(-newY);
                 prevY.value = event.translationY;
-            } else {
-                // drag the item - prevent going beyond list bounds
+            } else if (isDragging.value) {
+
+                // Drag the item
                 top.value = Math.max(
                     0,
                     Math.min(
@@ -155,7 +160,8 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                 );
                 const newPosition = Math.floor(top.value / LIST_ITEM_HEIGHT);
                 if (newPosition !== positions.value[item.id]) {
-                    // swap the item with the invader taking up its new position
+
+                    // Swap the item with the invader taking up its new position
                     const newObject = { ...positions.value };
                     const from = positions.value[item.id]
                     for (const id in positions.value) {
@@ -170,39 +176,36 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                 }
             }
         }).onTouchesUp(() => {
-            const currentTime = Date.now();
-            if (!didScroll.value && (initialGestureTime.value && currentTime - initialGestureTime.value <= 500)) {
-                // short press -> click the row
-                runOnJS(onContentClick)(item);
-            } else {
-                // end row drag
+            if (!isScrolling.value && !isDragging.value) {
+
+                // Click the content
+                clearTimeout(beginDragTimeout.value);
+                beginDragTimeout.value = undefined;
+                onContentClick(item);
+            } else if (isDragging.value) {
+
+                // End row drag
                 const newParentSortId = getParentSortId(item, positions, items);
                 const newSortId = generateSortId(newParentSortId, items);
-                runOnJS(onDragEnd)({ ...item, sortId: newSortId });
+                onDragEnd({ ...item, sortId: newSortId });
             }
             resetGestureValues();
-        });
+        }).runOnJS(true);
 
-    const lineGesture = Gesture.Pan()
-        .onTouchesDown(() => {
-            initialGestureTime.value = Date.now();
-            scrollMode.value = true;
-        }).onStart(() => {
-            didScroll.value = true;
-        }).onUpdate((event) => {
-            // scroll the page
-            if (scrollMode.value) {
-                const newY = prevY.value - event.translationY;
-                runOnJS(scroll)(-newY);
-                prevY.value = event.translationY;
-            }
+    const separatorGesture = Gesture.Pan()
+        .onUpdate((event) => {
+            isScrolling.value = true;
+            const newY = prevY.value - event.translationY;
+            scroll(-newY);
+            prevY.value = event.translationY;
         }).onTouchesUp(() => {
-            // short press -> create new textfield below row
-            if (!didScroll.value) {
-                runOnJS(saveTextfieldAndCreateNew)(item.sortId);
+
+            // Short press -> create new textfield below row
+            if (!isScrolling.value) {
+                saveTextfieldAndCreateNew(item.sortId);
             }
             resetGestureValues();
-        });
+        }).runOnJS(true);
 
     // Set the row's position
     useDerivedValue(() => {
@@ -217,15 +220,25 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
             width: '100%',
             position: 'absolute',
             top: top.value,
+            transform: [
+                {
+                    scale: withSpring(isDragging.value ? 0.8 : 1, {
+                        damping: 15,  // Controls the bounciness
+                        stiffness: 200, // Controls the speed
+                        mass: 1,        // Affects the oscillation
+                        overshootClamping: true, // If true, no overshoot
+                    }),
+                },
+            ],
         }
-    }, [top.value]);
+    }, [top.value, isDragging.value]);
 
     // Animate the popover's position
     const popoverPositionStyle = useAnimatedStyle(() => ({
         left: 4,
         position: 'absolute',
-        top: scrollPosition + top.value + LIST_ITEM_HEIGHT
-    }), [positions.value, top.value]);
+        top: top.value + LIST_ITEM_HEIGHT - scrollPosition.value + 100
+    }), [top.value, scrollPosition.value]);
 
     return (
         <Animated.View style={rowPositionStyle}>
@@ -254,16 +267,18 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
                     /> :
-                    <GestureDetector gesture={itemGesture}>
+                    <GestureDetector gesture={contentGesture}>
                         <View style={styles.content}>
                             <CustomText
+                                adjustsFontSizeToFit
+                                numberOfLines={2}
                                 type='standard'
                                 style={{
                                     color: customTextColor ||
                                         (isItemDeleting(item) ? colors.grey : colors.white),
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
-                                    height: 25
+                                    textAlignVertical: 'center',
                                 }}
                             >
                                 {item.value}
@@ -288,8 +303,10 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
             </View>
 
             {/* Separator Line */}
-            <GestureDetector gesture={lineGesture}>
-                <ClickableLine onPress={() => null} />
+            <GestureDetector gesture={separatorGesture}>
+                <Pressable>
+                    <ThinLine />
+                </Pressable>
             </GestureDetector>
 
             {/* Row Modal */}
@@ -319,9 +336,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 4,
-        height: '100%',
+        paddingHorizontal: 16
     },
     row: {
         flexDirection: 'row',

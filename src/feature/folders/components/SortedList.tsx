@@ -30,7 +30,7 @@ const SortedList = ({
                 const item = { ...updatedItem, status: isItemTextfield(updatedItem) ? ItemStatus.STATIC : updatedItem.status }
                 SortedItems.persistItemToStorage(item);
             }}
-            onContentClick={SortedItems.convertItemToTextfield}
+            onContentClick={SortedItems.toggleItemEdit}
             onDeleteItem={SortedItems.deleteItemFromStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             getLeftIconConfig={item => ({
@@ -38,7 +38,7 @@ const SortedList = ({
                     type: isItemDeleting(item) ? 'circle-filled' : 'circle',
                     color: isItemDeleting(item) ? colors.blue : colors.grey
                 },
-                onClick: SortedItems.toggleDeleteItem
+                onClick: SortedItems.toggleItemDelete
             })}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",

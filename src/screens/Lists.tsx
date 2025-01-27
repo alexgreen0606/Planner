@@ -21,15 +21,15 @@ const Lists = () => {
 
   const [parentClickTrigger, setParentClickTrigger] = useState(0);
 
-  const pageData = useMemo(() =>
-    pageConfig.type === FolderItemType.FOLDER ?
-      getFolderFromStorage(pageConfig.id) : getListFromStorage(pageConfig.id),
-    [pageConfig]
+  const pageData = useMemo(() => pageConfig.type === FolderItemType.FOLDER ?
+    getFolderFromStorage(pageConfig.id) : getListFromStorage(pageConfig.id),
+    [pageConfig.id]
   );
-  const parentFolderData = useMemo(() => pageData.listId !== NULL ? getFolderFromStorage(pageData.listId) : null, [pageData]);
+  const parentFolderData = useMemo(() => pageData.listId !== NULL ? getFolderFromStorage(pageData.listId) : null, [pageData.listId]);
 
 
-  const onBackClick = (listId: string) => {
+  const onOpenParent = (listId: string) => {
+    setParentClickTrigger(0);
     setPageConfig({ id: listId, type: FolderItemType.FOLDER });
   }
 
@@ -52,7 +52,7 @@ const Lists = () => {
           display: !!parentFolderData,
           label: parentFolderData?.value,
           onClick: pageConfig.type === FolderItemType.LIST ?
-            () => onBackClick(parentFolderData!.listId!) : clickParent
+            () => onOpenParent(parentFolderData!.id!) : clickParent
         }}
         itemType={pageConfig.type}
       />
@@ -62,7 +62,7 @@ const Lists = () => {
         <SortableListProvider>
           <SortedFolder
             folderId={pageConfig.id}
-            onBackClick={onBackClick}
+            onBackClick={onOpenParent}
             onOpenItem={onOpenItem}
             parentClickTrigger={parentClickTrigger}
 

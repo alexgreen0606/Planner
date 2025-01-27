@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, ViewStyle } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import { useDerivedValue } from 'react-native-reanimated';
@@ -12,9 +12,9 @@ import {
     generateSortId,
     LIST_ITEM_HEIGHT,
 } from '../../utils';
-import ClickableLine from '../separator/ClickableLine';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from '../emptyLabel/EmptyLabel';
+import ThinLine from '../../../components/separators/ThinLine';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -119,10 +119,12 @@ const SortableList = <
     );
 
     return (
-        <View style={{flex: fillSpace ? 1 : 0}}>
+        <View style={{ flex: fillSpace ? 1 : 0 }}>
 
             {/* Upper Item Creator */}
-            <ClickableLine onPress={() => saveTextfieldAndCreateNew(-1)} />
+            <TouchableOpacity onPress={() => saveTextfieldAndCreateNew(-1)}>
+                <ThinLine />
+            </TouchableOpacity>
 
             {/* List */}
             {!hideList && (

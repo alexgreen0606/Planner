@@ -11,6 +11,7 @@ const styles = StyleSheet.create({
     standard: {
         color: colors.white,
         fontSize: 16,
+        lineHeight: 20
     },
     soft: {
         color: colors.grey,

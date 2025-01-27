@@ -51,14 +51,14 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
                     type: 'trash',
                     color: isItemDeleting(item) ? colors.white : colors.grey
                 },
-                onClick: SortedEvents.toggleDeleteItem
+                onClick: SortedEvents.toggleItemDelete
             })}
             initializeItem={initializeNewEvent}
             getTextfieldKey={item => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}`}
             onSaveTextfield={SortedEvents.persistItemToStorage}
             onDeleteItem={SortedEvents.deleteItemFromStorage}
             onDragEnd={async (item) => { await SortedEvents.persistItemToStorage(item) }}
-            onContentClick={SortedEvents.convertItemToTextfield}
+            onContentClick={SortedEvents.toggleItemEdit}
             getRightIconConfig={item => ({
                 hideIcon: item.status === ItemStatus.STATIC && !item.timeConfig,
                 icon: {
