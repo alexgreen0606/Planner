@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-paper';
-import globalStyles from '../../../foundation/theme/globalStyles';
-import { getFolderItem, updateFolderItem } from '../storage/folderStorage';
-import CustomText from '../../../foundation/components/text/CustomText';
-import GenericIcon from '../../../foundation/components/icons/GenericIcon';
+import { FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../../utils';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import colors from '../../../foundation/theme/colors';
-import { FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../utils';
-import { ItemStatus } from '../../../foundation/sortedLists/utils';
+import { getFolderItem, updateFolderItem } from '../../storage/folderStorage';
+import { ItemStatus } from '../../../../foundation/sortedLists/utils';
+import globalStyles from '../../../../foundation/theme/globalStyles';
+import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
+import colors from '../../../../foundation/theme/colors';
+import CustomText from '../../../../foundation/components/text/CustomText';
 
 interface FolderItemBannerProps {
     itemId: string;

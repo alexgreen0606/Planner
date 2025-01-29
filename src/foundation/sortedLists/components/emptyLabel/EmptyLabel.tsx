@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import GenericIcon, { GenericIconProps } from '../../../components/icons/GenericIcon';
+import GenericIcon, { GenericIconProps } from '../../../components/icon/GenericIcon';
 import CustomText from '../../../components/text/CustomText';
 import globalStyles from '../../../theme/globalStyles';
 

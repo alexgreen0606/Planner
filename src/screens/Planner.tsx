@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import SortedPlanner from '../feature/planners/components/lists/SortedPlanner';
+import SortedPlanner from '../feature/planner/components/lists/SortedPlanner';
 import Modal from '../foundation/components/modal/Modal';
-import { generateNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../foundation/planners/timeUtils';
-import SortedRecurringPlanner from '../feature/planners/components/lists/SortedRecurringPlanner';
+import { generateNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../foundation/time/utils';
+import SortedRecurringPlanner from '../feature/planner/components/lists/SortedRecurringPlanner';
 import colors from '../foundation/theme/colors';
-import PlannerBanner from '../feature/planners/components/banner/PlannerBanner';
-import { ActivityIndicator } from 'react-native-paper';
+import PlannerBanner from '../feature/planner/components/banner/PlannerBanner';
 import { getWeeklyWeather, WeatherForecast } from '../foundation/weather/utils';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 import globalStyles from '../foundation/theme/globalStyles';
@@ -40,13 +39,14 @@ const Planner = () => {
     const timestamps = generateNextSevenDayTimestamps();
     const holidayMap = await generateHolidaysMap(timestamps);
     const birthdayMap = await generateBirthdaysMap(timestamps);
-    const forecastMap = await getWeeklyWeather(timestamps);
     const allDayEvents = await generateFullDayEventsMap(timestamps);
     setTimestamps(timestamps);
     setHolidays(holidayMap);
     setBirthdays(birthdayMap);
-    setForecasts(forecastMap);
     setAllDayEvents(allDayEvents);
+    const forecastMap = await getWeeklyWeather(timestamps);
+
+    setForecasts(forecastMap);
   };
 
   // Load in the initial planners
@@ -68,23 +68,11 @@ const Planner = () => {
       {/* Page Label */}
       <PlannerBanner
         label='Planner'
-        iconConfig={{
-          type: 'planner',
-          size: 26,
-          color: colors.blue
-        }}
-        controlConfig={{
-          type: 'recurring-calendar',
-          size: 20,
-          color: colors.grey
-        }}
-        control={toggleRecurringPlannerModal}
+        toggleRecurringPlannerModal={toggleRecurringPlannerModal}
       />
 
       {/* Planners */}
-      {!timestamps || !birthdays || !holidays || !forecasts || !allDayEvents ? (
-        <ActivityIndicator color={colors.blue} />
-      ) : (
+      {timestamps && birthdays && holidays && allDayEvents && (
         <SortableListProvider>
           <View key={`${recurringPlannerModalOpen}-weekday-modal-open`} style={styles.planners}>
             {timestamps.map((timestamp) =>
@@ -94,7 +82,7 @@ const Planner = () => {
                   reloadChips={() => buildPlanners(false)}
                   holidays={holidays[timestamp]}
                   birthdays={birthdays[timestamp]}
-                  forecast={forecasts[timestamp]}
+                  forecast={forecasts?.[timestamp]}
                   allDayEvents={allDayEvents[timestamp]}
                 />
               </View>

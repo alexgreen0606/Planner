@@ -14,7 +14,7 @@ import {
 } from '../../utils';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from '../emptyLabel/EmptyLabel';
-import ThinLine from '../../../components/separators/ThinLine';
+import ThinLine from '../../../components/separator/ThinLine';
 
 export interface DraggableListProps<
     T extends ListItem,

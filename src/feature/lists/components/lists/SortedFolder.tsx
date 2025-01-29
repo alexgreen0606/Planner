@@ -1,22 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
+import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
+import { useNavigatorContext } from '../../../../foundation/navigation/services/TabsProvider';
 import {
     createFolderItem,
     getFolderFromStorage,
     updateFolderItem,
     deleteFolderItem,
     getFolderItems,
-} from '../storage/folderStorage';
-import CustomText from '../../../foundation/components/text/CustomText';
-import colors from '../../../foundation/theme/colors';
-import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
-import Popover, { PopoverProps } from './FolderItemPopover';
-import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, NULL } from '../utils';
-import { Pages } from '../../../foundation/navigation/utils';
-import DeleteModal, { DeleteModalProps } from './DeleteModal';
-import { ItemStatus, ListItem, ModifyItemConfig } from '../../../foundation/sortedLists/utils';
-import { useSortableListContext } from '../../../foundation/sortedLists/services/SortableListProvider';
+} from '../../storage/folderStorage';
+import colors from '../../../../foundation/theme/colors';
+import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
+import Popover, { PopoverProps } from '../popover/FolderItemPopover';
+import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, NULL } from '../../utils';
+import { Pages } from '../../../../foundation/navigation/utils';
+import { ItemStatus, ListItem, ModifyItemConfig } from '../../../../foundation/sortedLists/utils';
+import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
+import DeleteModal, { DeleteModalProps } from '../modal/DeleteModal';
+import CustomText from '../../../../foundation/components/text/CustomText';
 
 interface SortableFolderProps {
     folderId: string;

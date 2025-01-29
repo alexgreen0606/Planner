@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
-import TimeValue from '../../../../foundation/components/info/TimeValue';
-import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../../../foundation/planners/timeUtils';
+import TimeValue from '../../../../foundation/time/components/TimeValue';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../../../foundation/time/utils';
 import colors from '../../../../foundation/theme/colors';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';

@@ -59,11 +59,10 @@ const GenericIcon: React.FC<GenericIconProps> = ({
     size,
     color,
     onClick,
-    ...props
 }) => {
     const iconConfig = IconMap[type];
     const IconComponent = IconSets[iconConfig.type];
-    const Icon =  <IconComponent name={iconConfig.name} size={size} color={color} {...props} />;
+    const Icon =  <IconComponent name={iconConfig.name} size={size} color={color} />;
 
     return onClick ?
         <TouchableOpacity onPress={onClick}>

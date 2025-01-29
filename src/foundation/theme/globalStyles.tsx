@@ -1,4 +1,4 @@
-import { ViewStyle } from "react-native";
+import { StyleSheet, ViewStyle } from "react-native";
 import colors from "./colors";
 
 type GlobalStyles = {
@@ -29,7 +29,10 @@ const globalStyles: GlobalStyles = {
     alignItems: 'center',
     flexDirection: 'row',
     width: '100%',
-    paddingHorizontal: 8
+    paddingHorizontal: 8,
+    borderBottomColor: colors.grey,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        paddingBottom: 7.5
   }
 };
 

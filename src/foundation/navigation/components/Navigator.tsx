@@ -4,7 +4,7 @@ import Today from '../../../screens/Today';
 import Planner from '../../../screens/Planner';
 import Lists from '../../../screens/Lists';
 import { useNavigatorContext } from '../services/TabsProvider';
-import GenericIcon from '../../components/icons/GenericIcon';
+import GenericIcon from '../../components/icon/GenericIcon';
 import colors from '../../theme/colors';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import globalStyles from '../../theme/globalStyles';

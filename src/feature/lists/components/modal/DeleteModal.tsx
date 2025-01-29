@@ -1,9 +1,9 @@
 import React from 'react';
-import colors from '../../../foundation/theme/colors';
-import { FolderItem, FolderItemType } from '../utils';
-import Modal from '../../../foundation/components/modal/Modal';
-import CustomText from '../../../foundation/components/text/CustomText';
-import { ListItemUpdateComponentProps } from '../../../foundation/sortedLists/utils';
+import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
+import { FolderItem, FolderItemType } from '../../utils';
+import colors from '../../../../foundation/theme/colors';
+import Modal from '../../../../foundation/components/modal/Modal';
+import CustomText from '../../../../foundation/components/text/CustomText';
 
 export interface DeleteModalProps extends ListItemUpdateComponentProps<FolderItem> {
     open: boolean;

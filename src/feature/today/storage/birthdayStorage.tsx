@@ -1,6 +1,6 @@
 import { MMKV } from "react-native-mmkv";
 import { BIRTHDAY_STORAGE_ID } from "../utils";
-import { generateTodayTimestamp } from "../../../foundation/planners/timeUtils";
+import { generateTodayTimestamp } from "../../../foundation/time/utils";
 import { generateBirthdaysMap } from "../../../foundation/planners/calendarUtils";
 import { uuid } from "expo-modules-core";
 import { generateSortId, ItemStatus, ListItem } from "../../../foundation/sortedLists/utils";

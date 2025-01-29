@@ -51,43 +51,40 @@ export const weatherCodeToString = (code: number): string => {
 };
 
 type WeatherIconMap = Record<
-  number,
-  {
-    name: any,
-  }
+  number, string
 >;
 
-export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] => {
+export function weatherCodeToFontistoIcon(code: number): string {
   switch (code) {
     case 0:
     case 1:
-      return { name: 'sun.max.fill' }; // sunny
+      return 'sun.max.fill'; // sunny
     case 2:
-      return { name: 'cloud.sun.fill' }; // sunny with clouds
+      return 'cloud.sun.fill'; // sunny with clouds
     case 3:
-      return { name: 'cloud.fill' }; // cloudy
+      return 'cloud.fill'; // cloudy
     case 45:
     case 48:
-      return { name: 'cloud.fog.fill' }; // foggy
+      return 'cloud.fog.fill'; // foggy
     case 51:
     case 61:
     case 81:
-      return { name: 'cloud.sun.rain.fill' }; // rainy with sun
+      return 'cloud.sun.rain.fill'; // rainy with sun
     case 53:
     case 55:
     case 63:
     case 65:
     case 82:
     case 85:
-      return { name: 'cloud.rain.fill' }; // rain
+      return 'cloud.rain.fill'; // rain
     case 71:
     case 73:
     case 75:
     case 77:
     case 86:
-      return { name: 'snowflake' }; // snow
+      return 'snowflake'; // snow
     case 95:
-      return { name: 'cloud.bolt.rain.fill' }; // thunderstorm
+      return 'cloud.bolt.rain.fill'; // thunderstorm
     default:
       throw new Error('Weather code not valid.')
   }

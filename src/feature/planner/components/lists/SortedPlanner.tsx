@@ -4,13 +4,13 @@ import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedLis
 import DayBanner from '../banner/DayBanner';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import CustomText from '../../../../foundation/components/text/CustomText';
-import TimeValue from '../../../../foundation/components/info/TimeValue';
-import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
+import TimeValue from '../../../../foundation/time/components/TimeValue';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/time/utils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import GenericIcon from '../../../../foundation/components/icons/GenericIcon';
+import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
-import Chip from '../../../../foundation/components/info/Chip';
+import EventChip from '../../../../foundation/planners/components/EventChip';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/utils';
 import { buildPlanner, deleteEvent, persistEvent } from '../../../../foundation/planners/storage/plannerStorage';
@@ -20,7 +20,7 @@ interface SortablePlannerProps {
     timestamp: string;
     birthdays: string[];
     holidays: string[];
-    forecast: WeatherForecast;
+    forecast?: WeatherForecast;
     allDayEvents: string[];
     reloadChips: () => void;
 };
@@ -65,7 +65,7 @@ const SortedPlanner = ({
             footer={
                 <View style={styles.wrappedChips}>
                     {allDayEvents.map((allDayEvent) =>
-                        <Chip
+                        <EventChip
                             label={allDayEvent}
                             iconConfig={{
                                 type: 'megaphone',
@@ -77,7 +77,7 @@ const SortedPlanner = ({
                         />
                     )}
                     {holidays.map(holiday =>
-                        <Chip
+                        <EventChip
                             label={holiday}
                             iconConfig={{
                                 type: 'globe',
@@ -89,7 +89,7 @@ const SortedPlanner = ({
                         />
                     )}
                     {birthdays.map(birthday =>
-                        <Chip
+                        <EventChip
                             label={birthday}
                             iconConfig={{
                                 type: 'birthday',
@@ -112,9 +112,7 @@ const SortedPlanner = ({
                         color={colors.grey}
                         size={16}
                     />
-                    <CustomText
-                        type='soft'
-                    >
+                    <CustomText type='soft'>
                         {collapsed ? 'View ' : 'Hide '}
                         {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
                     </CustomText>

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import globalStyles from '../foundation/theme/globalStyles';
-import TodayPlanner from '../feature/today/components/TodayPlanner';
+import TodayPlanner from '../feature/today/components/lists/TodayPlanner';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 import colors from '../foundation/theme/colors';
 import { generateFullDayEventsMap, generateHolidaysMap } from '../foundation/planners/calendarUtils';
-import { generateTodayTimestamp } from '../foundation/planners/timeUtils';
-import Chip from '../foundation/components/info/Chip';
-import BirthdayChecklist from '../feature/today/components/BirthdayChecklist';
-import TodayBanner from '../feature/today/components/TodayBanner';
+import { generateTodayTimestamp } from '../foundation/time/utils';
+import EventChip from '../foundation/planners/components/EventChip';
+import TodayBanner from '../feature/today/components/banner/TodayBanner';
+import BirthdayChecklist from '../feature/today/components/lists/BirthdayChecklist';
 
 const Today = () => {
   const timestamp = generateTodayTimestamp();
@@ -30,22 +30,17 @@ const Today = () => {
   return (
     <View style={globalStyles.blackFilledSpace}>
 
-      {/* Page Label */}
-      <TodayBanner
-        timestamp={timestamp}
-        weatherCode={0}
-        hight={45}
-        low={32}
-      />
+      {/* Banner */}
+      <TodayBanner timestamp={timestamp}/>
 
       <SortableListProvider>
         <View style={styles.container}>
 
-          {/* Holidays */}
+          {/* Holiday Chips */}
           {holidays.length && (
             <View style={styles.chips}>
               {holidays.map(holiday => (
-                <Chip
+                <EventChip
                   label={holiday}
                   iconConfig={{
                     type: 'globe',
@@ -59,11 +54,11 @@ const Today = () => {
             </View>
           )}
 
-          {/* All Day chips */}
+          {/* All Day Chips */}
           {allDayEvents.length && (
             <View style={styles.chips}>
               {allDayEvents.map(event => (
-                <Chip
+                <EventChip
                   label={event}
                   iconConfig={{
                     type: 'megaphone',
@@ -85,7 +80,7 @@ const Today = () => {
             <TodayPlanner reloadChips={buildTodayDetails} />
           </View>
 
-          {/* Goals Planner Card */}
+          {/* TODO: Goals Planner Card */}
 
         </View>
       </SortableListProvider>
@@ -97,6 +92,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 8,
+    paddingTop: 16,
     alignItems: 'center'
   },
   planner: {

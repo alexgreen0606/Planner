@@ -1,16 +1,16 @@
 import React from 'react';
-import { generateTodayTimestamp } from '../../../foundation/planners/timeUtils';
-import { isItemDeleting, ItemStatus, ListItem } from '../../../foundation/sortedLists/utils';
-import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
-import colors from '../../../foundation/theme/colors';
-import Card from '../../../foundation/components/card/Card';
-import { BIRTHDAY_CHECKLIST_ID } from '../utils';
-import { buildBirthdayChecklist } from '../storage/birthdayStorage';
-import CustomText from '../../../foundation/components/text/CustomText';
-import globalStyles from '../../../foundation/theme/globalStyles';
+import { BIRTHDAY_CHECKLIST_ID } from '../../utils';
+import { generateTodayTimestamp } from '../../../../foundation/time/utils';
+import { isItemDeleting, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
+import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
+import { buildBirthdayChecklist } from '../../storage/birthdayStorage';
 import { StyleSheet, View } from 'react-native';
-import GenericIcon from '../../../foundation/components/icons/GenericIcon';
+import globalStyles from '../../../../foundation/theme/globalStyles';
+import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
+import CustomText from '../../../../foundation/components/text/CustomText';
+import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
+import colors from '../../../../foundation/theme/colors';
+import Card from '../../../../foundation/components/card/Card';
 
 const BirthdayChecklist = () => {
     const timestamp = generateTodayTimestamp();

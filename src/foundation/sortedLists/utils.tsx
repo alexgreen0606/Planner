@@ -1,4 +1,4 @@
-import { GenericIconProps } from "../components/icons/GenericIcon";
+import { GenericIconProps } from "../components/icon/GenericIcon";
 
 export const LIST_ITEM_HEIGHT = 40;
 

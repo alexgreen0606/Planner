@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import GenericIcon, { GenericIconProps } from '../../../foundation/components/icons/GenericIcon';
-import colors from '../../../foundation/theme/colors';
-import ThinLine from '../../../foundation/components/separators/ThinLine';
-import { FolderItem, selectableColors } from '../utils';
-import { ListItemUpdateComponentProps } from '../../../foundation/sortedLists/utils';
+import GenericIcon, { GenericIconProps } from '../../../../foundation/components/icon/GenericIcon';
+import colors from '../../../../foundation/theme/colors';
+import ThinLine from '../../../../foundation/components/separator/ThinLine';
+import { FolderItem, selectableColors } from '../../utils';
+import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
 
 export interface IconConfig {
     onClick: (item: FolderItem) => FolderItem; // return the updated item

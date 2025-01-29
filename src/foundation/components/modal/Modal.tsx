@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Button, Dialog, Portal } from 'react-native-paper';
 import globalStyles from '../../theme/globalStyles';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import GenericIcon, { GenericIconProps } from '../icons/GenericIcon';
+import GenericIcon, { GenericIconProps } from '../icon/GenericIcon';
 import CustomText from '../text/CustomText';
 import colors from '../../theme/colors';
 

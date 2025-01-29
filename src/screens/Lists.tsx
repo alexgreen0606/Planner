@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import SortedFolder from '../feature/lists/components/SortedFolder';
-import SortedList from '../feature/lists/components/SortedList';
+import SortedFolder from '../feature/lists/components/lists/SortedFolder';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 import { FolderItemType, NULL, ROOT_FOLDER_ID } from '../feature/lists/utils';
 import globalStyles from '../foundation/theme/globalStyles';
-import FolderItemBanner from '../feature/lists/components/FolderItemBanner';
 import { getFolderFromStorage, getListFromStorage } from '../feature/lists/storage/folderStorage';
+import FolderItemBanner from '../feature/lists/components/banner/FolderItemBanner';
+import SortedList from '../feature/lists/components/lists/SortedList';
 
 interface PageConfig {
   id: string;
@@ -45,7 +45,7 @@ const Lists = () => {
   return (
     <View key={pageConfig.id} style={globalStyles.blackFilledSpace}>
 
-      {/* Page Label */}
+      {/* Banner */}
       <FolderItemBanner
         itemId={pageConfig.id}
         backButtonConfig={{

@@ -1,9 +1,9 @@
 import React from 'react';
-import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import colors from '../../../foundation/theme/colors';
-import { isItemDeleting, isItemTextfield, ItemStatus, ListItem } from '../../../foundation/sortedLists/utils';
-import { FOLDER_STORAGE_ID, List } from '../utils';
-import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
+import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
+import { isItemDeleting, isItemTextfield, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
+import { FOLDER_STORAGE_ID, List } from '../../utils';
+import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
+import colors from '../../../../foundation/theme/colors';
 
 interface SortableListProps {
     listId: string;

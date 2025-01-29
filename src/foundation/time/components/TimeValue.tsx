@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import CustomText from '../text/CustomText';
+import CustomText from '../../components/text/CustomText';
 
 interface TimeProps {
     timeValue: string; // HH:MM

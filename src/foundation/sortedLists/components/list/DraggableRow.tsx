@@ -16,9 +16,9 @@ import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
 import colors from "../../../theme/colors";
 import ListTextfield from "../textfield/ListTextfield";
-import GenericIcon from "../../../components/icons/GenericIcon";
+import GenericIcon from "../../../components/icon/GenericIcon";
 import { Portal } from "react-native-paper";
-import ThinLine from "../../../components/separators/ThinLine";
+import ThinLine from "../../../components/separator/ThinLine";
 
 interface RowProps<
     T extends ListItem,

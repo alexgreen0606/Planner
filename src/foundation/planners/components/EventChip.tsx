@@ -1,16 +1,16 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import GenericIcon, { GenericIconProps } from '../icons/GenericIcon';
+import GenericIcon, { GenericIconProps } from '../../components/icon/GenericIcon';
 import globalStyles from '../../theme/globalStyles';
-import CustomText from '../text/CustomText';
+import CustomText from '../../components/text/CustomText';
 
-interface ChipProps {
+interface EventChipProps {
     label: string;
     iconConfig: GenericIconProps;
     color: string;
 }
 
-const Chip = ({ label, iconConfig, color }: ChipProps) => {
+const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
     const styles = StyleSheet.create({
         text: {
             color: color,
@@ -46,4 +46,4 @@ const Chip = ({ label, iconConfig, color }: ChipProps) => {
     )
 };
 
-export default Chip;
+export default EventChip;
