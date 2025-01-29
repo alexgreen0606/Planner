@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import SortedPlanner from '../feature/planner/components/lists/SortedPlanner';
 import Modal from '../foundation/components/modal/Modal';
-import { generateNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../foundation/time/utils';
+import { getNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../foundation/planners/timeUtils';
 import SortedRecurringPlanner from '../feature/planner/components/lists/SortedRecurringPlanner';
 import colors from '../foundation/theme/colors';
 import PlannerBanner from '../feature/planner/components/banner/PlannerBanner';
@@ -36,7 +36,7 @@ const Planner = () => {
   // Build a collection of the next 7 days of planners
   const buildPlanners = async (reloadPage: boolean) => {
     if (reloadPage) resetState();
-    const timestamps = generateNextSevenDayTimestamps();
+    const timestamps = getNextSevenDayTimestamps();
     const holidayMap = await generateHolidaysMap(timestamps);
     const birthdayMap = await generateBirthdaysMap(timestamps);
     const allDayEvents = await generateFullDayEventsMap(timestamps);

@@ -1,6 +1,6 @@
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
 import { ItemStatus } from "../../foundation/sortedLists/utils";
-import { Event, isoToTimeValue } from "../time/utils";
+import { Event, isoToTimeValue } from "./timeUtils";
 
 /**
  * Grants access to the device calendar.

@@ -5,14 +5,14 @@ import { isItemTextfield, ItemStatus } from '../../../foundation/sortedLists/uti
 import { 
     Event, 
     generateSortIdByTimestamp, 
-    generateTodayTimestamp, 
-    generateTomorrowTimestamp, 
+    getTodayTimestamp, 
+    getTomorrowTimestamp, 
     isTimestampValid, 
     isTimestampWeekday, 
     PLANNER_STORAGE_ID, 
     RECURRING_WEEKDAY_PLANNER_KEY, 
     timeValueToIso 
-} from '../../time/utils';
+} from '../timeUtils';
 import { getCalendarEvents, getPrimaryCalendarId } from '../calendarUtils';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
@@ -41,7 +41,7 @@ function deletePastPlanners() {
     // TODO: grab yesterday's events and add them to today if any exist
     const allStorageKeys = storage.getAllKeys();
     allStorageKeys.map(timestamp => {
-        if (isTimestampValid(timestamp) && (new Date(timestamp) < new Date(generateTodayTimestamp()))) {
+        if (isTimestampValid(timestamp) && (new Date(timestamp) < new Date(getTodayTimestamp()))) {
             storage.delete(timestamp);
         }
     });
@@ -188,7 +188,7 @@ export async function buildPlanner(plannerId: string, planner: Event[]): Promise
     deletePastPlanners();
 
     // Sync the planner with the recurring weekday planner
-    if (isTimestampWeekday(plannerId) && plannerId === generateTomorrowTimestamp()) {
+    if (isTimestampWeekday(plannerId) && plannerId === getTomorrowTimestamp()) {
         const recurringPlanner = getPlannerFromStorage(RECURRING_WEEKDAY_PLANNER_KEY);
         planner = syncPlannerWithRecurring(recurringPlanner, planner, plannerId);
     }
@@ -248,7 +248,7 @@ export async function deleteEvent(eventToDelete: Event) {
     if (
         eventToDelete.timeConfig?.isCalendarEvent &&
         eventToDelete.timeConfig.calendarEventId &&
-        eventToDelete.listId !== generateTodayTimestamp()
+        eventToDelete.listId !== getTodayTimestamp()
     ) {
         await getPrimaryCalendarId();
         await RNCalendarEvents.removeEvent(eventToDelete.timeConfig.calendarEventId);

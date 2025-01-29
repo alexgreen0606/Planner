@@ -5,18 +5,17 @@ import TodayPlanner from '../feature/today/components/lists/TodayPlanner';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
 import colors from '../foundation/theme/colors';
 import { generateFullDayEventsMap, generateHolidaysMap } from '../foundation/planners/calendarUtils';
-import { generateTodayTimestamp } from '../foundation/time/utils';
+import { getTodayTimestamp } from '../foundation/planners/timeUtils';
 import EventChip from '../foundation/planners/components/EventChip';
 import TodayBanner from '../feature/today/components/banner/TodayBanner';
 import BirthdayChecklist from '../feature/today/components/lists/BirthdayChecklist';
 
 const Today = () => {
-  const timestamp = generateTodayTimestamp();
+  const timestamp = getTodayTimestamp();
   const [holidays, setHolidays] = useState<string[]>([]);
   const [allDayEvents, setAllDayEvents] = useState<string[]>([]);
 
-  // Build a collection of the next 7 days of planners
-  const buildTodayDetails = async () => {
+  async function getEventChips() {
     const holidayMap = await generateHolidaysMap([timestamp]);
     const allDayEvents = await generateFullDayEventsMap([timestamp]);
     setHolidays(holidayMap[timestamp]);
@@ -24,14 +23,14 @@ const Today = () => {
   };
 
   useEffect(() => {
-    buildTodayDetails();
+    getEventChips();
   }, []);
 
   return (
     <View style={globalStyles.blackFilledSpace}>
 
       {/* Banner */}
-      <TodayBanner timestamp={timestamp}/>
+      <TodayBanner timestamp={timestamp} />
 
       <SortableListProvider>
         <View style={styles.container}>
@@ -45,7 +44,6 @@ const Today = () => {
                   iconConfig={{
                     type: 'globe',
                     size: 10,
-                    color: colors.purple
                   }}
                   color={colors.purple}
                   key={holiday}
@@ -63,7 +61,6 @@ const Today = () => {
                   iconConfig={{
                     type: 'megaphone',
                     size: 10,
-                    color: colors.red
                   }}
                   color={colors.red}
                   key={`${event}-${timestamp}`}
@@ -77,7 +74,7 @@ const Today = () => {
 
           {/* Planner */}
           <View style={styles.planner}>
-            <TodayPlanner reloadChips={buildTodayDetails} />
+            <TodayPlanner reloadChips={getEventChips} />
           </View>
 
           {/* TODO: Goals Planner Card */}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { BIRTHDAY_CHECKLIST_ID } from '../../utils';
-import { generateTodayTimestamp } from '../../../../foundation/time/utils';
+import { getTodayTimestamp } from '../../../../foundation/planners/timeUtils';
 import { isItemDeleting, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import { buildBirthdayChecklist } from '../../storage/birthdayStorage';
@@ -13,7 +13,7 @@ import colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
 
 const BirthdayChecklist = () => {
-    const timestamp = generateTodayTimestamp();
+    const timestamp = getTodayTimestamp();
 
     // Stores the current planner and all handler functions to update it
     const BirthdayList = useSortedList<ListItem, ListItem[]>(

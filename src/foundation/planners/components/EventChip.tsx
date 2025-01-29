@@ -12,9 +12,7 @@ interface EventChipProps {
 
 const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
     const styles = StyleSheet.create({
-        text: {
-            color: color,
-        },
+        text: { color },
         chip: {
             ...globalStyles.verticallyCentered,
             height: 20,
@@ -32,6 +30,7 @@ const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
         <View style={styles.chip}>
             <GenericIcon
                 {...iconConfig}
+                color={color}
                 size={12}
             />
             <CustomText

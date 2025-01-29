@@ -4,8 +4,8 @@ import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedLis
 import DayBanner from '../banner/DayBanner';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import CustomText from '../../../../foundation/components/text/CustomText';
-import TimeValue from '../../../../foundation/time/components/TimeValue';
-import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/time/utils';
+import TimeValue from '../../../../foundation/planners/components/TimeValue';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import colors from '../../../../foundation/theme/colors';
@@ -51,11 +51,9 @@ const SortedPlanner = ({
         (planner) => buildPlanner(timestamp, planner),
         undefined,
         {
-            customStorageHandlers: {
-                create: persistEvent,
-                update: persistEvent,
-                delete: deleteEvent
-            }
+            create: persistEvent,
+            update: persistEvent,
+            delete: deleteEvent
         }
     );
 

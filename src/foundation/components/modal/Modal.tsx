@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GenericIcon, { GenericIconProps } from '../icon/GenericIcon';
 import CustomText from '../text/CustomText';
 import colors from '../../theme/colors';
+import LabelSublabel from '../text/LabelSublabel';
 
 interface ModalProps {
     title: string;
@@ -33,23 +34,30 @@ const Modal = ({
 }: ModalProps) =>
     <Portal>
         <GestureHandlerRootView>
-            <Dialog theme={{ colors: { backdrop: 'black' } }} style={styles.container} visible={open} onDismiss={toggleModalOpen}>
+            <Dialog
+                theme={{ colors: { backdrop: 'black' } }}
+                style={styles.container}
+                visible={open}
+                onDismiss={toggleModalOpen}
+            >
                 <Dialog.Title>
-                    <View style={styles.label}>
+                    <View style={globalStyles.verticallyCentered} >
                         {iconConfig && (
                             <GenericIcon
                                 {...iconConfig}
                                 size={20}
                             />
                         )}
-                        <CustomText type='header'>
-                            {title}
-                        </CustomText>
-                        <View style={styles.subTitle}>
-                            <CustomText type='label'>
-                                {subTitle}
+                        {subTitle ?
+                            <LabelSublabel
+                                label={title}
+                                subLabel={subTitle}
+                                type='medium'
+                            /> :
+                            <CustomText type='header'>
+                                {title}
                             </CustomText>
-                        </View>
+                        }
                     </View>
                 </Dialog.Title>
                 <Dialog.Content>
@@ -79,17 +87,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0,
         elevation: 0,
     },
-    label: {
-        color: colors.white,
-        gap: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    subTitle: {
-        justifyContent: 'flex-end',
-        flex: 1,
-        marginTop: 6
-    }
 });
 
 export default Modal;

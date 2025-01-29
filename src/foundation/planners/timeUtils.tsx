@@ -1,11 +1,38 @@
 import { generateSortId, getParentSortId, ListItem } from "../sortedLists/utils";
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-
 export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
 export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
+
+enum MONTHS {
+    January = "January",
+    February = "February",
+    March = "March",
+    April = "April",
+    May = "May",
+    June = "June",
+    July = "July",
+    August = "August",
+    September = "September",
+    October = "October",
+    November = "November",
+    December = "December",
+};
+enum DAYS_OF_WEEK {
+    Sunday = "Sunday",
+    Monday = "Monday",
+    Tuesday = "Tuesday",
+    Wednesday = "Wednesday",
+    Thursday = "Thursday",
+    Friday = "Friday",
+    Saturday = "Saturday",
+};
+enum WEEKDAYS {
+    Monday = "Monday",
+    Tuesday = "Tuesday",
+    Wednesday = "Wednesday",
+    Thursday = "Thursday",
+    Friday = "Friday",
+};
 
 // Links an event to one within the recurring weekday planner
 export interface RecurringConfig {
@@ -41,7 +68,7 @@ export interface TimeSelectorOptions {
 export function isTimestampValid(timestamp: string): boolean {
     const date = new Date(timestamp);
     return !isNaN(date.getTime());
-}
+};
 
 /**
  * Determines if the given timestamp represents a weekday.
@@ -50,8 +77,8 @@ export function isTimestampValid(timestamp: string): boolean {
  */
 export function isTimestampWeekday(timestamp: string): boolean {
     if (!isTimestampValid(timestamp)) return false;
-    return WEEKDAYS.includes(timestampToDayOfWeek(timestamp));
-}
+    return (Object.values(WEEKDAYS) as string[]).includes(timestampToDayOfWeek(timestamp));
+};
 
 /**
  * Combines a generic hour/minute combo with a given generic timestamp and returns a valid timestamp.
@@ -97,9 +124,9 @@ export function compareTimeValues(time1: string, time2: string): number {
  * @param timestamp - YYYY-MM-DD
  * @returns - the day of the week as a string
  */
-export function timestampToDayOfWeek(timestamp: string): string {
+export function timestampToDayOfWeek(timestamp: string): DAYS_OF_WEEK {
     const date = new Date(timestamp + 'T00:00:00');
-    return DAYS_OF_WEEK[date.getDay()];
+    return DAYS_OF_WEEK[Object.keys(DAYS_OF_WEEK)[date.getDay()] as keyof typeof DAYS_OF_WEEK];
 }
 
 /**
@@ -109,14 +136,14 @@ export function timestampToDayOfWeek(timestamp: string): string {
  */
 export function timestampToMonthDate(timestamp: string): string {
     const date = new Date(timestamp + 'T00:00:00');
-    return `${MONTHS[date.getMonth()]} ${date.getDate()}`;
+    return `${Object.values(MONTHS)[date.getMonth()]} ${date.getDate()}`;
 }
 
 /**
  * Generates the timestamp for today's date in YYYY-MM-DD format.
  * @returns - today's timestamp YYYY-MM-DD
  */
-export function generateTodayTimestamp(): string {
+export function getTodayTimestamp(): string {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -128,7 +155,7 @@ export function generateTodayTimestamp(): string {
  * Generates the timestamp for tomorrow's date in YYYY-MM-DD format.
  * @returns - tomorrow's timestamp YYYY-MM-DD
  */
-export function generateTomorrowTimestamp(): string {
+export function getTomorrowTimestamp(): string {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1); // Move to the next day
     const year = tomorrow.getFullYear();
@@ -141,7 +168,7 @@ export function generateTomorrowTimestamp(): string {
  * Builds a list of timestamps for the next seven days from tomorrow to tomorrow + 6.
  * @returns - list of timestamps YYYY-MM-DD
  */
-export function generateNextSevenDayTimestamps(): string[] {
+export function getNextSevenDayTimestamps(): string[] {
     const today = new Date();
     today.setDate(today.getDate() + 1);
     return Array.from({ length: 7 }, (_, i) => {
@@ -152,7 +179,7 @@ export function generateNextSevenDayTimestamps(): string[] {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     });
-}
+};
 
 /**
  * Generate a new sort ID for the event that maintains time logic within the planner.
@@ -245,7 +272,7 @@ export function generateSortIdByTimestamp(event: Event, planner: Event[], fallba
  * Generates an object with arrays for indicators, hours, and minutes.
  * @returns - an object with arrays for indicators, hours, and minutes
  */
-export function generateTimeSelectorOptions(): TimeSelectorOptions {
+export function getTimeSelectorOptions(): TimeSelectorOptions {
     const timeObject: TimeSelectorOptions = {
         indicator: ["AM", "PM"],
         hour: [], // Hours from 0 to 11
@@ -298,4 +325,4 @@ export function extractTimeValue(text: string): { timeConfig: TimeConfig | undef
         };
     }
     return { timeConfig, updatedText };
-}
+};

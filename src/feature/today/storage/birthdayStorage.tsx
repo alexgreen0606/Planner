@@ -1,6 +1,6 @@
 import { MMKV } from "react-native-mmkv";
 import { BIRTHDAY_STORAGE_ID } from "../utils";
-import { generateTodayTimestamp } from "../../../foundation/time/utils";
+import { getTodayTimestamp } from "../../../foundation/planners/timeUtils";
 import { generateBirthdaysMap } from "../../../foundation/planners/calendarUtils";
 import { uuid } from "expo-modules-core";
 import { generateSortId, ItemStatus, ListItem } from "../../../foundation/sortedLists/utils";
@@ -8,7 +8,7 @@ import { generateSortId, ItemStatus, ListItem } from "../../../foundation/sorted
 const storage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
 
 export async function buildBirthdayChecklist(currentBirthdayChecklist: ListItem[]): Promise<ListItem[]> {
-    const todayTimestamp = generateTodayTimestamp();
+    const todayTimestamp = getTodayTimestamp();
     const birthdayMap = await generateBirthdaysMap([todayTimestamp]);
     const todayBirthdays = birthdayMap[todayTimestamp];
     if (todayBirthdays && todayBirthdays.length != 0) {

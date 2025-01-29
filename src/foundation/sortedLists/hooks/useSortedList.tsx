@@ -9,10 +9,6 @@ interface StorageHandlers<T extends ListItem> {
     delete: (item: T) => Promise<void> | void;
 };
 
-interface CustomStorageHandlers<T extends ListItem> {
-    customStorageHandlers: StorageHandlers<T>;
-};
-
 /**
  * Maintains a list of sorted items.
  * @param storageKey - key of object holding the list in storage
@@ -25,7 +21,7 @@ const useSortedList = <T extends ListItem, S>(
     storageId: string,
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[],
     setItemsInStorageObject?: (items: T[], currentObject: S) => S,
-    storageConfig?: CustomStorageHandlers<T>
+    storageConfig?: StorageHandlers<T>
 ) => {
     const { currentTextfield, setCurrentTextfield, pendingDeletes } = useSortableListContext();
     const storage = useMMKV({ id: storageId });
@@ -47,9 +43,7 @@ const useSortedList = <T extends ListItem, S>(
         if (key === storageKey) {
             const fetchedItem = storage.getString(storageKey);
             if (fetchedItem)
-            console.log(JSON.parse(fetchedItem), 'fetched')
-            console.log(storageObject, 'value changed')
-            buildList();
+                buildList();
         }
     }, storage);
 
@@ -80,9 +74,9 @@ const useSortedList = <T extends ListItem, S>(
 
             // Handle the storage update directly
             if (item.status === ItemStatus.NEW) {
-                await storageConfig.customStorageHandlers.create(item);
+                await storageConfig.create(item);
             } else {
-                await storageConfig.customStorageHandlers.update(item);
+                await storageConfig.update(item);
             }
         } else {
 
@@ -108,7 +102,7 @@ const useSortedList = <T extends ListItem, S>(
         if (storageConfig)
 
             // Handle the storage delete directly
-            await storageConfig.customStorageHandlers.delete(item);
+            await storageConfig.delete(item);
         else {
 
             // Remove the item from the list and save

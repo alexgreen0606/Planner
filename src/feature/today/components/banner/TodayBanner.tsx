@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import { timestampToDayOfWeek, timestampToMonthDate } from '../../../../foundation/time/utils';
+import { timestampToDayOfWeek, timestampToMonthDate } from '../../../../foundation/planners/timeUtils';
 import colors from '../../../../foundation/theme/colors';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
-import CustomText from '../../../../foundation/components/text/CustomText';
 import WeatherDisplay from '../../../../foundation/weather/components/WeatherDisplay';
+import LabelSublabel from '../../../../foundation/components/text/LabelSublabel';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -28,10 +28,11 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
                 />
 
                 {/* Date */}
-                <View style={styles.dayContainer}>
-                    <CustomText type='pageLabel'>{timestampToDayOfWeek(timestamp)}</CustomText>
-                    <CustomText type='soft'>{timestampToMonthDate(timestamp)}</CustomText>
-                </View>
+                <LabelSublabel
+                    label={timestampToDayOfWeek(timestamp)}
+                    subLabel={timestampToMonthDate(timestamp)}
+                    type='large'
+                />
             </View>
 
             {/* Weather */}
@@ -43,12 +44,5 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    dayContainer: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-    },
-});
 
 export default TodayBanner;

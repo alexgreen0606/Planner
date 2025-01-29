@@ -28,7 +28,7 @@ const FolderItemBanner = ({
     const [item, setItem] = useState<FolderItem>();
     const folderStorage = useMMKV({ id: FOLDER_STORAGE_ID });
 
-    // Builds the folder item data from storage
+    // Build the item data from storage
     const loadItemData = () => {
         setItem(getFolderItem(itemId, itemType));
     };
@@ -54,22 +54,22 @@ const FolderItemBanner = ({
 
     return (
         <View style={globalStyles.pageLabelContainer}>
-            <View style={styles.label}>
+            <View style={styles.name}>
 
-                {/* Type Icon */}
+                {/* Icon */}
                 <GenericIcon
                     type={itemType === FolderItemType.FOLDER ? 'open-folder' : 'list'}
                     size={28}
                     color={colors[item.color as keyof typeof colors]}
                 />
 
-                {/* Item Name */}
+                {/* Name */}
                 {isItemEditing ? (
                     <TextInput
                         autoFocus
                         value={item.value}
                         onChangeText={updateItem}
-                        style={styles.textInput}
+                        style={styles.inputField}
                         selectionColor="white"
                         theme={{
                             colors: {
@@ -82,10 +82,11 @@ const FolderItemBanner = ({
                     />
                 ) : (
                     <CustomText
-                    type='pageLabel'
+                        type='pageLabel'
                         onPress={beginEditItem}
                         adjustsFontSizeToFit
                         numberOfLines={1}
+                        style={{ flex: 1 }}
                     >
                         {item.value}
                     </CustomText>
@@ -95,23 +96,22 @@ const FolderItemBanner = ({
             {/* Back Button */}
             {backButtonConfig.display && (
                 <TouchableOpacity
+                    style={globalStyles.verticallyCentered}
                     onPress={backButtonConfig.onClick}
                 >
-                    <View style={globalStyles.verticallyCentered}>
-                        <GenericIcon
-                            type='chevron-left'
-                            size={16}
-                            color={colors.blue} // TODO: use the color of the previous
-                        />
-                        <CustomText
-                            numberOfLines={1}
-                            ellipsizeMode='tail'
-                            style={styles.backButton}
-                            type='label'
-                        >
-                            {backButtonConfig.label}
-                        </CustomText>
-                    </View>
+                    <GenericIcon
+                        type='chevron-left'
+                        size={16}
+                        color={colors.blue} // TODO: use the color of the previous
+                    />
+                    <CustomText
+                        numberOfLines={1}
+                        ellipsizeMode='tail'
+                        style={styles.backButton}
+                        type='label'
+                    >
+                        {backButtonConfig.label}
+                    </CustomText>
                 </TouchableOpacity>
             )}
         </View>
@@ -119,18 +119,18 @@ const FolderItemBanner = ({
 };
 
 const styles = StyleSheet.create({
-    label: {
+    name: {
         ...globalStyles.verticallyCentered,
         flex: 1,
     },
-    textInput: {
+    inputField: {
         ...globalStyles.blackFilledSpace,
         height: 25,
         fontSize: 25,
     },
     backButton: {
         color: colors.blue,
-        maxWidth: 80,
+        width: 60,
     }
 });
 

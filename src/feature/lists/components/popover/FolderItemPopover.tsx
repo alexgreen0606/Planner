@@ -5,6 +5,7 @@ import colors from '../../../../foundation/theme/colors';
 import ThinLine from '../../../../foundation/components/separator/ThinLine';
 import { FolderItem, selectableColors } from '../../utils';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
+import globalStyles from '../../../../foundation/theme/globalStyles';
 
 export interface IconConfig {
     onClick: (item: FolderItem) => FolderItem; // return the updated item
@@ -24,8 +25,8 @@ const Popover = ({
 }: PopoverProps) => open &&
     <View style={styles.popup}>
         {icons.map((iconRow, i) =>
-            <View key={`${item.value}-${i}-popover-row`} style={styles.stretch}>
-                <View style={styles.popoverRow}>
+            <View key={`${item.value}-${i}-popover-row`}>
+                <View style={globalStyles.verticallyCentered}>
                     {iconRow.map(iconConfig =>
                         <GenericIcon
                             key={iconConfig.icon.type}
@@ -34,10 +35,10 @@ const Popover = ({
                         />
                     )}
                 </View>
-                <ThinLine/>
+                <ThinLine />
             </View>
         )}
-        <View style={styles.popoverRow}>
+        <View style={globalStyles.verticallyCentered}>
             {selectableColors.map(color =>
                 <GenericIcon
                     key={color}
@@ -51,19 +52,10 @@ const Popover = ({
     </View>
 
 const styles = StyleSheet.create({
-    stretch: {
-        alignSelf: 'stretch'
-    },
     popup: {
         backgroundColor: colors.background,
         padding: 12,
-        alignSelf: 'flex-start',
-        alignItems: 'flex-start',
     },
-    popoverRow: {
-        flexDirection: 'row',
-        gap: 16
-    }
 });
 
 export default Popover;

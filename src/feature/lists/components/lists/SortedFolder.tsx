@@ -56,14 +56,12 @@ const SortedFolder = ({
         getFolderItems,
         undefined,
         {
-            customStorageHandlers: {
-                create: createFolderItem,
-                update: (newItem) => {
-                    updateFolderItem(newItem);
-                    SortedItems.refetchItems();
-                },
-                delete: (item) => deleteFolderItem(item.id, item.type)
-            }
+            create: createFolderItem,
+            update: (newItem) => {
+                updateFolderItem(newItem);
+                SortedItems.refetchItems();
+            },
+            delete: (item) => deleteFolderItem(item.id, item.type)
         },
     );
 
@@ -235,7 +233,6 @@ const SortedFolder = ({
                     size: 20,
                     color: colors.grey,
                 },
-                customFontSize: 14,
                 style: { height: '90%' }
             }}
         />

@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import Modal from '../../../../foundation/components/modal/Modal';
-import { Event, generateTimeSelectorOptions, isTimestampValid, timestampToDayOfWeek } from '../../../../foundation/time/utils';
+import { Event, getTimeSelectorOptions, isTimestampValid, timestampToDayOfWeek } from '../../../../foundation/planners/timeUtils';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import TimeSelector from './TimeSelector';
 import colors from '../../../../foundation/theme/colors';
@@ -29,7 +29,7 @@ const TimeModal = ({
     onSave, 
     item 
 }: TimeModalProps) => {
-    const newTimeOptions = useMemo(() => generateTimeSelectorOptions(), [timestamp]);
+    const newTimeOptions = useMemo(() => getTimeSelectorOptions(), [timestamp]);
     const defaultStartTime = '00:00';
     const defaultEndTime = '23:55';
     const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(item.timeConfig ?? {

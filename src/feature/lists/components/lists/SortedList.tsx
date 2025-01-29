@@ -47,7 +47,6 @@ const SortedList = ({
                     size: 20,
                     color: colors.grey,
                 },
-                customFontSize: 14,
                 style: { height: 500 }
             }}
         />

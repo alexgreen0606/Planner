@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Event, extractTimeValue, generateSortIdByTimestamp, generateTodayTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/time/utils';
+import { Event, extractTimeValue, generateSortIdByTimestamp, getTodayTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
 import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/utils';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import { buildPlanner, deleteEvent, persistEvent } from '../../../../foundation/planners/storage/plannerStorage';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import TimeModal, { TimeModalProps } from '../../../planner/components/modal/TimeModal';
 import colors from '../../../../foundation/theme/colors';
-import TimeValue from '../../../../foundation/time/components/TimeValue';
+import TimeValue from '../../../../foundation/planners/components/TimeValue';
 
 interface SortablePlannerProps {
     reloadChips: () => void;
@@ -15,7 +15,7 @@ interface SortablePlannerProps {
 const TodayPlanner = ({
     reloadChips
 }: SortablePlannerProps) => {
-    const timestamp = generateTodayTimestamp();
+    const timestamp = getTodayTimestamp();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     const toggleTimeModal = async (item: Event) => {
@@ -31,11 +31,9 @@ const TodayPlanner = ({
         (planner) => buildPlanner(timestamp, planner),
         undefined,
         {
-            customStorageHandlers: {
-                create: persistEvent,
-                update: persistEvent,
-                delete: deleteEvent
-            }
+            create: persistEvent,
+            update: persistEvent,
+            delete: deleteEvent
         }
     );
 
