@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { weatherCodeToFontistoIcon } from '../../../../foundation/weather/utils';
-import { timestampToDayOfWeek, timestampToMonthDate } from '../../timeUtils';
+import { View, StyleSheet } from 'react-native';
+import { weatherCodeToFontistoIcon, WeatherForecast } from '../../../../foundation/weather/utils';
+import { timestampToDayOfWeek, timestampToMonthDate } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import colors from '../../../../foundation/theme/colors';
 import AppleIcon from '../../../../foundation/components/icons/AppleIcon';
-import { WeatherForecast } from '../../../../foundation/weather/types';
+import CustomText from '../../../../foundation/components/text/CustomText';
 
 interface DayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -15,22 +15,20 @@ interface DayBannerProps {
 const DayBanner = ({ timestamp, forecast }: DayBannerProps) => {
 
     return (
-        <View style={{ ...globalStyles.spacedApart }}>
+        <View style={globalStyles.spacedApart}>
 
             {/* Date */}
             <View style={styles.dayContainer}>
-                <Text style={styles.dayOfWeek}>{timestampToDayOfWeek(timestamp)}</Text>
-                <Text style={styles.date}>{timestampToMonthDate(timestamp)}</Text>
+                <CustomText type='header'>{timestampToDayOfWeek(timestamp)}</CustomText>
+                <CustomText type='soft' style={styles.date}>{timestampToMonthDate(timestamp)}</CustomText>
             </View>
 
             {/* Weather */}
             <View style={styles.weatherContainer}>
-                <Text style={styles.highTemp}>{Math.round(forecast.temperatureMax)}°</Text>
+                <CustomText type='highTemp'>{Math.round(forecast.temperatureMax)}°</CustomText>
                 <View style={styles.divider} />
-                <Text style={styles.lowTemp}>{Math.round(forecast.temperatureMin)}°</Text>
-                <View
-                    style={{ marginLeft: 32 }}
-                >
+                <CustomText type='lowTemp'>{Math.round(forecast.temperatureMin)}°</CustomText>
+                <View style={styles.icon}>
                     <AppleIcon
                         config={{
                             ...weatherCodeToFontistoIcon(forecast.weatherCode),
@@ -48,13 +46,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
     },
-    dayOfWeek: {
-        fontSize: 22,
-        color: colors.white
-    },
     date: {
-        fontSize: 12.5,
-        color: colors.blue,
         marginLeft: 5,
         marginBottom: 2,
     },
@@ -63,20 +55,16 @@ const styles = StyleSheet.create({
         gap: 0,
         height: '100%'
     },
-    highTemp: {
-        fontSize: 18,
-        color: colors.white,
-    },
     divider: {
         width: StyleSheet.hairlineWidth,
         height: '80%',
         backgroundColor: colors.grey,
         marginHorizontal: 4,
     },
-    lowTemp: {
-        fontSize: 14,
-        color: colors.grey,
-    },
+    icon: {
+        marginLeft: 16,
+        marginRight: 12
+    }
 });
 
 export default DayBanner;

@@ -1,8 +1,8 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
-import GenericIcon, { GenericIconProps } from '../../../../foundation/components/icons/GenericIcon';
-import globalStyles from '../../../../foundation/theme/globalStyles';
+import GenericIcon, { GenericIconProps } from '../icons/GenericIcon';
+import globalStyles from '../../theme/globalStyles';
+import CustomText from '../text/CustomText';
 
 interface ChipProps {
     label: string;
@@ -13,14 +13,12 @@ interface ChipProps {
 const Chip = ({ label, iconConfig, color }: ChipProps) => {
     const styles = StyleSheet.create({
         text: {
-            fontSize: 10,
             color: color,
-            flexShrink: 1
         },
         chip: {
             ...globalStyles.verticallyCentered,
-            width: 'auto',
             height: 20,
+            gap: 4,
             justifyContent: 'center',
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: color,
@@ -34,14 +32,16 @@ const Chip = ({ label, iconConfig, color }: ChipProps) => {
         <View style={styles.chip}>
             <GenericIcon
                 {...iconConfig}
+                size={12}
             />
-            <Text
+            <CustomText
+                type='soft'
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={styles.text}
             >
                 {label}
-            </Text>
+            </CustomText>
         </View>
     )
 };

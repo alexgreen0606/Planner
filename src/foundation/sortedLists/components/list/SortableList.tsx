@@ -37,7 +37,7 @@ export interface DraggableListProps<
     getPopovers?: (item: T) => ModifyItemConfig<T, P>[];
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
-    emptyLabelConfig: EmptyLabelProps;
+    emptyLabelConfig?: EmptyLabelProps;
 }
 
 /**
@@ -113,8 +113,7 @@ const SortableList = <
     );
 
     // Derive positions out of the current list
-    const positions = useDerivedValue(() =>
-        buildItemPositions<T>(currentList),
+    const positions = useDerivedValue(() => buildItemPositions(currentList),
         [currentList]
     );
 
@@ -147,7 +146,7 @@ const SortableList = <
             )}
 
             {/* Empty Label */}
-            {currentList.length === 0 && (
+            {currentList.length === 0 && emptyLabelConfig && (
                 <EmptyLabel
                     {...emptyLabelConfig}
                 />

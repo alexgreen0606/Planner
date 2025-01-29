@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../../../components/icons/GenericIcon';
 import CustomText from '../../../components/text/CustomText';
-import colors from '../../../theme/colors';
 import globalStyles from '../../../theme/globalStyles';
 
 export interface EmptyLabelProps {
@@ -23,7 +22,6 @@ const EmptyLabel = ({
             <CustomText
                 type='label'
                 style={{
-                    color: colors.grey,
                     fontSize: customFontSize
                 }}
             >

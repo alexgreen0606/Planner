@@ -1,6 +1,26 @@
 import Geolocation from "@react-native-community/geolocation";
-import { WeatherForecast } from "./types";
 import { fetchWeatherApi } from "openmeteo";
+
+export interface WeatherForecast {
+  date: string;
+  weatherCode: number;
+  weatherDescription: string;
+  temperatureMax: number;
+  temperatureMin: number;
+  precipitationSum: number;
+  precipitationProbabilityMax: number;
+}
+
+export interface ForecastResponse {
+  daily: {
+    time: Date[];
+    weatherCode: number[];
+    temperature2mMax: number[];
+    temperature2mMin: number[];
+    precipitationSum: number[];
+    precipitationProbabilityMax: number[];
+  };
+}
 
 export const weatherCodeToString = (code: number): string => {
   const weatherMap: { [key: number]: string } = {
@@ -73,7 +93,7 @@ export const weatherCodeToFontistoIcon = (code: number): WeatherIconMap[number] 
   }
 };
 
-export const getWeather = async (timestamps: string[]): Promise<Record<string, WeatherForecast>> => {
+export const getWeeklyWeather = async (timestamps: string[]): Promise<Record<string, WeatherForecast>> => {
   const forecast: Record<string, WeatherForecast> = {};
 
   // Properly typed wrapper for Geolocation.getCurrentPosition
@@ -138,4 +158,94 @@ export const getWeather = async (timestamps: string[]): Promise<Record<string, W
   })
 
   return forecast;
+}
+
+export interface TodayWeatherForecast {
+  date: string;
+  hour: number;
+  weatherCode: number;
+  temperature: number;
+}
+export const getTodayWeather = async (): Promise<TodayWeatherForecast[]> => {
+
+  // Properly typed wrapper for Geolocation.getCurrentPosition
+  const getCurrentPosition = (): Promise<GeolocationPosition> =>
+    new Promise((resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        // @ts-ignore
+        (position: GeolocationPosition) => resolve(position),
+        (error: GeolocationPositionError) => reject(error),
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+        }
+      );
+    });
+
+  const info = await getCurrentPosition();
+
+  const { latitude, longitude } = info.coords;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  const params = {
+    latitude,
+    longitude,
+    hourly: ["temperature_2m", "weather_code"],
+    forecast_days: 2,
+    temperature_unit: "fahrenheit",
+    timezone,
+  };
+
+
+
+  const url = "https://api.open-meteo.com/v1/forecast";
+
+  const responses = await fetchWeatherApi(url, params);
+
+  // Helper function to form time ranges
+  const range = (start: number, stop: number, step: number) =>
+    Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+
+  // Process first location. Add a for-loop for multiple locations or weather models
+  const response = responses[0];
+
+  // Attributes for timezone and location
+  const utcOffsetSeconds = response.utcOffsetSeconds();
+  const hourly = response.hourly()!;
+
+  const weatherData = {
+
+    hourly: {
+      time: range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval()).map(
+        (t) => new Date((t + utcOffsetSeconds) * 1000)
+      ),
+      temperature2m: hourly.variables(0)!.valuesArray()!,
+      weatherCode: hourly.variables(1)!.valuesArray()!,
+    },
+
+  };
+
+  const todayWeatherData = [];
+
+  for (let i = 0; i < weatherData.hourly.time.length; i++) {
+    const dateObj = weatherData.hourly.time[i];
+    const date = dateObj.toISOString().split("T")[0];
+    const hour = dateObj.getHours();
+
+    const hourData: TodayWeatherForecast = {
+      date,
+      hour,
+      weatherCode: weatherData.hourly.weatherCode[i],
+      temperature: weatherData.hourly.temperature2m[i],
+    };
+
+    todayWeatherData.push(hourData);
+  }
+  todayWeatherData.sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.hour}:00:00`).getTime();
+    const dateB = new Date(`${b.date}T${b.hour}:00:00`).getTime();
+    return dateA - dateB;
+  });
+  return todayWeatherData;
 }

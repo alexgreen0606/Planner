@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Checkbox } from 'react-native-paper';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import Modal from '../../../../foundation/components/modal/Modal';
-import { Event, generateTimeSelectorOptions, isTimestampValid, timestampToDayOfWeek } from '../../timeUtils';
+import { Event, generateTimeSelectorOptions, isTimestampValid, timestampToDayOfWeek } from '../../../../foundation/planners/timeUtils';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import TimeSelector from './TimeSelector';
 import colors from '../../../../foundation/theme/colors';
@@ -84,7 +84,7 @@ const TimeModal = ({
                 <View style={globalStyles.spacedApart}>
 
                     {/* Calendar Toggle */}
-                    <View style={{ width: '50%' }}>
+                    <View style={styles.halfWidth}>
                         {isTimestampValid(timestamp) && (
                             <>
                                 <CustomText type='label'>Calendar Event</CustomText>
@@ -108,7 +108,7 @@ const TimeModal = ({
                     </View>
 
                     {/* All Day Toggle */}
-                    <View style={{ width: '50%' }}>
+                    <View style={styles.halfWidth}>
                         {timeModalData.isCalendarEvent && (
                             <>
                                 <CustomText type='label'>All Day</CustomText>
@@ -135,7 +135,7 @@ const TimeModal = ({
 
                     {/* Start Time */}
                     {!timeModalData.allDay && (
-                        <View style={{ width: '100%' }}>
+                        <View style={styles.fullWidth}>
                             <CustomText type='label'>Start Time</CustomText>
                             <TimeSelector
                                 onChange={(newVal: string) => {
@@ -152,7 +152,7 @@ const TimeModal = ({
 
                     {/* End Time */}
                     {!timeModalData.allDay && timeModalData.isCalendarEvent && (
-                        <View style={{ width: '100%' }}>
+                        <View style={styles.fullWidth}>
                             <CustomText type='label'>End Time</CustomText>
                             <TimeSelector
                                 onChange={(newVal: string) => {
@@ -179,6 +179,12 @@ const styles = StyleSheet.create({
         marginTop: 20,
         gap: 40,
         height: 600
+    },
+    fullWidth: {
+        width: '100%'
+    },
+    halfWidth: {
+        width: '50%'
     }
 });
 

@@ -1,6 +1,6 @@
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
-import { Event, isoToTimeValue } from "./timeUtils";
 import { ItemStatus } from "../../foundation/sortedLists/utils";
+import { Event, isoToTimeValue } from "./timeUtils";
 
 /**
  * Grants access to the device calendar.
@@ -56,7 +56,7 @@ export async function getCalendarEvents(timestamp: string): Promise<Event[]> {
  * Fetches all holidays from the device calendar for the given date range.
  * @param timestamp - YYYY-MM-DD
  */
-export async function getHolidays(timestamps: string[]): Promise<Record<string, string[]>> {
+export async function generateHolidaysMap(timestamps: string[]): Promise<Record<string, string[]>> {
     await getCalendarAccess();
 
     // Load in the US Holiday calendar
@@ -84,7 +84,7 @@ export async function getHolidays(timestamps: string[]): Promise<Record<string, 
  * Fetches all birthdays from the device calendar for the given date range.
  * @param timestamp - YYYY-MM-DD
  */
-export async function getBirthdays(timestamps: string[]): Promise<Record<string, string[]>> {
+export async function generateBirthdaysMap(timestamps: string[]): Promise<Record<string, string[]>> {
     await getCalendarAccess();
 
     const calendars = await RNCalendarEvents.findCalendars();
@@ -109,7 +109,7 @@ export async function getBirthdays(timestamps: string[]): Promise<Record<string,
  * Fetches all full-day events from the device calendar for the given date range.
  * @param timestamp - YYYY-MM-DD
  */
-export async function getFullDayEvents(timestamps: string[]): Promise<Record<string, string[]>> {
+export async function generateFullDayEventsMap(timestamps: string[]): Promise<Record<string, string[]>> {
     await getCalendarAccess();
     const primaryCalendarId = await getPrimaryCalendarId();
 

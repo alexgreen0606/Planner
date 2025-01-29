@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
-import Time from '../info/Time';
-import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../timeUtils';
+import TimeValue from '../../../../foundation/components/info/TimeValue';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../../../foundation/planners/timeUtils';
 import colors from '../../../../foundation/theme/colors';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
@@ -66,7 +66,7 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
                     color: colors.grey
                 },
                 onClick: toggleTimeModal,
-                customIcon: !!item.timeConfig?.startTime ? <Time allDay={false} timeValue={item.timeConfig?.startTime} /> : undefined
+                customIcon: !!item.timeConfig?.startTime ? <TimeValue allDay={false} timeValue={item.timeConfig?.startTime} /> : undefined
             })}
             handleValueChange={(text, item) => {
                 const newEvent = {

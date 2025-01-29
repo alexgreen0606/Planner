@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import SortedFolder from '../feature/folders/components/SortedFolder';
-import SortedList from '../feature/folders/components/SortedList';
+import SortedFolder from '../feature/lists/components/SortedFolder';
+import SortedList from '../feature/lists/components/SortedList';
 import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
-import { FolderItemType, NULL, ROOT_FOLDER_ID } from '../feature/folders/utils';
+import { FolderItemType, NULL, ROOT_FOLDER_ID } from '../feature/lists/utils';
 import globalStyles from '../foundation/theme/globalStyles';
-import FolderItemBanner from '../feature/folders/components/FolderItemBanner';
-import { getFolderFromStorage, getListFromStorage } from '../feature/folders/storage/folderStorage';
+import FolderItemBanner from '../feature/lists/components/FolderItemBanner';
+import { getFolderFromStorage, getListFromStorage } from '../feature/lists/storage/folderStorage';
 
 interface PageConfig {
   id: string;

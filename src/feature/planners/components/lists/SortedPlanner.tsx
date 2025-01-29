@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from '../banner/DayBanner';
-import { persistEvent, deleteEvent, buildPlanner } from '../../storage/plannerStorage';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import CustomText from '../../../../foundation/components/text/CustomText';
-import Time from '../info/Time';
-import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../timeUtils';
+import TimeValue from '../../../../foundation/components/info/TimeValue';
+import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icons/GenericIcon';
 import colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
-import Chip from '../info/Chip';
-import { WeatherForecast } from '../../../../foundation/weather/types';
+import Chip from '../../../../foundation/components/info/Chip';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/utils';
+import { buildPlanner, deleteEvent, persistEvent } from '../../../../foundation/planners/storage/plannerStorage';
+import { WeatherForecast } from '../../../../foundation/weather/utils';
 
 interface SortablePlannerProps {
     timestamp: string;
@@ -63,12 +63,8 @@ const SortedPlanner = ({
         <Card
             header={<DayBanner forecast={forecast} timestamp={timestamp} />}
             footer={
-                <View style={{
-                    ...globalStyles.verticallyCentered,
-                    width: '100%',
-                    flexWrap: 'wrap',
-                }}>
-                    {allDayEvents.map((allDayEvent, i) =>
+                <View style={styles.wrappedChips}>
+                    {allDayEvents.map((allDayEvent) =>
                         <Chip
                             label={allDayEvent}
                             iconConfig={{
@@ -110,24 +106,19 @@ const SortedPlanner = ({
 
             {/* Collapse Control */}
             {SortedEvents.items.length > 15 && !collapsed && (
-                <View>
-                    <TouchableOpacity style={{ ...globalStyles.verticallyCentered, paddingLeft: 8, paddingTop: 8 }} onPress={toggleCollapsed}>
-                        <GenericIcon
-                            type='chevron-down'
-                            color={colors.grey}
-                            size={16}
-                        />
-                        <CustomText
-                            type='label'
-                            style={{
-                                color: colors.grey,
-                            }}
-                        >
-                            {collapsed ? 'View ' : 'Hide '}
-                            {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
-                        </CustomText>
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity style={styles.upperCollapseControl} onPress={toggleCollapsed}>
+                    <GenericIcon
+                        type='chevron-down'
+                        color={colors.grey}
+                        size={16}
+                    />
+                    <CustomText
+                        type='soft'
+                    >
+                        {collapsed ? 'View ' : 'Hide '}
+                        {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
+                    </CustomText>
+                </TouchableOpacity>
             )}
 
             {/* Planner List */}
@@ -192,7 +183,7 @@ const SortedPlanner = ({
                         color: colors.grey
                     },
                     onClick: toggleTimeModal,
-                    customIcon: item.timeConfig ? <Time allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined
+                    customIcon: item.timeConfig ? <TimeValue allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined
                 })}
                 getModal={(item: Event) => ({
                     component: TimeModal,
@@ -217,16 +208,13 @@ const SortedPlanner = ({
 
             {/* Collapse Control */}
             {!!SortedEvents.items.length && (
-                <TouchableOpacity style={{ ...globalStyles.verticallyCentered, paddingLeft: 8 }} onPress={toggleCollapsed}>
+                <TouchableOpacity style={styles.lowerCollapseControl} onPress={toggleCollapsed}>
                     <GenericIcon
                         type={collapsed ? 'chevron-right' : 'chevron-up'}
                         color={colors.grey}
                         size={16}
                     />
-                    <CustomText
-                        type='label'
-                        style={{ color: colors.grey }}
-                    >
+                    <CustomText type='soft'>
                         {collapsed ? 'View ' : 'Hide '}
                         {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
                     </CustomText>
@@ -235,5 +223,22 @@ const SortedPlanner = ({
         </Card>
     );
 };
+
+const styles = StyleSheet.create({
+    upperCollapseControl: {
+        ...globalStyles.verticallyCentered,
+        paddingLeft: 8,
+        paddingTop: 8
+    },
+    lowerCollapseControl: {
+        ...globalStyles.verticallyCentered,
+        paddingLeft: 8
+    },
+    wrappedChips: {
+        ...globalStyles.verticallyCentered,
+        width: '100%',
+        flexWrap: 'wrap',
+    }
+});
 
 export default SortedPlanner;

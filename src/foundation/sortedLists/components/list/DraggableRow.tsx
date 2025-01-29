@@ -211,7 +211,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     useDerivedValue(() => {
         if (!isDragging.value)
             top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
-    }, [positions.value, item]);
+    }, [positions.value[item.id]]);
 
     // Animate the row's position
     const rowPositionStyle = useAnimatedStyle(() => {
@@ -253,7 +253,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                         {leftIconConfig.customIcon || leftIconConfig.icon && (
                             <GenericIcon
                                 {...leftIconConfig.icon}
-                                size={20}
+                                size={leftIconConfig.icon.size ?? 20}
                             />
                         )}
                     </TouchableOpacity>
@@ -279,6 +279,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
                                     textAlignVertical: 'center',
+                                    flex: 1
                                 }}
                             >
                                 {item.value}
@@ -336,7 +337,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        paddingHorizontal: 16
+        paddingHorizontal: 16,
     },
     row: {
         flexDirection: 'row',

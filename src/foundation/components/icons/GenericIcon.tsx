@@ -1,5 +1,6 @@
 import React from 'react';
 import { FontAwesome, Feather, Ionicons, MaterialIcons, Entypo, FontAwesome5, Foundation, MaterialCommunityIcons, Fontisto, SimpleLineIcons, FontAwesome6 } from '@expo/vector-icons';
+import { TouchableOpacity } from 'react-native';
 
 const IconSets = {
     FontAwesome,
@@ -24,7 +25,7 @@ const IconMap: Record<string, { type: IconSetType, name: string }> = {
     list: { type: 'Ionicons', name: 'list-outline' },
     planner: { type: 'Ionicons', name: 'calendar-number-sharp' },
     lists: { type: 'Entypo', name: 'archive' },
-    dashboard: { type: 'FontAwesome', name: 'coffee' },
+    coffee: { type: 'FontAwesome', name: 'coffee' },
     'chevron-left': { type: 'Entypo', name: 'chevron-left' },
     'chevron-down': { type: 'Entypo', name: 'chevron-down' },
     'chevron-up': { type: 'Entypo', name: 'chevron-up' },
@@ -37,7 +38,11 @@ const IconMap: Record<string, { type: IconSetType, name: string }> = {
     globe: { type: 'Entypo', name: 'globe' },
     birthday: { type: 'FontAwesome', name: 'birthday-cake' },
     celebrate: { type: 'MaterialCommunityIcons', name: 'party-popper' },
-    clock: { type: 'MaterialCommunityIcons', name: 'clock-outline' }
+    clock: { type: 'MaterialCommunityIcons', name: 'clock-outline' },
+    message: { type: 'MaterialCommunityIcons', name: 'message-outline' },
+    messageFilled: { type: 'MaterialCommunityIcons', name: 'message' },
+    square: { type: 'Feather', name: 'square' },
+    checkSquare: { type: 'Feather', name: 'check-square' },
 
 };
 export type IconType = keyof typeof IconMap;
@@ -46,17 +51,26 @@ export interface GenericIconProps {
     type: IconType;
     size?: number;
     color?: string;
+    onClick?: () => void;
 }
 
 const GenericIcon: React.FC<GenericIconProps> = ({
     type,
     size,
     color,
+    onClick,
     ...props
 }) => {
     const iconConfig = IconMap[type];
     const IconComponent = IconSets[iconConfig.type];
-    return <IconComponent name={iconConfig.name} size={size} color={color} {...props} />;
+    const Icon =  <IconComponent name={iconConfig.name} size={size} color={color} {...props} />;
+
+    return onClick ?
+        <TouchableOpacity onPress={onClick}>
+            {Icon}
+        </TouchableOpacity>
+        :
+        Icon
 };
 
 export default GenericIcon;

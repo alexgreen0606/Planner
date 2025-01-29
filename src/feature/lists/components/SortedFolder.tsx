@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { useNavigatorContext } from '../../../foundation/navigation/services/TabsProvider';
 import {
@@ -9,7 +8,6 @@ import {
     deleteFolderItem,
     getFolderItems,
 } from '../storage/folderStorage';
-import globalStyles from '../../../foundation/theme/globalStyles';
 import CustomText from '../../../foundation/components/text/CustomText';
 import colors from '../../../foundation/theme/colors';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
@@ -17,7 +15,7 @@ import Popover, { PopoverProps } from './FolderItemPopover';
 import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, NULL } from '../utils';
 import { Pages } from '../../../foundation/navigation/utils';
 import DeleteModal, { DeleteModalProps } from './DeleteModal';
-import { isItemTextfield, ItemStatus, ListItem, ModifyItemConfig } from '../../../foundation/sortedLists/utils';
+import { ItemStatus, ListItem, ModifyItemConfig } from '../../../foundation/sortedLists/utils';
 import { useSortableListContext } from '../../../foundation/sortedLists/services/SortableListProvider';
 
 interface SortableFolderProps {
@@ -205,7 +203,7 @@ const SortedFolder = ({
             initializeItem={initializeFolderItem}
             getRightIconConfig={item => ({
                 customIcon:
-                    <CustomText type='soft' style={{ color: colors.grey }}>
+                    <CustomText type='soft'>
                         {item.childrenCount}
                     </CustomText>
             })}

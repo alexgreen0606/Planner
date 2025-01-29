@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { TimeSelectorOptions } from '../../timeUtils';
+import { TimeSelectorOptions } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import colors from '../../../../foundation/theme/colors';
 
@@ -35,11 +35,11 @@ const TimeSelector = ({
     }, [hour, minute, indicator]);
 
     return (
-        <View style={{ ...globalStyles.spacedApart }}>
-            <Picker style={{ width: '30%' }}
+        <View style={globalStyles.spacedApart}>
+            <Picker style={styles.scrollWheel}
                 selectedValue={hour}
                 onValueChange={(itemValue) => setHour(Number(itemValue))}
-                itemStyle={styles.item}
+                itemStyle={styles.wheelItem}
                 selectionColor={colors.blue}
             >
                 {options.hour.map(hourOption => (
@@ -51,9 +51,9 @@ const TimeSelector = ({
                     />
                 ))}
             </Picker>
-            <Picker style={{ width: '30%' }}
+            <Picker style={styles.scrollWheel}
                 selectedValue={minute}
-                itemStyle={styles.item}
+                itemStyle={styles.wheelItem}
                 onValueChange={(itemValue) => setMinute(itemValue)}
             >
                 {options.minute.map(minuteOption => (
@@ -65,10 +65,10 @@ const TimeSelector = ({
                     />
                 ))}
             </Picker>
-            <Picker style={{ width: '35%' }}
+            <Picker style={styles.scrollWheel}
                 selectedValue={indicator}
                 onValueChange={(itemValue) => setIndicator(itemValue)}
-                itemStyle={styles.item}
+                itemStyle={styles.wheelItem}
             >
                 {options.indicator.map(ind => (
                     <Picker.Item
@@ -84,21 +84,13 @@ const TimeSelector = ({
 };
 
 const styles = StyleSheet.create({
-    item: {
+    scrollWheel: {
+        width: '30%'
+    },
+    wheelItem: {
         fontSize: 14,
         color: colors.grey,
     },
-    flatList: {
-        maxHeight: 140,
-        borderColor: colors.background,
-        backgroundColor: 'transparent',
-    },
-    option: {
-        backgroundColor: colors.background,
-        color: colors.white,
-        height: 25,
-        textAlign: 'center',
-    }
 });
 
 export default TimeSelector;

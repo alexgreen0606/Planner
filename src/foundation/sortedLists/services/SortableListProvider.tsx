@@ -79,7 +79,6 @@ export const SortableListProvider = <T extends ListItem>({ children }: PropsWith
         }}>
             <Animated.ScrollView
                 ref={animatedRef}
-                style={{ flex: 1 }}
                 scrollEventThrottle={16}
                 onScroll={scrollHandler}
                 bounces={false}
@@ -101,6 +100,5 @@ export const useSortableListContext = () => {
     if (!context) {
         throw new Error("useSortableList must be used within a Provider");
     }
-
     return context;
 };

@@ -18,7 +18,7 @@ const AppleIcon: React.FC<AppleIconProps> = ({ config }) => {
         name={name}
         size={size}
         multicolor
-        resizeMode='right'
+        resizeMode='center'
     />
 };
 

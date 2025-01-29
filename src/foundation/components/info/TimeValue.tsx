@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import colors from '../../../../foundation/theme/colors';
+import { View, StyleSheet } from 'react-native';
+import CustomText from '../text/CustomText';
 
 interface TimeProps {
     timeValue: string; // HH:MM
     allDay: boolean;
 }
 
-const Time = ({ timeValue, allDay }: TimeProps) => {
+const TimeValue = ({ timeValue, allDay }: TimeProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
@@ -25,16 +25,16 @@ const Time = ({ timeValue, allDay }: TimeProps) => {
 
     return !allDay ? (
         <View style={styles.container}>
-            <Text style={styles.hour}>{hour}</Text>
+            <CustomText type='hour' style={styles.hour}>{hour}</CustomText>
             <View style={styles.details}>
-                <Text style={styles.minute}>{minute}</Text>
-                <Text style={styles.indicator}>{indicator}</Text>
+                <CustomText type='minute' style={styles.minute}>{minute}</CustomText>
+                <CustomText type='indicator' style={styles.indicator}>{indicator}</CustomText>
             </View>
         </View>
     ) : (
         <View>
-            <Text style={styles.all}>ALL</Text>
-            <Text style={styles.day}>DAY</Text>
+            <CustomText type='minute' style={styles.all}>ALL</CustomText>
+            <CustomText type='minute' style={styles.day}>DAY</CustomText>
         </View>
     )
 };
@@ -45,10 +45,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     hour: {
-        fontSize: 24,
-        fontFamily: 'Jersey15-Regular',
-        color: colors.orange,
-        height: 25
+        height: '100%'
     },
     details: {
         justifyContent: 'center',
@@ -56,37 +53,24 @@ const styles = StyleSheet.create({
         height: '100%'
     },
     minute: {
-        fontSize: 14,
-        paddingTop: 2,
-        fontFamily: 'Jersey15-Regular',
-        color: colors.orange,
         height: '50%',
+        paddingTop: 2,
         textAlignVertical: 'bottom'
     },
     indicator: {
-        fontSize: 7.5,
         height: '50%',
-        color: colors.white,
         textAlignVertical: 'bottom',
-        width: '100%',
         textAlign: 'right',
-        fontWeight: 600
     },
     all: {
         height: '50%',
-        fontSize: 15,
-        color: colors.orange,
         textAlign: 'center',
         letterSpacing: .6,
-        fontFamily: 'Jersey15-Regular',
     },
     day: {
         height: '50%',
-        fontSize: 15,
-        color: colors.orange,
         textAlign: 'center',
-        fontFamily: 'Jersey15-Regular',
     }
 });
 
-export default Time;
+export default TimeValue;

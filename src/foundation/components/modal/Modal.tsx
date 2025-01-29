@@ -52,7 +52,7 @@ const Modal = ({
                         </View>
                     </View>
                 </Dialog.Title>
-                <Dialog.Content style={{ marginHorizontal: 16 }}>
+                <Dialog.Content>
                     {children}
                 </Dialog.Content>
                 <Dialog.Actions>

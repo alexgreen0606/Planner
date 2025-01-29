@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import { getFolderItem, updateFolderItem } from '../storage/folderStorage';
@@ -52,29 +52,8 @@ const FolderItemBanner = ({
     const saveItem = () => updateFolderItem({ ...item, status: ItemStatus.STATIC });
     const isItemEditing = item.status === ItemStatus.EDIT;
 
-    const styles = StyleSheet.create({
-        label: {
-            ...globalStyles.verticallyCentered,
-            flex: 1,
-        },
-        labelText: {
-            fontSize: 25,
-            color: colors.white,
-            flex: 1
-        },
-        textInput: {
-            ...globalStyles.blackFilledSpace,
-            height: 25,
-            fontSize: 25,
-        },
-        backButton: {
-            color: colors.blue,
-            maxWidth: 80,
-        }
-    });
-
     return (
-        <View style={{ ...globalStyles.spacedApart, paddingHorizontal: 8 }}>
+        <View style={globalStyles.pageLabelContainer}>
             <View style={styles.label}>
 
                 {/* Type Icon */}
@@ -102,14 +81,14 @@ const FolderItemBanner = ({
                         contentStyle={{ paddingLeft: 0 }}
                     />
                 ) : (
-                    <Text
+                    <CustomText
+                    type='pageLabel'
                         onPress={beginEditItem}
                         adjustsFontSizeToFit
-                        style={styles.labelText}
                         numberOfLines={1}
                     >
                         {item.value}
-                    </Text>
+                    </CustomText>
                 )}
             </View>
 
@@ -138,5 +117,21 @@ const FolderItemBanner = ({
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    label: {
+        ...globalStyles.verticallyCentered,
+        flex: 1,
+    },
+    textInput: {
+        ...globalStyles.blackFilledSpace,
+        height: 25,
+        fontSize: 25,
+    },
+    backButton: {
+        color: colors.blue,
+        maxWidth: 80,
+    }
+});
 
 export default FolderItemBanner;

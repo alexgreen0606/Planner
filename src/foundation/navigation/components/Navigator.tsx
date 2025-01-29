@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Dashboard from '../../../screens/Dashboard';
+import Today from '../../../screens/Today';
 import Planner from '../../../screens/Planner';
 import Lists from '../../../screens/Lists';
 import { useNavigatorContext } from '../services/TabsProvider';
@@ -13,7 +13,7 @@ import { NAVBAR_HEIGHT, Pages } from '../utils';
 const Tab = createBottomTabNavigator();
 
 const routeIconMap: Record<string, string> = {
-    [Pages.DASHBOARD]: 'dashboard',
+    [Pages.DASHBOARD]: 'coffee',
     [Pages.PLANNER]: 'planner',
     [Pages.LISTS]: 'lists'
 }
@@ -50,7 +50,7 @@ const Navigator = () => {
                 <Tab.Screen name={Pages.LISTS} component={Lists} listeners={{
                     focus: () => setCurrentTab(Pages.LISTS)
                 }} />
-                <Tab.Screen name={Pages.DASHBOARD} component={Dashboard} listeners={{
+                <Tab.Screen name={Pages.DASHBOARD} component={Today} listeners={{
                     focus: () => setCurrentTab(Pages.DASHBOARD)
                 }} />
                 <Tab.Screen name={Pages.PLANNER} component={Planner} listeners={{

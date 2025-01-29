@@ -5,6 +5,7 @@ type GlobalStyles = {
   spacedApart: ViewStyle;
   verticallyCentered: ViewStyle;
   blackFilledSpace: ViewStyle;
+  pageLabelContainer: ViewStyle;
 }
 
 const globalStyles: GlobalStyles = {
@@ -23,6 +24,13 @@ const globalStyles: GlobalStyles = {
     gap: 8,
     alignItems: 'center',
   },
+  pageLabelContainer: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
+    width: '100%',
+    paddingHorizontal: 8
+  }
 };
 
 export default globalStyles;

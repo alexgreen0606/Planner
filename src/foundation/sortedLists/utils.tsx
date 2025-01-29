@@ -17,8 +17,7 @@ export interface ListItemUpdateComponentProps<T extends ListItem> {
 
 export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
     component: React.ComponentType<P>;
-    props: P; // will be passed directly by the list component
-    // onSave: (item: T) => T | undefined; // returns the updated item
+    props: P;
 }
 export type RowIconConfig<T extends ListItem> = {
     icon?: GenericIconProps;
