@@ -8,7 +8,7 @@ import TimeValue from '../../../../foundation/planners/components/TimeValue';
 import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
 import EventChip from '../../../../foundation/planners/components/EventChip';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
@@ -68,9 +68,8 @@ const SortedPlanner = ({
                             iconConfig={{
                                 type: 'megaphone',
                                 size: 10,
-                                color: colors.red
                             }}
-                            color={colors.red}
+                            color={Colors.RED}
                             key={`${allDayEvent}-${timestamp}`}
                         />
                     )}
@@ -80,9 +79,8 @@ const SortedPlanner = ({
                             iconConfig={{
                                 type: 'globe',
                                 size: 10,
-                                color: colors.purple
                             }}
-                            color={colors.purple}
+                            color={Colors.PURPLE}
                             key={holiday}
                         />
                     )}
@@ -92,9 +90,8 @@ const SortedPlanner = ({
                             iconConfig={{
                                 type: 'birthday',
                                 size: 10,
-                                color: colors.green
                             }}
-                            color={colors.green}
+                            color={Colors.GREEN}
                             key={birthday}
                         />
                     )}
@@ -107,7 +104,7 @@ const SortedPlanner = ({
                 <TouchableOpacity style={styles.upperCollapseControl} onPress={toggleCollapsed}>
                     <GenericIcon
                         type='chevron-down'
-                        color={colors.grey}
+                        color={Colors.GREY}
                         size={16}
                     />
                     <CustomText type='soft'>
@@ -124,7 +121,7 @@ const SortedPlanner = ({
                 getLeftIconConfig={item => ({
                     icon: {
                         type: isItemDeleting(item) ? 'circle-filled' : 'circle',
-                        color: isItemDeleting(item) ? colors.blue : colors.grey
+                        color: isItemDeleting(item) ? Colors.BLUE : Colors.GREY
                     },
                     onClick: SortedEvents.toggleItemDelete
                 })}
@@ -176,7 +173,7 @@ const SortedPlanner = ({
                     hideIcon: !item.timeConfig && !isItemTextfield(item),
                     icon: {
                         type: 'clock',
-                        color: colors.grey
+                        color: Colors.GREY
                     },
                     onClick: toggleTimeModal,
                     customIcon: item.timeConfig ? <TimeValue allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined
@@ -207,7 +204,7 @@ const SortedPlanner = ({
                 <TouchableOpacity style={styles.lowerCollapseControl} onPress={toggleCollapsed}>
                     <GenericIcon
                         type={collapsed ? 'chevron-right' : 'chevron-up'}
-                        color={colors.grey}
+                        color={Colors.GREY}
                         size={16}
                     />
                     <CustomText type='soft'>

@@ -3,7 +3,7 @@ import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedLis
 import { isItemDeleting, isItemTextfield, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
 import { FOLDER_STORAGE_ID, List } from '../../utils';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 
 interface SortableListProps {
     listId: string;
@@ -36,7 +36,7 @@ const SortedList = ({
             getLeftIconConfig={item => ({
                 icon: {
                     type: isItemDeleting(item) ? 'circle-filled' : 'circle',
-                    color: isItemDeleting(item) ? colors.blue : colors.grey
+                    color: isItemDeleting(item) ? Colors.BLUE : Colors.GREY
                 },
                 onClick: SortedItems.toggleItemDelete
             })}
@@ -45,7 +45,7 @@ const SortedList = ({
                 iconConfig: {
                     type: 'ghost',
                     size: 20,
-                    color: colors.grey,
+                    color: Colors.GREY,
                 },
                 style: { height: 500 }
             }}

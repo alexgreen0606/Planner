@@ -8,7 +8,7 @@ import {
     deleteFolderItem,
     getFolderItems,
 } from '../../storage/folderStorage';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import Popover, { PopoverProps } from '../popover/FolderItemPopover';
 import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, NULL } from '../../utils';
@@ -129,7 +129,7 @@ const SortedFolder = ({
                     icon: {
                         type: 'transfer',
                         size: 20,
-                        color: isItemTransfering(item) ? colors.blue : colors.grey
+                        color: isItemTransfering(item) ? Colors.BLUE : Colors.GREY
                     }
                 }],
                 [{
@@ -140,7 +140,7 @@ const SortedFolder = ({
                     icon: {
                         type: 'trash',
                         size: 20,
-                        color: colors.grey
+                        color: Colors.GREY
                     }
                 }]],
                 item,
@@ -158,7 +158,7 @@ const SortedFolder = ({
                     icon: {
                         type: 'folder',
                         size: 20,
-                        color: item.type === FolderItemType.FOLDER ? colors.blue : colors.grey
+                        color: item.type === FolderItemType.FOLDER ? Colors.BLUE : Colors.GREY
                     }
                 },
                 {
@@ -166,7 +166,7 @@ const SortedFolder = ({
                     icon: {
                         type: 'list',
                         size: 20,
-                        color: item.type === FolderItemType.LIST ? colors.blue : colors.grey
+                        color: item.type === FolderItemType.LIST ? Colors.BLUE : Colors.GREY
                     }
                 }]],
                 open: currentTab === Pages.LISTS && item.status === ItemStatus.NEW && !deleteModalOpen,
@@ -183,8 +183,8 @@ const SortedFolder = ({
             item.type === FolderItemType.FOLDER ? 'folder' :
                 'list';
     const getIconColor = (item: FolderItem) => isItemTransfering(item) ?
-        colors.blue : (item.type === FolderItemType.LIST && isTransferMode()) ?
-            colors.grey : colors[item.color as keyof typeof colors]
+        Colors.BLUE : (item.type === FolderItemType.LIST && isTransferMode()) ?
+            Colors.GREY : Colors[item.color as keyof typeof Colors]
 
     return (
         <SortableList<FolderItem, PopoverProps, DeleteModalProps>
@@ -196,8 +196,8 @@ const SortedFolder = ({
             onSaveTextfield={SortedItems.persistItemToStorage}
             onDeleteItem={SortedItems.deleteItemFromStorage}
             getPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
-            getRowTextColor={item => isItemTransfering(item) ? colors.blue :
-                (isTransferMode() && item.type === FolderItemType.LIST) ? colors.grey : colors.white}
+            getRowTextColor={item => isItemTransfering(item) ? Colors.BLUE :
+                (isTransferMode() && item.type === FolderItemType.LIST) ? Colors.GREY : Colors.WHITE}
             initializeItem={initializeFolderItem}
             getRightIconConfig={item => ({
                 customIcon:
@@ -231,7 +231,7 @@ const SortedFolder = ({
                 iconConfig: {
                     type: 'ghost',
                     size: 20,
-                    color: colors.grey,
+                    color: Colors.GREY,
                 },
                 style: { height: '90%' }
             }}

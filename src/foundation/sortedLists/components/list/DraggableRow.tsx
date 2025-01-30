@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
-import colors from "../../../theme/colors";
+import Colors from "../../../theme/colors";
 import ListTextfield from "../textfield/ListTextfield";
 import GenericIcon from "../../../components/icon/GenericIcon";
 import { Portal } from "react-native-paper";
@@ -275,7 +275,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                                 type='standard'
                                 style={{
                                     color: customTextColor ||
-                                        (isItemDeleting(item) ? colors.grey : colors.white),
+                                        (isItemDeleting(item) ? Colors.GREY : Colors.WHITE),
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
                                     textAlignVertical: 'center',

@@ -1,38 +1,38 @@
 import { GenericIconProps } from "../components/icon/GenericIcon";
 
-export const LIST_ITEM_HEIGHT = 40;
-
-export interface ListItem {
-    id: string;
-    value: string;
-    sortId: number;
-    status: ItemStatus
-    listId: string;
-};
-
-export interface ListItemUpdateComponentProps<T extends ListItem> {
-    item: T;
-    onSave: (item: T) => T | undefined;
-}
-
-export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
-    component: React.ComponentType<P>;
-    props: P;
-}
-export type RowIconConfig<T extends ListItem> = {
-    icon?: GenericIconProps;
-    onClick?: (item: T) => void;
-    customIcon?: React.ReactNode;
-    hideIcon?: boolean;
-}
-
 export enum ItemStatus {
     NEW = 'NEW',
     EDIT = 'EDIT',
     DELETE = 'DELETE',
     TRANSFER = 'TRANSFER',
     STATIC = 'STATIC',
-}
+};
+
+export const LIST_ITEM_HEIGHT = 40;
+
+
+export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
+    component: React.ComponentType<P>;
+    props: P;
+};
+export type RowIconConfig<T extends ListItem> = {
+    icon?: GenericIconProps;
+    onClick?: (item: T) => void;
+    customIcon?: React.ReactNode;
+    hideIcon?: boolean;
+};
+
+export interface ListItem {
+    id: string;
+    value: string;
+    sortId: number;
+    status: ItemStatus;
+    listId: string;
+};
+export interface ListItemUpdateComponentProps<T extends ListItem> {
+    item: T;
+    onSave: (item: T) => T | undefined;
+};
 
 /**
  * Generates a new sort ID for an item below the item with the given sort ID.
@@ -75,11 +75,11 @@ export function generateSortId(
  * @returns 
  */
 export function getParentSortId(item: ListItem, listItems: ListItem[]): number {
-    const sortedList = [...listItems].sort((a,b) => a.sortId - b.sortId);
+    const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
     const itemIndex = sortedList.findIndex(existingItem => existingItem.id === item.id);
     if (itemIndex !== -1)
         return itemIndex === 0 ? -1 : listItems[itemIndex - 1].sortId;
-    throw new Error ('Item does not exist in the given list.')
+    throw new Error('Item does not exist in the given list.')
 };
 
 /**

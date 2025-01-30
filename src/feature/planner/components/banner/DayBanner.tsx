@@ -11,28 +11,24 @@ interface DayBannerProps {
     forecast?: WeatherForecast;
 }
 
-const DayBanner = ({ timestamp, forecast }: DayBannerProps) => {
+const DayBanner = ({ timestamp, forecast }: DayBannerProps) =>
+    <View style={globalStyles.spacedApart}>
 
-    return (
-        <View style={globalStyles.spacedApart}>
+        {/* Date */}
+        <LabelSublabel
+            label={timestampToDayOfWeek(timestamp)}
+            subLabel={timestampToMonthDate(timestamp)}
+            type='medium'
+        />
 
-            {/* Date */}
-            <LabelSublabel
-                label={timestampToDayOfWeek(timestamp)}
-                subLabel={timestampToMonthDate(timestamp)}
-                type='medium'
+        {/* Weather */}
+        {forecast && (
+            <WeatherDisplay
+                high={forecast.temperatureMax}
+                low={forecast.temperatureMin}
+                weatherCode={forecast.weatherCode}
             />
-
-            {/* Weather */}
-            {forecast && (
-                <WeatherDisplay
-                    high={forecast.temperatureMax}
-                    low={forecast.temperatureMin}
-                    weatherCode={forecast.weatherCode}
-                />
-            )}
-        </View>
-    );
-};
+        )}
+    </View>
 
 export default DayBanner;

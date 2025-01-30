@@ -6,7 +6,7 @@ import Modal from '../../../../foundation/components/modal/Modal';
 import { Event, getTimeSelectorOptions, isTimestampValid, timestampToDayOfWeek } from '../../../../foundation/planners/timeUtils';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import TimeSelector from './TimeSelector';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
 
 export interface TimeModalProps extends ListItemUpdateComponentProps<Event> {
@@ -75,7 +75,7 @@ const TimeModal = ({
             }}
             iconConfig={{
                 type: 'clock',
-                color: colors.blue
+                color: Colors.BLUE
             }}
         >
             <View style={styles.container}>
@@ -99,8 +99,8 @@ const TimeModal = ({
                                         setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent, endTime: newEndTime });
 
                                     }}
-                                    color={colors.blue}
-                                    uncheckedColor={colors.grey}
+                                    color={Colors.BLUE}
+                                    uncheckedColor={Colors.GREY}
 
                                 />
                             </>
@@ -122,8 +122,8 @@ const TimeModal = ({
                                             endTime: defaultEndTime
                                         })
                                     }}
-                                    color={colors.blue}
-                                    uncheckedColor={colors.grey}
+                                    color={Colors.BLUE}
+                                    uncheckedColor={Colors.GREY}
                                 />
                             </>
                         )}
@@ -135,7 +135,7 @@ const TimeModal = ({
 
                     {/* Start Time */}
                     {!timeModalData.allDay && (
-                        <View style={styles.fullWidth}>
+                        <View style={globalStyles.fullWidth}>
                             <CustomText type='label'>Start Time</CustomText>
                             <TimeSelector
                                 onChange={(newVal: string) => {
@@ -152,7 +152,7 @@ const TimeModal = ({
 
                     {/* End Time */}
                     {!timeModalData.allDay && timeModalData.isCalendarEvent && (
-                        <View style={styles.fullWidth}>
+                        <View style={globalStyles.fullWidth}>
                             <CustomText type='label'>End Time</CustomText>
                             <TimeSelector
                                 onChange={(newVal: string) => {
@@ -179,9 +179,6 @@ const styles = StyleSheet.create({
         marginTop: 20,
         gap: 40,
         height: 600
-    },
-    fullWidth: {
-        width: '100%'
     },
     halfWidth: {
         width: '50%'

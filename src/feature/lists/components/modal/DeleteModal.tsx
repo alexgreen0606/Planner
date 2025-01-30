@@ -1,7 +1,7 @@
 import React from 'react';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
 import { FolderItem, FolderItemType } from '../../utils';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import Modal from '../../../../foundation/components/modal/Modal';
 import CustomText from '../../../../foundation/components/text/CustomText';
 
@@ -26,7 +26,7 @@ const DeleteModal = ({
             primaryButtonConfig={{
                 label: !!item.childrenCount ? 'Force Delete' : 'Delete',
                 onClick: () => onSave(item),
-                color: !!item.childrenCount ? 'red' : colors.blue
+                color: !!item.childrenCount ? 'red' : Colors.BLUE
             }}
             iconConfig={{
                 type: 'trash',

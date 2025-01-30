@@ -1,11 +1,13 @@
 import { StyleSheet, ViewStyle } from "react-native";
-import colors from "./colors";
+import Colors from "./colors";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;
   verticallyCentered: ViewStyle;
   blackFilledSpace: ViewStyle;
   pageLabelContainer: ViewStyle;
+  centered: ViewStyle;
+  fullWidth: ViewStyle;
 }
 
 const globalStyles: GlobalStyles = {
@@ -17,7 +19,7 @@ const globalStyles: GlobalStyles = {
   },
   blackFilledSpace: {
     flex: 1,
-    backgroundColor: colors.black
+    backgroundColor: Colors.BLACK
   },
   verticallyCentered: {
     flexDirection: 'row',
@@ -30,9 +32,16 @@ const globalStyles: GlobalStyles = {
     flexDirection: 'row',
     width: '100%',
     paddingHorizontal: 8,
-    borderBottomColor: colors.grey,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        paddingBottom: 7.5
+    borderBottomColor: Colors.GREY,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: 7.5
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  fullWidth: {
+    width: '100%'
   }
 };
 

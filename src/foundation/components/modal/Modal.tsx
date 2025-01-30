@@ -5,7 +5,7 @@ import globalStyles from '../../theme/globalStyles';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GenericIcon, { GenericIconProps } from '../icon/GenericIcon';
 import CustomText from '../text/CustomText';
-import colors from '../../theme/colors';
+import Colors from '../../theme/colors';
 import LabelSublabel from '../text/LabelSublabel';
 
 interface ModalProps {
@@ -65,11 +65,11 @@ const Modal = ({
                 </Dialog.Content>
                 <Dialog.Actions>
                     <View style={globalStyles.spacedApart}>
-                        <Button textColor={colors.grey} onPress={toggleModalOpen}>Cancel</Button>
+                        <Button textColor={Colors.GREY} onPress={toggleModalOpen}>Cancel</Button>
                         {primaryButtonConfig && (
                             <Button
                                 disabled={primaryButtonConfig.disabled}
-                                textColor={primaryButtonConfig.color || colors.blue}
+                                textColor={primaryButtonConfig.color || Colors.BLUE}
                                 onPress={primaryButtonConfig.onClick}
                             >
                                 {primaryButtonConfig.label}

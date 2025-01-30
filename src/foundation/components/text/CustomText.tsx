@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, TextStyle } from 'react-native';
 import { Text } from 'react-native-paper';
-import colors from '../../theme/colors';
+import Colors from '../../theme/colors';
 
 interface TextProps extends React.ComponentProps<typeof Text> {
     type: keyof typeof styles;
@@ -9,56 +9,56 @@ interface TextProps extends React.ComponentProps<typeof Text> {
     style?: TextStyle;
 }
 
-const CustomText = ({ type, children, style: customStyle, ...rest }: TextProps) =>
-    <Text style={{ ...styles[type], ...customStyle }} {...rest} >
+const CustomText = ({ type, children, style, ...rest }: TextProps) =>
+    <Text style={{ ...styles[type], ...style }} {...rest} >
         {children}
     </Text>
 
 const styles = StyleSheet.create({
     pageLabel: {
         fontSize: 25,
-        color: colors.white,
+        color: Colors.WHITE,
         fontWeight: 600
     },
     header: {
-        color: colors.white,
+        color: Colors.WHITE,
         fontSize: 20
     },
     standard: {
-        color: colors.white,
+        color: Colors.WHITE,
         fontSize: 16,
         lineHeight: 20
     },
     label: {
-        color: colors.grey,
+        color: Colors.GREY,
         fontSize: 14,
         fontWeight: 800
     },
     soft: {
-        color: colors.grey,
+        color: Colors.GREY,
         fontSize: 12,
     },
     highTemp: {
         fontSize: 18,
-        color: colors.white,
+        color: Colors.WHITE,
     },
     lowTemp: {
         fontSize: 14,
-        color: colors.grey,
+        color: Colors.GREY,
     },
     hour: {
         fontSize: 24,
         fontFamily: 'Jersey15-Regular',
-        color: colors.orange,
+        color: Colors.ORANGE,
     },
     minute: {
         fontSize: 14,
         fontFamily: 'Jersey15-Regular',
-        color: colors.orange,
+        color: Colors.ORANGE,
     },
     indicator: {
         fontSize: 7.5,
-        color: colors.white,
+        color: Colors.WHITE,
         fontWeight: 600
     },
 });

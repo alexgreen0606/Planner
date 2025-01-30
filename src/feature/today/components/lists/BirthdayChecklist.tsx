@@ -9,7 +9,7 @@ import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
 
 const BirthdayChecklist = () => {
@@ -28,7 +28,7 @@ const BirthdayChecklist = () => {
                 <GenericIcon
                     type='birthday'
                     size={16}
-                    color={colors.green}
+                    color={Colors.GREEN}
                 />
                 <CustomText type='header'>
                     Birthdays
@@ -43,7 +43,7 @@ const BirthdayChecklist = () => {
                     icon: {
                         type: isItemDeleting(item) ? 'messageFilled' : 'message',
                         size: 16,
-                        color: isItemDeleting(item) ? colors.grey : colors.blue
+                        color: isItemDeleting(item) ? Colors.GREY : Colors.BLUE
                     },
                     onClick: () => {
                         const newContactedStatus = !isItemDeleting(item);

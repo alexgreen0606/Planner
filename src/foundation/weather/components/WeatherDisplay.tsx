@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import colors from '../../theme/colors';
+import Colors from '../../theme/colors';
 import CustomText from '../../components/text/CustomText';
 import { weatherCodeToFontistoIcon } from '../utils';
 import globalStyles from '../../theme/globalStyles';
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     divider: {
         width: StyleSheet.hairlineWidth,
         height: '80%',
-        backgroundColor: colors.grey,
+        backgroundColor: Colors.GREY,
     },
     icon: {
         marginLeft: 16,

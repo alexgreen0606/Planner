@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../../../../foundation/components/icon/GenericIcon';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import ThinLine from '../../../../foundation/components/separator/ThinLine';
 import { FolderItem, selectableColors } from '../../utils';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
@@ -10,12 +10,12 @@ import globalStyles from '../../../../foundation/theme/globalStyles';
 export interface IconConfig {
     onClick: (item: FolderItem) => FolderItem; // return the updated item
     icon: GenericIconProps;
-}
+};
 
 export interface PopoverProps extends ListItemUpdateComponentProps<FolderItem> {
     icons: IconConfig[][];
     open: boolean;
-}
+};
 
 const Popover = ({
     item,
@@ -45,7 +45,7 @@ const Popover = ({
                     onClick={() => onSave({ ...item, color })}
                     type={item.color === color ? 'circle-filled' : 'circle'}
                     size={20}
-                    color={colors[color as keyof typeof colors]}
+                    color={selectableColors[color]}
                 />
             )}
         </View>
@@ -53,7 +53,7 @@ const Popover = ({
 
 const styles = StyleSheet.create({
     popup: {
-        backgroundColor: colors.background,
+        backgroundColor: Colors.BACKGROUND,
         padding: 12,
     },
 });

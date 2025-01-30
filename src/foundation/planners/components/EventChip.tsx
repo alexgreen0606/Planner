@@ -11,6 +11,7 @@ interface EventChipProps {
 }
 
 const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
+    
     const styles = StyleSheet.create({
         text: { color },
         chip: {

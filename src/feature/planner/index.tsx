@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import SortedPlanner from '../feature/planner/components/lists/SortedPlanner';
-import Modal from '../foundation/components/modal/Modal';
-import { getNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../foundation/planners/timeUtils';
-import SortedRecurringPlanner from '../feature/planner/components/lists/SortedRecurringPlanner';
-import colors from '../foundation/theme/colors';
-import PlannerBanner from '../feature/planner/components/banner/PlannerBanner';
-import { getWeeklyWeather, WeatherForecast } from '../foundation/weather/utils';
-import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
-import globalStyles from '../foundation/theme/globalStyles';
+import { getWeeklyWeather, WeatherForecast } from '../../foundation/weather/utils';
+import { getNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../foundation/planners/timeUtils';
+import { generateBirthdaysMap, generateFullDayEventsMap, generateHolidaysMap } from '../../foundation/planners/calendarUtils';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { generateBirthdaysMap, generateFullDayEventsMap, generateHolidaysMap } from '../foundation/planners/calendarUtils';
+import globalStyles from '../../foundation/theme/globalStyles';
+import PlannerBanner from './components/banner/PlannerBanner';
+import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
+import SortedPlanner from './components/lists/SortedPlanner';
+import Modal from '../../foundation/components/modal/Modal';
+import Colors from '../../foundation/theme/colors';
+import SortedRecurringPlanner from './components/lists/SortedRecurringPlanner';
 
 const Planner = () => {
   const [timestamps, setTimestamps] = useState<string[]>([]);
@@ -102,7 +102,7 @@ const Planner = () => {
         toggleModalOpen={toggleRecurringPlannerModal}
         iconConfig={{
           type: 'recurring-calendar',
-          color: colors.blue
+          color: Colors.BLUE
         }}
       >
         <View style={styles.recurringModal}>

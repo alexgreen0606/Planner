@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import colors from '../../theme/colors';
+import Colors from '../../theme/colors';
 
 interface CardProps {
     children: ReactNode;
@@ -9,39 +9,32 @@ interface CardProps {
     style?: ViewStyle;
 }
 
-const Card = ({ children, header, footer, style }: CardProps) => {
-
-    return (
-        <View style={{...styles.card, ...style}}>
-            {header && (
-                <View style={styles.header}>
-                    {header}
-                </View>
-            )}
-            {children}
-            {footer && (
-                <View style={styles.footer}>
-                    {footer}
-                </View>
-            )}
-        </View>
-    )
-};
+const Card = ({ children, header, footer, style }: CardProps) =>
+    <View style={{ ...styles.card, ...style }}>
+        {header && (
+            <View style={styles.header}>
+                {header}
+            </View>
+        )}
+        {children}
+        {footer && (
+            <View style={styles.footer}>
+                {footer}
+            </View>
+        )}
+    </View>
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: colors.background,
+        backgroundColor: Colors.BACKGROUND,
         borderRadius: 8,
-        width: '100%',
-        height: 'auto'
     },
     header: {
-        paddingHorizontal: 8,
-        paddingTop: 4
+        paddingTop: 4,
+        paddingHorizontal: 8
     },
     footer: {
-        paddingHorizontal: 16,
-        paddingVertical: 8
+        padding: 8
     }
 });
 

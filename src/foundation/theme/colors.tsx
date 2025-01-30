@@ -1,14 +1,14 @@
-const colors = {
-  blue: '#65BCFF',
-  green: '#7AF8CA',
-  red: '#FF98A4',
-  yellow: '#efc189',
-  purple: '#C099FF',
-  orange: '#FC946B',
-  white: 'white',
-  black: 'black',
-  grey: '#808080',
-  background: 'rgb(27, 27, 35)'
+export enum Colors {
+  BLUE = '#65BCFF',
+  GREEN = '#7AF8CA',
+  RED = '#FF98A4',
+  YELLOW = '#efc189',
+  PURPLE = '#C099FF',
+  ORANGE = '#FC946B',
+  WHITE = 'white',
+  BLACK = 'black',
+  GREY = '#808080',
+  BACKGROUND = 'rgb(27, 27, 35)'
 };
 
-export default colors;
+export default Colors;

@@ -1,8 +1,5 @@
 import { generateSortId, getParentSortId, ListItem } from "../sortedLists/utils";
 
-export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
-export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
-
 enum MONTHS {
     January = "January",
     February = "February",
@@ -34,12 +31,14 @@ enum WEEKDAYS {
     Friday = "Friday",
 };
 
+export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
+export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
+
 // Links an event to one within the recurring weekday planner
 export interface RecurringConfig {
     recurringId?: string;
     deleted?: boolean;
-}
-
+};
 // Links an event to one within the device calendar
 export interface TimeConfig {
     calendarEventId?: string;
@@ -48,12 +47,10 @@ export interface TimeConfig {
     endTime: string; // HH:MM
     isCalendarEvent: boolean;
 };
-
 export interface Event extends ListItem {
     timeConfig?: TimeConfig;
     recurringConfig?: RecurringConfig;
 };
-
 export interface TimeSelectorOptions {
     indicator: string[];
     hour: number[];

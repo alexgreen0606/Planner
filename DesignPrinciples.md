@@ -1,18 +1,18 @@
 # Code Style Guide
 
-## Interface: Props  
-- Always define props using `interface`.
-
-## Function  
-- All functions **must** explicitly show their return type if it exists.
-
 ## Order of Files  
 When declaring, follow this order (exported after local):
-1. `const`
-2. `enum`
+1. `enum`
+2. `const`
 3. `type`
 4. `interface`
 5. `function`
+
+## Props  
+- Always define props using `interface`.
+
+## Functions
+- All functions **must** explicitly show their return type if it exists.
 
 ## Comments  
 - Always leave an **empty line** before a comment.

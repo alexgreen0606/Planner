@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { TimeSelectorOptions } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 
 interface TimeSelectorProps {
     onChange: (newTimeValue: string) => void;
@@ -40,11 +40,11 @@ const TimeSelector = ({
                 selectedValue={hour}
                 onValueChange={(itemValue) => setHour(Number(itemValue))}
                 itemStyle={styles.wheelItem}
-                selectionColor={colors.blue}
+                selectionColor={Colors.BLUE}
             >
                 {options.hour.map(hourOption => (
                     <Picker.Item
-                        color={hour === hourOption ? colors.blue : colors.grey}
+                        color={hour === hourOption ? Colors.BLUE : Colors.GREY}
                         key={hourOption}
                         label={String(hourOption === 0 ? 12 : hourOption)}
                         value={hourOption}
@@ -58,7 +58,7 @@ const TimeSelector = ({
             >
                 {options.minute.map(minuteOption => (
                     <Picker.Item
-                        color={minute === minuteOption ? colors.blue : colors.grey}
+                        color={minute === minuteOption ? Colors.BLUE : Colors.GREY}
                         key={minuteOption}
                         label={String(minuteOption).padStart(2, '0')}
                         value={minuteOption}
@@ -72,7 +72,7 @@ const TimeSelector = ({
             >
                 {options.indicator.map(ind => (
                     <Picker.Item
-                        color={indicator === ind ? colors.blue : colors.grey}
+                        color={indicator === ind ? Colors.BLUE : Colors.GREY}
                         key={ind}
                         label={ind}
                         value={ind}
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     },
     wheelItem: {
         fontSize: 14,
-        color: colors.grey,
+        color: Colors.GREY,
     },
 });
 

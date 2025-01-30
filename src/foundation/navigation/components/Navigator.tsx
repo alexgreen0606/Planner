@@ -1,14 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Today from '../../../screens/Today';
-import Planner from '../../../screens/Planner';
-import Lists from '../../../screens/Lists';
+import Today from '../../../feature/today';
+import Lists from '../../../feature/lists';
 import { useNavigatorContext } from '../services/TabsProvider';
 import GenericIcon from '../../components/icon/GenericIcon';
-import colors from '../../theme/colors';
+import Colors from '../../theme/colors';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import globalStyles from '../../theme/globalStyles';
 import { NAVBAR_HEIGHT, Pages } from '../utils';
+import Planner from '../../../feature/planner';
 
 const Tab = createBottomTabNavigator();
 
@@ -30,15 +30,15 @@ const Navigator = () => {
                             size={size}
                             color={color}
                         />,
-                    tabBarActiveTintColor: colors.blue,
-                    tabBarInactiveTintColor: colors.grey,
+                    tabBarActiveTintColor: Colors.BLUE,
+                    tabBarInactiveTintColor: Colors.GREY,
                     headerShown: false,
                     tabBarStyle: {
-                        backgroundColor: colors.black,
+                        backgroundColor: Colors.BLACK,
                         shadowOpacity: 0,
                         paddingTop: 8,
                         borderTopWidth: StyleSheet.hairlineWidth,
-                        borderTopColor: colors.grey,
+                        borderTopColor: Colors.GREY,
                         height: NAVBAR_HEIGHT
                     },
                     tabBarLabelStyle: {

@@ -5,7 +5,7 @@ import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedLis
 import { buildPlanner, deleteEvent, persistEvent } from '../../../../foundation/planners/storage/plannerStorage';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import TimeModal, { TimeModalProps } from '../../../planner/components/modal/TimeModal';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import TimeValue from '../../../../foundation/planners/components/TimeValue';
 
 interface SortablePlannerProps {
@@ -45,7 +45,7 @@ const TodayPlanner = ({
             getLeftIconConfig={item => ({
                 icon: {
                     type: isItemDeleting(item) ? 'circle-filled' : 'circle',
-                    color: isItemDeleting(item) ? colors.blue : colors.grey
+                    color: isItemDeleting(item) ? Colors.BLUE : Colors.GREY
                 },
                 onClick: SortedEvents.toggleItemDelete
             })}
@@ -96,7 +96,7 @@ const TodayPlanner = ({
                 hideIcon: !item.timeConfig && !isItemTextfield(item),
                 icon: {
                     type: 'clock',
-                    color: colors.grey
+                    color: Colors.GREY
                 },
                 onClick: toggleTimeModal,
                 customIcon: item.timeConfig ? <TimeValue allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined

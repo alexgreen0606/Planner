@@ -7,7 +7,7 @@ import { getFolderItem, updateFolderItem } from '../../storage/folderStorage';
 import { ItemStatus } from '../../../../foundation/sortedLists/utils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import CustomText from '../../../../foundation/components/text/CustomText';
 
 interface FolderItemBannerProps {
@@ -60,7 +60,7 @@ const FolderItemBanner = ({
                 <GenericIcon
                     type={itemType === FolderItemType.FOLDER ? 'open-folder' : 'list'}
                     size={28}
-                    color={colors[item.color as keyof typeof colors]}
+                    color={Colors[item.color as keyof typeof Colors]}
                 />
 
                 {/* Name */}
@@ -76,7 +76,7 @@ const FolderItemBanner = ({
                                 primary: 'transparent'
                             }
                         }}
-                        textColor={colors.white}
+                        textColor={Colors.WHITE}
                         onSubmitEditing={saveItem}
                         contentStyle={{ paddingLeft: 0 }}
                     />
@@ -85,8 +85,8 @@ const FolderItemBanner = ({
                         type='pageLabel'
                         onPress={beginEditItem}
                         adjustsFontSizeToFit
-                        numberOfLines={1}
-                        style={{ flex: 1 }}
+                        numberOfLines={2}
+                        style={globalStyles.blackFilledSpace}
                     >
                         {item.value}
                     </CustomText>
@@ -102,7 +102,7 @@ const FolderItemBanner = ({
                     <GenericIcon
                         type='chevron-left'
                         size={16}
-                        color={colors.blue} // TODO: use the color of the previous
+                        color={Colors.BLUE} // TODO: use the color of the previous
                     />
                     <CustomText
                         numberOfLines={1}
@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
     name: {
         ...globalStyles.verticallyCentered,
         flex: 1,
+        height: 40
     },
     inputField: {
         ...globalStyles.blackFilledSpace,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
         fontSize: 25,
     },
     backButton: {
-        color: colors.blue,
+        color: Colors.BLUE,
         width: 60,
     }
 });

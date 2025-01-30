@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import globalStyles from '../foundation/theme/globalStyles';
-import TodayPlanner from '../feature/today/components/lists/TodayPlanner';
-import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
-import colors from '../foundation/theme/colors';
-import { generateFullDayEventsMap, generateHolidaysMap } from '../foundation/planners/calendarUtils';
-import { getTodayTimestamp } from '../foundation/planners/timeUtils';
-import EventChip from '../foundation/planners/components/EventChip';
-import TodayBanner from '../feature/today/components/banner/TodayBanner';
-import BirthdayChecklist from '../feature/today/components/lists/BirthdayChecklist';
+import TodayPlanner from './components/lists/TodayPlanner';
+import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
+import Colors from '../../foundation/theme/colors';
+import { generateFullDayEventsMap, generateHolidaysMap } from '../../foundation/planners/calendarUtils';
+import { getTodayTimestamp } from '../../foundation/planners/timeUtils';
+import EventChip from '../../foundation/planners/components/EventChip';
+import TodayBanner from './components/banner/TodayBanner';
+import BirthdayChecklist from './components/lists/BirthdayChecklist';
+import globalStyles from '../../foundation/theme/globalStyles';
 
 const Today = () => {
   const timestamp = getTodayTimestamp();
@@ -45,7 +45,7 @@ const Today = () => {
                     type: 'globe',
                     size: 10,
                   }}
-                  color={colors.purple}
+                  color={Colors.PURPLE}
                   key={holiday}
                 />
               ))}
@@ -62,7 +62,7 @@ const Today = () => {
                     type: 'megaphone',
                     size: 10,
                   }}
-                  color={colors.red}
+                  color={Colors.RED}
                   key={`${event}-${timestamp}`}
                 />
               ))}

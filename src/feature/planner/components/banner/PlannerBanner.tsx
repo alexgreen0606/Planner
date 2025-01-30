@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import CustomText from '../../../../foundation/components/text/CustomText';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 
 interface PlannerBannerProps {
     label: string;
@@ -16,16 +16,16 @@ const PlannerBanner = ({ label, toggleRecurringPlannerModal }: PlannerBannerProp
             <GenericIcon
                 type='planner'
                 size={26}
-                color={colors.blue}
+                color={Colors.BLUE}
             />
-            <CustomText adjustsFontSizeToFit type='pageLabel' numberOfLines={2}>
+            <CustomText type='pageLabel'>
                 {label}
             </CustomText>
         </View>
         <GenericIcon
             type='recurring-calendar'
             size={20}
-            color={colors.grey}
+            color={Colors.GREY}
             onClick={toggleRecurringPlannerModal}
         />
     </View>

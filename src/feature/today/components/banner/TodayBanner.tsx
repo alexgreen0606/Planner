@@ -2,7 +2,7 @@ import React from 'react';
 import { View } from 'react-native';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import { timestampToDayOfWeek, timestampToMonthDate } from '../../../../foundation/planners/timeUtils';
-import colors from '../../../../foundation/theme/colors';
+import Colors from '../../../../foundation/theme/colors';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import WeatherDisplay from '../../../../foundation/weather/components/WeatherDisplay';
 import LabelSublabel from '../../../../foundation/components/text/LabelSublabel';
@@ -24,7 +24,7 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
                 <GenericIcon
                     type='coffee'
                     size={26}
-                    color={colors.blue}
+                    color={Colors.BLUE}
                 />
 
                 {/* Date */}

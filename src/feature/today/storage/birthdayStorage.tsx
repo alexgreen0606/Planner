@@ -14,8 +14,6 @@ export async function buildBirthdayChecklist(currentBirthdayChecklist: ListItem[
     if (todayBirthdays && todayBirthdays.length != 0) {
         const todayBirthdayChecklist = currentBirthdayChecklist.filter(birthdayItem => birthdayItem.listId === todayTimestamp);
 
-        console.log(todayBirthdayChecklist, 'current list in storage')
-
         todayBirthdays.forEach(birthday => {
             if (!todayBirthdayChecklist.find(currentItem => currentItem.value === birthday)) {
                 // add in an item for this birthday
@@ -26,7 +24,6 @@ export async function buildBirthdayChecklist(currentBirthdayChecklist: ListItem[
                     status: ItemStatus.STATIC,
                     listId: todayTimestamp
                 };
-                console.log(newBirthdayItem, 'new item')
                 todayBirthdayChecklist.push(newBirthdayItem);
             }
         })

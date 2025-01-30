@@ -1,5 +1,17 @@
 import React from 'react';
-import { FontAwesome, Feather, Ionicons, MaterialIcons, Entypo, FontAwesome5, Foundation, MaterialCommunityIcons, Fontisto, SimpleLineIcons, FontAwesome6 } from '@expo/vector-icons';
+import {
+    FontAwesome,
+    Feather,
+    Ionicons,
+    MaterialIcons,
+    Entypo,
+    FontAwesome5,
+    Foundation,
+    MaterialCommunityIcons,
+    Fontisto,
+    SimpleLineIcons,
+    FontAwesome6
+} from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 
 const IconSets = {
@@ -62,7 +74,7 @@ const GenericIcon: React.FC<GenericIconProps> = ({
 }) => {
     const iconConfig = IconMap[type];
     const IconComponent = IconSets[iconConfig.type];
-    const Icon =  <IconComponent name={iconConfig.name} size={size} color={color} />;
+    const Icon = <IconComponent name={iconConfig.name} size={size} color={color} />;
 
     return onClick ?
         <TouchableOpacity onPress={onClick}>
