@@ -2,16 +2,16 @@ import { MMKV } from 'react-native-mmkv';
 import RNCalendarEvents from "react-native-calendar-events";
 import { uuid } from 'expo-modules-core';
 import { isItemTextfield, ItemStatus } from '../../../foundation/sortedLists/utils';
-import { 
-    Event, 
-    generateSortIdByTimestamp, 
-    getTodayTimestamp, 
-    getTomorrowTimestamp, 
-    isTimestampValid, 
-    isTimestampWeekday, 
-    PLANNER_STORAGE_ID, 
-    RECURRING_WEEKDAY_PLANNER_KEY, 
-    timeValueToIso 
+import {
+    Event,
+    generateSortIdByTimestamp,
+    getTodayTimestamp,
+    getTomorrowTimestamp,
+    isTimestampValid,
+    isTimestampWeekday,
+    PLANNER_STORAGE_ID,
+    RECURRING_WEEKDAY_PLANNER_KEY,
+    timeValueToIso
 } from '../timeUtils';
 import { getCalendarEvents, getPrimaryCalendarId } from '../calendarUtils';
 
@@ -62,7 +62,7 @@ function syncPlannerWithCalendar(calendar: Event[], currentPlanner: Event[], cur
     const newPlanner = currentPlanner.reduce<Event[]>((accumulator, currentEvent) => {
 
         // This event isn't related to the calendar -> keep it
-        if (!currentEvent.timeConfig?.isCalendarEvent) {
+        if (!currentEvent.timeConfig?.isCalendarEvent || currentEvent.timeConfig?.deleted) {
             return [...accumulator, currentEvent];
         }
 
@@ -197,7 +197,7 @@ export async function buildPlanner(plannerId: string, planner: Event[]): Promise
     const calendarEvents = await getCalendarEvents(plannerId);
     planner = syncPlannerWithCalendar(calendarEvents, planner, plannerId);
 
-    return planner.filter(event => !event.recurringConfig?.deleted && !event.timeConfig?.allDay);
+    return planner.filter(event => !event.recurringConfig?.deleted && !event.timeConfig?.allDay && !event.timeConfig?.deleted);
 };
 
 /**
@@ -250,16 +250,22 @@ export async function deleteEvent(eventToDelete: Event) {
         eventToDelete.timeConfig.calendarEventId &&
         eventToDelete.listId !== getTodayTimestamp()
     ) {
+        // TODO: mark it as deleted, but keep it in calendar
         await getPrimaryCalendarId();
         await RNCalendarEvents.removeEvent(eventToDelete.timeConfig.calendarEventId);
     }
 
-    // The event is a recurring event -> mark it deleted
-    if (eventToDelete.recurringConfig) {
-        const existingEventIndex = newPlanner.findIndex(event => event.recurringConfig?.recurringId === eventToDelete.recurringConfig?.recurringId);
-        if (existingEventIndex !== -1 && newPlanner[existingEventIndex].recurringConfig) {
-            newPlanner[existingEventIndex].recurringConfig.deleted = true;
-            newPlanner[existingEventIndex].status = ItemStatus.STATIC;
+    // The event is a recurring event or calendar event from today -> mark it deleted
+    if (eventToDelete.recurringConfig ||
+        (eventToDelete.timeConfig?.isCalendarEvent && eventToDelete.listId === getTodayTimestamp())
+    ) {
+        const eventIndex = newPlanner.findIndex(event => event.id === eventToDelete.id);
+        if (eventIndex !== -1) {
+            if (newPlanner[eventIndex].recurringConfig)
+                newPlanner[eventIndex].recurringConfig.deleted = true;
+            if (newPlanner[eventIndex].timeConfig)
+                newPlanner[eventIndex].timeConfig.deleted = true;
+            newPlanner[eventIndex].status = ItemStatus.STATIC;
             savePlannerToStorage(eventToDelete.listId, newPlanner);
             return;
         }

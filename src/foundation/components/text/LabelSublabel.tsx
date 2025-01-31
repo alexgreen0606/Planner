@@ -11,7 +11,7 @@ interface LabelSublabelProps {
 const LabelSublabel = ({ type, label, subLabel }: LabelSublabelProps) =>
     <View style={styles.container}>
         <CustomText type={type === 'large' ? 'pageLabel' : 'header'}>{label}</CustomText>
-        <CustomText type='soft' style={styles.subLabel}>{subLabel}</CustomText>
+        <CustomText type={type === 'large' ? 'subPageLabel' : 'subHeader'} style={styles.subLabel}>{subLabel}</CustomText>
     </View>
 
 const styles = StyleSheet.create({

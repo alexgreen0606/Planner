@@ -6,8 +6,8 @@ import Modal from '../../../../foundation/components/modal/Modal';
 import { Event, getTimeSelectorOptions, isTimestampValid, timestampToDayOfWeek } from '../../../../foundation/planners/timeUtils';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import TimeSelector from './TimeSelector';
-import Colors from '../../../../foundation/theme/colors';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
+import { Color } from '../../../../foundation/theme/colors';
 
 export interface TimeModalProps extends ListItemUpdateComponentProps<Event> {
     toggleModalOpen: (event: Event) => void;
@@ -75,7 +75,7 @@ const TimeModal = ({
             }}
             iconConfig={{
                 type: 'clock',
-                color: Colors.BLUE
+                color: Color.BLUE
             }}
         >
             <View style={styles.container}>
@@ -99,8 +99,8 @@ const TimeModal = ({
                                         setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent, endTime: newEndTime });
 
                                     }}
-                                    color={Colors.BLUE}
-                                    uncheckedColor={Colors.GREY}
+                                    color={Color.BLUE}
+                                    uncheckedColor={Color.DIM}
 
                                 />
                             </>
@@ -122,8 +122,8 @@ const TimeModal = ({
                                             endTime: defaultEndTime
                                         })
                                     }}
-                                    color={Colors.BLUE}
-                                    uncheckedColor={Colors.GREY}
+                                    color={Color.BLUE}
+                                    uncheckedColor={Color.DIM}
                                 />
                             </>
                         )}

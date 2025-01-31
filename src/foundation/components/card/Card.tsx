@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
-import Colors from '../../theme/colors';
+import { Color } from '../../theme/colors';
 
 interface CardProps {
     children: ReactNode;
@@ -12,13 +12,13 @@ interface CardProps {
 const Card = ({ children, header, footer, style }: CardProps) =>
     <View style={{ ...styles.card, ...style }}>
         {header && (
-            <View style={styles.header}>
+            <View style={styles.banner}>
                 {header}
             </View>
         )}
         {children}
         {footer && (
-            <View style={styles.footer}>
+            <View style={styles.banner}>
                 {footer}
             </View>
         )}
@@ -26,16 +26,13 @@ const Card = ({ children, header, footer, style }: CardProps) =>
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Colors.BACKGROUND,
+        backgroundColor: Color.BACKGROUND,
         borderRadius: 8,
     },
-    header: {
-        paddingTop: 4,
+    banner: {
+        paddingVertical: 4,
         paddingHorizontal: 8
     },
-    footer: {
-        padding: 8
-    }
 });
 
 export default Card;

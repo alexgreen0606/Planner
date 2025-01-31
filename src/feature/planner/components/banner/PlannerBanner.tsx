@@ -3,7 +3,8 @@ import { View } from 'react-native';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import CustomText from '../../../../foundation/components/text/CustomText';
-import Colors from '../../../../foundation/theme/colors';
+import { Color } from '../../../../foundation/theme/colors';
+import ThinLine from '../../../../foundation/components/separator/ThinLine';
 
 interface PlannerBannerProps {
     label: string;
@@ -11,23 +12,26 @@ interface PlannerBannerProps {
 }
 
 const PlannerBanner = ({ label, toggleRecurringPlannerModal }: PlannerBannerProps) =>
-    <View style={globalStyles.pageLabelContainer}>
-        <View style={globalStyles.verticallyCentered}>
+    <View>
+        <View style={globalStyles.pageLabelContainer}>
+            <View style={globalStyles.verticallyCentered}>
+                <GenericIcon
+                    type='planner'
+                    size={26}
+                    color={Color.BLUE}
+                />
+                <CustomText type='pageLabel'>
+                    {label}
+                </CustomText>
+            </View>
             <GenericIcon
-                type='planner'
-                size={26}
-                color={Colors.BLUE}
+                type='recurring-calendar'
+                size={20}
+                color={Color.DIM}
+                onClick={toggleRecurringPlannerModal}
             />
-            <CustomText type='pageLabel'>
-                {label}
-            </CustomText>
         </View>
-        <GenericIcon
-            type='recurring-calendar'
-            size={20}
-            color={Colors.GREY}
-            onClick={toggleRecurringPlannerModal}
-        />
+        <ThinLine centerLine={false} />
     </View>
 
 export default PlannerBanner;

@@ -36,7 +36,7 @@ export const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER';
 
 // Links an event to one within the recurring weekday planner
 export interface RecurringConfig {
-    recurringId?: string;
+    recurringId: string;
     deleted?: boolean;
 };
 // Links an event to one within the device calendar
@@ -46,6 +46,7 @@ export interface TimeConfig {
     startTime: string; // HH:MM
     endTime: string; // HH:MM
     isCalendarEvent: boolean;
+    deleted?: boolean;
 };
 export interface Event extends ListItem {
     timeConfig?: TimeConfig;

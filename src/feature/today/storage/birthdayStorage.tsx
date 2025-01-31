@@ -11,7 +11,7 @@ export async function buildBirthdayChecklist(currentBirthdayChecklist: ListItem[
     const todayTimestamp = getTodayTimestamp();
     const birthdayMap = await generateBirthdaysMap([todayTimestamp]);
     const todayBirthdays = birthdayMap[todayTimestamp];
-    if (todayBirthdays && todayBirthdays.length != 0) {
+    if (todayBirthdays && todayBirthdays.length !== 0) {
         const todayBirthdayChecklist = currentBirthdayChecklist.filter(birthdayItem => birthdayItem.listId === todayTimestamp);
 
         todayBirthdays.forEach(birthday => {

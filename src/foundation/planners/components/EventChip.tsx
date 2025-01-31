@@ -11,17 +11,18 @@ interface EventChipProps {
 }
 
 const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
-    
+
     const styles = StyleSheet.create({
         text: { color },
         chip: {
             ...globalStyles.verticallyCentered,
             height: 20,
             gap: 4,
+            maxWidth: '100%',
             justifyContent: 'center',
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: color,
-            paddingHorizontal: 6,
+            paddingHorizontal: 10,
             alignItems: 'center',
             borderRadius: 16,
         },

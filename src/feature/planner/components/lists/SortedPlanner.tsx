@@ -8,13 +8,15 @@ import TimeValue from '../../../../foundation/planners/components/TimeValue';
 import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
-import Colors from '../../../../foundation/theme/colors';
 import Card from '../../../../foundation/components/card/Card';
 import EventChip from '../../../../foundation/planners/components/EventChip';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/utils';
 import { buildPlanner, deleteEvent, persistEvent } from '../../../../foundation/planners/storage/plannerStorage';
 import { WeatherForecast } from '../../../../foundation/weather/utils';
+import { Color } from '../../../../foundation/theme/colors';
+import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
+import CollapseControl from '../../../../foundation/sortedLists/components/collapseControl/CollapseControl';
 
 interface SortablePlannerProps {
     timestamp: string;
@@ -33,10 +35,18 @@ const SortedPlanner = ({
     allDayEvents,
     reloadChips
 }: SortablePlannerProps) => {
+    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
 
-    const toggleCollapsed = () => setCollapsed(curr => !curr);
+    const toggleCollapsed = async () => {
+        if (currentTextfield) {
+            if (currentTextfield.value.trim() !== '')
+                await SortedEvents.persistItemToStorage(currentTextfield);
+            setCurrentTextfield(undefined);
+        }
+        setCollapsed(curr => !curr);
+    };
 
     const toggleTimeModal = async (item: Event) => {
         if (!isItemTextfield(item))
@@ -60,7 +70,7 @@ const SortedPlanner = ({
     return (
         <Card
             header={<DayBanner forecast={forecast} timestamp={timestamp} />}
-            footer={
+            footer={allDayEvents.length + holidays.length + birthdays.length > 0 ?
                 <View style={styles.wrappedChips}>
                     {allDayEvents.map((allDayEvent) =>
                         <EventChip
@@ -69,7 +79,7 @@ const SortedPlanner = ({
                                 type: 'megaphone',
                                 size: 10,
                             }}
-                            color={Colors.RED}
+                            color={Color.RED}
                             key={`${allDayEvent}-${timestamp}`}
                         />
                     )}
@@ -80,7 +90,7 @@ const SortedPlanner = ({
                                 type: 'globe',
                                 size: 10,
                             }}
-                            color={Colors.PURPLE}
+                            color={Color.PURPLE}
                             key={holiday}
                         />
                     )}
@@ -91,28 +101,22 @@ const SortedPlanner = ({
                                 type: 'birthday',
                                 size: 10,
                             }}
-                            color={Colors.GREEN}
+                            color={Color.GREEN}
                             key={birthday}
                         />
                     )}
-                </View>
+                </View> : undefined
             }
         >
 
             {/* Collapse Control */}
-            {SortedEvents.items.length > 15 && !collapsed && (
-                <TouchableOpacity style={styles.upperCollapseControl} onPress={toggleCollapsed}>
-                    <GenericIcon
-                        type='chevron-down'
-                        color={Colors.GREY}
-                        size={16}
-                    />
-                    <CustomText type='soft'>
-                        {collapsed ? 'View ' : 'Hide '}
-                        {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
-                    </CustomText>
-                </TouchableOpacity>
-            )}
+            <CollapseControl
+                itemCount={SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length}
+                itemName='plan'
+                onClick={toggleCollapsed}
+                display={SortedEvents.items.length > 15 && !collapsed}
+                collapsed={collapsed}
+            />
 
             {/* Planner List */}
             <SortableList<Event, never, TimeModalProps>
@@ -121,7 +125,7 @@ const SortedPlanner = ({
                 getLeftIconConfig={item => ({
                     icon: {
                         type: isItemDeleting(item) ? 'circle-filled' : 'circle',
-                        color: isItemDeleting(item) ? Colors.BLUE : Colors.GREY
+                        color: isItemDeleting(item) ? Color.BLUE : Color.DIM
                     },
                     onClick: SortedEvents.toggleItemDelete
                 })}
@@ -173,7 +177,7 @@ const SortedPlanner = ({
                     hideIcon: !item.timeConfig && !isItemTextfield(item),
                     icon: {
                         type: 'clock',
-                        color: Colors.GREY
+                        color: Color.DIM
                     },
                     onClick: toggleTimeModal,
                     customIcon: item.timeConfig ? <TimeValue allDay={item.timeConfig.allDay} timeValue={item.timeConfig.startTime} /> : undefined
@@ -196,37 +200,25 @@ const SortedPlanner = ({
                 })}
                 emptyLabelConfig={{
                     label: 'No Plans',
+                    style: { paddingBottom: 8 }
                 }}
             />
 
             {/* Collapse Control */}
-            {!!SortedEvents.items.length && (
-                <TouchableOpacity style={styles.lowerCollapseControl} onPress={toggleCollapsed}>
-                    <GenericIcon
-                        type={collapsed ? 'chevron-right' : 'chevron-up'}
-                        color={Colors.GREY}
-                        size={16}
-                    />
-                    <CustomText type='soft'>
-                        {collapsed ? 'View ' : 'Hide '}
-                        {SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length} plans
-                    </CustomText>
-                </TouchableOpacity>
-            )}
+            <CollapseControl
+                itemCount={SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length}
+                itemName='plan'
+                onClick={toggleCollapsed}
+                display={!!SortedEvents.items.length}
+                collapsed={collapsed}
+                bottomOfListControl
+            />
+
         </Card>
     );
 };
 
 const styles = StyleSheet.create({
-    upperCollapseControl: {
-        ...globalStyles.verticallyCentered,
-        paddingLeft: 8,
-        paddingTop: 8
-    },
-    lowerCollapseControl: {
-        ...globalStyles.verticallyCentered,
-        paddingLeft: 8
-    },
     wrappedChips: {
         ...globalStyles.verticallyCentered,
         width: '100%',

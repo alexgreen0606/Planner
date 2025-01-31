@@ -38,6 +38,7 @@ export interface DraggableListProps<
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: EmptyLabelProps;
+    staticList?: boolean;
 }
 
 /**
@@ -64,6 +65,7 @@ const SortableList = <
     initializeItem,
     emptyLabelConfig,
     fillSpace,
+    staticList,
     ...rest
 }: DraggableListProps<T, P, M>) => {
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
@@ -74,6 +76,7 @@ const SortableList = <
     function buildFullList() {
         const fullList = [...items];
         if (currentTextfield?.listId === listId) {
+            console.log(currentTextfield)
             if (currentTextfield?.status === ItemStatus.NEW)
                 fullList.push(currentTextfield);
             else {
@@ -90,6 +93,7 @@ const SortableList = <
      * @param parentSortId - the sort ID of the item the new textfield must go below
      */
     async function saveTextfieldAndCreateNew(parentSortId: number) {
+        if (staticList) return;
         if (currentTextfield && currentTextfield.value.trim() !== '') {
 
             // Save the current textfield before creating a new one.
@@ -119,29 +123,30 @@ const SortableList = <
 
     return (
         <View style={{ flex: fillSpace ? 1 : 0 }}>
-
-            {/* Upper Item Creator */}
-            <TouchableOpacity onPress={() => saveTextfieldAndCreateNew(-1)}>
-                <ThinLine />
-            </TouchableOpacity>
-
-            {/* List */}
             {!hideList && (
-                <View style={{
-                    height: currentList.length * LIST_ITEM_HEIGHT,
-                    position: 'relative',
-                }}>
-                    {currentList.map((item) =>
-                        <DraggableRow<T, P, M>
-                            key={`${item.id}-row`}
-                            item={item}
-                            positions={positions}
-                            saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
-                            listLength={currentList.length}
-                            {...rest}
-                            items={currentList}
-                        />
-                    )}
+                <View>
+                    {/* Upper Item Creator */}
+                    <TouchableOpacity activeOpacity={staticList ? 1 : 0} onPress={() => saveTextfieldAndCreateNew(-1)}>
+                        <ThinLine />
+                    </TouchableOpacity>
+
+                    {/* List */}
+                    <View style={{
+                        height: currentList.length * LIST_ITEM_HEIGHT,
+                        position: 'relative',
+                    }}>
+                        {currentList.map((item) =>
+                            <DraggableRow<T, P, M>
+                                key={`${item.id}-row`}
+                                item={item}
+                                positions={positions}
+                                saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
+                                listLength={currentList.length}
+                                {...rest}
+                                items={currentList}
+                            />
+                        )}
+                    </View>
                 </View>
             )}
 

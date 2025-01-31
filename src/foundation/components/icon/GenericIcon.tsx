@@ -59,19 +59,19 @@ const IconMap: Record<string, { type: IconSetType, name: string }> = {
 };
 export type IconType = keyof typeof IconMap;
 
-export interface GenericIconProps {
+export interface GenericIconProps<T = void> {
     type: IconType;
     size?: number;
     color?: string;
-    onClick?: () => void;
+    onClick?: () => T;
 }
 
-const GenericIcon: React.FC<GenericIconProps> = ({
+const GenericIcon = <T,>({
     type,
     size,
     color,
     onClick,
-}) => {
+}: GenericIconProps<T>) => {
     const iconConfig = IconMap[type];
     const IconComponent = IconSets[iconConfig.type];
     const Icon = <IconComponent name={iconConfig.name} size={size} color={color} />;

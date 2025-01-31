@@ -1,4 +1,4 @@
-import Animated, { runOnJS, SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from "react-native-reanimated";
 import {
     generateSortId,
     isItemDeleting,
@@ -10,21 +10,21 @@ import {
 } from "../../utils";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import CustomText from "../../../components/text/CustomText";
-import Colors from "../../../theme/colors";
 import ListTextfield from "../textfield/ListTextfield";
 import GenericIcon from "../../../components/icon/GenericIcon";
 import { Portal } from "react-native-paper";
 import ThinLine from "../../../components/separator/ThinLine";
+import { Color } from "../../../theme/colors";
 
 interface RowProps<
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>,
     M extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>
-> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig'> {
+> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'staticList' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig'> {
     item: T;
     positions: SharedValue<Record<string, number>>;
     saveTextfieldAndCreateNew: (parentSortId: number) => Promise<void>;
@@ -271,15 +271,14 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                         <View style={styles.content}>
                             <CustomText
                                 adjustsFontSizeToFit
-                                numberOfLines={2}
+                                numberOfLines={1}
                                 type='standard'
                                 style={{
                                     color: customTextColor ||
-                                        (isItemDeleting(item) ? Colors.GREY : Colors.WHITE),
+                                        (isItemDeleting(item) ? Color.DIM : Color.WHITE),
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
-                                    textAlignVertical: 'center',
-                                    flex: 1
+                                    width: '100%'
                                 }}
                             >
                                 {item.value}

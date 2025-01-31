@@ -7,8 +7,8 @@ import { getFolderItem, updateFolderItem } from '../../storage/folderStorage';
 import { ItemStatus } from '../../../../foundation/sortedLists/utils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
-import Colors from '../../../../foundation/theme/colors';
 import CustomText from '../../../../foundation/components/text/CustomText';
+import { Color } from '../../../../foundation/theme/colors';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -60,7 +60,7 @@ const FolderItemBanner = ({
                 <GenericIcon
                     type={itemType === FolderItemType.FOLDER ? 'open-folder' : 'list'}
                     size={28}
-                    color={Colors[item.color as keyof typeof Colors]}
+                    color={item.color}
                 />
 
                 {/* Name */}
@@ -76,7 +76,7 @@ const FolderItemBanner = ({
                                 primary: 'transparent'
                             }
                         }}
-                        textColor={Colors.WHITE}
+                        textColor={Color.WHITE}
                         onSubmitEditing={saveItem}
                         contentStyle={{ paddingLeft: 0 }}
                     />
@@ -102,7 +102,7 @@ const FolderItemBanner = ({
                     <GenericIcon
                         type='chevron-left'
                         size={16}
-                        color={Colors.BLUE} // TODO: use the color of the previous
+                        color={Color.BLUE} // TODO: use the color of the previous
                     />
                     <CustomText
                         numberOfLines={1}
@@ -122,7 +122,6 @@ const styles = StyleSheet.create({
     name: {
         ...globalStyles.verticallyCentered,
         flex: 1,
-        height: 40
     },
     inputField: {
         ...globalStyles.blackFilledSpace,
@@ -130,7 +129,7 @@ const styles = StyleSheet.create({
         fontSize: 25,
     },
     backButton: {
-        color: Colors.BLUE,
+        color: Color.BLUE,
         width: 60,
     }
 });

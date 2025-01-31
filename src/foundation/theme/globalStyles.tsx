@@ -1,5 +1,5 @@
 import { StyleSheet, ViewStyle } from "react-native";
-import Colors from "./colors";
+import { Color } from "./colors";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;
@@ -19,7 +19,7 @@ const globalStyles: GlobalStyles = {
   },
   blackFilledSpace: {
     flex: 1,
-    backgroundColor: Colors.BLACK
+    backgroundColor: Color.BLACK
   },
   verticallyCentered: {
     flexDirection: 'row',
@@ -32,9 +32,6 @@ const globalStyles: GlobalStyles = {
     flexDirection: 'row',
     width: '100%',
     paddingHorizontal: 8,
-    borderBottomColor: Colors.GREY,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    paddingBottom: 7.5
   },
   centered: {
     justifyContent: 'center',

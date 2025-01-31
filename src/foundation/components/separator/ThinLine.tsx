@@ -1,25 +1,32 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import Colors from '../../theme/colors';
+import { StyleSheet, View } from 'react-native';
+import { Color } from '../../theme/colors';
 
-const ThinLine = () =>
-    <View style={styles.lineContainer}>
-        <View style={styles.thinLine} />
-    </View>
+interface ThinLineProps {
+    centerLine?: boolean
+}
 
+const ThinLine = ({ centerLine = true }: ThinLineProps) => {
 
-const styles = StyleSheet.create({
-    thinLine: {
-        width: '100%',
-        height: StyleSheet.hairlineWidth,
-        backgroundColor: Colors.GREY,
-    },
-    lineContainer: {
-        width: '100%',
-        height: 15,
-        backgroundColor: 'transparent',
-        justifyContent: 'center'
-    },
-});
+    const styles = StyleSheet.create({
+        thinLine: {
+            width: '100%',
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: Color.DIM,
+        },
+        lineContainer: {
+            width: '100%',
+            height: centerLine ? 15 : 8,
+            backgroundColor: 'transparent',
+            justifyContent: centerLine ? 'center' : 'flex-end'
+        },
+    });
+
+    return (
+        <View style={styles.lineContainer}>
+            <View style={styles.thinLine} />
+        </View>
+    )
+}
 
 export default ThinLine;

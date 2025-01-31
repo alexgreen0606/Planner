@@ -1,22 +1,13 @@
 import { ListItem } from "../../foundation/sortedLists/utils";
+import { SelectableColor } from "../../foundation/theme/colors";
 
-export enum Colors {
-    Yellow = 'yellow',
-    Green = 'green',
-    Red = 'red',
-    Purple = 'purple',
-    Orange = 'orange',
-};
-
-export const selectableColors = Object.values(Colors);
 export const NULL = 'NULL';
 export const ROOT_FOLDER_ID = 'ROOT_FOLDER_ID';
 export const FOLDER_STORAGE_ID = 'FOLDER_STORAGE';
 
-export interface FolderItem extends ListItem {
+export interface FolderItem extends ColoredListItem {
     type: FolderItemType
     childrenCount: number;
-    color: string;
 };
 export interface Folder extends ColoredListItem {
     folderIds: string[];
@@ -31,5 +22,5 @@ export enum FolderItemType {
     LIST = 'LIST'
 };
 export interface ColoredListItem extends ListItem {
-    color: string;
+    color: SelectableColor;
 };

@@ -3,10 +3,10 @@ import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedLis
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
 import TimeValue from '../../../../foundation/planners/components/TimeValue';
 import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../../../foundation/planners/timeUtils';
-import Colors from '../../../../foundation/theme/colors';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, ItemStatus, ListItem } from '../../../../foundation/sortedLists/utils';
 import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
+import { Color } from '../../../../foundation/theme/colors';
 
 interface SortedRecurringPlannerProps {
     modalOpen: boolean;
@@ -49,7 +49,7 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
             getLeftIconConfig={item => ({
                 icon: {
                     type: 'trash',
-                    color: isItemDeleting(item) ? Colors.WHITE : Colors.GREY
+                    color: isItemDeleting(item) ? Color.WHITE : Color.DIM
                 },
                 onClick: SortedEvents.toggleItemDelete
             })}
@@ -63,7 +63,7 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
                 hideIcon: item.status === ItemStatus.STATIC && !item.timeConfig,
                 icon: {
                     type: 'clock',
-                    color: Colors.GREY
+                    color: Color.DIM
                 },
                 onClick: toggleTimeModal,
                 customIcon: !!item.timeConfig?.startTime ? <TimeValue allDay={false} timeValue={item.timeConfig?.startTime} /> : undefined

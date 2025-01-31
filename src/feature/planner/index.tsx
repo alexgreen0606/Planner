@@ -9,8 +9,8 @@ import PlannerBanner from './components/banner/PlannerBanner';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
 import SortedPlanner from './components/lists/SortedPlanner';
 import Modal from '../../foundation/components/modal/Modal';
-import Colors from '../../foundation/theme/colors';
 import SortedRecurringPlanner from './components/lists/SortedRecurringPlanner';
+import { Color } from '../../foundation/theme/colors';
 
 const Planner = () => {
   const [timestamps, setTimestamps] = useState<string[]>([]);
@@ -102,7 +102,7 @@ const Planner = () => {
         toggleModalOpen={toggleRecurringPlannerModal}
         iconConfig={{
           type: 'recurring-calendar',
-          color: Colors.BLUE
+          color: Color.BLUE
         }}
       >
         <View style={styles.recurringModal}>

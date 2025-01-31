@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import TodayPlanner from './components/lists/TodayPlanner';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
-import Colors from '../../foundation/theme/colors';
 import { generateFullDayEventsMap, generateHolidaysMap } from '../../foundation/planners/calendarUtils';
 import { getTodayTimestamp } from '../../foundation/planners/timeUtils';
 import EventChip from '../../foundation/planners/components/EventChip';
 import TodayBanner from './components/banner/TodayBanner';
 import BirthdayChecklist from './components/lists/BirthdayChecklist';
 import globalStyles from '../../foundation/theme/globalStyles';
+import { Color } from '../../foundation/theme/colors';
 
 const Today = () => {
   const timestamp = getTodayTimestamp();
@@ -30,13 +30,16 @@ const Today = () => {
     <View style={globalStyles.blackFilledSpace}>
 
       {/* Banner */}
-      <TodayBanner timestamp={timestamp} />
+      <TodayBanner
+        showBannerBorder={holidays.length + allDayEvents.length !== 0}
+        timestamp={timestamp}
+      />
 
       <SortableListProvider>
         <View style={styles.container}>
 
-          {/* Holiday Chips */}
-          {holidays.length && (
+          {/* Event Chips */}
+          {holidays.length + allDayEvents.length > 0 && (
             <View style={styles.chips}>
               {holidays.map(holiday => (
                 <EventChip
@@ -45,16 +48,10 @@ const Today = () => {
                     type: 'globe',
                     size: 10,
                   }}
-                  color={Colors.PURPLE}
+                  color={Color.PURPLE}
                   key={holiday}
                 />
               ))}
-            </View>
-          )}
-
-          {/* All Day Chips */}
-          {allDayEvents.length && (
-            <View style={styles.chips}>
               {allDayEvents.map(event => (
                 <EventChip
                   label={event}
@@ -62,7 +59,7 @@ const Today = () => {
                     type: 'megaphone',
                     size: 10,
                   }}
-                  color={Colors.RED}
+                  color={Color.RED}
                   key={`${event}-${timestamp}`}
                 />
               ))}
@@ -88,15 +85,17 @@ const Today = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    gap: 8,
-    paddingTop: 16,
+    gap: 4,
     alignItems: 'center'
   },
   planner: {
+    flex: 1,
     width: '100%'
   },
   chips: {
     ...globalStyles.verticallyCentered,
+    paddingTop: 8,
+    paddingHorizontal: 8,
     width: '100%',
     flexWrap: 'wrap',
   }

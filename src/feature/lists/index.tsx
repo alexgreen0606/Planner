@@ -4,7 +4,7 @@ import SortedFolder from './components/lists/SortedFolder';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
 import { FolderItemType, NULL, ROOT_FOLDER_ID } from './utils';
 import globalStyles from '../../foundation/theme/globalStyles';
-import { getFolderFromStorage, getListFromStorage } from './storage/folderStorage';
+import { getFolderFromStorage, getFolderItems, getListFromStorage } from './storage/folderStorage';
 import FolderItemBanner from './components/banner/FolderItemBanner';
 import SortedList from './components/lists/SortedList';
 
@@ -25,8 +25,7 @@ const Lists = () => {
     getFolderFromStorage(pageConfig.id) : getListFromStorage(pageConfig.id),
     [pageConfig.id]
   );
-  const parentFolderData = useMemo(() => pageData.listId !== NULL ? getFolderFromStorage(pageData.listId) : null, [pageData.listId]);
-
+  const parentFolderData = useMemo(() => pageData.listId !== NULL ? getFolderFromStorage(pageData.listId) : undefined, [pageData.listId]);
 
   const onOpenParent = (listId: string) => {
     setParentClickTrigger(0);
@@ -61,6 +60,7 @@ const Lists = () => {
       {pageConfig.type === FolderItemType.FOLDER ? (
         <SortableListProvider>
           <SortedFolder
+            parentFolderData={parentFolderData}
             folderId={pageConfig.id}
             onBackClick={onOpenParent}
             onOpenItem={onOpenItem}

@@ -1,9 +1,9 @@
 import React from 'react';
 import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
 import { FolderItem, FolderItemType } from '../../utils';
-import Colors from '../../../../foundation/theme/colors';
 import Modal from '../../../../foundation/components/modal/Modal';
 import CustomText from '../../../../foundation/components/text/CustomText';
+import { Color } from '../../../../foundation/theme/colors';
 
 export interface DeleteModalProps extends ListItemUpdateComponentProps<FolderItem> {
     open: boolean;
@@ -26,7 +26,7 @@ const DeleteModal = ({
             primaryButtonConfig={{
                 label: !!item.childrenCount ? 'Force Delete' : 'Delete',
                 onClick: () => onSave(item),
-                color: !!item.childrenCount ? 'red' : Colors.BLUE
+                color: !!item.childrenCount ? 'red' : Color.BLUE
             }}
             iconConfig={{
                 type: 'trash',

@@ -4,11 +4,11 @@ import Today from '../../../feature/today';
 import Lists from '../../../feature/lists';
 import { useNavigatorContext } from '../services/TabsProvider';
 import GenericIcon from '../../components/icon/GenericIcon';
-import Colors from '../../theme/colors';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import globalStyles from '../../theme/globalStyles';
 import { NAVBAR_HEIGHT, Pages } from '../utils';
 import Planner from '../../../feature/planner';
+import { Color } from '../../theme/colors';
 
 const Tab = createBottomTabNavigator();
 
@@ -30,15 +30,15 @@ const Navigator = () => {
                             size={size}
                             color={color}
                         />,
-                    tabBarActiveTintColor: Colors.BLUE,
-                    tabBarInactiveTintColor: Colors.GREY,
+                    tabBarActiveTintColor: Color.BLUE,
+                    tabBarInactiveTintColor: Color.DIM,
                     headerShown: false,
                     tabBarStyle: {
-                        backgroundColor: Colors.BLACK,
+                        backgroundColor: Color.BLACK,
                         shadowOpacity: 0,
                         paddingTop: 8,
                         borderTopWidth: StyleSheet.hairlineWidth,
-                        borderTopColor: Colors.GREY,
+                        borderTopColor: Color.DIM,
                         height: NAVBAR_HEIGHT
                     },
                     tabBarLabelStyle: {

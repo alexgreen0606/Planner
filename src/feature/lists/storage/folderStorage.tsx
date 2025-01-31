@@ -1,6 +1,7 @@
 import { MMKV } from "react-native-mmkv";
 import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, List, NULL, ROOT_FOLDER_ID } from "../utils";
 import { ItemStatus } from "../../../foundation/sortedLists/utils";
+import { Color } from "../../../foundation/theme/colors";
 
 const storage = new MMKV({ id: FOLDER_STORAGE_ID });
 
@@ -17,6 +18,8 @@ export const getFolderFromStorage = (folderId: string) => {
         const foundFolder: Folder = JSON.parse(folderString);
         return foundFolder;
     } else if (folderId === ROOT_FOLDER_ID) {
+
+        // @ts-ignore - color must be overridden to blue for the root folder
         const initialRootFolder = {
             id: ROOT_FOLDER_ID,
             listId: NULL,
@@ -24,7 +27,7 @@ export const getFolderFromStorage = (folderId: string) => {
             listIds: [],
             value: 'Lists',
             sortId: 1,
-            color: 'blue',
+            color: Color.BLUE,
             status: ItemStatus.STATIC
         } as Folder;
         saveToStorage(initialRootFolder)

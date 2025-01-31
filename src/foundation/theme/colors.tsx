@@ -1,4 +1,4 @@
-export enum Colors {
+export enum Color {
   BLUE = '#65BCFF',
   GREEN = '#7AF8CA',
   RED = '#FF98A4',
@@ -7,8 +7,15 @@ export enum Colors {
   ORANGE = '#FC946B',
   WHITE = 'white',
   BLACK = 'black',
-  GREY = '#808080',
+  DIM = '#808080',
+  GREY = '#BFBFBF',
   BACKGROUND = 'rgb(27, 27, 35)'
 };
 
-export default Colors;
+export enum SelectableColor {
+  GREEN = Color.GREEN,
+  RED = Color.RED,
+  YELLOW = Color.YELLOW,
+  PURPLE = Color.PURPLE,
+  ORANGE = Color.ORANGE
+};
