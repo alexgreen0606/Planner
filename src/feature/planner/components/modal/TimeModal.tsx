@@ -12,7 +12,6 @@ import { Color } from '../../../../foundation/theme/colors';
 export interface TimeModalProps extends ListItemUpdateComponentProps<Event> {
     toggleModalOpen: (event: Event) => void;
     open: boolean;
-    timestamp: string;
 }
 
 type TimeModalSelection = {
@@ -22,14 +21,13 @@ type TimeModalSelection = {
     isCalendarEvent: boolean;
 };
 
-const TimeModal = ({ 
-    toggleModalOpen, 
-    open, 
-    timestamp, 
-    onSave, 
-    item 
+const TimeModal = ({
+    toggleModalOpen,
+    open,
+    onSave,
+    item
 }: TimeModalProps) => {
-    const newTimeOptions = useMemo(() => getTimeSelectorOptions(), [timestamp]);
+    const newTimeOptions = useMemo(() => getTimeSelectorOptions(), []);
     const defaultStartTime = '00:00';
     const defaultEndTime = '23:55';
     const [timeModalData, setTimeModalData] = useState<TimeModalSelection>(item.timeConfig ?? {
@@ -64,9 +62,8 @@ const TimeModal = ({
 
     return (
         <Modal
-            title={item.value}
+            title='Plan time'
             toggleModalOpen={() => toggleModalOpen(item)}
-            subTitle={timestampToDayOfWeek(timestamp)}
             open={open}
             primaryButtonConfig={{
                 label: 'Save',
@@ -75,9 +72,18 @@ const TimeModal = ({
             }}
             iconConfig={{
                 type: 'clock',
-                color: Color.BLUE
+                color: Color.BLUE,
             }}
         >
+
+            {/* Event Details */}
+            <CustomText type='standard'>
+                {item.value}
+            </CustomText>
+            <CustomText type='soft' style={{ marginBottom: 16 }}>
+                on {timestampToDayOfWeek(item.listId)}
+            </CustomText>
+
             <View style={styles.container}>
 
                 {/* Calendar Controls */}
@@ -85,8 +91,8 @@ const TimeModal = ({
 
                     {/* Calendar Toggle */}
                     <View style={styles.halfWidth}>
-                        {isTimestampValid(timestamp) && (
-                            <>
+                        {isTimestampValid(item.listId) && (
+                            <View>
                                 <CustomText type='label'>Calendar Event</CustomText>
                                 <Checkbox.Android
                                     status={timeModalData.isCalendarEvent ? 'checked' : 'unchecked'}
@@ -97,13 +103,12 @@ const TimeModal = ({
                                             null;
                                         if (!newEndTime) newEndTime = '23:55';
                                         setTimeModalData({ ...timeModalData, isCalendarEvent: !timeModalData.isCalendarEvent, endTime: newEndTime });
-
                                     }}
                                     color={Color.BLUE}
                                     uncheckedColor={Color.DIM}
 
                                 />
-                            </>
+                            </View>
                         )}
                     </View>
 
@@ -176,9 +181,8 @@ const TimeModal = ({
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 20,
-        gap: 40,
-        height: 600
+        gap: 16,
+        height: 550
     },
     halfWidth: {
         width: '50%'

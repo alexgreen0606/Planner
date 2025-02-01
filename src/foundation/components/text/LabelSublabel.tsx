@@ -21,7 +21,6 @@ const styles = StyleSheet.create({
     },
     subLabel: {
         marginLeft: 5,
-        marginBottom: 2,
     },
 });
 

@@ -76,7 +76,6 @@ const SortableList = <
     function buildFullList() {
         const fullList = [...items];
         if (currentTextfield?.listId === listId) {
-            console.log(currentTextfield)
             if (currentTextfield?.status === ItemStatus.NEW)
                 fullList.push(currentTextfield);
             else {

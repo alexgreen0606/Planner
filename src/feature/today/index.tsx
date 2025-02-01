@@ -2,25 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import TodayPlanner from './components/lists/TodayPlanner';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
-import { generateFullDayEventsMap, generateHolidaysMap } from '../../foundation/planners/calendarUtils';
+import { generateEventChips } from '../../foundation/planners/calendarUtils';
 import { getTodayTimestamp } from '../../foundation/planners/timeUtils';
-import EventChip from '../../foundation/planners/components/EventChip';
+import EventChip, { EventChipProps } from '../../foundation/planners/components/EventChip';
 import TodayBanner from './components/banner/TodayBanner';
 import BirthdayChecklist from './components/lists/BirthdayChecklist';
 import globalStyles from '../../foundation/theme/globalStyles';
-import { Color } from '../../foundation/theme/colors';
 
 const Today = () => {
   const timestamp = getTodayTimestamp();
-  const [holidays, setHolidays] = useState<string[]>([]);
-  const [allDayEvents, setAllDayEvents] = useState<string[]>([]);
+  const [eventChips, setEventChips] = useState<EventChipProps[]>([]);
+  const [birthdayChips, setBirthdayChips] = useState<EventChipProps[]>();
 
   async function getEventChips() {
-    const holidayMap = await generateHolidaysMap([timestamp]);
-    const allDayEvents = await generateFullDayEventsMap([timestamp]);
-    setHolidays(holidayMap[timestamp]);
-    setAllDayEvents(allDayEvents[timestamp]);
-  };
+    const allEventChips = await generateEventChips([timestamp]);
+    const todayChips = allEventChips[timestamp];
+    const todayBirthdayChips: EventChipProps[] = [];
+    const todayOtherChips: EventChipProps[] = [];
+    todayChips.forEach(chip => {
+      if (chip.label.includes(' Birthday')) {
+        todayBirthdayChips.push(chip);
+      } else {
+        todayOtherChips.push(chip);
+      }
+    });
+    setBirthdayChips(todayBirthdayChips);
+    setEventChips(todayOtherChips);
+  }
 
   useEffect(() => {
     getEventChips();
@@ -31,7 +39,7 @@ const Today = () => {
 
       {/* Banner */}
       <TodayBanner
-        showBannerBorder={holidays.length + allDayEvents.length !== 0}
+        showBannerBorder={eventChips.length + (birthdayChips?.length || 0) > 0}
         timestamp={timestamp}
       />
 
@@ -39,35 +47,21 @@ const Today = () => {
         <View style={styles.container}>
 
           {/* Event Chips */}
-          {holidays.length + allDayEvents.length > 0 && (
+          {eventChips.length > 0 && (
             <View style={styles.chips}>
-              {holidays.map(holiday => (
+              {eventChips.map(chipConfig => (
                 <EventChip
-                  label={holiday}
-                  iconConfig={{
-                    type: 'globe',
-                    size: 10,
-                  }}
-                  color={Color.PURPLE}
-                  key={holiday}
-                />
-              ))}
-              {allDayEvents.map(event => (
-                <EventChip
-                  label={event}
-                  iconConfig={{
-                    type: 'megaphone',
-                    size: 10,
-                  }}
-                  color={Color.RED}
-                  key={`${event}-${timestamp}`}
+                  key={chipConfig.label}
+                  {...chipConfig}
                 />
               ))}
             </View>
           )}
 
           {/* Birthday Checklist Card */}
-          <BirthdayChecklist />
+          {birthdayChips && (
+            <BirthdayChecklist birthdays={birthdayChips} />
+          )}
 
           {/* Planner */}
           <View style={styles.planner}>

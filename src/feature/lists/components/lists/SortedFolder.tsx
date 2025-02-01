@@ -205,6 +205,7 @@ const SortedFolder = ({
             getModal={(item: FolderItem) => ({
                 component: DeleteModal,
                 props: {
+                    parentFolderName: folderData.value,
                     open: deleteModalOpen,
                     toggleModalOpen: toggleDeleteModal,
                     onSave: (updatedItem: FolderItem) => {

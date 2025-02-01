@@ -13,7 +13,7 @@ import {
     RECURRING_WEEKDAY_PLANNER_KEY,
     timeValueToIso
 } from '../timeUtils';
-import { getCalendarEvents, getPrimaryCalendarId } from '../calendarUtils';
+import { getCalendarEvents, getPrimaryCalendarDetails } from '../calendarUtils';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
@@ -92,7 +92,10 @@ function syncPlannerWithCalendar(calendar: Event[], currentPlanner: Event[], cur
 
     // Find any new events in the calendar and add these to the new planner
     calendar.forEach(calEvent => {
-        if (!newPlanner.find(existingEvent => existingEvent.timeConfig?.calendarEventId === calEvent.id)) {
+        if (
+            !newPlanner.find(existingEvent => existingEvent.timeConfig?.calendarEventId === calEvent.id) &&
+            !calEvent.value.includes(' Birthday')
+        ) {
 
             // Generate a new record to represent the calendar event
             const newEvent = {
@@ -106,7 +109,7 @@ function syncPlannerWithCalendar(calendar: Event[], currentPlanner: Event[], cur
             newPlanner.push(newEvent);
             newEvent.sortId = generateSortIdByTimestamp(newEvent, newPlanner);
         }
-    })
+    });
 
     return newPlanner;
 }
@@ -211,7 +214,7 @@ export async function persistEvent(event: Event) {
     // The event is a calendar event -> sync the calendar
     if (newEvent.timeConfig?.isCalendarEvent) {
         const calendarEventDetails = {
-            calendarId: await getPrimaryCalendarId(),
+            calendarId: (await getPrimaryCalendarDetails()).id,
             title: newEvent.value,
             startDate: timeValueToIso(event.listId, newEvent.timeConfig.startTime),
             endDate: timeValueToIso(newEvent.listId, newEvent.timeConfig.endTime),
@@ -250,8 +253,7 @@ export async function deleteEvent(eventToDelete: Event) {
         eventToDelete.timeConfig.calendarEventId &&
         eventToDelete.listId !== getTodayTimestamp()
     ) {
-        // TODO: mark it as deleted, but keep it in calendar
-        await getPrimaryCalendarId();
+        await getPrimaryCalendarDetails();
         await RNCalendarEvents.removeEvent(eventToDelete.timeConfig.calendarEventId);
     }
 

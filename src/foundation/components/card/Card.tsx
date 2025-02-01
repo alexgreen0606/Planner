@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     banner: {
-        paddingVertical: 4,
+        paddingVertical: 8,
         paddingHorizontal: 8
     },
 });

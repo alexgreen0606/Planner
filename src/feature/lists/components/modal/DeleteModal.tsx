@@ -8,19 +8,21 @@ import { Color } from '../../../../foundation/theme/colors';
 export interface DeleteModalProps extends ListItemUpdateComponentProps<FolderItem> {
     open: boolean;
     toggleModalOpen: () => void;
+    parentFolderName: string;
 }
 
 const DeleteModal = ({
     item,
     onSave,
     open,
-    toggleModalOpen
+    toggleModalOpen,
+    parentFolderName
 }: DeleteModalProps) => {
-    const getItemType = (item: FolderItem) => item.type === FolderItemType.FOLDER ? 'folder' : 'list';
+    const itemType = item.type === FolderItemType.FOLDER ? 'folder' : 'list';
 
     return (
         <Modal
-            title={`${!!item.childrenCount ? 'Force delete' : 'Delete'} ${getItemType(item)}?`}
+            title={`${!!item.childrenCount ? 'Force delete' : 'Delete'} ${itemType}?`}
             open={open}
             toggleModalOpen={toggleModalOpen}
             primaryButtonConfig={{
@@ -33,13 +35,23 @@ const DeleteModal = ({
                 color: 'red'
             }}
         >
+
+            {/* Item Details */}
+            <CustomText type='standard'>
+                {item.value}
+            </CustomText>
+            <CustomText type='soft' style={{ marginBottom: 16 }}>
+                from {parentFolderName}
+            </CustomText>
+
+            {/* Warning Message */}
             {!!item.childrenCount ? (
-                <CustomText type='standard'>
-                    This {getItemType(item)} has {item.childrenCount} items. Deleting is irreversible and will lose all inner contents.
+                <CustomText type='standard' style={{ color: Color.GREY }}>
+                    This {itemType} has {item.childrenCount} items. Deleting is irreversible and will lose all inner contents.
                 </CustomText>
             ) : (
-                <CustomText type='standard'>
-                    Would you like to delete this {getItemType(item)}?
+                <CustomText type='standard' style={{ color: Color.GREY }}>
+                    Would you like to delete this {itemType}?
                 </CustomText>
             )}
         </Modal>

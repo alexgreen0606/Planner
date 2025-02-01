@@ -4,11 +4,11 @@ import GenericIcon, { GenericIconProps } from '../../components/icon/GenericIcon
 import globalStyles from '../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
 
-interface EventChipProps {
+export interface EventChipProps {
     label: string;
     iconConfig: GenericIconProps;
     color: string;
-}
+};
 
 const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
 
@@ -19,7 +19,6 @@ const EventChip = ({ label, iconConfig, color }: EventChipProps) => {
             height: 20,
             gap: 4,
             maxWidth: '100%',
-            justifyContent: 'center',
             borderWidth: StyleSheet.hairlineWidth,
             borderColor: color,
             paddingHorizontal: 10,

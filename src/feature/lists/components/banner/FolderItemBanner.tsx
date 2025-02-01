@@ -84,9 +84,9 @@ const FolderItemBanner = ({
                     <CustomText
                         type='pageLabel'
                         onPress={beginEditItem}
-                        adjustsFontSizeToFit
-                        numberOfLines={2}
-                        style={globalStyles.blackFilledSpace}
+                        ellipsizeMode='tail'
+                        numberOfLines={1}
+                    // style={globalStyles.blackFilledSpace}
                     >
                         {item.value}
                     </CustomText>
@@ -96,19 +96,19 @@ const FolderItemBanner = ({
             {/* Back Button */}
             {backButtonConfig.display && (
                 <TouchableOpacity
-                    style={globalStyles.verticallyCentered}
+                    style={styles.backButton}
                     onPress={backButtonConfig.onClick}
                 >
                     <GenericIcon
                         type='chevron-left'
                         size={16}
-                        color={Color.BLUE} // TODO: use the color of the previous
+                        color={Color.BLUE}
                     />
                     <CustomText
-                        numberOfLines={1}
                         ellipsizeMode='tail'
-                        style={styles.backButton}
                         type='label'
+                        numberOfLines={1}
+                        style={{ color: Color.BLUE }}
                     >
                         {backButtonConfig.label}
                     </CustomText>
@@ -122,6 +122,7 @@ const styles = StyleSheet.create({
     name: {
         ...globalStyles.verticallyCentered,
         flex: 1,
+        marginRight: 40
     },
     inputField: {
         ...globalStyles.blackFilledSpace,
@@ -129,9 +130,12 @@ const styles = StyleSheet.create({
         fontSize: 25,
     },
     backButton: {
-        color: Color.BLUE,
-        width: 60,
+        ...globalStyles.verticallyCentered,
+        gap: 0,
+        maxWidth: 70,
+        justifyContent: 'flex-end'
     }
 });
+
 
 export default FolderItemBanner;

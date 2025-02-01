@@ -12,8 +12,8 @@ interface WeatherDisplayProps {
     low: number;
 }
 
-const WeatherDisplay = ({ weatherCode, high, low }: WeatherDisplayProps) =>
-    <View style={styles.weatherContainer}>
+const WeatherDisplay = ({ weatherCode, high, low }: WeatherDisplayProps) => {
+    return <View style={styles.weatherContainer}>
         <CustomText type='highTemp'>{Math.round(high)}°</CustomText>
         <View style={styles.divider} />
         <CustomText type='lowTemp'>{Math.round(low)}°</CustomText>
@@ -26,6 +26,7 @@ const WeatherDisplay = ({ weatherCode, high, low }: WeatherDisplayProps) =>
             />
         </View>
     </View>
+}
 
 const styles = StyleSheet.create({
     weatherContainer: {

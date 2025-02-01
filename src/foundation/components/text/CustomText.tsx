@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     label: {
-        color: Color.DIM,
+        color: Color.GREY,
         fontSize: 14,
         fontWeight: 800
     },
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     },
     lowTemp: {
         fontSize: 14,
-        color: Color.DIM,
+        color: Color.GREY,
     },
     hour: {
         fontSize: 24,

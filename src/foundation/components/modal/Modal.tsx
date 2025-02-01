@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Button, Dialog, Portal } from 'react-native-paper';
 import globalStyles from '../../theme/globalStyles';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -21,6 +21,7 @@ interface ModalProps {
     open: boolean;
     toggleModalOpen: () => void;
     iconConfig?: GenericIconProps;
+    style?: ViewStyle;
 }
 
 const Modal = ({
@@ -30,13 +31,14 @@ const Modal = ({
     open,
     iconConfig,
     subTitle,
+    style,
     toggleModalOpen
 }: ModalProps) =>
     <Portal>
         <GestureHandlerRootView>
             <Dialog
-                theme={{ colors: { backdrop: 'black' } }}
-                style={styles.container}
+                theme={{ colors: { backdrop: Color.BLACK } }}
+                style={styles.card}
                 visible={open}
                 onDismiss={toggleModalOpen}
             >
@@ -61,7 +63,9 @@ const Modal = ({
                     </View>
                 </Dialog.Title>
                 <Dialog.Content>
-                    {children}
+                    <View style={styles.container}>
+                        {children}
+                    </View>
                 </Dialog.Content>
                 <Dialog.Actions>
                     <View style={globalStyles.spacedApart}>
@@ -82,11 +86,14 @@ const Modal = ({
     </Portal>
 
 const styles = StyleSheet.create({
-    container: {
-        backgroundColor: 'transparent',
-        shadowOpacity: 0,
-        elevation: 0,
+    card: {
+        backgroundColor: Color.BLACK,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
     },
+    container: {
+        padding: 8
+    }
 });
 
 export default Modal;

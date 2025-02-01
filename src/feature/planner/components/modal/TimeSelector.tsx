@@ -35,7 +35,7 @@ const TimeSelector = ({
     }, [hour, minute, indicator]);
 
     return (
-        <View style={globalStyles.spacedApart}>
+        <View style={styles.container}>
             <Picker style={styles.scrollWheel}
                 selectedValue={hour}
                 onValueChange={(itemValue) => setHour(Number(itemValue))}
@@ -84,8 +84,16 @@ const TimeSelector = ({
 };
 
 const styles = StyleSheet.create({
+    container: {
+        ...globalStyles.spacedApart,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: Color.DIM,
+        borderRadius: 8,
+        marginTop: 8,
+        marginBottom: 16
+    },
     scrollWheel: {
-        width: '30%'
+        width: '33%'
     },
     wheelItem: {
         fontSize: 14,

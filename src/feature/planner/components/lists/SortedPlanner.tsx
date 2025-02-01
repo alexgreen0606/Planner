@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from '../banner/DayBanner';
 import TimeModal, { TimeModalProps } from '../modal/TimeModal';
-import CustomText from '../../../../foundation/components/text/CustomText';
 import TimeValue from '../../../../foundation/planners/components/TimeValue';
 import { Event, extractTimeValue, generateSortIdByTimestamp, PLANNER_STORAGE_ID } from '../../../../foundation/planners/timeUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
 import Card from '../../../../foundation/components/card/Card';
-import EventChip from '../../../../foundation/planners/components/EventChip';
+import EventChip, { EventChipProps } from '../../../../foundation/planners/components/EventChip';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/utils';
 import { buildPlanner, deleteEvent, persistEvent } from '../../../../foundation/planners/storage/plannerStorage';
@@ -20,19 +18,15 @@ import CollapseControl from '../../../../foundation/sortedLists/components/colla
 
 interface SortablePlannerProps {
     timestamp: string;
-    birthdays: string[];
-    holidays: string[];
     forecast?: WeatherForecast;
-    allDayEvents: string[];
+    eventChips: EventChipProps[];
     reloadChips: () => void;
 };
 
 const SortedPlanner = ({
     timestamp,
-    birthdays,
-    holidays,
     forecast,
-    allDayEvents,
+    eventChips,
     reloadChips
 }: SortablePlannerProps) => {
     const { currentTextfield, setCurrentTextfield } = useSortableListContext();
@@ -70,39 +64,12 @@ const SortedPlanner = ({
     return (
         <Card
             header={<DayBanner forecast={forecast} timestamp={timestamp} />}
-            footer={allDayEvents.length + holidays.length + birthdays.length > 0 ?
+            footer={eventChips.length > 0 ?
                 <View style={styles.wrappedChips}>
-                    {allDayEvents.map((allDayEvent) =>
+                    {eventChips.map(allDayEvent =>
                         <EventChip
-                            label={allDayEvent}
-                            iconConfig={{
-                                type: 'megaphone',
-                                size: 10,
-                            }}
-                            color={Color.RED}
-                            key={`${allDayEvent}-${timestamp}`}
-                        />
-                    )}
-                    {holidays.map(holiday =>
-                        <EventChip
-                            label={holiday}
-                            iconConfig={{
-                                type: 'globe',
-                                size: 10,
-                            }}
-                            color={Color.PURPLE}
-                            key={holiday}
-                        />
-                    )}
-                    {birthdays.map(birthday =>
-                        <EventChip
-                            label={birthday}
-                            iconConfig={{
-                                type: 'birthday',
-                                size: 10,
-                            }}
-                            color={Color.GREEN}
-                            key={birthday}
+                            key={`${allDayEvent.label}-${timestamp}`}
+                            {...allDayEvent}
                         />
                     )}
                 </View> : undefined
@@ -200,7 +167,7 @@ const SortedPlanner = ({
                 })}
                 emptyLabelConfig={{
                     label: 'No Plans',
-                    style: { paddingBottom: 8 }
+                    style: { height: 40, paddingBottom: 8 }
                 }}
             />
 

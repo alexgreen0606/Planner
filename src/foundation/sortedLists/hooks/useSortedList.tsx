@@ -27,9 +27,6 @@ const useSortedList = <T extends ListItem, S>(
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
-
-    console.log(items)
-
     const buildList = async () => {
         const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);

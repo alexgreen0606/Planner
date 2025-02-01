@@ -72,6 +72,7 @@ export function weatherCodeToFontistoIcon(code: number): string {
     case 65:
     case 82:
     case 85:
+    case 80:
       return 'cloud.rain.fill'; // rain
     case 71:
     case 73:

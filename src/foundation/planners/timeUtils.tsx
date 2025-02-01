@@ -49,6 +49,7 @@ export interface TimeConfig {
     deleted?: boolean;
 };
 export interface Event extends ListItem {
+    color?: string;
     timeConfig?: TimeConfig;
     recurringConfig?: RecurringConfig;
 };
@@ -56,7 +57,7 @@ export interface TimeSelectorOptions {
     indicator: string[];
     hour: number[];
     minute: number[];
-}
+};
 
 /**
  * Determines if the given string is a valid timestamp.

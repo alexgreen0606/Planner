@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getWeeklyWeather, WeatherForecast } from '../../foundation/weather/utils';
 import { getNextSevenDayTimestamps, PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY } from '../../foundation/planners/timeUtils';
-import { generateBirthdaysMap, generateFullDayEventsMap, generateHolidaysMap } from '../../foundation/planners/calendarUtils';
+import { generateEventChips } from '../../foundation/planners/calendarUtils';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import globalStyles from '../../foundation/theme/globalStyles';
 import PlannerBanner from './components/banner/PlannerBanner';
@@ -11,13 +11,12 @@ import SortedPlanner from './components/lists/SortedPlanner';
 import Modal from '../../foundation/components/modal/Modal';
 import SortedRecurringPlanner from './components/lists/SortedRecurringPlanner';
 import { Color } from '../../foundation/theme/colors';
+import { EventChipProps } from '../../foundation/planners/components/EventChip';
 
 const Planner = () => {
   const [timestamps, setTimestamps] = useState<string[]>([]);
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>();
-  const [birthdays, setBirthdays] = useState<Record<string, string[]>>();
-  const [holidays, setHolidays] = useState<Record<string, string[]>>();
-  const [allDayEvents, setAllDayEvents] = useState<Record<string, string[]>>();
+  const [eventChipMap, setEventChipMap] = useState<Record<string, EventChipProps[]>>();
   const [recurringPlannerModalOpen, setRecurringPlannerModalOpen] = useState(false);
 
   const toggleRecurringPlannerModal = () => setRecurringPlannerModalOpen(curr => !curr);
@@ -27,23 +26,17 @@ const Planner = () => {
    */
   const resetState = () => {
     setTimestamps([]);
-    setHolidays(undefined);
-    setBirthdays(undefined);
     setForecasts(undefined);
-    setAllDayEvents(undefined);
+    setEventChipMap(undefined);
   }
 
   // Build a collection of the next 7 days of planners
   const buildPlanners = async (reloadPage: boolean) => {
     if (reloadPage) resetState();
     const timestamps = getNextSevenDayTimestamps();
-    const holidayMap = await generateHolidaysMap(timestamps);
-    const birthdayMap = await generateBirthdaysMap(timestamps);
-    const allDayEvents = await generateFullDayEventsMap(timestamps);
+    const allEventChips = await generateEventChips(timestamps);
     setTimestamps(timestamps);
-    setHolidays(holidayMap);
-    setBirthdays(birthdayMap);
-    setAllDayEvents(allDayEvents);
+    setEventChipMap(allEventChips);
     const forecastMap = await getWeeklyWeather(timestamps);
 
     setForecasts(forecastMap);
@@ -72,7 +65,7 @@ const Planner = () => {
       />
 
       {/* Planners */}
-      {timestamps && birthdays && holidays && allDayEvents && (
+      {timestamps && eventChipMap && (
         <SortableListProvider>
           <View key={`${recurringPlannerModalOpen}-weekday-modal-open`} style={styles.planners}>
             {timestamps.map((timestamp) =>
@@ -80,10 +73,8 @@ const Planner = () => {
                 <SortedPlanner
                   timestamp={timestamp}
                   reloadChips={() => buildPlanners(false)}
-                  holidays={holidays[timestamp]}
-                  birthdays={birthdays[timestamp]}
                   forecast={forecasts?.[timestamp]}
-                  allDayEvents={allDayEvents[timestamp]}
+                  eventChips={eventChipMap[timestamp]}
                 />
               </View>
             )}
