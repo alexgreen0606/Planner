@@ -7,17 +7,17 @@ import {
     LIST_ITEM_HEIGHT,
     ListItem,
     ListItemUpdateComponentProps
-} from "../../utils";
+} from "../../sortedListUtils";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
 import { useMemo, useState } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import CustomText from "../../../components/text/CustomText";
+import CustomText from "../../../ui/text/CustomText";
 import ListTextfield from "../textfield/ListTextfield";
-import GenericIcon from "../../../components/icon/GenericIcon";
+import GenericIcon from "../../../ui/icon/GenericIcon";
 import { Portal } from "react-native-paper";
-import ThinLine from "../../../components/separator/ThinLine";
+import ThinLine from "../../../ui/separator/ThinLine";
 import { Color } from "../../../theme/colors";
 
 interface RowProps<
@@ -275,7 +275,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                                 type='standard'
                                 style={{
                                     color: customTextColor ||
-                                        (isItemDeleting(item) ? Color.DIM : Color.WHITE),
+                                        (isItemDeleting(item) ? Color.DIM : item.recurringId ? Color.GREY : Color.WHITE),
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
                                     width: '100%'

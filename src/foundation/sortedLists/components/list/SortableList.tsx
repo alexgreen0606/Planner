@@ -11,10 +11,10 @@ import {
     RowIconConfig,
     generateSortId,
     LIST_ITEM_HEIGHT,
-} from '../../utils';
+} from '../../sortedListUtils';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from '../emptyLabel/EmptyLabel';
-import ThinLine from '../../../components/separator/ThinLine';
+import ThinLine from '../../../ui/separator/ThinLine';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -74,7 +74,7 @@ const SortableList = <
      * Builds the list out of the existing items and the textfield.
      */
     function buildFullList() {
-        const fullList = [...items];
+        const fullList = items.filter(item => item.status !== ItemStatus.HIDDEN);
         if (currentTextfield?.listId === listId) {
             if (currentTextfield?.status === ItemStatus.NEW)
                 fullList.push(currentTextfield);
@@ -84,6 +84,7 @@ const SortableList = <
                     fullList[textfieldIndex] = currentTextfield;
             }
         }
+        console.info(listId, [...fullList].sort((a, b) => a.sortId - b.sortId));
         return fullList.sort((a, b) => a.sortId - b.sortId);
     };
 

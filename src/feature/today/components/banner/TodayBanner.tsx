@@ -1,12 +1,12 @@
 import React from 'react';
 import { View } from 'react-native';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import { timestampToDayOfWeek, timestampToMonthDate } from '../../../../foundation/planners/timeUtils';
-import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
+import { timestampToDayOfWeek, genericTimestampToMonthDate } from '../../../../foundation/calendar/dateUtils';
+import GenericIcon from '../../../../foundation/ui/icon/GenericIcon';
 import WeatherDisplay from '../../../../foundation/weather/components/WeatherDisplay';
-import LabelSublabel from '../../../../foundation/components/text/LabelSublabel';
+import LabelSublabel from '../../../../foundation/ui/text/LabelSublabel';
 import { Color } from '../../../../foundation/theme/colors';
-import ThinLine from '../../../../foundation/components/separator/ThinLine';
+import ThinLine from '../../../../foundation/ui/separator/ThinLine';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -33,7 +33,7 @@ const TodayBanner = ({ timestamp, showBannerBorder }: TodayBannerProps) => {
                     {/* Date */}
                     <LabelSublabel
                         label={timestampToDayOfWeek(timestamp)}
-                        subLabel={timestampToMonthDate(timestamp)}
+                        subLabel={genericTimestampToMonthDate(timestamp)}
                         type='large'
                     />
                 </View>

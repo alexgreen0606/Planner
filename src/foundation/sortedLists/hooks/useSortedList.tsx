@@ -1,4 +1,4 @@
-import { isItemDeleting, ItemStatus, ListItem } from '../utils';
+import { isItemDeleting, ItemStatus, ListItem } from '../sortedListUtils';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 import { useSortableListContext } from '../services/SortableListProvider';
 import { useEffect, useState } from 'react';
@@ -36,15 +36,6 @@ const useSortedList = <T extends ListItem, S>(
     useEffect(() => {
         buildList();
     }, [storageObject]);
-
-    // Rebuild the list whenever the storage object changes
-    useMMKVListener((key) => {
-        if (key === storageKey) {
-            const fetchedItem = storage.getString(storageKey);
-            if (fetchedItem)
-                buildList();
-        }
-    }, storage);
 
     /**
      * Toggles an item between a textfield and static.

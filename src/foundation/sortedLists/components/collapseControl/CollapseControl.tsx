@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
-import GenericIcon from '../../../components/icon/GenericIcon';
-import CustomText from '../../../components/text/CustomText';
+import GenericIcon from '../../../ui/icon/GenericIcon';
+import CustomText from '../../../ui/text/CustomText';
 import globalStyles from '../../../theme/globalStyles';
 import { Color } from '../../../theme/colors';
 

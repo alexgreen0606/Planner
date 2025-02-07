@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-paper';
-import { FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../../utils';
+import { LISTS_STORAGE_ID, FolderItem, FolderItemType } from '../../listUtils';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { getFolderItem, updateFolderItem } from '../../storage/folderStorage';
-import { ItemStatus } from '../../../../foundation/sortedLists/utils';
+import { ItemStatus } from '../../../../foundation/sortedLists/sortedListUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import GenericIcon from '../../../../foundation/components/icon/GenericIcon';
-import CustomText from '../../../../foundation/components/text/CustomText';
+import GenericIcon from '../../../../foundation/ui/icon/GenericIcon';
+import CustomText from '../../../../foundation/ui/text/CustomText';
 import { Color } from '../../../../foundation/theme/colors';
 
 interface FolderItemBannerProps {
@@ -26,7 +26,7 @@ const FolderItemBanner = ({
     itemType
 }: FolderItemBannerProps) => {
     const [item, setItem] = useState<FolderItem>();
-    const folderStorage = useMMKV({ id: FOLDER_STORAGE_ID });
+    const folderStorage = useMMKV({ id: LISTS_STORAGE_ID });
 
     // Build the item data from storage
     const loadItemData = () => {

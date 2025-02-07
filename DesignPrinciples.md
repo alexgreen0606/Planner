@@ -15,7 +15,7 @@ When declaring, follow this order (exported after local):
 - All functions **must** explicitly show their return type if it exists.
 
 ## Comments  
-- Always leave an **empty line** before a comment.
+- Always leave an **empty line** before a comment, unless describing an if/else block interior.
 
 ## Interfaces and Types  
 - **Props** should always be defined in the pertaining file.  

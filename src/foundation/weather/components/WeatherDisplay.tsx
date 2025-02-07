@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import CustomText from '../../components/text/CustomText';
-import { weatherCodeToFontistoIcon } from '../utils';
+import CustomText from '../../ui/text/CustomText';
+import { weatherCodeToFontistoIcon } from '../weatherUtils';
 import globalStyles from '../../theme/globalStyles';
 import { SFSymbol } from 'react-native-sfsymbols';
 import { Color } from '../../theme/colors';

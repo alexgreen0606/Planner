@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
-import GenericIcon, { GenericIconProps } from '../../../components/icon/GenericIcon';
-import CustomText from '../../../components/text/CustomText';
+import GenericIcon, { GenericIconProps } from '../../../ui/icon/GenericIcon';
+import CustomText from '../../../ui/text/CustomText';
 import globalStyles from '../../../theme/globalStyles';
 
 export interface EmptyLabelProps {

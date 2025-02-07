@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import GenericIcon, { GenericIconProps } from '../../../../foundation/components/icon/GenericIcon';
-import ThinLine from '../../../../foundation/components/separator/ThinLine';
-import { FolderItem } from '../../utils';
-import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/utils';
+import GenericIcon, { GenericIconProps } from '../../../../foundation/ui/icon/GenericIcon';
+import ThinLine from '../../../../foundation/ui/separator/ThinLine';
+import { FolderItem } from '../../listUtils';
+import { ListItemUpdateComponentProps } from '../../../../foundation/sortedLists/sortedListUtils';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import { Color, SelectableColor } from '../../../../foundation/theme/colors';
 

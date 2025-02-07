@@ -1,9 +1,9 @@
 import { MMKV } from "react-native-mmkv";
-import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType, List, NULL, ROOT_FOLDER_ID } from "../utils";
-import { ItemStatus } from "../../../foundation/sortedLists/utils";
+import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemType, List, NULL, ROOT_FOLDER_KEY } from "../listUtils";
+import { ItemStatus } from "../../../foundation/sortedLists/sortedListUtils";
 import { Color } from "../../../foundation/theme/colors";
 
-const storage = new MMKV({ id: FOLDER_STORAGE_ID });
+const storage = new MMKV({ id: LISTS_STORAGE_ID });
 
 /**
  * Fetches a folder from storage with the given ID.
@@ -17,11 +17,11 @@ export const getFolderFromStorage = (folderId: string) => {
     if (folderString) {
         const foundFolder: Folder = JSON.parse(folderString);
         return foundFolder;
-    } else if (folderId === ROOT_FOLDER_ID) {
+    } else if (folderId === ROOT_FOLDER_KEY) {
 
         // @ts-ignore - color must be overridden to blue for the root folder
         const initialRootFolder = {
-            id: ROOT_FOLDER_ID,
+            id: ROOT_FOLDER_KEY,
             listId: NULL,
             folderIds: [],
             listIds: [],

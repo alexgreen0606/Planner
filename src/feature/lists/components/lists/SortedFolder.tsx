@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
-import { useNavigatorContext } from '../../../../foundation/navigation/services/TabsProvider';
+import { useNavigatorContext } from '../../../navigation/services/TabsProvider';
 import {
     createFolderItem,
     getFolderFromStorage,
@@ -10,12 +10,12 @@ import {
 } from '../../storage/folderStorage';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import Popover, { PopoverProps } from '../popover/FolderItemPopover';
-import { Folder, FOLDER_STORAGE_ID, FolderItem, FolderItemType } from '../../utils';
-import { Pages } from '../../../../foundation/navigation/utils';
-import { generateSortId, ItemStatus, ListItem, ModifyItemConfig } from '../../../../foundation/sortedLists/utils';
+import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemType } from '../../listUtils';
+import { Pages } from '../../../navigation/navigationUtils';
+import { generateSortId, ItemStatus, ListItem, ModifyItemConfig } from '../../../../foundation/sortedLists/sortedListUtils';
 import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from '../modal/DeleteModal';
-import CustomText from '../../../../foundation/components/text/CustomText';
+import CustomText from '../../../../foundation/ui/text/CustomText';
 import { Color, SelectableColor } from '../../../../foundation/theme/colors';
 
 interface SortableFolderProps {
@@ -53,7 +53,7 @@ const SortedFolder = ({
     // Stores the current folder and all handler functions to update it
     const SortedItems = useSortedList<FolderItem, Folder>(
         folderId,
-        FOLDER_STORAGE_ID,
+        LISTS_STORAGE_ID,
         getFolderItems,
         undefined,
         {
