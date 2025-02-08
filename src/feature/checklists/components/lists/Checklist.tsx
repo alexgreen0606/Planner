@@ -1,7 +1,7 @@
 import React from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
 import { isItemDeleting, isItemTextfield, ItemStatus, ListItem } from '../../../../foundation/sortedLists/sortedListUtils';
-import { LISTS_STORAGE_ID, List } from '../../listUtils';
+import { LISTS_STORAGE_ID, Checklist } from '../../listUtils';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import { Color } from '../../../../foundation/theme/colors';
 
@@ -9,16 +9,16 @@ interface SortableListProps {
     listId: string;
 };
 
-const SortedList = ({
+const ChecklistList = ({
     listId,
 }: SortableListProps) => {
 
     // Stores the current list and all handler functions to update it
-    const SortedItems = useSortedList<ListItem, List>(
+    const SortedItems = useSortedList<ListItem, Checklist>(
         listId,
         LISTS_STORAGE_ID,
-        (storageObject: List) => storageObject.items,
-        (newItems: ListItem[], currentObject: List) => ({ ...currentObject, items: newItems }),
+        (storageObject: Checklist) => storageObject.items,
+        (newItems: ListItem[], currentObject: Checklist) => ({ ...currentObject, items: newItems }),
     );
 
     return (
@@ -53,4 +53,4 @@ const SortedList = ({
     );
 };
 
-export default SortedList;
+export default ChecklistList;

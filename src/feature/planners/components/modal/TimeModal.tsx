@@ -151,7 +151,7 @@ const PlannerEventTimeModal = ({
                         <View style={{ transform: [{ scale: .8, }], alignItems: 'center' }}>
                             <DatePicker
                                 mode='time'
-                                title='Select deadline date'
+                                title='Select countdown date'
                                 theme='dark'
                                 date={timeModalData.startTime}
                                 onDateChange={(date) => {
@@ -173,7 +173,7 @@ const PlannerEventTimeModal = ({
                         <View style={{ transform: [{ scale: .8, }], alignItems: 'center' }}>
                             <DatePicker
                                 mode='time'
-                                title='Select deadline date'
+                                title='Select countdown date'
                                 theme='dark'
                                 date={new Date(timeModalData?.endTime || endOfDayDate)}
                                 onDateChange={(date) => {

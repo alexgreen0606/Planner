@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
-import { useNavigatorContext } from '../../../navigation/services/TabsProvider';
 import {
     createFolderItem,
     getFolderFromStorage,
@@ -11,12 +10,13 @@ import {
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
 import Popover, { PopoverProps } from '../popover/FolderItemPopover';
 import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemType } from '../../listUtils';
-import { Pages } from '../../../navigation/navigationUtils';
+import { Pages } from '../../../../app/navigationUtils';
 import { generateSortId, ItemStatus, ListItem, ModifyItemConfig } from '../../../../foundation/sortedLists/sortedListUtils';
 import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from '../modal/DeleteModal';
 import CustomText from '../../../../foundation/ui/text/CustomText';
 import { Color, SelectableColor } from '../../../../foundation/theme/colors';
+import { useNavigatorContext } from '../../../../app/TabsProvider';
 
 interface SortableFolderProps {
     folderId: string;

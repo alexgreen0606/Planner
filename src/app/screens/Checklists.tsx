@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import SortedFolder from '../../feature/lists/components/lists/SortedFolder';
+import SortedFolder from '../../feature/checklists/components/lists/SortedFolder';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
-import { FolderItemType, NULL, ROOT_FOLDER_KEY } from '../../feature/lists/listUtils';
+import { FolderItemType, NULL, ROOT_FOLDER_KEY } from '../../feature/checklists/listUtils';
 import globalStyles from '../../foundation/theme/globalStyles';
-import { getFolderFromStorage, getListFromStorage } from '../../feature/lists/storage/folderStorage';
-import FolderItemBanner from '../../feature/lists/components/banner/FolderItemBanner';
-import SortedList from '../../feature/lists/components/lists/SortedList';
+import { getFolderFromStorage, getListFromStorage } from '../../feature/checklists/storage/folderStorage';
+import FolderItemBanner from '../../feature/checklists/components/banner/FolderItemBanner';
+import ChecklistList from '../../feature/checklists/components/lists/Checklist';
 
 type PageConfig = {
   id: string;
@@ -70,7 +70,7 @@ const Lists = () => {
         </SortableListProvider>
       ) : (
         <SortableListProvider>
-          <SortedList listId={pageConfig.id} />
+          <ChecklistList listId={pageConfig.id} />
         </SortableListProvider>
       )}
     </View>

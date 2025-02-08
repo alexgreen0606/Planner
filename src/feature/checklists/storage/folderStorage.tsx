@@ -1,5 +1,5 @@
 import { MMKV } from "react-native-mmkv";
-import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemType, List, NULL, ROOT_FOLDER_KEY } from "../listUtils";
+import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemType, Checklist, NULL, ROOT_FOLDER_KEY } from "../listUtils";
 import { ItemStatus } from "../../../foundation/sortedLists/sortedListUtils";
 import { Color } from "../../../foundation/theme/colors";
 
@@ -44,7 +44,7 @@ export const getListFromStorage = (listId: string) => {
     const listString = storage.getString(listId);
 
     if (listString) {
-        const foundList: List = JSON.parse(listString);
+        const foundList: Checklist = JSON.parse(listString);
         return foundList;
     }
     throw new Error('List not found!')
@@ -69,7 +69,7 @@ export const getFolderItem = (itemId: string, type: FolderItemType): FolderItem 
         childrenCount:
             type === FolderItemType.FOLDER
                 ? (data as Folder).folderIds.length + (data as Folder).listIds.length
-                : (data as List).items.length,
+                : (data as Checklist).items.length,
     };
 
     return newItem;
@@ -92,7 +92,7 @@ export const getFolderItems = (folder: Folder): FolderItem[] => {
  * Saves a folder or list to storage.
  * @param item - the item to save
  */
-export const saveToStorage = (item: Folder | List) => {
+export const saveToStorage = (item: Folder | Checklist) => {
     storage.set(item.id, JSON.stringify(item));
 };
 
@@ -143,7 +143,7 @@ export const updateFolderItem = (newData: FolderItem) => {
         ...existingItem,
         ...newData,
         status: ItemStatus.STATIC
-    } as List | Folder;
+    } as Checklist | Folder;
 
     // Item is being transfered (root folder may not be transfered)
     if (existingItem.listId !== NULL && existingItem.listId !== newItem.listId) {

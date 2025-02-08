@@ -1,22 +1,31 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Today from './screens/Today';
-import Lists from './screens/Lists';
-import { useNavigatorContext } from '../feature/navigation/services/TabsProvider';
+import Lists from './screens/Checklists';
 import GenericIcon from '../foundation/ui/icon/GenericIcon';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import globalStyles from '../foundation/theme/globalStyles';
-import { NAVBAR_HEIGHT, Pages } from '../feature/navigation/navigationUtils';
+import { NAVBAR_HEIGHT, Pages } from './navigationUtils';
 import Planner from './screens/Planner';
 import { Color } from '../foundation/theme/colors';
+import Countdowns from './screens/Countdowns';
+import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
+import { useNavigatorContext } from './TabsProvider';
 
 const Tab = createBottomTabNavigator();
 
 const routeIconMap: Record<string, string> = {
     [Pages.DASHBOARD]: 'coffee',
     [Pages.PLANNER]: 'planner',
-    [Pages.LISTS]: 'lists'
+    [Pages.LISTS]: 'lists',
+    [Pages.COUNTDOWNS]: 'alert'
 }
+
+const CountdownWithProvider = () => (
+    <SortableListProvider>
+        <Countdowns />
+    </SortableListProvider>
+);
 
 const Navigator = () => {
     const { setCurrentTab } = useNavigatorContext();
@@ -55,6 +64,9 @@ const Navigator = () => {
                 }} />
                 <Tab.Screen name={Pages.PLANNER} component={Planner} listeners={{
                     focus: () => setCurrentTab(Pages.PLANNER)
+                }} />
+                <Tab.Screen name={Pages.COUNTDOWNS} component={CountdownWithProvider} listeners={{
+                    focus: () => setCurrentTab(Pages.COUNTDOWNS)
                 }} />
             </Tab.Navigator>
         </SafeAreaView>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BIRTHDAY_CHECKLIST_STORAGE_ID } from '../../deadlines/deadlineUtils';
+import { BIRTHDAY_CHECKLIST_STORAGE_ID } from '../../countdowns/countdownUtils';
 import { getTodayGenericTimestamp } from '../../../foundation/calendar/dateUtils';
 import { isItemDeleting, ItemStatus, ListItem } from '../../../foundation/sortedLists/sortedListUtils';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';

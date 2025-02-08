@@ -21,7 +21,7 @@ export interface Folder extends ColoredListItem {
     folderIds: string[];
     listIds: string[];
 };
-export interface List extends ColoredListItem {
+export interface Checklist extends ColoredListItem {
     items: ListItem[];
     listId: string;
 };

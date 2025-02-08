@@ -13,7 +13,7 @@ import {
     FontAwesome6,
     Octicons
 } from '@expo/vector-icons';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, ViewStyle } from 'react-native';
 
 const IconSets = {
     FontAwesome,
@@ -66,6 +66,7 @@ export interface GenericIconProps<T = void> {
     size?: number;
     color?: string;
     onClick?: () => T;
+    style?: ViewStyle;
 }
 
 const GenericIcon = <T,>({
@@ -73,13 +74,14 @@ const GenericIcon = <T,>({
     size,
     color,
     onClick,
+    style
 }: GenericIconProps<T>) => {
     const iconConfig = IconMap[type];
     const IconComponent = IconSets[iconConfig.type];
     const Icon = <IconComponent name={iconConfig.name} size={size} color={color} />;
 
     return onClick ?
-        <TouchableOpacity onPress={onClick}>
+        <TouchableOpacity style={style} onPress={onClick}>
             {Icon}
         </TouchableOpacity>
         :

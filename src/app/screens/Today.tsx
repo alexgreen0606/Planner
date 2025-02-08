@@ -8,7 +8,6 @@ import EventChip, { EventChipProps } from '../../foundation/calendar/components/
 import TodayBanner from '../../feature/today/components/banner/TodayBanner';
 import BirthdayChecklist from '../../feature/birthdays/components/BirthdayChecklist';
 import globalStyles from '../../foundation/theme/globalStyles';
-import DeadlineList from '../../feature/deadlines/components/DeadlineList';
 
 const Today = () => {
   const timestamp = getTodayGenericTimestamp();
@@ -68,9 +67,6 @@ const Today = () => {
           <View style={styles.planner}>
             <TodayPlanner reloadChips={getEventChips} />
           </View>
-
-          {/* Deadline List Card*/}
-          <DeadlineList />
 
         </View>
       </SortableListProvider>

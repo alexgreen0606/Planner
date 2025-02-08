@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { Pages } from '../navigationUtils';
+import { Pages } from './navigationUtils';
 
 interface NavigatorContextValue {
     currentTab: string;

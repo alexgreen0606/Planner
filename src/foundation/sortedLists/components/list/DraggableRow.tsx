@@ -336,7 +336,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
     },
     row: {
         flexDirection: 'row',
