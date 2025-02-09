@@ -234,6 +234,17 @@ export function getNextSevenDayTimestamps(): string[] {
     });
 };
 
+export function getEventTime(item: PlannerEvent | RecurringEvent | undefined): string | undefined {
+    if (!item) return undefined;
+    if ("timeConfig" in item) {
+        return item.timeConfig?.startTime;
+    } else if ("startTime" in item) {
+        return item.startTime;
+    } else {
+        return undefined;
+    }
+};
+
 /**
  * Generate a new sort ID for the event that maintains time logic within the planner.
  * @param event - the event to place
@@ -259,17 +270,6 @@ export function generateSortIdByTime(
         } else {
             // Use the event's current position.
             return event.sortId;
-        }
-    };
-
-    function getEventTime(item: PlannerEvent | RecurringEvent | undefined): string | undefined {
-        if (!item) return undefined;
-        if ("timeConfig" in item) {
-            return item.timeConfig?.startTime;
-        } else if ("startTime" in item) {
-            return item.startTime;
-        } else {
-            return undefined;
         }
     };
 

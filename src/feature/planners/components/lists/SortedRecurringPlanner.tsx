@@ -1,18 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useSortedList from '../../../../foundation/sortedLists/hooks/useSortedList';
-import TimeValue from '../../../../foundation/calendar/components/TimeValue';
 import {
-    extractTimeValue,
     generateSortIdByTime,
     genericTimestampToMidnightDate
 } from '../../../../foundation/calendar/dateUtils';
 import SortableList from '../../../../foundation/sortedLists/components/list/SortableList';
-import { isItemDeleting, isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/sortedListUtils';
+import { isItemTextfield, ItemStatus } from '../../../../foundation/sortedLists/sortedListUtils';
 import { useSortableListContext } from '../../../../foundation/sortedLists/services/SortableListProvider';
-import { Color } from '../../../../foundation/theme/colors';
 import { View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { PLANNER_STORAGE_ID, RECURRING_WEEKDAY_PLANNER_KEY, RecurringEvent } from '../../../../foundation/calendar/calendarUtils';
+import { generateCheckboxIconConfig, generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../../foundation/calendar/sharedListProps';
 
 interface SortedRecurringPlannerProps {
     modalOpen: boolean;
@@ -75,52 +73,17 @@ const SortedRecurringPlanner = ({ modalOpen }: SortedRecurringPlannerProps) => {
             <SortableList<RecurringEvent, never, never>
                 items={SortedEvents.items}
                 listId={RECURRING_WEEKDAY_PLANNER_KEY}
-                getLeftIconConfig={item => ({
-                    icon: {
-                        type: 'trash',
-                        color: isItemDeleting(item) ? Color.WHITE : Color.DIM
-                    },
-                    onClick: SortedEvents.toggleItemDelete
-                })}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
                 onDeleteItem={SortedEvents.deleteItemFromStorage}
-                onDragEnd={async (item) => { await SortedEvents.persistItemToStorage(item) }}
+                onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}
-                getRightIconConfig={item => ({
-                    hideIcon: item.status === ItemStatus.STATIC && !item.startTime,
-                    icon: {
-                        type: 'clock',
-                        color: Color.DIM
-                    },
-                    onClick: toggleTimeModal,
-                    customIcon: item.startTime ? <TimeValue allDay={false} timeValue={item.startTime} /> : undefined
-                })}
-                handleValueChange={(text, item) => {
-                    const newEvent = {
-                        ...item,
-                        value: text,
-                    };
-                    if (!item.startTime) {
-                        const { timeConfig, updatedText } = extractTimeValue(text);
-                        if (timeConfig) {
-                            newEvent.startTime = timeConfig.startTime;
-                            newEvent.value = updatedText;
-                            const updatedList = [...SortedEvents.items];
-                            const itemCurrentIndex = SortedEvents.items.findIndex(item => item.id === currentTextfield.id);
-                            if (itemCurrentIndex !== -1) {
-                                updatedList[itemCurrentIndex] = newEvent;
-                            } else {
-                                updatedList.push(newEvent);
-                            }
-                            newEvent.sortId = generateSortIdByTime(newEvent, updatedList);
-                        }
-                    }
-                    return newEvent;
-                }}
+                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items)}
+                getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete)}
                 emptyLabelConfig={{
                     label: 'No recurring weekday plans',
-                    style: { height: 400 }
+                    style: { height: '100%' }
                 }}
             />
             <DatePicker
