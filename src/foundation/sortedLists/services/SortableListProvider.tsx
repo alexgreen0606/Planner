@@ -7,7 +7,7 @@ import Animated, {
     useDerivedValue,
     DerivedValue,
 } from 'react-native-reanimated';
-import { ListItem } from '../sortedListUtils';
+import { ListItem } from '../types';
 
 interface PendingDelete<T extends ListItem> {
     timeout: NodeJS.Timeout;

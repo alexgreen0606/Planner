@@ -1,9 +1,10 @@
-import { isItemDeleting, ItemStatus, ListItem } from '../sortedListUtils';
-import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
+import { isItemDeleting } from '../sortedListUtils';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSortableListContext } from '../services/SortableListProvider';
 import { useEffect, useState } from 'react';
+import { ItemStatus, ListItem } from '../types';
 
-interface StorageHandlers<T extends ListItem> {
+type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
     create: (item: T) => Promise<void> | void;
     delete: (item: T) => Promise<void> | void;

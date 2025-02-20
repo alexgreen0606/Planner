@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import CustomText from '../../ui/text/CustomText';
+import CustomText from '../../components/text/CustomText';
 import { weatherCodeToFontistoIcon } from '../weatherUtils';
 import globalStyles from '../../theme/globalStyles';
 import { SFSymbol } from 'react-native-sfsymbols';
-import { Color } from '../../theme/colors';
+import { Palette } from '../../theme/colors';
 
 interface WeatherDisplayProps {
     weatherCode: number;
@@ -20,7 +20,7 @@ const WeatherDisplay = ({ weatherCode, high, low }: WeatherDisplayProps) => {
         <View style={styles.icon}>
             <SFSymbol
                 name={weatherCodeToFontistoIcon(weatherCode)}
-                size={20}
+                size={18}
                 multicolor
                 resizeMode='center'
             />
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     divider: {
         width: StyleSheet.hairlineWidth,
         height: '80%',
-        backgroundColor: Color.DIM,
+        backgroundColor: Palette.DIM,
     },
     icon: {
         marginLeft: 16,

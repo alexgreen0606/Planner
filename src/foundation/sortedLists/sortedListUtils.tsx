@@ -1,39 +1,4 @@
-import { GenericIconProps } from "../ui/icon/GenericIcon";
-
-export enum ItemStatus {
-    NEW = 'NEW',
-    EDIT = 'EDIT',
-    DELETE = 'DELETE',
-    TRANSFER = 'TRANSFER',
-    STATIC = 'STATIC',
-    HIDDEN = 'HIDDEN'
-};
-
-export const LIST_ITEM_HEIGHT = 40;
-
-
-export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {
-    component: React.ComponentType<P>;
-    props: P;
-};
-export type RowIconConfig<T extends ListItem> = {
-    icon?: GenericIconProps;
-    onClick?: (item: T) => void;
-    customIcon?: React.ReactNode;
-    hideIcon?: boolean;
-};
-
-export interface ListItem {
-    id: string;
-    value: string;
-    sortId: number;
-    status: ItemStatus;
-    listId: string;
-};
-export interface ListItemUpdateComponentProps<T extends ListItem> {
-    item: T;
-    onSave: (item: T) => T | undefined;
-};
+import { ItemStatus, ListItem } from "./types";
 
 /**
  * Generates a new sort ID for an item below the item with the given sort ID.

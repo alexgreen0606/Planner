@@ -1,31 +1,24 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Today from './screens/Today';
-import Lists from './screens/Checklists';
-import GenericIcon from '../foundation/ui/icon/GenericIcon';
+import Today from './screens/today';
+import Lists from './screens/checklists';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import globalStyles from '../foundation/theme/globalStyles';
-import { NAVBAR_HEIGHT, Pages } from './navigationUtils';
-import Planner from './screens/Planner';
-import { Color } from '../foundation/theme/colors';
-import Countdowns from './screens/Countdowns';
-import { SortableListProvider } from '../foundation/sortedLists/services/SortableListProvider';
-import { useNavigatorContext } from './TabsProvider';
+import { Pages } from './navUtils';
+import Planners from './screens/planners';
+import { Palette } from '../foundation/theme/colors';
+import { useNavigatorContext } from './NavProvider';
+import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
+import GenericIcon, { IconType } from '../foundation/components/GenericIcon';
 
 const Tab = createBottomTabNavigator();
 
-const routeIconMap: Record<string, string> = {
+const routeIconMap: Record<string, IconType> = {
     [Pages.DASHBOARD]: 'coffee',
-    [Pages.PLANNER]: 'planner',
+    [Pages.PLANNERS]: 'planners',
     [Pages.LISTS]: 'lists',
-    [Pages.COUNTDOWNS]: 'alert'
-}
-
-const CountdownWithProvider = () => (
-    <SortableListProvider>
-        <Countdowns />
-    </SortableListProvider>
-);
+    [Pages.DEADLINES]: 'alert'
+};
 
 const Navigator = () => {
     const { setCurrentTab } = useNavigatorContext();
@@ -33,22 +26,24 @@ const Navigator = () => {
         <SafeAreaView style={globalStyles.blackFilledSpace}>
             <Tab.Navigator
                 screenOptions={({ route }) => ({
-                    tabBarIcon: ({ color, size }) =>
-                        <GenericIcon
-                            type={routeIconMap[route.name]}
-                            size={size}
-                            color={color}
-                        />,
-                    tabBarActiveTintColor: Color.BLUE,
-                    tabBarInactiveTintColor: Color.DIM,
+                    tabBarIcon: ({ color }) =>
+                        <TouchableWithoutFeedback>
+                            <GenericIcon
+                                type={routeIconMap[route.name]}
+                                size='xl'
+                                color={color}
+                            />
+                        </TouchableWithoutFeedback>,
+                    tabBarActiveTintColor: Palette.BLUE,
+                    tabBarInactiveTintColor: Palette.DIM,
                     headerShown: false,
                     tabBarStyle: {
-                        backgroundColor: Color.BLACK,
+                        backgroundColor: Palette.BLACK,
                         shadowOpacity: 0,
                         paddingTop: 8,
                         borderTopWidth: StyleSheet.hairlineWidth,
-                        borderTopColor: Color.DIM,
-                        height: NAVBAR_HEIGHT
+                        borderTopColor: Palette.DIM,
+                        height: 30
                     },
                     tabBarLabelStyle: {
                         display: 'none'
@@ -62,11 +57,8 @@ const Navigator = () => {
                 <Tab.Screen name={Pages.DASHBOARD} component={Today} listeners={{
                     focus: () => setCurrentTab(Pages.DASHBOARD)
                 }} />
-                <Tab.Screen name={Pages.PLANNER} component={Planner} listeners={{
-                    focus: () => setCurrentTab(Pages.PLANNER)
-                }} />
-                <Tab.Screen name={Pages.COUNTDOWNS} component={CountdownWithProvider} listeners={{
-                    focus: () => setCurrentTab(Pages.COUNTDOWNS)
+                <Tab.Screen name={Pages.PLANNERS} component={Planners} listeners={{
+                    focus: () => setCurrentTab(Pages.PLANNERS)
                 }} />
             </Tab.Navigator>
         </SafeAreaView>

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { Pressable, TouchableOpacity, View } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import { useDerivedValue } from 'react-native-reanimated';
@@ -9,12 +9,12 @@ import {
     ModifyItemConfig,
     ListItemUpdateComponentProps,
     RowIconConfig,
-    generateSortId,
     LIST_ITEM_HEIGHT,
-} from '../../sortedListUtils';
+} from '../../types';
 import DraggableRow from './DraggableRow';
-import EmptyLabel, { EmptyLabelProps } from '../emptyLabel/EmptyLabel';
-import ThinLine from '../../../ui/separator/ThinLine';
+import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
+import ThinLine from '../../../components/ThinLine';
+import { generateSortId } from '../../sortedListUtils';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -25,6 +25,7 @@ export interface DraggableListProps<
     items: T[];
     hideList?: boolean;
     fillSpace?: boolean;
+    disableDrag?: boolean;
     onSaveTextfield: (updatedItem: T) => Promise<void> | void;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd: (updatedItem: T) => Promise<void> | void;
@@ -37,7 +38,7 @@ export interface DraggableListProps<
     getPopovers?: (item: T) => ModifyItemConfig<T, P>[];
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
-    emptyLabelConfig?: EmptyLabelProps;
+    emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     staticList?: boolean;
 }
 
@@ -110,6 +111,11 @@ const SortableList = <
         setCurrentTextfield(newTextfield);
     };
 
+    function handleEmptySpaceClick () {
+        if (!currentTextfield)
+            saveTextfieldAndCreateNew(currentList[currentList.length - 1]?.sortId ?? -1);
+    }
+
     // Derive the current list out of the list and textfield
     const currentList = useMemo(() =>
         buildFullList(),
@@ -151,10 +157,13 @@ const SortableList = <
             )}
 
             {/* Empty Label */}
-            {currentList.length === 0 && emptyLabelConfig && (
+            {currentList.length === 0 && emptyLabelConfig ? (
                 <EmptyLabel
                     {...emptyLabelConfig}
+                    onPress={handleEmptySpaceClick}
                 />
+            ) : (
+                <Pressable style={{flex: 1}} onPress={handleEmptySpaceClick} />
             )}
         </View>
     )

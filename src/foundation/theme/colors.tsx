@@ -1,4 +1,4 @@
-export enum Color {
+export enum Palette {
   BLUE = '#65BCFF',
   GREEN = '#7AF8CA',
   RED = '#FF98A4',
@@ -13,9 +13,9 @@ export enum Color {
 };
 
 export enum SelectableColor {
-  GREEN = Color.GREEN,
-  RED = Color.RED,
-  YELLOW = Color.YELLOW,
-  PURPLE = Color.PURPLE,
-  ORANGE = Color.ORANGE
+  GREEN = Palette.GREEN,
+  RED = Palette.RED,
+  YELLOW = Palette.YELLOW,
+  PURPLE = Palette.PURPLE,
+  ORANGE = Palette.ORANGE
 };

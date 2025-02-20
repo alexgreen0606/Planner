@@ -1,12 +1,13 @@
-import { getTodayGenericTimestamp } from "../../../foundation/calendar/dateUtils";
 import { uuid } from "expo-modules-core";
-import { generateSortId, ItemStatus, ListItem } from "../../../foundation/sortedLists/sortedListUtils";
+import { generateSortId} from "../../../foundation/sortedLists/sortedListUtils";
+import { ItemStatus, ListItem } from "../../../foundation/sortedLists/types";
+import { getTodayDatestamp } from "../../../foundation/calendarEvents/timestampUtils";
 
 export async function buildBirthdayChecklist(
     currentBirthdayChecklist: ListItem[],
     birthdays: string[]
 ): Promise<ListItem[]> {
-    const todayTimestamp = getTodayGenericTimestamp();
+    const todayTimestamp = getTodayDatestamp();
     if (birthdays && birthdays.length !== 0) {
         const todayBirthdayChecklist = currentBirthdayChecklist.filter(birthdayItem =>
             birthdayItem.listId === todayTimestamp &&

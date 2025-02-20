@@ -1,24 +1,22 @@
 import Animated, { SharedValue, useAnimatedStyle, useDerivedValue, useSharedValue, withSpring } from "react-native-reanimated";
 import {
-    generateSortId,
-    isItemDeleting,
-    isItemTextfield,
     ItemStatus,
     LIST_ITEM_HEIGHT,
     ListItem,
     ListItemUpdateComponentProps
-} from "../../sortedListUtils";
+} from "../../types";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import CustomText from "../../../ui/text/CustomText";
-import ListTextfield from "../textfield/ListTextfield";
-import GenericIcon from "../../../ui/icon/GenericIcon";
+import CustomText from "../../../components/text/CustomText";
+import ListTextfield from "../ListTextfield";
 import { Portal } from "react-native-paper";
-import ThinLine from "../../../ui/separator/ThinLine";
-import { Color } from "../../../theme/colors";
+import { Palette } from "../../../theme/colors";
+import GenericIcon from "../../../components/GenericIcon";
+import ThinLine from "../../../components/ThinLine";
+import { generateSortId, isItemDeleting, isItemTextfield } from "../../sortedListUtils";
 
 interface RowProps<
     T extends ListItem,
@@ -56,6 +54,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
     getRowTextColor,
     onContentClick,
     getPopovers,
+    disableDrag,
     onDeleteItem,
     saveTextfieldAndCreateNew,
     listLength,
@@ -127,12 +126,13 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
 
     const contentGesture = Gesture.Pan()
         .onTouchesDown(() => {
-            beginDragTimeout.value = setTimeout(() => {
-                isScrolling.value = false;
-                isDragging.value = true;
-                dragInitialPosition.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
-                beginDragTimeout.value = undefined;
-            }, 500);
+            if (!disableDrag)
+                beginDragTimeout.value = setTimeout(() => {
+                    isScrolling.value = false;
+                    isDragging.value = true;
+                    dragInitialPosition.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
+                    beginDragTimeout.value = undefined;
+                }, 500);
         }).onStart(() => {
             if (!isDragging.value) {
 
@@ -248,16 +248,22 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
             >
 
                 {/* Left Icon */}
-                {leftIconConfig && !leftIconConfig.hideIcon && (leftIconConfig.icon || leftIconConfig.customIcon) && (
-                    <TouchableOpacity onPress={() => leftIconConfig.onClick?.(item)}>
-                        {leftIconConfig.customIcon || leftIconConfig.icon && (
-                            <GenericIcon
-                                {...leftIconConfig.icon}
-                                size={leftIconConfig.icon.size ?? 20}
-                            />
-                        )}
-                    </TouchableOpacity>
-                )}
+                {leftIconConfig &&
+                    !leftIconConfig.hideIcon &&
+                    (leftIconConfig.customIcon ? (
+                        <TouchableOpacity
+                            activeOpacity={leftIconConfig.onClick ? 0 : 1}
+                            onPress={() => leftIconConfig.onClick?.(item)}
+                        >
+                            {leftIconConfig.customIcon}
+                        </TouchableOpacity>
+                    ) : leftIconConfig.icon ? (
+                        <GenericIcon
+                            {...leftIconConfig.icon}
+                            onClick={() => leftIconConfig.onClick?.(item)}
+                            size='m'
+                        />
+                    ) : null)}
 
                 {/* Content */}
                 {isItemTextfield(item) ?
@@ -275,7 +281,7 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                                 type='standard'
                                 style={{
                                     color: customTextColor ||
-                                        (isItemDeleting(item) ? Color.DIM : item.recurringId ? Color.GREY : Color.WHITE),
+                                        (isItemDeleting(item) ? Palette.DIM : item.recurringId ? Palette.GREY : Palette.WHITE),
                                     textDecorationLine: isItemDeleting(item) ?
                                         'line-through' : undefined,
                                     width: '100%'
@@ -288,18 +294,23 @@ const DraggableRow = <T extends ListItem, P extends ListItemUpdateComponentProps
                 }
 
                 {/* Right Icon */}
-                {rightIconConfig && !rightIconConfig.hideIcon && (rightIconConfig.icon || rightIconConfig.customIcon) && (
-                    <TouchableOpacity onPress={() => {
-                        rightIconConfig.onClick?.(item);
-                    }}>
-                        {rightIconConfig.customIcon || rightIconConfig.icon && (
-                            <GenericIcon
-                                {...rightIconConfig.icon}
-                                size={18}
-                            />
-                        )}
-                    </TouchableOpacity>
-                )}
+                {rightIconConfig &&
+                    !rightIconConfig.hideIcon &&
+                    (rightIconConfig.customIcon ? (
+                        <TouchableOpacity
+                            activeOpacity={rightIconConfig.onClick ? 0 : 1}
+                            onPress={() => rightIconConfig.onClick?.(item)}
+                        >
+                            {rightIconConfig.customIcon}
+                        </TouchableOpacity>
+                    ) : rightIconConfig.icon ? (
+                        <GenericIcon
+                            {...rightIconConfig.icon}
+                            onClick={() => rightIconConfig.onClick?.(item)}
+                            size='s'
+                        />
+                    ) : null)}
+
             </View>
 
             {/* Separator Line */}
