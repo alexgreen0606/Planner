@@ -14,6 +14,7 @@ import Card from '../../foundation/components/Card';
 import GenericIcon from '../../foundation/components/GenericIcon';
 import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
 import { ItemStatus, ListItem } from '../../foundation/sortedLists/types';
+import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
 
 interface BirthdayChecklistProps {
     birthdays: EventChipProps[];
@@ -21,19 +22,17 @@ interface BirthdayChecklistProps {
 
 const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
     const [collapsed, setCollapsed] = useState(false);
-    const timestamp = getTodayDatestamp();
+    const todayDatestamp = getTodayDatestamp();
+    const BirthdayList = useSortedList<ListItem, ListItem[]>(
+        todayDatestamp,
+        BIRTHDAY_CHECKLIST_STORAGE_ID,
+        (currentList) => buildBirthdayChecklist(currentList, birthdays.map(bday => bday.label), todayDatestamp),
+    );
 
     function toggleCollapsed() {
         if (allBirthdaysContacted)
             setCollapsed(curr => !curr)
     };
-
-    // Stores the current planner and all handler functions to update it
-    const BirthdayList = useSortedList<ListItem, ListItem[]>(
-        timestamp,
-        BIRTHDAY_CHECKLIST_STORAGE_ID,
-        (currentList) => buildBirthdayChecklist(currentList, birthdays.map(bday => bday.label)),
-    );
 
     const allBirthdaysContacted = !BirthdayList.items.some(item => item.status === ItemStatus.STATIC);
 
@@ -68,26 +67,30 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     staticList
                     hideList={collapsed}
                     items={BirthdayList.items}
+                    onDeleteItem={BirthdayList.deleteItemFromStorage}
+                    onContentClick={() => { }}
+                    getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
+                    onSaveTextfield={() => { }}
+                    onDragEnd={BirthdayList.persistItemToStorage}
                     getRightIconConfig={item => ({
                         icon: {
                             type: isItemDeleting(item) ? 'messageFilled' : 'message',
-                            color: isItemDeleting(item) ? Palette.DIM : Palette.BLUE
+                            color: isItemDeleting(item) ? Palette.DIM : Palette.BLUE,
+                            hideRipple: true
                         },
-                        onClick: () => {
+                        onClick: async () => {
                             const newContactedStatus = !isItemDeleting(item);
                             if (newContactedStatus) {
-                                // TODO: open message to person
+                                const personName = extractNameFromBirthdayText(item.value);
+                                if (personName) {
+                                    await openBirthdayMessage(personName);
+                                }
                                 BirthdayList.persistItemToStorage({ ...item, status: ItemStatus.DELETE });
                             } else {
                                 BirthdayList.persistItemToStorage({ ...item, status: ItemStatus.STATIC });
                             }
                         }
                     })}
-                    onDeleteItem={BirthdayList.deleteItemFromStorage}
-                    onContentClick={() => { }}
-                    getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
-                    onSaveTextfield={() => { }}
-                    onDragEnd={BirthdayList.persistItemToStorage}
                 />
             </Card>
         </View>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import globalStyles from '../../../../foundation/theme/globalStyles';
-import WeatherDisplay from '../../../../foundation/weather/components/WeatherDisplay';
+import WeatherDisplay from '../../../../feature/weather';
 import LabelSublabel from '../../../../foundation/components/text/LabelSublabel';
 import { Palette } from '../../../../foundation/theme/colors';
 import GenericIcon from '../../../../foundation/components/GenericIcon';
@@ -18,6 +18,7 @@ const TodayBanner = ({ timestamp, showBannerBorder }: TodayBannerProps) => {
     const high = 47;
     const low = 32;
     const weatherCode = 0;
+    const currentTemp = 37;
 
     return (
         <View>
@@ -43,6 +44,7 @@ const TodayBanner = ({ timestamp, showBannerBorder }: TodayBannerProps) => {
                 <WeatherDisplay
                     low={low}
                     high={high}
+                    currentTemp={currentTemp}
                     weatherCode={weatherCode}
                 />
             </View>

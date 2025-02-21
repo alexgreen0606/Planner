@@ -1,8 +1,8 @@
 import React from 'react';
 import { View } from 'react-native';
-import { WeatherForecast } from '../../../foundation/weather/weatherUtils';
+import { WeatherForecast } from '../../weather/utils';
 import globalStyles from '../../../foundation/theme/globalStyles';
-import WeatherDisplay from '../../../foundation/weather/components/WeatherDisplay';
+import WeatherDisplay from '../../weather';
 import LabelSublabel from '../../../foundation/components/text/LabelSublabel';
 import { datestampToDayOfWeek, datestampToMonthDate, getTomorrowDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
 

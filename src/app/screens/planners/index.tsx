@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { getWeeklyWeather, WeatherForecast } from '../../../foundation/weather/weatherUtils';
+import { getWeeklyWeather, WeatherForecast } from '../../../feature/weather/utils';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import PlannersBanner from './banner/PlannersBanner';
 import { SortableListProvider } from '../../../foundation/sortedLists/services/SortableListProvider';

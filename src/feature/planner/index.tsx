@@ -7,7 +7,7 @@ import EventChip, { EventChipProps } from '../../foundation/calendarEvents/compo
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { isItemTextfield } from '../../foundation/sortedLists/sortedListUtils';
 import { buildPlanner, deleteEvent, saveEvent } from '../../foundation/calendarEvents/storage/plannerStorage';
-import { WeatherForecast } from '../../foundation/weather/weatherUtils';
+import { WeatherForecast } from '../weather/utils';
 import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
 import { generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/sharedListProps';

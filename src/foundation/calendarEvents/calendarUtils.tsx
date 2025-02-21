@@ -11,7 +11,7 @@ function getCalendarIcon(calendarName: string) {
             return 'globe';
         case 'Birthdays':
             return 'birthday';
-        case 'deadlines':
+        case 'Deadlines':
             return 'alert';
         default:
             return 'megaphone';
