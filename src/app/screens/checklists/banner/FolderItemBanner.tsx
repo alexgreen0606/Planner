@@ -9,6 +9,7 @@ import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/GenericIcon';
 import { Palette } from '../../../../foundation/theme/colors';
 import CustomText from '../../../../foundation/components/text/CustomText';
+import { BANNER_HEIGHT } from '../../../../foundation/components/constants';
 
 interface FolderItemBannerProps {
     itemId: string;

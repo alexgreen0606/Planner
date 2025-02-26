@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
 import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
 import { useSortableListContext } from '../../../foundation/sortedLists/services/SortableListProvider';
-import { isItemTextfield } from '../../../foundation/sortedLists/sortedListUtils';
+import { isItemTextfield } from '../../../foundation/sortedLists/utils';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '../storage/recurringStorage';
 import globalStyles from '../../../foundation/theme/globalStyles';
@@ -10,7 +10,7 @@ import { View } from 'react-native';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../foundation/calendarEvents/sharedListProps';
 import { ItemStatus } from '../../../foundation/sortedLists/types';
-import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/sharedListProps';
+import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/commonProps';
 import DatePicker from 'react-native-date-picker';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';

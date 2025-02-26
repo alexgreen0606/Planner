@@ -1,4 +1,4 @@
-import { isItemDeleting } from '../sortedListUtils';
+import { isItemDeleting } from '../utils';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSortableListContext } from '../services/SortableListProvider';
 import { useEffect, useState } from 'react';

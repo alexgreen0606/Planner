@@ -28,7 +28,7 @@ const iconMap = {
     circleFilled: 'inset.filled.circle',
     circle: 'circle',
     trash: 'trash',
-    megaphone: 'megaphone.fill',
+    megaphone: 'megaphone',
     globe: 'globe.americas.fill',
     birthday: 'birthday.cake.fill',
     clock: 'clock',

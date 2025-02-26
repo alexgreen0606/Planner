@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
-import { isItemTextfield } from '../../foundation/sortedLists/sortedListUtils';
+import { isItemTextfield } from '../../foundation/sortedLists/utils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { buildPlanner, deleteEvent, saveEvent } from '../../foundation/calendarEvents/storage/plannerStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
-import { generateCheckboxIconConfig } from '../../foundation/sortedLists/sharedListProps';
+import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 

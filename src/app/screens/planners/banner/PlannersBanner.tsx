@@ -6,6 +6,7 @@ import { Palette } from '../../../../foundation/theme/colors';
 import PlannerModes from '../../../../feature/planner/types';
 import GenericIcon from '../../../../foundation/components/GenericIcon';
 import ThinLine from '../../../../foundation/components/ThinLine';
+import { BANNER_HEIGHT } from '../../../../foundation/components/constants';
 
 interface PlannerBannerProps {
     mode: PlannerModes;

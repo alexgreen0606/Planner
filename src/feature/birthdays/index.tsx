@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { isItemDeleting } from '../../foundation/sortedLists/sortedListUtils';
+import { isItemDeleting } from '../../foundation/sortedLists/utils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { buildBirthdayChecklist } from './storage/birthdayStorage';
 import { StyleSheet, View } from 'react-native';

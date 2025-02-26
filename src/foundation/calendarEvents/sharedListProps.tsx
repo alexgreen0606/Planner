@@ -1,5 +1,5 @@
 import { IconType } from "../components/GenericIcon";
-import { isItemTextfield } from "../sortedLists/sortedListUtils";
+import { isItemTextfield } from "../sortedLists/utils";
 import TimeModal from "./components/TimeModal";
 import TimeValue from "./components/values/TimeValue";
 import { extractTimeValue, generateSortIdByTime, getEventTime } from "./timestampUtils";

@@ -7,6 +7,7 @@ import { Palette } from '../../../../foundation/theme/colors';
 import GenericIcon from '../../../../foundation/components/GenericIcon';
 import { datestampToDayOfWeek, datestampToMonthDate } from '../../../../foundation/calendarEvents/timestampUtils';
 import ThinLine from '../../../../foundation/components/ThinLine';
+import { BANNER_HEIGHT } from '../../../../foundation/components/constants';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD

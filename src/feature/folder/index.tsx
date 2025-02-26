@@ -17,7 +17,7 @@ import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
 import { Palette, SelectableColor } from '../../foundation/theme/colors';
 import { useNavigatorContext } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
-import { generateSortId } from '../../foundation/sortedLists/sortedListUtils';
+import { generateSortId } from '../../foundation/sortedLists/utils';
 
 interface SortableFolderProps {
     folderId: string;

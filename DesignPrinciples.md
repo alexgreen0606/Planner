@@ -24,3 +24,21 @@ When declaring, follow this order (exported after local):
 ## Naming Conventions  
 - Use `get` for things that already exist.  
 - Use `generate` for creating new things.
+
+I'd like to work on some refactoring of this file. Please organize things nicely and section them off, with a label separating the sections of the format:
+
+// ------------- Animation and Gesture State -------------
+
+Please also add in comments of the format:
+
+/**
+     * 
+     * @param itemId 
+     * @returns 
+     */
+
+Also use functions instead of arrow functions wherever possible.
+
+Only use implementation comments where necessary.
+
+Ensure the code is as clean and easy to read as possible.

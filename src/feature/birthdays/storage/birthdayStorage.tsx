@@ -1,5 +1,5 @@
 import { uuid } from "expo-modules-core";
-import { generateSortId } from "../../../foundation/sortedLists/sortedListUtils";
+import { generateSortId } from "../../../foundation/sortedLists/utils";
 import { ItemStatus, ListItem } from "../../../foundation/sortedLists/types";
 
 /**

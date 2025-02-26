@@ -10,6 +10,7 @@ import { Palette } from '../foundation/theme/colors';
 import { useNavigatorContext } from './NavProvider';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import GenericIcon, { IconType } from '../foundation/components/GenericIcon';
+import { BANNER_HEIGHT } from '../foundation/components/constants';
 
 const Tab = createBottomTabNavigator();
 
@@ -43,7 +44,7 @@ const Navigator = () => {
                         paddingTop: 8,
                         borderTopWidth: StyleSheet.hairlineWidth,
                         borderTopColor: Palette.DIM,
-                        height: 30
+                        height: BANNER_HEIGHT
                     },
                     tabBarLabelStyle: {
                         display: 'none'

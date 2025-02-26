@@ -1,6 +1,6 @@
 import { MMKV } from 'react-native-mmkv';
 import RNCalendarEvents from "react-native-calendar-events";
-import { isItemTextfield } from '../../sortedLists/sortedListUtils';
+import { isItemTextfield } from '../../sortedLists/utils';
 import {
     generateSortIdByTime,
     getTodayDatestamp,

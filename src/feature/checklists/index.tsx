@@ -1,9 +1,9 @@
 import React from 'react';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import { isItemTextfield} from '../../foundation/sortedLists/sortedListUtils';
+import { isItemTextfield} from '../../foundation/sortedLists/utils';
 import { LISTS_STORAGE_ID, Checklist } from './types';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { generateCheckboxIconConfig } from '../../foundation/sortedLists/sharedListProps';
+import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { ItemStatus, ListItem } from '../../foundation/sortedLists/types';
 
 interface SortableListProps {

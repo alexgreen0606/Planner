@@ -1,4 +1,4 @@
-import { generateSortId, getParentSortId } from "../sortedLists/sortedListUtils";
+import { generateSortId, getParentSortId } from "../sortedLists/utils";
 import { ItemStatus } from "../sortedLists/types";
 import { DaysOfWeek, PlannerEvent, RecurringEvent, TimeConfig, Weekdays } from "./types";
 

@@ -4,7 +4,7 @@ import { useSortableListContext } from '../../foundation/sortedLists/services/So
 import { daysBetweenToday, datestampToMidnightDate, getTodayDatestamp, generateSortIdByTime } from '../../foundation/calendarEvents/timestampUtils';
 import globalStyles from '../../foundation/theme/globalStyles';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/sortedListUtils';
+import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import DateValue from '../../foundation/calendarEvents/components/values/DateValue';
 import CustomText from '../../foundation/components/text/CustomText';
