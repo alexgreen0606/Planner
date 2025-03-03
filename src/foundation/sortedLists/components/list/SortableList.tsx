@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, TouchableOpacity, View } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { runOnUI, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
     ItemStatus,
     ListItem,
@@ -60,7 +60,7 @@ const SortableList = <
     staticList,
     ...rest
 }: DraggableListProps<T, P, M>) => {
-    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, evaluateOffsetBounds } = useSortableListContext();
     const positions = useSharedValue<Record<string, number>>({});
 
     // ------------- List Building and Management -------------
@@ -117,7 +117,7 @@ const SortableList = <
         }
     }
 
-    // ------------- State Derivation -------------
+    // ------------- State Derivation and Handling -------------
 
     // Derive the current list out of the items and textfield
     const currentList = useMemo(() => {
@@ -125,6 +125,14 @@ const SortableList = <
         positions.value = buildItemPositions(newList);
         return newList;
     }, [currentTextfield?.id, currentTextfield?.sortId, items]);
+
+    useEffect(() => {
+        let contentHeight = 0;
+        if (!hideList && fillSpace) {
+            contentHeight = (currentList.length + 1) * LIST_ITEM_HEIGHT;
+        }
+        runOnUI(evaluateOffsetBounds)(contentHeight);
+    }, [currentTextfield?.id, currentList.length, hideList])
 
     // ------------- Animations -------------
 

@@ -6,6 +6,8 @@ import Animated, {
     useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
+    withDecay,
+    withDelay,
     withRepeat,
     withSpring,
     withTiming,
@@ -17,6 +19,7 @@ import {
     LIST_SPRING_CONFIG,
     ListItem,
     ListItemUpdateComponentProps,
+    SCROLL_OUT_OF_BOUNDS_RESISTANCE,
     SCROLL_THROTTLE
 } from "../../types";
 import { DraggableListProps } from "./SortableList";
@@ -34,22 +37,20 @@ import { generateSortId, getParentSortIdFromPositions, isItemDeleting, isItemTex
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
 
-/**
- * Props for the DraggableRow component.
- */
 interface RowProps<
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>,
     M extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>
 > extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'staticList' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig'> {
-    /** The item to be rendered */
     item: T;
-    /** Shared value containing the positions of all items in the list */
     positions: SharedValue<Record<string, number>>;
-    /** Function to save the current textfield and create a new item after the current one */
     saveTextfieldAndCreateNew: (parentSortId: number) => Promise<void>;
-    /** Total number of items in the list */
     listLength: number;
+}
+
+enum AutoScrollDirection {
+    UP = 'UP',
+    DOWN = 'DOWN'
 }
 
 /**
@@ -80,19 +81,12 @@ const DraggableRow = <
 }: RowProps<T, P, M>) => {
     const windowDimensions = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    const TOP_AUTO_SCROLL_BOUND = insets.top + BANNER_HEIGHT;
-    const BOTTOM_AUTO_SCROLL_BOUND = windowDimensions.height - insets.bottom - BANNER_HEIGHT - LIST_ITEM_HEIGHT;
-
-    // Context for the sortable list operations
     const {
-        scroll,
-        scrollPosition,
+        scrollOffset,
         currentTextfield,
         setCurrentTextfield,
-        endScroll,
-        isManualScrolling,
-        sanitizeScrollPosition,
-        unboundedScrollPosition
+        disableNativeScroll,
+        scrollOffsetBounds
     } = useSortableListContext();
 
     /**
@@ -103,21 +97,19 @@ const DraggableRow = <
         [currentTextfield, staticItem]
     );
 
-    const [isLoadingInitialPosition, setIsLoadingInitialPosition] = useState(true);
+    const [isLoadingInitialPosition, setIsLoadingInitialPosition] = useState(!!positions.value[item.id]);
 
-    // ------------- Animation and Gesture State -------------
-    const isDragging = useSharedValue(false);
+    // ------------- Animation Variables -------------
+    const TOP_AUTO_SCROLL_BOUND = insets.top + BANNER_HEIGHT;
+    const BOTTOM_AUTO_SCROLL_BOUND = windowDimensions.height - insets.bottom - BANNER_HEIGHT - LIST_ITEM_HEIGHT;
+
+    const isDragging = useSharedValue(0);
+    const isManualScrolling = useSharedValue(false);
     const top = useSharedValue(-1000);
-    const isScrolling = useSharedValue(false);
-    const prevY = useSharedValue(0);
-    const dragInitialPosition = useSharedValue(0);
-    const beginDragTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+    const initialGestureValue = useSharedValue(0);
+    const autoScrollTrigger = useSharedValue<number | null>(null);
 
-    const autoScrollTrigger = useSharedValue(0);
-    const isAutoScrolling = useSharedValue(false);
-    const autoScrollDirection = useSharedValue<'up' | 'down' | null>(null);
-
-    // ------------- Row Configuration -------------
+    // ------------- Row Configuration Variables -------------
     const customTextColor = useMemo(() => getRowTextColor?.(item), [item, getRowTextColor]);
     const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
     const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
@@ -128,44 +120,7 @@ const DraggableRow = <
         [popoverConfigs]
     );
 
-    // ------------- Utility Functions -------------
-
-    /**
-     * Clears any active drag timeout
-     */
-    const clearDragTimeout = () => {
-        if (beginDragTimeoutRef.current) {
-            clearTimeout(beginDragTimeoutRef.current);
-            beginDragTimeoutRef.current = undefined;
-        }
-    };
-
-    /**
-     * Resets all UI thread animated values to their defaults
-     */
-    const resetUIThreadValues = () => {
-        'worklet';
-        isScrolling.value = false;
-        isDragging.value = false;
-        prevY.value = 0;
-        dragInitialPosition.value = 0;
-        top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
-        isManualScrolling.value = false;
-    };
-
-    /**
-     * Starts a timeout that will trigger drag mode if the user holds down
-     * on a content area for long enough
-     */
-    const startDragTimeout = () => {
-        beginDragTimeoutRef.current = setTimeout(() => {
-            runOnUI(() => {
-                isScrolling.value = false;
-                isDragging.value = true;
-                dragInitialPosition.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
-            })();
-        }, 500);
-    };
+    // ------------- Row Utilities -------------
 
     /**
      * Updates the content of the row's textfield, with optional formatting
@@ -190,32 +145,30 @@ const DraggableRow = <
         }
     };
 
+    // ------------- Drag Utilities -------------
+
     /**
-     * Gets the minimum and maximum boundary values for dragging
+     * Finds the smallest and largest number the top value can be to keep it within its relative container.
+     * @returns Minimum and Maximum numbers the top can contain.
      */
-    const getTopValueBoundaries = () => {
+    const getTopBoundaries = () => {
         'worklet';
         const minBound = 0;
         const maxBound = Math.max(0, LIST_ITEM_HEIGHT * (listLength - 1));
         return { minBound, maxBound };
     };
 
-    /**
-     * Ensures the top value stays within valid boundaries
-     * @param newPosition Optional new position value (defaults to current scroll position)
-     * @returns A valid top value that stays within list boundaries
-     */
-    const sanitizeTopValue = (newPosition: number = scrollPosition.value) => {
+    const sanitizeTopValue = (newPosition: number = scrollOffset.value) => {
         'worklet';
-        const { minBound, maxBound } = getTopValueBoundaries();
+        const { minBound, maxBound } = getTopBoundaries();
         return Math.max(minBound, Math.min(newPosition, maxBound));
     };
 
     /**
-     * Updates the positions of all items in the list based on the current
-     * drag position
+     * Updates the position map so that this row aligns with the user's
+     * drag.
      */
-    const updateListPosition = () => {
+    const updateRowPosition = () => {
         'worklet';
         const newPosition = Math.floor(top.value / LIST_ITEM_HEIGHT);
         if (newPosition !== positions.value[item.id]) {
@@ -233,26 +186,152 @@ const DraggableRow = <
         }
     };
 
-    // const autoScroll = (direction: 'up' | 'down' | null) => {
-    //     'worklet';
-    //     cancelAnimation(autoScrollTrigger);
+    const drag = (
+        currentDragDisplacement: number,
+        currentTopAbsoluteYPosition: number
+    ) => {
+        'worklet';
 
-    //     if (direction === null) {
-    //         // Stop auto-scrolling
-    //         isAutoScrolling.value = false;
-    //         autoScrollDirection.value = null;
-    //         return;
-    //     }
+        const beginAutoScroll = (direction: AutoScrollDirection) => {
+            'worklet';
+            const displacement = direction === AutoScrollDirection.UP ? -AUTO_SCROLL_SPEED : AUTO_SCROLL_SPEED;
+            disableNativeScroll.value = true;
 
-    //     // Start new auto-scroll
-    //     isAutoScrolling.value = true;
-    //     autoScrollDirection.value = direction;
-    //     autoScrollTrigger.value = withRepeat(
-    //         withTiming(1, { duration: SCROLL_THROTTLE }),
-    //         -1,
-    //         false
-    //     );
-    // };
+            const handleAutoScrollEnd = () => {
+                'worklet';
+                autoScrollTrigger.value = null;
+                disableNativeScroll.value = false;
+            };
+
+            autoScrollTrigger.value = withRepeat(
+                withTiming(displacement, { duration: 0 }),
+                -1,
+                false,
+                handleAutoScrollEnd
+            );
+            return;
+        };
+
+        if (!autoScrollTrigger.value) {
+            if (currentTopAbsoluteYPosition <= TOP_AUTO_SCROLL_BOUND) {
+                // --- Auto Scroll Up ---
+                beginAutoScroll(AutoScrollDirection.UP)
+                return;
+            }
+            else if (currentTopAbsoluteYPosition >= BOTTOM_AUTO_SCROLL_BOUND) {
+                // --- Auto Scroll Down ---
+                beginAutoScroll(AutoScrollDirection.DOWN)
+                return;
+            }
+        } else if (
+            currentTopAbsoluteYPosition > TOP_AUTO_SCROLL_BOUND &&
+            currentTopAbsoluteYPosition < BOTTOM_AUTO_SCROLL_BOUND
+        ) {
+            // --- Cancel Auto Scroll ---
+            cancelAnimation(autoScrollTrigger);
+        }
+
+        // --- Drag the item ---
+        top.value = withTiming(
+            sanitizeTopValue(initialGestureValue.value + currentDragDisplacement),
+            { duration: 16 }
+        );
+        updateRowPosition();
+    };
+
+    /**
+     * Resets all UI thread animated values to their defaults
+     */
+    const endDrag = () => {
+        'worklet';
+        cancelAnimation(autoScrollTrigger);
+        cancelAnimation(isDragging);
+        isDragging.value = 0;
+        initialGestureValue.value = 0;
+        top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
+    };
+
+    // ------------- Scroll Utilities -------------
+
+    const sanitizeScrollOffset = (newPosition: number = scrollOffset.value) => {
+        'worklet';
+        return Math.max(scrollOffsetBounds.value.min, Math.min(newPosition, scrollOffsetBounds.value.max));
+    };
+
+    const beginManulaScroll = () => {
+        'worklet';
+        cancelAnimation(isDragging);
+        isManualScrolling.value = true;
+        disableNativeScroll.value = true;
+        initialGestureValue.value = scrollOffset.value;
+    };
+
+    /**
+     * Handles scrolling with elastic resistance.
+     * @param distance Scroll distance (negative for down, positive for up)
+     */
+    const manualScroll = (currentDragDisplacement: number) => {
+        'worklet';
+        const unresistedScrollPosition = initialGestureValue.value - currentDragDisplacement;
+
+        // --- Apply Resistance When Out of Bounds ---
+        let resistedScrollPosition;
+        if (unresistedScrollPosition < scrollOffsetBounds.value.min) {
+            const overscroll = scrollOffsetBounds.value.min - unresistedScrollPosition;
+            resistedScrollPosition = scrollOffsetBounds.value.min - (overscroll * SCROLL_OUT_OF_BOUNDS_RESISTANCE);
+        } else if (unresistedScrollPosition > scrollOffsetBounds.value.max) {
+            const overscroll = unresistedScrollPosition - scrollOffsetBounds.value.max;
+            resistedScrollPosition = scrollOffsetBounds.value.max + (overscroll * SCROLL_OUT_OF_BOUNDS_RESISTANCE);
+        } else {
+            resistedScrollPosition = unresistedScrollPosition;
+        }
+
+        scrollOffset.value = withTiming(resistedScrollPosition, { duration: 16 });
+    };
+
+    /**
+     * Executes a scroll rebound if user scrolled past container bounds,
+     * or continues scrolling with momentum if within bounds.
+     * @param velocity The velocity at which the user was scrolling
+     */
+    const endManualScroll = (velocity: number = 0) => {
+        'worklet';
+        const isScrollOutOfBounds =
+            scrollOffset.value < scrollOffsetBounds.value.min ||
+            scrollOffset.value > scrollOffsetBounds.value.max;
+
+        const handleScrollEnd = () => {
+            'worklet';
+            isManualScrolling.value = false;
+            disableNativeScroll.value = false;
+            initialGestureValue.value = 0;
+        };
+
+        if (isScrollOutOfBounds) {
+            // --- Rebound to valid position ---
+            scrollOffset.value = withSpring(
+                sanitizeScrollOffset(),
+                {
+                    stiffness: 100,
+                    damping: 40,
+                    mass: .6,
+                    overshootClamping: true
+                },
+                handleScrollEnd
+            );
+        } else {
+            // --- Momentum Decay ---
+            scrollOffset.value = withDecay(
+                {
+                    velocity: -velocity,
+                    rubberBandEffect: true,
+                    clamp: [scrollOffsetBounds.value.min, scrollOffsetBounds.value.max],
+                    rubberBandFactor: SCROLL_OUT_OF_BOUNDS_RESISTANCE
+                },
+                handleScrollEnd
+            );
+        }
+    };
 
     /**
      * Creates a gesture handler for item content or separator lines.
@@ -262,103 +341,54 @@ const DraggableRow = <
      * @param isContentArea Whether this handler is for content (true) or separator (false)
      * @returns A Gesture.Pan() handler with appropriate behavior
      */
-    const createGestureHandler = useCallback((isContentArea = true) => {
+    const createGestureHandler = useCallback((onClick: () => void) => {
         return Gesture.Pan()
             .onTouchesDown(() => {
-                if (!disableDrag) {
-                    runOnJS(startDragTimeout)();
-                }
+                if (disableDrag) return;
+                // --- Initiate Drag After Delay ---
+                isDragging.value = withDelay(500, withTiming(1, { duration: 0 }, (finished) => {
+                    if (finished)
+                        initialGestureValue.value = top.value
+                }));
             })
             .onStart(() => {
                 if (isDragging.value) return;
-
-                runOnJS(clearDragTimeout)();
-                isScrolling.value = true;
+                // --- Initiate Scroll If Drag Hasn't Begun ---
+                beginManulaScroll();
             })
             .onUpdate((event) => {
-                if (isScrolling.value) { // Scrolling
-                    const newY = prevY.value - event.translationY;
-                    scroll(-newY);
-                    prevY.value = event.translationY;
-                } else if (isDragging.value) { // Dragging
-                    isManualScrolling.value = true;
-                    const fingerPositionY = event.absoluteY;
-                    const fingerBelowUpperBound = fingerPositionY > TOP_AUTO_SCROLL_BOUND + 30;
-                    const fingerAboveLowerBound = fingerPositionY < BOTTOM_AUTO_SCROLL_BOUND - 30;
-
-                    console.log(fingerPositionY, 'position')
-                    console.log(insets)
-
-                    if (isAutoScrolling.value) {
-                        // Container is scrolling
-                        const pullingDownFromUpperBound = autoScrollDirection.value === 'up' && fingerBelowUpperBound;
-                        const pullingUpFromLowerBound = autoScrollDirection.value === 'down' && fingerAboveLowerBound;
-                        if (!pullingDownFromUpperBound && !pullingUpFromLowerBound) {
-                            return;
-                        } else {
-                            // autoScroll(null);
-                            isAutoScrolling.value = false;
-                            autoScrollDirection.value = null;
-                            cancelAnimation(scrollPosition);
-                            cancelAnimation(top);
-                        }
-                    }
-
-                    const { minBound, maxBound } = getTopValueBoundaries();
-
-                    if (fingerPositionY <= TOP_AUTO_SCROLL_BOUND && !isScrolling.value) {
-                        // Begin scrolling up
-                        // autoScroll('up');
-                        scrollPosition.value = withTiming(0, { duration: positions.value[item.id] * 1000 }, () => unboundedScrollPosition.value = scrollPosition.value);
-                        top.value = withTiming(minBound, { duration: positions.value[item.id] * 1000 });
-                        isAutoScrolling.value = true;
-                        autoScrollDirection.value = 'up';
-                        return;
-                    }
-                    else if (fingerPositionY >= BOTTOM_AUTO_SCROLL_BOUND && !isScrolling.value) {
-                        // Begin scrolling down
-                        // autoScroll('down');
-                        scrollPosition.value = withTiming(2000, { duration: item.length - positions.value[item.id] * 1000 }, () => unboundedScrollPosition.value = scrollPosition.value);
-                        top.value = withTiming(maxBound, { duration: items.length - positions.value[item.id] * 1000 });
-                        isAutoScrolling.value = true;
-                        autoScrollDirection.value = 'down';
-                        return;
-                    }
-
-                    // Drag the item
-                    const newPosition = sanitizeTopValue(dragInitialPosition.value + event.translationY);
-                    top.value = withTiming(newPosition, { duration: 16 });
-                    // updateListPosition();
+                if (isManualScrolling.value) {
+                    // --- Scroll ---
+                    manualScroll(event.translationY);
+                } else if (isDragging.value) {
+                    // --- Drag ---
+                    drag(
+                        event.translationY,
+                        event.absoluteY
+                    );
                 }
             })
             .onFinalize((event) => {
-                if (isScrolling.value) {
-                    endScroll(event.velocityY);
+                if (isManualScrolling.value) {
+                    // --- End Manual Scroll ---
+                    endManualScroll(event.velocityY);
                 } else if (isDragging.value) {
-                    // Update item sort ID after drag is complete
-                    const newParentSortId = getParentSortIdFromPositions(item, positions, items);
-                    const newSortId = generateSortId(newParentSortId, items);
-                    runOnJS(onDragEnd)({ ...item, sortId: newSortId });
-
-                    if (isAutoScrolling.value) {
-                        // autoScroll(null);
-                        isAutoScrolling.value = false;
-                        autoScrollDirection.value = null;
-                        cancelAnimation(scrollPosition);
-                        cancelAnimation(top);
-                    }
+                    // --- End Drag ---
+                    endDrag();
+                    runOnJS(onDragEnd)({
+                        ...item,
+                        sortId: generateSortId(
+                            getParentSortIdFromPositions(item, positions, items),
+                            items
+                        )
+                    });
                 } else {
-                    if (isContentArea) {
-                        runOnJS(onContentClick)(item);
-                    } else {
-                        runOnJS(saveTextfieldAndCreateNew)(item.sortId);
-                    }
+                    // --- Click ---
+                    cancelAnimation(isDragging);
+                    runOnJS(onClick)();
                 }
-                resetUIThreadValues();
-                runOnJS(clearDragTimeout)();
-            }
-            )
-    }, []);
+            })
+    }, [item]);
 
     // ------------- Animations -------------
 
@@ -367,7 +397,7 @@ const DraggableRow = <
         () => positions.value[item.id],
         (currPosition, prevPosition) => {
             if (currPosition !== prevPosition && !isDragging.value) {
-                if (isLoadingInitialPosition) {
+                if (isLoadingInitialPosition || item.status === ItemStatus.NEW) {
                     top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
                     runOnJS(setIsLoadingInitialPosition)(false);
                 } else {
@@ -378,46 +408,29 @@ const DraggableRow = <
         [isDragging.value, isLoadingInitialPosition]
     );
 
-    // Add use animated reaction to update positions whenever top changes?
+    // Auto Scroll
     useAnimatedReaction(
-        () => top.value,
-        (curr, prev) => {
-            if (curr !== prev) {
-                updateListPosition();
+        () => ({
+            trigger: autoScrollTrigger.value
+        }),
+        ({ trigger }) => {
+            if (!trigger) return;
+            console.log(trigger)
+
+            const newTop = sanitizeTopValue(top.value + trigger);
+            const newScroll = sanitizeScrollOffset(scrollOffset.value + trigger);
+            const { maxBound } = getTopBoundaries();
+            if ([0, maxBound].includes(newTop) || [0, 2000].includes(newScroll)) {
+                cancelAnimation(autoScrollTrigger);
             }
-        }
-    )
 
-    // Auto scrolling
-    // useAnimatedReaction(
-    //     () => ({
-    //         isScrolling: isAutoScrolling.value,
-    //         direction: autoScrollDirection.value,
-    //         trigger: autoScrollTrigger.value
-    //     }),
-    //     ({ isScrolling, direction }) => {
-    //         if (!isScrolling || !direction || !isDragging.value) return;
-
-    //         const moveAmount = direction === 'up' ? -AUTO_SCROLL_SPEED : AUTO_SCROLL_SPEED;
-    //         const newTop = sanitizeTopValue(top.value + moveAmount);
-    //         const newScroll = sanitizeScrollPosition(scrollPosition.value + moveAmount);
-    //         const { maxBound } = getTopValueBoundaries();
-
-    //         // Stop auto-scrolling if we reach the bounds
-    //         if (newTop === (direction === 'up' ? 0 : maxBound) || newScroll === (direction === 'up' ? 0 : 2000)) {
-    //             isAutoScrolling.value = false;
-    //             autoScrollDirection.value = null;
-    //             cancelAnimation(autoScrollTrigger);
-    //             return;
-    //         }
-
-    //         top.value = newTop;
-    //         scrollPosition.value = newScroll;
-    //         dragInitialPosition.value += moveAmount;
-    //         updateListPosition();
-    //     },
-    //     [isDragging.value]
-    // );
+            top.value = newTop;
+            scrollOffset.value = newScroll;
+            initialGestureValue.value += trigger;
+            updateRowPosition();
+        },
+        [isDragging.value]
+    );
 
     /**
      * Animated style for positioning the row and scaling when dragged
@@ -447,8 +460,8 @@ const DraggableRow = <
     const popoverPositionStyle = useAnimatedStyle(() => ({
         left: 4,
         position: 'absolute',
-        top: top.value + LIST_ITEM_HEIGHT - scrollPosition.value + 100
-    }), [top.value, scrollPosition.value]);
+        top: top.value + LIST_ITEM_HEIGHT - scrollOffset.value + 100
+    }), [top.value, scrollOffset.value]);
 
     return <Animated.View style={rowPositionStyle}>
         <View key={item.id} style={styles.row}>
@@ -479,7 +492,7 @@ const DraggableRow = <
                     onSubmit={handleTextfieldSave}
                 />
             ) : (
-                <GestureDetector gesture={createGestureHandler(true)}>
+                <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
                     <View style={styles.content}>
                         <CustomText
                             adjustsFontSizeToFit
@@ -519,7 +532,7 @@ const DraggableRow = <
         </View>
 
         {/* Separator Line */}
-        <GestureDetector gesture={createGestureHandler(false)}>
+        <GestureDetector gesture={createGestureHandler(() => saveTextfieldAndCreateNew(item.sortId))}>
             <Pressable>
                 <ThinLine />
             </Pressable>

@@ -173,8 +173,7 @@ export function syncPlannerWithCalendar(
     planner: PlannerEvent[],
     timestamp: string
 ) {
-    console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
-    console.log(calendar, 'calendar')
+    // console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
 
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
@@ -226,7 +225,7 @@ export function syncPlannerWithCalendar(
         }
     });
 
-    console.info('syncPlannerWithCalendar: START', newPlanner);
+    // console.info('syncPlannerWithCalendar: START', newPlanner);
     return newPlanner;
 }
 
@@ -244,7 +243,7 @@ export function syncPlannerWithRecurring(
     planner: PlannerEvent[],
     timestamp: string
 ) {
-    console.info('syncPlannerWithRecurring: START', { recurringPlanner, planner, timestamp })
+    // console.info('syncPlannerWithRecurring: START', { recurringPlanner, planner, timestamp })
 
     function getRecurringEventTimeConfig(recEvent: RecurringEvent) {
         return {
@@ -325,6 +324,6 @@ export function syncPlannerWithRecurring(
         }
     });
 
-    console.info('syncPlannerWithRecurring: END', newPlanner);
+    // console.info('syncPlannerWithRecurring: END', newPlanner);
     return newPlanner;
 }

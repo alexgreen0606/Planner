@@ -240,7 +240,7 @@ export function generateSortIdByTime(
     event: PlannerEvent | RecurringEvent,
     planner: (PlannerEvent | RecurringEvent)[]
 ): number {
-    console.info('generateSortIdByTime START', { event, planner });
+    // console.info('generateSortIdByTime START', { event, planner });
 
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
 
