@@ -91,6 +91,7 @@ export function generateTimeModalConfig(
             open: timeModalOpen,
             toggleModalOpen: toggleTimeModal,
             timestamp: datestamp,
+            hideKeyboard: timeModalOpen,
             onSave: (updatedItem: PlannerEvent) => {
                 const updatedList = [...currentList];
                 const itemCurrentIndex = currentList.findIndex(item => item.id === updatedItem.id);
@@ -126,6 +127,7 @@ export function generateTimeIconConfig(
             <TimeValue
                 allDay={!!(item as PlannerEvent).timeConfig?.allDay}
                 endEvent={!!(item as PlannerEvent).timeConfig?.isEndEvent}
+                startEvent={!!(item as PlannerEvent).timeConfig?.isStartEvent}
                 timeValue={itemTime}
             /> : undefined
     }

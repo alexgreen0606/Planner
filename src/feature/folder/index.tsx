@@ -8,16 +8,16 @@ import {
     getFolderItems,
 } from '../checklists/storage/folderStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import Popover, { PopoverProps } from './components/FolderItemPopover';
+import Toolbar, { ToolbarProps } from './components/FolderItemToolbar';
 import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemTypes } from '../checklists/types';
 import { Pages } from '../../app/navUtils';
 import { ItemStatus, ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
-import { Palette, SelectableColor } from '../../foundation/theme/colors';
 import { useNavigatorContext } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId } from '../../foundation/sortedLists/utils';
+import { PlatformColor } from 'react-native';
 
 interface SortableFolderProps {
     folderId: string;
@@ -45,7 +45,7 @@ const SortedFolder = ({
         childrenCount: 0,
         listId: folderId,
         type: FolderItemTypes.FOLDER,
-        color: SelectableColor.YELLOW,
+        platformColor: 'systemBrown',
     });
 
     // Toggles an item in and out of delete status
@@ -82,7 +82,7 @@ const SortedFolder = ({
         // Transfer the item to the destination
         const destinationItems = getFolderItems(
             destination ? getFolderFromStorage(destination.id) : parentFolderData!
-        );        
+        );
         updateFolderItem({ ...currentTextfield, status: ItemStatus.STATIC, listId: destinationId, sortId: generateSortId(-1, destinationItems) });
         setCurrentTextfield(undefined);
     };
@@ -124,15 +124,14 @@ const SortedFolder = ({
         onOpenItem(item.id, item.type);
     };
 
-    const editItemPopoverConfig = (item: FolderItem): ModifyItemConfig<FolderItem, PopoverProps> => {
+    const editItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps> => {
         return {
-            component: Popover,
+            component: Toolbar,
             props: {
                 open: currentTab === Pages.LISTS && item.status === ItemStatus.EDIT && !deleteModalOpen,
                 iconRows: [[{
                     type: 'transfer',
                     onClick: () => beginItemTransfer(item),
-                    color: isItemTransfering(item) ? Palette.BLUE : Palette.DIM
                 }],
                 [{
                     onClick: () => {
@@ -147,19 +146,19 @@ const SortedFolder = ({
         }
     }
 
-    const newItemPopoverConfig = (item: FolderItem): ModifyItemConfig<FolderItem, PopoverProps> => {
+    const newItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps> => {
         return {
-            component: Popover,
+            component: Toolbar,
             props: {
                 iconRows: [[{
                     type: 'folder',
                     onClick: () => ({ ...item, type: FolderItemTypes.FOLDER }),
-                    color: item.type === FolderItemTypes.FOLDER ? Palette.BLUE : Palette.DIM
+                    platformColor: item.type === FolderItemTypes.FOLDER ? item.platformColor : 'secondaryLabel'
                 },
                 {
                     type: 'list',
                     onClick: () => ({ ...item, type: FolderItemTypes.LIST }),
-                    color: item.type === FolderItemTypes.LIST ? Palette.BLUE : Palette.DIM
+                    platformColor: item.type === FolderItemTypes.LIST ? item.platformColor : 'secondaryLabel'
                 }]],
                 open: currentTab === Pages.LISTS && item.status === ItemStatus.NEW && !deleteModalOpen,
                 onSave: (updatedItem: FolderItem) => updatedItem,
@@ -174,12 +173,12 @@ const SortedFolder = ({
         isItemTransfering(item) ? 'transfer' :
             item.type === FolderItemTypes.FOLDER ? 'folder' :
                 'list';
-    const getIconColor = (item: FolderItem) => isItemTransfering(item) ?
-        Palette.BLUE : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
-            Palette.DIM : item.color
+    const getIconPlatformColor = (item: FolderItem) => isItemTransfering(item) ?
+        'systemTeal' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
+            'secondaryLabel' : item.platformColor
 
     return (
-        <SortableList<FolderItem, PopoverProps, DeleteModalProps>
+        <SortableList<FolderItem, ToolbarProps, DeleteModalProps>
             listId={folderId}
             items={SortedItems.items}
             fillSpace
@@ -187,14 +186,14 @@ const SortedFolder = ({
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             onSaveTextfield={SortedItems.persistItemToStorage}
             onDeleteItem={SortedItems.deleteItemFromStorage}
-            getPopovers={item => [editItemPopoverConfig(item), newItemPopoverConfig(item)]}
+            getToolbars={item => [editItemToolbarConfig(item), newItemToolbarConfig(item)]}
             initializeItem={initializeFolderItem}
             onContentClick={handleItemClick}
-            getRowTextColor={item => isItemTransfering(item) ? Palette.BLUE :
-                (isTransferMode() && item.type === FolderItemTypes.LIST) ? Palette.DIM : Palette.WHITE}
+            getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemTeal' :
+                (isTransferMode() && item.type === FolderItemTypes.LIST) ? 'systemGray3' : 'label'}
             getRightIconConfig={item => ({
                 customIcon:
-                    <CustomText type='soft'>
+                    <CustomText type='label'>
                         {item.childrenCount}
                     </CustomText>
             })}
@@ -203,6 +202,7 @@ const SortedFolder = ({
                 props: {
                     parentFolderName: folderData.value,
                     open: deleteModalOpen,
+                    hideKeyboard: deleteModalOpen,
                     toggleModalOpen: toggleDeleteModal,
                     onSave: (updatedItem: FolderItem) => {
                         SortedItems.deleteItemFromStorage(updatedItem);
@@ -215,7 +215,7 @@ const SortedFolder = ({
             getLeftIconConfig={item => ({
                 icon: {
                     type: getIconType(item),
-                    color: getIconColor(item)
+                    platformColor: getIconPlatformColor(item)
                 },
                 onClick: SortedItems.toggleItemEdit
             })}

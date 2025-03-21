@@ -67,8 +67,8 @@ export async function buildPlanner(datestamp: string, planner: PlannerEvent[]): 
     }
 
     // Sync the planner with the apple calendar
-    const allCelendarEvents = await getCalendarEvents(datestamp);
-    planner = syncPlannerWithCalendar(allCelendarEvents, planner, datestamp);
+    const allCalendarEvents = await getCalendarEvents(datestamp);
+    planner = syncPlannerWithCalendar(allCalendarEvents, planner, datestamp);
 
     // Delete past planners and carry over incomplete yesterday events
     if (datestamp === getTodayDatestamp()) {

@@ -1,5 +1,7 @@
 import { ListItem } from "../../foundation/sortedLists/types";
-import { SelectableColor } from "../../foundation/theme/colors";
+import { selectableColors } from "../../foundation/theme/colors";
+
+type SelectableColor = (typeof selectableColors)[number];
 
 export const NULL = 'NULL';
 
@@ -13,7 +15,7 @@ export enum FolderItemTypes {
 };
 
 export interface ColoredListItem extends ListItem {
-    color: SelectableColor;
+    platformColor: SelectableColor;
 };
 
 export interface FolderItem extends ColoredListItem {

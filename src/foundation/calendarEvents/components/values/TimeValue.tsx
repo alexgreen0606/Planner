@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, PlatformColor } from 'react-native';
 import CustomText from '../../../components/text/CustomText';
 import { isoToTimeValue, isTimestampValid } from '../../timestampUtils';
-import { Palette } from '../../../theme/colors';
 
 interface TimeProps {
     timeValue: string; // HH:MM
     allDay: boolean;
     endEvent: boolean;
+    startEvent: boolean;
 }
 
-const TimeValue = ({ timeValue, allDay, endEvent }: TimeProps) => {
+const TimeValue = ({ timeValue, allDay, endEvent, startEvent }: TimeProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
@@ -39,6 +39,11 @@ const TimeValue = ({ timeValue, allDay, endEvent }: TimeProps) => {
             {endEvent && (
                 <CustomText style={styles.endIndicator} type='indicator'>
                     END
+                </CustomText>
+            )}
+            {startEvent && (
+                <CustomText style={styles.endIndicator} type='indicator'>
+                    START
                 </CustomText>
             )}
         </View>
@@ -70,7 +75,7 @@ const styles = StyleSheet.create({
         textAlignVertical: 'bottom'
     },
     endIndicator: {
-        color: Palette.YELLOW,
+        color: PlatformColor('systemYellow'),
         width: '100%',
         textAlign: 'center',
         bottom: 4

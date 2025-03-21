@@ -63,7 +63,6 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
 
     return (
         <View style={globalStyles.blackFilledSpace}>
-
             <SortableList<RecurringEvent, never, never>
                 items={SortedEvents.items}
                 listId={plannerKey}

@@ -24,19 +24,27 @@ const useSortedList = <T extends ListItem, S>(
     setItemsInStorageObject?: (items: T[], currentObject: S) => S,
     storageConfig?: StorageHandlers<T>
 ) => {
-    const { currentTextfield, setCurrentTextfield, pendingDeletes } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, pendingDeletes, loadingData, endLoadingData } = useSortableListContext();
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
     const buildList = async () => {
         const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);
+        endLoadingData();
     };
 
     // Build the list from the storage object
     useEffect(() => {
         buildList();
     }, [storageObject]);
+
+    // Rebuild the list when the user overscrolls
+    useEffect(() => {
+        if (loadingData) {
+            buildList();
+        }
+    }, [loadingData]);
 
     /**
      * Toggles an item between a textfield and static.

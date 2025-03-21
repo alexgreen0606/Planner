@@ -1,9 +1,9 @@
 import React from 'react';
 import { FolderItem, FolderItemTypes } from '../../checklists/types';
 import Modal from '../../../foundation/components/Modal';
-import { Palette } from '../../../foundation/theme/colors';
 import CustomText from '../../../foundation/components/text/CustomText';
 import { ListItemUpdateComponentProps } from '../../../foundation/sortedLists/types';
+import { PlatformColor } from 'react-native';
 
 export interface DeleteModalProps extends ListItemUpdateComponentProps<FolderItem> {
     open: boolean;
@@ -28,11 +28,11 @@ const DeleteModal = ({
             primaryButtonConfig={{
                 label: !!item.childrenCount ? 'Force Delete' : 'Delete',
                 onClick: () => onSave(item),
-                color: !!item.childrenCount ? 'red' : Palette.BLUE
+                platformColor: !!item.childrenCount ? 'systemRed' : 'systemTeal'
             }}
             iconConfig={{
                 type: 'trash',
-                color: 'red'
+                platformColor: 'systemRed'
             }}
         >
 
@@ -46,11 +46,11 @@ const DeleteModal = ({
 
             {/* Warning Message */}
             {!!item.childrenCount ? (
-                <CustomText type='standard' style={{ color: Palette.GREY }}>
+                <CustomText type='standard' style={{ color: PlatformColor('secondaryLabel') }}>
                     This {itemType} has {item.childrenCount} items. Deleting is irreversible and will lose all inner contents.
                 </CustomText>
             ) : (
-                <CustomText type='standard' style={{ color: Palette.GREY }}>
+                <CustomText type='standard' style={{ color: PlatformColor('secondaryLabel') }}>
                     Would you like to delete this {itemType}?
                 </CustomText>
             )}

@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { isItemDeleting } from '../../foundation/sortedLists/utils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { buildBirthdayChecklist } from './storage/birthdayStorage';
-import { StyleSheet, View } from 'react-native';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 import globalStyles from '../../foundation/theme/globalStyles';
 import CustomText from '../../foundation/components/text/CustomText';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { Palette } from '../../foundation/theme/colors';
 import { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
 import { BIRTHDAY_CHECKLIST_STORAGE_ID } from './types';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
@@ -43,7 +42,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     <GenericIcon
                         type='birthday'
                         size='l'
-                        color={birthdays[0]?.color}
+                        platformColor={birthdays[0]?.color}
                     />
                     <CustomText type='header'>
                         Birthdays
@@ -75,7 +74,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     getRightIconConfig={item => ({
                         icon: {
                             type: isItemDeleting(item) ? 'messageFilled' : 'message',
-                            color: isItemDeleting(item) ? Palette.DIM : Palette.BLUE,
+                            platformColor: isItemDeleting(item) ? 'secondaryLabel' : 'systemTeal',
                             hideRipple: true
                         },
                         onClick: async () => {

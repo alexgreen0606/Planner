@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
-import { Palette } from '../theme/colors';
+import { PlatformColor, StyleSheet, View, ViewStyle } from 'react-native';
 
 interface CardProps {
     children: ReactNode;
@@ -26,7 +25,7 @@ const Card = ({ children, header, footer, style }: CardProps) =>
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Palette.BACKGROUND,
+        backgroundColor: PlatformColor('systemGray6'),
         borderRadius: 8,
     },
     banner: {

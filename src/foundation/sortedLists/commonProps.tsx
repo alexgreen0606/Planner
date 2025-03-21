@@ -1,7 +1,6 @@
-import { IconType } from "../components/GenericIcon";
-import { Palette } from "../theme/colors";
 import { isItemDeleting } from "./utils";
 import { ListItem } from "./types";
+import { IconType } from "../components/GenericIcon";
 
 // ------------- Icon Configuration -------------
 
@@ -12,14 +11,14 @@ import { ListItem } from "./types";
 * @returns Icon configuration object containing icon type, color and click handler
 */
 export function generateCheckboxIconConfig<T extends ListItem>(
-   item: T,
-   toggleItemDelete: (item: T) => void
+    item: T,
+    toggleItemDelete: (item: T) => void
 ) {
-   return {
-       icon: {
-           type: isItemDeleting(item) ? 'circleFilled' : 'circle' as IconType,
-           color: isItemDeleting(item) ? Palette.BLUE : Palette.DIM
-       },
-       onClick: toggleItemDelete
-   };
+    return {
+        icon: {
+            type: isItemDeleting(item) ? 'circleFilled' : 'circle' as IconType,
+            platformColor: isItemDeleting(item) ? 'systemTeal' : 'secondaryLabel'
+        },
+        onClick: toggleItemDelete
+    };
 }

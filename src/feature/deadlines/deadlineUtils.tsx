@@ -1,6 +1,5 @@
 import ReactNativeCalendarEvents from "react-native-calendar-events";
 import { getCalendarAccess } from "../../foundation/calendarEvents/calendarUtils";
-import { Palette } from "../../foundation/theme/colors";
 import { getDatestampThreeYearsFromToday, getTodayDatestamp } from "../../foundation/calendarEvents/timestampUtils";
 import { CalendarDetails, Deadline } from "../../foundation/calendarEvents/types";
 import { DEADLINE_LIST_KEY } from "./types";
@@ -19,7 +18,7 @@ async function getDeadlineCalendarDetails(): Promise<CalendarDetails> {
         // Create the deadline calendar
         deadlineCalendarId = await ReactNativeCalendarEvents.saveCalendar({
             title: 'Deadlines',
-            color: Palette.RED,
+            color: 'systemRed',
             entityType: 'event',
             name: 'Deadlines',
             accessLevel: 'owner',
@@ -30,7 +29,7 @@ async function getDeadlineCalendarDetails(): Promise<CalendarDetails> {
             }
         })
     }
-    return { id: deadlineCalendarId, color: Palette.RED, iconType: 'alert' };
+    return { id: deadlineCalendarId, color: 'systemRed', iconType: 'alert', isPrimary: false, isBirthday: false };
 };
 
 export async function getDeadlines(): Promise<Deadline[]> {

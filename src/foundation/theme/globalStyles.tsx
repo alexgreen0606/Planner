@@ -1,6 +1,4 @@
-import { StyleSheet, ViewStyle } from "react-native";
-import { Palette } from "./colors";
-import { BANNER_HEIGHT } from "../components/constants";
+import { PlatformColor, ViewStyle } from "react-native";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;
@@ -20,7 +18,7 @@ const globalStyles: GlobalStyles = {
   },
   blackFilledSpace: {
     flex: 1,
-    backgroundColor: Palette.BLACK
+    backgroundColor: PlatformColor('systemBackground')
   },
   verticallyCentered: {
     flexDirection: 'row',
@@ -32,8 +30,7 @@ const globalStyles: GlobalStyles = {
     alignItems: 'center',
     flexDirection: 'row',
     width: '100%',
-    height: BANNER_HEIGHT,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
   },
   centered: {
     justifyContent: 'center',

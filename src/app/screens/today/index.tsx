@@ -38,12 +38,9 @@ const Today = () => {
     <View style={globalStyles.blackFilledSpace}>
 
       {/* Banner */}
-      <TodayBanner
-        showBannerBorder={eventChips.length + (birthdayChips?.length || 0) > 0}
-        timestamp={timestamp}
-      />
+      <TodayBanner timestamp={timestamp} />
 
-      <SortableListProvider>
+      <SortableListProvider enableReload>
         <View style={styles.container}>
 
           {/* Event Chips */}
@@ -86,7 +83,7 @@ const styles = StyleSheet.create({
   },
   chips: {
     ...globalStyles.verticallyCentered,
-    paddingTop: 12,
+    paddingTop: 8,
     paddingHorizontal: 8,
     width: '100%',
     flexWrap: 'wrap',

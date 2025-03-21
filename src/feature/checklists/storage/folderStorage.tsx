@@ -1,7 +1,6 @@
 import { MMKV } from "react-native-mmkv";
 import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemTypes, Checklist, NULL, ROOT_FOLDER_KEY } from "../types";
 import { ItemStatus } from "../../../foundation/sortedLists/types";
-import { Palette } from "../../../foundation/theme/colors";
 
 const storage = new MMKV({ id: LISTS_STORAGE_ID });
 
@@ -27,7 +26,7 @@ export const getFolderFromStorage = (folderId: string) => {
             listIds: [],
             value: 'Lists',
             sortId: 1,
-            color: Palette.BLUE,
+            platformColor: 'systemTeal',
             status: ItemStatus.STATIC
         } as Folder;
         saveToStorage(initialRootFolder)
@@ -63,7 +62,7 @@ export const getFolderItem = (itemId: string, type: FolderItemTypes): FolderItem
         value: data.value,
         listId: data.listId,
         sortId: data.sortId,
-        color: data.color,
+        platformColor: data.platformColor,
         status: data.status,
         type,
         childrenCount:

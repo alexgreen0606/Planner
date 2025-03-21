@@ -1,22 +1,22 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Palette } from '../theme/colors';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 
 interface ThinLineProps {
-    centerLine?: boolean
+    centerLine?: boolean;
+    vertical?: boolean;
 }
 
-const ThinLine = ({ centerLine = true }: ThinLineProps) => {
+const ThinLine = ({ centerLine = true, vertical = false }: ThinLineProps) => {
 
     const styles = StyleSheet.create({
         thinLine: {
-            width: '100%',
-            height: StyleSheet.hairlineWidth,
-            backgroundColor: Palette.DIM,
+            width: vertical ? StyleSheet.hairlineWidth : '100%',
+            height: vertical ? '100%' : StyleSheet.hairlineWidth,
+            backgroundColor: PlatformColor('systemGray'),
         },
         lineContainer: {
-            width: '100%',
-            height: centerLine ? 15 : 8,
+            width: vertical ? 8 : '100%',
+            height: vertical ? '100%' : centerLine ? 15 : 8,
             backgroundColor: 'transparent',
             justifyContent: centerLine ? 'center' : 'flex-end'
         },

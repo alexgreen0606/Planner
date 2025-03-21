@@ -42,6 +42,7 @@ export type RowIconConfig<T extends ListItem> = {
 export interface ListItemUpdateComponentProps<T extends ListItem> {
     item: T;
     onSave: (item: T) => T | undefined;
+    hideKeyboard?: boolean;
 };
 
 export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {

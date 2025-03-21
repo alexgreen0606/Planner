@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Checkbox } from 'react-native-paper';
+import { View, StyleSheet, PlatformColor } from 'react-native';
 import globalStyles from '../../theme/globalStyles';
 import Modal from '../../components/Modal';
 import {
@@ -10,8 +9,8 @@ import {
     isoToDatestamp,
     getTodayDatestamp
 } from '../timestampUtils';
+import Checkbox from 'expo-checkbox';
 import CustomText from '../../components/text/CustomText';
-import { Palette } from '../../theme/colors';
 import DatePicker from 'react-native-date-picker';
 import { ListItemUpdateComponentProps } from '../../sortedLists/types';
 import { PlannerEvent } from '../types';
@@ -104,7 +103,7 @@ const TimeModal = ({
             }}
             iconConfig={{
                 type: 'clock',
-                color: Palette.BLUE,
+                platformColor: 'systemTeal',
             }}
         >
 
@@ -123,9 +122,9 @@ const TimeModal = ({
                     {/* Calendar Toggle */}
                     <View style={styles.halfWidth}>
                         <CustomText type='label'>Calendar Event</CustomText>
-                        <Checkbox.Android
-                            status={timeModalData.isCalendarEvent ? 'checked' : 'unchecked'}
-                            onPress={() => {
+                        <Checkbox
+                            value={timeModalData.isCalendarEvent}
+                            onValueChange={() => {
                                 const newIsCalendarEvent = !timeModalData.isCalendarEvent;
                                 setTimeModalData({
                                     ...timeModalData,
@@ -136,9 +135,10 @@ const TimeModal = ({
                                 });
                                 setRescheduleEvent(false);
                             }}
-                            color={Palette.BLUE}
-                            uncheckedColor={Palette.DIM}
-
+                            style={{
+                                marginTop: 4,
+                            }}
+                            color={PlatformColor(timeModalData.isCalendarEvent ? 'systemTeal' : 'secondaryLabel')}
                         />
                     </View>
 
@@ -147,9 +147,9 @@ const TimeModal = ({
                         {timeModalData.isCalendarEvent && (
                             <>
                                 <CustomText type='label'>All Day</CustomText>
-                                <Checkbox.Android
-                                    status={timeModalData.allDay ? 'checked' : 'unchecked'}
-                                    onPress={() => {
+                                <Checkbox
+                                    value={timeModalData.allDay}
+                                    onValueChange={() => {
                                         const newAllDay = !timeModalData.allDay;
                                         setTimeModalData({
                                             ...timeModalData,
@@ -158,8 +158,10 @@ const TimeModal = ({
                                             endTime: newAllDay ? startOfDayDate : endOfDayDate
                                         });
                                     }}
-                                    color={Palette.BLUE}
-                                    uncheckedColor={Palette.DIM}
+                                    style={{
+                                        marginTop: 4,
+                                    }}
+                                    color={PlatformColor(timeModalData.allDay ? 'systemTeal' : 'secondaryLabel')}
                                 />
                             </>
                         )}
@@ -171,11 +173,13 @@ const TimeModal = ({
                     {timeModalData.isCalendarEvent && (
                         <>
                             <CustomText type='label'>Reschedule</CustomText>
-                            <Checkbox.Android
-                                status={rescheduleEvent ? 'checked' : 'unchecked'}
-                                onPress={toggleReschedule}
-                                color={Palette.BLUE}
-                                uncheckedColor={Palette.DIM}
+                            <Checkbox
+                                value={rescheduleEvent}
+                                onValueChange={toggleReschedule}
+                                style={{
+                                    marginTop: 4,
+                                }}
+                                color={PlatformColor(rescheduleEvent ? 'systemTeal' : 'secondaryLabel')}
                             />
                         </>
                     )}

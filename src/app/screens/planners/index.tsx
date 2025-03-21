@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 import { getWeeklyWeather, WeatherForecast } from '../../../feature/weather/utils';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import PlannersBanner from './banner/PlannersBanner';
@@ -8,7 +8,6 @@ import PlannerCard from '../../../feature/planner';
 import RecurringPlanner from '../../../feature/recurringPlanners/components/RecurringPlanner';
 import { Dropdown } from 'react-native-element-dropdown';
 import RecurringWeekdayPlanner from '../../../feature/recurringPlanners/components/RecurringWeekdayPlanner';
-import { Palette } from '../../../foundation/theme/colors';
 import CustomText from '../../../foundation/components/text/CustomText';
 import PlannerModes from '../../../feature/planner/types';
 import Deadlines from '../../../feature/deadlines';
@@ -37,8 +36,7 @@ const Planners = () => {
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>();
   const [eventChipMap, setEventChipMap] = useState<Record<string, EventChipProps[]>>();
 
-  // Build a collection of the next 7 days of planners
-  async function buildPlanners() {
+  async function fetchChipsAndWeather() {
     const allEventChips = await generateEventChips(datestamps);
     setEventChipMap(allEventChips);
     const forecastMap = await getWeeklyWeather(datestamps);
@@ -48,7 +46,7 @@ const Planners = () => {
 
   // Load in the initial planners
   useEffect(() => {
-    buildPlanners();
+    fetchChipsAndWeather();
   }, []);
 
   const renderDropdownItem = (item: { label: string, value: string }) => {
@@ -74,14 +72,14 @@ const Planners = () => {
       {mode === PlannerModes.PLANNERS ? (
         <>
           {datestamps && eventChipMap && (
-            <SortableListProvider>
+            <SortableListProvider enableReload>
               <View style={styles.dropdownContainer} >
                 <Dropdown
                   data={defaultPlannerOptions}
                   maxHeight={300}
                   selectedTextStyle={styles.selectedTextStyle}
                   style={styles.dropdown}
-                  containerStyle={{ backgroundColor: Palette.BLUE, borderWidth: 0 }}
+                  containerStyle={{ borderWidth: 0 }}
                   renderItem={renderDropdownItem}
                   labelField="label"
                   valueField="value"
@@ -90,7 +88,7 @@ const Planners = () => {
                 />
                 <GenericIcon
                   type='add'
-                  color={Palette.GREY}
+                  platformColor='secondaryLabel'
                 />
               </View>
               <View style={styles.planners}>
@@ -98,7 +96,7 @@ const Planners = () => {
                   <PlannerCard
                     key={`${datestamp}-planner`}
                     timestamp={datestamp}
-                    reloadChips={buildPlanners}
+                    reloadChips={fetchChipsAndWeather}
                     forecast={forecasts?.[datestamp]}
                     eventChips={eventChipMap[datestamp]}
                   />
@@ -116,7 +114,7 @@ const Planners = () => {
               labelField="label"
               valueField="value"
               value={selectedRecurring}
-              containerStyle={{ backgroundColor: Palette.BLUE, borderWidth: 0 }}
+              containerStyle={{ backgroundColor: PlatformColor('systemTeal'), borderWidth: 0 }}
               onChange={setSelectedRecurring}
               selectedTextStyle={styles.selectedTextStyle}
               style={styles.dropdown}
@@ -124,7 +122,7 @@ const Planners = () => {
             />
             <GenericIcon
               type='add'
-              color={Palette.GREY}
+              platformColor='secondaryLabel'
             />
           </View>
           <View style={{ ...styles.planners, flex: 1, paddingHorizontal: 0 }}>
@@ -136,7 +134,7 @@ const Planners = () => {
           </View>
         </SortableListProvider>
       ) : (
-        <SortableListProvider>
+        <SortableListProvider enableReload>
           <Deadlines />
         </SortableListProvider>
       )}
@@ -154,7 +152,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32
   },
   selectedTextStyle: {
-    color: Palette.GREY,
+    color: PlatformColor('secondaryLabel'),
     fontSize: 14,
     fontWeight: 800
   },
@@ -168,11 +166,11 @@ const styles = StyleSheet.create({
     padding: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderLeftWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Palette.GREY
+    borderColor: PlatformColor('systemGray3')
   },
   dropdownItem: {
-    backgroundColor: Palette.BACKGROUND,
-    borderColor: Palette.DIM,
+    backgroundColor: PlatformColor('systemBackground'),
+    borderColor: PlatformColor('systemGray3'),
     borderBottomWidth: StyleSheet.hairlineWidth,
     padding: 8,
   }

@@ -1,7 +1,6 @@
 import Animated, {
     cancelAnimation,
     runOnJS,
-    runOnUI,
     SharedValue,
     useAnimatedReaction,
     useAnimatedStyle,
@@ -20,22 +19,20 @@ import {
     ListItem,
     ListItemUpdateComponentProps,
     SCROLL_OUT_OF_BOUNDS_RESISTANCE,
-    SCROLL_THROTTLE
 } from "../../types";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
-import CustomText from "../../../components/text/CustomText";
+import { PlatformColor, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import ListTextfield from "../ListTextfield";
 import { Portal } from "react-native-paper";
-import { Palette } from "../../../theme/colors";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "../../../components/ThinLine";
 import { generateSortId, getParentSortIdFromPositions, isItemDeleting, isItemTextfield } from "../../utils";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
+import { LIST_ITEM_TOOLBAR_HEIGHT } from "../../constants";
 
 interface RowProps<
     T extends ListItem,
@@ -70,9 +67,9 @@ const DraggableRow = <
     getRightIconConfig,
     getModal,
     handleValueChange,
-    getRowTextColor,
+    getRowTextPlatformColor,
     onContentClick,
-    getPopovers,
+    getToolbars,
     disableDrag,
     onDeleteItem,
     saveTextfieldAndCreateNew,
@@ -86,7 +83,8 @@ const DraggableRow = <
         currentTextfield,
         setCurrentTextfield,
         disableNativeScroll,
-        scrollOffsetBounds
+        scrollOffsetBounds,
+        keyboardPosition,
     } = useSortableListContext();
 
     /**
@@ -97,7 +95,7 @@ const DraggableRow = <
         [currentTextfield, staticItem]
     );
 
-    const [isLoadingInitialPosition, setIsLoadingInitialPosition] = useState(!!positions.value[item.id]);
+    const isLoadingInitialPosition = useSharedValue(!!positions.value[item.id]);
 
     // ------------- Animation Variables -------------
     const TOP_AUTO_SCROLL_BOUND = insets.top + BANNER_HEIGHT;
@@ -110,11 +108,11 @@ const DraggableRow = <
     const autoScrollTrigger = useSharedValue<number | null>(null);
 
     // ------------- Row Configuration Variables -------------
-    const customTextColor = useMemo(() => getRowTextColor?.(item), [item, getRowTextColor]);
+    const customTextPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
     const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
     const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
     const modalConfig = useMemo(() => getModal?.(item), [item, getModal]);
-    const popoverConfigs = useMemo(() => getPopovers?.(item), [item, getPopovers]);
+    const popoverConfigs = useMemo(() => getToolbars?.(item), [item, getToolbars]);
     const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
     const Popovers = useMemo(() => popoverConfigs?.map(config => config.component),
         [popoverConfigs]
@@ -135,6 +133,7 @@ const DraggableRow = <
      */
     const handleTextfieldSave = () => {
         if (item.value.trim() !== '') {
+            isLoadingInitialPosition.value = true;
             saveTextfieldAndCreateNew(item.sortId);
         } else {
             if (item.status === ItemStatus.NEW) {
@@ -347,11 +346,12 @@ const DraggableRow = <
                 if (disableDrag) return;
                 // --- Initiate Drag After Delay ---
                 isDragging.value = withDelay(500, withTiming(1, { duration: 0 }, (finished) => {
-                    if (finished)
-                        initialGestureValue.value = top.value
+                    if (finished) {
+                        initialGestureValue.value = top.value;
+                    }
                 }));
             })
-            .onStart(() => {
+            .onStart((e) => {
                 if (isDragging.value) return;
                 // --- Initiate Scroll If Drag Hasn't Begun ---
                 beginManulaScroll();
@@ -385,7 +385,9 @@ const DraggableRow = <
                 } else {
                     // --- Click ---
                     cancelAnimation(isDragging);
-                    runOnJS(onClick)();
+                    if (item.id !== currentTextfield?.id) {
+                        runOnJS(onClick)();
+                    }
                 }
             })
     }, [item]);
@@ -397,15 +399,15 @@ const DraggableRow = <
         () => positions.value[item.id],
         (currPosition, prevPosition) => {
             if (currPosition !== prevPosition && !isDragging.value) {
-                if (isLoadingInitialPosition || item.status === ItemStatus.NEW) {
+                if (isLoadingInitialPosition.value || item.status === ItemStatus.NEW) {
                     top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
-                    runOnJS(setIsLoadingInitialPosition)(false);
+                    isLoadingInitialPosition.value = false;
                 } else {
                     top.value = withSpring(positions.value[item.id] * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG);
                 }
             }
         },
-        [isDragging.value, isLoadingInitialPosition]
+        [isDragging.value]
     );
 
     // Auto Scroll
@@ -415,7 +417,6 @@ const DraggableRow = <
         }),
         ({ trigger }) => {
             if (!trigger) return;
-            console.log(trigger)
 
             const newTop = sanitizeTopValue(top.value + trigger);
             const newScroll = sanitizeScrollOffset(scrollOffset.value + trigger);
@@ -458,10 +459,10 @@ const DraggableRow = <
      * Animated style for positioning popovers relative to the row
      */
     const popoverPositionStyle = useAnimatedStyle(() => ({
-        left: 4,
+        left: 0,
         position: 'absolute',
-        top: top.value + LIST_ITEM_HEIGHT - scrollOffset.value + 100
-    }), [top.value, scrollOffset.value]);
+        bottom: keyboardPosition.value
+    }), [keyboardPosition.value]);
 
     return <Animated.View style={rowPositionStyle}>
         <View key={item.id} style={styles.row}>
@@ -484,33 +485,24 @@ const DraggableRow = <
                 ) : null)}
 
             {/* Content */}
-            {isItemTextfield(item) ? (
-                <ListTextfield<T>
-                    key={getTextfieldKey(item)}
-                    item={item}
-                    onChange={handleTextfieldChange}
-                    onSubmit={handleTextfieldSave}
-                />
-            ) : (
-                <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
-                    <View style={styles.content}>
-                        <CustomText
-                            adjustsFontSizeToFit
-                            numberOfLines={1}
-                            type='standard'
-                            style={{
-                                color: customTextColor ||
-                                    (isItemDeleting(item) ? Palette.DIM : item.recurringId ? Palette.GREY : Palette.WHITE),
-                                textDecorationLine: isItemDeleting(item) ?
-                                    'line-through' : undefined,
-                                width: '100%'
-                            }}
-                        >
-                            {item.value}
-                        </CustomText>
-                    </View>
-                </GestureDetector>
-            )}
+            <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
+                <View collapsable={false} style={{ flex: 1 }}>
+                    <ListTextfield<T>
+                        key={getTextfieldKey(item)}
+                        item={item}
+                        onChange={handleTextfieldChange}
+                        onSubmit={handleTextfieldSave}
+                        toggleBlur={!modalConfig?.props.hideKeyboard}
+                        customStyle={{
+                            color: PlatformColor(customTextPlatformColor ??
+                                (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
+                            textDecorationLine: isItemDeleting(item) ?
+                                'line-through' : undefined,
+                            width: '100%'
+                        }}
+                    />
+                </View>
+            </GestureDetector>
 
             {/* Right Icon */}
             {rightIconConfig &&
@@ -563,12 +555,12 @@ const DraggableRow = <
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        paddingHorizontal: 8,
+        paddingHorizontal: 16,
     },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
+        paddingHorizontal: 16,
         height: 25,
         width: '100%',
     }

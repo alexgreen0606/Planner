@@ -1,7 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, View, ViewStyle } from 'react-native';
+import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SFSymbol } from 'react-native-sfsymbols';
-import { Palette } from '../theme/colors';
+import { isValidPlatformColor } from '../theme/colors';
 
 const sizeMap = {
     xs: 10,
@@ -13,7 +13,7 @@ const sizeMap = {
 const iconMap = {
     transfer: 'arrow.uturn.down',
     recurringCalendar: 'arrow.trianglehead.2.clockwise.rotate.90',
-    folder: 'folder',
+    folder: 'folder.fill',
     openFolder: 'folder.fill',
     list: 'list.bullet',
     planners: 'calendar',
@@ -35,13 +35,15 @@ const iconMap = {
     message: 'message',
     messageFilled: 'checkmark.message',
     alert: 'exclamationmark.triangle',
+    refresh: 'arrow.trianglehead.counterclockwise',
+    refreshComplete: 'checkmark.arrow.trianglehead.counterclockwise'
 };
 
 export type IconType = keyof typeof iconMap;
 export interface GenericIconProps<T = void> {
     type: IconType;
     size?: 'xs' | 's' | 'm' | 'l' | 'xl';
-    color?: string;
+    platformColor?: string;
     onClick?: () => T;
     style?: ViewStyle;
     hideRipple?: boolean;
@@ -50,7 +52,7 @@ export interface GenericIconProps<T = void> {
 const GenericIcon = <T,>({
     type,
     size = 'm',
-    color = Palette.DIM,
+    platformColor: color = 'secondaryLabel',
     onClick,
     style,
     hideRipple = false
@@ -64,7 +66,7 @@ const GenericIcon = <T,>({
             justifyContent: 'center',
             ...style
         }}>
-            <SFSymbol resizeMode='center' name={iconMap[type]} size={sizeMap[size]} color={color} />
+            <SFSymbol resizeMode='center' name={iconMap[type]} size={sizeMap[size]} color={isValidPlatformColor(color) ? PlatformColor(color) : color} />
         </Wrapper>
     )
 };

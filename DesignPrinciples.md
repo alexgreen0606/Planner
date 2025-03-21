@@ -25,6 +25,11 @@ When declaring, follow this order (exported after local):
 - Use `get` for things that already exist.  
 - Use `generate` for creating new things.
 
+## Colors
+- `backgrounds`: systemGray6  
+- `dim`: systemGray3
+
+
 I'd like to work on some refactoring of this file. Please organize things nicely and section them off, with a label separating the sections of the format:
 
 // ------------- Animation and Gesture State -------------

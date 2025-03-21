@@ -19,17 +19,41 @@ function getCalendarIcon(calendarName: string) {
 }
 
 /**
- * TODO comment
- * @param event 
- * @param datestamp 
- * @returns 
+ * Determines if an event should be displayed as a chip on a given date in a calendar.
+ * 
+ * An event will be kept if:
+ * 1. It is an all-day event for the given date
+ * 2. It is an all-day event that spans across the given date (starts before and ends after)
+ * 3. It is a non-all-day event that starts on the given date and ends after the given date
+ * 4. It is a non-all-day event that spans across the given date (starts before and ends after)
+ * 
+ * @param event The calendar event to validate
+ * @param datestamp The date in string format to check against
+ * @returns Returns true if the event should be displayed on the given date as a chip, false otherwise
  */
 function validateEventChip(event: CalendarEventReadable, datestamp: string): boolean {
-    if (!event.endDate) throw new Error('Event has no end date!');
+    if (!event.endDate || !event.startDate) return false;
+
     const dateStart = datestampToMidnightDate(datestamp);
+    const dateEnd = datestampToMidnightDate(datestamp, 1);
+    const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
-    return dateStart <= eventEnd;
-};
+
+    if (event.allDay) {
+        // For all-day events, compare dates without time
+        const eventStartDate = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
+        const eventEndDate = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
+        const checkDate = new Date(dateStart.getFullYear(), dateStart.getMonth(), dateStart.getDate());
+
+        return eventStartDate <= checkDate && eventEndDate >= checkDate;
+    } else {
+        return (
+            eventStart >= dateStart && eventStart < dateEnd && eventEnd > dateEnd // Starts on this date and ends after it OR
+        ) || (
+                eventStart < dateStart && eventEnd > dateStart // Spans across this date
+            );
+    }
+}
 
 /**
  * TODO comment
@@ -38,13 +62,16 @@ function validateEventChip(event: CalendarEventReadable, datestamp: string): boo
  * @returns 
  */
 function validateEvent(event: CalendarEventReadable, datestamp: string): boolean {
-    if (event.allDay) return false;
-    if (!event.endDate) throw new Error('Event has no end date!');
+    if (event.allDay || !event.endDate) return false;
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
-    return dateStart < eventStart || dateEnd > eventEnd;
+    return (
+        eventStart >= dateStart && eventStart < dateEnd // Starts on this date OR
+    ) || (
+            eventEnd < dateEnd // Ends on this date
+        );
 };
 
 /**
@@ -58,8 +85,8 @@ function sanitizeCalendarEvent(event: CalendarEventReadable, datestamp: string):
     const dateEnd = datestampToMidnightDate(datestamp, 1);
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate!);
-    const isEndEvent = dateEnd > eventEnd && eventStart < dateStart;
-
+    const isEndEvent = eventEnd < dateEnd && eventStart < dateStart; // Starts before date and ends on date
+    const isStartEvent = eventStart >= dateStart && eventStart < dateEnd && eventEnd >= dateEnd; // Starts on date and ends after date
     return {
         id: event.id,
         value: event.title,
@@ -69,7 +96,8 @@ function sanitizeCalendarEvent(event: CalendarEventReadable, datestamp: string):
             startTime: event.startDate,
             endTime: event.endDate!,
             allDay: false,
-            isEndEvent
+            isEndEvent,
+            isStartEvent
         },
         status: ItemStatus.STATIC
     };
@@ -96,7 +124,7 @@ export async function getPrimaryCalendarDetails(): Promise<CalendarDetails> {
     const calendars = await RNCalendarEvents.findCalendars();
     const primaryCalendar = calendars.find(calendar => calendar.isPrimary);
     if (!primaryCalendar) throw new Error('Primary calendar does not exist!');
-    return { id: primaryCalendar.id, color: primaryCalendar.color, iconType: 'megaphone' };
+    return { id: primaryCalendar.id, color: primaryCalendar.color, iconType: 'megaphone', isPrimary: true, isBirthday: false };
 };
 
 /**
@@ -107,7 +135,13 @@ export async function generateCalendarDetailsMap(): Promise<Record<string, Calen
     const calendars = await RNCalendarEvents.findCalendars();
     const idToColorMap: Record<string, CalendarDetails> = {};
     calendars.forEach(calendar => {
-        idToColorMap[calendar.id] = { id: calendar.id, color: calendar.color, iconType: getCalendarIcon(calendar.title) };
+        idToColorMap[calendar.id] = {
+            id: calendar.id,
+            color: calendar.color,
+            iconType: getCalendarIcon(calendar.title),
+            isPrimary: calendar.isPrimary,
+            isBirthday: calendar.title === 'Birthdays'
+        };
     });
     return idToColorMap;
 };
@@ -148,13 +182,42 @@ export async function generateEventChips(timestamps: string[]): Promise<Record<s
             .filter(event => validateEventChip(event, datestamp))
             .map(event => {
                 const calendarDetails = calendarColorMap[event.calendar?.id!];
-                return {
-                    label: event.title,
+
+                // Process title for birthday events
+                let eventTitle = event.title;
+                if (calendarDetails.isBirthday) {
+                    eventTitle = eventTitle.split(/['’]s /)[0]
+                }
+
+                const chipProps: EventChipProps = {
+                    label: eventTitle,
                     iconConfig: {
                         type: calendarDetails.iconType,
                     },
                     color: calendarDetails.color
+                };
+
+                // TODO: do all chips need to have the same ID?
+                // do start and end events need to have the same ID?
+
+                if (calendarDetails.isPrimary) {
+                    chipProps.planEvent = {
+                        id: uuid.v4(),
+                        value: eventTitle,
+                        sortId: 1, // temporary sort id
+                        listId: datestamp,
+                        timeConfig: {
+                            startTime: event.startDate,
+                            endTime: event.endDate!,
+                            allDay: !!event.allDay
+                        },
+                        status: ItemStatus.STATIC,
+                        color: calendarDetails.color,
+                        calendarId: event.id
+                    };
                 }
+
+                return chipProps;
             });
         return map;
     }, {} as Record<string, EventChipProps[]>);

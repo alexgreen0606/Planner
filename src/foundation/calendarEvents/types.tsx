@@ -25,6 +25,8 @@ export type CalendarDetails = {
     id: string;
     color: string;
     iconType: IconType;
+    isPrimary: boolean;
+    isBirthday: boolean;
 };
 
 export type TimeConfig = {
@@ -32,6 +34,7 @@ export type TimeConfig = {
     startTime: string; // ISO timestamp
     endTime: string; // ISO timestamp
     isEndEvent?: boolean;
+    isStartEvent?: boolean;
 };
 
 export interface PlannerEvent extends ListItem {

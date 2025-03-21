@@ -1,10 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Linking } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Linking, PlatformColor } from 'react-native';
 import CustomText from '../../foundation/components/text/CustomText';
 import { weatherCodeToFontistoIcon } from './utils';
 import globalStyles from '../../foundation/theme/globalStyles';
 import { SFSymbol } from 'react-native-sfsymbols';
-import { Palette } from '../../foundation/theme/colors';
 
 interface WeatherDisplayProps {
     weatherCode: number;
@@ -80,7 +79,7 @@ const defaultStyles = StyleSheet.create({
     divider: {
         width: StyleSheet.hairlineWidth,
         height: '80%',
-        backgroundColor: Palette.DIM,
+        backgroundColor: PlatformColor('systemGray3'),
     },
     icon: {
         marginLeft: 16,

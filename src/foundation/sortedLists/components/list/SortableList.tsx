@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { Pressable, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { OpaqueColorValue, Pressable, TouchableOpacity, View } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import Animated, { runOnUI, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -35,8 +35,8 @@ export interface DraggableListProps<
     getRightIconConfig?: (item: T) => RowIconConfig<T>;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
-    getRowTextColor?: (item: T) => string;
-    getPopovers?: (item: T) => ModifyItemConfig<T, P>[];
+    getRowTextPlatformColor?: (item: T) => string;
+    getToolbars?: (item: T) => ModifyItemConfig<T, P>[];
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
@@ -60,8 +60,10 @@ const SortableList = <
     staticList,
     ...rest
 }: DraggableListProps<T, P, M>) => {
-    const { currentTextfield, setCurrentTextfield, evaluateOffsetBounds } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, evaluateOffsetBounds, setPreviousTextfieldId } = useSortableListContext();
     const positions = useSharedValue<Record<string, number>>({});
+    const pendingTextfield = useRef<T | null>(null);
+    const pendingItem = useRef<T | null>(null);
 
     // ------------- List Building and Management -------------
 
@@ -81,6 +83,20 @@ const SortableList = <
                 }
             }
         }
+        if (pendingTextfield.current) {
+            if (!fullList.find(i => i.id === pendingTextfield.current!.id)) {
+                fullList.push(pendingTextfield.current);
+            } else {
+                pendingTextfield.current = null;
+            }
+        }
+        if (pendingItem.current) {
+            if (!fullList.find(i => i.id === pendingItem.current!.id)) {
+                fullList.push(pendingItem.current);
+            } else {
+                pendingItem.current = null;
+            }
+        }
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }
 
@@ -93,6 +109,8 @@ const SortableList = <
 
         if (currentTextfield && currentTextfield.value.trim() !== '') {
             // Save the current textfield before creating a new one
+            setPreviousTextfieldId(currentTextfield.id);
+            pendingItem.current = { ...currentTextfield };
             await onSaveTextfield(currentTextfield);
         }
 
@@ -104,7 +122,11 @@ const SortableList = <
             listId: listId
         } as ListItem;
 
-        newTextfield = initializeItem?.(newTextfield) ?? newTextfield;
+        // PROBLEM: onSaveTextfield causes the currentList to re-run (because it updates items)
+        // I need to have this function only cause currentList to change once -> it should 
+
+        newTextfield = initializeItem?.(newTextfield) ?? newTextfield as T;
+        pendingTextfield.current = { ...newTextfield } as T;
         setCurrentTextfield(newTextfield);
     }
 

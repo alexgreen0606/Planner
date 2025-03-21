@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, TextStyle } from 'react-native';
+import { PlatformColor, StyleSheet, TextStyle } from 'react-native';
 import { Text } from 'react-native-paper';
-import { Palette } from '../../theme/colors';
 
 interface TextProps extends React.ComponentProps<typeof Text> {
     type: keyof typeof styles;
@@ -17,55 +16,55 @@ const CustomText = ({ type, children, style, ...rest }: TextProps) =>
 const styles = StyleSheet.create({
     pageLabel: {
         fontSize: 25,
-        color: Palette.WHITE,
+        color: PlatformColor('label'),
         fontWeight: 600
     },
     subPageLabel: {
-        color: Palette.GREY,
+        color: PlatformColor('secondaryLabel'),
         fontSize: 14,
     },
     header: {
-        color: Palette.WHITE,
+        color: PlatformColor('label'),
         fontSize: 20
     },
     subHeader: {
-        color: Palette.GREY,
+        color: PlatformColor('secondaryLabel'),
         fontSize: 12,
     },
     standard: {
-        color: Palette.WHITE,
+        color: PlatformColor('label'),
         fontSize: 16,
     },
     label: {
-        color: Palette.GREY,
+        color: PlatformColor('secondaryLabel'),
         fontSize: 14,
         fontWeight: 600
     },
     soft: {
-        color: Palette.DIM,
+        color: PlatformColor('secondaryLabel'),
         fontSize: 12,
     },
     highTemp: {
         fontSize: 16,
-        color: Palette.WHITE,
+        color: PlatformColor('secondaryLabel'),
     },
     lowTemp: {
         fontSize: 12,
-        color: Palette.GREY,
+        color: PlatformColor('tertiaryLabel'),
     },
     hour: {
         fontSize: 24,
         fontFamily: 'Jersey15-Regular',
-        color: Palette.ORANGE,
+        color: PlatformColor('systemOrange'),
     },
     minute: {
         fontSize: 14,
         fontFamily: 'Jersey15-Regular',
-        color: Palette.ORANGE,
+        color: PlatformColor('systemOrange'),
     },
     indicator: {
         fontSize: 7.5,
-        color: Palette.GREY,
+        color: PlatformColor('secondaryLabel'),
         fontWeight: 600
     },
 });

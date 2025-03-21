@@ -1,12 +1,11 @@
 import React, { ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { Button, Dialog, Portal } from 'react-native-paper';
+import { View, StyleSheet, ViewStyle, PlatformColor, OpaqueColorValue } from 'react-native';
+import { Dialog, Portal, Text } from 'react-native-paper';
 import globalStyles from '../theme/globalStyles';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
 import LabelSublabel from './text/LabelSublabel';
-import { Palette } from '../theme/colors';
 
 interface ModalProps {
     title: string;
@@ -14,7 +13,7 @@ interface ModalProps {
     primaryButtonConfig?: {
         label: string;
         onClick: () => void;
-        color?: string;
+        platformColor?: string;
         disabled?: boolean;
     };
     children: ReactNode;
@@ -31,7 +30,6 @@ const Modal = ({
     open,
     iconConfig,
     subTitle,
-    style,
     toggleModalOpen
 }: ModalProps) =>
     <Portal>
@@ -69,15 +67,15 @@ const Modal = ({
                 </Dialog.Content>
                 <Dialog.Actions>
                     <View style={globalStyles.spacedApart}>
-                        <Button textColor={Palette.DIM} onPress={toggleModalOpen}>Cancel</Button>
+                        <Text style={{ color: PlatformColor('systemGray3') }} onPress={toggleModalOpen}>Cancel</Text>
                         {primaryButtonConfig && (
-                            <Button
+                            <Text
                                 disabled={primaryButtonConfig.disabled}
-                                textColor={primaryButtonConfig.color || Palette.BLUE}
+                                style={{ color: PlatformColor(primaryButtonConfig.platformColor ?? 'systemTeal') }}
                                 onPress={primaryButtonConfig.onClick}
                             >
                                 {primaryButtonConfig.label}
-                            </Button>
+                            </Text>
                         )}
                     </View>
                 </Dialog.Actions>
@@ -87,7 +85,7 @@ const Modal = ({
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: Palette.BLACK,
+        backgroundColor: PlatformColor('systemBackground'),
         paddingHorizontal: 8,
         paddingVertical: 4,
     },
