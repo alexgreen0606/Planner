@@ -18,7 +18,6 @@ export const DECELERATION_RATE = 0.998;
 export enum ItemStatus {
     NEW = 'NEW',
     EDIT = 'EDIT',
-    DELETE = 'DELETE',
     TRANSFER = 'TRANSFER',
     STATIC = 'STATIC',
     HIDDEN = 'HIDDEN'

@@ -88,15 +88,6 @@ export function isItemTextfield(item: ListItem): boolean {
     return [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
 }
 
-/**
-* Returns true if the item is deleting.
-* @param item The item to check
-* @returns Whether the item is being deleted
-*/
-export function isItemDeleting(item: ListItem): boolean {
-    return item.status === ItemStatus.DELETE;
-}
-
 // ------------- Position Management -------------
 
 /**

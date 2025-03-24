@@ -14,8 +14,9 @@ import Deadlines from '../../../feature/deadlines';
 import { getNextSevenDayDatestamps } from '../../../foundation/calendarEvents/timestampUtils';
 import { RecurringPlannerKeys } from '../../../feature/recurringPlanners/types';
 import { EventChipProps } from '../../../foundation/calendarEvents/components/EventChip';
-import { generateEventChips } from '../../../foundation/calendarEvents/calendarUtils';
+import { generateEventChipMap, generatePlannerEventMap } from '../../../foundation/calendarEvents/calendarUtils';
 import GenericIcon from '../../../foundation/components/GenericIcon';
+import { PlannerEvent } from '../../../foundation/calendarEvents/types';
 
 const defaultPlannerOptions = [
   { label: 'Next 7 Days', value: getNextSevenDayDatestamps() },
@@ -31,17 +32,19 @@ const Planners = () => {
     })
   }, [])
   const [mode, setMode] = useState(PlannerModes.PLANNERS);
+  const [calendarEventsMap, setCalendarEventsMap] = useState<Record<string, PlannerEvent[]>>({});
   const [selectedRecurring, setSelectedRecurring] = useState({ label: 'Weekdays', value: [RecurringPlannerKeys.WEEKDAYS] });
   const [selectedPlanners, setSelectedPlanners] = useState({ label: 'Next 7 Days', value: getNextSevenDayDatestamps() });
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>();
   const [eventChipMap, setEventChipMap] = useState<Record<string, EventChipProps[]>>();
 
   async function fetchChipsAndWeather() {
-    const allEventChips = await generateEventChips(datestamps);
+    const allEventChips = await generateEventChipMap(datestamps);
     setEventChipMap(allEventChips);
     const forecastMap = await getWeeklyWeather(datestamps);
-
     setForecasts(forecastMap);
+    const calendarEvents = await generatePlannerEventMap(datestamps);
+    setCalendarEventsMap(calendarEvents);
   };
 
   // Load in the initial planners
@@ -96,6 +99,7 @@ const Planners = () => {
                   <PlannerCard
                     key={`${datestamp}-planner`}
                     timestamp={datestamp}
+                    calendarEvents={calendarEventsMap[datestamp]}
                     reloadChips={fetchChipsAndWeather}
                     forecast={forecasts?.[datestamp]}
                     eventChips={eventChipMap[datestamp]}

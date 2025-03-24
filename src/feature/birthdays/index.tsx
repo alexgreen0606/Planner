@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { isItemDeleting } from '../../foundation/sortedLists/utils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { buildBirthdayChecklist } from './storage/birthdayStorage';
-import { PlatformColor, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import globalStyles from '../../foundation/theme/globalStyles';
 import CustomText from '../../foundation/components/text/CustomText';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
@@ -22,16 +21,21 @@ interface BirthdayChecklistProps {
 const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
     const [collapsed, setCollapsed] = useState(false);
     const todayDatestamp = getTodayDatestamp();
-    const BirthdayList = useSortedList<ListItem, ListItem[]>(
-        todayDatestamp,
-        BIRTHDAY_CHECKLIST_STORAGE_ID,
-        (currentList) => buildBirthdayChecklist(currentList, birthdays.map(bday => bday.label), todayDatestamp),
-    );
 
     function toggleCollapsed() {
         if (allBirthdaysContacted)
             setCollapsed(curr => !curr)
     };
+
+    function getItemsFromStorageObject(currentList: ListItem[]) {
+        return buildBirthdayChecklist(currentList, birthdays.map(bday => bday.label), todayDatestamp);
+    };
+
+    const BirthdayList = useSortedList<ListItem, ListItem[]>({
+        storageId: BIRTHDAY_CHECKLIST_STORAGE_ID,
+        storageKey: todayDatestamp,
+        getItemsFromStorageObject
+    });
 
     const allBirthdaysContacted = !BirthdayList.items.some(item => item.status === ItemStatus.STATIC);
 
@@ -66,25 +70,26 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     staticList
                     hideList={collapsed}
                     items={BirthdayList.items}
-                    onDeleteItem={BirthdayList.deleteItemFromStorage}
+                    onDeleteItem={BirthdayList.deleteSingleItemFromStorage}
                     onContentClick={() => { }}
                     getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                     onSaveTextfield={() => { }}
                     onDragEnd={BirthdayList.persistItemToStorage}
+                    isItemDeleting={BirthdayList.isItemDeleting}
                     getRightIconConfig={item => ({
                         icon: {
-                            type: isItemDeleting(item) ? 'messageFilled' : 'message',
-                            platformColor: isItemDeleting(item) ? 'secondaryLabel' : 'systemTeal',
+                            type: BirthdayList.isItemDeleting(item) ? 'messageFilled' : 'message',
+                            platformColor: BirthdayList.isItemDeleting(item) ? 'secondaryLabel' : 'systemTeal',
                             hideRipple: true
                         },
                         onClick: async () => {
-                            const newContactedStatus = !isItemDeleting(item);
+                            const newContactedStatus = !BirthdayList.isItemDeleting(item);
                             if (newContactedStatus) {
                                 const personName = extractNameFromBirthdayText(item.value);
                                 if (personName) {
                                     await openBirthdayMessage(personName);
                                 }
-                                BirthdayList.persistItemToStorage({ ...item, status: ItemStatus.DELETE });
+                                BirthdayList.persistItemToStorage({ ...item, status: ItemStatus.STATIC }); // TODO: need to mark the item checked somehow - make new item type
                             } else {
                                 BirthdayList.persistItemToStorage({ ...item, status: ItemStatus.STATIC });
                             }

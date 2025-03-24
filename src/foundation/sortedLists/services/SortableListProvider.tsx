@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useRef, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
     scrollTo,
     useAnimatedRef,
-    useAnimatedKeyboard,
     useAnimatedReaction,
     SharedValue,
     measure,
@@ -18,24 +17,25 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 import { ListItem, SCROLL_THROTTLE } from '../types';
-import { ScrollView, View, KeyboardAvoidingView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import GenericIcon from '../../components/GenericIcon';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BANNER_HEIGHT } from '../../components/constants';
+import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedReload = Animated.createAnimatedComponent(View);
+const AnimatedFiller = Animated.createAnimatedComponent(View);
 
-interface PendingDelete<T extends ListItem> {
-    timeout: NodeJS.Timeout;
-    item: T;
-}
-
-interface SortableListProviderProps<T extends ListItem> {
+interface SortableListProviderProps {
     children: React.ReactNode;
     enableReload?: boolean;
+}
+
+enum LoadingStatus {
+    STATIC = 'STATIC', // no overscroll visible
+    LOADING = 'LOADING', // currently rebuilding list
+    COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
 }
 
 interface SortableListContextValue<T extends ListItem> {
@@ -49,13 +49,26 @@ interface SortableListContextValue<T extends ListItem> {
     setCurrentTextfield: React.Dispatch<React.SetStateAction<T | undefined>>;
     previousTextfieldId: T | undefined;
     setPreviousTextfieldId: React.Dispatch<React.SetStateAction<string | undefined>>;
-    pendingDeletes: React.MutableRefObject<Map<string, PendingDelete<T>>>;
+    pendingDeleteItems: T[];
+    setPendingDeleteItems: React.Dispatch<React.SetStateAction<T[]>>;
     loadingData: boolean;
-    keyboardPosition: SharedValue<number>;
     endLoadingData: () => void;
 }
 
 const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
+
+export const SortableListProvider = ({
+    children,
+    enableReload = false,
+}: SortableListProviderProps) => {
+    return (
+        <KeyboardProvider>
+            <SortableListProviderContent enableReload={enableReload}>
+                {children}
+            </SortableListProviderContent>
+        </KeyboardProvider>
+    );
+};
 
 /**
  * Provider to allow multiple lists to be rendered within a larger scroll container.
@@ -63,17 +76,15 @@ const SortableListContext = createContext<SortableListContextValue<any> | null>(
  * Container allows for native scrolling, or manual scrolling by exposing the @scrollOffset variable.
  * Manual scroll will only work while @isManualScrolling variable is set to true.
  */
-export const SortableListProvider = <T extends ListItem>({
+export const SortableListProviderContent = <T extends ListItem>({
     children,
     enableReload = false,
-}: SortableListProviderProps<T>) => {
-    const { top } = useSafeAreaInsets();
-    const keyboard = useAnimatedKeyboard();
+}: SortableListProviderProps) => {
 
     // --- List Variables ---
     const [currentTextfield, setCurrentTextfield] = useState<T | undefined>(undefined);
     const [previousTextfieldId, setPreviousTextfieldId] = useState<string | undefined>(undefined);
-    const pendingDeletes = useRef<Map<string, PendingDelete<T>>>(new Map());
+    const [pendingDeleteItems, setPendingDeleteItems] = useState<T[]>([]);
 
     // --- Scroll Variables ---
     const [visibleHeight, setVisibleHeight] = useState(0);
@@ -85,14 +96,12 @@ export const SortableListProvider = <T extends ListItem>({
     const contentRef = useAnimatedRef<Animated.View>();
     const scrollOffset = useSharedValue(0);
     const disableNativeScroll = useSharedValue(false);
+    const { keyboardHeight } = useKeyboard();
 
     // --- Reload Variables ---
-    const [loadingData, setLoadingData] = useState(false);
-    const [showCheckmark, setShowCheckmark] = useState(false);
-    const canRefresh = useSharedValue(true);
-    const spinValue = useSharedValue(0);
-    const offsetY = useSharedValue(0);
-    const loadingComplete = useSharedValue(false);
+    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
+    const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
+    const loadingRotation = useSharedValue(0);
 
     // ------------- Utility Functions -------------
 
@@ -103,8 +112,15 @@ export const SortableListProvider = <T extends ListItem>({
         });
     };
 
+    const updateLoadingStatus = (newStatus: LoadingStatus) => {
+        setLoadingStatus(newStatus);
+        loadingAnimationTrigger.value = newStatus;
+    }
+
     const endLoadingData = () => {
-        setLoadingData(false);
+        if (loadingStatus !== LoadingStatus.STATIC) {
+            updateLoadingStatus(LoadingStatus.COMPLETE);
+        }
     }
 
     const evaluateOffsetBounds = (customContentHeight: number = 0) => {
@@ -118,51 +134,6 @@ export const SortableListProvider = <T extends ListItem>({
 
     // ---------- Animated Reactions ----------
 
-    // Manual Scroll
-    useAnimatedReaction(
-        () => scrollOffset.value,
-        (current) => {
-            scrollTo(scrollRef, 0, current, false);
-            if (enableReload) {
-                offsetY.value = Math.min(0, current);
-
-                // Allow refreshes when scroll returns to top
-                if (current >= 0 && !canRefresh.value) {
-                    canRefresh.value = true;
-                    loadingComplete.value = false;
-                    runOnJS(setShowCheckmark)(false);
-                }
-
-                if (canRefresh.value && current <= -100) {
-                    canRefresh.value = false;
-                    runOnJS(setLoadingData)(true);
-                }
-            }
-        }
-    );
-
-    // Loading Spin Animation
-    useAnimatedReaction(
-        () => loadingData,
-        (isLoading, wasLoading) => {
-            if (isLoading && !wasLoading) {
-                // Begin Spinning Animation
-                runOnJS(triggerHaptic)();
-                canRefresh.value = false;
-                spinValue.value = withRepeat(
-                    withTiming(spinValue.value - 360, {
-                        duration: 500,
-                        easing: Easing.linear
-                    }),
-                    -1,
-                    false,
-                );
-            } else if (!isLoading && wasLoading) {
-                loadingComplete.value = true;
-                runOnJS(setShowCheckmark)(true);
-            }
-        }, [loadingData])
-
     // Native Scroll
     const handler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -172,19 +143,58 @@ export const SortableListProvider = <T extends ListItem>({
         }
     });
 
-    // Spin Icon End
+    // Manual Scroll
     useAnimatedReaction(
-        () => ({ complete: loadingComplete.value, rotation: spinValue.value }),
-        (curr) => {
-            if (curr.complete && curr.rotation % 360 >= -1) {
-                cancelAnimation(spinValue);
+        () => scrollOffset.value,
+        (current) => {
+            scrollTo(scrollRef, 0, current, false);
+            if (enableReload) {
+                // scrollOverbound.value = Math.min(0, current);
+
+                // Allow refreshes when scroll returns to top
+                if (current >= 0 && loadingAnimationTrigger.value === LoadingStatus.COMPLETE) {
+                    runOnJS(updateLoadingStatus)(LoadingStatus.STATIC);
+                }
+
+                // Trigger a reload of the list
+                if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -100) {
+                    runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
+                }
             }
         }
     );
 
-    const refreshIconStyle = useAnimatedStyle(() => {
+    // Loading Spinner Animation
+    useAnimatedReaction(
+        () => ({
+            status: loadingAnimationTrigger.value,
+            overscroll: Math.min(0, scrollOffset.value),
+            rotation: loadingRotation.value
+        }),
+        (curr, prev) => {
+            if (curr.status === LoadingStatus.STATIC) return;
+            if (curr.status === LoadingStatus.LOADING && prev?.status !== LoadingStatus.LOADING) {
+                // Begin Spinning Animation
+                runOnJS(triggerHaptic)();
+                loadingRotation.value = withRepeat(
+                    withTiming(loadingRotation.value - 360, {
+                        duration: 500,
+                        easing: Easing.linear
+                    }),
+                    -1,
+                    false,
+                );
+            } else if (curr.status === LoadingStatus.COMPLETE) {
+                if (curr.rotation % 360 >= -1) {
+                    cancelAnimation(loadingRotation);
+                }
+            }
+        }
+    );
+
+    const loadingIconStyle = useAnimatedStyle(() => {
         const opacity = interpolate(
-            offsetY.value,
+            Math.min(0, scrollOffset.value),
             [-50, -100],
             [0, 1],
             Extrapolation.CLAMP
@@ -192,7 +202,7 @@ export const SortableListProvider = <T extends ListItem>({
         return {
             opacity,
             transform: [
-                { rotate: `${spinValue.value}deg` },
+                { rotate: `${loadingRotation.value}deg` },
             ],
             position: 'absolute',
             top: -50,
@@ -200,53 +210,55 @@ export const SortableListProvider = <T extends ListItem>({
         };
     });
 
+    const keyboardPadboxStyle = useAnimatedStyle(() => {
+        return {
+            width: 100,
+            height: keyboardHeight.value
+        };
+    });
+
     return (
         <SortableListContext.Provider
             value={{
                 currentTextfield,
-                keyboardPosition: keyboard.height,
                 setCurrentTextfield,
-                pendingDeletes,
                 scrollOffset,
                 disableNativeScroll,
                 scrollOffsetBounds,
                 evaluateOffsetBounds,
-                loadingData,
+                loadingData: loadingStatus === LoadingStatus.LOADING,
                 endLoadingData,
                 previousTextfieldId,
-                setPreviousTextfieldId
+                setPreviousTextfieldId,
+                pendingDeleteItems,
+                setPendingDeleteItems
             }}
         >
-            <KeyboardAvoidingView
-                behavior='padding' // TODO which to use
-                keyboardVerticalOffset={top + BANNER_HEIGHT}
-                style={{ flex: 1 }}
+            <AnimatedScrollView
+                ref={scrollRef}
+                scrollEventThrottle={SCROLL_THROTTLE}
+                scrollToOverflowEnabled={true}
+                onScroll={handler}
+                contentContainerStyle={{ flexGrow: 1 }}
+                onLayout={(event) => {
+                    const { height } = event.nativeEvent.layout;
+                    setVisibleHeight(height);
+                }}
             >
-                <AnimatedScrollView
-                    ref={scrollRef}
-                    scrollEventThrottle={SCROLL_THROTTLE}
-                    scrollToOverflowEnabled={true}
-                    onScroll={handler}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    onLayout={(event) => {
-                        const { height } = event.nativeEvent.layout;
-                        setVisibleHeight(height);
-                    }}
-                >
-                    <AnimatedView ref={contentRef} style={{ flex: 1 }}>
-                        {enableReload && (
-                            <AnimatedReload style={[refreshIconStyle]}>
-                                <GenericIcon
-                                    size='l'
-                                    platformColor={showCheckmark ? 'systemTeal' : 'secondaryLabel'}
-                                    type={showCheckmark ? 'refreshComplete' : 'refresh'}
-                                />
-                            </AnimatedReload>
-                        )}
-                        {children}
-                    </AnimatedView>
-                </AnimatedScrollView>
-            </KeyboardAvoidingView>
+                <AnimatedView ref={contentRef} style={{ flex: 1 }}>
+                    {enableReload && (
+                        <AnimatedReload style={[loadingIconStyle]}>
+                            <GenericIcon
+                                size='l'
+                                platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemTeal' : 'secondaryLabel'}
+                                type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
+                            />
+                        </AnimatedReload>
+                    )}
+                    {children}
+                    <AnimatedFiller style={keyboardPadboxStyle} />
+                </AnimatedView>
+            </AnimatedScrollView>
         </SortableListContext.Provider>
     );
 };

@@ -9,7 +9,7 @@ import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import DateValue from '../../foundation/calendarEvents/components/values/DateValue';
 import CustomText from '../../foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
-import { deleteDeadline, getDeadlines, saveDeadline } from './deadlineUtils';
+import { deleteDeadlines, getDeadlines, saveDeadline } from './deadlineUtils';
 import { DEADLINE_LIST_KEY } from './types';
 import { Deadline } from '../../foundation/calendarEvents/types';
 import GenericIcon from '../../foundation/components/GenericIcon';
@@ -22,7 +22,7 @@ const Deadlines = () => {
     const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
 
     function initializedeadline(item: ListItem) {
-        const newSortId = generateSortId(-1, deadlineItems.items);
+        const newSortId = generateSortId(-1, DeadlineItems.items);
         return {
             ...item,
             sortId: newSortId,
@@ -32,30 +32,29 @@ const Deadlines = () => {
 
     async function toggleDateSelector(deadline: Deadline) {
         if (!isItemTextfield(deadline))
-            await deadlineItems.toggleItemEdit(deadline);
+            await DeadlineItems.toggleItemEdit(deadline);
         setDateSelectOpen(curr => !curr);
     };
 
-    const deadlineItems = useSortedList<Deadline, Deadline[]>(
-        DEADLINE_LIST_KEY,
-        DEADLINE_LIST_KEY,
-        () => getDeadlines(),
-        (list) => list,
-        {
+    const DeadlineItems = useSortedList<Deadline, Deadline[]>({
+        storageId: DEADLINE_LIST_KEY,
+        storageKey: DEADLINE_LIST_KEY,
+        getItemsFromStorageObject: getDeadlines,
+        storageConfig: {
             create: (deadline) => {
                 saveDeadline(deadline, true);
-                deadlineItems.refetchItems();
+                DeadlineItems.refetchItems();
             },
             update: (deadline) => {
                 saveDeadline(deadline, false);
-                deadlineItems.refetchItems();
+                DeadlineItems.refetchItems();
             },
-            delete: (deadline) => {
-                deleteDeadline(deadline);
-                deadlineItems.refetchItems();
+            delete: async (deadlines) => {
+                await deleteDeadlines(deadlines);
+                DeadlineItems.refetchItems();
             }
         }
-    );
+    });
 
     return (
         <View style={globalStyles.blackFilledSpace}>
@@ -65,13 +64,14 @@ const Deadlines = () => {
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
                 disableDrag
-                items={deadlineItems.items}
+                items={DeadlineItems.items}
                 initializeItem={initializedeadline}
-                onDeleteItem={deadlineItems.deleteItemFromStorage}
-                onContentClick={deadlineItems.toggleItemEdit}
+                isItemDeleting={DeadlineItems.isItemDeleting}
+                onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
+                onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
-                onSaveTextfield={deadlineItems.persistItemToStorage}
-                onDragEnd={deadlineItems.persistItemToStorage} // todo no dragging
+                onSaveTextfield={DeadlineItems.persistItemToStorage}
+                onDragEnd={DeadlineItems.persistItemToStorage} // todo no dragging
                 emptyLabelConfig={{
                     label: 'No deadlines',
                     style: { flex: 1 }
@@ -89,7 +89,7 @@ const Deadlines = () => {
                                 </CustomText> :
                                 <GenericIcon
                                     type='trash'
-                                    onClick={() => deadlineItems.toggleItemDelete(deadline)}
+                                    onClick={() => DeadlineItems.toggleItemDelete(deadline)}
                                     style={{ marginLeft: 8 }}
                                 />
                             }
@@ -110,7 +110,7 @@ const Deadlines = () => {
                 onConfirm={(date) => {
                     if (!currentTextfield) return;
                     const updatedDeadline = { ...currentTextfield, startTime: date.toISOString() };
-                    const updatedList = [...deadlineItems.items];
+                    const updatedList = [...DeadlineItems.items];
                     const itemCurrentIndex = updatedList.findIndex(listItem => listItem.id === currentTextfield.id);
                     if (itemCurrentIndex !== -1) {
                         updatedList[itemCurrentIndex] = updatedDeadline;

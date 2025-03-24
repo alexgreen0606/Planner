@@ -7,7 +7,7 @@ import BirthdayCard from '../../../feature/birthdays';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import EventChip, { EventChipProps } from '../../../foundation/calendarEvents/components/EventChip';
 import { getTodayDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
-import { generateEventChips } from '../../../foundation/calendarEvents/calendarUtils';
+import { generateEventChipMap } from '../../../foundation/calendarEvents/calendarUtils';
 
 const Today = () => {
   const timestamp = getTodayDatestamp();
@@ -15,7 +15,7 @@ const Today = () => {
   const [birthdayChips, setBirthdayChips] = useState<EventChipProps[]>();
 
   async function getEventChips() {
-    const allEventChips = await generateEventChips([timestamp]);
+    const allEventChips = await generateEventChipMap([timestamp]);
     const todayChips = allEventChips[timestamp];
     const todayBirthdayChips: EventChipProps[] = [];
     const todayOtherChips: EventChipProps[] = [];

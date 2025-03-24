@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { isItemTextfield } from '../../foundation/sortedLists/utils';
 import { LISTS_STORAGE_ID, Checklist } from './types';
@@ -14,14 +14,22 @@ interface SortableListProps {
 const ChecklistList = ({
     listId,
 }: SortableListProps) => {
+    const { pendingDeleteItems } = useSortableListContext();
 
-    // Stores the current list and all handler functions to update it
-    const SortedItems = useSortedList<ListItem, Checklist>(
-        listId,
-        LISTS_STORAGE_ID,
-        (storageObject: Checklist) => storageObject.items,
-        (newItems: ListItem[], currentObject: Checklist) => ({ ...currentObject, items: newItems }),
-    );
+    function getItemsFromStorageObject(storageObject: Checklist) {
+        return storageObject.items;
+    }
+
+    function setItemsInStorageObject(newItems: ListItem[], currentObject: Checklist) {
+        return { ...currentObject, items: newItems };
+    }
+
+    const SortedItems = useSortedList<ListItem, Checklist>({
+        storageId: LISTS_STORAGE_ID,
+        storageKey: listId,
+        getItemsFromStorageObject,
+        setItemsInStorageObject
+    });
 
     return (
         <SortableList<ListItem, never, never>
@@ -29,9 +37,10 @@ const ChecklistList = ({
             items={SortedItems.items}
             onDragEnd={SortedItems.persistItemToStorage}
             onContentClick={SortedItems.toggleItemEdit}
-            onDeleteItem={SortedItems.deleteItemFromStorage}
+            isItemDeleting={SortedItems.isItemDeleting}
+            onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete)}
+            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, pendingDeleteItems)}
             onSaveTextfield={(updatedItem: ListItem) => {
                 const item = { ...updatedItem, status: isItemTextfield(updatedItem) ? ItemStatus.STATIC : updatedItem.status }
                 SortedItems.persistItemToStorage(item);

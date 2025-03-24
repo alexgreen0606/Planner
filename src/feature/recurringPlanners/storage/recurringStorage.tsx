@@ -43,9 +43,15 @@ export function saveRecurringWeekdayEvent(event: RecurringEvent) {
     });
 }
 
-export function deleteRecurringWeekdayEvent(deleteEvent: RecurringEvent) {
+export function deleteRecurringWeekdayEvent(eventsToDelete: RecurringEvent[]) {
     Object.values(Weekdays).forEach((day) => {
         const planner = getPlannerFromStorage(day);
-        savePlannerToStorage(day, planner.filter(event => event.id !== deleteEvent.id));
+        savePlannerToStorage(
+            day,
+            // Filter out any planner events within the list of events to delete
+            planner.filter(
+                planEvent => !eventsToDelete.some(delEvent => delEvent.id === planEvent.id)
+            )
+        );
     });
 }

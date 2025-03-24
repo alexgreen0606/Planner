@@ -61,6 +61,8 @@ export async function saveDeadline(deadline: Deadline, createNew: boolean) {
     );
 };
 
-export async function deleteDeadline(deadline: Deadline) {
-    await ReactNativeCalendarEvents.removeEvent(deadline.id);
-};
+export async function deleteDeadlines(deadlines: Deadline[]) {
+    await Promise.all(
+        deadlines.map((deadline) => ReactNativeCalendarEvents.removeEvent(deadline.id))
+    );
+}

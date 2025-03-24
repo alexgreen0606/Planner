@@ -19,7 +19,7 @@ interface SortedRecurringPlannerProps {
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
-    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableListContext();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     async function toggleTimeModal(item: RecurringEvent) {
@@ -55,11 +55,10 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         toggleTimeModal(currentTextfield);
     };
 
-    // Stores the current recurring weekday planner and all handler functions to update it
-    const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>(
-        plannerKey,
-        PLANNER_STORAGE_ID,
-    );
+    const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>({
+        storageId: PLANNER_STORAGE_ID,
+        storageKey: plannerKey
+    });
 
     return (
         <View style={globalStyles.blackFilledSpace}>
@@ -67,14 +66,15 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace
+                isItemDeleting={SortedEvents.isItemDeleting}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
-                onDeleteItem={SortedEvents.deleteItemFromStorage}
+                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as RecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
                 emptyLabelConfig={{
                     label: `No recurring ${plannerKey} plans`,
                     style: { flex: 1 }

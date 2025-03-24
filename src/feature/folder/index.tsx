@@ -17,7 +17,6 @@ import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
 import { useNavigatorContext } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId } from '../../foundation/sortedLists/utils';
-import { PlatformColor } from 'react-native';
 
 interface SortableFolderProps {
     folderId: string;
@@ -39,7 +38,7 @@ const SortedFolder = ({
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
 
-    // Creates a new textfield with initial item count set to 0
+    // Creates a new empty brown folder item
     const initializeFolderItem = (newItem: ListItem) => ({
         ...newItem,
         childrenCount: 0,
@@ -48,27 +47,12 @@ const SortedFolder = ({
         platformColor: 'systemBrown',
     });
 
-    // Toggles an item in and out of delete status
-    const toggleDeleteModal = () => setDeleteModalOpen(curr => !curr);
-
-    // Stores the current folder and all handler functions to update it
-    const SortedItems = useSortedList<FolderItem, Folder>(
-        folderId,
-        LISTS_STORAGE_ID,
-        getFolderItems,
-        undefined,
-        {
-            create: createFolderItem,
-            update: (newItem) => {
-                updateFolderItem(newItem);
-                SortedItems.refetchItems();
-            },
-            delete: (item) => deleteFolderItem(item.id, item.type)
-        },
-    );
-
-    const beginItemTransfer = (item: FolderItem) => {
+    function beginItemTransfer(item: FolderItem) {
         return { ...item, status: ItemStatus.TRANSFER };
+    }
+
+    function toggleDeleteModal() {
+        setDeleteModalOpen(curr => !curr);
     }
 
     /**
@@ -175,7 +159,22 @@ const SortedFolder = ({
                 'list';
     const getIconPlatformColor = (item: FolderItem) => isItemTransfering(item) ?
         'systemTeal' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
-            'secondaryLabel' : item.platformColor
+            'secondaryLabel' : item.platformColor;
+
+    const SortedItems = useSortedList<FolderItem, Folder>({
+        storageId: LISTS_STORAGE_ID,
+        storageKey: folderId,
+        getItemsFromStorageObject: getFolderItems,
+        storageConfig: {
+            create: createFolderItem,
+            update: (newItem) => {
+                updateFolderItem(newItem);
+                // Manually reload the list
+                SortedItems.refetchItems();
+            },
+            delete: (items) => deleteFolderItem(items[0].id, items[0].type)
+        }
+    });
 
     return (
         <SortableList<FolderItem, ToolbarProps, DeleteModalProps>
@@ -183,9 +182,10 @@ const SortedFolder = ({
             items={SortedItems.items}
             fillSpace
             onDragEnd={SortedItems.persistItemToStorage}
+            isItemDeleting={SortedItems.isItemDeleting}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             onSaveTextfield={SortedItems.persistItemToStorage}
-            onDeleteItem={SortedItems.deleteItemFromStorage}
+            onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getToolbars={item => [editItemToolbarConfig(item), newItemToolbarConfig(item)]}
             initializeItem={initializeFolderItem}
             onContentClick={handleItemClick}
@@ -205,7 +205,7 @@ const SortedFolder = ({
                     hideKeyboard: deleteModalOpen,
                     toggleModalOpen: toggleDeleteModal,
                     onSave: (updatedItem: FolderItem) => {
-                        SortedItems.deleteItemFromStorage(updatedItem);
+                        SortedItems.deleteSingleItemFromStorage(updatedItem);
                         toggleDeleteModal();
                         return undefined;
                     },

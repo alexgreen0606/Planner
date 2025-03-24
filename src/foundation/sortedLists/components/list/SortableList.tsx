@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { OpaqueColorValue, Pressable, TouchableOpacity, View } from 'react-native';
+import { Dimensions, OpaqueColorValue, Pressable, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
-import Animated, { runOnUI, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { runOnUI, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
     ItemStatus,
     ListItem,
@@ -16,6 +16,7 @@ import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
 import ThinLine from '../../../components/ThinLine';
 import { buildItemPositions, generateSortId } from '../../utils';
+import { useKeyboard } from '../../services/KeyboardProvider';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -41,6 +42,7 @@ export interface DraggableListProps<
     initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     staticList?: boolean;
+    isItemDeleting: (item: T) => boolean;
 }
 
 // ------------- Component Definition -------------
@@ -60,7 +62,13 @@ const SortableList = <
     staticList,
     ...rest
 }: DraggableListProps<T, P, M>) => {
-    const { currentTextfield, setCurrentTextfield, evaluateOffsetBounds, setPreviousTextfieldId } = useSortableListContext();
+    const {
+        currentTextfield,
+        setCurrentTextfield,
+        evaluateOffsetBounds,
+        setPreviousTextfieldId,
+    } = useSortableListContext();
+    const { isKeyboardOpen } = useKeyboard();
     const positions = useSharedValue<Record<string, number>>({});
     const pendingTextfield = useRef<T | null>(null);
     const pendingItem = useRef<T | null>(null);
@@ -122,9 +130,6 @@ const SortableList = <
             listId: listId
         } as ListItem;
 
-        // PROBLEM: onSaveTextfield causes the currentList to re-run (because it updates items)
-        // I need to have this function only cause currentList to change once -> it should 
-
         newTextfield = initializeItem?.(newTextfield) ?? newTextfield as T;
         pendingTextfield.current = { ...newTextfield } as T;
         setCurrentTextfield(newTextfield);
@@ -154,7 +159,18 @@ const SortableList = <
             contentHeight = (currentList.length + 1) * LIST_ITEM_HEIGHT;
         }
         runOnUI(evaluateOffsetBounds)(contentHeight);
-    }, [currentTextfield?.id, currentList.length, hideList])
+    }, [hideList, currentList.length, currentTextfield?.id])
+
+    useAnimatedReaction(
+        () => isKeyboardOpen.value,
+        () => {
+            let contentHeight = 0;
+            if (!hideList && fillSpace) {
+                contentHeight = (currentList.length + 1) * LIST_ITEM_HEIGHT;
+            }
+            evaluateOffsetBounds(contentHeight);
+        }
+    )
 
     // ------------- Animations -------------
 

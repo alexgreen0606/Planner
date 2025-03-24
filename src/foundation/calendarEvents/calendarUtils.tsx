@@ -2,8 +2,10 @@ import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-e
 import { datestampToMidnightDate, generateSortIdByTime, timeValueToIso } from "./timestampUtils";
 import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
-import { CalendarDetails, PlannerEvent, RecurringEvent } from "./types";
+import { PlannerEvent, RecurringEvent } from "./types";
 import { ItemStatus } from "../sortedLists/types";
+
+// ---------- Data Model Generation ----------
 
 function getCalendarIcon(calendarName: string) {
     switch (calendarName) {
@@ -16,6 +18,99 @@ function getCalendarIcon(calendarName: string) {
         default:
             return 'megaphone';
     }
+}
+
+/**
+ * TODO comment
+ * @param event 
+ * @param datestamp 
+ * @returns 
+ */
+function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): PlannerEvent {
+    const dateStart = datestampToMidnightDate(datestamp);
+    const dateEnd = datestampToMidnightDate(datestamp, 1);
+    const eventStart = new Date(event.startDate);
+    const eventEnd = new Date(event.endDate!);
+    const isEndEvent = eventEnd < dateEnd && eventStart < dateStart; // Starts before date and ends on date
+    const isStartEvent = eventStart >= dateStart && eventStart < dateEnd && eventEnd >= dateEnd; // Starts on date and ends after date
+    return {
+        id: event.id,
+        value: event.title,
+        sortId: 1, // temporary sort id -> will be overwritten
+        listId: datestamp,
+        timeConfig: {
+            startTime: event.startDate,
+            endTime: event.endDate!,
+            allDay: false,
+            isEndEvent,
+            isStartEvent
+        },
+        status: ItemStatus.STATIC
+    };
+}
+
+/**
+ * 
+ * @param event 
+ * @param datestamp 
+ * @param calendarDetails 
+ * @returns 
+ */
+function generateEventChip(event: CalendarEventReadable, datestamp: string): EventChipProps {
+    const calendar = event.calendar!;
+
+    // Process title for birthday events
+    let eventTitle = event.title;
+    const isBirthday = calendar.title === 'Birthdays';
+    if (isBirthday) {
+        eventTitle = eventTitle.split(/['’]s /)[0];
+    }
+
+    const chipProps: EventChipProps = {
+        label: eventTitle,
+        iconConfig: {
+            type: getCalendarIcon(calendar.title),
+        },
+        color: calendar?.color || '#000000'
+    };
+
+    if (calendar.isPrimary) {
+        chipProps.planEvent = {
+            id: event.id,
+            value: eventTitle,
+            sortId: 1, // temporary sort id
+            listId: datestamp,
+            timeConfig: {
+                startTime: event.startDate,
+                endTime: event.endDate!,
+                allDay: !!event.allDay
+            },
+            status: ItemStatus.STATIC,
+            color: calendar?.color || '#000000',
+            calendarId: event.id
+        };
+    }
+
+    return chipProps;
+}
+
+/**
+ * TODO comment
+ * @param event 
+ * @param datestamp 
+ * @returns 
+ */
+function validateCalendarEvent(event: CalendarEventReadable, datestamp: string): boolean {
+    if (event.allDay || !event.endDate) return false;
+    const dateStart = datestampToMidnightDate(datestamp);
+    const dateEnd = datestampToMidnightDate(datestamp, 1);
+    const eventStart = new Date(event.startDate);
+    const eventEnd = new Date(event.endDate);
+    return (
+        eventStart >= dateStart && eventStart < dateEnd // Starts on this date OR
+    ) || (
+            eventEnd >= dateStart && eventEnd < dateEnd // Ends on this date
+        );
 }
 
 /**
@@ -55,53 +150,7 @@ function validateEventChip(event: CalendarEventReadable, datestamp: string): boo
     }
 }
 
-/**
- * TODO comment
- * @param event 
- * @param datestamp 
- * @returns 
- */
-function validateEvent(event: CalendarEventReadable, datestamp: string): boolean {
-    if (event.allDay || !event.endDate) return false;
-    const dateStart = datestampToMidnightDate(datestamp);
-    const dateEnd = datestampToMidnightDate(datestamp, 1);
-    const eventStart = new Date(event.startDate);
-    const eventEnd = new Date(event.endDate);
-    return (
-        eventStart >= dateStart && eventStart < dateEnd // Starts on this date OR
-    ) || (
-            eventEnd < dateEnd // Ends on this date
-        );
-};
-
-/**
- * TODO comment
- * @param event 
- * @param datestamp 
- * @returns 
- */
-function sanitizeCalendarEvent(event: CalendarEventReadable, datestamp: string): PlannerEvent {
-    const dateStart = datestampToMidnightDate(datestamp);
-    const dateEnd = datestampToMidnightDate(datestamp, 1);
-    const eventStart = new Date(event.startDate);
-    const eventEnd = new Date(event.endDate!);
-    const isEndEvent = eventEnd < dateEnd && eventStart < dateStart; // Starts before date and ends on date
-    const isStartEvent = eventStart >= dateStart && eventStart < dateEnd && eventEnd >= dateEnd; // Starts on date and ends after date
-    return {
-        id: event.id,
-        value: event.title,
-        sortId: 1, // temporary sort id -> will be overwritten
-        listId: datestamp,
-        timeConfig: {
-            startTime: event.startDate,
-            endTime: event.endDate!,
-            allDay: false,
-            isEndEvent,
-            isStartEvent
-        },
-        status: ItemStatus.STATIC
-    };
-};
+// ---------- Calendar Interaction Utilities ----------
 
 /**
  * Grants access to the device calendar.
@@ -114,115 +163,53 @@ export async function getCalendarAccess() {
             throw new Error('Access denied to calendars.'); // TODO: just skip calendars if denied?
         }
     }
-};
-
-/**
- * Fetches the primary calendar ID for this device.
- */
-export async function getPrimaryCalendarDetails(): Promise<CalendarDetails> {
-    await getCalendarAccess();
-    const calendars = await RNCalendarEvents.findCalendars();
-    const primaryCalendar = calendars.find(calendar => calendar.isPrimary);
-    if (!primaryCalendar) throw new Error('Primary calendar does not exist!');
-    return { id: primaryCalendar.id, color: primaryCalendar.color, iconType: 'megaphone', isPrimary: true, isBirthday: false };
-};
-
-/**
- * Builds a map of all calendar IDs to calendar colors.
- */
-export async function generateCalendarDetailsMap(): Promise<Record<string, CalendarDetails>> {
-    await getCalendarAccess();
-    const calendars = await RNCalendarEvents.findCalendars();
-    const idToColorMap: Record<string, CalendarDetails> = {};
-    calendars.forEach(calendar => {
-        idToColorMap[calendar.id] = {
-            id: calendar.id,
-            color: calendar.color,
-            iconType: getCalendarIcon(calendar.title),
-            isPrimary: calendar.isPrimary,
-            isBirthday: calendar.title === 'Birthdays'
-        };
-    });
-    return idToColorMap;
-};
+}
 
 /**
  * Fetches all events from the device calendar for the given date.
  * TODO: validate the events as needed
  * @param datestamp - YYYY-MM-DD
  */
-export async function getCalendarEvents(datestamp: string): Promise<PlannerEvent[]> {
-    const startDate = new Date(`${datestamp}T00:00:00`).toISOString();
-    const endDate = new Date(`${datestamp}T23:59:59`).toISOString();
-    const calendarColorMap = await generateCalendarDetailsMap();
+export async function generatePlannerEventMap(datestamps: string[]): Promise<Record<string, PlannerEvent[]>> {
+    // Find the overall date range
+    const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
+    const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
 
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, Object.keys(calendarColorMap));
-    return calendarEvents
-        .filter(calEvent => validateEvent(calEvent, datestamp))
-        .map(calendarEvent => sanitizeCalendarEvent(calendarEvent, datestamp));
-};
+    // Fetch all events in the date range
+    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
+
+    // Build a map of datestamps to their corresponding PlannerEvent arrays
+    return datestamps.reduce((map, datestamp) => {
+        map[datestamp] = calendarEvents
+            .filter(calEvent => validateCalendarEvent(calEvent, datestamp))
+            .map(calendarEvent => generatePlannerEvent(calendarEvent, datestamp));
+        return map;
+    }, {} as Record<string, PlannerEvent[]>);
+}
 
 /**
  * Map each timestamp to a list of event chip configs for that day.
  * Any event that is all day will be convertted into a chip.
  * @param timestamp - YYYY-MM-DD
  */
-export async function generateEventChips(timestamps: string[]): Promise<Record<string, EventChipProps[]>> {
+export async function generateEventChipMap(datestamps: string[]): Promise<Record<string, EventChipProps[]>> {
     await getCalendarAccess();
 
     // Find the overall date range
-    const startDate = new Date(`${timestamps[0]}T00:00:00`).toISOString();
-    const endDate = new Date(`${timestamps[timestamps.length - 1]}T23:59:59`).toISOString();
+    const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
+    const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
 
     // Fetch all events in the date range and format
-    const calendarColorMap = await generateCalendarDetailsMap();
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate, Object.keys(calendarColorMap));
-    const eventChipMap: Record<string, EventChipProps[]> = timestamps.reduce((map, datestamp) => {
+    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
+    return datestamps.reduce((map, datestamp) => {
         map[datestamp] = calendarEvents
             .filter(event => validateEventChip(event, datestamp))
-            .map(event => {
-                const calendarDetails = calendarColorMap[event.calendar?.id!];
-
-                // Process title for birthday events
-                let eventTitle = event.title;
-                if (calendarDetails.isBirthday) {
-                    eventTitle = eventTitle.split(/['’]s /)[0]
-                }
-
-                const chipProps: EventChipProps = {
-                    label: eventTitle,
-                    iconConfig: {
-                        type: calendarDetails.iconType,
-                    },
-                    color: calendarDetails.color
-                };
-
-                // TODO: do all chips need to have the same ID?
-                // do start and end events need to have the same ID?
-
-                if (calendarDetails.isPrimary) {
-                    chipProps.planEvent = {
-                        id: uuid.v4(),
-                        value: eventTitle,
-                        sortId: 1, // temporary sort id
-                        listId: datestamp,
-                        timeConfig: {
-                            startTime: event.startDate,
-                            endTime: event.endDate!,
-                            allDay: !!event.allDay
-                        },
-                        status: ItemStatus.STATIC,
-                        color: calendarDetails.color,
-                        calendarId: event.id
-                    };
-                }
-
-                return chipProps;
-            });
+            .map(event => generateEventChip(event, datestamp));
         return map;
     }, {} as Record<string, EventChipProps[]>);
-    return eventChipMap;
-};
+}
+
+// ---------- List Synchronization ----------
 
 /**
  * Syncs an existing planner with a calendar. Calendars have final say on the state of the events.
@@ -277,7 +264,6 @@ export function syncPlannerWithCalendar(
             // Generate a new record to represent the calendar event
             const newEvent = {
                 ...calEvent,
-                id: uuid.v4(),
                 listId: timestamp,
                 calendarId: calEvent.id
             };

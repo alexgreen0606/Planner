@@ -15,22 +15,31 @@ import Card from '../../foundation/components/Card';
 import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
 import { ItemStatus } from '../../foundation/sortedLists/types';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
-import { deleteEventLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
+import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 
-interface SortablePlannerProps {
+interface PlannerCardProps {
     timestamp: string;
     forecast?: WeatherForecast;
     eventChips: EventChipProps[];
     reloadChips: () => void;
+    calendarEvents: PlannerEvent[]
 };
 
 const PlannerCard = ({
     timestamp: datestamp,
     forecast,
     eventChips,
-    reloadChips
-}: SortablePlannerProps) => {
-    const { currentTextfield, setCurrentTextfield, loadingData } = useSortableListContext();
+    reloadChips,
+    calendarEvents
+}: PlannerCardProps) => {
+
+    const {
+        currentTextfield,
+        setCurrentTextfield,
+        loadingData,
+        pendingDeleteItems
+    } = useSortableListContext();
+
     const [timeModalOpen, setTimeModalOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
 
@@ -51,28 +60,30 @@ const PlannerCard = ({
         await saveEventLoadChips(planEvent, reloadChips, SortedEvents.items);
     }
 
-    async function handleDeleteEvent(planEvent: PlannerEvent) {
-        await deleteEventLoadChips(planEvent, reloadChips, SortedEvents.items);
+    async function handleDeleteEvent(planEvents: PlannerEvent[]) {
+        await deleteEventsLoadChips(planEvents, reloadChips, SortedEvents.items);
     }
 
-    // Stores the current planner and all handler functions to update it
-    const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>(
-        datestamp,
-        PLANNER_STORAGE_ID,
-        (planner) => buildPlanner(datestamp, planner),
-        undefined,
-        {
-            create: handleSaveEvent,
-            update: handleSaveEvent,
-            delete: handleDeleteEvent
-        }
-    );
+    function getItemsFromStorageObject(planner: PlannerEvent[]) {
+        return buildPlanner(datestamp, planner, calendarEvents);
+    }
 
     useEffect(() => {
         if (loadingData) {
             reloadChips();
         }
     }, [loadingData]);
+
+    const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
+        storageId: PLANNER_STORAGE_ID,
+        storageKey: datestamp,
+        getItemsFromStorageObject,
+        storageConfig: {
+            create: handleSaveEvent,
+            update: handleSaveEvent,
+            delete: handleDeleteEvent
+        }
+    });
 
     return (
         <Card
@@ -103,14 +114,15 @@ const PlannerCard = ({
                 listId={datestamp}
                 items={SortedEvents.items}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
-                onDeleteItem={SortedEvents.deleteItemFromStorage}
+                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 hideList={collapsed}
+                isItemDeleting={SortedEvents.isItemDeleting}
                 onContentClick={SortedEvents.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
                 getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
                 onSaveTextfield={async (updatedItem) => {
                     await SortedEvents.persistItemToStorage(updatedItem);
                     if (updatedItem.timeConfig?.allDay) reloadChips();

@@ -21,19 +21,19 @@ const EventChip = ({
     color
 }: EventChipProps) => {
     const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
-    
+
     const toggleTimeModal = () => {
         setIsTimeModalOpen(!isTimeModalOpen);
     };
-    
+
     const handleSave = (updatedEvent: PlannerEvent) => {
         saveEvent(updatedEvent);
 
         // TODO: reload the lists?
-        
+
         toggleTimeModal();
     };
-    
+
     const ChipContent = () => (
         <View style={{ ...styles.chip, borderColor: color }}>
             <GenericIcon
@@ -51,7 +51,7 @@ const EventChip = ({
             </CustomText>
         </View>
     );
-    
+
     return (
         <>
             {planEvent ? (
@@ -59,7 +59,7 @@ const EventChip = ({
                     <TouchableOpacity onPress={() => toggleTimeModal()}>
                         <ChipContent />
                     </TouchableOpacity>
-                    
+
                     <TimeModal
                         toggleModalOpen={toggleTimeModal}
                         open={isTimeModalOpen}

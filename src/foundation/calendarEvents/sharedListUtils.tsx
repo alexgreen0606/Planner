@@ -1,6 +1,6 @@
 import { isItemTextfield } from '../sortedLists/utils';
-import { deleteEvent, saveEvent } from './storage/plannerStorage';
-import { PlannerEvent } from './types'; // Assuming you have a types file
+import { deleteEvents, saveEvent } from './storage/plannerStorage';
+import { PlannerEvent } from './types';
 
 /**
  * Toggles the time modal for a planner event
@@ -39,19 +39,19 @@ export async function saveEventLoadChips(
 }
 
 /**
- * Handles deleting a planner event
+ * Handles deleting a planner event.
  * @param planEvent - The planner event to delete
  * @param deleteEvent - Function to delete the event
  * @param reloadChips - Function to reload chips
  * @param getItems - Optional function to get all items (for weekly planner)
  */
-export async function deleteEventLoadChips(
-    planEvent: PlannerEvent,
+export async function deleteEventsLoadChips(
+    planEvents: PlannerEvent[],
     reloadChips: () => void,
     items: PlannerEvent[]
 ) {
-    await deleteEvent(planEvent);
-    if (planEvent.calendarId || (items.find(i => i.id === planEvent.id)?.calendarId)) {
+    await deleteEvents(planEvents);
+    if (planEvents.some(item => item.calendarId) || (planEvents.some(planEvent => items.find(i => i.id === planEvent.id)?.calendarId))) {
         reloadChips();
     }
 }

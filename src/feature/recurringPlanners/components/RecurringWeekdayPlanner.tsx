@@ -17,7 +17,7 @@ const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
 const RecurringWeekdayPlanner = () => {
     const genericDate = datestampToMidnightDate('2000-01-01');
-    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableListContext();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     function initializeEvent(event: RecurringEvent): RecurringEvent {
@@ -60,13 +60,11 @@ const RecurringWeekdayPlanner = () => {
         toggleTimeModal(currentTextfield);
     };
 
-    // Stores the current recurring weekday planner and all handler functions to update it
-    const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>(
-        RECURRING_WEEKDAY_PLANNER_KEY,
-        PLANNER_STORAGE_ID,
-        () => generateRecurringWeekdayPlanner(),
-        (list) => list,
-        {
+    const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>({
+        storageId: PLANNER_STORAGE_ID,
+        storageKey: RECURRING_WEEKDAY_PLANNER_KEY,
+        getItemsFromStorageObject: generateRecurringWeekdayPlanner,
+        storageConfig: {
             create: (event) => {
                 saveRecurringWeekdayEvent(event);
                 SortedEvents.refetchItems();
@@ -75,12 +73,13 @@ const RecurringWeekdayPlanner = () => {
                 saveRecurringWeekdayEvent(event);
                 SortedEvents.refetchItems();
             },
-            delete: (event) => {
-                deleteRecurringWeekdayEvent(event);
+            delete: (events) => {
+                deleteRecurringWeekdayEvent(events);
+                // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
                 SortedEvents.refetchItems();
             },
         }
-    );
+    });
 
     return (
         <View style={globalStyles.blackFilledSpace}>
@@ -89,15 +88,16 @@ const RecurringWeekdayPlanner = () => {
                 items={SortedEvents.items}
                 listId={RECURRING_WEEKDAY_PLANNER_KEY}
                 fillSpace
+                isItemDeleting={SortedEvents.isItemDeleting}
                 initializeItem={initializeEvent}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
-                onDeleteItem={SortedEvents.deleteItemFromStorage}
+                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as RecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
                 emptyLabelConfig={{
                     label: `No recurring weekday plans`,
                     style: { flex: 1 }

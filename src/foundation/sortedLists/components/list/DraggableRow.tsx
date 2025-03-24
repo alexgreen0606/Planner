@@ -22,17 +22,17 @@ import {
 } from "../../types";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { PlatformColor, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import ListTextfield from "../ListTextfield";
 import { Portal } from "react-native-paper";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "../../../components/ThinLine";
-import { generateSortId, getParentSortIdFromPositions, isItemDeleting, isItemTextfield } from "../../utils";
+import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from "../../utils";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
-import { LIST_ITEM_TOOLBAR_HEIGHT } from "../../constants";
+import { useKeyboard } from "../../services/KeyboardProvider";
 
 interface RowProps<
     T extends ListItem,
@@ -74,18 +74,22 @@ const DraggableRow = <
     onDeleteItem,
     saveTextfieldAndCreateNew,
     listLength,
-    onDragEnd
+    onDragEnd,
+    isItemDeleting
 }: RowProps<T, P, M>) => {
     const windowDimensions = useWindowDimensions();
     const insets = useSafeAreaInsets();
+
     const {
         scrollOffset,
         currentTextfield,
         setCurrentTextfield,
         disableNativeScroll,
         scrollOffsetBounds,
-        keyboardPosition,
+        pendingDeleteItems
     } = useSortableListContext();
+
+    const { keyboardAbsoluteTop } = useKeyboard();
 
     /**
      * The current item, either from static props or from the context if it's being edited
@@ -103,8 +107,8 @@ const DraggableRow = <
 
     const isDragging = useSharedValue(0);
     const isManualScrolling = useSharedValue(false);
-    const top = useSharedValue(-1000);
-    const initialGestureValue = useSharedValue(0);
+    const top = useSharedValue(0);
+    const initialGesturePosition = useSharedValue(0);
     const autoScrollTrigger = useSharedValue<number | null>(null);
 
     // ------------- Row Configuration Variables -------------
@@ -232,7 +236,7 @@ const DraggableRow = <
 
         // --- Drag the item ---
         top.value = withTiming(
-            sanitizeTopValue(initialGestureValue.value + currentDragDisplacement),
+            sanitizeTopValue(initialGesturePosition.value + currentDragDisplacement),
             { duration: 16 }
         );
         updateRowPosition();
@@ -246,7 +250,7 @@ const DraggableRow = <
         cancelAnimation(autoScrollTrigger);
         cancelAnimation(isDragging);
         isDragging.value = 0;
-        initialGestureValue.value = 0;
+        initialGesturePosition.value = 0;
         top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
     };
 
@@ -262,7 +266,7 @@ const DraggableRow = <
         cancelAnimation(isDragging);
         isManualScrolling.value = true;
         disableNativeScroll.value = true;
-        initialGestureValue.value = scrollOffset.value;
+        initialGesturePosition.value = scrollOffset.value;
     };
 
     /**
@@ -271,7 +275,7 @@ const DraggableRow = <
      */
     const manualScroll = (currentDragDisplacement: number) => {
         'worklet';
-        const unresistedScrollPosition = initialGestureValue.value - currentDragDisplacement;
+        const unresistedScrollPosition = initialGesturePosition.value - currentDragDisplacement;
 
         // --- Apply Resistance When Out of Bounds ---
         let resistedScrollPosition;
@@ -303,7 +307,7 @@ const DraggableRow = <
             'worklet';
             isManualScrolling.value = false;
             disableNativeScroll.value = false;
-            initialGestureValue.value = 0;
+            initialGesturePosition.value = 0;
         };
 
         if (isScrollOutOfBounds) {
@@ -347,11 +351,11 @@ const DraggableRow = <
                 // --- Initiate Drag After Delay ---
                 isDragging.value = withDelay(500, withTiming(1, { duration: 0 }, (finished) => {
                     if (finished) {
-                        initialGestureValue.value = top.value;
+                        initialGesturePosition.value = top.value;
                     }
                 }));
             })
-            .onStart((e) => {
+            .onStart(() => {
                 if (isDragging.value) return;
                 // --- Initiate Scroll If Drag Hasn't Begun ---
                 beginManulaScroll();
@@ -427,16 +431,16 @@ const DraggableRow = <
 
             top.value = newTop;
             scrollOffset.value = newScroll;
-            initialGestureValue.value += trigger;
+            initialGesturePosition.value += trigger;
             updateRowPosition();
         },
         [isDragging.value]
     );
 
     /**
-     * Animated style for positioning the row and scaling when dragged
+     * Animated style for positioning the row and scaling when dragged.
      */
-    const rowPositionStyle = useAnimatedStyle(() => {
+    const rowStyle = useAnimatedStyle(() => {
         return {
             height: LIST_ITEM_HEIGHT,
             width: '100%',
@@ -456,16 +460,17 @@ const DraggableRow = <
     }, [top.value, isDragging.value]);
 
     /**
-     * Animated style for positioning popovers relative to the row
+     * Animated style for positioning the toolbar over the textfield.
      */
-    const popoverPositionStyle = useAnimatedStyle(() => ({
+    const toolbarStyle = useAnimatedStyle(() => ({
         left: 0,
         position: 'absolute',
-        bottom: keyboardPosition.value
-    }), [keyboardPosition.value]);
+        top: keyboardAbsoluteTop.value
+    }), [keyboardAbsoluteTop.value]);
 
-    return <Animated.View style={rowPositionStyle}>
+    return <Animated.View style={rowStyle}>
         <View key={item.id} style={styles.row}>
+
             {/* Left Icon */}
             {leftIconConfig &&
                 !leftIconConfig.hideIcon &&
@@ -490,6 +495,7 @@ const DraggableRow = <
                     <ListTextfield<T>
                         key={getTextfieldKey(item)}
                         item={item}
+                        isLoadingInitialPosition={isLoadingInitialPosition}
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
                         toggleBlur={!modalConfig?.props.hideKeyboard}
@@ -541,7 +547,7 @@ const DraggableRow = <
         {/* Row Popovers */}
         {isItemTextfield(item) && popoverConfigs && Popovers && Popovers.map((Popover, i) => (
             <Portal key={`${item.id}-popover-${i}`}>
-                <Animated.View style={popoverPositionStyle}>
+                <Animated.View style={toolbarStyle}>
                     <Popover
                         {...popoverConfigs[i].props}
                         onSave={(newItem: T) => setCurrentTextfield(popoverConfigs[i].props.onSave(newItem))}
