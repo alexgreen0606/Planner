@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { daysBetweenToday, datestampToMidnightDate, getTodayDatestamp, generateSortIdByTime } from '../../foundation/calendarEvents/timestampUtils';
 import globalStyles from '../../foundation/theme/globalStyles';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
@@ -13,10 +13,11 @@ import { deleteDeadlines, getDeadlines, saveDeadline } from './deadlineUtils';
 import { DEADLINE_LIST_KEY } from './constants';
 import { Deadline } from '../../foundation/calendarEvents/types';
 import GenericIcon from '../../foundation/components/GenericIcon';
-import { ListItem } from '../../foundation/sortedLists/types';
+import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
+import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 
 const Deadlines = () => {
-    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield } = useSortableList();
     const [dateSelectOpen, setDateSelectOpen] = useState(false);
 
     const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
@@ -31,22 +32,47 @@ const Deadlines = () => {
     };
 
     async function toggleDateSelector(deadline: Deadline) {
-        if (!isItemTextfield(deadline))
+        if (!isItemTextfield(deadline)) {
             await DeadlineItems.toggleItemEdit(deadline);
+        }
         setDateSelectOpen(curr => !curr);
     };
+
+    function generateToolbar(
+        deadline: Deadline,
+    ): ModifyItemConfig<Deadline, ToolbarProps<Deadline>> {
+        return {
+            component: Toolbar,
+            props: {
+                open: !dateSelectOpen && isItemTextfield(deadline),
+                iconSets: [
+                    [{
+                        type: 'trash',
+                        onClick: () => { DeadlineItems.toggleItemDelete(deadline) }
+                    }],
+                    [{
+                        type: 'clock',
+                        onClick: () => { toggleDateSelector(deadline) },
+                        customIcon: <DateValue timestamp={deadline.startTime.toISOString()} />
+                    }]],
+                item: deadline,
+                hideKeyboard: dateSelectOpen
+            },
+        }
+    }
 
     const DeadlineItems = useSortedList<Deadline, Deadline[]>({
         storageId: DEADLINE_LIST_KEY,
         storageKey: DEADLINE_LIST_KEY,
         getItemsFromStorageObject: getDeadlines,
         storageConfig: {
-            create: (deadline) => {
-                saveDeadline(deadline, true);
+            create: async (deadline) => {
+                const newId = await saveDeadline(deadline, true);
                 DeadlineItems.refetchItems();
+                return newId;
             },
-            update: (deadline) => {
-                saveDeadline(deadline, false);
+            update: async (deadline) => {
+                await saveDeadline(deadline, false);
                 DeadlineItems.refetchItems();
             },
             delete: async (deadlines) => {
@@ -60,7 +86,7 @@ const Deadlines = () => {
         <View style={globalStyles.blackFilledSpace}>
 
             {/* deadline List */}
-            <SortableList<Deadline, never, never>
+            <SortableList<Deadline, ToolbarProps<Deadline>, never>
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
                 disableDrag
@@ -72,6 +98,7 @@ const Deadlines = () => {
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 onSaveTextfield={DeadlineItems.persistItemToStorage}
                 onDragEnd={DeadlineItems.persistItemToStorage} // todo no dragging
+                getToolbar={(deadline) => generateToolbar(deadline)}
                 emptyLabelConfig={{
                     label: 'No deadlines',
                     style: { flex: 1 }
@@ -83,16 +110,9 @@ const Deadlines = () => {
                 getLeftIconConfig={(deadline) => ({
                     customIcon:
                         <View style={{ width: 55 }}>
-                            {!isItemTextfield(deadline) ?
-                                <CustomText adjustsFontSizeToFit numberOfLines={1} style={{ width: 55 }} type='soft'>
-                                    {daysBetweenToday(deadline.startTime)} days
-                                </CustomText> :
-                                <GenericIcon
-                                    type='trash'
-                                    onClick={() => DeadlineItems.toggleItemDelete(deadline)}
-                                    style={{ marginLeft: 8 }}
-                                />
-                            }
+                            <CustomText adjustsFontSizeToFit numberOfLines={1} style={{ width: 55 }} type='soft'>
+                                {daysBetweenToday(deadline.startTime)} days
+                            </CustomText>
                         </View>
                 })}
             />

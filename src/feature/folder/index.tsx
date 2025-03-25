@@ -12,7 +12,7 @@ import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/L
 import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
 import { Pages } from '../../app/navUtils';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
-import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
 import { useNavigatorContext } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
@@ -38,7 +38,7 @@ const SortedFolder = ({
     parentFolderData,
 }: SortableFolderProps) => {
     const { currentTab } = useNavigatorContext();
-    const { currentTextfield, setCurrentTextfield } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield } = useSortableList();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
 
@@ -169,7 +169,7 @@ const SortedFolder = ({
             item.type === FolderItemTypes.FOLDER ? 'folder' :
                 'list';
     const getIconPlatformColor = (item: FolderItem) => isItemTransfering(item) ?
-        'systemTeal' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
+        'systemBlue' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
             'secondaryLabel' : item.platformColor;
 
     const SortedItems = useSortedList<FolderItem, Folder>({
@@ -200,7 +200,7 @@ const SortedFolder = ({
             getToolbar={item => getItemToolbarConfig(item)}
             initializeItem={initializeFolderItem}
             onContentClick={handleItemClick}
-            getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemTeal' :
+            getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
                 (isTransferMode() && item.type === FolderItemTypes.LIST) ? 'systemGray3' : 'label'}
             getRightIconConfig={item => ({
                 customIcon:

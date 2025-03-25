@@ -5,7 +5,7 @@ import { Checklist } from './types';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { ListItem } from '../../foundation/sortedLists/types';
-import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { LISTS_STORAGE_ID } from './constants';
 
@@ -16,7 +16,7 @@ interface SortableListProps {
 const ChecklistList = ({
     listId,
 }: SortableListProps) => {
-    const { pendingDeleteItems } = useSortableListContext();
+    const { pendingDeleteItems } = useSortableList();
 
     function getItemsFromStorageObject(storageObject: Checklist) {
         return storageObject.items;

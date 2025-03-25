@@ -7,13 +7,14 @@ import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, 
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
-import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { generatePlannerEventMap } from '../../foundation/calendarEvents/calendarUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
+import { ReloadProvider } from '../../foundation/sortedLists/services/ReloadProvider';
 
 interface SortablePlannerProps {
-    reloadChips: () => void;
+    reloadChips: () => Promise<void>;
 };
 
 const TodayPlanner = ({
@@ -21,7 +22,12 @@ const TodayPlanner = ({
 }: SortablePlannerProps) => {
     const datestamp = getTodayDatestamp();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const { loadingData, pendingDeleteItems } = useSortableListContext();
+
+    const {
+        // loadingData,
+        pendingDeleteItems,
+        setCurrentTextfield
+    } = useSortableList();
 
     async function handleToggleTimeModal(item: PlannerEvent) {
         await toggleTimeModal(item, SortedEvents.toggleItemEdit, setTimeModalOpen);
@@ -40,12 +46,6 @@ const TodayPlanner = ({
         return buildPlanner(datestamp, planner, todayEvents[datestamp]);
     }
 
-    useEffect(() => {
-        if (loadingData) {
-            reloadChips();
-        }
-    }, [loadingData]);
-
     const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: datestamp,
@@ -57,33 +57,39 @@ const TodayPlanner = ({
         }
     });
 
-    return (
-        <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>
-            listId={datestamp}
-            items={SortedEvents.items}
-            fillSpace
-            isItemDeleting={SortedEvents.isItemDeleting}
-            getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items)}
-            onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
-            onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
-            onContentClick={SortedEvents.toggleItemEdit}
-            getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
-            handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
-            getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
-            getToolbar={(item) => generateEventToolbar(item, handleToggleTimeModal, timeModalOpen)}
-            onSaveTextfield={async (updatedItem) => {
-                await SortedEvents.persistItemToStorage(updatedItem);
-                if (updatedItem.timeConfig?.allDay) {
-                    reloadChips();
-                }
-            }}
-            emptyLabelConfig={{
-                label: 'All Plans Complete',
-                style: { height: '100%' }
-            }}
-        />
+    async function reloadAllData() {
+        await reloadChips();
+        await SortedEvents.refetchItems();
+    }
 
+    return (
+        <ReloadProvider reloadData={reloadAllData}>
+            <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>
+                listId={datestamp}
+                items={SortedEvents.items}
+                fillSpace
+                isItemDeleting={SortedEvents.isItemDeleting}
+                getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items, setCurrentTextfield)}
+                onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
+                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
+                onContentClick={SortedEvents.toggleItemEdit}
+                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
+                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
+                getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
+                getToolbar={(item) => generateEventToolbar(item, handleToggleTimeModal, timeModalOpen)}
+                onSaveTextfield={async (updatedItem) => {
+                    await SortedEvents.persistItemToStorage(updatedItem);
+                    if (updatedItem.timeConfig?.allDay) {
+                        reloadChips();
+                    }
+                }}
+                emptyLabelConfig={{
+                    label: 'All Plans Complete',
+                    style: { height: '100%' }
+                }}
+            />
+        </ReloadProvider>
     );
 };
 

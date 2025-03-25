@@ -29,7 +29,7 @@ const DeleteModal = ({
             primaryButtonConfig={{
                 label: !!item.childrenCount ? 'Force Delete' : 'Delete',
                 onClick: () => onSave(item),
-                platformColor: !!item.childrenCount ? 'systemRed' : 'systemTeal'
+                platformColor: !!item.childrenCount ? 'systemRed' : 'systemBlue'
             }}
             iconConfig={{
                 type: 'trash',

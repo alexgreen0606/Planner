@@ -11,14 +11,14 @@ export const selectableColors = [
 
 export const isValidPlatformColor = (color: string) => {
   return [
-    'systemTeal',
+    'systemBlue',
     'systemRed',
     'systemGreen',
     'systemYellow',
     'systemPurple',
     'systemOrange',
     'systemBackground',
-    'systemTeal',
+    'systemBlue',
     'systemGray6',
     'label',
     'systemMint',

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { ListItem } from '../types';
-import { useSortableListContext } from '../services/SortableListProvider';
+import { useSortableList } from '../services/SortableListProvider';
 import { runOnJS, SharedValue, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useKeyboard } from '../services/KeyboardProvider';
 import { LIST_ITEM_HEIGHT } from '../constants';
@@ -10,7 +10,7 @@ interface ListTextfieldProps<T extends ListItem> {
     item: T;
     onChange: (newText: string) => void;
     onSubmit: () => void;
-    toggleBlur: boolean;
+    hideKeyboard: boolean;
     customStyle: TextStyle;
     isLoadingInitialPosition: SharedValue<boolean>;
 }
@@ -20,7 +20,7 @@ const ListTextfield = <T extends ListItem>({
     onChange,
     onSubmit,
     isLoadingInitialPosition,
-    toggleBlur,
+    hideKeyboard,
     customStyle,
 }: ListTextfieldProps<T>) => {
     const inputRef = useRef<TextInput>(null);
@@ -29,11 +29,11 @@ const ListTextfield = <T extends ListItem>({
 
     const {
         currentTextfield,
-        previousTextfieldId,
-        setPreviousTextfieldId,
+        pendingItem,
+        setCurrentTextfield,
         scrollOffset,
         disableNativeScroll
-    } = useSortableListContext();
+    } = useSortableList();
 
     const {
         isKeyboardOpen,
@@ -42,14 +42,14 @@ const ListTextfield = <T extends ListItem>({
     } = useKeyboard();
 
     const editable = useMemo(() => {
-        const isEditable = [previousTextfieldId, currentTextfield?.id].includes(item.id);
+        const isEditable = [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard;
 
         if (!isEditable) {
             isFocused.value = false;
         }
 
         return isEditable;
-    }, [previousTextfieldId, currentTextfield?.id, item.id]);
+    }, [pendingItem, currentTextfield?.id, item.id, hideKeyboard]);
 
     // ---------- Scroll Logic ----------
 
@@ -102,20 +102,10 @@ const ListTextfield = <T extends ListItem>({
                 evaluateBottomPosition();
 
                 // Trigger the previous textfield to become static
-                setPreviousTextfieldId(undefined);
+                setCurrentTextfield(currentTextfield)
             }, 50);
         }
     }, [currentTextfield?.id]);
-
-    // Manual Focus and Blur
-    useEffect(() => {
-        console.log(toggleBlur, 'toggle blur')
-        if (toggleBlur) {
-            inputRef.current?.blur();
-        } else {
-            inputRef.current?.focus();
-        }
-    }, [toggleBlur]);
 
     return (
         <TextInput
@@ -124,7 +114,7 @@ const ListTextfield = <T extends ListItem>({
             submitBehavior='submit'
             editable={editable}
             onChangeText={onChange}
-            selectionColor={PlatformColor('systemTeal')}
+            selectionColor={PlatformColor('systemBlue')}
             style={{ ...styles.textInput, ...customStyle }}
             onSubmitEditing={onSubmit}
         />

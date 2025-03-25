@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
@@ -8,35 +8,24 @@ import Animated, {
     SharedValue,
     measure,
     useAnimatedStyle,
-    interpolate,
-    runOnJS,
-    Extrapolation,
-    cancelAnimation,
-    withTiming,
-    withRepeat,
-    Easing,
 } from 'react-native-reanimated';
 import { ListItem } from '../types';
 import { ScrollView, View } from 'react-native';
-import GenericIcon from '../../components/GenericIcon';
-import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { SCROLL_THROTTLE } from '../constants';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const AnimatedView = Animated.createAnimatedComponent(View);
-const AnimatedReload = Animated.createAnimatedComponent(View);
 const AnimatedFiller = Animated.createAnimatedComponent(View);
+
+interface TextFieldState<T> {
+    current: T | undefined;
+    pending?: T | undefined;
+}
 
 interface SortableListProviderProps {
     children: React.ReactNode;
     enableReload?: boolean;
-}
-
-enum LoadingStatus {
-    STATIC = 'STATIC', // no overscroll visible
-    LOADING = 'LOADING', // currently rebuilding list
-    COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
 }
 
 interface SortableListContextValue<T extends ListItem> {
@@ -47,24 +36,20 @@ interface SortableListContextValue<T extends ListItem> {
     evaluateOffsetBounds: (customContentHeight: number) => void;
     // --- List Variables ---
     currentTextfield: T | undefined;
-    setCurrentTextfield: React.Dispatch<React.SetStateAction<T | undefined>>;
-    previousTextfieldId: T | undefined;
-    setPreviousTextfieldId: React.Dispatch<React.SetStateAction<string | undefined>>;
+    setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
+    pendingItem: T | undefined;
     pendingDeleteItems: T[];
     setPendingDeleteItems: React.Dispatch<React.SetStateAction<T[]>>;
-    loadingData: boolean;
-    endLoadingData: () => void;
 }
 
 const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
 
 export const SortableListProvider = ({
     children,
-    enableReload = false,
 }: SortableListProviderProps) => {
     return (
         <KeyboardProvider>
-            <SortableListProviderContent enableReload={enableReload}>
+            <SortableListProviderContent>
                 {children}
             </SortableListProviderContent>
         </KeyboardProvider>
@@ -78,13 +63,17 @@ export const SortableListProvider = ({
  * Manual scroll will only work while @isManualScrolling variable is set to true.
  */
 export const SortableListProviderContent = <T extends ListItem>({
-    children,
-    enableReload = false,
+    children
 }: SortableListProviderProps) => {
 
     // --- List Variables ---
-    const [currentTextfield, setCurrentTextfield] = useState<T | undefined>(undefined);
-    const [previousTextfieldId, setPreviousTextfieldId] = useState<string | undefined>(undefined);
+    // Replace separate states with combined state
+    const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
+        current: undefined,
+        pending: undefined
+    });
+    // const [currentTextfield, setCurrentTextfield] = useState<T | undefined>(undefined);
+    // const [previousTextfieldId, setPreviousTextfieldId] = useState<string | undefined>(undefined);
     const [pendingDeleteItems, setPendingDeleteItems] = useState<T[]>([]);
 
     // --- Scroll Variables ---
@@ -99,30 +88,14 @@ export const SortableListProviderContent = <T extends ListItem>({
     const disableNativeScroll = useSharedValue(false);
     const { keyboardHeight } = useKeyboard();
 
-    // --- Reload Variables ---
-    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
-    const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
-    const loadingRotation = useSharedValue(0);
-
     // ------------- Utility Functions -------------
 
-    const triggerHaptic = () => {
-        ReactNativeHapticFeedback.trigger('impactMedium', {
-            enableVibrateFallback: true,
-            ignoreAndroidSystemSettings: false
+    const setCurrentTextfield = (current: T | undefined, pending?: T | undefined) => {
+        setTextFieldState({
+            current,
+            pending
         });
     };
-
-    const updateLoadingStatus = (newStatus: LoadingStatus) => {
-        setLoadingStatus(newStatus);
-        loadingAnimationTrigger.value = newStatus;
-    }
-
-    const endLoadingData = () => {
-        if (loadingStatus !== LoadingStatus.STATIC) {
-            updateLoadingStatus(LoadingStatus.COMPLETE);
-        }
-    }
 
     const evaluateOffsetBounds = (customContentHeight: number = 0) => {
         'worklet';
@@ -147,69 +120,8 @@ export const SortableListProviderContent = <T extends ListItem>({
     // Manual Scroll
     useAnimatedReaction(
         () => scrollOffset.value,
-        (current) => {
-            scrollTo(scrollRef, 0, current, false);
-            if (enableReload) {
-                // scrollOverbound.value = Math.min(0, current);
-
-                // Allow refreshes when scroll returns to top
-                if (current >= 0 && loadingAnimationTrigger.value === LoadingStatus.COMPLETE) {
-                    runOnJS(updateLoadingStatus)(LoadingStatus.STATIC);
-                }
-
-                // Trigger a reload of the list
-                if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -100) {
-                    runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
-                }
-            }
-        }
+        (current) => scrollTo(scrollRef, 0, current, false)
     );
-
-    // Loading Spinner Animation
-    useAnimatedReaction(
-        () => ({
-            status: loadingAnimationTrigger.value,
-            overscroll: Math.min(0, scrollOffset.value),
-            rotation: loadingRotation.value
-        }),
-        (curr, prev) => {
-            if (curr.status === LoadingStatus.STATIC) return;
-            if (curr.status === LoadingStatus.LOADING && prev?.status !== LoadingStatus.LOADING) {
-                // Begin Spinning Animation
-                runOnJS(triggerHaptic)();
-                loadingRotation.value = withRepeat(
-                    withTiming(loadingRotation.value - 360, {
-                        duration: 500,
-                        easing: Easing.linear
-                    }),
-                    -1,
-                    false,
-                );
-            } else if (curr.status === LoadingStatus.COMPLETE) {
-                if (curr.rotation % 360 >= -1) {
-                    cancelAnimation(loadingRotation);
-                }
-            }
-        }
-    );
-
-    const loadingIconStyle = useAnimatedStyle(() => {
-        const opacity = interpolate(
-            Math.min(0, scrollOffset.value),
-            [-50, -100],
-            [0, 1],
-            Extrapolation.CLAMP
-        );
-        return {
-            opacity,
-            transform: [
-                { rotate: `${loadingRotation.value}deg` },
-            ],
-            position: 'absolute',
-            top: -50,
-            alignSelf: 'center',
-        };
-    });
 
     const keyboardPadboxStyle = useAnimatedStyle(() => {
         return {
@@ -221,16 +133,13 @@ export const SortableListProviderContent = <T extends ListItem>({
     return (
         <SortableListContext.Provider
             value={{
-                currentTextfield,
+                currentTextfield: textFieldState.current,
                 setCurrentTextfield,
                 scrollOffset,
                 disableNativeScroll,
                 scrollOffsetBounds,
                 evaluateOffsetBounds,
-                loadingData: loadingStatus === LoadingStatus.LOADING,
-                endLoadingData,
-                previousTextfieldId,
-                setPreviousTextfieldId,
+                pendingItem: textFieldState.pending,
                 pendingDeleteItems,
                 setPendingDeleteItems
             }}
@@ -247,15 +156,6 @@ export const SortableListProviderContent = <T extends ListItem>({
                 }}
             >
                 <AnimatedView ref={contentRef} style={{ flex: 1 }}>
-                    {enableReload && (
-                        <AnimatedReload style={[loadingIconStyle]}>
-                            <GenericIcon
-                                size='l'
-                                platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemTeal' : 'secondaryLabel'}
-                                type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
-                            />
-                        </AnimatedReload>
-                    )}
                     {children}
                     <AnimatedFiller style={keyboardPadboxStyle} />
                 </AnimatedView>
@@ -264,7 +164,7 @@ export const SortableListProviderContent = <T extends ListItem>({
     );
 };
 
-export const useSortableListContext = () => {
+export const useSortableList = () => {
     const context = useContext(SortableListContext);
     if (!context) {
         throw new Error("useSortableList must be used within a Provider");

@@ -2,11 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import SortedFolder from '../../../feature/folder';
 import { SortableListProvider } from '../../../foundation/sortedLists/services/SortableListProvider';
-import { FolderItemTypes, NULL, ROOT_FOLDER_KEY } from '../../../feature/checklists/types';
+import { FolderItemTypes } from '../../../feature/checklists/types';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import { getFolderFromStorage, getListFromStorage } from '../../../feature/checklists/storage/folderStorage';
 import FolderItemBanner from './banner/FolderItemBanner';
 import ChecklistList from '../../../feature/checklists';
+import { NULL, ROOT_FOLDER_KEY } from '../../../feature/checklists/constants';
 
 type PageConfig = {
   id: string;

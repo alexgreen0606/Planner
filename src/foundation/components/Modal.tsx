@@ -71,7 +71,7 @@ const Modal = ({
                         {primaryButtonConfig && (
                             <Text
                                 disabled={primaryButtonConfig.disabled}
-                                style={{ color: PlatformColor(primaryButtonConfig.platformColor ?? 'systemTeal') }}
+                                style={{ color: PlatformColor(primaryButtonConfig.platformColor ?? 'systemBlue') }}
                                 onPress={primaryButtonConfig.onClick}
                             >
                                 {primaryButtonConfig.label}

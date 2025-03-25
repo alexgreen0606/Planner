@@ -33,8 +33,8 @@ export type TimeConfig = {
     allDay: boolean;
     startTime: string; // ISO timestamp
     endTime: string; // ISO timestamp
-    isEndEvent?: boolean;
-    isStartEvent?: boolean;
+    multiDayEnd?: boolean;
+    multiDayStart?: boolean;
 };
 
 export interface PlannerEvent extends ListItem {

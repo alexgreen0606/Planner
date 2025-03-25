@@ -222,7 +222,7 @@ export function getNextSevenDayDatestamps(): string[] {
 export function getEventTime(item: PlannerEvent | RecurringEvent | undefined): string | undefined {
     if (!item) return undefined;
     if ("timeConfig" in item) {
-        return item.timeConfig?.isEndEvent ? item.timeConfig.endTime : item.timeConfig?.startTime;
+        return item.timeConfig?.multiDayEnd ? item.timeConfig.endTime : item.timeConfig?.startTime;
     } else if ("startTime" in item) {
         return item.startTime;
     } else {
@@ -240,7 +240,7 @@ export function generateSortIdByTime(
     event: PlannerEvent | RecurringEvent,
     planner: (PlannerEvent | RecurringEvent)[]
 ): number {
-    console.info('generateSortIdByTime START', { event, planner });
+    // console.info('generateSortIdByTime START', { event: {...event}, planner: [...planner] });
 
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
 
@@ -266,7 +266,7 @@ export function generateSortIdByTime(
     planner.sort((a, b) => a.sortId - b.sortId);
 
     // Check if the event conflicts at its current position
-    const eventsWithTimes = planner.filter(existingEvent => getEventTime(existingEvent));
+    const eventsWithTimes = [...planner].filter(existingEvent => getEventTime(existingEvent));
     const currentIndex = eventsWithTimes.findIndex(e => e.id === event.id);
     if (currentIndex !== -1) {
 
@@ -293,9 +293,7 @@ export function generateSortIdByTime(
 
     // Place the new event before the event that starts after it
     if (eventThatStartsAfterIndex !== -1) {
-        const newParentSortId = eventThatStartsAfterIndex > 0
-            ? planner[eventThatStartsAfterIndex - 1].sortId
-            : -1;
+        const newParentSortId = planner[eventThatStartsAfterIndex - 1]?.sortId ?? -1;
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 

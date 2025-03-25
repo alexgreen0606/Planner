@@ -27,7 +27,7 @@ export const getFolderFromStorage = (folderId: string) => {
             listIds: [],
             value: 'Lists',
             sortId: 1,
-            platformColor: 'systemTeal',
+            platformColor: 'systemBlue',
             status: ItemStatus.STATIC
         } as Folder;
         saveToStorage(initialRootFolder)

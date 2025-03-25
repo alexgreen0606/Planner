@@ -59,20 +59,14 @@ function getAndDeletePastPlanners(): PlannerEvent[] {
  * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
  */
 export async function buildPlanner(datestamp: string, planner: PlannerEvent[], calendarEvents: PlannerEvent[]): Promise<PlannerEvent[]> {
-    console.log('building')
     // Sync the planner with the recurring weekday planner
     if ([getTodayDatestamp(), getTomorrowDatestamp()].includes(datestamp)) {
         const recurringPlanner = getPlannerFromStorage(datestampToDayOfWeek(datestamp));
-        console.log('here 43')
         planner = syncPlannerWithRecurring(recurringPlanner, planner, datestamp);
     }
 
-    console.log('buildingm 2')
-
     // Sync the planner with the apple calendar
     planner = syncPlannerWithCalendar(calendarEvents, planner, datestamp);
-
-    console.log('building 3')
 
     // Delete past planners and carry over incomplete yesterday events
     if (datestamp === getTodayDatestamp()) {

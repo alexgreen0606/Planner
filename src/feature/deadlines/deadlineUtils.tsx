@@ -48,15 +48,15 @@ export async function getDeadlines(): Promise<Deadline[]> {
     }));
 };
 
-export async function saveDeadline(deadline: Deadline, createNew: boolean) {
-    await ReactNativeCalendarEvents.saveEvent(
+export async function saveDeadline(deadline: Deadline, createNew: boolean): Promise<string> {
+    return await ReactNativeCalendarEvents.saveEvent(
         deadline.value,
         {
+            id: createNew ? undefined : deadline.id,
             calendarId: (await getDeadlineCalendarDetails()).id,
             startDate: deadline.startTime.toISOString(),
             endDate: deadline.startTime.toISOString(),
             allDay: true,
-            id: createNew ? undefined : deadline.id
         }
     );
 };

@@ -18,7 +18,7 @@ export function generateCheckboxIconConfig<T extends ListItem>(
     return {
         icon: {
             type: !!pendingDeleteItems.find(i => i.id === item.id) ? 'circleFilled' : 'circle' as IconType,
-            platformColor: !!pendingDeleteItems.find(i => i.id === item.id) ? 'systemTeal' : 'secondaryLabel'
+            platformColor: !!pendingDeleteItems.find(i => i.id === item.id) ? 'systemBlue' : 'secondaryLabel'
         },
         onClick: toggleItemDelete
     };

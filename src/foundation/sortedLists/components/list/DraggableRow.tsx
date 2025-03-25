@@ -16,7 +16,7 @@ import {
     ListItemUpdateComponentProps,
 } from "../../types";
 import { DraggableListProps } from "./SortableList";
-import { useSortableListContext } from "../../services/SortableListProvider";
+import { useSortableList } from "../../services/SortableListProvider";
 import { useCallback, useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { PlatformColor, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
@@ -82,7 +82,7 @@ const DraggableRow = <
         setCurrentTextfield,
         disableNativeScroll,
         scrollOffsetBounds,
-    } = useSortableListContext();
+    } = useSortableList();
 
     const { keyboardAbsoluteTop } = useKeyboard();
 
@@ -122,7 +122,7 @@ const DraggableRow = <
      * @param text The new text value from the input field
      */
     const handleTextfieldChange = (text: string) => {
-        setCurrentTextfield((curr: T) => handleValueChange?.(text, curr) ?? { ...curr, value: text });
+        setCurrentTextfield(handleValueChange?.(text, currentTextfield) ?? { ...currentTextfield, value: text });
     };
 
     /**
@@ -474,13 +474,13 @@ const DraggableRow = <
                     >
                         {leftIconConfig.customIcon}
                     </TouchableOpacity>
-                ) : leftIconConfig.icon ? (
+                ) : leftIconConfig.icon && (
                     <GenericIcon
                         {...leftIconConfig.icon}
                         onClick={() => leftIconConfig.onClick?.(item)}
                         size='m'
                     />
-                ) : null)}
+                ))}
 
             {/* Content */}
             <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
@@ -491,7 +491,7 @@ const DraggableRow = <
                         isLoadingInitialPosition={isLoadingInitialPosition}
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
-                        toggleBlur={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
+                        hideKeyboard={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
                         customStyle={{
                             color: PlatformColor(customTextPlatformColor ??
                                 (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
@@ -513,13 +513,13 @@ const DraggableRow = <
                     >
                         {rightIconConfig.customIcon}
                     </TouchableOpacity>
-                ) : rightIconConfig.icon ? (
+                ) : rightIconConfig.icon && (
                     <GenericIcon
                         {...rightIconConfig.icon}
                         onClick={() => rightIconConfig.onClick?.(item)}
                         size='s'
                     />
-                ) : null)}
+                ))}
         </View>
 
         {/* Separator Line */}

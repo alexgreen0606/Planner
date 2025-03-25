@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, TouchableOpacity, View } from 'react-native';
-import { useSortableListContext } from '../../services/SortableListProvider';
+import { useSortableList } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import Animated, { runOnUI, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
@@ -26,7 +26,7 @@ export interface DraggableListProps<
     hideList?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
-    onSaveTextfield: (updatedItem: T) => Promise<void> | void;
+    onSaveTextfield: (updatedItem: T) => Promise<void> | void | Promise<string>;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd: (updatedItem: T) => Promise<void> | void;
     onContentClick: (item: T) => void;
@@ -42,8 +42,6 @@ export interface DraggableListProps<
     staticList?: boolean;
     isItemDeleting: (item: T) => boolean;
 }
-
-// ------------- Component Definition -------------
 
 const SortableList = <
     T extends ListItem,
@@ -64,11 +62,9 @@ const SortableList = <
         currentTextfield,
         setCurrentTextfield,
         evaluateOffsetBounds,
-        setPreviousTextfieldId,
-    } = useSortableListContext();
+    } = useSortableList();
     const { isKeyboardOpen } = useKeyboard();
     const positions = useSharedValue<Record<string, number>>({});
-    const pendingTextfield = useRef<T | null>(null);
     const pendingItem = useRef<T | null>(null);
 
     // ------------- List Building and Management -------------
@@ -89,15 +85,8 @@ const SortableList = <
                 }
             }
         }
-        if (pendingTextfield.current) {
-            if (!fullList.find(i => i.id === pendingTextfield.current!.id)) {
-                fullList.push(pendingTextfield.current);
-            } else {
-                pendingTextfield.current = null;
-            }
-        }
         if (pendingItem.current) {
-            if (!fullList.find(i => i.id === pendingItem.current!.id)) {
+            if (!fullList.find(i => i.id === pendingItem.current?.id)) {
                 fullList.push(pendingItem.current);
             } else {
                 pendingItem.current = null;
@@ -115,9 +104,11 @@ const SortableList = <
 
         if (currentTextfield && currentTextfield.value.trim() !== '') {
             // Save the current textfield before creating a new one
-            setPreviousTextfieldId(currentTextfield.id);
             pendingItem.current = { ...currentTextfield };
-            await onSaveTextfield(currentTextfield);
+            const newId = await onSaveTextfield(currentTextfield);
+            if (newId) {
+                pendingItem.current!.id = newId;
+            }
         }
 
         let newTextfield = {
@@ -129,8 +120,7 @@ const SortableList = <
         } as ListItem;
 
         newTextfield = initializeItem?.(newTextfield) ?? newTextfield as T;
-        pendingTextfield.current = { ...newTextfield } as T;
-        setCurrentTextfield(newTextfield);
+        setCurrentTextfield(newTextfield, pendingItem.current);
     }
 
     /**

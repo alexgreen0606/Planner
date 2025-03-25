@@ -85,7 +85,8 @@ export function generateTimeModalConfig(
     timeModalOpen: boolean,
     toggleTimeModal: (item: PlannerEvent) => void,
     datestamp: string,
-    currentList: PlannerEvent[]
+    currentList: PlannerEvent[],
+    setCurrentTextfield: React.Dispatch<PlannerEvent>
 ) {
     return {
         component: TimeModal,
@@ -104,7 +105,7 @@ export function generateTimeModalConfig(
                 }
                 updatedItem.sortId = generateSortIdByTime(updatedItem, updatedList);
                 toggleTimeModal(updatedItem);
-                return updatedItem;
+                setCurrentTextfield(updatedItem);
             },
             item
         },
@@ -120,18 +121,15 @@ export function generateTimeIconConfig(
 ) {
     const itemTime = getEventTime(item);
     return {
-        hideIcon: !itemTime, // && !isItemTextfield(item),
-        icon: {
-            type: 'clock' as IconType,
-        },
+        hideIcon: !itemTime || isItemTextfield(item),
         onClick: toggleTimeModal,
-        customIcon: itemTime ?
+        customIcon: itemTime &&
             <TimeValue
                 allDay={!!(item as PlannerEvent).timeConfig?.allDay}
-                endEvent={!!(item as PlannerEvent).timeConfig?.isEndEvent}
-                startEvent={!!(item as PlannerEvent).timeConfig?.isStartEvent}
+                endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
+                startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
                 timeValue={itemTime}
-            /> : undefined
+            />
     }
 }
 
@@ -143,6 +141,7 @@ export function generateEventToolbar(
     toggleTimeModal: (item: PlannerEvent | RecurringEvent) => void,
     timeModalOpen: boolean
 ): ModifyItemConfig<PlannerEvent | RecurringEvent, ToolbarProps<PlannerEvent | RecurringEvent>> {
+    const itemTime = getEventTime(item);
     return {
         component: Toolbar,
         props: {
@@ -150,6 +149,13 @@ export function generateEventToolbar(
             iconSets: [[{
                 type: 'clock',
                 onClick: () => toggleTimeModal(item),
+                customIcon: itemTime ?
+                    <TimeValue
+                        allDay={!!(item as PlannerEvent).timeConfig?.allDay}
+                        endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
+                        startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
+                        timeValue={itemTime}
+                    /> : undefined
             }]],
             item,
         },

@@ -31,8 +31,8 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
     const dateEnd = datestampToMidnightDate(datestamp, 1);
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate!);
-    const isEndEvent = eventEnd < dateEnd && eventStart < dateStart; // Starts before date and ends on date
-    const isStartEvent = eventStart >= dateStart && eventStart < dateEnd && eventEnd >= dateEnd; // Starts on date and ends after date
+    const multiDayEnd = eventStart < dateStart && eventEnd < dateEnd; // Starts before date and ends on date
+    const multiDayStart = eventStart >= dateStart && eventStart < dateEnd && eventEnd >= dateEnd; // Starts on date and ends after date
     return {
         id: event.id,
         value: event.title,
@@ -42,8 +42,8 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
             startTime: event.startDate,
             endTime: event.endDate!,
             allDay: false,
-            isEndEvent,
-            isStartEvent
+            multiDayEnd,
+            multiDayStart
         },
         status: ItemStatus.STATIC
     };
@@ -71,7 +71,7 @@ function generateEventChip(event: CalendarEventReadable, datestamp: string): Eve
         iconConfig: {
             type: getCalendarIcon(calendar.title),
         },
-        color: calendar?.color || '#000000'
+        color: calendar.color
     };
 
     if (calendar.isPrimary) {
@@ -86,7 +86,7 @@ function generateEventChip(event: CalendarEventReadable, datestamp: string): Eve
                 allDay: !!event.allDay
             },
             status: ItemStatus.STATIC,
-            color: calendar?.color || '#000000',
+            color: calendar.color!,
             calendarId: event.id
         };
     }
@@ -223,7 +223,7 @@ export function syncPlannerWithCalendar(
     planner: PlannerEvent[],
     timestamp: string
 ) {
-    console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
+    // console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
 
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
@@ -250,15 +250,12 @@ export function syncPlannerWithCalendar(
 
             // Generate the updated event's new position in the list
             updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
-            console.log('gen by sort ID END 1')
             return updatedPlanner;
         } else {
             // This event is linked to the calendar but has been removed -> delete it
             return [...accumulator];
         }
     }, []);
-
-    console.log(newPlanner, 'new ')
 
     // Find any new events in the calendar and add these to the new planner
     calendar.forEach(calEvent => {
@@ -273,13 +270,11 @@ export function syncPlannerWithCalendar(
 
             // Add the new event to the planner and generate its position within the list
             newPlanner.push(newEvent);
-            console.log('gen by sort ID START 2')
             newEvent.sortId = generateSortIdByTime(newEvent, newPlanner);
-            console.log('gen by sort ID END 2')
         }
     });
 
-    console.info('syncPlannerWithCalendar: END', newPlanner);
+    // console.info('syncPlannerWithCalendar: END', newPlanner);
     return newPlanner;
 }
 

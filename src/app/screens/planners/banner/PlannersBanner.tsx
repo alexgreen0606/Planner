@@ -23,19 +23,19 @@ const PlannersBanner = ({ mode, setMode }: PlannerBannerProps) =>
                 <GenericIcon
                     type='plannerStack'
                     size='l'
-                    platformColor={mode === PlannerModes.PLANNERS ? 'systemTeal' : 'secondaryLabel'}
+                    platformColor={mode === PlannerModes.PLANNERS ? 'systemBlue' : 'secondaryLabel'}
                     onClick={() => setMode(PlannerModes.PLANNERS)}
                 />
                 <GenericIcon
                     type='alert'
                     size='l'
-                    platformColor={mode === PlannerModes.DEADLINES ? 'systemTeal' : 'secondaryLabel'}
+                    platformColor={mode === PlannerModes.DEADLINES ? 'systemBlue' : 'secondaryLabel'}
                     onClick={() => setMode(PlannerModes.DEADLINES)}
                 />
                 <GenericIcon
                     type='recurringCalendar'
                     size='l'
-                    platformColor={mode === PlannerModes.RECURRING ? 'systemTeal' : 'secondaryLabel'}
+                    platformColor={mode === PlannerModes.RECURRING ? 'systemBlue' : 'secondaryLabel'}
                     onClick={() => setMode(PlannerModes.RECURRING)}
                 />
             </View>

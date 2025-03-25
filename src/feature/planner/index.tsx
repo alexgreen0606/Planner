@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from './components/DayBanner';
@@ -7,7 +7,7 @@ import EventChip, { EventChipProps } from '../../foundation/calendarEvents/compo
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { buildPlanner } from '../../foundation/calendarEvents/storage/plannerStorage';
 import { WeatherForecast } from '../weather/utils';
-import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
@@ -18,30 +18,28 @@ import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeM
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 
 interface PlannerCardProps {
-    timestamp: string;
+    datestamp: string;
     forecast?: WeatherForecast;
     eventChips: EventChipProps[];
-    reloadChips: () => void;
+    reloadChips: () => Promise<void>;
     calendarEvents: PlannerEvent[]
 };
 
 const PlannerCard = ({
-    timestamp: datestamp,
+    datestamp,
     forecast,
     eventChips,
     reloadChips,
     calendarEvents
 }: PlannerCardProps) => {
+    const [timeModalOpen, setTimeModalOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
 
     const {
         currentTextfield,
         setCurrentTextfield,
-        loadingData,
         pendingDeleteItems
-    } = useSortableListContext();
-
-    const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(false);
+    } = useSortableList();
 
     async function toggleCollapsed() {
         if (currentTextfield) {
@@ -67,12 +65,6 @@ const PlannerCard = ({
     function getItemsFromStorageObject(planner: PlannerEvent[]) {
         return buildPlanner(datestamp, planner, calendarEvents);
     }
-
-    useEffect(() => {
-        if (loadingData) {
-            reloadChips();
-        }
-    }, [loadingData]);
 
     const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
         storageId: PLANNER_STORAGE_ID,
@@ -120,7 +112,7 @@ const PlannerCard = ({
                 onContentClick={SortedEvents.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
-                getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items)}
+                getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items, setCurrentTextfield)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
                 onSaveTextfield={async (updatedItem) => {

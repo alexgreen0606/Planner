@@ -20,7 +20,7 @@ const Today = () => {
     const todayBirthdayChips: EventChipProps[] = [];
     const todayOtherChips: EventChipProps[] = [];
     todayChips.forEach(chip => {
-      if (chip.label.includes(' Birthday')) {
+      if (chip.iconConfig.type === 'birthday') {
         todayBirthdayChips.push(chip);
       } else {
         todayOtherChips.push(chip);
@@ -40,32 +40,30 @@ const Today = () => {
       {/* Banner */}
       <TodayBanner timestamp={timestamp} />
 
-      <SortableListProvider enableReload>
-        <View style={styles.container}>
-
-          {/* Event Chips */}
-          {eventChips.length > 0 && (
-            <View style={styles.chips}>
-              {eventChips.map(chipConfig => (
-                <EventChip
-                  key={chipConfig.label}
-                  {...chipConfig}
-                />
-              ))}
-            </View>
-          )}
-
-          {/* Birthday Checklist Card */}
-          {birthdayChips && (
-            <BirthdayCard birthdays={birthdayChips} />
-          )}
-
-          {/* Planner */}
-          <View style={styles.planner}>
-            <TodayPlanner reloadChips={getEventChips} />
-          </View>
-
+      {/* Event Chips */}
+      {eventChips.length > 0 && (
+        <View style={styles.chips}>
+          {eventChips.map((chipConfig, i) => (
+            <EventChip
+              key={`event-chip-${i}`}
+              {...chipConfig}
+            />
+          ))}
         </View>
+      )}
+
+      <SortableListProvider>
+
+        {/* Birthday Checklist Card */}
+        {birthdayChips && (
+          <BirthdayCard birthdays={birthdayChips} />
+        )}
+
+        {/* Planner */}
+        <View style={styles.planner}>
+          <TodayPlanner reloadChips={getEventChips} />
+        </View>
+
       </SortableListProvider>
     </View>
   );
@@ -79,11 +77,10 @@ const styles = StyleSheet.create({
   },
   planner: {
     flex: 1,
-    width: '100%'
   },
   chips: {
     ...globalStyles.verticallyCentered,
-    paddingTop: 8,
+    paddingVertical: 4,
     paddingHorizontal: 8,
     width: '100%',
     flexWrap: 'wrap',

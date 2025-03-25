@@ -80,7 +80,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     getRightIconConfig={item => ({
                         icon: {
                             type: BirthdayList.isItemDeleting(item) ? 'messageFilled' : 'message',
-                            platformColor: BirthdayList.isItemDeleting(item) ? 'secondaryLabel' : 'systemTeal',
+                            platformColor: BirthdayList.isItemDeleting(item) ? 'secondaryLabel' : 'systemBlue',
                             hideRipple: true
                         },
                         onClick: async () => {

@@ -17,6 +17,7 @@ import { EventChipProps } from '../../../foundation/calendarEvents/components/Ev
 import { generateEventChipMap, generatePlannerEventMap } from '../../../foundation/calendarEvents/calendarUtils';
 import GenericIcon from '../../../foundation/components/GenericIcon';
 import { PlannerEvent } from '../../../foundation/calendarEvents/types';
+import { ReloadProvider } from '../../../foundation/sortedLists/services/ReloadProvider';
 
 const defaultPlannerOptions = [
   { label: 'Next 7 Days', value: getNextSevenDayDatestamps() },
@@ -37,20 +38,35 @@ const Planners = () => {
   const [selectedPlanners, setSelectedPlanners] = useState({ label: 'Next 7 Days', value: getNextSevenDayDatestamps() });
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>();
   const [eventChipMap, setEventChipMap] = useState<Record<string, EventChipProps[]>>();
+  const [plannersReloadTrigger, setPlannersReloadTrigger] = useState('INITIAL_KEY');
+  const [deadlinesReloadTrigger, setDeadlinesReloadTrigger] = useState('INITIAL_KEY');
 
-  async function fetchChipsAndWeather() {
+  async function reloadEntirePage(tab: PlannerModes) {
+    console.log(tab, 'reloading')
+    loadAllData();
+    if (tab === PlannerModes.DEADLINES) {
+      setDeadlinesReloadTrigger(deadlinesReloadTrigger + '_RELOAD');
+    } else if (tab === PlannerModes.PLANNERS) {
+      setPlannersReloadTrigger(plannersReloadTrigger + '_RELOAD');
+    }
+  }
+
+  /**
+   * Loads in all chip, weather, and calendar data.
+   */
+  async function loadAllData() {
     const allEventChips = await generateEventChipMap(datestamps);
     setEventChipMap(allEventChips);
     const forecastMap = await getWeeklyWeather(datestamps);
     setForecasts(forecastMap);
     const calendarEvents = await generatePlannerEventMap(datestamps);
     setCalendarEventsMap(calendarEvents);
-  };
+  }
 
   // Load in the initial planners
   useEffect(() => {
-    fetchChipsAndWeather();
-  }, []);
+    loadAllData();
+  }, [])
 
   const renderDropdownItem = (item: { label: string, value: string }) => {
     return (
@@ -72,10 +88,10 @@ const Planners = () => {
       />
 
       {/* Planners */}
-      {mode === PlannerModes.PLANNERS ? (
-        <>
-          {datestamps && eventChipMap && (
-            <SortableListProvider enableReload>
+      {mode === PlannerModes.PLANNERS ? <>
+        {datestamps && eventChipMap && (
+          <SortableListProvider>
+            <ReloadProvider reloadData={() => reloadEntirePage(PlannerModes.PLANNERS)}>
               <View style={styles.dropdownContainer} >
                 <Dropdown
                   data={defaultPlannerOptions}
@@ -94,22 +110,22 @@ const Planners = () => {
                   platformColor='secondaryLabel'
                 />
               </View>
-              <View style={styles.planners}>
+              <View style={styles.planners} key={plannersReloadTrigger}>
                 {selectedPlanners.value.map((datestamp) =>
                   <PlannerCard
                     key={`${datestamp}-planner`}
-                    timestamp={datestamp}
+                    datestamp={datestamp}
                     calendarEvents={calendarEventsMap[datestamp]}
-                    reloadChips={fetchChipsAndWeather}
+                    reloadChips={loadAllData}
                     forecast={forecasts?.[datestamp]}
                     eventChips={eventChipMap[datestamp]}
                   />
                 )}
               </View>
-            </SortableListProvider>
-          )}
-        </>
-      ) : mode === PlannerModes.RECURRING ? (
+            </ReloadProvider>
+          </SortableListProvider>
+        )}
+      </> : mode === PlannerModes.RECURRING ? (
         <SortableListProvider>
           <View style={styles.dropdownContainer} >
             <Dropdown
@@ -118,7 +134,7 @@ const Planners = () => {
               labelField="label"
               valueField="value"
               value={selectedRecurring}
-              containerStyle={{ backgroundColor: PlatformColor('systemTeal'), borderWidth: 0 }}
+              containerStyle={{ backgroundColor: PlatformColor('systemBlue'), borderWidth: 0 }}
               onChange={setSelectedRecurring}
               selectedTextStyle={styles.selectedTextStyle}
               style={styles.dropdown}
@@ -138,8 +154,10 @@ const Planners = () => {
           </View>
         </SortableListProvider>
       ) : (
-        <SortableListProvider enableReload>
-          <Deadlines />
+        <SortableListProvider>
+          <ReloadProvider reloadData={() => reloadEntirePage(PlannerModes.DEADLINES)}>
+            <Deadlines key={plannersReloadTrigger} />
+          </ReloadProvider>
         </SortableListProvider>
       )}
     </View>

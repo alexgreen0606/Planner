@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { RecurringPlannerKeys } from '../constants';
 import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
-import { useSortableListContext } from '../../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../../foundation/sortedLists/services/SortableListProvider';
 import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
 import { View } from 'react-native';
 import globalStyles from '../../../foundation/theme/globalStyles';
@@ -19,7 +19,7 @@ interface SortedRecurringPlannerProps {
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
-    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableList();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     async function toggleTimeModal(item: RecurringEvent) {

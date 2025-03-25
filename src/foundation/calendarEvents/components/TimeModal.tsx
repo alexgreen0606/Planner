@@ -104,7 +104,7 @@ const TimeModal = ({
             }}
             iconConfig={{
                 type: 'clock',
-                platformColor: 'systemTeal',
+                platformColor: 'systemBlue',
             }}
         >
 
@@ -139,7 +139,7 @@ const TimeModal = ({
                             style={{
                                 marginTop: 4,
                             }}
-                            color={PlatformColor(timeModalData.isCalendarEvent ? 'systemTeal' : 'secondaryLabel')}
+                            color={PlatformColor(timeModalData.isCalendarEvent ? 'systemBlue' : 'secondaryLabel')}
                         />
                     </View>
 
@@ -162,7 +162,7 @@ const TimeModal = ({
                                     style={{
                                         marginTop: 4,
                                     }}
-                                    color={PlatformColor(timeModalData.allDay ? 'systemTeal' : 'secondaryLabel')}
+                                    color={PlatformColor(timeModalData.allDay ? 'systemBlue' : 'secondaryLabel')}
                                 />
                             </>
                         )}
@@ -180,7 +180,7 @@ const TimeModal = ({
                                 style={{
                                     marginTop: 4,
                                 }}
-                                color={PlatformColor(rescheduleEvent ? 'systemTeal' : 'secondaryLabel')}
+                                color={PlatformColor(rescheduleEvent ? 'systemBlue' : 'secondaryLabel')}
                             />
                         </>
                     )}

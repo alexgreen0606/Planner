@@ -31,7 +31,7 @@ const Navigator = () => {
                                 <GenericIcon
                                     type={routeIconMap[route.name]}
                                     size='xl'
-                                    platformColor={focused ? 'systemTeal' : 'secondaryLabel'}
+                                    platformColor={focused ? 'systemBlue' : 'secondaryLabel'}
                                 />
                             </TouchableOpacity>,
                         headerShown: false,

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
 import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
-import { useSortableListContext } from '../../../foundation/sortedLists/services/SortableListProvider';
+import { useSortableList } from '../../../foundation/sortedLists/services/SortableListProvider';
 import { isItemTextfield } from '../../../foundation/sortedLists/utils';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '../storage/recurringStorage';
@@ -17,7 +17,7 @@ const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
 const RecurringWeekdayPlanner = () => {
     const genericDate = datestampToMidnightDate('2000-01-01');
-    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableListContext();
+    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableList();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     function initializeEvent(event: RecurringEvent): RecurringEvent {

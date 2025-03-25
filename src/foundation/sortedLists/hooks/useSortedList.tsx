@@ -1,12 +1,12 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { useSortableListContext } from '../services/SortableListProvider';
+import { useSortableList } from '../services/SortableListProvider';
 import { useEffect, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
-    create: (item: T) => Promise<void> | void;
+    create: (item: T) => Promise<void> | void | Promise<string>;
     delete: (items: T[]) => Promise<void> | void;
 };
 
@@ -19,7 +19,7 @@ interface SortedListConfig<T extends ListItem, S> {
 }
 
 const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) => {
-    
+
     const {
         storageKey,
         storageId,
@@ -40,22 +40,17 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         setCurrentTextfield,
         pendingDeleteItems,
         setPendingDeleteItems,
-        loadingData,
-        endLoadingData
-    } = useSortableListContext();
+    } = useSortableList();
 
     const buildList = async () => {
         const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);
-        endLoadingData();
     };
 
-    // Build the list whenever storage changes or data loading is triggered
+    // Build the list whenever storage changes
     useEffect(() => {
-        if (loadingData || storageObject) {
-            buildList();
-        }
-    }, [loadingData, storageObject]);
+        buildList();
+    }, [storageObject]);
 
     // Schedule items for deletion
     useEffect(() => {
@@ -88,7 +83,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
 
             // Handle the storage update directly
             if (item.status === ItemStatus.NEW) {
-                await storageConfig.create(item);
+                return await storageConfig.create(item);
             } else {
                 await storageConfig.update(item);
             }
