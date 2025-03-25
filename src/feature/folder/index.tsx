@@ -120,10 +120,6 @@ const SortedFolder = ({
         }));
     };
 
-    useEffect(() => {
-        console.log(currentTextfield)
-    }, [currentTextfield])
-
     const getItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps<FolderItem>> => {
         const isNew = item.status === ItemStatus.NEW;
         const isOpen = currentTab === Pages.LISTS && !deleteModalOpen &&

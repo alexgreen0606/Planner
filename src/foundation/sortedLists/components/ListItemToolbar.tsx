@@ -12,7 +12,6 @@ export interface ToolbarProps<T extends ListItem> extends ListItemUpdateComponen
 const Toolbar = <T extends ListItem>({
     item,
     iconSets,
-    // formatItemAndSave: saveItemToList,
     open
 }: ToolbarProps<T>) => open &&
     <View style={styles.toolbar}>

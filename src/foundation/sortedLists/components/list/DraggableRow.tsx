@@ -24,7 +24,7 @@ import ListTextfield from "../ListTextfield";
 import { Portal } from "react-native-paper";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "../../../components/ThinLine";
-import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from "../../utils";
+import { generateSortId, getParentSortIdFromPositions } from "../../utils";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
 import { useKeyboard } from "../../services/KeyboardProvider";
@@ -82,7 +82,6 @@ const DraggableRow = <
         setCurrentTextfield,
         disableNativeScroll,
         scrollOffsetBounds,
-        pendingDeleteItems
     } = useSortableListContext();
 
     const { keyboardAbsoluteTop } = useKeyboard();
@@ -530,22 +529,16 @@ const DraggableRow = <
             </Pressable>
         </GestureDetector>
 
-        {/* Row Modal */}
-        {modalConfig && Modal && (
-            <Modal
-                {...modalConfig.props}
-                // formatItemAndSave={(newItem: T) => setCurrentTextfield(modalConfig.props.formatItemAndSave(newItem))}
-            />
-        )}
+        {/* Modal */}
+        {Modal && modalConfig &&
+            <Modal {...modalConfig.props} />
+        }
 
         {/* Toolbar */}
-        {toolbarConfig && Toolbar &&
-            <Portal key={`${item.id}-popover`}>
+        {Toolbar && toolbarConfig &&
+            <Portal>
                 <Animated.View style={toolbarStyle}>
-                    <Toolbar
-                        {...toolbarConfig.props}
-                        // formatItemAndSave={(newItem: T) => setCurrentTextfield(toolbarConfig.props.formatItemAndSave(newItem))}
-                    />
+                    <Toolbar {...toolbarConfig.props} />
                 </Animated.View>
             </Portal>
         }
