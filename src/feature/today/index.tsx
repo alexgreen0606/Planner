@@ -74,8 +74,9 @@ const TodayPlanner = ({
             getToolbar={(item) => generateEventToolbar(item, handleToggleTimeModal, timeModalOpen)}
             onSaveTextfield={async (updatedItem) => {
                 await SortedEvents.persistItemToStorage(updatedItem);
-                if (updatedItem.timeConfig?.allDay)
+                if (updatedItem.timeConfig?.allDay) {
                     reloadChips();
+                }
             }}
             emptyLabelConfig={{
                 label: 'All Plans Complete',

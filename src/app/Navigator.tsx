@@ -7,7 +7,6 @@ import globalStyles from '../foundation/theme/globalStyles';
 import { Pages } from './navUtils';
 import Planners from './screens/planners';
 import { useNavigatorContext } from './NavProvider';
-import { Pressable } from 'react-native-gesture-handler';
 import GenericIcon, { IconType } from '../foundation/components/GenericIcon';
 import { BANNER_HEIGHT } from '../foundation/components/constants';
 

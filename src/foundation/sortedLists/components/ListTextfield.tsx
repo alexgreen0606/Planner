@@ -57,7 +57,7 @@ const ListTextfield = <T extends ListItem>({
         inputRef.current?.measureInWindow((_, y) => {
             textfieldBottom.value = y + LIST_ITEM_HEIGHT;
         });
-    }
+    };
 
     // Evaluate position of textfield after initialization
     useAnimatedReaction(
@@ -109,6 +109,7 @@ const ListTextfield = <T extends ListItem>({
 
     // Manual Focus and Blur
     useEffect(() => {
+        console.log(toggleBlur, 'toggle blur')
         if (toggleBlur) {
             inputRef.current?.blur();
         } else {

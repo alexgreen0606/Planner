@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
-import globalStyles from '../../../../foundation/theme/globalStyles';
-import CustomText from '../../../../foundation/ui/text/CustomText';
+import CustomText from '../../../foundation/components/text/CustomText';
+import globalStyles from '../../../foundation/theme/globalStyles';
 
 interface RecurringPlannerBannerProps {
     title: string;

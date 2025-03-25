@@ -223,7 +223,7 @@ export function syncPlannerWithCalendar(
     planner: PlannerEvent[],
     timestamp: string
 ) {
-    // console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
+    console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
 
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
@@ -250,12 +250,15 @@ export function syncPlannerWithCalendar(
 
             // Generate the updated event's new position in the list
             updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
+            console.log('gen by sort ID END 1')
             return updatedPlanner;
         } else {
             // This event is linked to the calendar but has been removed -> delete it
             return [...accumulator];
         }
     }, []);
+
+    console.log(newPlanner, 'new ')
 
     // Find any new events in the calendar and add these to the new planner
     calendar.forEach(calEvent => {
@@ -270,11 +273,13 @@ export function syncPlannerWithCalendar(
 
             // Add the new event to the planner and generate its position within the list
             newPlanner.push(newEvent);
+            console.log('gen by sort ID START 2')
             newEvent.sortId = generateSortIdByTime(newEvent, newPlanner);
+            console.log('gen by sort ID END 2')
         }
     });
 
-    // console.info('syncPlannerWithCalendar: START', newPlanner);
+    console.info('syncPlannerWithCalendar: END', newPlanner);
     return newPlanner;
 }
 

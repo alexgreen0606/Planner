@@ -12,7 +12,7 @@ import CustomText from '../../../foundation/components/text/CustomText';
 import PlannerModes from '../../../feature/planner/types';
 import Deadlines from '../../../feature/deadlines';
 import { getNextSevenDayDatestamps } from '../../../foundation/calendarEvents/timestampUtils';
-import { RecurringPlannerKeys } from '../../../feature/recurringPlanners/types';
+import { RecurringPlannerKeys } from '../../../feature/recurringPlanners/constants';
 import { EventChipProps } from '../../../foundation/calendarEvents/components/EventChip';
 import { generateEventChipMap, generatePlannerEventMap } from '../../../foundation/calendarEvents/calendarUtils';
 import GenericIcon from '../../../foundation/components/GenericIcon';

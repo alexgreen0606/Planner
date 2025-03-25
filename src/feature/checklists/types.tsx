@@ -3,12 +3,6 @@ import { selectableColors } from "../../foundation/theme/colors";
 
 type SelectableColor = (typeof selectableColors)[number];
 
-export const NULL = 'NULL';
-
-export const ROOT_FOLDER_KEY = 'ROOT_FOLDER_ID';
-
-export const LISTS_STORAGE_ID = 'FOLDER_STORAGE';
-
 export enum FolderItemTypes {
     FOLDER = 'FOLDER',
     LIST = 'LIST'

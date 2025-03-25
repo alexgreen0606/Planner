@@ -1,6 +1,6 @@
 import { MMKV } from "react-native-mmkv";
 import { PLANNER_STORAGE_ID, RecurringEvent, Weekdays } from "../../../foundation/calendarEvents/types";
-import { RecurringPlannerKeys } from "../types";
+import { RecurringPlannerKeys } from "../constants";
 import { generateSortIdByTime } from "../../../foundation/calendarEvents/timestampUtils";
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });

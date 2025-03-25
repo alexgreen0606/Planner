@@ -6,7 +6,7 @@ import globalStyles from '../../foundation/theme/globalStyles';
 import CustomText from '../../foundation/components/text/CustomText';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
-import { BIRTHDAY_CHECKLIST_STORAGE_ID } from './types';
+import { BIRTHDAY_CHECKLIST_STORAGE_ID } from './constants';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
 import Card from '../../foundation/components/Card';
 import GenericIcon from '../../foundation/components/GenericIcon';

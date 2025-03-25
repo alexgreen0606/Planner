@@ -2,7 +2,7 @@ import ReactNativeCalendarEvents from "react-native-calendar-events";
 import { getCalendarAccess } from "../../foundation/calendarEvents/calendarUtils";
 import { getDatestampThreeYearsFromToday, getTodayDatestamp } from "../../foundation/calendarEvents/timestampUtils";
 import { CalendarDetails, Deadline } from "../../foundation/calendarEvents/types";
-import { DEADLINE_LIST_KEY } from "./types";
+import { DEADLINE_LIST_KEY } from "./constants";
 import { ItemStatus } from "../../foundation/sortedLists/constants";
 
 async function getDeadlineCalendarDetails(): Promise<CalendarDetails> {

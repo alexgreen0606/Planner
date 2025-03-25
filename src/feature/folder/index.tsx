@@ -9,7 +9,7 @@ import {
 } from '../checklists/storage/folderStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemTypes } from '../checklists/types';
+import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
 import { Pages } from '../../app/navUtils';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
@@ -20,6 +20,7 @@ import { generateSortId } from '../../foundation/sortedLists/utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { selectableColors } from '../../foundation/theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
+import { LISTS_STORAGE_ID } from '../checklists/constants';
 
 interface SortableFolderProps {
     folderId: string;

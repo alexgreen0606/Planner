@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlatformColor, View } from 'react-native';
+import { View } from 'react-native';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import CustomText from '../../../../foundation/components/text/CustomText';
 import PlannerModes from '../../../../feature/planner/types';

@@ -1,6 +1,7 @@
 import { uuid } from "expo-modules-core";
 import { generateSortId } from "../../../foundation/sortedLists/utils";
-import { ItemStatus, ListItem } from "../../../foundation/sortedLists/types";
+import { ListItem } from "../../../foundation/sortedLists/types";
+import { ItemStatus } from "../../../foundation/sortedLists/constants";
 
 /**
 * Generates or updates a checklist of birthdays for the current day

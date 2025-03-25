@@ -10,7 +10,7 @@ import DateValue from '../../foundation/calendarEvents/components/values/DateVal
 import CustomText from '../../foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
 import { deleteDeadlines, getDeadlines, saveDeadline } from './deadlineUtils';
-import { DEADLINE_LIST_KEY } from './types';
+import { DEADLINE_LIST_KEY } from './constants';
 import { Deadline } from '../../foundation/calendarEvents/types';
 import GenericIcon from '../../foundation/components/GenericIcon';
 import { ListItem } from '../../foundation/sortedLists/types';

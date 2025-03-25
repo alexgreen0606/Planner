@@ -1,5 +1,5 @@
+import { ItemStatus } from "../sortedLists/constants";
 import { generateSortId, getParentSortId } from "../sortedLists/utils";
-import { ItemStatus } from "../sortedLists/types";
 import { DaysOfWeek, PlannerEvent, RecurringEvent, TimeConfig, Weekdays } from "./types";
 
 enum Months {
@@ -240,7 +240,7 @@ export function generateSortIdByTime(
     event: PlannerEvent | RecurringEvent,
     planner: (PlannerEvent | RecurringEvent)[]
 ): number {
-    // console.info('generateSortIdByTime START', { event, planner });
+    console.info('generateSortIdByTime START', { event, planner });
 
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
 

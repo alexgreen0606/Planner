@@ -24,7 +24,7 @@ import ListTextfield from "../ListTextfield";
 import { Portal } from "react-native-paper";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "../../../components/ThinLine";
-import { generateSortId, getParentSortIdFromPositions } from "../../utils";
+import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from "../../utils";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
 import { useKeyboard } from "../../services/KeyboardProvider";
@@ -491,7 +491,7 @@ const DraggableRow = <
                         isLoadingInitialPosition={isLoadingInitialPosition}
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
-                        toggleBlur={!modalConfig?.props.hideKeyboard}
+                        toggleBlur={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
                         customStyle={{
                             color: PlatformColor(customTextPlatformColor ??
                                 (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
@@ -529,19 +529,23 @@ const DraggableRow = <
             </Pressable>
         </GestureDetector>
 
-        {/* Modal */}
-        {Modal && modalConfig &&
-            <Modal {...modalConfig.props} />
-        }
+        {isItemTextfield(item) && <>
 
-        {/* Toolbar */}
-        {Toolbar && toolbarConfig &&
-            <Portal>
-                <Animated.View style={toolbarStyle}>
-                    <Toolbar {...toolbarConfig.props} />
-                </Animated.View>
-            </Portal>
-        }
+            {/* Modal */}
+            {Modal && modalConfig &&
+                <Modal {...modalConfig.props} />
+            }
+
+            {/* Toolbar */}
+            {Toolbar && toolbarConfig &&
+                <Portal>
+                    <Animated.View style={toolbarStyle}>
+                        <Toolbar {...toolbarConfig.props} />
+                    </Animated.View>
+                </Portal>
+            }
+        </>}
+
     </Animated.View>
 };
 

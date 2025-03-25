@@ -1,6 +1,7 @@
 import { MMKV } from "react-native-mmkv";
-import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemTypes, Checklist, NULL, ROOT_FOLDER_KEY } from "../types";
+import { Folder, FolderItem, FolderItemTypes, Checklist } from "../types";
 import { ItemStatus } from "../../../foundation/sortedLists/constants";
+import { LISTS_STORAGE_ID, NULL, ROOT_FOLDER_KEY } from "../constants";
 
 const storage = new MMKV({ id: LISTS_STORAGE_ID });
 
