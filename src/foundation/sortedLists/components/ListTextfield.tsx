@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
-import { LIST_ITEM_HEIGHT, ListItem } from '../types';
+import { ListItem } from '../types';
 import { useSortableListContext } from '../services/SortableListProvider';
 import { runOnJS, SharedValue, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useKeyboard } from '../services/KeyboardProvider';
+import { LIST_ITEM_HEIGHT } from '../constants';
 
 interface ListTextfieldProps<T extends ListItem> {
     item: T;

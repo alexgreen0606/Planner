@@ -1,7 +1,8 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSortableListContext } from '../services/SortableListProvider';
 import { useEffect, useRef, useState } from 'react';
-import { ItemStatus, ListItem } from '../types';
+import { ListItem } from '../types';
+import { ItemStatus } from '../constants';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -26,8 +27,9 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         setItemsInStorageObject,
         storageConfig
     } = config;
-    
+
     const storage = useMMKV({ id: storageId });
+
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);

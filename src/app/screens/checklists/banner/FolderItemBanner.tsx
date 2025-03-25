@@ -4,7 +4,7 @@ import { TextInput } from 'react-native-paper';
 import { FolderItem, FolderItemTypes, LISTS_STORAGE_ID } from '../../../../feature/checklists/types';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { getFolderItem, updateFolderItem } from '../../../../feature/checklists/storage/folderStorage';
-import { ItemStatus } from '../../../../foundation/sortedLists/types';
+import { ItemStatus } from '../../../../foundation/sortedLists/constants';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/GenericIcon';
 import CustomText from '../../../../foundation/components/text/CustomText';

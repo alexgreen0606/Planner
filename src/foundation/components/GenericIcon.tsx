@@ -44,7 +44,7 @@ export interface GenericIconProps<T = void> {
     type: IconType;
     size?: 'xs' | 's' | 'm' | 'l' | 'xl';
     platformColor?: string;
-    onClick?: () => T;
+    onClick?: (item?: T) => T | void;
     style?: ViewStyle;
     hideRipple?: boolean;
 };
@@ -59,7 +59,7 @@ const GenericIcon = <T,>({
 }: GenericIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
     return (
-        <Wrapper activeOpacity={hideRipple ? 1 : 0} onPress={onClick} style={{
+        <Wrapper activeOpacity={hideRipple ? 1 : 0} onPress={() => onClick?.()} style={{
             width: sizeMap[size],
             height: sizeMap[size],
             alignItems: 'center',

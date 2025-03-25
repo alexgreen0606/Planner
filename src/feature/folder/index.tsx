@@ -8,15 +8,18 @@ import {
     getFolderItems,
 } from '../checklists/storage/folderStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import Toolbar, { ToolbarProps } from './components/FolderItemToolbar';
+import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { Folder, LISTS_STORAGE_ID, FolderItem, FolderItemTypes } from '../checklists/types';
 import { Pages } from '../../app/navUtils';
-import { ItemStatus, ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
+import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
 import { useNavigatorContext } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId } from '../../foundation/sortedLists/utils';
+import { ItemStatus } from '../../foundation/sortedLists/constants';
+import { selectableColors } from '../../foundation/theme/colors';
+import { GenericIconProps } from '../../foundation/components/GenericIcon';
 
 interface SortableFolderProps {
     folderId: string;
@@ -108,48 +111,59 @@ const SortedFolder = ({
         onOpenItem(item.id, item.type);
     };
 
-    const editItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps> => {
-        return {
-            component: Toolbar,
-            props: {
-                open: currentTab === Pages.LISTS && item.status === ItemStatus.EDIT && !deleteModalOpen,
-                iconRows: [[{
-                    type: 'transfer',
-                    onClick: () => beginItemTransfer(item),
-                }],
-                [{
-                    onClick: () => {
-                        toggleDeleteModal();
-                        return item;
-                    },
-                    type: 'trash',
-                }]],
-                item,
-                onSave: (newItem: FolderItem) => newItem
-            },
-        }
-    }
+    // Helper function to create the color selection icon set
+    const createColorSelectionIconSet = (item: FolderItem): GenericIconProps<FolderItem>[] => {
+        return Object.values(selectableColors).map(color => ({
+            type: item.platformColor === color ? 'circleFilled' : 'circle',
+            platformColor: color,
+            onClick: () => setCurrentTextfield({ ...item, platformColor: color }),
+        }));
+    };
 
-    const newItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps> => {
+    useEffect(() => {
+        console.log(currentTextfield)
+    }, [currentTextfield])
+
+    const getItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps<FolderItem>> => {
+        const isNew = item.status === ItemStatus.NEW;
+        const isOpen = currentTab === Pages.LISTS && !deleteModalOpen &&
+            (isNew ? item.status === ItemStatus.NEW : item.status === ItemStatus.EDIT);
+
         return {
             component: Toolbar,
             props: {
-                iconRows: [[{
-                    type: 'folder',
-                    onClick: () => ({ ...item, type: FolderItemTypes.FOLDER }),
-                    platformColor: item.type === FolderItemTypes.FOLDER ? item.platformColor : 'secondaryLabel'
-                },
-                {
-                    type: 'list',
-                    onClick: () => ({ ...item, type: FolderItemTypes.LIST }),
-                    platformColor: item.type === FolderItemTypes.LIST ? item.platformColor : 'secondaryLabel'
-                }]],
-                open: currentTab === Pages.LISTS && item.status === ItemStatus.NEW && !deleteModalOpen,
-                onSave: (updatedItem: FolderItem) => updatedItem,
-                item
+                open: isOpen,
+                iconSets: isNew
+                    ? [
+                        [
+                            {
+                                type: 'folder',
+                                onClick: () => setCurrentTextfield({ ...item, type: FolderItemTypes.FOLDER }),
+                                platformColor: item.type === FolderItemTypes.FOLDER ? item.platformColor : 'secondaryLabel'
+                            },
+                            {
+                                type: 'list',
+                                onClick: () => setCurrentTextfield({ ...item, type: FolderItemTypes.LIST }),
+                                platformColor: item.type === FolderItemTypes.LIST ? item.platformColor : 'secondaryLabel'
+                            }
+                        ],
+                        createColorSelectionIconSet(item)
+                    ]
+                    : [
+                        [{
+                            type: 'transfer',
+                            onClick: () => beginItemTransfer(item),
+                        }],
+                        [{
+                            onClick: toggleDeleteModal,
+                            type: 'trash',
+                        }],
+                        createColorSelectionIconSet(item),
+                    ],
+                item,
             },
-        }
-    }
+        };
+    };
 
     const isItemTransfering = (item: FolderItem) => item.status === ItemStatus.TRANSFER;
     const isTransferMode = () => currentTextfield?.status === ItemStatus.TRANSFER;
@@ -177,7 +191,7 @@ const SortedFolder = ({
     });
 
     return (
-        <SortableList<FolderItem, ToolbarProps, DeleteModalProps>
+        <SortableList<FolderItem, ToolbarProps<FolderItem>, DeleteModalProps>
             listId={folderId}
             items={SortedItems.items}
             fillSpace
@@ -186,7 +200,7 @@ const SortedFolder = ({
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             onSaveTextfield={SortedItems.persistItemToStorage}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
-            getToolbars={item => [editItemToolbarConfig(item), newItemToolbarConfig(item)]}
+            getToolbar={item => getItemToolbarConfig(item)}
             initializeItem={initializeFolderItem}
             onContentClick={handleItemClick}
             getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemTeal' :
@@ -207,7 +221,6 @@ const SortedFolder = ({
                     onSave: (updatedItem: FolderItem) => {
                         SortedItems.deleteSingleItemFromStorage(updatedItem);
                         toggleDeleteModal();
-                        return undefined;
                     },
                     item
                 },

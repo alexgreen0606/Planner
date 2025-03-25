@@ -11,7 +11,7 @@ import {
 } from '../timestampUtils';
 import { getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from '../calendarUtils';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../types';
-import { ItemStatus } from '../../sortedLists/types';
+import { ItemStatus } from '../../sortedLists/constants';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 

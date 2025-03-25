@@ -16,11 +16,12 @@ import Animated, {
     withRepeat,
     Easing,
 } from 'react-native-reanimated';
-import { ListItem, SCROLL_THROTTLE } from '../types';
+import { ListItem } from '../types';
 import { ScrollView, View } from 'react-native';
 import GenericIcon from '../../components/GenericIcon';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
+import { SCROLL_THROTTLE } from '../constants';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const AnimatedView = Animated.createAnimatedComponent(View);

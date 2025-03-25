@@ -4,8 +4,9 @@ import { isItemTextfield } from '../../foundation/sortedLists/utils';
 import { LISTS_STORAGE_ID, Checklist } from './types';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
-import { ItemStatus, ListItem } from '../../foundation/sortedLists/types';
+import { ListItem } from '../../foundation/sortedLists/types';
 import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
+import { ItemStatus } from '../../foundation/sortedLists/constants';
 
 interface SortableListProps {
     listId: string;

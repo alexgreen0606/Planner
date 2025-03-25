@@ -1,5 +1,6 @@
 import { SharedValue } from "react-native-reanimated";
-import { ItemStatus, ListItem } from "./types";
+import {  ListItem } from "./types";
+import { ItemStatus } from "./constants";
 
 // ------------- Sort ID Management -------------
 

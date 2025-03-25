@@ -7,14 +7,15 @@ import { PlatformColor } from 'react-native';
 
 export interface DeleteModalProps extends ListItemUpdateComponentProps<FolderItem> {
     open: boolean;
-    toggleModalOpen: () => void;
     parentFolderName: string;
+    onSave: (item: FolderItem) => void;
+    toggleModalOpen: () => void;
 }
 
 const DeleteModal = ({
     item,
-    onSave,
     open,
+    onSave,
     toggleModalOpen,
     parentFolderName
 }: DeleteModalProps) => {

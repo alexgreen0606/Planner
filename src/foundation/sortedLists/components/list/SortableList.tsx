@@ -1,22 +1,20 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Dimensions, OpaqueColorValue, Pressable, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Pressable, TouchableOpacity, View } from 'react-native';
 import { useSortableListContext } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import Animated, { runOnUI, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
-    ItemStatus,
     ListItem,
     ModifyItemConfig,
     ListItemUpdateComponentProps,
-    RowIconConfig,
-    LIST_ITEM_HEIGHT,
-    LIST_SPRING_CONFIG,
+    ListItemIconConfig,
 } from '../../types';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
 import ThinLine from '../../../components/ThinLine';
 import { buildItemPositions, generateSortId } from '../../utils';
 import { useKeyboard } from '../../services/KeyboardProvider';
+import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -32,12 +30,12 @@ export interface DraggableListProps<
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd: (updatedItem: T) => Promise<void> | void;
     onContentClick: (item: T) => void;
-    getLeftIconConfig?: (item: T) => RowIconConfig<T>;
-    getRightIconConfig?: (item: T) => RowIconConfig<T>;
+    getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
+    getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
     getRowTextPlatformColor?: (item: T) => string;
-    getToolbars?: (item: T) => ModifyItemConfig<T, P>[];
+    getToolbar?: (item: T) => ModifyItemConfig<T, P>;
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;

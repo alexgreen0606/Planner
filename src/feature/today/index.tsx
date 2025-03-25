@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { buildPlanner } from '../../foundation/calendarEvents/storage/plannerStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
+import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import { useSortableListContext } from '../../foundation/sortedLists/services/SortableListProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { generatePlannerEventMap } from '../../foundation/calendarEvents/calendarUtils';
+import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 
 interface SortablePlannerProps {
     reloadChips: () => void;
@@ -57,7 +58,7 @@ const TodayPlanner = ({
     });
 
     return (
-        <SortableList<PlannerEvent, never, TimeModalProps>
+        <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>
             listId={datestamp}
             items={SortedEvents.items}
             fillSpace
@@ -70,6 +71,7 @@ const TodayPlanner = ({
             handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
+            getToolbar={(item) => generateEventToolbar(item, handleToggleTimeModal, timeModalOpen)}
             onSaveTextfield={async (updatedItem) => {
                 await SortedEvents.persistItemToStorage(updatedItem);
                 if (updatedItem.timeConfig?.allDay)

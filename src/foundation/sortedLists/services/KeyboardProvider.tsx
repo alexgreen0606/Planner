@@ -9,7 +9,7 @@ import {
     withSpring,
 } from 'react-native-reanimated';
 import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';
-import { LIST_SPRING_CONFIG } from '../types';
+import { LIST_SPRING_CONFIG } from '../constants';
 
 interface KeyboardContextValue {
     keyboard: AnimatedKeyboardInfo;

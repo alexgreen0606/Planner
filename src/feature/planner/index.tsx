@@ -13,7 +13,7 @@ import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonP
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import Card from '../../foundation/components/Card';
 import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
-import { ItemStatus } from '../../foundation/sortedLists/types';
+import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 

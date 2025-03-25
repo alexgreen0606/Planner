@@ -11,8 +11,9 @@ import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtil
 import Card from '../../foundation/components/Card';
 import GenericIcon from '../../foundation/components/GenericIcon';
 import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
-import { ItemStatus, ListItem } from '../../foundation/sortedLists/types';
+import { ListItem } from '../../foundation/sortedLists/types';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
+import { ItemStatus } from '../../foundation/sortedLists/constants';
 
 interface BirthdayChecklistProps {
     birthdays: EventChipProps[];

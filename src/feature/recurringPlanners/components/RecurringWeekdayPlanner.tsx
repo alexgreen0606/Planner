@@ -9,7 +9,7 @@ import globalStyles from '../../../foundation/theme/globalStyles';
 import { View } from 'react-native';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../foundation/calendarEvents/sharedListProps';
-import { ItemStatus } from '../../../foundation/sortedLists/types';
+import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/commonProps';
 import DatePicker from 'react-native-date-picker';
 

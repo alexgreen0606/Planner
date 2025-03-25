@@ -3,7 +3,7 @@ import { datestampToMidnightDate, generateSortIdByTime, timeValueToIso } from ".
 import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
 import { PlannerEvent, RecurringEvent } from "./types";
-import { ItemStatus } from "../sortedLists/types";
+import { ItemStatus } from "../sortedLists/constants";
 
 // ---------- Data Model Generation ----------
 

@@ -12,13 +12,8 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import {
-    AUTO_SCROLL_SPEED,
-    ItemStatus,
-    LIST_ITEM_HEIGHT,
-    LIST_SPRING_CONFIG,
     ListItem,
     ListItemUpdateComponentProps,
-    SCROLL_OUT_OF_BOUNDS_RESISTANCE,
 } from "../../types";
 import { DraggableListProps } from "./SortableList";
 import { useSortableListContext } from "../../services/SortableListProvider";
@@ -33,6 +28,7 @@ import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from ".
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
 import { useKeyboard } from "../../services/KeyboardProvider";
+import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
 
 interface RowProps<
     T extends ListItem,
@@ -69,7 +65,7 @@ const DraggableRow = <
     handleValueChange,
     getRowTextPlatformColor,
     onContentClick,
-    getToolbars,
+    getToolbar,
     disableDrag,
     onDeleteItem,
     saveTextfieldAndCreateNew,
@@ -116,11 +112,9 @@ const DraggableRow = <
     const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
     const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
     const modalConfig = useMemo(() => getModal?.(item), [item, getModal]);
-    const popoverConfigs = useMemo(() => getToolbars?.(item), [item, getToolbars]);
+    const toolbarConfig = useMemo(() => getToolbar?.(item), [item, getToolbar]);
     const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
-    const Popovers = useMemo(() => popoverConfigs?.map(config => config.component),
-        [popoverConfigs]
-    );
+    const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
     // ------------- Row Utilities -------------
 
@@ -537,24 +531,24 @@ const DraggableRow = <
         </GestureDetector>
 
         {/* Row Modal */}
-        {isItemTextfield(item) && modalConfig && Modal && (
+        {modalConfig && Modal && (
             <Modal
                 {...modalConfig.props}
-                onSave={(newItem: T) => setCurrentTextfield(modalConfig.props.onSave(newItem))}
+                // formatItemAndSave={(newItem: T) => setCurrentTextfield(modalConfig.props.formatItemAndSave(newItem))}
             />
         )}
 
-        {/* Row Popovers */}
-        {isItemTextfield(item) && popoverConfigs && Popovers && Popovers.map((Popover, i) => (
-            <Portal key={`${item.id}-popover-${i}`}>
+        {/* Toolbar */}
+        {toolbarConfig && Toolbar &&
+            <Portal key={`${item.id}-popover`}>
                 <Animated.View style={toolbarStyle}>
-                    <Popover
-                        {...popoverConfigs[i].props}
-                        onSave={(newItem: T) => setCurrentTextfield(popoverConfigs[i].props.onSave(newItem))}
+                    <Toolbar
+                        {...toolbarConfig.props}
+                        // formatItemAndSave={(newItem: T) => setCurrentTextfield(toolbarConfig.props.formatItemAndSave(newItem))}
                     />
                 </Animated.View>
             </Portal>
-        ))}
+        }
     </Animated.View>
 };
 

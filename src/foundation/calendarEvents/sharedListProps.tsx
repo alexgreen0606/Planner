@@ -1,4 +1,6 @@
 import { IconType } from "../components/GenericIcon";
+import Toolbar, { ToolbarProps } from "../sortedLists/components/ListItemToolbar";
+import { ModifyItemConfig } from "../sortedLists/types";
 import { isItemTextfield } from "../sortedLists/utils";
 import TimeModal from "./components/TimeModal";
 import TimeValue from "./components/values/TimeValue";
@@ -118,7 +120,7 @@ export function generateTimeIconConfig(
 ) {
     const itemTime = getEventTime(item);
     return {
-        hideIcon: !itemTime && !isItemTextfield(item),
+        hideIcon: !itemTime, // && !isItemTextfield(item),
         icon: {
             type: 'clock' as IconType,
         },
@@ -130,5 +132,26 @@ export function generateTimeIconConfig(
                 startEvent={!!(item as PlannerEvent).timeConfig?.isStartEvent}
                 timeValue={itemTime}
             /> : undefined
+    }
+}
+
+/**
+ * TODO: comment
+ */
+export function generateEventToolbar(
+    item: PlannerEvent | RecurringEvent,
+    toggleTimeModal: (item: PlannerEvent | RecurringEvent) => void,
+    timeModalOpen: boolean
+): ModifyItemConfig<PlannerEvent | RecurringEvent, ToolbarProps<PlannerEvent | RecurringEvent>> {
+    return {
+        component: Toolbar,
+        props: {
+            open: !timeModalOpen && isItemTextfield(item),
+            iconSets: [[{
+                type: 'clock',
+                onClick: () => toggleTimeModal(item),
+            }]],
+            item,
+        },
     }
 }

@@ -25,6 +25,7 @@ type FormData = {
 export interface TimeModalProps extends ListItemUpdateComponentProps<PlannerEvent> {
     toggleModalOpen: (event: PlannerEvent) => void;
     open: boolean;
+    onSave: (event: PlannerEvent) => void;
 }
 
 const TimeModal = ({
