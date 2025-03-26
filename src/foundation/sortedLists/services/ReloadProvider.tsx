@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedReaction,
@@ -16,8 +16,9 @@ import GenericIcon from '../../components/GenericIcon';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { useSortableList } from './SortableListProvider';
 import { Portal } from 'react-native-paper';
-import { BANNER_HEIGHT } from '../../components/constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { OVERSCROLL_RELOAD_THRESHOLD } from '../constants';
+import { BANNER_HEIGHT } from '../../components/constants';
 
 const AnimatedReload = Animated.createAnimatedComponent(View);
 
@@ -29,15 +30,24 @@ export enum LoadingStatus {
 
 interface ReloadProviderProps {
     children: React.ReactNode;
-    reloadData: () => Promise<void>;
 }
 
-const ReloadContext = createContext<null>(null);
+interface ReloadFunction {
+    id: string;
+    func: () => Promise<void>;
+}
+
+interface ReloadContextType {
+    addReloadFunction: (id: string, reloadFunc: () => Promise<void>) => void;
+}
+
+const ReloadContext = createContext<ReloadContextType | null>(null);
 
 export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     children,
-    reloadData
 }) => {
+    const [reloadFunctions, setReloadFunctions] = useState<Record<string, () => Promise<void>>>({});
+
     const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
     const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
@@ -47,6 +57,32 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     const { top } = useSafeAreaInsets();
 
     // ------------- Utility Functions -------------
+
+    // Function to add a new reload function
+    const addReloadFunction = useCallback((id: string, reloadFunc: () => Promise<void>) => {
+        setReloadFunctions(prev => {
+            // Only add if the ID doesn't already exist
+            if (prev[id]) {
+                return prev; // ID already exists, don't update
+            }
+            return {
+                ...prev,
+                [id]: reloadFunc
+            };
+        });
+    }, []);
+
+    // Combined reload function that executes all registered functions
+    const executeAllReloadFunctions = async () => {
+        try {
+            // Execute all functions in the map/record
+            await Promise.all(Object.values(reloadFunctions).map(func => func()));
+        } catch (error) {
+            console.error('Error during reload:', error);
+        } finally {
+            endLoadingData();
+        }
+    };
 
     const triggerHaptic = () => {
         ReactNativeHapticFeedback.trigger('impactMedium', {
@@ -69,7 +105,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     // Reload data when loadingStatus changes to LOADING
     useEffect(() => {
         if (loadingStatus === LoadingStatus.LOADING) {
-            reloadData().then(endLoadingData);
+            executeAllReloadFunctions().then(endLoadingData);
         }
     }, [loadingStatus]);
 
@@ -79,7 +115,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
         (current) => {
 
             // Trigger a reload of the list
-            if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -BANNER_HEIGHT) {
+            if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
                 runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
             }
 
@@ -121,7 +157,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     const loadingIconStyle = useAnimatedStyle(() => {
         const opacity = interpolate(
             Math.min(0, scrollOffset.value),
-            [-BANNER_HEIGHT / 2, -BANNER_HEIGHT],
+            [-OVERSCROLL_RELOAD_THRESHOLD / 2, -OVERSCROLL_RELOAD_THRESHOLD],
             [0, 1],
             Extrapolation.CLAMP
         );
@@ -131,14 +167,16 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
                 { rotate: `${loadingRotation.value}deg` },
             ],
             position: 'absolute',
-            top: top - scrollOffset.value,
+            top: top + (BANNER_HEIGHT * 1.5),
             alignSelf: 'center',
             zIndex: 1,
         };
     });
 
     return (
-        <ReloadContext.Provider value={null}>
+        <ReloadContext.Provider value={{
+            addReloadFunction
+        }}>
             <Portal>
                 <AnimatedReload style={loadingIconStyle}>
                     <GenericIcon

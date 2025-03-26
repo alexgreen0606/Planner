@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
 import { NavigatorProvider } from './src/app/NavProvider';
+import { DeleteSchedulerProvider } from './src/foundation/sortedLists/services/DeleteScheduler';
 
 const App = () => {
   return (
@@ -13,10 +14,12 @@ const App = () => {
       <GestureHandlerRootView>
         <NavigationContainer>
           <SafeAreaProvider>
-            <StatusBar barStyle='default' />
-            <NavigatorProvider>
-              <Navigator />
-            </NavigatorProvider>
+            <DeleteSchedulerProvider>
+              <StatusBar barStyle='default' />
+              <NavigatorProvider>
+                <Navigator />
+              </NavigatorProvider>
+            </DeleteSchedulerProvider>
           </SafeAreaProvider>
         </NavigationContainer>
       </GestureHandlerRootView>

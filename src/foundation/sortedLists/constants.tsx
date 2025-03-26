@@ -1,3 +1,5 @@
+import { BANNER_HEIGHT } from "../components/constants";
+
 export const LIST_ITEM_TOOLBAR_HEIGHT = 50;
 
 export const LIST_ITEM_HEIGHT = 40;
@@ -22,3 +24,5 @@ export enum ItemStatus {
     STATIC = 'STATIC',
     HIDDEN = 'HIDDEN'
 };
+
+export const OVERSCROLL_RELOAD_THRESHOLD = BANNER_HEIGHT * 2;

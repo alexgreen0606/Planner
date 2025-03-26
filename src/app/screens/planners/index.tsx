@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
 import { getWeeklyWeather, WeatherForecast } from '../../../feature/weather/utils';
 import globalStyles from '../../../foundation/theme/globalStyles';
@@ -17,7 +17,11 @@ import { EventChipProps } from '../../../foundation/calendarEvents/components/Ev
 import { generateEventChipMap, generatePlannerEventMap } from '../../../foundation/calendarEvents/calendarUtils';
 import GenericIcon from '../../../foundation/components/GenericIcon';
 import { PlannerEvent } from '../../../foundation/calendarEvents/types';
-import { ReloadProvider } from '../../../foundation/sortedLists/services/ReloadProvider';
+
+interface PageDataMaps {
+  chips: Record<string, EventChipProps[]>;
+  calendarEvents: Record<string, PlannerEvent[]>;
+}
 
 const defaultPlannerOptions = [
   { label: 'Next 7 Days', value: getNextSevenDayDatestamps() },
@@ -33,40 +37,93 @@ const Planners = () => {
     })
   }, [])
   const [mode, setMode] = useState(PlannerModes.PLANNERS);
-  const [calendarEventsMap, setCalendarEventsMap] = useState<Record<string, PlannerEvent[]>>({});
   const [selectedRecurring, setSelectedRecurring] = useState({ label: 'Weekdays', value: [RecurringPlannerKeys.WEEKDAYS] });
   const [selectedPlanners, setSelectedPlanners] = useState({ label: 'Next 7 Days', value: getNextSevenDayDatestamps() });
-  const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>();
-  const [eventChipMap, setEventChipMap] = useState<Record<string, EventChipProps[]>>();
-  const [plannersReloadTrigger, setPlannersReloadTrigger] = useState('INITIAL_KEY');
-  const [deadlinesReloadTrigger, setDeadlinesReloadTrigger] = useState('INITIAL_KEY');
-
-  async function reloadEntirePage(tab: PlannerModes) {
-    console.log(tab, 'reloading')
-    loadAllData();
-    if (tab === PlannerModes.DEADLINES) {
-      setDeadlinesReloadTrigger(deadlinesReloadTrigger + '_RELOAD');
-    } else if (tab === PlannerModes.PLANNERS) {
-      setPlannersReloadTrigger(plannersReloadTrigger + '_RELOAD');
+  const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
+    "2025-03-27": {
+      "date": "2025-03-27",
+      "weatherCode": 61,
+      "weatherDescription": "Slight rain",
+      "temperatureMax": 57,
+      "temperatureMin": 51,
+      "precipitationSum": 0.06,
+      "precipitationProbabilityMax": 24
+    },
+    "2025-03-28": {
+      "date": "2025-03-28",
+      "weatherCode": 65,
+      "weatherDescription": "Heavy rain",
+      "temperatureMax": 57,
+      "temperatureMin": 50,
+      "precipitationSum": 1.19,
+      "precipitationProbabilityMax": 32
+    },
+    "2025-03-29": {
+      "date": "2025-03-29",
+      "weatherCode": 3,
+      "weatherDescription": "Overcast",
+      "temperatureMax": 56,
+      "temperatureMin": 47,
+      "precipitationSum": 0,
+      "precipitationProbabilityMax": 3
+    },
+    "2025-03-30": {
+      "date": "2025-03-30",
+      "weatherCode": 63,
+      "weatherDescription": "Moderate rain",
+      "temperatureMax": 54,
+      "temperatureMin": 45,
+      "precipitationSum": 0.46,
+      "precipitationProbabilityMax": 66
+    },
+    "2025-03-31": {
+      "date": "2025-03-31",
+      "weatherCode": 51,
+      "weatherDescription": "Light drizzle",
+      "temperatureMax": 57,
+      "temperatureMin": 50,
+      "precipitationSum": 0.02,
+      "precipitationProbabilityMax": 34
+    },
+    "2025-04-01": {
+      "date": "2025-04-01",
+      "weatherCode": 53,
+      "weatherDescription": "Moderate drizzle",
+      "temperatureMax": 59,
+      "temperatureMin": 53,
+      "precipitationSum": 0.09,
+      "precipitationProbabilityMax": 34
+    },
+    "2025-04-02": {
+      "date": "2025-04-02",
+      "weatherCode": 53,
+      "weatherDescription": "Moderate drizzle",
+      "temperatureMax": 57,
+      "temperatureMin": 53,
+      "precipitationSum": 0.37,
+      "precipitationProbabilityMax": 41
     }
-  }
+  });
+  const [pageDataMaps, setPageDataMaps] = useState<PageDataMaps>({
+    chips: {},
+    calendarEvents: {}
+  })
 
   /**
    * Loads in all chip, weather, and calendar data.
    */
-  async function loadAllData() {
-    const allEventChips = await generateEventChipMap(datestamps);
-    setEventChipMap(allEventChips);
-    const forecastMap = await getWeeklyWeather(datestamps);
-    setForecasts(forecastMap);
-    const calendarEvents = await generatePlannerEventMap(datestamps);
-    setCalendarEventsMap(calendarEvents);
-  }
+  async function loadAllExternalData() {
+    // TODO: add in forecasts from apple weather kit
+    setPageDataMaps({
+      chips: await generateEventChipMap(datestamps),
+      calendarEvents: await generatePlannerEventMap(datestamps)
+    })
+  };
 
   // Load in the initial planners
   useEffect(() => {
-    loadAllData();
-  }, [])
+    loadAllExternalData();
+  }, []);
 
   const renderDropdownItem = (item: { label: string, value: string }) => {
     return (
@@ -89,40 +146,38 @@ const Planners = () => {
 
       {/* Planners */}
       {mode === PlannerModes.PLANNERS ? <>
-        {datestamps && eventChipMap && (
+        {datestamps && (
           <SortableListProvider>
-            <ReloadProvider reloadData={() => reloadEntirePage(PlannerModes.PLANNERS)}>
-              <View style={styles.dropdownContainer} >
-                <Dropdown
-                  data={defaultPlannerOptions}
-                  maxHeight={300}
-                  selectedTextStyle={styles.selectedTextStyle}
-                  style={styles.dropdown}
-                  containerStyle={{ borderWidth: 0 }}
-                  renderItem={renderDropdownItem}
-                  labelField="label"
-                  valueField="value"
-                  value={selectedPlanners}
-                  onChange={setSelectedPlanners}
+            <View style={styles.dropdownContainer} >
+              <Dropdown
+                data={defaultPlannerOptions}
+                maxHeight={300}
+                selectedTextStyle={styles.selectedTextStyle}
+                style={styles.dropdown}
+                containerStyle={{ borderWidth: 0 }}
+                renderItem={renderDropdownItem}
+                labelField="label"
+                valueField="value"
+                value={selectedPlanners}
+                onChange={setSelectedPlanners}
+              />
+              <GenericIcon
+                type='add'
+                platformColor='secondaryLabel'
+              />
+            </View>
+            <View style={styles.planners}>
+              {selectedPlanners.value.map((datestamp) =>
+                <PlannerCard
+                  key={`${datestamp}-planner`}
+                  datestamp={datestamp}
+                  loadAllExternalData={loadAllExternalData}
+                  forecast={forecasts?.[datestamp]}
+                  calendarEvents={pageDataMaps.calendarEvents[datestamp] ?? []}
+                  eventChips={pageDataMaps.chips[datestamp] ?? []}
                 />
-                <GenericIcon
-                  type='add'
-                  platformColor='secondaryLabel'
-                />
-              </View>
-              <View style={styles.planners} key={plannersReloadTrigger}>
-                {selectedPlanners.value.map((datestamp) =>
-                  <PlannerCard
-                    key={`${datestamp}-planner`}
-                    datestamp={datestamp}
-                    calendarEvents={calendarEventsMap[datestamp]}
-                    reloadChips={loadAllData}
-                    forecast={forecasts?.[datestamp]}
-                    eventChips={eventChipMap[datestamp]}
-                  />
-                )}
-              </View>
-            </ReloadProvider>
+              )}
+            </View>
           </SortableListProvider>
         )}
       </> : mode === PlannerModes.RECURRING ? (
@@ -148,16 +203,14 @@ const Planners = () => {
           <View style={{ ...styles.planners, flex: 1, paddingHorizontal: 0 }}>
             {selectedRecurring.value.map((key) => (
               key === RecurringPlannerKeys.WEEKDAYS ?
-                <RecurringWeekdayPlanner key='recurring-planner' /> :
+                <RecurringWeekdayPlanner key='weekday-recurring-planner' /> :
                 <RecurringPlanner key={`${key}-planner`} plannerKey={key} />
             ))}
           </View>
         </SortableListProvider>
       ) : (
         <SortableListProvider>
-          <ReloadProvider reloadData={() => reloadEntirePage(PlannerModes.DEADLINES)}>
-            <Deadlines key={plannersReloadTrigger} />
-          </ReloadProvider>
+          <Deadlines />
         </SortableListProvider>
       )}
     </View>

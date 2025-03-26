@@ -8,6 +8,7 @@ import { ListItem } from '../../foundation/sortedLists/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { LISTS_STORAGE_ID } from './constants';
+import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
 
 interface SortableListProps {
     listId: string;
@@ -16,7 +17,7 @@ interface SortableListProps {
 const ChecklistList = ({
     listId,
 }: SortableListProps) => {
-    const { pendingDeleteItems } = useSortableList();
+    const { isItemDeleting } = useDeleteScheduler();
 
     function getItemsFromStorageObject(storageObject: Checklist) {
         return storageObject.items;
@@ -39,10 +40,9 @@ const ChecklistList = ({
             items={SortedItems.items}
             onDragEnd={SortedItems.persistItemToStorage}
             onContentClick={SortedItems.toggleItemEdit}
-            isItemDeleting={SortedItems.isItemDeleting}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, pendingDeleteItems)}
+            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, isItemDeleting(item))}
             onSaveTextfield={(updatedItem: ListItem) => {
                 const item = { ...updatedItem, status: isItemTextfield(updatedItem) ? ItemStatus.STATIC : updatedItem.status }
                 SortedItems.persistItemToStorage(item);

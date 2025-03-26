@@ -32,17 +32,23 @@ const TimeModal = ({
     toggleModalOpen,
     open,
     onSave,
-    item
+    item: planEvent
 }: TimeModalProps) => {
-    const startOfDayDate = datestampToMidnightDate(item.listId);
-    const endOfDayDate = datestampToMidnightDate(item.listId);
+    const isMultidayEvent = () => {
+        const eventStartDate = planEvent.timeConfig?.startTime && isoToDatestamp(planEvent.timeConfig?.startTime);
+        const eventEndDate = planEvent.timeConfig?.endTime && isoToDatestamp(planEvent.timeConfig?.endTime)
+        return eventStartDate !== eventEndDate;
+    }
+
+    const startOfDayDate = datestampToMidnightDate(planEvent.listId);
+    const endOfDayDate = datestampToMidnightDate(planEvent.listId);
     endOfDayDate.setHours(23, 55, 0, 0);
-    const [rescheduleEvent, setRescheduleEvent] = useState(false);
-    const [timeModalData, setTimeModalData] = useState<FormData>(item.timeConfig ? {
-        startTime: new Date(item.timeConfig.startTime),
-        endTime: new Date(item.timeConfig.endTime),
-        allDay: item.timeConfig.allDay,
-        isCalendarEvent: !!item.calendarId
+    const [multiDayEvent, setMultiDayEvent] = useState(isMultidayEvent());
+    const [timeModalData, setTimeModalData] = useState<FormData>(planEvent.timeConfig ? {
+        startTime: new Date(planEvent.timeConfig.startTime),
+        endTime: new Date(planEvent.timeConfig.endTime),
+        allDay: planEvent.timeConfig.allDay,
+        isCalendarEvent: !!planEvent.calendarId
     } : {
         allDay: false,
         isCalendarEvent: false,
@@ -51,36 +57,37 @@ const TimeModal = ({
     });
 
     useEffect(() => {
-        setTimeModalData(item.timeConfig ? {
-            startTime: new Date(item.timeConfig.startTime),
-            endTime: new Date(item.timeConfig.endTime),
-            allDay: item.timeConfig.allDay,
-            isCalendarEvent: !!item.calendarId
+        setTimeModalData(planEvent.timeConfig ? {
+            startTime: new Date(planEvent.timeConfig.startTime),
+            endTime: new Date(planEvent.timeConfig.endTime),
+            allDay: planEvent.timeConfig.allDay,
+            isCalendarEvent: !!planEvent.calendarId
         } : {
             allDay: false,
             isCalendarEvent: false,
             startTime: startOfDayDate,
             endTime: endOfDayDate,
         });
-    }, [item]);
+        setMultiDayEvent(isMultidayEvent());
+    }, [planEvent]);
 
     function handleSave() {
         const updatedItem = {
-            ...item,
+            ...planEvent,
             timeConfig: {
                 allDay: timeModalData.allDay,
                 startTime: timeModalData.startTime.toISOString(),
                 endTime: timeModalData.endTime.toISOString()
             }
         };
-        if (timeModalData.isCalendarEvent && !item.calendarId) {
+        if (timeModalData.isCalendarEvent && !planEvent.calendarId) {
             updatedItem.calendarId = 'NEW';
         }
         onSave(updatedItem);
     };
 
-    function toggleReschedule() {
-        setRescheduleEvent(curr => !curr);
+    function toggleMultiDay() {
+        setMultiDayEvent(curr => !curr);
     }
 
     function getDateLabel() {
@@ -93,24 +100,23 @@ const TimeModal = ({
         }
     }
 
+    const hideStartTimeSelector = !multiDayEvent && timeModalData.allDay;
+    const hideEndTimeSelector = !timeModalData.isCalendarEvent;
+
     return (
         <Modal
             title='Schedule event time'
-            toggleModalOpen={() => toggleModalOpen(item)}
             open={open}
+            toggleModalOpen={() => toggleModalOpen(planEvent)}
             primaryButtonConfig={{
                 label: 'Save',
                 onClick: handleSave,
-            }}
-            iconConfig={{
-                type: 'clock',
-                platformColor: 'systemBlue',
             }}
         >
 
             {/* Event Details */}
             <CustomText type='standard'>
-                {item.value}
+                {planEvent.value}
             </CustomText>
             <CustomText adjustsFontSizeToFit numberOfLines={1} type='soft' style={{ marginBottom: 16 }}>
                 {getDateLabel()}
@@ -134,7 +140,7 @@ const TimeModal = ({
                                         ? new Date(timeModalData.startTime.getTime() + 60 * 60 * 1000)
                                         : endOfDayDate
                                 });
-                                setRescheduleEvent(false);
+                                setMultiDayEvent(false);
                             }}
                             style={{
                                 marginTop: 4,
@@ -169,30 +175,30 @@ const TimeModal = ({
                     </View>
                 </View>
 
-                {/* Reschedule Toggle */}
+                {/* Multi-Day Toggle */}
                 <View style={styles.halfWidth}>
                     {timeModalData.isCalendarEvent && (
                         <>
-                            <CustomText type='label'>Reschedule</CustomText>
+                            <CustomText type='label'>Multi-Day</CustomText>
                             <Checkbox
-                                value={rescheduleEvent}
-                                onValueChange={toggleReschedule}
+                                value={multiDayEvent}
+                                onValueChange={toggleMultiDay}
                                 style={{
                                     marginTop: 4,
                                 }}
-                                color={PlatformColor(rescheduleEvent ? 'systemBlue' : 'secondaryLabel')}
+                                color={PlatformColor(multiDayEvent ? 'systemBlue' : 'secondaryLabel')}
                             />
                         </>
                     )}
                 </View>
 
                 {/* Start Time */}
-                {!timeModalData.allDay && (
+                {!hideStartTimeSelector && (
                     <View style={globalStyles.fullWidth}>
                         <CustomText type='label'>Start Time</CustomText>
                         <View style={{ transform: [{ scale: .8, }], alignItems: 'center' }}>
                             <DatePicker
-                                mode={rescheduleEvent ? 'datetime' : 'time'}
+                                mode={multiDayEvent && timeModalData.allDay ? 'date' : multiDayEvent ? 'datetime' : 'time'}
                                 title='Select deadline date'
                                 theme='dark'
                                 date={timeModalData.startTime}
@@ -209,12 +215,12 @@ const TimeModal = ({
                 )}
 
                 {/* End Time */}
-                {!timeModalData.allDay && timeModalData.isCalendarEvent && (
+                {!hideEndTimeSelector && (
                     <View style={globalStyles.fullWidth}>
                         <CustomText type='label'>End Time</CustomText>
                         <View style={{ transform: [{ scale: .8, }], alignItems: 'center' }}>
                             <DatePicker
-                                mode={rescheduleEvent ? 'datetime' : 'time'}
+                                mode={multiDayEvent && timeModalData.allDay ? 'date' : multiDayEvent ? 'datetime' : 'time'}
                                 title='Select deadline date'
                                 theme='dark'
                                 date={new Date(timeModalData?.endTime || endOfDayDate)}

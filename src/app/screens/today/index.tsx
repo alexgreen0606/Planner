@@ -40,7 +40,9 @@ const Today = () => {
       {/* Banner */}
       <TodayBanner timestamp={timestamp} />
 
-      {/* Event Chips */}
+      <SortableListProvider>
+
+        {/* Event Chips */}
       {eventChips.length > 0 && (
         <View style={styles.chips}>
           {eventChips.map((chipConfig, i) => (
@@ -51,8 +53,6 @@ const Today = () => {
           ))}
         </View>
       )}
-
-      <SortableListProvider>
 
         {/* Birthday Checklist Card */}
         {birthdayChips && (

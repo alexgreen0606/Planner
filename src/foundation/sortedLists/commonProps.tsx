@@ -13,12 +13,12 @@ import { IconType } from "../components/GenericIcon";
 export function generateCheckboxIconConfig<T extends ListItem>(
     item: T,
     toggleItemDelete: (item: T) => void,
-    pendingDeleteItems: T[]
+    isDeleting: boolean
 ) {
     return {
         icon: {
-            type: !!pendingDeleteItems.find(i => i.id === item.id) ? 'circleFilled' : 'circle' as IconType,
-            platformColor: !!pendingDeleteItems.find(i => i.id === item.id) ? 'systemBlue' : 'secondaryLabel'
+            type: isDeleting ? 'circleFilled' : 'circle' as IconType,
+            platformColor: isDeleting ? 'systemBlue' : 'secondaryLabel'
         },
         onClick: toggleItemDelete
     };

@@ -29,13 +29,14 @@ export async function toggleTimeModal(
  */
 export async function saveEventLoadChips(
     planEvent: PlannerEvent,
-    reloadChips: () => void,
+    reloadChips: () => Promise<void>,
     items: PlannerEvent[]
 ) {
-    await saveEvent(planEvent);
+    const eventCalendarId = await saveEvent(planEvent);
     if (planEvent.calendarId || (items.find(i => i.id === planEvent.id)?.calendarId)) {
-        reloadChips();
+        await reloadChips();
     }
+    return eventCalendarId;
 }
 
 /**
@@ -47,11 +48,11 @@ export async function saveEventLoadChips(
  */
 export async function deleteEventsLoadChips(
     planEvents: PlannerEvent[],
-    reloadChips: () => void,
+    reloadChips: () => Promise<void>,
     items: PlannerEvent[]
 ) {
     await deleteEvents(planEvents);
     if (planEvents.some(item => item.calendarId) || (planEvents.some(planEvent => items.find(i => i.id === planEvent.id)?.calendarId))) {
-        reloadChips();
+        await reloadChips();
     }
 }

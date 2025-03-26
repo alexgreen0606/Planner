@@ -74,7 +74,7 @@ function generateEventChip(event: CalendarEventReadable, datestamp: string): Eve
         color: calendar.color
     };
 
-    if (calendar.isPrimary) {
+    if (calendar.isPrimary || calendar.title === 'Calendar') {
         chipProps.planEvent = {
             id: event.id,
             value: eventTitle,

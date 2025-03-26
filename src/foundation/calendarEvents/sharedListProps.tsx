@@ -1,3 +1,4 @@
+import { View } from "react-native";
 import { IconType } from "../components/GenericIcon";
 import Toolbar, { ToolbarProps } from "../sortedLists/components/ListItemToolbar";
 import { ModifyItemConfig } from "../sortedLists/types";
@@ -56,7 +57,7 @@ export async function handleDragEnd(
     item: PlannerEvent | RecurringEvent,
     currentList: (PlannerEvent | RecurringEvent)[],
     refetchItems: () => void,
-    saveItem: (item: PlannerEvent | RecurringEvent) => Promise<void>
+    saveItem: (item: PlannerEvent | RecurringEvent) => Promise<void | string>
 ) {
     const itemTime = getEventTime(item);
     if (itemTime) {
@@ -150,12 +151,14 @@ export function generateEventToolbar(
                 type: 'clock',
                 onClick: () => toggleTimeModal(item),
                 customIcon: itemTime ?
-                    <TimeValue
-                        allDay={!!(item as PlannerEvent).timeConfig?.allDay}
-                        endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
-                        startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
-                        timeValue={itemTime}
-                    /> : undefined
+                    <View style={{ transform: 'scale(1.1)' }}>
+                        <TimeValue
+                            allDay={!!(item as PlannerEvent).timeConfig?.allDay}
+                            endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
+                            startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
+                            timeValue={itemTime}
+                        />
+                    </View> : undefined
             }]],
             item,
         },

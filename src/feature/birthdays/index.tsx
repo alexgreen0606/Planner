@@ -14,6 +14,7 @@ import CollapseControl from '../../foundation/sortedLists/components/CollapseCon
 import { ListItem } from '../../foundation/sortedLists/types';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
+import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
 
 interface BirthdayChecklistProps {
     birthdays: EventChipProps[];
@@ -22,6 +23,8 @@ interface BirthdayChecklistProps {
 const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
     const [collapsed, setCollapsed] = useState(false);
     const todayDatestamp = getTodayDatestamp();
+
+    const {isItemDeleting} = useDeleteScheduler();
 
     function toggleCollapsed() {
         if (allBirthdaysContacted)
@@ -69,22 +72,21 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                 <SortableList<ListItem, never, never>
                     listId={BIRTHDAY_CHECKLIST_STORAGE_ID}
                     staticList
+                    disableDrag
                     hideList={collapsed}
                     items={BirthdayList.items}
                     onDeleteItem={BirthdayList.deleteSingleItemFromStorage}
                     onContentClick={() => { }}
                     getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                     onSaveTextfield={() => { }}
-                    onDragEnd={BirthdayList.persistItemToStorage}
-                    isItemDeleting={BirthdayList.isItemDeleting}
                     getRightIconConfig={item => ({
                         icon: {
-                            type: BirthdayList.isItemDeleting(item) ? 'messageFilled' : 'message',
-                            platformColor: BirthdayList.isItemDeleting(item) ? 'secondaryLabel' : 'systemBlue',
+                            type: isItemDeleting(item) ? 'messageFilled' : 'message',
+                            platformColor: isItemDeleting(item) ? 'secondaryLabel' : 'systemBlue',
                             hideRipple: true
                         },
                         onClick: async () => {
-                            const newContactedStatus = !BirthdayList.isItemDeleting(item);
+                            const newContactedStatus = !isItemDeleting(item);
                             if (newContactedStatus) {
                                 const personName = extractNameFromBirthdayText(item.value);
                                 if (personName) {

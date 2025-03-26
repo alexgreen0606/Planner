@@ -53,7 +53,10 @@ const Deadlines = () => {
                     [{
                         type: 'clock',
                         onClick: () => { toggleDateSelector(deadline) },
-                        customIcon: <DateValue timestamp={deadline.startTime.toISOString()} />
+                        customIcon:
+                            <View style={{ transform: 'scale(1.1)' }}>
+                                <DateValue timestamp={deadline.startTime.toISOString()} />
+                            </View>
                     }]],
                 item: deadline,
                 hideKeyboard: dateSelectOpen
@@ -92,12 +95,10 @@ const Deadlines = () => {
                 disableDrag
                 items={DeadlineItems.items}
                 initializeItem={initializedeadline}
-                isItemDeleting={DeadlineItems.isItemDeleting}
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 onSaveTextfield={DeadlineItems.persistItemToStorage}
-                onDragEnd={DeadlineItems.persistItemToStorage} // todo no dragging
                 getToolbar={(deadline) => generateToolbar(deadline)}
                 emptyLabelConfig={{
                     label: 'No deadlines',

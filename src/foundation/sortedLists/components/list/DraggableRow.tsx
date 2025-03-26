@@ -29,6 +29,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
 import { useKeyboard } from "../../services/KeyboardProvider";
 import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
+import { useDeleteScheduler } from "../../services/DeleteScheduler";
 
 interface RowProps<
     T extends ListItem,
@@ -37,7 +38,7 @@ interface RowProps<
 > extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'staticList' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig'> {
     item: T;
     positions: SharedValue<Record<string, number>>;
-    saveTextfieldAndCreateNew: (parentSortId: number) => Promise<void>;
+    saveTextfieldAndCreateNew: (parentSortId?: number) => Promise<void>;
     listLength: number;
 }
 
@@ -71,7 +72,6 @@ const DraggableRow = <
     saveTextfieldAndCreateNew,
     listLength,
     onDragEnd,
-    isItemDeleting
 }: RowProps<T, P, M>) => {
     const windowDimensions = useWindowDimensions();
     const insets = useSafeAreaInsets();
@@ -83,6 +83,8 @@ const DraggableRow = <
         disableNativeScroll,
         scrollOffsetBounds,
     } = useSortableList();
+
+    const { isItemDeleting } = useDeleteScheduler();
 
     const { keyboardAbsoluteTop } = useKeyboard();
 
@@ -128,10 +130,10 @@ const DraggableRow = <
     /**
      * Saves the textfield content or deletes empty items
      */
-    const handleTextfieldSave = () => {
+    const handleTextfieldSave = (createNew: boolean = true) => {
         if (item.value.trim() !== '') {
-            isLoadingInitialPosition.value = true;
-            saveTextfieldAndCreateNew(item.sortId);
+            isLoadingInitialPosition.value = true; // TODO: why is this needed?
+            saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
         } else {
             if (item.status === ItemStatus.NEW) {
                 setCurrentTextfield(undefined);
@@ -372,13 +374,15 @@ const DraggableRow = <
                 } else if (isDragging.value) {
                     // --- End Drag ---
                     endDrag();
-                    runOnJS(onDragEnd)({
-                        ...item,
-                        sortId: generateSortId(
-                            getParentSortIdFromPositions(item, positions, items),
-                            items
-                        )
-                    });
+                    if (onDragEnd) {
+                        runOnJS(onDragEnd)({
+                            ...item,
+                            sortId: generateSortId(
+                                getParentSortIdFromPositions(item, positions, items),
+                                items
+                            )
+                        });
+                    }
                 } else {
                     // --- Click ---
                     cancelAnimation(isDragging);

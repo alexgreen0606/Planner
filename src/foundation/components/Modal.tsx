@@ -67,7 +67,7 @@ const Modal = ({
                 </Dialog.Content>
                 <Dialog.Actions>
                     <View style={globalStyles.spacedApart}>
-                        <Text style={{ color: PlatformColor('systemGray3') }} onPress={toggleModalOpen}>Cancel</Text>
+                        <Text style={{ color: PlatformColor('secondaryLabel') }} onPress={toggleModalOpen}>Cancel</Text>
                         {primaryButtonConfig && (
                             <Text
                                 disabled={primaryButtonConfig.disabled}

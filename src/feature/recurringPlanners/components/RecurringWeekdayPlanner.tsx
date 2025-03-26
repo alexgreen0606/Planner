@@ -12,12 +12,20 @@ import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../.
 import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/commonProps';
 import DatePicker from 'react-native-date-picker';
+import { useDeleteScheduler } from '../../../foundation/sortedLists/services/DeleteScheduler';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
 const RecurringWeekdayPlanner = () => {
     const genericDate = datestampToMidnightDate('2000-01-01');
-    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableList();
+
+    const {
+        currentTextfield,
+        setCurrentTextfield
+    } = useSortableList();
+
+    const { isItemDeleting } = useDeleteScheduler();
+
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     function initializeEvent(event: RecurringEvent): RecurringEvent {
@@ -88,7 +96,6 @@ const RecurringWeekdayPlanner = () => {
                 items={SortedEvents.items}
                 listId={RECURRING_WEEKDAY_PLANNER_KEY}
                 fillSpace
-                isItemDeleting={SortedEvents.isItemDeleting}
                 initializeItem={initializeEvent}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
@@ -97,7 +104,7 @@ const RecurringWeekdayPlanner = () => {
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as RecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
                     label: `No recurring weekday plans`,
                     style: { flex: 1 }

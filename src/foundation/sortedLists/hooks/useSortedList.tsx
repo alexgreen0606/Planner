@@ -1,21 +1,24 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSortableList } from '../services/SortableListProvider';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
+import { useDeleteScheduler } from '../services/DeleteScheduler';
+import { useReload } from '../services/ReloadProvider';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
-    create: (item: T) => Promise<void> | void | Promise<string>;
+    create: (item: T) => Promise<void> | void | Promise<string | undefined>;
     delete: (items: T[]) => Promise<void> | void;
 };
 
 interface SortedListConfig<T extends ListItem, S> {
-    storageKey: string;
     storageId: string;
+    storageKey: string;
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
     setItemsInStorageObject?: (items: T[], currentObject: S) => S;
     storageConfig?: StorageHandlers<T>;
+    noReload?: boolean;
 }
 
 const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) => {
@@ -25,11 +28,11 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         storageId,
         getItemsFromStorageObject,
         setItemsInStorageObject,
-        storageConfig
+        storageConfig,
+        noReload
     } = config;
 
     const storage = useMMKV({ id: storageId });
-
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,9 +41,23 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     const {
         currentTextfield,
         setCurrentTextfield,
+    } = useSortableList();
+
+    const {
         pendingDeleteItems,
         setPendingDeleteItems,
-    } = useSortableList();
+        scheduledDeletionItems,
+        isItemDeleting
+    } = useDeleteScheduler();
+
+    const {
+        addReloadFunction
+    } = useReload();
+
+    const scheduledDeletions = useMemo(
+        () => scheduledDeletionItems(storageKey), 
+        [scheduledDeletionItems]
+    );
 
     const buildList = async () => {
         const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
@@ -51,6 +68,11 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     useEffect(() => {
         buildList();
     }, [storageObject]);
+
+    useEffect(() => {
+        if (!noReload)
+        addReloadFunction(storageKey, buildList);
+    }, [])
 
     // Schedule items for deletion
     useEffect(() => {
@@ -64,12 +86,12 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
                 setDeletePending(true);
             }, 3000);
         }
-    }, [pendingDeleteItems]);
+    }, [scheduledDeletions]);
 
     // Execute item deletion
     useEffect(() => {
         if (deletePending) {
-            deleteItemsFromStorage([...pendingDeleteItems]);
+            deleteItemsFromStorage([...scheduledDeletions as T[]]);
             setDeletePending(false);
         }
     }, [deletePending]);
@@ -173,16 +195,6 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     }
 
     /**
-     * Checks if an item is currently marked for deletion.
-     * 
-     * @param item - The item to check
-     * @returns true if the item is in the pending delete list, false otherwise
-     */
-    function isItemDeleting(item: T) {
-        return pendingDeleteItems.some(deleteItem => deleteItem.id === item.id);
-    }
-
-    /**
      * Deletes a single item from storage.
      * Uses the batch function with a single item.
      */
@@ -197,7 +209,6 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         toggleItemDelete,
         toggleItemEdit,
         deleteSingleItemFromStorage,
-        isItemDeleting
     };
 };
 

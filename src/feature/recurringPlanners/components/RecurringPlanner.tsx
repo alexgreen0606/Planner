@@ -12,6 +12,7 @@ import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/comm
 import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import DatePicker from 'react-native-date-picker';
 import { isItemTextfield } from '../../../foundation/sortedLists/utils';
+import { useDeleteScheduler } from '../../../foundation/sortedLists/services/DeleteScheduler';
 
 interface SortedRecurringPlannerProps {
     plannerKey: RecurringPlannerKeys;
@@ -19,7 +20,14 @@ interface SortedRecurringPlannerProps {
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
-    const { currentTextfield, setCurrentTextfield, pendingDeleteItems } = useSortableList();
+
+    const { 
+        currentTextfield, 
+        setCurrentTextfield 
+    } = useSortableList();
+
+    const {isItemDeleting} = useDeleteScheduler();
+
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
     async function toggleTimeModal(item: RecurringEvent) {
@@ -66,7 +74,6 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace
-                isItemDeleting={SortedEvents.isItemDeleting}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
@@ -74,7 +81,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as RecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
                     label: `No recurring ${plannerKey} plans`,
                     style: { flex: 1 }

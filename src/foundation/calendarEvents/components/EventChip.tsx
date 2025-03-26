@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, PlatformColor } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
 import globalStyles from '../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
 import TimeModal from './TimeModal';
 import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
+import { useSortableList } from '../../sortedLists/services/SortableListProvider';
+import { isValidPlatformColor } from '../../theme/colors';
+import { useDeleteScheduler } from '../../sortedLists/services/DeleteScheduler';
 
 export interface EventChipProps {
     planEvent?: PlannerEvent;
@@ -22,6 +25,8 @@ const EventChip = ({
 }: EventChipProps) => {
     const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
 
+    const { isItemDeleting } = useDeleteScheduler();
+
     const toggleTimeModal = () => {
         setIsTimeModalOpen(!isTimeModalOpen);
     };
@@ -34,18 +39,24 @@ const EventChip = ({
         toggleTimeModal();
     };
 
+    const isPendingDelete = planEvent && isItemDeleting(planEvent);
+    const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
+
     const ChipContent = () => (
-        <View style={{ ...styles.chip, borderColor: color }}>
+        <View style={{ ...styles.chip, borderColor: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor }}>
             <GenericIcon
                 {...iconConfig}
-                platformColor={color}
+                platformColor={chipColor}
                 size='xs'
             />
             <CustomText
                 type='soft'
                 adjustsFontSizeToFit
                 numberOfLines={1}
-                style={{ color }}
+                style={{
+                    color: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor,
+                    textDecorationLine: isPendingDelete ? 'line-through' : undefined
+                }}
             >
                 {label}
             </CustomText>

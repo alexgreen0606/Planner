@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
@@ -13,6 +13,7 @@ import { ListItem } from '../types';
 import { ScrollView, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { SCROLL_THROTTLE } from '../constants';
+import { ReloadProvider } from './ReloadProvider';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -36,10 +37,10 @@ interface SortableListContextValue<T extends ListItem> {
     evaluateOffsetBounds: (customContentHeight: number) => void;
     // --- List Variables ---
     currentTextfield: T | undefined;
-    setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
     pendingItem: T | undefined;
-    pendingDeleteItems: T[];
-    setPendingDeleteItems: React.Dispatch<React.SetStateAction<T[]>>;
+    setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
+    // pendingDeleteItems: T[];
+    // setPendingDeleteItems: React.Dispatch<React.SetStateAction<T[]>>;
 }
 
 const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
@@ -67,14 +68,11 @@ export const SortableListProviderContent = <T extends ListItem>({
 }: SortableListProviderProps) => {
 
     // --- List Variables ---
-    // Replace separate states with combined state
     const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
         current: undefined,
         pending: undefined
     });
-    // const [currentTextfield, setCurrentTextfield] = useState<T | undefined>(undefined);
-    // const [previousTextfieldId, setPreviousTextfieldId] = useState<string | undefined>(undefined);
-    const [pendingDeleteItems, setPendingDeleteItems] = useState<T[]>([]);
+    // const [pendingDeleteItems, setPendingDeleteItems] = useState<T[]>([]);
 
     // --- Scroll Variables ---
     const [visibleHeight, setVisibleHeight] = useState(0);
@@ -140,8 +138,8 @@ export const SortableListProviderContent = <T extends ListItem>({
                 scrollOffsetBounds,
                 evaluateOffsetBounds,
                 pendingItem: textFieldState.pending,
-                pendingDeleteItems,
-                setPendingDeleteItems
+                // pendingDeleteItems,
+                // setPendingDeleteItems
             }}
         >
             <AnimatedScrollView
@@ -156,7 +154,9 @@ export const SortableListProviderContent = <T extends ListItem>({
                 }}
             >
                 <AnimatedView ref={contentRef} style={{ flex: 1 }}>
-                    {children}
+                    <ReloadProvider>
+                        {children}
+                    </ReloadProvider>
                     <AnimatedFiller style={keyboardPadboxStyle} />
                 </AnimatedView>
             </AnimatedScrollView>

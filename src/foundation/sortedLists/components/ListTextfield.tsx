@@ -9,7 +9,7 @@ import { LIST_ITEM_HEIGHT } from '../constants';
 interface ListTextfieldProps<T extends ListItem> {
     item: T;
     onChange: (newText: string) => void;
-    onSubmit: () => void;
+    onSubmit: (blurred: boolean) => void;
     hideKeyboard: boolean;
     customStyle: TextStyle;
     isLoadingInitialPosition: SharedValue<boolean>;
@@ -24,6 +24,7 @@ const ListTextfield = <T extends ListItem>({
     customStyle,
 }: ListTextfieldProps<T>) => {
     const inputRef = useRef<TextInput>(null);
+    const hasSaved = useRef(false);
     const isFocused = useSharedValue(false);
     const textfieldBottom = useSharedValue<number>(0);
 
@@ -43,13 +44,20 @@ const ListTextfield = <T extends ListItem>({
 
     const editable = useMemo(() => {
         const isEditable = [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard;
-
+        
         if (!isEditable) {
             isFocused.value = false;
         }
 
         return isEditable;
     }, [pendingItem, currentTextfield?.id, item.id, hideKeyboard]);
+
+    function handleSave(createNew: boolean) {
+        if (hasSaved.current) return; 
+        hasSaved.current = true;
+
+        onSubmit(createNew);
+    }
 
     // ---------- Scroll Logic ----------
 
@@ -97,6 +105,7 @@ const ListTextfield = <T extends ListItem>({
             setTimeout(() => {
                 inputRef.current?.focus();
                 isFocused.value = true;
+                hasSaved.current = false;
 
                 // Evaluate in case item has moved since initial render
                 evaluateBottomPosition();
@@ -116,7 +125,8 @@ const ListTextfield = <T extends ListItem>({
             onChangeText={onChange}
             selectionColor={PlatformColor('systemBlue')}
             style={{ ...styles.textInput, ...customStyle }}
-            onSubmitEditing={onSubmit}
+            onSubmitEditing={() => handleSave(true)}
+            onBlur={() => handleSave(false)}
         />
     )
 }

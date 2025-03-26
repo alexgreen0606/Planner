@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from './components/DayBanner';
@@ -8,7 +8,7 @@ import SortableList from '../../foundation/sortedLists/components/list/SortableL
 import { buildPlanner } from '../../foundation/calendarEvents/storage/plannerStorage';
 import { WeatherForecast } from '../weather/utils';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
-import { generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
+import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import Card from '../../foundation/components/Card';
@@ -16,12 +16,15 @@ import CollapseControl from '../../foundation/sortedLists/components/CollapseCon
 import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
+import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
+import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
+import { useReload } from '../../foundation/sortedLists/services/ReloadProvider';
 
 interface PlannerCardProps {
     datestamp: string;
     forecast?: WeatherForecast;
     eventChips: EventChipProps[];
-    reloadChips: () => Promise<void>;
+    loadAllExternalData: () => Promise<void>;
     calendarEvents: PlannerEvent[]
 };
 
@@ -29,7 +32,7 @@ const PlannerCard = ({
     datestamp,
     forecast,
     eventChips,
-    reloadChips,
+    loadAllExternalData,
     calendarEvents
 }: PlannerCardProps) => {
     const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -38,8 +41,15 @@ const PlannerCard = ({
     const {
         currentTextfield,
         setCurrentTextfield,
-        pendingDeleteItems
     } = useSortableList();
+
+    const {
+        isItemDeleting
+    } = useDeleteScheduler();
+
+    const {
+        addReloadFunction
+    } = useReload();
 
     async function toggleCollapsed() {
         if (currentTextfield) {
@@ -54,17 +64,25 @@ const PlannerCard = ({
         await toggleTimeModal(planEvent, SortedEvents.toggleItemEdit, setTimeModalOpen);
     };
 
-    async function handleSaveEvent(planEvent: PlannerEvent) {
-        await saveEventLoadChips(planEvent, reloadChips, SortedEvents.items);
+    async function handleSaveEvent(planEvent: PlannerEvent): Promise<string | undefined> {
+        return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
     }
 
     async function handleDeleteEvent(planEvents: PlannerEvent[]) {
-        await deleteEventsLoadChips(planEvents, reloadChips, SortedEvents.items);
+        await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
     }
 
-    function getItemsFromStorageObject(planner: PlannerEvent[]) {
+    const getItemsFromStorageObject = (planner: PlannerEvent[]) => {
         return buildPlanner(datestamp, planner, calendarEvents);
-    }
+    };
+
+    useEffect(() => {
+        SortedEvents.refetchItems();
+    }, [calendarEvents])
+
+    useEffect(() => {
+        addReloadFunction(`planner-external-data`, loadAllExternalData);
+    }, []);
 
     const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
         storageId: PLANNER_STORAGE_ID,
@@ -72,9 +90,10 @@ const PlannerCard = ({
         getItemsFromStorageObject,
         storageConfig: {
             create: handleSaveEvent,
-            update: handleSaveEvent,
+            update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
             delete: handleDeleteEvent
-        }
+        },
+        noReload: true
     });
 
     return (
@@ -102,22 +121,22 @@ const PlannerCard = ({
             />
 
             {/* Planner List */}
-            <SortableList<PlannerEvent, never, TimeModalProps>
+            <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>
                 listId={datestamp}
                 items={SortedEvents.items}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 hideList={collapsed}
-                isItemDeleting={SortedEvents.isItemDeleting}
                 onContentClick={SortedEvents.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
                 getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items, setCurrentTextfield)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, pendingDeleteItems)}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
+                getToolbar={(event) => generateEventToolbar(event, handleToggleTimeModal, timeModalOpen)}
                 onSaveTextfield={async (updatedItem) => {
                     await SortedEvents.persistItemToStorage(updatedItem);
-                    if (updatedItem.timeConfig?.allDay) reloadChips();
+                    if (updatedItem.timeConfig?.allDay) loadAllExternalData();
                 }}
                 emptyLabelConfig={{
                     label: 'No Plans',

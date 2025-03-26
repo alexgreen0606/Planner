@@ -26,9 +26,9 @@ export interface DraggableListProps<
     hideList?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
-    onSaveTextfield: (updatedItem: T) => Promise<void> | void | Promise<string>;
+    onSaveTextfield: (updatedItem: T) => Promise<void> | void | Promise<string | void>;
     onDeleteItem: (item: T) => Promise<void> | void;
-    onDragEnd: (updatedItem: T) => Promise<void> | void;
+    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
     getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
@@ -40,7 +40,6 @@ export interface DraggableListProps<
     initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     staticList?: boolean;
-    isItemDeleting: (item: T) => boolean;
 }
 
 const SortableList = <
@@ -99,7 +98,7 @@ const SortableList = <
      * Saves the existing textfield to storage and generates a new one at the requested position.
      * @param parentSortId The sort ID of the item the new textfield must go below
      */
-    async function saveTextfieldAndCreateNew(parentSortId: number) {
+    async function saveTextfieldAndCreateNew(parentSortId?: number) {
         if (staticList) return;
 
         if (currentTextfield && currentTextfield.value.trim() !== '') {
@@ -109,6 +108,11 @@ const SortableList = <
             if (newId) {
                 pendingItem.current!.id = newId;
             }
+        }
+
+        if (!parentSortId) {
+            setCurrentTextfield(undefined);
+            return;
         }
 
         let newTextfield = {

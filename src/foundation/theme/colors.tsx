@@ -25,6 +25,7 @@ export const isValidPlatformColor = (color: string) => {
     'secondaryLabel',
     'systemBlue',
     'systemBrown',
-    'systemIndigo'
+    'systemIndigo',
+    'tertiaryLabel'
   ].includes(color);
 }

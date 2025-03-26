@@ -146,6 +146,8 @@ export async function saveEvent(event: PlannerEvent) {
 
     // Save the new planner
     savePlannerToStorage(newEvent.listId, newPlanner);
+
+    return newEvent.calendarId;
 };
 
 /**
@@ -153,19 +155,16 @@ export async function saveEvent(event: PlannerEvent) {
  * @param eventsToDelete 
  */
 export async function deleteEvents(eventsToDelete: PlannerEvent[]) {
-    // Group events by listId for efficient updates
     const eventsByList: Record<string, PlannerEvent[]> = {};
 
     // First pass - group events and handle calendar removals
     for (const eventToDelete of eventsToDelete) {
-        // Initialize the list if it doesn't exist
         if (!eventsByList[eventToDelete.listId]) {
             eventsByList[eventToDelete.listId] = [];
         }
-
         eventsByList[eventToDelete.listId].push(eventToDelete);
 
-        // The event is an apple event in the future -> remove from the calendar
+        // Await calendar deletions
         if (
             eventToDelete.calendarId &&
             eventToDelete.listId !== getTodayDatestamp()
@@ -175,35 +174,26 @@ export async function deleteEvents(eventsToDelete: PlannerEvent[]) {
         }
     }
 
-    // Second pass - process each list only once
-    for (const listId in eventsByList) {
-        let newPlanner = getPlannerFromStorage(listId);
-        const listEvents = eventsByList[listId];
+    // Second pass - process each list in parallel
+    await Promise.all(Object.entries(eventsByList).map(async ([listId, listEvents]) => {
+        let newPlanner = await getPlannerFromStorage(listId);
         const todayDatestamp = getTodayDatestamp();
 
-        // Create lookup sets for efficient operations
         const recurringOrTodayCalendarIds = new Set<string>();
         const regularDeleteIds = new Set<string>();
 
-        // Sort events into appropriate categories
         for (const event of listEvents) {
-            if (event.recurringId ||
-                (event.calendarId && event.listId === todayDatestamp)) {
+            if (event.recurringId || (event.calendarId && event.listId === todayDatestamp)) {
                 recurringOrTodayCalendarIds.add(event.id);
             } else {
                 regularDeleteIds.add(event.id);
             }
         }
 
-        // Update the planner with all changes at once
-        newPlanner = newPlanner.map(event => {
-            if (recurringOrTodayCalendarIds.has(event.id)) {
-                return { ...event, status: ItemStatus.HIDDEN };
-            }
-            return event;
-        }).filter(event => !regularDeleteIds.has(event.id));
+        newPlanner = newPlanner
+            .map(event => (recurringOrTodayCalendarIds.has(event.id) ? { ...event, status: ItemStatus.HIDDEN } : event))
+            .filter(event => !regularDeleteIds.has(event.id));
 
-        // Save updated planner to storage
-        savePlannerToStorage(listId, newPlanner);
-    }
+        await savePlannerToStorage(listId, newPlanner);
+    }));
 }

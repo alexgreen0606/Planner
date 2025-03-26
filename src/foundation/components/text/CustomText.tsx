@@ -46,25 +46,25 @@ const styles = StyleSheet.create({
     },
     highTemp: {
         fontSize: 16,
-        color: PlatformColor('secondaryLabel'),
+        color: PlatformColor('label'),
     },
     lowTemp: {
         fontSize: 12,
-        color: PlatformColor('tertiaryLabel'),
+        color: PlatformColor('secondaryLabel'),
     },
     hour: {
         fontSize: 24,
         fontFamily: 'Jersey15-Regular',
-        color: PlatformColor('systemOrange'),
+        color: PlatformColor('systemYellow'),
     },
     minute: {
         fontSize: 14,
         fontFamily: 'Jersey15-Regular',
-        color: PlatformColor('systemOrange'),
+        color: PlatformColor('systemYellow'),
     },
     indicator: {
         fontSize: 7.5,
-        color: PlatformColor('secondaryLabel'),
+        color: PlatformColor('label'),
         fontWeight: 600
     },
 });
