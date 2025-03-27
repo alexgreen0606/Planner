@@ -488,7 +488,7 @@ const DraggableRow = <
 
             {/* Content */}
             <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
-                <View collapsable={false} style={{ flex: 1 }}>
+                <View style={{ flex: 1 }}>
                     <ListTextfield<T>
                         key={getTextfieldKey(item)}
                         item={item}
@@ -527,11 +527,13 @@ const DraggableRow = <
         </View>
 
         {/* Separator Line */}
-        <GestureDetector gesture={createGestureHandler(() => saveTextfieldAndCreateNew(item.sortId))}>
-            <Pressable>
-                <ThinLine />
-            </Pressable>
-        </GestureDetector>
+        <View style={{ marginLeft: 40 }}>
+            <GestureDetector gesture={createGestureHandler(() => saveTextfieldAndCreateNew(item.sortId))}>
+                <Pressable>
+                    <ThinLine />
+                </Pressable>
+            </GestureDetector>
+        </View>
 
         {isItemTextfield(item) && <>
 
@@ -556,12 +558,12 @@ const DraggableRow = <
 const styles = StyleSheet.create({
     content: {
         flex: 1,
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
     },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
+        paddingHorizontal: 8,
         height: 25,
         width: '100%',
     }

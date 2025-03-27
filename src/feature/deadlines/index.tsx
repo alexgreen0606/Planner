@@ -104,11 +104,12 @@ const Deadlines = () => {
                     label: 'No deadlines',
                     style: { flex: 1 }
                 }}
-                getRightIconConfig={(item) => ({
+                getLeftIconConfig={(item) => ({
                     onClick: toggleDateSelector,
+                    hideIcon: isItemTextfield(item),
                     customIcon: <DateValue timestamp={item.startTime.toISOString()} />
                 })}
-                getLeftIconConfig={(deadline) => ({
+                getRightIconConfig={(deadline) => ({
                     customIcon:
                         <View style={{ width: 55 }}>
                             <CustomText adjustsFontSizeToFit numberOfLines={1} style={{ width: 55 }} type='soft'>

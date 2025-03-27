@@ -5,6 +5,7 @@ import { isoToMonthDate } from '../../timestampUtils';
 
 interface DateValue {
     timestamp: string;
+    disabled?: boolean;
 }
 
 const DateValue = ({ timestamp }: DateValue) => {
@@ -22,15 +23,14 @@ const DateValue = ({ timestamp }: DateValue) => {
 
     return (
         <View style={styles.container}>
-            <CustomText type='hour' style={styles.hour}>{day}</CustomText>
+            <CustomText type='day' style={styles.hour}>{day}</CustomText>
             <View style={styles.details}>
-                <CustomText type='minute' style={styles.minute}>{month}</CustomText>
+                <CustomText type='month' style={styles.minute}>{month}</CustomText>
                 <CustomText type='indicator' style={styles.indicator}>{year}</CustomText>
             </View>
         </View>
     )
 };
-
 
 const styles = StyleSheet.create({
     container: {

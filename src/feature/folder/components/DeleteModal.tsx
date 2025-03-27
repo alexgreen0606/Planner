@@ -26,14 +26,12 @@ const DeleteModal = ({
             title={`${!!item.childrenCount ? 'Force delete' : 'Delete'} ${itemType}?`}
             open={open}
             toggleModalOpen={toggleModalOpen}
+            modalAbsoluteTop={300}
+            width={400}
             primaryButtonConfig={{
                 label: !!item.childrenCount ? 'Force Delete' : 'Delete',
                 onClick: () => onSave(item),
                 platformColor: !!item.childrenCount ? 'systemRed' : 'systemBlue'
-            }}
-            iconConfig={{
-                type: 'trash',
-                platformColor: 'systemRed'
             }}
         >
 

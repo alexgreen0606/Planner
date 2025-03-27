@@ -167,7 +167,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
                 { rotate: `${loadingRotation.value}deg` },
             ],
             position: 'absolute',
-            top: top + (BANNER_HEIGHT * 1.5),
+            top: top + (BANNER_HEIGHT * 2),
             alignSelf: 'center',
             zIndex: 1,
         };

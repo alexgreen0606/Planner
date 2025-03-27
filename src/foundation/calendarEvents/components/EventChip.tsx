@@ -3,7 +3,7 @@ import { StyleSheet, View, TouchableOpacity, PlatformColor } from 'react-native'
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
 import globalStyles from '../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
-import TimeModal from './TimeModal';
+import TimeModal from './timeModal/TimeModal';
 import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
 import { useSortableList } from '../../sortedLists/services/SortableListProvider';

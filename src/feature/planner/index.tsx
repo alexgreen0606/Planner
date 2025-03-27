@@ -14,7 +14,7 @@ import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvent
 import Card from '../../foundation/components/Card';
 import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
-import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
+import { TimeModalProps } from '../../foundation/calendarEvents/components/timeModal/TimeModal';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';

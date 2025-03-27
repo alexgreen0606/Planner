@@ -5,7 +5,7 @@ import { buildPlanner } from '../../foundation/calendarEvents/storage/plannerSto
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
-import { TimeModalProps } from '../../foundation/calendarEvents/components/TimeModal';
+import { TimeModalProps } from '../../foundation/calendarEvents/components/timeModal/TimeModal';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';

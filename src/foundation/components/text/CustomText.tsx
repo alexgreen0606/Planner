@@ -55,12 +55,22 @@ const styles = StyleSheet.create({
     hour: {
         fontSize: 24,
         fontFamily: 'Jersey15-Regular',
-        color: PlatformColor('systemYellow'),
+        color: PlatformColor('systemPurple'),
     },
     minute: {
         fontSize: 14,
         fontFamily: 'Jersey15-Regular',
-        color: PlatformColor('systemYellow'),
+        color: PlatformColor('systemPurple'),
+    },
+    day: {
+        fontSize: 24,
+        fontFamily: 'Jersey15-Regular',
+        color: PlatformColor('systemIndigo'),
+    },
+    month: {
+        fontSize: 14,
+        fontFamily: 'Jersey15-Regular',
+        color: PlatformColor('systemIndigo'),
     },
     indicator: {
         fontSize: 7.5,

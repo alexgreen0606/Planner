@@ -5,12 +5,18 @@ import { isoToTimeValue, isTimestampValid } from '../../timestampUtils';
 
 interface TimeProps {
     timeValue: string; // HH:MM
-    allDay: boolean;
-    endEvent: boolean;
-    startEvent: boolean;
+    allDay?: boolean;
+    endEvent?: boolean;
+    startEvent?: boolean;
+    disabled?: boolean;
 }
 
-const TimeValue = ({ timeValue, allDay, endEvent, startEvent }: TimeProps) => {
+const TimeValue = ({ 
+    timeValue, 
+    allDay, 
+    endEvent, 
+    startEvent 
+}: TimeProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
