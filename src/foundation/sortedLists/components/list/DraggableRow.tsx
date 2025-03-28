@@ -19,17 +19,17 @@ import { DraggableListProps } from "./SortableList";
 import { useSortableList } from "../../services/SortableListProvider";
 import { useCallback, useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
-import { PlatformColor, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
 import ListTextfield from "../ListTextfield";
 import { Portal } from "react-native-paper";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "../../../components/ThinLine";
 import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from "../../utils";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BANNER_HEIGHT } from "../../../components/constants";
 import { useKeyboard } from "../../services/KeyboardProvider";
 import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
 import { useDeleteScheduler } from "../../services/DeleteScheduler";
+import useDimensions from "../../../hooks/useDimensions";
 
 interface RowProps<
     T extends ListItem,
@@ -73,8 +73,13 @@ const DraggableRow = <
     listLength,
     onDragEnd,
 }: RowProps<T, P, M>) => {
-    const windowDimensions = useWindowDimensions();
-    const insets = useSafeAreaInsets();
+
+    const {
+        topSpacer,
+        bottomSpacer,
+        screenHeight,
+        bannerHeight
+    } = useDimensions();
 
     const {
         scrollOffset,
@@ -99,8 +104,8 @@ const DraggableRow = <
     const isLoadingInitialPosition = useSharedValue(!!positions.value[item.id]);
 
     // ------------- Animation Variables -------------
-    const TOP_AUTO_SCROLL_BOUND = insets.top + BANNER_HEIGHT;
-    const BOTTOM_AUTO_SCROLL_BOUND = windowDimensions.height - insets.bottom - BANNER_HEIGHT - LIST_ITEM_HEIGHT;
+    const TOP_AUTO_SCROLL_BOUND = bannerHeight;
+    const BOTTOM_AUTO_SCROLL_BOUND = screenHeight - bottomSpacer - BANNER_HEIGHT - LIST_ITEM_HEIGHT; // TODO: update this for new bottom bar
 
     const isDragging = useSharedValue(0);
     const isManualScrolling = useSharedValue(false);

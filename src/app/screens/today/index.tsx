@@ -9,14 +9,21 @@ import EventChip, { EventChipProps } from '../../../foundation/calendarEvents/co
 import { getTodayDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
 import { generateEventChipMap } from '../../../foundation/calendarEvents/calendarUtils';
 
-const Today = () => {
-  const timestamp = getTodayDatestamp();
-  const [eventChips, setEventChips] = useState<EventChipProps[]>([]);
-  const [birthdayChips, setBirthdayChips] = useState<EventChipProps[]>();
+interface PageDataMaps {
+  chips: EventChipProps[];
+  birthdays: EventChipProps[];
+}
 
-  async function getEventChips() {
-    const allEventChips = await generateEventChipMap([timestamp]);
-    const todayChips = allEventChips[timestamp];
+const Today = () => {
+  const todayDatestamp = getTodayDatestamp();
+  const [pageData, setPageData] = useState<PageDataMaps>({
+    chips: [],
+    birthdays: []
+  });
+
+  async function loadCalendarData() {
+    const allEventChips = await generateEventChipMap([todayDatestamp]);
+    const todayChips = allEventChips[todayDatestamp];
     const todayBirthdayChips: EventChipProps[] = [];
     const todayOtherChips: EventChipProps[] = [];
     todayChips.forEach(chip => {
@@ -26,43 +33,47 @@ const Today = () => {
         todayOtherChips.push(chip);
       }
     });
-    setBirthdayChips(todayBirthdayChips);
-    setEventChips(todayOtherChips);
+    setPageData({
+      chips: todayOtherChips,
+      birthdays: todayBirthdayChips
+    });
   }
 
   useEffect(() => {
-    getEventChips();
+    loadCalendarData();
   }, []);
 
   return (
     <View style={globalStyles.blackFilledSpace}>
 
-      <SortableListProvider bannerContent={
-        <View>
-          <TodayBanner timestamp={timestamp} />
+      <SortableListProvider
+        extraBannerHeight={pageData.chips.length > 0 ? 24 : 0}
+        bannerContent={
+          <View>
+            <TodayBanner timestamp={todayDatestamp} />
 
-          {/* Event Chips */}
-          {eventChips.length > 0 && (
-            <View style={styles.chips}>
-              {eventChips.map((chipConfig, i) => (
-                <EventChip
-                  key={`event-chip-${i}`}
-                  {...chipConfig}
-                />
-              ))}
-            </View>
-          )}
-        </View>
-      }>
+            {/* Event Chips */}
+            {pageData.chips.length > 0 && (
+              <View style={styles.chips}>
+                {pageData.chips.map((chipConfig, i) => (
+                  <EventChip
+                    key={`event-chip-${i}`}
+                    {...chipConfig}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        }>
 
         {/* Birthday Checklist Card */}
-        {birthdayChips && (
-          <BirthdayCard birthdays={birthdayChips} />
+        {pageData.birthdays.length > 0 && (
+          <BirthdayCard birthdays={pageData.birthdays} /> // TODO: update birthdays to use actual events
         )}
 
         {/* Planner */}
         <View style={styles.planner}>
-          <TodayPlanner reloadChips={getEventChips} />
+          <TodayPlanner reloadChips={loadCalendarData} />
         </View>
 
       </SortableListProvider>

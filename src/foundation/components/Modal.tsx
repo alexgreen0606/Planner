@@ -1,14 +1,14 @@
 import React, { ReactNode, useEffect } from 'react';
-import { View, StyleSheet, ViewStyle, PlatformColor, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ViewStyle, PlatformColor, TouchableOpacity } from 'react-native';
 import { Portal } from 'react-native-paper';
 import CustomText from './text/CustomText';
 import LabelSublabel from './text/LabelSublabel';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { LIST_SPRING_CONFIG } from '../sortedLists/constants';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from "@react-native-community/blur";
 import ButtonText from './text/ButtonText';
+import useDimensions from '../hooks/useDimensions';
 
 const AnimatedModal = Animated.createAnimatedComponent(View);
 
@@ -40,15 +40,17 @@ const Modal = ({
     toggleModalOpen,
     style: customStyle
 }: ModalProps) => {
-    const { bottom } = useSafeAreaInsets();
-    const { height } = useWindowDimensions();
 
-    const top = useSharedValue(height);
+    const {
+        screenHeight,
+        bottomSpacer
+    } = useDimensions();
+
+    const top = useSharedValue(screenHeight);
 
     useEffect(() => {
-        console.log(open, modalAbsoluteTop)
         top.value = withSpring(
-            open ? modalAbsoluteTop : height,
+            open ? modalAbsoluteTop : screenHeight,
             LIST_SPRING_CONFIG
         );
     }, [open]);
@@ -91,7 +93,7 @@ const Modal = ({
                         >
                             <ScrollView contentContainerStyle={{
                                 paddingHorizontal: 16,
-                                paddingBottom: bottom,
+                                paddingBottom: bottomSpacer,
                                 paddingTop: 50,
                                 flexGrow: 1
                             }}

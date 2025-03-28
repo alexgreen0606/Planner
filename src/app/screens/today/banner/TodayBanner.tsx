@@ -4,7 +4,6 @@ import globalStyles from '../../../../foundation/theme/globalStyles';
 import WeatherDisplay from '../../../../feature/weather';
 import LabelSublabel from '../../../../foundation/components/text/LabelSublabel';
 import { datestampToDayOfWeek, datestampToMonthDate } from '../../../../foundation/calendarEvents/timestampUtils';
-import { BANNER_HEIGHT } from '../../../../foundation/components/constants';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -18,7 +17,6 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
     const currentTemp = 37;
 
     return (
-        <View style={{ height: BANNER_HEIGHT - 30 }}>
             <View style={globalStyles.pageLabelContainer}>
 
                 <View style={globalStyles.verticallyCentered}>
@@ -40,7 +38,6 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
                     weatherCode={weatherCode}
                 />
             </View>
-        </View>
     );
 };
 

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { Pages } from './navUtils';
 
 interface NavigatorContextValue {
-    currentTab: string;
+    currentTab: Pages;
     setCurrentTab: (newTab: Pages) => void;
 }
 
@@ -22,10 +22,10 @@ export const NavigatorProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
 };
 
-export const useNavigatorContext = () => {
+export const useNavigator = () => {
     const context = useContext(NavigatorContext);
     if (!context) {
-        throw new Error("useNavigatorContext must be used within a Provider");
+        throw new Error("useNavigator must be used within a Provider");
     }
     return context;
 };

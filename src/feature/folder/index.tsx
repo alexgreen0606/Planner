@@ -14,7 +14,7 @@ import { Pages } from '../../app/navUtils';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
-import { useNavigatorContext } from '../../app/NavProvider';
+import { useNavigator } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId } from '../../foundation/sortedLists/utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
@@ -37,7 +37,7 @@ const SortedFolder = ({
     parentClickTrigger,
     parentFolderData,
 }: SortableFolderProps) => {
-    const { currentTab } = useNavigatorContext();
+    const { currentTab } = useNavigator();
     const { currentTextfield, setCurrentTextfield } = useSortableList();
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);

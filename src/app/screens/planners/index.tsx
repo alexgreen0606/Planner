@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-import { getWeeklyWeather, WeatherForecast } from '../../../feature/weather/utils';
+import { WeatherForecast } from '../../../feature/weather/utils';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import PlannersBanner from './banner/PlannersBanner';
 import { SortableListProvider } from '../../../foundation/sortedLists/services/SortableListProvider';
@@ -141,10 +141,12 @@ const Planners = () => {
       {/* Planners */}
       {mode === PlannerModes.PLANNERS ? <>
         {datestamps && (
-          <SortableListProvider bannerContent={<PlannersBanner
-            setMode={setMode}
-            mode={mode}
-          />}>
+          <SortableListProvider bannerContent={
+            <PlannersBanner
+              setMode={setMode}
+              mode={mode}
+            />
+          }>
             <View style={styles.dropdownContainer} >
               <Dropdown
                 data={defaultPlannerOptions}
@@ -179,10 +181,10 @@ const Planners = () => {
         )}
       </> : mode === PlannerModes.RECURRING ? (
         <SortableListProvider bannerContent={
-        <PlannersBanner
-          setMode={setMode}
-          mode={mode}
-        />}>
+          <PlannersBanner
+            setMode={setMode}
+            mode={mode}
+          />}>
           <View style={styles.dropdownContainer} >
             <Dropdown
               data={recurringPlannerOptions}

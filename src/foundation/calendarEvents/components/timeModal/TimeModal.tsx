@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, PlatformColor, Dimensions, useWindowDimensions, Switch } from 'react-native';
+import { View } from 'react-native';
 import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../components/Modal';
 import {
@@ -9,18 +9,14 @@ import {
     isoToDatestamp,
     getTodayDatestamp
 } from '../../timestampUtils';
-import Checkbox from 'expo-checkbox';
 import CustomText from '../../../components/text/CustomText';
-import DatePicker from 'react-native-date-picker';
 import { ListItemUpdateComponentProps } from '../../../sortedLists/types';
 import { PlannerEvent } from '../../types';
-import { BANNER_HEIGHT } from '../../../components/constants';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toggle from './Toggle';
 import DateSelector from './DateSelector';
 import ThinLine from '../../../components/ThinLine';
-import { Button } from 'react-native-paper';
 import ButtonText from '../../../components/text/ButtonText';
+import useDimensions from '../../../hooks/useDimensions';
 
 type FormData = {
     allDay: boolean;
@@ -41,7 +37,11 @@ const TimeModal = ({
     onSave,
     item: planEvent
 }: TimeModalProps) => {
-    const { width, height } = useWindowDimensions();
+
+    const {
+        screenWidth,
+        screenHeight
+    } = useDimensions();
 
     const isMultidayEvent = () => {
         const eventStartDate = planEvent.timeConfig?.startTime && isoToDatestamp(planEvent.timeConfig?.startTime);
@@ -120,13 +120,13 @@ const TimeModal = ({
         <Modal
             title={planEvent.value}
             open={open}
-            modalAbsoluteTop={height - 600}
+            modalAbsoluteTop={screenHeight - 600}
             toggleModalOpen={() => toggleModalOpen(planEvent)}
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSave,
             }}
-            width={width}
+            width={screenWidth}
             style={{
                 gap: 4,
                 height: 600,

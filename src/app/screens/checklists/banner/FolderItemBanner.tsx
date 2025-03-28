@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, PlatformColor } from 'react-native';
-import { TextInput } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity, PlatformColor, TextInput } from 'react-native';
 import { FolderItem, FolderItemTypes } from '../../../../feature/checklists/types';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import { getFolderItem, updateFolderItem } from '../../../../feature/checklists/storage/folderStorage';
@@ -8,8 +7,8 @@ import { ItemStatus } from '../../../../foundation/sortedLists/constants';
 import globalStyles from '../../../../foundation/theme/globalStyles';
 import GenericIcon from '../../../../foundation/components/GenericIcon';
 import CustomText from '../../../../foundation/components/text/CustomText';
-import { BANNER_HEIGHT } from '../../../../foundation/components/constants';
 import { LISTS_STORAGE_ID } from '../../../../feature/checklists/constants';
+import ButtonText from '../../../../foundation/components/text/ButtonText';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -64,14 +63,8 @@ const FolderItemBanner = ({
                         value={item.value}
                         onChangeText={updateItem}
                         style={styles.inputField}
-                        selectionColor="white"
-                        theme={{
-                            colors: {
-                                primary: 'transparent'
-                            }
-                        }}
+                        cursorColor={PlatformColor('systemBlue')}
                         onSubmitEditing={saveItem}
-                        contentStyle={{ paddingLeft: 0 }}
                     />
                 ) : (
                     <CustomText
@@ -96,14 +89,11 @@ const FolderItemBanner = ({
                         size='m'
                         platformColor='systemBlue'
                     />
-                    <CustomText
-                        ellipsizeMode='tail'
-                        type='label'
-                        numberOfLines={1}
-                        style={{ color: PlatformColor('systemBlue') }}
-                    >
-                        {backButtonConfig.label}
-                    </CustomText>
+                    <ButtonText
+                        label={backButtonConfig.label!}
+                        platformColor='systemBlue'
+                        onClick={backButtonConfig.onClick}
+                    />
                 </TouchableOpacity>
             )}
         </View>
@@ -120,6 +110,8 @@ const styles = StyleSheet.create({
         ...globalStyles.blackFilledSpace,
         height: 25,
         fontSize: 25,
+        backgroundColor: 'transparent',
+        color: PlatformColor('label'),
     },
     backButton: {
         ...globalStyles.verticallyCentered,

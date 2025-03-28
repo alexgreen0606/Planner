@@ -47,6 +47,8 @@ const ButtonText = ({
                         ...styles.text,
                         color: PlatformColor(platformColor)
                     }}
+                    ellipsizeMode='tail'
+                    numberOfLines={1}
                 >
                     {label}
                 </Text>

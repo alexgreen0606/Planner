@@ -1,4 +1,5 @@
 import { PlatformColor, ViewStyle } from "react-native";
+import { BANNER_HEIGHT } from "../components/constants";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;
@@ -31,6 +32,7 @@ const globalStyles: GlobalStyles = {
     flexDirection: 'row',
     width: '100%',
     paddingHorizontal: 12,
+    height: BANNER_HEIGHT,
   },
   centered: {
     justifyContent: 'center',

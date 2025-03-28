@@ -16,9 +16,10 @@ import GenericIcon from '../../components/GenericIcon';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { useSortableList } from './SortableListProvider';
 import { Portal } from 'react-native-paper';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { OVERSCROLL_RELOAD_THRESHOLD } from '../constants';
-import { BANNER_HEIGHT } from '../../components/constants';
+import { useNavigator } from '../../../app/NavProvider';
+import { Pages } from '../../../app/navUtils';
+import useDimensions from '../../hooks/useDimensions';
 
 const AnimatedReload = Animated.createAnimatedComponent(View);
 
@@ -32,10 +33,10 @@ interface ReloadProviderProps {
     children: React.ReactNode;
 }
 
-interface ReloadFunction {
-    id: string;
-    func: () => Promise<void>;
-}
+const pagesWithReload = [
+    Pages.DASHBOARD,
+    Pages.PLANNERS
+]
 
 interface ReloadContextType {
     addReloadFunction: (id: string, reloadFunc: () => Promise<void>) => void;
@@ -52,9 +53,13 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
 
+    const {currentTab} = useNavigator();
+
     const { scrollOffset } = useSortableList();
 
-    const { top } = useSafeAreaInsets();
+    const {
+        bannerHeight
+    } = useDimensions();
 
     // ------------- Utility Functions -------------
 
@@ -167,7 +172,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
                 { rotate: `${loadingRotation.value}deg` },
             ],
             position: 'absolute',
-            top: top + (BANNER_HEIGHT * 2),
+            top: bannerHeight + (OVERSCROLL_RELOAD_THRESHOLD / 3),
             alignSelf: 'center',
             zIndex: 1,
         };
@@ -177,6 +182,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
         <ReloadContext.Provider value={{
             addReloadFunction
         }}>
+            {pagesWithReload.includes(currentTab) && (
             <Portal>
                 <AnimatedReload style={loadingIconStyle}>
                     <GenericIcon
@@ -186,6 +192,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
                     />
                 </AnimatedReload>
             </Portal>
+            )}
             {children}
         </ReloadContext.Provider>
     );

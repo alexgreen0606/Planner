@@ -1,21 +1,26 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Today from './screens/today';
 import Lists from './screens/checklists';
-import { PlatformColor, useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
 import globalStyles from '../foundation/theme/globalStyles';
 import { Pages } from './navUtils';
 import Planners from './screens/planners';
-import { useNavigatorContext } from './NavProvider';
-import GenericIcon, { IconType } from '../foundation/components/GenericIcon';
-import { BANNER_HEIGHT } from '../foundation/components/constants';
+import { useNavigator } from './NavProvider';
+import GenericIcon from '../foundation/components/GenericIcon';
 import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import useDimensions from '../foundation/hooks/useDimensions';
 
 const Navigator = () => {
-    const { setCurrentTab, currentTab } = useNavigatorContext();
-    const { width } = useWindowDimensions();
-    const { bottom } = useSafeAreaInsets();
+
+    const { 
+        currentTab,
+        setCurrentTab 
+    } = useNavigator();
+
+    const {
+        screenWidth,
+        bottomSpacer
+    } = useDimensions();
 
     return (
         <View style={{ flex: 1 }}>
@@ -23,21 +28,26 @@ const Navigator = () => {
                 ...globalStyles.verticallyCentered,
                 justifyContent: 'space-evenly',
                 position: 'absolute',
-                bottom: 0,
-                width,
-                zIndex: 10,
-                height: bottom * 2,
-                backgroundColor: PlatformColor('systemBackground'),
-                paddingBottom: bottom / 2
+                bottom: bottomSpacer,
+                left: screenWidth * .1,
+                width: screenWidth * .8,
+                height: bottomSpacer * 1.5,
+                borderRadius: 16,
+                zIndex: 4
             }}>
-                {/* <BlurView
-                    tint='default'
+                <BlurView
+                    tint='systemUltraThinMaterialDark'
+                    intensity={100}
                     style={{
-                        height: BANNER_HEIGHT + bottom,
-                        width,
                         position: 'absolute',
-                        left: 0
-                    }} /> */}
+                        height: bottomSpacer * 1.5,
+                        width: screenWidth * .8,
+                        bottom: 0,
+                        left: 0,
+                        borderRadius: 16,
+                        overflow: 'hidden',
+                    }}
+                />
                 <GenericIcon
                     type='lists'
                     size='xl'
@@ -58,11 +68,11 @@ const Navigator = () => {
                 />
             </View>
             {currentTab === Pages.DASHBOARD ? (
-                <Today/>
+                <Today />
             ) : currentTab === Pages.PLANNERS ? (
-                <Planners/>
+                <Planners />
             ) : (
-                <Lists/>
+                <Lists />
             )}
         </View>
     );

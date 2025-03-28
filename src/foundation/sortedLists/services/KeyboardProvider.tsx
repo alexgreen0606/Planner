@@ -10,6 +10,7 @@ import {
 } from 'react-native-reanimated';
 import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';
 import { LIST_SPRING_CONFIG } from '../constants';
+import useDimensions from '../../hooks/useDimensions';
 
 interface KeyboardContextValue {
     keyboard: AnimatedKeyboardInfo;
@@ -31,14 +32,17 @@ interface KeyboardProviderProps {
 
 export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) => {
     const keyboard = useAnimatedKeyboard();
-    const { height: windowHeight } = useWindowDimensions();
+    
+    const {
+        screenHeight
+    } = useDimensions();
 
     const keyboardHeight = useDerivedValue(() => {
         return keyboard.height.value + LIST_ITEM_TOOLBAR_HEIGHT;
     });
 
     const keyboardAbsoluteTop = useDerivedValue(() => {
-        return windowHeight - keyboardHeight.value;
+        return screenHeight - keyboardHeight.value;
     });
 
     const isKeyboardOpen = useDerivedValue(() => {
