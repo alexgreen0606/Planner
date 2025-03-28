@@ -178,7 +178,8 @@ const Planners = () => {
           </SortableListProvider>
         )}
       </> : mode === PlannerModes.RECURRING ? (
-        <SortableListProvider bannerContent={<PlannersBanner
+        <SortableListProvider bannerContent={
+        <PlannersBanner
           setMode={setMode}
           mode={mode}
         />}>

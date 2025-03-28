@@ -54,60 +54,58 @@ const FolderItemBanner = ({
     const isItemEditing = item.status === ItemStatus.EDIT;
 
     return (
-        <View style={{ height: BANNER_HEIGHT }}>
-            <View style={globalStyles.pageLabelContainer}>
-                <View style={styles.name}>
+        <View style={globalStyles.pageLabelContainer}>
+            <View style={styles.name}>
 
-                    {/* Name */}
-                    {isItemEditing ? (
-                        <TextInput
-                            autoFocus
-                            value={item.value}
-                            onChangeText={updateItem}
-                            style={styles.inputField}
-                            selectionColor="white"
-                            theme={{
-                                colors: {
-                                    primary: 'transparent'
-                                }
-                            }}
-                            onSubmitEditing={saveItem}
-                            contentStyle={{ paddingLeft: 0 }}
-                        />
-                    ) : (
-                        <CustomText
-                            type='pageLabel'
-                            onPress={beginEditItem}
-                            ellipsizeMode='tail'
-                            numberOfLines={1}
-                        >
-                            {item.value}
-                        </CustomText>
-                    )}
-                </View>
-
-                {/* Back Button */}
-                {backButtonConfig.display && (
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={backButtonConfig.onClick}
+                {/* Name */}
+                {isItemEditing ? (
+                    <TextInput
+                        autoFocus
+                        value={item.value}
+                        onChangeText={updateItem}
+                        style={styles.inputField}
+                        selectionColor="white"
+                        theme={{
+                            colors: {
+                                primary: 'transparent'
+                            }
+                        }}
+                        onSubmitEditing={saveItem}
+                        contentStyle={{ paddingLeft: 0 }}
+                    />
+                ) : (
+                    <CustomText
+                        type='pageLabel'
+                        onPress={beginEditItem}
+                        ellipsizeMode='tail'
+                        numberOfLines={1}
                     >
-                        <GenericIcon
-                            type='chevronLeft'
-                            size='m'
-                            platformColor='systemBlue'
-                        />
-                        <CustomText
-                            ellipsizeMode='tail'
-                            type='label'
-                            numberOfLines={1}
-                            style={{ color: PlatformColor('systemBlue') }}
-                        >
-                            {backButtonConfig.label}
-                        </CustomText>
-                    </TouchableOpacity>
+                        {item.value}
+                    </CustomText>
                 )}
             </View>
+
+            {/* Back Button */}
+            {backButtonConfig.display && (
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={backButtonConfig.onClick}
+                >
+                    <GenericIcon
+                        type='chevronLeft'
+                        size='m'
+                        platformColor='systemBlue'
+                    />
+                    <CustomText
+                        ellipsizeMode='tail'
+                        type='label'
+                        numberOfLines={1}
+                        style={{ color: PlatformColor('systemBlue') }}
+                    >
+                        {backButtonConfig.label}
+                    </CustomText>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };

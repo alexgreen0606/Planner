@@ -48,15 +48,16 @@ const Lists = () => {
       {/* List */}
       {pageConfig.type === FolderItemTypes.FOLDER ? (
         <SortableListProvider bannerContent={
-        <FolderItemBanner
-          itemId={pageConfig.id}
-          backButtonConfig={{
-            display: !!parentFolderData,
-            label: parentFolderData?.value,
-            onClick: clickParent
-          }}
-          itemType={pageConfig.type}
-        />}>
+          <FolderItemBanner
+            itemId={pageConfig.id}
+            backButtonConfig={{
+              display: !!parentFolderData,
+              label: parentFolderData?.value,
+              onClick: clickParent
+            }}
+            itemType={FolderItemTypes.FOLDER}
+          />
+        }>
           <SortedFolder
             parentFolderData={parentFolderData}
             folderId={pageConfig.id}
@@ -68,15 +69,16 @@ const Lists = () => {
         </SortableListProvider>
       ) : (
         <SortableListProvider bannerContent={
-        <FolderItemBanner
-          itemId={pageConfig.id}
-          backButtonConfig={{
-            display: !!parentFolderData,
-            label: parentFolderData?.value,
-            onClick: () => onOpenParent(parentFolderData!.id!)
-          }}
-          itemType={pageConfig.type}
-        />}>
+          <FolderItemBanner
+            itemId={pageConfig.id}
+            backButtonConfig={{
+              display: !!parentFolderData,
+              label: parentFolderData?.value,
+              onClick: () => onOpenParent(parentFolderData!.id!)
+            }}
+            itemType={FolderItemTypes.LIST}
+          />
+        }>
           <ChecklistList listId={pageConfig.id} />
         </SortableListProvider>
       )}
