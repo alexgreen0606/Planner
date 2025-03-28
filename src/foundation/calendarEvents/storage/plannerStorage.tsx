@@ -51,6 +51,7 @@ function getAndDeletePastPlanners(): PlannerEvent[] {
             }
         });
         return yesterdayPlanner;
+        // TODO: remove hidden events, and events whose end time already happened?
     }
     return [];
 };
@@ -116,6 +117,7 @@ export async function saveEvent(event: PlannerEvent) {
 
     // The event is a calendar event -> sync the calendar
     if (newEvent.calendarId && newEvent.timeConfig) {
+        await getCalendarAccess();
         const calendarEventId = await RNCalendarEvents.saveEvent(
             newEvent.value,
             {
@@ -138,11 +140,22 @@ export async function saveEvent(event: PlannerEvent) {
     }
 
     // Update the list with the new event
-    const existingIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id)
-    if (existingIndex !== -1)
+    const existingIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id);
+    if (existingIndex !== -1) {
+        const existingEventCalendarId = newPlanner[existingIndex]!.calendarId;
+        console.log(newPlanner[existingIndex], newEvent);
+        if (existingEventCalendarId && !newEvent.calendarId) {
+            await getCalendarAccess();
+            await RNCalendarEvents.removeEvent(existingEventCalendarId);
+        }
         newPlanner.splice(existingIndex, 1, newEvent);
-    else
+    } else {
         newPlanner.push(newEvent);
+    }
+
+    // TODO: why no delete time
+
+    console.log(newPlanner, 'saving planner')
 
     // Save the new planner
     savePlannerToStorage(newEvent.listId, newPlanner);

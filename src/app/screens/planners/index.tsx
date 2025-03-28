@@ -138,16 +138,13 @@ const Planners = () => {
   return (
     <View style={globalStyles.blackFilledSpace}>
 
-      {/* Page Label */}
-      <PlannersBanner
-        setMode={setMode}
-        mode={mode}
-      />
-
       {/* Planners */}
       {mode === PlannerModes.PLANNERS ? <>
         {datestamps && (
-          <SortableListProvider>
+          <SortableListProvider bannerContent={<PlannersBanner
+            setMode={setMode}
+            mode={mode}
+          />}>
             <View style={styles.dropdownContainer} >
               <Dropdown
                 data={defaultPlannerOptions}
@@ -181,7 +178,10 @@ const Planners = () => {
           </SortableListProvider>
         )}
       </> : mode === PlannerModes.RECURRING ? (
-        <SortableListProvider>
+        <SortableListProvider bannerContent={<PlannersBanner
+          setMode={setMode}
+          mode={mode}
+        />}>
           <View style={styles.dropdownContainer} >
             <Dropdown
               data={recurringPlannerOptions}
@@ -209,7 +209,10 @@ const Planners = () => {
           </View>
         </SortableListProvider>
       ) : (
-        <SortableListProvider>
+        <SortableListProvider bannerContent={<PlannersBanner
+          setMode={setMode}
+          mode={mode}
+        />}>
           <Deadlines />
         </SortableListProvider>
       )}

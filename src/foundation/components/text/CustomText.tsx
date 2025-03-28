@@ -17,7 +17,8 @@ const styles = StyleSheet.create({
     pageLabel: {
         fontSize: 25,
         color: PlatformColor('label'),
-        fontWeight: 600
+        fontWeight: 600,
+        fontFamily: 'System'
     },
     subPageLabel: {
         color: PlatformColor('secondaryLabel'),

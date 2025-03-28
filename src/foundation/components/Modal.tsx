@@ -1,18 +1,16 @@
 import React, { ReactNode, useEffect } from 'react';
 import { View, StyleSheet, ViewStyle, PlatformColor, useWindowDimensions, TouchableOpacity } from 'react-native';
-import { Portal, Text } from 'react-native-paper';
-import globalStyles from '../theme/globalStyles';
-import GenericIcon, { GenericIconProps } from './GenericIcon';
+import { Portal } from 'react-native-paper';
 import CustomText from './text/CustomText';
 import LabelSublabel from './text/LabelSublabel';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { LIST_SPRING_CONFIG } from '../sortedLists/constants';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView, VibrancyView } from "@react-native-community/blur";
+import { BlurView } from "@react-native-community/blur";
+import ButtonText from './text/ButtonText';
 
 const AnimatedModal = Animated.createAnimatedComponent(View);
-const AnimatedToolbar = Animated.createAnimatedComponent(View);
 
 interface ModalProps {
     title: string;
@@ -64,20 +62,6 @@ const Modal = ({
         [top.value]
     );
 
-    const toolbarStyle = useAnimatedStyle(
-        () => {
-            return {
-                ...globalStyles.spacedApart,
-                top: top.value,
-                borderTopLeftRadius: 16,
-                borderTopRightRadius: 16,
-                height: 50,
-                position: 'relative'
-            }
-        },
-        [top.value]
-    );
-
     return (
         <Portal>
 
@@ -85,6 +69,7 @@ const Modal = ({
             {open && (
                 <TouchableOpacity
                     onPress={toggleModalOpen}
+                    activeOpacity={0}
                     style={{
                         flex: 1,
                         backgroundColor: PlatformColor('systemBackground'),
@@ -101,57 +86,16 @@ const Modal = ({
                             ...styles.card,
                             ...customStyle,
                             width,
+                            position: 'relative'
                         }}
                         >
                             <ScrollView contentContainerStyle={{
                                 paddingHorizontal: 16,
-                                paddingBottom: bottom * 2,
-                                paddingTop: 60,
+                                paddingBottom: bottom,
+                                paddingTop: 50,
+                                flexGrow: 1
                             }}
                             >
-
-                                {/* Tool Bar */}
-                                <Portal>
-                                    <AnimatedToolbar style={modalStyle}>
-                                        <View style={{
-                                            ...globalStyles.spacedApart,
-                                            borderTopRightRadius: 16,
-                                            borderTopLeftRadius: 16,
-                                        }}>
-                                            <BlurView
-                                                blurAmount={10}
-                                                blurType='dark'
-                                                style={{
-                                                    height: 60,
-                                                    width,
-                                                    borderTopRightRadius: 16,
-                                                    borderTopLeftRadius: 16,
-                                                    overflow: 'hidden'
-                                                }} />
-
-                                            {/* Modal Control Buttons */}
-                                            <CustomText
-                                                type='label'
-                                                onPress={toggleModalOpen}
-                                                style={{ position: 'absolute', left: 16 }}
-                                            >
-                                                Cancel
-                                            </CustomText>
-                                            <CustomText
-                                                type='standard'
-                                                disabled={primaryButtonConfig.disabled}
-                                                style={{
-                                                    color: PlatformColor(primaryButtonConfig.platformColor ?? 'systemBlue'),
-                                                    position: 'absolute',
-                                                    right: 16
-                                                }}
-                                                onPress={primaryButtonConfig.onClick}
-                                            >
-                                                {primaryButtonConfig.label}
-                                            </CustomText>
-                                        </View>
-                                    </AnimatedToolbar>
-                                </Portal>
 
                                 {/* Title */}
                                 <View style={{ display: 'flex', alignItems: 'center', paddingBottom: 32 }}>
@@ -166,8 +110,43 @@ const Modal = ({
                                         </CustomText>
                                     }
                                 </View>
+
+                                {/* Content */}
                                 {children}
+
                             </ScrollView>
+
+                            {/* Blur Bar */}
+                            <BlurView
+                                blurAmount={10}
+                                blurType='dark'
+                                style={{
+                                    height: 50,
+                                    width,
+                                    position: 'absolute',
+                                    borderTopRightRadius: 16,
+                                    borderTopLeftRadius: 16,
+                                    overflow: 'hidden',
+                                    top: 0
+                                }} />
+
+                            {/* Cancel Button */}
+                            <View style={{ position: 'absolute', left: 16, top: 16 }}>
+                                <ButtonText
+                                    label='Cancel'
+                                    platformColor='secondaryLabel'
+                                    onClick={toggleModalOpen}
+                                />
+                            </View>
+
+                            {/* Primary Button */}
+                            <View style={{ position: 'absolute', right: 16, top: 16 }}>
+                                <ButtonText
+                                    label={primaryButtonConfig.label}
+                                    platformColor={primaryButtonConfig.platformColor ?? 'systemBlue'}
+                                    onClick={primaryButtonConfig.onClick}
+                                />
+                            </View>
                         </View>
                     </AnimatedModal>
                 </GestureHandlerRootView>

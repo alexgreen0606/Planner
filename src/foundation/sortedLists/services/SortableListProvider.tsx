@@ -8,16 +8,22 @@ import Animated, {
     SharedValue,
     measure,
     useAnimatedStyle,
+    interpolate,
+    Extrapolation,
 } from 'react-native-reanimated';
 import { ListItem } from '../types';
-import { ScrollView, View } from 'react-native';
+import { PlatformColor, ScrollView, useWindowDimensions, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { SCROLL_THROTTLE } from '../constants';
 import { ReloadProvider } from './ReloadProvider';
+import { BANNER_HEIGHT } from '../../components/constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedFiller = Animated.createAnimatedComponent(View);
+const AnimatedBanner = Animated.createAnimatedComponent(View);
 
 interface TextFieldState<T> {
     current: T | undefined;
@@ -26,7 +32,7 @@ interface TextFieldState<T> {
 
 interface SortableListProviderProps {
     children: React.ReactNode;
-    enableReload?: boolean;
+    bannerContent: React.ReactNode;
 }
 
 interface SortableListContextValue<T extends ListItem> {
@@ -39,18 +45,17 @@ interface SortableListContextValue<T extends ListItem> {
     currentTextfield: T | undefined;
     pendingItem: T | undefined;
     setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
-    // pendingDeleteItems: T[];
-    // setPendingDeleteItems: React.Dispatch<React.SetStateAction<T[]>>;
 }
 
 const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
 
 export const SortableListProvider = ({
     children,
+    bannerContent
 }: SortableListProviderProps) => {
     return (
         <KeyboardProvider>
-            <SortableListProviderContent>
+            <SortableListProviderContent bannerContent={bannerContent}>
                 {children}
             </SortableListProviderContent>
         </KeyboardProvider>
@@ -64,15 +69,17 @@ export const SortableListProvider = ({
  * Manual scroll will only work while @isManualScrolling variable is set to true.
  */
 export const SortableListProviderContent = <T extends ListItem>({
-    children
+    children,
+    bannerContent
 }: SortableListProviderProps) => {
+    const { top } = useSafeAreaInsets();
+    const { width } = useWindowDimensions();
 
     // --- List Variables ---
     const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
         current: undefined,
         pending: undefined
     });
-    // const [pendingDeleteItems, setPendingDeleteItems] = useState<T[]>([]);
 
     // --- Scroll Variables ---
     const [visibleHeight, setVisibleHeight] = useState(0);
@@ -128,6 +135,22 @@ export const SortableListProviderContent = <T extends ListItem>({
         };
     });
 
+    const bannerStyle = useAnimatedStyle(() => {
+        return {
+            opacity: interpolate(
+                scrollOffset.value,
+                [0, BANNER_HEIGHT * 2],
+                [1, 0],
+                Extrapolation.CLAMP
+            ),
+            height: BANNER_HEIGHT + top,
+            width,
+            position: 'absolute',
+            top: 0,
+            zIndex: 2,
+        };
+    });
+
     return (
         <SortableListContext.Provider
             value={{
@@ -138,8 +161,6 @@ export const SortableListProviderContent = <T extends ListItem>({
                 scrollOffsetBounds,
                 evaluateOffsetBounds,
                 pendingItem: textFieldState.pending,
-                // pendingDeleteItems,
-                // setPendingDeleteItems
             }}
         >
             <AnimatedScrollView
@@ -147,7 +168,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                 scrollEventThrottle={SCROLL_THROTTLE}
                 scrollToOverflowEnabled={true}
                 onScroll={handler}
-                contentContainerStyle={{ flexGrow: 1 }}
+                contentContainerStyle={{ flexGrow: 1, paddingTop: BANNER_HEIGHT + top }}
                 onLayout={(event) => {
                     const { height } = event.nativeEvent.layout;
                     setVisibleHeight(height);
@@ -160,6 +181,26 @@ export const SortableListProviderContent = <T extends ListItem>({
                     <AnimatedFiller style={keyboardPadboxStyle} />
                 </AnimatedView>
             </AnimatedScrollView>
+            <BlurView
+                tint='default'
+                intensity={40}
+                style={{
+                    height: BANNER_HEIGHT + top,
+                    width,
+                    position: 'absolute',
+                    top: 0,
+                    zIndex: 1
+                }}
+            />
+            <AnimatedBanner style={bannerStyle}>
+                <View style={{
+                    flex: 1,
+                    backgroundColor: PlatformColor('systemBackground')
+                }} />
+            </AnimatedBanner>
+            <View style={{ position: 'absolute', top, zIndex: 3 }}>
+                {bannerContent}
+            </View>
         </SortableListContext.Provider>
     );
 };

@@ -79,11 +79,10 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     onContentClick={() => { }}
                     getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                     onSaveTextfield={() => { }}
-                    getRightIconConfig={item => ({
+                    getLeftIconConfig={item => ({
                         icon: {
                             type: isItemDeleting(item) ? 'messageFilled' : 'message',
                             platformColor: isItemDeleting(item) ? 'secondaryLabel' : 'systemBlue',
-                            hideRipple: true
                         },
                         onClick: async () => {
                             const newContactedStatus = !isItemDeleting(item);

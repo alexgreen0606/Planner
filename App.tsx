@@ -13,14 +13,14 @@ const App = () => {
     <PaperProvider>
       <GestureHandlerRootView>
         <NavigationContainer>
-          <SafeAreaProvider>
+          {/* <SafeAreaProvider> */}
             <DeleteSchedulerProvider>
-              <StatusBar barStyle='default' />
+              <StatusBar translucent backgroundColor='transparent' barStyle='default' />
               <NavigatorProvider>
                 <Navigator />
               </NavigatorProvider>
             </DeleteSchedulerProvider>
-          </SafeAreaProvider>
+          {/* </SafeAreaProvider> */}
         </NavigationContainer>
       </GestureHandlerRootView>
     </PaperProvider>

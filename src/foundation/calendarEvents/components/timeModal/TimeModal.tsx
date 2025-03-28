@@ -19,6 +19,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toggle from './Toggle';
 import DateSelector from './DateSelector';
 import ThinLine from '../../../components/ThinLine';
+import { Button } from 'react-native-paper';
+import ButtonText from '../../../components/text/ButtonText';
 
 type FormData = {
     allDay: boolean;
@@ -40,6 +42,7 @@ const TimeModal = ({
     item: planEvent
 }: TimeModalProps) => {
     const { width, height } = useWindowDimensions();
+
     const isMultidayEvent = () => {
         const eventStartDate = planEvent.timeConfig?.startTime && isoToDatestamp(planEvent.timeConfig?.startTime);
         const eventEndDate = planEvent.timeConfig?.endTime && isoToDatestamp(planEvent.timeConfig?.endTime)
@@ -91,6 +94,13 @@ const TimeModal = ({
         }
         onSave(updatedItem);
     };
+
+    function handleDelete() {
+        const updatedItem = {...planEvent};
+        delete updatedItem.calendarId;
+        delete updatedItem.timeConfig;
+        onSave(updatedItem);
+    }
 
     function toggleMultiDay() {
         setMultiDayEvent(curr => !curr);
@@ -199,16 +209,17 @@ const TimeModal = ({
                 />
             </View>
 
-            <View>
+            <View style={{ flex: 1 }} />
+
+            <View style={{ alignItems: 'center', width: '100%' }}>
+                <ButtonText
+                    label='Unschedule'
+                    platformColor='systemRed'
+                    onClick={handleDelete}
+                />
             </View>
         </Modal>
     );
 };
-
-const styles = StyleSheet.create({
-    halfWidth: {
-        width: '50%'
-    }
-});
 
 export default TimeModal;

@@ -37,22 +37,23 @@ const Today = () => {
   return (
     <View style={globalStyles.blackFilledSpace}>
 
-      {/* Banner */}
-      <TodayBanner timestamp={timestamp} />
+      <SortableListProvider bannerContent={
+        <View>
+          <TodayBanner timestamp={timestamp} />
 
-      {/* Event Chips */}
-      {eventChips.length > 0 && (
-        <View style={styles.chips}>
-          {eventChips.map((chipConfig, i) => (
-            <EventChip
-              key={`event-chip-${i}`}
-              {...chipConfig}
-            />
-          ))}
+          {/* Event Chips */}
+          {eventChips.length > 0 && (
+            <View style={styles.chips}>
+              {eventChips.map((chipConfig, i) => (
+                <EventChip
+                  key={`event-chip-${i}`}
+                  {...chipConfig}
+                />
+              ))}
+            </View>
+          )}
         </View>
-      )}
-
-      <SortableListProvider>
+      }>
 
         {/* Birthday Checklist Card */}
         {birthdayChips && (

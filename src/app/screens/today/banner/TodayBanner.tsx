@@ -18,7 +18,7 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
     const currentTemp = 37;
 
     return (
-        <View style={{ height: BANNER_HEIGHT }}>
+        <View style={{ height: BANNER_HEIGHT - 30 }}>
             <View style={globalStyles.pageLabelContainer}>
 
                 <View style={globalStyles.verticallyCentered}>
