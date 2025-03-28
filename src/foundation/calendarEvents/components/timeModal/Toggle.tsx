@@ -16,6 +16,7 @@ const Toggle = ({
             value={value}
             onValueChange={onValueChange}
             ios_backgroundColor={PlatformColor('secondaryLabel')}
+            trackColor={{ true: PlatformColor('systemBlue') }}
         />
     );
 };

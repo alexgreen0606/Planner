@@ -24,7 +24,7 @@ interface ModalProps {
     children: ReactNode;
     open: boolean;
     width: number;
-    modalAbsoluteTop: number;
+    height: number;
     toggleModalOpen: () => void;
     style?: ViewStyle;
 }
@@ -35,7 +35,7 @@ const Modal = ({
     children,
     open,
     width,
-    modalAbsoluteTop = 0,
+    height,
     subTitle,
     toggleModalOpen,
     style: customStyle
@@ -50,7 +50,7 @@ const Modal = ({
 
     useEffect(() => {
         top.value = withSpring(
-            open ? modalAbsoluteTop : screenHeight,
+            open ? (screenHeight - height) : screenHeight,
             LIST_SPRING_CONFIG
         );
     }, [open]);
@@ -88,6 +88,7 @@ const Modal = ({
                             ...styles.card,
                             ...customStyle,
                             width,
+                            height,
                             position: 'relative'
                         }}
                         >

@@ -31,8 +31,9 @@ interface KeyboardProviderProps {
 }
 
 export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) => {
+
     const keyboard = useAnimatedKeyboard();
-    
+
     const {
         screenHeight
     } = useDimensions();
@@ -49,7 +50,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
         return keyboard.state.value === 2;
     });
 
-    // TODO: after brief typing, the textfield moves up slightly
+    // TODO: after brief typing, the textfield moves up slightly -> not scrolling enough sometimes
 
     /**
      * Calculates and applies scrolling to keep a textfield visible above the keyboard
@@ -62,24 +63,19 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
         textfieldBottom: SharedValue<number>,
         scrollOffset: SharedValue<number>,
         disableNativeScroll: SharedValue<boolean>
-    ): number => {
+    ) => {
         'worklet';
-        if (textfieldBottom.value > keyboardAbsoluteTop.value) {
-            const scrollAmount = textfieldBottom.value - keyboardAbsoluteTop.value;
-            disableNativeScroll.value = true;
+        const scrollAmount = textfieldBottom.value - keyboardAbsoluteTop.value;
 
-            scrollOffset.value = withSpring(
-                scrollOffset.value + scrollAmount,
-                LIST_SPRING_CONFIG,
-                () => {
-                    textfieldBottom.value -= scrollAmount;
-                    disableNativeScroll.value = false;
-                }
-            );
-
-            return scrollAmount;
-        }
-        return 0;
+        disableNativeScroll.value = true;
+        scrollOffset.value = withSpring(
+            scrollOffset.value + scrollAmount,
+            LIST_SPRING_CONFIG,
+            () => {
+                textfieldBottom.value -= scrollAmount;
+                disableNativeScroll.value = false;
+            }
+        );
     };
 
     return (

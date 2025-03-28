@@ -80,9 +80,7 @@ const ListTextfield = <T extends ListItem>({
     // Scroll the textfield into view
     useAnimatedReaction(
         () => ({
-            shouldCheck: isFocused.value &&
-                !isLoadingInitialPosition.value &&
-                isKeyboardOpen.value,
+            shouldCheck: isFocused.value && isKeyboardOpen.value,
             textfieldBottom: textfieldBottom.value,
             keyboardTop: keyboardAbsoluteTop.value
         }),

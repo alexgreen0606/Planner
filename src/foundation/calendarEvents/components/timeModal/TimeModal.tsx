@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../components/Modal';
 import {
     datestampToMidnightDate,
-    datestampToDayOfWeek,
-    datestampToMonthDate,
     isoToDatestamp,
-    getTodayDatestamp
 } from '../../timestampUtils';
 import CustomText from '../../../components/text/CustomText';
 import { ListItemUpdateComponentProps } from '../../../sortedLists/types';
@@ -38,21 +35,34 @@ const TimeModal = ({
     item: planEvent
 }: TimeModalProps) => {
 
-    const {
-        screenWidth,
-        screenHeight
-    } = useDimensions();
+    // Default start date
+    const todayStart = useMemo(() => {
+        return datestampToMidnightDate(planEvent.listId);
+    }, [planEvent.listId]);
 
-    const isMultidayEvent = () => {
-        const eventStartDate = planEvent.timeConfig?.startTime && isoToDatestamp(planEvent.timeConfig?.startTime);
-        const eventEndDate = planEvent.timeConfig?.endTime && isoToDatestamp(planEvent.timeConfig?.endTime)
-        return eventStartDate !== eventEndDate;
+    // Default end date
+    // const endOfDayDate = useMemo(() => {
+    //     const todayStart = datestampToMidnightDate(planEvent.listId);
+    //     todayStart.setHours(23, 55, 0, 0);
+    //     return todayStart;
+    // }, [planEvent.listId]);
+
+    // Default end date
+    const tomorrowStart = useMemo(() => {
+        return datestampToMidnightDate(planEvent.listId, 1);
+    }, [planEvent.listId]);
+
+    const getStartOfDay = (date: Date) => {
+        return datestampToMidnightDate(isoToDatestamp(date.toISOString()));
     }
 
-    const startOfDayDate = datestampToMidnightDate(planEvent.listId);
-    const endOfDayDate = datestampToMidnightDate(planEvent.listId);
-    endOfDayDate.setHours(23, 55, 0, 0);
-    const [multiDayEvent, setMultiDayEvent] = useState(isMultidayEvent());
+    const getHourInFuture = () => {
+        const date = new Date();
+        date.setHours(date.getHours() + 1);
+        return date;
+    };
+
+    // Form Data Tracker
     const [timeModalData, setTimeModalData] = useState<FormData>(planEvent.timeConfig ? {
         startTime: new Date(planEvent.timeConfig.startTime),
         endTime: new Date(planEvent.timeConfig.endTime),
@@ -61,10 +71,15 @@ const TimeModal = ({
     } : {
         allDay: false,
         isCalendarEvent: false,
-        startTime: startOfDayDate,
-        endTime: endOfDayDate,
+        startTime: todayStart,
+        endTime: tomorrowStart,
     });
 
+    const {
+        screenWidth,
+    } = useDimensions();
+
+    // Sync the form data every time the planEvent changes
     useEffect(() => {
         setTimeModalData(planEvent.timeConfig ? {
             startTime: new Date(planEvent.timeConfig.startTime),
@@ -74,10 +89,9 @@ const TimeModal = ({
         } : {
             allDay: false,
             isCalendarEvent: false,
-            startTime: startOfDayDate,
-            endTime: endOfDayDate,
+            startTime: todayStart,
+            endTime: tomorrowStart,
         });
-        setMultiDayEvent(isMultidayEvent());
     }, [planEvent]);
 
     function handleSave() {
@@ -90,56 +104,34 @@ const TimeModal = ({
             }
         };
         if (timeModalData.isCalendarEvent && !planEvent.calendarId) {
+            // Triggers creation of a new calendar event
             updatedItem.calendarId = 'NEW';
         }
         onSave(updatedItem);
     };
 
     function handleDelete() {
-        const updatedItem = {...planEvent};
+        const updatedItem = { ...planEvent };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
         onSave(updatedItem);
-    }
-
-    function toggleMultiDay() {
-        setMultiDayEvent(curr => !curr);
-    }
-
-    function getDateLabel() {
-        const startMonthDay = datestampToMonthDate(isoToDatestamp(timeModalData.startTime.toISOString()));
-        const endMonthDay = datestampToMonthDate(isoToDatestamp(timeModalData.endTime.toISOString()));
-        if (startMonthDay !== endMonthDay) {
-            return `${getTodayDatestamp() === isoToDatestamp(timeModalData.startTime.toISOString()) ? 'Today' : `${datestampToDayOfWeek(isoToDatestamp(timeModalData.startTime.toISOString()))} ${startMonthDay}`} to ${datestampToDayOfWeek(isoToDatestamp(timeModalData.endTime.toISOString()))} ${endMonthDay}`
-        } else {
-            return `on ${datestampToDayOfWeek(isoToDatestamp(timeModalData.startTime.toISOString()))}`
-        }
     }
 
     return (
         <Modal
             title={planEvent.value}
             open={open}
-            modalAbsoluteTop={screenHeight - 600}
             toggleModalOpen={() => toggleModalOpen(planEvent)}
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSave,
             }}
             width={screenWidth}
+            height={500}
             style={{
                 gap: 4,
-                height: 600,
             }}
         >
-
-            {/* Event Details */}
-            {/* <CustomText type='standard'>
-                {planEvent.value}
-            </CustomText>
-            <CustomText adjustsFontSizeToFit numberOfLines={1} type='soft' style={{ marginBottom: 16 }}>
-                {getDateLabel()}
-            </CustomText> */}
 
             {/* Start Time */}
             <DateSelector
@@ -160,7 +152,7 @@ const TimeModal = ({
             <DateSelector
                 label='End Time'
                 allDay={timeModalData.allDay}
-                date={new Date(timeModalData?.endTime || endOfDayDate)}
+                date={new Date(timeModalData?.endTime || tomorrowStart)}
                 onDateChange={(date) => {
                     setTimeModalData({
                         ...timeModalData,
@@ -168,6 +160,25 @@ const TimeModal = ({
                     })
                 }}
             />
+
+            <ThinLine />
+
+            {/* All Day Toggle */}
+            <View style={globalStyles.spacedApart}>
+                <CustomText type='standard'>All Day</CustomText>
+                <Toggle
+                    value={timeModalData.allDay}
+                    onValueChange={() => {
+                        const isAllDay = !timeModalData.allDay;
+                        setTimeModalData({
+                            ...timeModalData,
+                            allDay: isAllDay,
+                            startTime: getStartOfDay(timeModalData.startTime),
+                            endTime: getStartOfDay(timeModalData.endTime)
+                        });
+                    }}
+                />
+            </View>
 
             <ThinLine />
 
@@ -181,29 +192,6 @@ const TimeModal = ({
                         setTimeModalData({
                             ...timeModalData,
                             isCalendarEvent: newIsCalendarEvent,
-                            endTime: newIsCalendarEvent
-                                ? new Date(timeModalData.startTime.getTime() + 60 * 60 * 1000)
-                                : endOfDayDate
-                        });
-                        setMultiDayEvent(false);
-                    }}
-                />
-            </View>
-
-            <ThinLine />
-
-            {/* All Day Toggle */}
-            <View style={globalStyles.spacedApart}>
-                <CustomText type='standard'>All Day</CustomText>
-                <Toggle
-                    value={timeModalData.allDay}
-                    onValueChange={() => {
-                        const newAllDay = !timeModalData.allDay;
-                        setTimeModalData({
-                            ...timeModalData,
-                            allDay: newAllDay,
-                            startTime: startOfDayDate,
-                            endTime: newAllDay ? startOfDayDate : endOfDayDate
                         });
                     }}
                 />
@@ -211,6 +199,7 @@ const TimeModal = ({
 
             <View style={{ flex: 1 }} />
 
+            {/* Delete Button */}
             <View style={{ alignItems: 'center', width: '100%' }}>
                 <ButtonText
                     label='Unschedule'

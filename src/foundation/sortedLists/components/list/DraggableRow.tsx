@@ -137,7 +137,6 @@ const DraggableRow = <
      */
     const handleTextfieldSave = (createNew: boolean = true) => {
         if (item.value.trim() !== '') {
-            isLoadingInitialPosition.value = true; // TODO: why is this needed?
             saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
         } else {
             if (item.status === ItemStatus.NEW) {

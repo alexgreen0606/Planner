@@ -60,7 +60,7 @@ const ButtonText = ({
 const styles = StyleSheet.create({
     text: {
         fontSize: 16,
-        fontWeight: 500,
+        fontWeight: 400,
         fontFamily: 'System'
     },
 });

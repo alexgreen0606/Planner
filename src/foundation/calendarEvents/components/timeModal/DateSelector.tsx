@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlatformColor, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import globalStyles from '../../../theme/globalStyles';
 import CustomText from '../../../components/text/CustomText';
@@ -7,16 +7,16 @@ import DateValue from '../values/DateValue';
 import { isoToDatestamp, isoToTimeValue } from '../../timestampUtils';
 import TimeValue from '../values/TimeValue';
 
+enum SelectorMode {
+    DATE = 'date',
+    TIME = 'time'
+}
+
 export interface DateSelectorProps {
     onDateChange: (newDate: Date) => void;
     date: Date;
     label: string;
     allDay: boolean;
-}
-
-enum SelectorMode {
-    DATE = 'date',
-    TIME = 'time'
 }
 
 const DateSelector = ({
@@ -27,7 +27,7 @@ const DateSelector = ({
 }: DateSelectorProps) => {
     const [mode, setMode] = useState<SelectorMode | null>(null);
 
-    const toggleMode = (newMode: SelectorMode) => {
+    function toggleMode(newMode: SelectorMode) {
         if (mode === newMode) {
             setMode(null);
         } else {
