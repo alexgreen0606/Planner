@@ -1,5 +1,5 @@
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
-import { datestampToMidnightDate, generateSortIdByTime, timeValueToIso } from "./timestampUtils";
+import { datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "./timestampUtils";
 import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
 import { PlannerEvent, RecurringEvent } from "./types";
@@ -76,18 +76,20 @@ function generateEventChip(event: CalendarEventReadable, datestamp: string): Eve
 
     if (calendar.isPrimary || calendar.title === 'Calendar') {
         chipProps.planEvent = {
-            id: event.id,
+            status: ItemStatus.STATIC,
+            sortId: 1,
+            calendarId: event.id,
             value: eventTitle,
-            sortId: 1, // temporary sort id
-            listId: datestamp,
             timeConfig: {
                 startTime: event.startDate,
                 endTime: event.endDate!,
                 allDay: !!event.allDay
             },
-            status: ItemStatus.STATIC,
             color: calendar.color!,
-            calendarId: event.id
+            // Link all chips for the same calendar event together
+            id: event.id,
+            // Link all chips for the same calendar event to the same planner
+            listId: isoToDatestamp(event.startDate),
         };
     }
 

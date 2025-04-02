@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
-import SortedFolder from '../../../feature/folder';
-import { SortableListProvider } from '../../../foundation/sortedLists/services/SortableListProvider';
-import { FolderItemTypes } from '../../../feature/checklists/types';
-import globalStyles from '../../../foundation/theme/globalStyles';
-import { getFolderFromStorage, getListFromStorage } from '../../../feature/checklists/storage/folderStorage';
+import { FolderItemTypes } from '../../feature/checklists/types';
+import { NULL, ROOT_FOLDER_KEY } from '../../feature/checklists/constants';
+import { getFolderFromStorage, getListFromStorage } from '../../feature/checklists/storage/folderStorage';
+import globalStyles from '../../foundation/theme/globalStyles';
+import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
 import FolderItemBanner from './banner/FolderItemBanner';
-import ChecklistList from '../../../feature/checklists';
-import { NULL, ROOT_FOLDER_KEY } from '../../../feature/checklists/constants';
+import SortedFolder from '../../feature/folder';
+import ChecklistList from '../../feature/checklists';
 
 type PageConfig = {
   id: string;
@@ -44,20 +44,21 @@ const Lists = () => {
 
   return (
     <View key={pageConfig.id} style={globalStyles.blackFilledSpace}>
-
-      {/* List */}
-      {pageConfig.type === FolderItemTypes.FOLDER ? (
-        <SortableListProvider bannerContent={
-          <FolderItemBanner
+      <SortableListProvider
+      header={
+        <FolderItemBanner
             itemId={pageConfig.id}
             backButtonConfig={{
               display: !!parentFolderData,
               label: parentFolderData?.value,
-              onClick: clickParent
+              onClick: pageConfig.type === FolderItemTypes.FOLDER ? clickParent : () => onOpenParent(parentFolderData!.id!)
             }}
-            itemType={FolderItemTypes.FOLDER}
+            itemType={pageConfig.type}
           />
-        }>
+      }
+      >
+
+      {pageConfig.type === FolderItemTypes.FOLDER ? (
           <SortedFolder
             parentFolderData={parentFolderData}
             folderId={pageConfig.id}
@@ -66,22 +67,10 @@ const Lists = () => {
             parentClickTrigger={parentClickTrigger}
 
           />
-        </SortableListProvider>
       ) : (
-        <SortableListProvider bannerContent={
-          <FolderItemBanner
-            itemId={pageConfig.id}
-            backButtonConfig={{
-              display: !!parentFolderData,
-              label: parentFolderData?.value,
-              onClick: () => onOpenParent(parentFolderData!.id!)
-            }}
-            itemType={FolderItemTypes.LIST}
-          />
-        }>
           <ChecklistList listId={pageConfig.id} />
-        </SortableListProvider>
       )}
+      </SortableListProvider>
     </View>
   );
 };

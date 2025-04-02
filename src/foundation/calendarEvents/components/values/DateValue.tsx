@@ -1,25 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import CustomText from '../../../components/text/CustomText';
-import { isoToMonthDate } from '../../timestampUtils';
 
 interface DateValue {
-    timestamp: string;
-    disabled?: boolean;
+    timestamp?: string;
+    date?: Date;
 }
 
-const DateValue = ({ timestamp }: DateValue) => {
-    const [month, setMonth] = useState('');
-    const [day, setDay] = useState('');
-    const [year, setYear] = useState('')
-
-    useEffect(() => {
-        const [newMonth, newDay] = isoToMonthDate(timestamp).split(' ');
-        const newYear = timestamp.split('-')[0];
-        setMonth(newMonth.slice(0, 3).toUpperCase());
-        setDay(newDay);
-        setYear(newYear);
-    }, [timestamp])
+const DateValue = ({ timestamp, date }: DateValue) => {
+    const dateObject = date || (timestamp ? new Date(timestamp) : new Date());
+    const month = dateObject.toLocaleString(undefined, { month: 'short' }).slice(0, 3).toUpperCase();
+    const day = dateObject.toLocaleString(undefined, { day: 'numeric' });
+    const year = dateObject.toLocaleString(undefined, { year: 'numeric' });
 
     return (
         <View style={styles.container}>

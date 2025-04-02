@@ -1,22 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-import { WeatherForecast } from '../../../feature/weather/utils';
-import globalStyles from '../../../foundation/theme/globalStyles';
-import PlannersBanner from './banner/PlannersBanner';
-import { SortableListProvider } from '../../../foundation/sortedLists/services/SortableListProvider';
-import PlannerCard from '../../../feature/planner';
-import RecurringPlanner from '../../../feature/recurringPlanners/components/RecurringPlanner';
 import { Dropdown } from 'react-native-element-dropdown';
-import RecurringWeekdayPlanner from '../../../feature/recurringPlanners/components/RecurringWeekdayPlanner';
-import CustomText from '../../../foundation/components/text/CustomText';
-import PlannerModes from '../../../feature/planner/types';
-import Deadlines from '../../../feature/deadlines';
-import { getNextSevenDayDatestamps } from '../../../foundation/calendarEvents/timestampUtils';
-import { RecurringPlannerKeys } from '../../../feature/recurringPlanners/constants';
-import { EventChipProps } from '../../../foundation/calendarEvents/components/EventChip';
-import { generateEventChipMap, generatePlannerEventMap } from '../../../foundation/calendarEvents/calendarUtils';
-import GenericIcon from '../../../foundation/components/GenericIcon';
-import { PlannerEvent } from '../../../foundation/calendarEvents/types';
+import { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
+import { getNextSevenDayDatestamps } from '../../foundation/calendarEvents/timestampUtils';
+import { PlannerEvent } from '../../foundation/calendarEvents/types';
+import { RecurringPlannerKeys } from '../../feature/recurringPlanners/constants';
+import PlannerModes from '../../feature/planner/types';
+import { WeatherForecast } from '../../feature/weather/utils';
+import { generateEventChipMap, generatePlannerEventMap } from '../../foundation/calendarEvents/calendarUtils';
+import CustomText from '../../foundation/components/text/CustomText';
+import globalStyles from '../../foundation/theme/globalStyles';
+import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
+import TopNavbar from '../../foundation/navigation/components/TopNavbar';
+import GenericIcon from '../../foundation/components/GenericIcon';
+import PlannerCard from '../../feature/planner';
+import RecurringWeekdayPlanner from '../../feature/recurringPlanners/components/RecurringWeekdayPlanner';
+import RecurringPlanner from '../../feature/recurringPlanners/components/RecurringPlanner';
+import Deadlines from '../../feature/deadlines';
 
 interface PageDataMaps {
   chips: Record<string, EventChipProps[]>;
@@ -137,16 +137,30 @@ const Planners = () => {
 
   return (
     <View style={globalStyles.blackFilledSpace}>
+      <SortableListProvider floatingBanner={
+        <TopNavbar
+          tabs={[
+            { label: 'Planners', onClick: () => setMode(PlannerModes.PLANNERS) },
+            { label: 'Deadlines', onClick: () => setMode(PlannerModes.DEADLINES) },
+            { label: 'Recurring', onClick: () => setMode(PlannerModes.RECURRING) }
+          ]}
+          currentTabIndex={mode === PlannerModes.PLANNERS ? 0 : mode === PlannerModes.RECURRING ? 1 : 2}
+          setCurrentTabIndex={(index) => {
+            if (index === 0) {
+              setMode(PlannerModes.PLANNERS);
+            } else if (index === 1) {
+              setMode(PlannerModes.RECURRING);
+            } else {
+              setMode(PlannerModes.DEADLINES);
+            }
+          }}
+        />
+      }
+      >
 
-      {/* Planners */}
-      {mode === PlannerModes.PLANNERS ? <>
-        {datestamps && (
-          <SortableListProvider bannerContent={
-            <PlannersBanner
-              setMode={setMode}
-              mode={mode}
-            />
-          }>
+        {/* Planners */}
+        {mode === PlannerModes.PLANNERS && datestamps ? (
+          <View>
             <View style={styles.dropdownContainer} >
               <Dropdown
                 data={defaultPlannerOptions}
@@ -177,48 +191,39 @@ const Planners = () => {
                 />
               )}
             </View>
-          </SortableListProvider>
-        )}
-      </> : mode === PlannerModes.RECURRING ? (
-        <SortableListProvider bannerContent={
-          <PlannersBanner
-            setMode={setMode}
-            mode={mode}
-          />}>
-          <View style={styles.dropdownContainer} >
-            <Dropdown
-              data={recurringPlannerOptions}
-              maxHeight={300}
-              labelField="label"
-              valueField="value"
-              value={selectedRecurring}
-              containerStyle={{ backgroundColor: PlatformColor('systemBlue'), borderWidth: 0 }}
-              onChange={setSelectedRecurring}
-              selectedTextStyle={styles.selectedTextStyle}
-              style={styles.dropdown}
-              renderItem={renderDropdownItem}
-            />
-            <GenericIcon
-              type='add'
-              platformColor='secondaryLabel'
-            />
           </View>
-          <View style={{ ...styles.planners, flex: 1, paddingHorizontal: 0 }}>
-            {selectedRecurring.value.map((key) => (
-              key === RecurringPlannerKeys.WEEKDAYS ?
-                <RecurringWeekdayPlanner key='weekday-recurring-planner' /> :
-                <RecurringPlanner key={`${key}-planner`} plannerKey={key} />
-            ))}
+        ) : mode === PlannerModes.RECURRING ? (
+          <View style={{ flex: 1 }}>
+            <View style={styles.dropdownContainer} >
+              <Dropdown
+                data={recurringPlannerOptions}
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                value={selectedRecurring}
+                containerStyle={{ backgroundColor: PlatformColor('systemBlue'), borderWidth: 0 }}
+                onChange={setSelectedRecurring}
+                selectedTextStyle={styles.selectedTextStyle}
+                style={styles.dropdown}
+                renderItem={renderDropdownItem}
+              />
+              <GenericIcon
+                type='add'
+                platformColor='secondaryLabel'
+              />
+            </View>
+            <View style={{ ...styles.planners, flex: 1, paddingHorizontal: 0 }}>
+              {selectedRecurring.value.map((key) => (
+                key === RecurringPlannerKeys.WEEKDAYS ?
+                  <RecurringWeekdayPlanner key='weekday-recurring-planner' /> :
+                  <RecurringPlanner key={`${key}-planner`} plannerKey={key} />
+              ))}
+            </View>
           </View>
-        </SortableListProvider>
-      ) : (
-        <SortableListProvider bannerContent={<PlannersBanner
-          setMode={setMode}
-          mode={mode}
-        />}>
+        ) : (
           <Deadlines />
-        </SortableListProvider>
-      )}
+        )}
+      </SortableListProvider>
     </View>
   );
 };
@@ -245,9 +250,6 @@ const styles = StyleSheet.create({
   dropdown: {
     width: '40%',
     padding: 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderLeftWidth: StyleSheet.hairlineWidth,
-    borderColor: PlatformColor('systemGray3')
   },
   dropdownItem: {
     backgroundColor: PlatformColor('systemBackground'),

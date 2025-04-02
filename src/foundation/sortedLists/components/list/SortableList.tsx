@@ -15,6 +15,7 @@ import ThinLine from '../../../components/ThinLine';
 import { buildItemPositions, generateSortId } from '../../utils';
 import { useKeyboard } from '../../services/KeyboardProvider';
 import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
+import { Portal } from 'react-native-paper';
 
 export interface DraggableListProps<
     T extends ListItem,
@@ -55,18 +56,41 @@ const SortableList = <
     emptyLabelConfig,
     fillSpace,
     staticList,
+    getModal,
+    getToolbar,
     ...rest
 }: DraggableListProps<T, P, M>) => {
+
     const {
         currentTextfield,
         setCurrentTextfield,
         evaluateOffsetBounds,
     } = useSortableList();
-    const { isKeyboardOpen } = useKeyboard();
+
+    const {
+        isKeyboardOpen,
+        keyboardAbsoluteTop
+    } = useKeyboard();
+
     const positions = useSharedValue<Record<string, number>>({});
     const pendingItem = useRef<T | null>(null);
+    const modalConfig = useMemo(() => currentTextfield ? getModal?.(currentTextfield) : null, [currentTextfield, getModal]);
+    const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
+    const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
+    const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
-    // ------------- List Building and Management -------------
+    // ------------- Utility Function -------------
+
+    /**
+     * Handles click on empty space to create a new textfield
+     */
+    function handleEmptySpaceClick() {
+        if (!currentTextfield) {
+            saveTextfieldAndCreateNew(currentList[currentList.length - 1]?.sortId ?? -1);
+        }
+    }
+
+    // ------------- List Building -------------
 
     /**
      * Builds the list out of the existing items and the textfield.
@@ -93,6 +117,15 @@ const SortableList = <
         }
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }
+
+    // Derive the current list out of the items and textfield
+    const currentList = useMemo(() => {
+        const newList = buildFullList();
+        positions.value = buildItemPositions(newList);
+        return newList;
+    }, [currentTextfield?.id, currentTextfield?.sortId, items]);
+
+    // ------------- List Management -------------
 
     /**
      * Saves the existing textfield to storage and generates a new one at the requested position.
@@ -127,23 +160,7 @@ const SortableList = <
         setCurrentTextfield(newTextfield, pendingItem.current);
     }
 
-    /**
-     * Handles click on empty space to create a new textfield
-     */
-    function handleEmptySpaceClick() {
-        if (!currentTextfield) {
-            saveTextfieldAndCreateNew(currentList[currentList.length - 1]?.sortId ?? -1);
-        }
-    }
-
-    // ------------- State Derivation and Handling -------------
-
-    // Derive the current list out of the items and textfield
-    const currentList = useMemo(() => {
-        const newList = buildFullList();
-        positions.value = buildItemPositions(newList);
-        return newList;
-    }, [currentTextfield?.id, currentTextfield?.sortId, items]);
+    // ------------- Scroll Container Height Evaluation -------------
 
     useEffect(() => {
         let contentHeight = 0;
@@ -166,6 +183,7 @@ const SortableList = <
 
     // ------------- Animations -------------
 
+    // Animate the opening and closing of the list
     const listContainerStyle = useAnimatedStyle(() => {
         return {
             height: withSpring(hideList ? 0 : currentList.length * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG),
@@ -173,6 +191,13 @@ const SortableList = <
             overflow: 'hidden'
         }
     }, [currentList.length, hideList]);
+
+    // Animate the toolbar above the textfield
+    const toolbarStyle = useAnimatedStyle(() => ({
+        left: 0,
+        position: 'absolute',
+        top: keyboardAbsoluteTop.value
+    }), [keyboardAbsoluteTop.value]);
 
     return (
         <View style={{ flex: fillSpace ? 1 : 0 }}>
@@ -192,6 +217,7 @@ const SortableList = <
                         <DraggableRow<T, P, M>
                             key={`${item.id}-row`}
                             item={item}
+                            hideKeyboard={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
                             positions={positions}
                             saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
                             listLength={currentList.length}
@@ -211,6 +237,20 @@ const SortableList = <
             ) : (
                 <Pressable style={{ flex: 1 }} onPress={handleEmptySpaceClick} />
             )}
+
+            {/* Modal */}
+            {Modal && modalConfig &&
+                <Modal {...modalConfig.props} />
+            }
+
+            {/* Toolbar */}
+            {Toolbar && toolbarConfig &&
+                <Portal>
+                    <Animated.View style={toolbarStyle}>
+                        <Toolbar {...toolbarConfig.props} />
+                    </Animated.View>
+                </Portal>
+            }
         </View>
     );
 };

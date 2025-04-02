@@ -8,7 +8,7 @@ const sizeMap = {
     s: 14,
     m: 16,
     l: 18,
-    xl: 24
+    xl: 25
 };
 const iconMap = {
     transfer: 'arrow.uturn.down',

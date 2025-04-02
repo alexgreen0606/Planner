@@ -6,13 +6,14 @@ import CustomText from '../../components/text/CustomText';
 import TimeModal from './timeModal/TimeModal';
 import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
-import { useSortableList } from '../../sortedLists/services/SortableListProvider';
 import { isValidPlatformColor } from '../../theme/colors';
 import { useDeleteScheduler } from '../../sortedLists/services/DeleteScheduler';
+import { useReload } from '../../sortedLists/services/ReloadProvider';
 
 export interface EventChipProps {
     planEvent?: PlannerEvent;
     iconConfig: GenericIconProps;
+    backgroundPlatformColor?: string;
     color: string;
     label: string;
 };
@@ -21,6 +22,7 @@ const EventChip = ({
     planEvent,
     label,
     iconConfig,
+    backgroundPlatformColor = 'systemGray6',
     color
 }: EventChipProps) => {
     const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
@@ -31,11 +33,8 @@ const EventChip = ({
         setIsTimeModalOpen(!isTimeModalOpen);
     };
 
-    const handleSave = (updatedEvent: PlannerEvent) => {
-        saveEvent(updatedEvent);
-
-        // TODO: reload the lists?
-
+    const handleSave = async (updatedEvent: PlannerEvent) => {
+        await saveEvent(updatedEvent);
         toggleTimeModal();
     };
 
@@ -43,7 +42,12 @@ const EventChip = ({
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
 
     const ChipContent = () => (
-        <View style={{ ...styles.chip, borderColor: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor }}>
+        <View style={{
+            ...styles.chip,
+            borderColor: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor,
+            backgroundColor: PlatformColor(backgroundPlatformColor)
+        }}
+        >
             <GenericIcon
                 {...iconConfig}
                 platformColor={chipColor}

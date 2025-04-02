@@ -12,6 +12,7 @@ import {
 import { getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from '../calendarUtils';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../types';
 import { ItemStatus } from '../../sortedLists/constants';
+import { ListItem } from '../../sortedLists/types';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
@@ -36,7 +37,7 @@ export function savePlannerToStorage(plannerId: string, newPlanner: PlannerEvent
  * Deletes all the planners from before today's date, and returns the planner from yesterday.
  * @returns - all the remaining events from yesterday
  */
-function getAndDeletePastPlanners(): PlannerEvent[] {
+function getCarryoverEventsAndCleanStorage(): PlannerEvent[] {
     const yesterdayTimestamp = getYesterdayDatestamp();
     const todayTimestamp = getTodayDatestamp();
     const yesterdayPlannerString = storage.getString(yesterdayTimestamp);
@@ -50,8 +51,21 @@ function getAndDeletePastPlanners(): PlannerEvent[] {
                 storage.delete(timestamp);
             }
         });
-        return yesterdayPlanner;
-        // TODO: remove hidden events, and events whose end time already happened?
+        return yesterdayPlanner
+            // Remove hidden items
+            .filter((event: PlannerEvent) => {
+                event.status !== ItemStatus.HIDDEN && !event.recurringId
+            })
+            // Remove any time configs 
+            .map((event: PlannerEvent) => {
+                delete event.calendarId;
+                if (event.timeConfig) {
+                    const newEvent = { ...event };
+                    delete newEvent.timeConfig;
+                    return newEvent;
+                }
+                return event;
+            });
     }
     return [];
 };
@@ -60,6 +74,7 @@ function getAndDeletePastPlanners(): PlannerEvent[] {
  * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
  */
 export async function buildPlanner(datestamp: string, planner: PlannerEvent[], calendarEvents: PlannerEvent[]): Promise<PlannerEvent[]> {
+
     // Sync the planner with the recurring weekday planner
     if ([getTodayDatestamp(), getTomorrowDatestamp()].includes(datestamp)) {
         const recurringPlanner = getPlannerFromStorage(datestampToDayOfWeek(datestamp));
@@ -71,36 +86,20 @@ export async function buildPlanner(datestamp: string, planner: PlannerEvent[], c
 
     // Delete past planners and carry over incomplete yesterday events
     if (datestamp === getTodayDatestamp()) {
-        const remainingYesterdayEvents = getAndDeletePastPlanners();
+        const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
         if (remainingYesterdayEvents.length > 0) {
 
             // Carry over yesterday's incomplete events to today
             remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
-                if (!yesterdayEvent.recurringId) {
-                    const newEvent = {
-                        ...yesterdayEvent,
-                        listId: datestamp,
-                        sortId: -1,
-                    };
-                    if (yesterdayEvent.timeConfig) {
-                        // TODO: TEST
-                        const yesterdayStartTime = new Date(yesterdayEvent.timeConfig.startTime);
-                        const yesterdayEndTime = new Date(yesterdayEvent.timeConfig.endTime);
-                        yesterdayStartTime.setUTCHours(yesterdayStartTime.getUTCHours() + 24);
-                        yesterdayEndTime.setUTCHours(yesterdayEndTime.getUTCHours() + 24);
-
-                        newEvent.timeConfig = {
-                            ...yesterdayEvent.timeConfig,
-                            startTime: yesterdayStartTime.toISOString(),
-                            endTime: yesterdayEndTime.toISOString(),
-                        };
-                    }
-                    planner.push(newEvent);
-                    newEvent.sortId = generateSortIdByTime(newEvent, planner);
-                }
+                const newEvent = {
+                    ...yesterdayEvent,
+                    listId: datestamp,
+                    sortId: -1,
+                };
+                planner.push(newEvent);
+                newEvent.sortId = generateSortIdByTime(newEvent, planner);
             });
             savePlannerToStorage(datestamp, planner);
-            return planner;
         }
     }
 
@@ -143,8 +142,8 @@ export async function saveEvent(event: PlannerEvent) {
     const existingIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id);
     if (existingIndex !== -1) {
         const existingEventCalendarId = newPlanner[existingIndex]!.calendarId;
-        console.log(newPlanner[existingIndex], newEvent);
         if (existingEventCalendarId && !newEvent.calendarId) {
+            // Handle deletion of calendar events
             await getCalendarAccess();
             await RNCalendarEvents.removeEvent(existingEventCalendarId);
         }

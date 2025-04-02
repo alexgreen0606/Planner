@@ -8,6 +8,15 @@ When declaring, follow this order (exported after local):
 4. `interface`
 5. `function`
 
+## Flow of Files 
+When declaring, follow this order (exported after local):
+1. `functions`
+2. `context`
+3. `state`
+4. `animated variables`
+5. `hooks`
+6. `function`
+
 ## Props  
 - Always define props using `interface`.
 

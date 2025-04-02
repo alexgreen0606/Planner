@@ -68,11 +68,12 @@ export function isoToTimeValue(isoTimestamp: string): string {
  * @returns - Formatted date in YYYY-MM-DD.
  */
 export function isoToDatestamp(isoTimestamp: string): string {
-    const date = new Date(isoTimestamp);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return new Date(isoTimestamp).toLocaleDateString('en-CA', {
+        timeZone: 'UTC',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
 };
 
 /**
@@ -183,9 +184,17 @@ export function getTomorrowDatestamp(): string {
  * @returns - Date object representing the midnight time of the computed date
  */
 export function datestampToMidnightDate(timestamp: string, dayOffset: number = 0): Date {
-    const baseDate = new Date(timestamp + 'T00:00:00'); // Ensures consistent parsing in local time
+    const [year, month, day] = timestamp.split('-').map(Number); // Destructuring
+
+    // Create date in local time at midnight
+    const baseDate = new Date(year, month - 1, day);
+
+    // Apply day offset
     baseDate.setDate(baseDate.getDate() + dayOffset);
+
+    // Ensure time is exactly at midnight
     baseDate.setHours(0, 0, 0, 0);
+
     return baseDate;
 };
 

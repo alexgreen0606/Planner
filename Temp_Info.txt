@@ -1,0 +1,28 @@
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Use to gather weather info.</string>
+<key>NSContactsUsageDescription</key>
+<string>This app requires access to contacts to send birthday messages</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app requires location access</string>
+
+
+RNDatePickerManager.mm
+
+@interface RNDatePicker (CustomDateProperties)
+@end
+
+@implementation RNDatePicker (CustomDateProperties)
+
+- (void)setDate:(NSDate *)date {
+    [[self valueForKey:@"picker"] setDate:date];
+}
+
+- (void)setMaximumDate:(NSDate *)date {
+    [[self valueForKey:@"picker"] setMaximumDate:date];
+}
+
+- (void)setMinimumDate:(NSDate *)date {
+    [[self valueForKey:@"picker"] setMinimumDate:date];
+}
+
+@end

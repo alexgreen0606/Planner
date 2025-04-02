@@ -88,7 +88,7 @@ const Deadlines = () => {
     return (
         <View style={globalStyles.blackFilledSpace}>
 
-            {/* deadline List */}
+            {/* Deadline List */}
             <SortableList<Deadline, ToolbarProps<Deadline>, never>
                 listId={DEADLINE_LIST_KEY}
                 fillSpace

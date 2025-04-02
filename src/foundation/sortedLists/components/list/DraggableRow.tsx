@@ -25,11 +25,11 @@ import { Portal } from "react-native-paper";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "../../../components/ThinLine";
 import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from "../../utils";
-import { BANNER_HEIGHT } from "../../../components/constants";
 import { useKeyboard } from "../../services/KeyboardProvider";
 import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
 import { useDeleteScheduler } from "../../services/DeleteScheduler";
 import useDimensions from "../../../hooks/useDimensions";
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "../../../navigation/constants";
 
 interface RowProps<
     T extends ListItem,
@@ -40,6 +40,7 @@ interface RowProps<
     positions: SharedValue<Record<string, number>>;
     saveTextfieldAndCreateNew: (parentSortId?: number) => Promise<void>;
     listLength: number;
+    hideKeyboard: boolean;
 }
 
 enum AutoScrollDirection {
@@ -72,13 +73,13 @@ const DraggableRow = <
     saveTextfieldAndCreateNew,
     listLength,
     onDragEnd,
+    hideKeyboard
 }: RowProps<T, P, M>) => {
 
     const {
-        topSpacer,
         bottomSpacer,
         screenHeight,
-        bannerHeight
+        topSpacer
     } = useDimensions();
 
     const {
@@ -91,8 +92,6 @@ const DraggableRow = <
 
     const { isItemDeleting } = useDeleteScheduler();
 
-    const { keyboardAbsoluteTop } = useKeyboard();
-
     /**
      * The current item, either from static props or from the context if it's being edited
      */
@@ -104,8 +103,8 @@ const DraggableRow = <
     const isLoadingInitialPosition = useSharedValue(!!positions.value[item.id]);
 
     // ------------- Animation Variables -------------
-    const TOP_AUTO_SCROLL_BOUND = bannerHeight;
-    const BOTTOM_AUTO_SCROLL_BOUND = screenHeight - bottomSpacer - BANNER_HEIGHT - LIST_ITEM_HEIGHT; // TODO: update this for new bottom bar
+    const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + topSpacer; // TODO: add in height of floating navbar too
+    const BOTTOM_AUTO_SCROLL_BOUND = screenHeight - bottomSpacer - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
     const isDragging = useSharedValue(0);
     const isManualScrolling = useSharedValue(false);
@@ -117,10 +116,6 @@ const DraggableRow = <
     const customTextPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
     const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
     const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
-    const modalConfig = useMemo(() => getModal?.(item), [item, getModal]);
-    const toolbarConfig = useMemo(() => getToolbar?.(item), [item, getToolbar]);
-    const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
-    const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
     // ------------- Row Utilities -------------
 
@@ -460,15 +455,6 @@ const DraggableRow = <
         }
     }, [top.value, isDragging.value]);
 
-    /**
-     * Animated style for positioning the toolbar over the textfield.
-     */
-    const toolbarStyle = useAnimatedStyle(() => ({
-        left: 0,
-        position: 'absolute',
-        top: keyboardAbsoluteTop.value
-    }), [keyboardAbsoluteTop.value]);
-
     return <Animated.View style={rowStyle}>
         <View key={item.id} style={styles.row}>
 
@@ -499,7 +485,7 @@ const DraggableRow = <
                         isLoadingInitialPosition={isLoadingInitialPosition}
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
-                        hideKeyboard={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
+                        hideKeyboard={hideKeyboard}
                         customStyle={{
                             color: PlatformColor(customTextPlatformColor ??
                                 (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
@@ -538,23 +524,6 @@ const DraggableRow = <
                 </Pressable>
             </GestureDetector>
         </View>
-
-        {isItemTextfield(item) && <>
-
-            {/* Modal */}
-            {Modal && modalConfig &&
-                <Modal {...modalConfig.props} />
-            }
-
-            {/* Toolbar */}
-            {Toolbar && toolbarConfig &&
-                <Portal>
-                    <Animated.View style={toolbarStyle}>
-                        <Toolbar {...toolbarConfig.props} />
-                    </Animated.View>
-                </Portal>
-            }
-        </>}
 
     </Animated.View>
 };

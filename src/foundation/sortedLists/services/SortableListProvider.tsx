@@ -10,20 +10,23 @@ import Animated, {
     useAnimatedStyle,
     interpolate,
     Extrapolation,
+    runOnJS,
 } from 'react-native-reanimated';
 import { ListItem } from '../types';
-import { PlatformColor, ScrollView, useColorScheme, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { SCROLL_THROTTLE } from '../constants';
 import { ReloadProvider } from './ReloadProvider';
 import { BlurView } from 'expo-blur';
 import LinearGradient from 'react-native-linear-gradient';
 import useDimensions from '../../hooks/useDimensions';
+import { HEADER_HEIGHT } from '../../navigation/constants';
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedFiller = Animated.createAnimatedComponent(View);
 const AnimatedBanner = Animated.createAnimatedComponent(View);
+const AnimatedFloatingBanner = Animated.createAnimatedComponent(View);
 
 interface TextFieldState<T> {
     current: T | undefined;
@@ -32,8 +35,8 @@ interface TextFieldState<T> {
 
 interface SortableListProviderProps {
     children: React.ReactNode;
-    bannerContent: React.ReactNode;
-    extraBannerHeight?: number;
+    header?: React.ReactNode;
+    floatingBanner?: React.ReactNode;
 }
 
 interface SortableListContextValue<T extends ListItem> {
@@ -52,12 +55,14 @@ const SortableListContext = createContext<SortableListContextValue<any> | null>(
 
 export const SortableListProvider = ({
     children,
-    bannerContent,
-    extraBannerHeight
+    header,
+    floatingBanner
 }: SortableListProviderProps) => {
     return (
         <KeyboardProvider>
-            <SortableListProviderContent extraBannerHeight={extraBannerHeight} bannerContent={bannerContent}>
+            <SortableListProviderContent
+                floatingBanner={floatingBanner}
+                header={header}>
                 {children}
             </SortableListProviderContent>
         </KeyboardProvider>
@@ -72,19 +77,19 @@ export const SortableListProvider = ({
  */
 export const SortableListProviderContent = <T extends ListItem>({
     children,
-    bannerContent,
-    extraBannerHeight = 0
+    header,
+    floatingBanner
 }: SortableListProviderProps) => {
 
     const {
-        screenWidth, 
+        screenWidth,
         topSpacer,
-        bannerHeight
     } = useDimensions();
 
+    const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
     const theme = useColorScheme();
     const fadedOpacity = theme === 'dark' ? 'rgba(0,0,0,' : 'rgba(255,255,255,';
-    const totalBannerHeight = bannerHeight + extraBannerHeight;
+    const totalHeaderHeight = topSpacer + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight;
 
     // --- List Variables ---
     const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
@@ -116,9 +121,10 @@ export const SortableListProviderContent = <T extends ListItem>({
     const evaluateOffsetBounds = (customContentHeight: number = 0) => {
         'worklet';
         const contentHeight = Math.max(customContentHeight, measure(contentRef)?.height ?? 0);
+        const maxScroll = Math.max(0, contentHeight - visibleHeight);
         scrollOffsetBounds.value = {
             min: 0,
-            max: Math.max(0, contentHeight - visibleHeight)
+            max: maxScroll
         };
     };
 
@@ -150,11 +156,11 @@ export const SortableListProviderContent = <T extends ListItem>({
         return {
             opacity: interpolate(
                 scrollOffset.value,
-                [0, totalBannerHeight],
-                [1, 0],
+                [0, HEADER_HEIGHT],
+                [0, 1],
                 Extrapolation.CLAMP
             ),
-            height: totalBannerHeight,
+            height: totalHeaderHeight,
             width: screenWidth,
             position: 'absolute',
             top: 0,
@@ -162,12 +168,20 @@ export const SortableListProviderContent = <T extends ListItem>({
         };
     });
 
+    const floatingBannerStyle = useAnimatedStyle(() => {
+        return {
+            top: Math.max(topSpacer, HEADER_HEIGHT + topSpacer - scrollOffset.value),
+        }
+    },
+        [scrollOffset.value]
+    );
+
     const renderTopBlurViews = () => {
         const blurViews = [];
         const numViews = 50;
 
-        for (let i = 0; i < numViews; i++) {
-            const intensity = 2;
+        for (let i = 1; i <= numViews; i++) {
+            const intensity = 1;
 
             blurViews.push(
                 <BlurView
@@ -175,7 +189,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                     intensity={intensity}
                     tint='systemUltraThinMaterialDark'
                     style={{
-                        height: ((totalBannerHeight) / numViews) * (i + 1),
+                        height: (totalHeaderHeight / numViews) * i,
                         width: screenWidth,
                         position: 'absolute',
                         top: 0,
@@ -186,7 +200,7 @@ export const SortableListProviderContent = <T extends ListItem>({
         }
 
         return blurViews
-    }
+    };
 
     return (
         <SortableListContext.Provider
@@ -200,12 +214,28 @@ export const SortableListProviderContent = <T extends ListItem>({
                 pendingItem: textFieldState.pending,
             }}
         >
+
+            {/* Floating Banner */}
+            <AnimatedFloatingBanner
+                style={[
+                    styles.floatingBanner,
+                    header ? floatingBannerStyle : { top: topSpacer }
+                ]}
+                onLayout={(event) => {
+                    const { height } = event.nativeEvent.layout;
+                    setFloatingBannerHeight(height);
+                }}
+            >
+                {floatingBanner}
+            </AnimatedFloatingBanner>
+
+            {/* Scroll Container */}
             <AnimatedScrollView
                 ref={scrollRef}
                 scrollEventThrottle={SCROLL_THROTTLE}
                 scrollToOverflowEnabled={true}
                 onScroll={handler}
-                contentContainerStyle={{ flexGrow: 1, paddingTop: totalBannerHeight }}
+                contentContainerStyle={{ flexGrow: 1, paddingTop: topSpacer }}
                 onLayout={(event) => {
                     const { height } = event.nativeEvent.layout;
                     setVisibleHeight(height);
@@ -213,34 +243,47 @@ export const SortableListProviderContent = <T extends ListItem>({
             >
                 <AnimatedView ref={contentRef} style={{ flex: 1 }}>
                     <ReloadProvider>
+                        {header && (
+                            <View style={{
+                                height: HEADER_HEIGHT,
+                                paddingVertical: 8,
+                                paddingHorizontal: 16,
+                            }}>
+                                {header}
+                            </View>
+                        )}
+                        <View style={{height: floatingBannerHeight}} />
                         {children}
                     </ReloadProvider>
                     <AnimatedFiller style={keyboardPadboxStyle} />
                 </AnimatedView>
             </AnimatedScrollView>
-            {renderTopBlurViews()}
-            <LinearGradient
-                colors={[`${fadedOpacity}0.5)`, `${fadedOpacity}0)`]}
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: screenWidth,
-                    height: totalBannerHeight
-                }}
-            />
             <AnimatedBanner style={bannerStyle}>
-                <View style={{
-                    flex: 1,
-                    backgroundColor: PlatformColor('systemBackground')
-                }} />
+                {renderTopBlurViews()}
+                <LinearGradient
+                    colors={[`${fadedOpacity}1)`, `${fadedOpacity}0)`]}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: screenWidth,
+                        height: totalHeaderHeight
+                    }}
+                />
             </AnimatedBanner>
-            <View style={{ position: 'absolute', top: topSpacer, zIndex: 3 }}>
-                {bannerContent}
-            </View>
         </SortableListContext.Provider>
     );
 };
+
+const styles = StyleSheet.create({
+    floatingBanner: {
+        position: 'absolute',
+        zIndex: 3,
+        display: 'flex',
+        justifyContent: 'center',
+        width: Dimensions.get('window').width
+    }
+});
 
 export const useSortableList = () => {
     const context = useContext(SortableListContext);

@@ -1,9 +1,9 @@
 import React from 'react';
 import { View } from 'react-native';
-import globalStyles from '../../../../foundation/theme/globalStyles';
-import WeatherDisplay from '../../../../feature/weather';
-import LabelSublabel from '../../../../foundation/components/text/LabelSublabel';
-import { datestampToDayOfWeek, datestampToMonthDate } from '../../../../foundation/calendarEvents/timestampUtils';
+import globalStyles from '../../../foundation/theme/globalStyles';
+import LabelSublabel from '../../../foundation/components/text/LabelSublabel';
+import { datestampToDayOfWeek, datestampToMonthDate } from '../../../foundation/calendarEvents/timestampUtils';
+import WeatherDisplay from '../../../feature/weather';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -27,6 +27,7 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
                         subLabel={datestampToMonthDate(timestamp)}
                         upperSublabel={datestampToDayOfWeek(timestamp)}
                         type='large'
+                        horizontal
                     />
                 </View>
 

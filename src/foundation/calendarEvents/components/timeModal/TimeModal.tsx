@@ -1,10 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { PlatformColor, View } from 'react-native';
 import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../components/Modal';
 import {
     datestampToMidnightDate,
-    isoToDatestamp,
 } from '../../timestampUtils';
 import CustomText from '../../../components/text/CustomText';
 import { ListItemUpdateComponentProps } from '../../../sortedLists/types';
@@ -14,11 +13,12 @@ import DateSelector from './DateSelector';
 import ThinLine from '../../../components/ThinLine';
 import ButtonText from '../../../components/text/ButtonText';
 import useDimensions from '../../../hooks/useDimensions';
+import { TIME_MODAL_INPUT_HEIGHT } from '../../constants';
 
 type FormData = {
     allDay: boolean;
-    startTime: Date;
-    endTime: Date;
+    startDate: Date;
+    endDate: Date;
     isCalendarEvent: boolean;
 };
 
@@ -35,80 +35,45 @@ const TimeModal = ({
     item: planEvent
 }: TimeModalProps) => {
 
-    // Default start date
-    const todayStart = useMemo(() => {
-        return datestampToMidnightDate(planEvent.listId);
-    }, [planEvent.listId]);
-
-    // Default end date
-    // const endOfDayDate = useMemo(() => {
-    //     const todayStart = datestampToMidnightDate(planEvent.listId);
-    //     todayStart.setHours(23, 55, 0, 0);
-    //     return todayStart;
-    // }, [planEvent.listId]);
-
-    // Default end date
-    const tomorrowStart = useMemo(() => {
-        return datestampToMidnightDate(planEvent.listId, 1);
-    }, [planEvent.listId]);
-
-    const getStartOfDay = (date: Date) => {
-        return datestampToMidnightDate(isoToDatestamp(date.toISOString()));
-    }
-
-    const getHourInFuture = () => {
-        const date = new Date();
-        date.setHours(date.getHours() + 1);
-        return date;
-    };
-
     // Form Data Tracker
-    const [timeModalData, setTimeModalData] = useState<FormData>(planEvent.timeConfig ? {
-        startTime: new Date(planEvent.timeConfig.startTime),
-        endTime: new Date(planEvent.timeConfig.endTime),
-        allDay: planEvent.timeConfig.allDay,
-        isCalendarEvent: !!planEvent.calendarId
-    } : {
+    const [formData, setFormData] = useState<FormData>({
+        startDate: new Date(),
+        endDate: new Date(),
         allDay: false,
-        isCalendarEvent: false,
-        startTime: todayStart,
-        endTime: tomorrowStart,
+        isCalendarEvent: false
     });
 
     const {
         screenWidth,
     } = useDimensions();
 
-    // Sync the form data every time the planEvent changes
-    useEffect(() => {
-        setTimeModalData(planEvent.timeConfig ? {
-            startTime: new Date(planEvent.timeConfig.startTime),
-            endTime: new Date(planEvent.timeConfig.endTime),
-            allDay: planEvent.timeConfig.allDay,
-            isCalendarEvent: !!planEvent.calendarId
-        } : {
-            allDay: false,
-            isCalendarEvent: false,
-            startTime: todayStart,
-            endTime: tomorrowStart,
-        });
-    }, [planEvent]);
+    function getStartOfDay(date: Date) {
+        const startOfDate = new Date(date);
+        startOfDate.setHours(0, 0, 0, 0);
+        return startOfDate;
+    }
 
     function handleSave() {
         const updatedItem = {
             ...planEvent,
             timeConfig: {
-                allDay: timeModalData.allDay,
-                startTime: timeModalData.startTime.toISOString(),
-                endTime: timeModalData.endTime.toISOString()
+                allDay: formData.allDay,
+                startTime: formData.startDate.toISOString(),
+                endTime: formData.endDate.toISOString()
             }
         };
-        if (timeModalData.isCalendarEvent && !planEvent.calendarId) {
+        if (formData.isCalendarEvent && !planEvent.calendarId) {
             // Triggers creation of a new calendar event
             updatedItem.calendarId = 'NEW';
         }
+        if (formData.allDay && updatedItem.calendarId === 'NEW') {
+            // All day events end at the start of the next day
+            const startOfNextDay = new Date(formData.endDate);
+            startOfNextDay.setDate(startOfNextDay.getDate() + 1);
+            updatedItem.timeConfig.endTime = startOfNextDay.toISOString();
+        }
         onSave(updatedItem);
-    };
+    }
 
     function handleDelete() {
         const updatedItem = { ...planEvent };
@@ -116,6 +81,28 @@ const TimeModal = ({
         delete updatedItem.timeConfig;
         onSave(updatedItem);
     }
+
+    // Sync the form data every time the planEvent changes
+    useEffect(() => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const defaultStartTime = datestampToMidnightDate(planEvent.listId);
+        defaultStartTime.setHours(currentHour);
+        const defaultEndTime = datestampToMidnightDate(planEvent.listId);
+        defaultEndTime.setHours(currentHour + 1);
+
+        setFormData(planEvent.timeConfig ? {
+            startDate: new Date(planEvent.timeConfig.startTime),
+            endDate: new Date(planEvent.timeConfig.endTime),
+            allDay: planEvent.timeConfig.allDay,
+            isCalendarEvent: !!planEvent.calendarId
+        } : {
+            allDay: false,
+            isCalendarEvent: false,
+            startDate: defaultStartTime,
+            endDate: defaultEndTime,
+        });
+    }, [planEvent]);
 
     return (
         <Modal
@@ -127,21 +114,19 @@ const TimeModal = ({
                 onClick: handleSave,
             }}
             width={screenWidth}
-            height={500}
-            style={{
-                gap: 4,
-            }}
+            height={600}
+            style={{ gap: 4 }}
         >
 
             {/* Start Time */}
             <DateSelector
-                label='Start Time'
-                allDay={timeModalData.allDay}
-                date={timeModalData.startTime}
-                onDateChange={(date) => {
-                    setTimeModalData({
-                        ...timeModalData,
-                        startTime: date
+                label='Start'
+                allDay={formData.allDay}
+                date={formData.startDate}
+                onDateChange={(startDate) => {
+                    setFormData({
+                        ...formData,
+                        startDate
                     })
                 }}
             />
@@ -150,13 +135,14 @@ const TimeModal = ({
 
             {/* End Time */}
             <DateSelector
-                label='End Time'
-                allDay={timeModalData.allDay}
-                date={new Date(timeModalData?.endTime || tomorrowStart)}
-                onDateChange={(date) => {
-                    setTimeModalData({
-                        ...timeModalData,
-                        endTime: date
+                label='End'
+                allDay={formData.allDay}
+                date={formData.endDate}
+                hide={!formData.isCalendarEvent}
+                onDateChange={(endDate) => {
+                    setFormData({
+                        ...formData,
+                        endDate
                     })
                 }}
             />
@@ -164,34 +150,34 @@ const TimeModal = ({
             <ThinLine />
 
             {/* All Day Toggle */}
-            <View style={globalStyles.spacedApart}>
-                <CustomText type='standard'>All Day</CustomText>
-                <Toggle
-                    value={timeModalData.allDay}
-                    onValueChange={() => {
-                        const isAllDay = !timeModalData.allDay;
-                        setTimeModalData({
-                            ...timeModalData,
-                            allDay: isAllDay,
-                            startTime: getStartOfDay(timeModalData.startTime),
-                            endTime: getStartOfDay(timeModalData.endTime)
-                        });
-                    }}
-                />
+            <View style={{ ...globalStyles.spacedApart, height: TIME_MODAL_INPUT_HEIGHT }}>
+                <CustomText type='standard' style={{ color: PlatformColor(!formData.isCalendarEvent ? 'tertiaryLabel' : 'label') }}>All Day</CustomText>
+                {formData.isCalendarEvent && (
+                    <Toggle
+                        value={formData.allDay}
+                        onValueChange={(allDay) => {
+                            setFormData({
+                                ...formData,
+                                allDay,
+                                startDate: getStartOfDay(formData.startDate),
+                                endDate: getStartOfDay(formData.endDate)
+                            });
+                        }}
+                    />
+                )}
             </View>
 
             <ThinLine />
 
             {/* Calendar Toggle */}
-            <View style={globalStyles.spacedApart}>
+            <View style={{ ...globalStyles.spacedApart, height: TIME_MODAL_INPUT_HEIGHT }}>
                 <CustomText type='standard'>Calendar Event</CustomText>
                 <Toggle
-                    value={timeModalData.isCalendarEvent}
-                    onValueChange={() => {
-                        const newIsCalendarEvent = !timeModalData.isCalendarEvent;
-                        setTimeModalData({
-                            ...timeModalData,
-                            isCalendarEvent: newIsCalendarEvent,
+                    value={formData.isCalendarEvent}
+                    onValueChange={(isCalendarEvent) => {
+                        setFormData({
+                            ...formData,
+                            isCalendarEvent
                         });
                     }}
                 />

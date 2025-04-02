@@ -12,12 +12,6 @@
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Use to gather weather info.</string>
-    <key>NSContactsUsageDescription</key>
-    <string>This app requires access to contacts to send birthday messages</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app requires location access</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

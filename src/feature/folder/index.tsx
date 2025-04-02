@@ -10,17 +10,17 @@ import {
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
-import { Pages } from '../../app/navUtils';
+import { Pages } from '../../foundation/navigation/constants';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
-import { useNavigator } from '../../app/NavProvider';
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId } from '../../foundation/sortedLists/utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { selectableColors } from '../../foundation/theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
+import { useNavigator } from '../../foundation/navigation/services/NavProvider';
 
 interface SortableFolderProps {
     folderId: string;
@@ -193,7 +193,6 @@ const SortedFolder = ({
             items={SortedItems.items}
             fillSpace
             onDragEnd={SortedItems.persistItemToStorage}
-            isItemDeleting={SortedItems.isItemDeleting}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             onSaveTextfield={SortedItems.persistItemToStorage}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}

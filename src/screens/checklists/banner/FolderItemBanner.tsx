@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, PlatformColor, TextInput } from 'react-native';
-import { FolderItem, FolderItemTypes } from '../../../../feature/checklists/types';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { getFolderItem, updateFolderItem } from '../../../../feature/checklists/storage/folderStorage';
-import { ItemStatus } from '../../../../foundation/sortedLists/constants';
-import globalStyles from '../../../../foundation/theme/globalStyles';
-import GenericIcon from '../../../../foundation/components/GenericIcon';
-import CustomText from '../../../../foundation/components/text/CustomText';
-import { LISTS_STORAGE_ID } from '../../../../feature/checklists/constants';
-import ButtonText from '../../../../foundation/components/text/ButtonText';
+import { LISTS_STORAGE_ID } from '../../../feature/checklists/constants';
+import { FolderItem, FolderItemTypes } from '../../../feature/checklists/types';
+import { getFolderItem, updateFolderItem } from '../../../feature/checklists/storage/folderStorage';
+import { ItemStatus } from '../../../foundation/sortedLists/constants';
+import globalStyles from '../../../foundation/theme/globalStyles';
+import GenericIcon from '../../../foundation/components/GenericIcon';
+import CustomText from '../../../foundation/components/text/CustomText';
+import ButtonText from '../../../foundation/components/text/ButtonText';
 
 interface FolderItemBannerProps {
     itemId: string;

@@ -1,79 +1,83 @@
 import React from 'react';
-import Today from './screens/today';
-import Lists from './screens/checklists';
 import { View } from 'react-native';
-import globalStyles from '../foundation/theme/globalStyles';
-import { Pages } from './navUtils';
-import Planners from './screens/planners';
-import { useNavigator } from './NavProvider';
-import GenericIcon from '../foundation/components/GenericIcon';
+import { BOTTOM_NAVIGATION_HEIGHT, Pages } from './constants';
+import GenericIcon from '../components/GenericIcon';
 import { BlurView } from 'expo-blur';
-import useDimensions from '../foundation/hooks/useDimensions';
+import useDimensions from '../hooks/useDimensions';
+import { useNavigator } from './services/NavProvider';
+import Today from '../../screens/today';
+import Planners from '../../screens/planners';
+import Lists from '../../screens/checklists';
 
 const Navigator = () => {
 
-    const { 
+    const {
         currentTab,
-        setCurrentTab 
+        setCurrentTab
     } = useNavigator();
 
     const {
         screenWidth,
-        bottomSpacer
+        bottomSpacer,
     } = useDimensions();
 
     return (
         <View style={{ flex: 1 }}>
+            <View style={{ flex: 1 }}>
+                {currentTab === Pages.DASHBOARD ? (
+                    <Today />
+                ) : currentTab === Pages.PLANNERS ? (
+                    <Planners />
+                ) : (
+                    <Lists />
+                )}
+            </View>
             <View style={{
-                ...globalStyles.verticallyCentered,
+                display: 'flex',
+                flexDirection: 'row',
                 justifyContent: 'space-evenly',
+                alignItems: 'flex-end',
+                width: screenWidth,
+                height: BOTTOM_NAVIGATION_HEIGHT,
                 position: 'absolute',
-                bottom: bottomSpacer,
-                left: screenWidth * .1,
-                width: screenWidth * .8,
-                height: bottomSpacer * 1.5,
-                borderRadius: 16,
-                zIndex: 4
+                bottom: 0,
+                left: 0,
+                paddingBottom: bottomSpacer - 8,
+                backgroundColor: 'transparent'
             }}>
                 <BlurView
-                    tint='systemUltraThinMaterialDark'
+                    tint='systemUltraThinMaterial'
                     intensity={100}
                     style={{
+                        height: BOTTOM_NAVIGATION_HEIGHT + bottomSpacer,
+                        width: screenWidth,
                         position: 'absolute',
-                        height: bottomSpacer * 1.5,
-                        width: screenWidth * .8,
                         bottom: 0,
                         left: 0,
-                        borderRadius: 16,
-                        overflow: 'hidden',
                     }}
                 />
                 <GenericIcon
                     type='lists'
                     size='xl'
+                    hideRipple
                     platformColor={currentTab === Pages.LISTS ? 'systemBlue' : 'secondaryLabel'}
                     onClick={() => setCurrentTab(Pages.LISTS)}
                 />
                 <GenericIcon
                     type='coffee'
                     size='xl'
+                    hideRipple
                     platformColor={currentTab === Pages.DASHBOARD ? 'systemBlue' : 'secondaryLabel'}
                     onClick={() => setCurrentTab(Pages.DASHBOARD)}
                 />
                 <GenericIcon
                     type='planners'
                     size='xl'
+                    hideRipple
                     platformColor={currentTab === Pages.PLANNERS ? 'systemBlue' : 'secondaryLabel'}
                     onClick={() => setCurrentTab(Pages.PLANNERS)}
                 />
             </View>
-            {currentTab === Pages.DASHBOARD ? (
-                <Today />
-            ) : currentTab === Pages.PLANNERS ? (
-                <Planners />
-            ) : (
-                <Lists />
-            )}
         </View>
     );
 };

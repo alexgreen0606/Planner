@@ -17,8 +17,8 @@ import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { useSortableList } from './SortableListProvider';
 import { Portal } from 'react-native-paper';
 import { OVERSCROLL_RELOAD_THRESHOLD } from '../constants';
-import { useNavigator } from '../../../app/NavProvider';
-import { Pages } from '../../../app/navUtils';
+import { useNavigator } from '../../navigation/services/NavProvider';
+import { Pages } from '../../navigation/constants';
 import useDimensions from '../../hooks/useDimensions';
 
 const AnimatedReload = Animated.createAnimatedComponent(View);
@@ -40,6 +40,7 @@ const pagesWithReload = [
 
 interface ReloadContextType {
     addReloadFunction: (id: string, reloadFunc: () => Promise<void>) => void;
+    hardReload: () => void;
 }
 
 const ReloadContext = createContext<ReloadContextType | null>(null);
@@ -58,7 +59,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     const { scrollOffset } = useSortableList();
 
     const {
-        bannerHeight
+        topSpacer
     } = useDimensions();
 
     // ------------- Utility Functions -------------
@@ -172,7 +173,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
                 { rotate: `${loadingRotation.value}deg` },
             ],
             position: 'absolute',
-            top: bannerHeight + (OVERSCROLL_RELOAD_THRESHOLD / 3),
+            top: topSpacer + OVERSCROLL_RELOAD_THRESHOLD / 3,
             alignSelf: 'center',
             zIndex: 1,
         };
@@ -180,7 +181,8 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
 
     return (
         <ReloadContext.Provider value={{
-            addReloadFunction
+            addReloadFunction,
+            hardReload: executeAllReloadFunctions
         }}>
             {pagesWithReload.includes(currentTab) && (
             <Portal>
