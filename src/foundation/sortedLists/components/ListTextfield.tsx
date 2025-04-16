@@ -4,7 +4,7 @@ import { ListItem } from '../types';
 import { useSortableList } from '../services/SortableListProvider';
 import { runOnJS, SharedValue, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useKeyboard } from '../services/KeyboardProvider';
-import { LIST_ITEM_HEIGHT } from '../constants';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '../constants';
 
 interface ListTextfieldProps<T extends ListItem> {
     item: T;
@@ -44,7 +44,7 @@ const ListTextfield = <T extends ListItem>({
 
     const editable = useMemo(() => {
         const isEditable = [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard;
-        
+
         if (!isEditable) {
             isFocused.value = false;
         }
@@ -53,7 +53,7 @@ const ListTextfield = <T extends ListItem>({
     }, [pendingItem, currentTextfield?.id, item.id, hideKeyboard]);
 
     function handleSave(createNew: boolean) {
-        if (hasSaved.current) return; 
+        if (hasSaved.current) return;
         hasSaved.current = true;
 
         onSubmit(createNew);
@@ -131,13 +131,12 @@ const ListTextfield = <T extends ListItem>({
 
 const styles = StyleSheet.create({
     textInput: {
-        backgroundColor: 'transparent',
-        color: PlatformColor('label'),
-        paddingVertical: 1,
         flex: 1,
-        height: 25,
+        height: LIST_CONTENT_HEIGHT,
         fontSize: 16,
-        paddingLeft: 16,
+        marginRight: LIST_ICON_SPACING / 2,
+        color: PlatformColor('label'),
+        backgroundColor: 'transparent',
     },
 });
 

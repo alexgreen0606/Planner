@@ -10,7 +10,7 @@ import { ListItemUpdateComponentProps } from '../../../sortedLists/types';
 import { PlannerEvent } from '../../types';
 import Toggle from './Toggle';
 import DateSelector from './DateSelector';
-import ThinLine from '../../../components/ThinLine';
+import ThinLine from '../../../sortedLists/components/list/ThinLine';
 import ButtonText from '../../../components/text/ButtonText';
 import useDimensions from '../../../hooks/useDimensions';
 import { TIME_MODAL_INPUT_HEIGHT } from '../../constants';
@@ -188,10 +188,11 @@ const TimeModal = ({
             {/* Delete Button */}
             <View style={{ alignItems: 'center', width: '100%' }}>
                 <ButtonText
-                    label='Unschedule'
                     platformColor='systemRed'
                     onClick={handleDelete}
-                />
+                >
+                    Unschedule
+                </ButtonText>
             </View>
         </Modal>
     );

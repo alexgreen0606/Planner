@@ -11,8 +11,7 @@ import CustomText from '../../foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
 import { deleteDeadlines, getDeadlines, saveDeadline } from './deadlineUtils';
 import { DEADLINE_LIST_KEY } from './constants';
-import { Deadline } from '../../foundation/calendarEvents/types';
-import GenericIcon from '../../foundation/components/GenericIcon';
+import { Deadline } from './types';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 

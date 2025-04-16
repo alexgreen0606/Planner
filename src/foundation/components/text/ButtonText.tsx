@@ -1,20 +1,23 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
-import { Text } from 'react-native-paper';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import CustomText from './CustomText';
+import GenericIcon, { GenericIconProps } from '../GenericIcon';
 
 const AnimatedText = Animated.createAnimatedComponent(View);
 
 interface TextProps {
     platformColor: string;
-    label: string;
     onClick: () => void;
+    children: React.ReactNode;
+    iconConfig?: GenericIconProps;
 }
 
 const ButtonText = ({
     platformColor,
-    label,
-    onClick
+    onClick,
+    children,
+    iconConfig
 }: TextProps) => {
 
     const opacity = useSharedValue(1);
@@ -41,27 +44,31 @@ const ButtonText = ({
 
     return (
         <TouchableWithoutFeedback onPressIn={handlePressStart} onPressOut={handlePressEnd}>
-            <AnimatedText style={textStyle}>
-                <Text
+            <AnimatedText style={[textStyle, styles.container]}>
+                {iconConfig && (
+                    <GenericIcon
+                        {...iconConfig}
+                    />
+                )}
+                <CustomText
+                    type='button'
                     style={{
-                        ...styles.text,
                         color: PlatformColor(platformColor)
                     }}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                 >
-                    {label}
-                </Text>
+                    {children}
+                </CustomText>
             </AnimatedText>
         </TouchableWithoutFeedback>
     )
 }
 
 const styles = StyleSheet.create({
-    text: {
-        fontSize: 16,
-        fontWeight: 400,
-        fontFamily: 'System'
+    container: {
+        alignItems: 'center',
+        flexDirection: 'row'
     },
 });
 

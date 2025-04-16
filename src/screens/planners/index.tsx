@@ -1,13 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
 import { getNextSevenDayDatestamps } from '../../foundation/calendarEvents/timestampUtils';
-import { PlannerEvent } from '../../foundation/calendarEvents/types';
+import { CalendarData } from '../../foundation/calendarEvents/types';
 import { RecurringPlannerKeys } from '../../feature/recurringPlanners/constants';
-import PlannerModes from '../../feature/planner/types';
 import { WeatherForecast } from '../../feature/weather/utils';
-import { generateEventChipMap, generatePlannerEventMap } from '../../foundation/calendarEvents/calendarUtils';
+import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../foundation/calendarEvents/calendarUtils';
 import CustomText from '../../foundation/components/text/CustomText';
 import globalStyles from '../../foundation/theme/globalStyles';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
@@ -17,11 +15,8 @@ import PlannerCard from '../../feature/planner';
 import RecurringWeekdayPlanner from '../../feature/recurringPlanners/components/RecurringWeekdayPlanner';
 import RecurringPlanner from '../../feature/recurringPlanners/components/RecurringPlanner';
 import Deadlines from '../../feature/deadlines';
-
-interface PageDataMaps {
-  chips: Record<string, EventChipProps[]>;
-  calendarEvents: Record<string, PlannerEvent[]>;
-}
+import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
+import { Screens } from '../../foundation/navigation/constants';
 
 const defaultPlannerOptions = [
   { label: 'Next 7 Days', value: getNextSevenDayDatestamps() },
@@ -32,11 +27,11 @@ const Planners = () => {
   const recurringPlannerOptions = useMemo(() => {
     return Object.values(RecurringPlannerKeys).map(key => {
       return {
-        label: key, value: [key]
+        label: key,
+        value: [key]
       }
     })
   }, [])
-  const [mode, setMode] = useState(PlannerModes.PLANNERS);
   const [selectedRecurring, setSelectedRecurring] = useState({ label: 'Weekdays', value: [RecurringPlannerKeys.WEEKDAYS] });
   const [selectedPlanners, setSelectedPlanners] = useState({ label: 'Next 7 Days', value: getNextSevenDayDatestamps() });
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
@@ -104,25 +99,27 @@ const Planners = () => {
       "precipitationProbabilityMax": 41
     }
   });
-  const [pageDataMaps, setPageDataMaps] = useState<PageDataMaps>({
-    chips: {},
-    calendarEvents: {}
-  })
+  const [calendarEventData, setCalendarEventData] = useState<CalendarData>(generateEmptyCalendarDataMaps(datestamps))
+
+  const {
+    registerReloadFunction,
+    setCurrentScreen,
+    currentScreen
+  } = useNavigation();
 
   /**
    * Loads in all chip, weather, and calendar data.
    */
   async function loadAllExternalData() {
     // TODO: add in forecasts from apple weather kit
-    setPageDataMaps({
-      chips: await generateEventChipMap(datestamps),
-      calendarEvents: await generatePlannerEventMap(datestamps)
-    })
+
+    setCalendarEventData(await loadCalendarEventData(datestamps));
   };
 
   // Load in the initial planners
   useEffect(() => {
     loadAllExternalData();
+    registerReloadFunction('planners-reload-trigger', loadAllExternalData);
   }, []);
 
   const renderDropdownItem = (item: { label: string, value: string }) => {
@@ -140,27 +137,28 @@ const Planners = () => {
       <SortableListProvider floatingBanner={
         <TopNavbar
           tabs={[
-            { label: 'Planners', onClick: () => setMode(PlannerModes.PLANNERS) },
-            { label: 'Deadlines', onClick: () => setMode(PlannerModes.DEADLINES) },
-            { label: 'Recurring', onClick: () => setMode(PlannerModes.RECURRING) }
+            { label: Screens.PLANNERS, onClick: () => setCurrentScreen(Screens.PLANNERS) },
+            { label: Screens.DEADLINES, onClick: () => setCurrentScreen(Screens.DEADLINES) },
+            { label: Screens.RECURRING, onClick: () => setCurrentScreen(Screens.RECURRING) }
           ]}
-          currentTabIndex={mode === PlannerModes.PLANNERS ? 0 : mode === PlannerModes.RECURRING ? 1 : 2}
+          currentTabIndex={currentScreen === Screens.PLANNERS ? 0 : currentScreen === Screens.DEADLINES ? 1 : 2}
           setCurrentTabIndex={(index) => {
             if (index === 0) {
-              setMode(PlannerModes.PLANNERS);
+              setCurrentScreen(Screens.PLANNERS);
             } else if (index === 1) {
-              setMode(PlannerModes.RECURRING);
+              setCurrentScreen(Screens.DEADLINES);
             } else {
-              setMode(PlannerModes.DEADLINES);
+              setCurrentScreen(Screens.RECURRING);
             }
           }}
         />
       }
       >
 
-        {/* Planners */}
-        {mode === PlannerModes.PLANNERS && datestamps ? (
+        {currentScreen === Screens.PLANNERS && datestamps ? (
           <View>
+
+            {/* Planners */}
             <View style={styles.dropdownContainer} >
               <Dropdown
                 data={defaultPlannerOptions}
@@ -186,14 +184,16 @@ const Planners = () => {
                   datestamp={datestamp}
                   loadAllExternalData={loadAllExternalData}
                   forecast={forecasts?.[datestamp]}
-                  calendarEvents={pageDataMaps.calendarEvents[datestamp] ?? []}
-                  eventChips={pageDataMaps.chips[datestamp] ?? []}
+                  calendarEvents={calendarEventData.plannersMap[datestamp] ?? []}
+                  eventChips={calendarEventData.chipsMap[datestamp] ?? []}
                 />
               )}
             </View>
           </View>
-        ) : mode === PlannerModes.RECURRING ? (
+        ) : currentScreen === Screens.RECURRING ? (
           <View style={{ flex: 1 }}>
+
+            {/* Recurring */}
             <View style={styles.dropdownContainer} >
               <Dropdown
                 data={recurringPlannerOptions}

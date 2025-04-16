@@ -11,7 +11,7 @@ import {
 } from '../../types';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
-import ThinLine from '../../../components/ThinLine';
+import ThinLine from './ThinLine';
 import { buildItemPositions, generateSortId } from '../../utils';
 import { useKeyboard } from '../../services/KeyboardProvider';
 import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
@@ -64,7 +64,6 @@ const SortableList = <
     const {
         currentTextfield,
         setCurrentTextfield,
-        evaluateOffsetBounds,
     } = useSortableList();
 
     const {
@@ -160,27 +159,6 @@ const SortableList = <
         setCurrentTextfield(newTextfield, pendingItem.current);
     }
 
-    // ------------- Scroll Container Height Evaluation -------------
-
-    useEffect(() => {
-        let contentHeight = 0;
-        if (!hideList && fillSpace) {
-            contentHeight = (currentList.length + 1) * LIST_ITEM_HEIGHT;
-        }
-        runOnUI(evaluateOffsetBounds)(contentHeight);
-    }, [hideList, currentList.length, currentTextfield?.id])
-
-    useAnimatedReaction(
-        () => isKeyboardOpen.value,
-        () => {
-            let contentHeight = 0;
-            if (!hideList && fillSpace) {
-                contentHeight = (currentList.length + 1) * LIST_ITEM_HEIGHT;
-            }
-            evaluateOffsetBounds(contentHeight);
-        }
-    )
-
     // ------------- Animations -------------
 
     // Animate the opening and closing of the list
@@ -204,12 +182,11 @@ const SortableList = <
             <View>
 
                 {/* Upper Item Creator */}
-                <TouchableOpacity
-                    activeOpacity={staticList ? 1 : 0}
+                <Pressable
                     onPress={() => saveTextfieldAndCreateNew(-1)}
                 >
                     <ThinLine />
-                </TouchableOpacity>
+                </Pressable>
 
                 {/* List */}
                 <Animated.View style={listContainerStyle}>

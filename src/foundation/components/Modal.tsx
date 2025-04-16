@@ -163,19 +163,21 @@ const Modal = ({
                             {/* Cancel Button */}
                             <View style={{ position: 'absolute', left: 16, top: 16 }}>
                                 <ButtonText
-                                    label='Cancel'
                                     platformColor='secondaryLabel'
                                     onClick={toggleModalOpen}
-                                />
+                                >
+                                    Cancel
+                                </ButtonText>
                             </View>
 
                             {/* Primary Button */}
                             <View style={{ position: 'absolute', right: 16, top: 16 }}>
                                 <ButtonText
-                                    label={primaryButtonConfig.label}
                                     platformColor={primaryButtonConfig.platformColor ?? 'systemBlue'}
                                     onClick={primaryButtonConfig.onClick}
-                                />
+                                >
+                                    {primaryButtonConfig.label}
+                                </ButtonText>
                             </View>
                         </View>
                     </AnimatedModal>

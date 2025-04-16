@@ -9,48 +9,43 @@ import { TimeModalProps } from '../../foundation/calendarEvents/components/timeM
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
-import { generatePlannerEventMap } from '../../foundation/calendarEvents/calendarUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { ReloadProvider, useReload } from '../../foundation/sortedLists/services/ReloadProvider';
+import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
+import { Screens } from '../../foundation/navigation/constants';
 
 interface SortablePlannerProps {
-    reloadChips: () => Promise<void>;
+    loadAllExternalData: () => Promise<void>;
+    calendarEvents: PlannerEvent[];
 };
 
 const TodayPlanner = ({
-    reloadChips
+    loadAllExternalData,
+    calendarEvents
 }: SortablePlannerProps) => {
     const datestamp = getTodayDatestamp();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
-    const {
-        setCurrentTextfield
-    } = useSortableList();
+    const { setCurrentTextfield } = useSortableList();
 
-    const {
-        isItemDeleting
-    } = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler();
 
-    const {
-        addReloadFunction
-    } = useReload();
+    const { registerReloadFunction: addReloadFunction } = useNavigation();
 
     async function handleToggleTimeModal(item: PlannerEvent) {
         await toggleTimeModal(item, SortedEvents.toggleItemEdit, setTimeModalOpen);
     };
 
     async function handleSaveEvent(planEvent: PlannerEvent): Promise<string | undefined> {
-        return await saveEventLoadChips(planEvent, reloadChips, SortedEvents.items);
+        return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
     }
 
     async function handleDeleteEvents(planEvents: PlannerEvent[]) {
-        await deleteEventsLoadChips(planEvents, reloadChips, SortedEvents.items);
+        await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
     }
 
     async function getItemsFromStorageObject(planner: PlannerEvent[]) {
-        const todayEvents = await generatePlannerEventMap([datestamp]);
-        return buildPlanner(datestamp, planner, todayEvents[datestamp]);
+        return buildPlanner(datestamp, planner, calendarEvents);
     }
 
     const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
@@ -61,11 +56,12 @@ const TodayPlanner = ({
             create: handleSaveEvent,
             update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
             delete: handleDeleteEvents
-        }
+        },
+        noReload: true
     });
 
     useEffect(() => {
-        addReloadFunction(`${datestamp}-chips-and-calendar-events`, reloadChips);
+        addReloadFunction(`external-data`, loadAllExternalData);
     }, []);
 
     return (
@@ -82,12 +78,7 @@ const TodayPlanner = ({
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
             getToolbar={(item) => generateEventToolbar(item, handleToggleTimeModal, timeModalOpen)}
-            onSaveTextfield={async (updatedItem) => {
-                await SortedEvents.persistItemToStorage(updatedItem);
-                if (updatedItem.timeConfig?.allDay) {
-                    reloadChips();
-                }
-            }}
+            onSaveTextfield={SortedEvents.persistItemToStorage}
             emptyLabelConfig={{
                 label: 'All Plans Complete',
                 style: { height: '100%' }

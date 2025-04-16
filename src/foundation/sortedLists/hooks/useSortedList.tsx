@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useReload } from '../services/ReloadProvider';
+import { useNavigation } from '../../navigation/services/NavigationProvider';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -32,12 +32,6 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         noReload
     } = config;
 
-    const storage = useMMKV({ id: storageId });
-    const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
-    const [items, setItems] = useState<T[]>([]);
-    const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const [deletePending, setDeletePending] = useState(false);
-
     const {
         currentTextfield,
         setCurrentTextfield,
@@ -50,12 +44,16 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         isItemDeleting
     } = useDeleteScheduler();
 
-    const {
-        addReloadFunction
-    } = useReload();
+    const { registerReloadFunction } = useNavigation();
+
+    const storage = useMMKV({ id: storageId });
+    const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
+    const [items, setItems] = useState<T[]>([]);
+    const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [deletePending, setDeletePending] = useState(false);
 
     const scheduledDeletions = useMemo(
-        () => scheduledDeletionItems(storageKey), 
+        () => scheduledDeletionItems(storageKey),
         [scheduledDeletionItems]
     );
 
@@ -70,9 +68,10 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     }, [storageObject]);
 
     useEffect(() => {
-        if (!noReload)
-        addReloadFunction(storageKey, buildList);
-    }, [])
+        if (!noReload) {
+            registerReloadFunction(`${storageKey}-${storageId}`, buildList);
+        }
+    }, []);
 
     // Schedule items for deletion
     useEffect(() => {

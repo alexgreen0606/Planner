@@ -12,7 +12,6 @@ import {
 import { getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from '../calendarUtils';
 import { PLANNER_STORAGE_ID, PlannerEvent } from '../types';
 import { ItemStatus } from '../../sortedLists/constants';
-import { ListItem } from '../../sortedLists/types';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
@@ -43,6 +42,8 @@ function getCarryoverEventsAndCleanStorage(): PlannerEvent[] {
     const yesterdayPlannerString = storage.getString(yesterdayTimestamp);
     if (yesterdayPlannerString) {
         const yesterdayPlanner = JSON.parse(yesterdayPlannerString);
+
+        // TODO: delete past birthdays
 
         // Delete all previous calendars
         const allStorageKeys = storage.getAllKeys();

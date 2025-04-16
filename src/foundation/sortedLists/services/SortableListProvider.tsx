@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import Animated, {
     useSharedValue,
     useAnimatedScrollHandler,
@@ -11,22 +11,31 @@ import Animated, {
     interpolate,
     Extrapolation,
     runOnJS,
+    cancelAnimation,
+    withTiming,
+    Easing,
+    withRepeat,
 } from 'react-native-reanimated';
 import { ListItem } from '../types';
 import { Dimensions, ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
-import { SCROLL_THROTTLE } from '../constants';
-import { ReloadProvider } from './ReloadProvider';
+import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
+import { useNavigation } from '../../navigation/services/NavigationProvider';
 import { BlurView } from 'expo-blur';
+import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import LinearGradient from 'react-native-linear-gradient';
 import useDimensions from '../../hooks/useDimensions';
-import { HEADER_HEIGHT } from '../../navigation/constants';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, Screens } from '../../navigation/constants';
+import { Portal } from 'react-native-paper';
+import GenericIcon from '../../components/GenericIcon';
 
+const AnimatedReload = Animated.createAnimatedComponent(View);
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
-const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedFiller = Animated.createAnimatedComponent(View);
 const AnimatedBanner = Animated.createAnimatedComponent(View);
 const AnimatedFloatingBanner = Animated.createAnimatedComponent(View);
+
+const reloadableScreens = [Screens.DASHBOARD, Screens.DEADLINES, Screens.PLANNERS];
 
 interface TextFieldState<T> {
     current: T | undefined;
@@ -44,11 +53,16 @@ interface SortableListContextValue<T extends ListItem> {
     scrollOffset: SharedValue<number>;
     scrollOffsetBounds: SharedValue<{ min: number, max: number }>;
     disableNativeScroll: SharedValue<boolean>;
-    evaluateOffsetBounds: (customContentHeight: number) => void;
     // --- List Variables ---
     currentTextfield: T | undefined;
     pendingItem: T | undefined;
     setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
+}
+
+export enum LoadingStatus {
+    STATIC = 'STATIC', // no overscroll visible
+    LOADING = 'LOADING', // currently rebuilding list
+    COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
 }
 
 const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
@@ -86,10 +100,19 @@ export const SortableListProviderContent = <T extends ListItem>({
         topSpacer,
     } = useDimensions();
 
+    const {
+        currentScreen,
+        reloadCurrentPage,
+    } = useNavigation();
+
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
     const theme = useColorScheme();
     const fadedOpacity = theme === 'dark' ? 'rgba(0,0,0,' : 'rgba(255,255,255,';
     const totalHeaderHeight = topSpacer + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight;
+
+    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
+    const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
+    const loadingRotation = useSharedValue(0);
 
     // --- List Variables ---
     const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
@@ -118,14 +141,9 @@ export const SortableListProviderContent = <T extends ListItem>({
         });
     };
 
-    const evaluateOffsetBounds = (customContentHeight: number = 0) => {
-        'worklet';
-        const contentHeight = Math.max(customContentHeight, measure(contentRef)?.height ?? 0);
-        const maxScroll = Math.max(0, contentHeight - visibleHeight);
-        scrollOffsetBounds.value = {
-            min: 0,
-            max: maxScroll
-        };
+    const updateLoadingStatus = (newStatus: LoadingStatus) => {
+        setLoadingStatus(newStatus);
+        loadingAnimationTrigger.value = newStatus;
     };
 
     // ---------- Animated Reactions ----------
@@ -142,7 +160,24 @@ export const SortableListProviderContent = <T extends ListItem>({
     // Manual Scroll
     useAnimatedReaction(
         () => scrollOffset.value,
-        (current) => scrollTo(scrollRef, 0, current, false)
+        (current) => {
+            scrollTo(scrollRef, 0, current, false);
+
+            // Detect pull-to-refresh action
+            if (reloadableScreens.includes(currentScreen)) {
+
+                // Trigger a reload of the list
+                if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
+                    runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
+                }
+
+                // Allow refreshes when scroll returns to top
+                if (current >= 0 && loadingAnimationTrigger.value === LoadingStatus.COMPLETE) {
+                    runOnJS(updateLoadingStatus)(LoadingStatus.STATIC);
+                }
+            }
+
+        }
     );
 
     const keyboardPadboxStyle = useAnimatedStyle(() => {
@@ -170,7 +205,7 @@ export const SortableListProviderContent = <T extends ListItem>({
 
     const floatingBannerStyle = useAnimatedStyle(() => {
         return {
-            top: Math.max(topSpacer, HEADER_HEIGHT + topSpacer - scrollOffset.value),
+            top: Math.max(topSpacer, (header ? HEADER_HEIGHT : 0) + topSpacer - scrollOffset.value),
         }
     },
         [scrollOffset.value]
@@ -178,10 +213,10 @@ export const SortableListProviderContent = <T extends ListItem>({
 
     const renderTopBlurViews = () => {
         const blurViews = [];
-        const numViews = 50;
+        const numViews = 10;
 
         for (let i = 1; i <= numViews; i++) {
-            const intensity = 1;
+            const intensity = 5;
 
             blurViews.push(
                 <BlurView
@@ -189,7 +224,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                     intensity={intensity}
                     tint='systemUltraThinMaterialDark'
                     style={{
-                        height: (totalHeaderHeight / numViews) * i,
+                        height: ((totalHeaderHeight / numViews) * i) + 8,
                         width: screenWidth,
                         position: 'absolute',
                         top: 0,
@@ -202,6 +237,69 @@ export const SortableListProviderContent = <T extends ListItem>({
         return blurViews
     };
 
+    // Reload data when loadingStatus changes to LOADING
+    useEffect(() => {
+        if (loadingStatus === LoadingStatus.LOADING) {
+            reloadCurrentPage().then(() => {
+                updateLoadingStatus(LoadingStatus.COMPLETE);
+            });
+        }
+    }, [loadingStatus]);
+
+    const triggerHaptic = () => {
+        ReactNativeHapticFeedback.trigger('impactMedium', {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false
+        });
+    };
+
+    // Loading Spinner Animation
+    useAnimatedReaction(
+        () => ({
+            status: loadingAnimationTrigger.value,
+            overscroll: Math.min(0, scrollOffset.value),
+            rotation: loadingRotation.value
+        }),
+        (curr, prev) => {
+            if (curr.status === LoadingStatus.STATIC) return;
+            if (curr.status === LoadingStatus.LOADING && prev?.status !== LoadingStatus.LOADING) {
+                // Begin Spinning Animation
+                runOnJS(triggerHaptic)();
+                loadingRotation.value = withRepeat(
+                    withTiming(loadingRotation.value - 360, {
+                        duration: 500,
+                        easing: Easing.linear
+                    }),
+                    -1,
+                    false,
+                );
+            } else if (curr.status === LoadingStatus.COMPLETE) {
+                if (curr.rotation % 360 >= -1) {
+                    cancelAnimation(loadingRotation);
+                }
+            }
+        }
+    );
+
+    const loadingIconStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            Math.min(0, scrollOffset.value),
+            [-OVERSCROLL_RELOAD_THRESHOLD / 2, -OVERSCROLL_RELOAD_THRESHOLD],
+            [0, 1],
+            Extrapolation.CLAMP
+        );
+        return {
+            opacity,
+            transform: [
+                { rotate: `${loadingRotation.value}deg` },
+            ],
+            position: 'absolute',
+            top: topSpacer + OVERSCROLL_RELOAD_THRESHOLD / 3,
+            alignSelf: 'center',
+            zIndex: 1,
+        };
+    });
+
     return (
         <SortableListContext.Provider
             value={{
@@ -210,7 +308,6 @@ export const SortableListProviderContent = <T extends ListItem>({
                 scrollOffset,
                 disableNativeScroll,
                 scrollOffsetBounds,
-                evaluateOffsetBounds,
                 pendingItem: textFieldState.pending,
             }}
         >
@@ -219,7 +316,7 @@ export const SortableListProviderContent = <T extends ListItem>({
             <AnimatedFloatingBanner
                 style={[
                     styles.floatingBanner,
-                    header ? floatingBannerStyle : { top: topSpacer }
+                    floatingBannerStyle
                 ]}
                 onLayout={(event) => {
                     const { height } = event.nativeEvent.layout;
@@ -241,23 +338,51 @@ export const SortableListProviderContent = <T extends ListItem>({
                     setVisibleHeight(height);
                 }}
             >
-                <AnimatedView ref={contentRef} style={{ flex: 1 }}>
-                    <ReloadProvider>
-                        {header && (
-                            <View style={{
-                                height: HEADER_HEIGHT,
-                                paddingVertical: 8,
-                                paddingHorizontal: 16,
-                            }}>
-                                {header}
-                            </View>
-                        )}
-                        <View style={{height: floatingBannerHeight}} />
-                        {children}
-                    </ReloadProvider>
+                <View style={{ flex: 1 }} onLayout={(event) => {
+                    const { height: contentHeight } = event.nativeEvent.layout;
+                    const maxScroll = Math.max(0, contentHeight - (visibleHeight - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT));
+                    scrollOffsetBounds.value = {
+                        min: 0,
+                        max: maxScroll
+                    };
+                }}>
+
+                    {/* Header */}
+                    {header && (
+                        <View style={{
+                            height: HEADER_HEIGHT,
+                            paddingVertical: 8,
+                            paddingHorizontal: 16,
+                        }}>
+                            {header}
+                        </View>
+                    )}
+
+                    {/* Fill Space Behind Floating Banner */}
+                    <View style={{ height: floatingBannerHeight }} />
+
+
+                    {/* Loading Spinner */}
+                    {reloadableScreens.includes(currentScreen) && (
+                        <Portal>
+                            <AnimatedReload style={loadingIconStyle}>
+                                <GenericIcon
+                                    size='l'
+                                    platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
+                                    type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
+                                />
+                            </AnimatedReload>
+                        </Portal>
+                    )}
+
+                    {children}
+
+                    {/* Fill Space Behind Keyboard */}
                     <AnimatedFiller style={keyboardPadboxStyle} />
-                </AnimatedView>
+                </View>
             </AnimatedScrollView>
+
+            {/* Upper Blur Bar */}
             <AnimatedBanner style={bannerStyle}>
                 {renderTopBlurViews()}
                 <LinearGradient

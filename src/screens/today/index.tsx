@@ -3,45 +3,74 @@ import { StyleSheet, View } from 'react-native';
 import TodayBanner from './banner/TodayBanner';
 import EventChip, { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
-import { generateEventChipMap } from '../../foundation/calendarEvents/calendarUtils';
+import { loadCalendarEventData } from '../../foundation/calendarEvents/calendarUtils';
 import globalStyles from '../../foundation/theme/globalStyles';
 import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
 import BirthdayCard from '../../feature/birthdays';
 import TodayPlanner from '../../feature/today';
+import { PlannerEvent } from '../../foundation/calendarEvents/types';
+import { Birthday } from '../../feature/birthdays/types';
+import { eventChipToBirthday, extractNameFromBirthdayText } from '../../feature/birthdays/utils';
+import { MMKV, useMMKVListener } from 'react-native-mmkv';
+import { BIRTHDAY_STORAGE_ID } from '../../feature/birthdays/constants';
+import { getContactedBirthdaysByDatestamp } from '../../feature/birthdays/storage/birthdayStorage';
 
-interface PageDataMaps {
+interface TodayData {
+  planner: PlannerEvent[];
   chips: EventChipProps[];
-  birthdays: EventChipProps[];
+  uncontactedBirthdays: Birthday[];
 }
+
+const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
 
 const Today = () => {
   const todayDatestamp = getTodayDatestamp();
-  const [pageData, setPageData] = useState<PageDataMaps>({
+  const [pageData, setPageData] = useState<TodayData>({
+    planner: [],
     chips: [],
-    birthdays: []
+    uncontactedBirthdays: []
   });
 
+  // ------------ Manual Birthday Storage Handling -------------
+
   async function loadCalendarData() {
-    const allEventChips = await generateEventChipMap([todayDatestamp]);
-    const todayChips = allEventChips[todayDatestamp];
-    const todayBirthdayChips: EventChipProps[] = [];
-    const todayOtherChips: EventChipProps[] = [];
-    todayChips.forEach(chip => {
-      if (chip.iconConfig.type === 'birthday') {
-        todayBirthdayChips.push(chip);
-      } else {
-        todayOtherChips.push(chip);
+
+    const {
+      chipsMap,
+      plannersMap
+    } = await loadCalendarEventData([todayDatestamp]); // TODO: don't load this in every time -> too wasteful -> store the data in a memo, and recall this function when they change. Then add the full reload function to useReload
+
+    const contactedBirthdayPersons = getContactedBirthdaysByDatestamp(todayDatestamp);
+
+    const uncontactedBirthdays: Birthday[] = [];
+    chipsMap[todayDatestamp].forEach((chip) => {
+      if (
+        // The chip is a birthday chip
+        chip.iconConfig.type === 'birthday' &&
+        // The birthday person has not been contacted today
+        !contactedBirthdayPersons.includes(extractNameFromBirthdayText(chip.label))) {
+        uncontactedBirthdays.push(eventChipToBirthday(chip, todayDatestamp));
       }
     });
+    uncontactedBirthdays.sort((a, b) => a.age - b.age).map((bday, i) => ({ ...bday, sortId: i }));
     setPageData({
-      chips: todayOtherChips,
-      birthdays: todayBirthdayChips
+      planner: plannersMap[todayDatestamp],
+      chips: chipsMap[todayDatestamp],
+      uncontactedBirthdays
     });
   }
 
+  // Initial load of data
   useEffect(() => {
     loadCalendarData();
   }, []);
+
+  // Load of data each time a birthday is contacted
+  useMMKVListener((key) => {
+    if (key === todayDatestamp) {
+      loadCalendarData();
+    }
+  }, birthdayStorage);
 
   return (
     <View style={globalStyles.blackFilledSpace}>
@@ -49,26 +78,27 @@ const Today = () => {
       <SortableListProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
         floatingBanner={pageData.chips.length > 0 && (
-              <View style={styles.chips}>
-                {pageData.chips.map((chipConfig, i) => (
-                  <EventChip
-                    key={`event-chip-${i}`}
-                    backgroundPlatformColor='systemBackground'
-                    {...chipConfig}
-                  />
-                ))}
-              </View>
-            )
+          <View style={styles.chips}>
+            {pageData.chips.map((chipConfig, i) => (
+              <EventChip
+                key={`event-chip-${i}`}
+                backgroundPlatformColor='systemBackground'
+                {...chipConfig}
+              />
+            ))}
+          </View>
+        )
         }>
 
         {/* Birthday Checklist Card */}
-        {pageData.birthdays.length > 0 && (
-          <BirthdayCard birthdays={pageData.birthdays} /> // TODO: update birthdays to use actual events
-        )}
+        <BirthdayCard birthdays={pageData.uncontactedBirthdays} />
 
         {/* Planner */}
         <View style={styles.planner}>
-          <TodayPlanner reloadChips={loadCalendarData} />
+          <TodayPlanner
+            loadAllExternalData={loadCalendarData}
+            calendarEvents={pageData.planner}
+          />
         </View>
 
       </SortableListProvider>

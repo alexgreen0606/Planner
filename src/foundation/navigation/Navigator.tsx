@@ -1,10 +1,10 @@
 import React from 'react';
 import { View } from 'react-native';
-import { BOTTOM_NAVIGATION_HEIGHT, Pages } from './constants';
+import { BOTTOM_NAVIGATION_HEIGHT, Screens } from './constants';
 import GenericIcon from '../components/GenericIcon';
 import { BlurView } from 'expo-blur';
 import useDimensions from '../hooks/useDimensions';
-import { useNavigator } from './services/NavProvider';
+import { useNavigation } from './services/NavigationProvider';
 import Today from '../../screens/today';
 import Planners from '../../screens/planners';
 import Lists from '../../screens/checklists';
@@ -12,9 +12,9 @@ import Lists from '../../screens/checklists';
 const Navigator = () => {
 
     const {
-        currentTab,
-        setCurrentTab
-    } = useNavigator();
+        currentScreen: currentTab,
+        setCurrentScreen: setCurrentTab
+    } = useNavigation();
 
     const {
         screenWidth,
@@ -24,14 +24,19 @@ const Navigator = () => {
     return (
         <View style={{ flex: 1 }}>
             <View style={{ flex: 1 }}>
-                {currentTab === Pages.DASHBOARD ? (
+
+                {/* Screens */}
+                {currentTab === Screens.DASHBOARD ? (
                     <Today />
-                ) : currentTab === Pages.PLANNERS ? (
-                    <Planners />
-                ) : (
+                ) : currentTab === Screens.LISTS ? (
                     <Lists />
+                ) : (
+                    <Planners />
                 )}
+
             </View>
+
+            {/* Bottom Navbar */}
             <View style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -45,6 +50,8 @@ const Navigator = () => {
                 paddingBottom: bottomSpacer - 8,
                 backgroundColor: 'transparent'
             }}>
+
+                {/* Blurred Background */}
                 <BlurView
                     tint='systemUltraThinMaterial'
                     intensity={100}
@@ -56,27 +63,29 @@ const Navigator = () => {
                         left: 0,
                     }}
                 />
+
                 <GenericIcon
                     type='lists'
                     size='xl'
                     hideRipple
-                    platformColor={currentTab === Pages.LISTS ? 'systemBlue' : 'secondaryLabel'}
-                    onClick={() => setCurrentTab(Pages.LISTS)}
+                    platformColor={currentTab === Screens.LISTS ? 'systemBlue' : 'secondaryLabel'}
+                    onClick={() => setCurrentTab(Screens.LISTS)}
                 />
                 <GenericIcon
                     type='coffee'
                     size='xl'
                     hideRipple
-                    platformColor={currentTab === Pages.DASHBOARD ? 'systemBlue' : 'secondaryLabel'}
-                    onClick={() => setCurrentTab(Pages.DASHBOARD)}
+                    platformColor={currentTab === Screens.DASHBOARD ? 'systemBlue' : 'secondaryLabel'}
+                    onClick={() => setCurrentTab(Screens.DASHBOARD)}
                 />
                 <GenericIcon
                     type='planners'
                     size='xl'
                     hideRipple
-                    platformColor={currentTab === Pages.PLANNERS ? 'systemBlue' : 'secondaryLabel'}
-                    onClick={() => setCurrentTab(Pages.PLANNERS)}
+                    platformColor={currentTab === Screens.PLANNERS ? 'systemBlue' : 'secondaryLabel'}
+                    onClick={() => setCurrentTab(Screens.PLANNERS)}
                 />
+                
             </View>
         </View>
     );

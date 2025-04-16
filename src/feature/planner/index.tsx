@@ -18,14 +18,13 @@ import { TimeModalProps } from '../../foundation/calendarEvents/components/timeM
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
-import { useReload } from '../../foundation/sortedLists/services/ReloadProvider';
 
 interface PlannerCardProps {
     datestamp: string;
     forecast?: WeatherForecast;
     eventChips: EventChipProps[];
     loadAllExternalData: () => Promise<void>;
-    calendarEvents: PlannerEvent[]
+    calendarEvents: PlannerEvent[];
 };
 
 const PlannerCard = ({
@@ -46,10 +45,6 @@ const PlannerCard = ({
     const {
         isItemDeleting
     } = useDeleteScheduler();
-
-    const {
-        addReloadFunction
-    } = useReload();
 
     async function toggleCollapsed() {
         if (currentTextfield) {
@@ -79,10 +74,6 @@ const PlannerCard = ({
     useEffect(() => {
         SortedEvents.refetchItems();
     }, [calendarEvents])
-
-    useEffect(() => {
-        addReloadFunction(`planner-external-data`, loadAllExternalData);
-    }, []);
 
     const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
         storageId: PLANNER_STORAGE_ID,

@@ -10,22 +10,22 @@ const BAR_HEIGHT = 34;
 const TAB_SPACING = 32;
 const INDICATOR_GAP = 6;
 
-interface NavConfig {
-    label: string;
+interface NavConfig<T> {
+    label: T;
     onClick: () => void;
 }
 
-interface TopNavbarProps {
+interface TopNavbarProps<T> {
     currentTabIndex: number;
     setCurrentTabIndex: React.Dispatch<React.SetStateAction<number>>
-    tabs: NavConfig[];
+    tabs: NavConfig<T>[];
 }
 
-const TopNavbar = ({
+const TopNavbar = <T,>({
     currentTabIndex,
     setCurrentTabIndex,
     tabs
-}: TopNavbarProps) => {
+}: TopNavbarProps<T>) => {
     const barRef = useRef<View>(null);
     const [barWidth, setBarWidth] = useState(0);
     const tabWidths = useRef<number[]>(Array(tabs.length).fill(0));
@@ -93,7 +93,7 @@ const TopNavbar = ({
                             }
                         }}
                     >
-                        {tab.label}
+                        {tab.label as string}
                     </CustomText>
                 ))}
             </View>

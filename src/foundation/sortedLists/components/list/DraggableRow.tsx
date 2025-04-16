@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import {
     ListItem,
+    ListItemIconConfig,
     ListItemUpdateComponentProps,
 } from "../../types";
 import { DraggableListProps } from "./SortableList";
@@ -21,31 +22,30 @@ import { useCallback, useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
 import ListTextfield from "../ListTextfield";
-import { Portal } from "react-native-paper";
 import GenericIcon from "../../../components/GenericIcon";
-import ThinLine from "../../../components/ThinLine";
-import { generateSortId, getParentSortIdFromPositions, isItemTextfield } from "../../utils";
-import { useKeyboard } from "../../services/KeyboardProvider";
-import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
+import ThinLine from "./ThinLine";
+import { generateSortId, getParentSortIdFromPositions } from "../../utils";
+import { AUTO_SCROLL_SPEED, ItemStatus, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SEPARATOR_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
 import { useDeleteScheduler } from "../../services/DeleteScheduler";
 import useDimensions from "../../../hooks/useDimensions";
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "../../../navigation/constants";
+import globalStyles from "../../../theme/globalStyles";
+
+enum AutoScrollDirection {
+    UP = 'UP',
+    DOWN = 'DOWN'
+}
 
 interface RowProps<
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>,
     M extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>
-> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'staticList' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig'> {
+> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'staticList' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig' | 'getModal' | 'getToolbar'> {
     item: T;
     positions: SharedValue<Record<string, number>>;
     saveTextfieldAndCreateNew: (parentSortId?: number) => Promise<void>;
     listLength: number;
     hideKeyboard: boolean;
-}
-
-enum AutoScrollDirection {
-    UP = 'UP',
-    DOWN = 'DOWN'
 }
 
 /**
@@ -63,11 +63,9 @@ const DraggableRow = <
     items,
     getLeftIconConfig,
     getRightIconConfig,
-    getModal,
     handleValueChange,
     getRowTextPlatformColor,
     onContentClick,
-    getToolbar,
     disableDrag,
     onDeleteItem,
     saveTextfieldAndCreateNew,
@@ -117,20 +115,20 @@ const DraggableRow = <
     const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
     const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
 
-    // ------------- Row Utilities -------------
+    // ------------- Edit Utilities -------------
 
     /**
      * Updates the content of the row's textfield, with optional formatting
      * @param text The new text value from the input field
      */
-    const handleTextfieldChange = (text: string) => {
+    function handleTextfieldChange(text: string) {
         setCurrentTextfield(handleValueChange?.(text, currentTextfield) ?? { ...currentTextfield, value: text });
-    };
+    }
 
     /**
      * Saves the textfield content or deletes empty items
      */
-    const handleTextfieldSave = (createNew: boolean = true) => {
+    function handleTextfieldSave(createNew: boolean = true) {
         if (item.value.trim() !== '') {
             saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
         } else {
@@ -140,7 +138,7 @@ const DraggableRow = <
                 onDeleteItem(item);
             }
         }
-    };
+    }
 
     // ------------- Drag Utilities -------------
 
@@ -436,11 +434,8 @@ const DraggableRow = <
     /**
      * Animated style for positioning the row and scaling when dragged.
      */
-    const rowStyle = useAnimatedStyle(() => {
+    const animatedRowStyle = useAnimatedStyle(() => {
         return {
-            height: LIST_ITEM_HEIGHT,
-            width: '100%',
-            position: 'absolute',
             top: top.value,
             transform: [
                 {
@@ -448,98 +443,109 @@ const DraggableRow = <
                         damping: 15,
                         stiffness: 200,
                         mass: 1,
-                        overshootClamping: true,
+                        overshootClamping: true, // TODO: make opacity instead
                     }),
                 },
             ],
         }
     }, [top.value, isDragging.value]);
 
-    return <Animated.View style={rowStyle}>
-        <View key={item.id} style={styles.row}>
+    // ------------- Render Helper Functions -------------
+
+    const renderIcon = (config: ListItemIconConfig<T>, type: 'left' | 'right') => {
+        if (config.hideIcon) return null;
+
+        const iconStyle = type === 'left' ? { 
+            marginLeft: LIST_ICON_SPACING, 
+            marginBottom: LIST_SEPARATOR_HEIGHT 
+        } : {
+            marginRight: LIST_ICON_SPACING / 2
+        }
+        const size = type === 'left' ? 'm' : 's';
+
+        if (config.customIcon) {
+            return (
+                <TouchableOpacity
+                    activeOpacity={config.onClick ? 0 : 1}
+                    onPress={() => config.onClick?.(item)}
+                    style={iconStyle}
+                >
+                    {config.customIcon}
+                </TouchableOpacity>
+            );
+        }
+
+        if (config.icon) {
+            return (
+                <GenericIcon
+                    {...config.icon}
+                    onClick={() => config.onClick?.(item)}
+                    size={size}
+                    style={iconStyle}
+                />
+            );
+        }
+
+        return null;
+    };
+
+
+    return (
+        <Animated.View style={[animatedRowStyle, styles.row]}>
 
             {/* Left Icon */}
-            {leftIconConfig &&
-                !leftIconConfig.hideIcon &&
-                (leftIconConfig.customIcon ? (
-                    <TouchableOpacity
-                        activeOpacity={leftIconConfig.onClick ? 0 : 1}
-                        onPress={() => leftIconConfig.onClick?.(item)}
-                    >
-                        {leftIconConfig.customIcon}
-                    </TouchableOpacity>
-                ) : leftIconConfig.icon && (
-                    <GenericIcon
-                        {...leftIconConfig.icon}
-                        onClick={() => leftIconConfig.onClick?.(item)}
-                        size='m'
-                    />
-                ))}
+            {leftIconConfig && renderIcon(leftIconConfig, 'left')}
 
             {/* Content */}
-            <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
-                <View style={{ flex: 1 }}>
-                    <ListTextfield<T>
-                        key={getTextfieldKey(item)}
-                        item={item}
-                        isLoadingInitialPosition={isLoadingInitialPosition}
-                        onChange={handleTextfieldChange}
-                        onSubmit={handleTextfieldSave}
-                        hideKeyboard={hideKeyboard}
-                        customStyle={{
-                            color: PlatformColor(customTextPlatformColor ??
-                                (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
-                            textDecorationLine: isItemDeleting(item) ?
-                                'line-through' : undefined,
-                            width: '100%'
-                        }}
-                    />
+            <View style={styles.content}>
+                <View style={globalStyles.verticallyCentered}>
+                    <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
+                        <ListTextfield<T>
+                            key={getTextfieldKey(item)}
+                            item={item}
+                            isLoadingInitialPosition={isLoadingInitialPosition}
+                            onChange={handleTextfieldChange}
+                            onSubmit={handleTextfieldSave}
+                            hideKeyboard={hideKeyboard}
+                            customStyle={{
+                                color: PlatformColor(customTextPlatformColor ??
+                                    (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
+                                textDecorationLine: isItemDeleting(item) ?
+                                    'line-through' : undefined,
+                                width: '100%'
+                            }}
+                        />
+                    </GestureDetector>
+
+                    {/* Right Icon */}
+                    {rightIconConfig && renderIcon(rightIconConfig, 'right')}
                 </View>
-            </GestureDetector>
 
-            {/* Right Icon */}
-            {rightIconConfig &&
-                !rightIconConfig.hideIcon &&
-                (rightIconConfig.customIcon ? (
-                    <TouchableOpacity
-                        activeOpacity={rightIconConfig.onClick ? 0 : 1}
-                        onPress={() => rightIconConfig.onClick?.(item)}
-                    >
-                        {rightIconConfig.customIcon}
-                    </TouchableOpacity>
-                ) : rightIconConfig.icon && (
-                    <GenericIcon
-                        {...rightIconConfig.icon}
-                        onClick={() => rightIconConfig.onClick?.(item)}
-                        size='s'
-                    />
-                ))}
-        </View>
+                {/* Separator Line */}
+                <GestureDetector gesture={createGestureHandler(() => saveTextfieldAndCreateNew(item.sortId))}>
+                    <Pressable>
+                        <ThinLine />
+                    </Pressable>
+                </GestureDetector>
+            </View>
 
-        {/* Separator Line */}
-        <View style={{ marginLeft: 40 }}>
-            <GestureDetector gesture={createGestureHandler(() => saveTextfieldAndCreateNew(item.sortId))}>
-                <Pressable>
-                    <ThinLine />
-                </Pressable>
-            </GestureDetector>
-        </View>
-
-    </Animated.View>
+        </Animated.View>
+    )
 };
 
 const styles = StyleSheet.create({
-    content: {
-        flex: 1,
-        paddingHorizontal: 8,
-    },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        height: 25,
+        height: LIST_ITEM_HEIGHT,
         width: '100%',
-    }
+        position: 'absolute',
+    },
+    content: {
+        flex: 1,
+        height: LIST_ITEM_HEIGHT,
+        marginLeft: LIST_ICON_SPACING
+    },
 });
 
 export default DraggableRow;

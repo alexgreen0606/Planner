@@ -8,7 +8,6 @@ import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
 import { isValidPlatformColor } from '../../theme/colors';
 import { useDeleteScheduler } from '../../sortedLists/services/DeleteScheduler';
-import { useReload } from '../../sortedLists/services/ReloadProvider';
 
 export interface EventChipProps {
     planEvent?: PlannerEvent;
@@ -16,6 +15,8 @@ export interface EventChipProps {
     backgroundPlatformColor?: string;
     color: string;
     label: string;
+    onClick?: () => void;
+
 };
 
 const EventChip = ({
@@ -23,7 +24,8 @@ const EventChip = ({
     label,
     iconConfig,
     backgroundPlatformColor = 'systemGray6',
-    color
+    color,
+    onClick
 }: EventChipProps) => {
     const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
 
@@ -82,6 +84,10 @@ const EventChip = ({
                         item={planEvent}
                     />
                 </>
+            ) : onClick ? (
+                <TouchableOpacity onPress={onClick}>
+                    <ChipContent />
+                </TouchableOpacity>
             ) : (
                 <ChipContent />
             )}

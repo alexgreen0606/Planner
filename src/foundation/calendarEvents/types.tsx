@@ -1,5 +1,6 @@
 import { IconType } from "../components/GenericIcon";
 import { ListItem } from "../sortedLists/types";
+import { EventChipProps } from "./components/EventChip";
 
 export enum DaysOfWeek {
     Sunday = "Sunday",
@@ -9,7 +10,7 @@ export enum DaysOfWeek {
     Thursday = "Thursday",
     Friday = "Friday",
     Saturday = "Saturday",
-};
+}
 
 export enum Weekdays {
     Monday = DaysOfWeek.Monday,
@@ -17,7 +18,7 @@ export enum Weekdays {
     Wednesday = DaysOfWeek.Wednesday,
     Thursday = DaysOfWeek.Thursday,
     Friday = DaysOfWeek.Friday,
-};
+}
 
 export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';
 
@@ -27,7 +28,7 @@ export type CalendarDetails = {
     iconType: IconType;
     isPrimary: boolean;
     isBirthday: boolean;
-};
+}
 
 export type TimeConfig = {
     allDay: boolean;
@@ -35,20 +36,21 @@ export type TimeConfig = {
     endTime: string; // ISO timestamp
     multiDayEnd?: boolean;
     multiDayStart?: boolean;
-};
+}
 
 export interface PlannerEvent extends ListItem {
     color?: string;
     timeConfig?: TimeConfig;
     calendarId?: string;
     recurringId?: string;
-};
+}
 
 export interface RecurringEvent extends ListItem {
     startTime?: string; // HH:MM
     isWeekdayEvent?: boolean;
-};
+}
 
-export interface Deadline extends ListItem {
-    startTime: Date;
-};
+export interface CalendarData {
+    chipsMap: Record<string, EventChipProps[]>;
+    plannersMap: Record<string, PlannerEvent[]>;
+}

@@ -2,8 +2,9 @@ import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-e
 import { datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "./timestampUtils";
 import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
-import { PlannerEvent, RecurringEvent } from "./types";
+import { CalendarData, PlannerEvent, RecurringEvent } from "./types";
 import { ItemStatus } from "../sortedLists/constants";
+import { extractNameFromBirthdayText, openMessage } from "../../feature/birthdays/utils";
 
 // ---------- Data Model Generation ----------
 
@@ -50,36 +51,33 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
 }
 
 /**
- * 
+ * TODO: comment
  * @param event 
  * @param datestamp 
  * @param calendarDetails 
  * @returns 
  */
-function generateEventChip(event: CalendarEventReadable, datestamp: string): EventChipProps {
+function generateEventChip(event: CalendarEventReadable): EventChipProps {
     const calendar = event.calendar!;
 
-    // Process title for birthday events
-    let eventTitle = event.title;
-    const isBirthday = calendar.title === 'Birthdays';
-    if (isBirthday) {
-        eventTitle = eventTitle.split(/['’]s /)[0];
-    }
-
     const chipProps: EventChipProps = {
-        label: eventTitle,
+        label: event.title,
         iconConfig: {
             type: getCalendarIcon(calendar.title),
         },
         color: calendar.color
     };
 
+    if (calendar.title === 'Birthdays') {
+        chipProps.onClick = () => openMessage(extractNameFromBirthdayText(event.title));
+    }
+
     if (calendar.isPrimary || calendar.title === 'Calendar') {
         chipProps.planEvent = {
             status: ItemStatus.STATIC,
             sortId: 1,
             calendarId: event.id,
-            value: eventTitle,
+            value: event.title,
             timeConfig: {
                 startTime: event.startDate,
                 endTime: event.endDate!,
@@ -167,35 +165,26 @@ export async function getCalendarAccess() {
     }
 }
 
-/**
- * Fetches all events from the device calendar for the given date.
- * TODO: validate the events as needed
- * @param datestamp - YYYY-MM-DD
- */
-export async function generatePlannerEventMap(datestamps: string[]): Promise<Record<string, PlannerEvent[]>> {
-    // Find the overall date range
-    const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
-    const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
+export function generateEmptyCalendarDataMaps(datestamps: string[]) {
+    const chipsMap: Record<string, EventChipProps[]> = Object.fromEntries(
+        datestamps.map((date) => [date, []])
+    );
 
-    // Fetch all events in the date range
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
+    const plannersMap: Record<string, PlannerEvent[]> = Object.fromEntries(
+        datestamps.map((date) => [date, []])
+    );
 
-    // Build a map of datestamps to their corresponding PlannerEvent arrays
-    return datestamps.reduce((map, datestamp) => {
-        map[datestamp] = calendarEvents
-            .filter(calEvent => validateCalendarEvent(calEvent, datestamp))
-            .map(calendarEvent => generatePlannerEvent(calendarEvent, datestamp));
-        return map;
-    }, {} as Record<string, PlannerEvent[]>);
+    return { chipsMap, plannersMap };
 }
 
 /**
- * Map each timestamp to a list of event chip configs for that day.
- * Any event that is all day will be convertted into a chip.
- * @param timestamp - YYYY-MM-DD
+ *TODO: comment
+ * @param datestamps - YYYY-MM-DD
  */
-export async function generateEventChipMap(datestamps: string[]): Promise<Record<string, EventChipProps[]>> {
+export async function loadCalendarEventData(datestamps: string[]): Promise<CalendarData> {
     await getCalendarAccess();
+
+    const calendarData = generateEmptyCalendarDataMaps(datestamps);
 
     // Find the overall date range
     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
@@ -203,12 +192,17 @@ export async function generateEventChipMap(datestamps: string[]): Promise<Record
 
     // Fetch all events in the date range and format
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
-    return datestamps.reduce((map, datestamp) => {
-        map[datestamp] = calendarEvents
-            .filter(event => validateEventChip(event, datestamp))
-            .map(event => generateEventChip(event, datestamp));
-        return map;
-    }, {} as Record<string, EventChipProps[]>);
+    datestamps.forEach((datestamp) => {
+        calendarEvents.forEach((calEvent) => {
+            if (validateEventChip(calEvent, datestamp)) {
+                calendarData.chipsMap[datestamp].push(generateEventChip(calEvent));
+            }
+            if (validateCalendarEvent(calEvent, datestamp)) {
+                calendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
+            }
+        })
+    });
+    return calendarData;
 }
 
 // ---------- List Synchronization ----------

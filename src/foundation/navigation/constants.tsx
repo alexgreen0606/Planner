@@ -2,9 +2,10 @@ export const HEADER_HEIGHT = 46;
 
 export const BOTTOM_NAVIGATION_HEIGHT = 30;
 
-export enum Pages {
+export enum Screens {
     LISTS = 'LISTS',
     DASHBOARD = 'DASHBOARD',
-    PLANNERS = 'PLANNERS',
-    DEADLINES = 'DEADLINES'
+    PLANNERS = 'Planners',
+    DEADLINES = 'Deadlines',
+    RECURRING = 'Recurring',
 };

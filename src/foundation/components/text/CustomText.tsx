@@ -26,7 +26,8 @@ const styles = StyleSheet.create({
     },
     header: {
         color: PlatformColor('label'),
-        fontSize: 20
+        fontSize: 20,
+        fontWeight: 400
     },
     subHeader: {
         color: PlatformColor('secondaryLabel'),
@@ -73,10 +74,25 @@ const styles = StyleSheet.create({
         fontFamily: 'Jersey15-Regular',
         color: PlatformColor('systemIndigo'),
     },
+    age: {
+        fontSize: 24,
+        fontFamily: 'Jersey15-Regular',
+        color: PlatformColor('systemGreen'),
+    },
+    year: {
+        fontSize: 14,
+        fontFamily: 'Jersey15-Regular',
+        color: PlatformColor('systemGreen'),
+    },
     indicator: {
         fontSize: 7.5,
         color: PlatformColor('label'),
         fontWeight: 600
+    },
+    button: {
+        fontSize: 16,
+        fontWeight: 400,
+        fontFamily: 'System',
     },
 });
 

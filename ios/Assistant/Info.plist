@@ -31,6 +31,16 @@
         </array>
       </dict>
     </array>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Use to gather weather info.</string>
+    <key>NSContactsUsageDescription</key>
+    <string>This app requires access to contacts to send birthday messages</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app requires location access</string>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+      <string>sms</string>
+    </array>
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>LSMinimumSystemVersion</key>
@@ -44,6 +54,8 @@
       <key>NSAllowsLocalNetworking</key>
       <true/>
     </dict>
+    <key>NSContactsUsageDescription</key>
+    <string>Allow planner to access your contacts.</string>
     <key>UIAppFonts</key>
     <array>
       <string>Jersey15-Regular.ttf</string>

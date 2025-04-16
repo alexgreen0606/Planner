@@ -80,21 +80,16 @@ const FolderItemBanner = ({
 
             {/* Back Button */}
             {backButtonConfig.display && (
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={backButtonConfig.onClick}
+                <ButtonText
+                    platformColor='systemBlue'
+                    onClick={backButtonConfig.onClick}
+                    iconConfig={{
+                        type: 'chevronLeft',
+                        platformColor: 'systemBlue'
+                    }}
                 >
-                    <GenericIcon
-                        type='chevronLeft'
-                        size='m'
-                        platformColor='systemBlue'
-                    />
-                    <ButtonText
-                        label={backButtonConfig.label!}
-                        platformColor='systemBlue'
-                        onClick={backButtonConfig.onClick}
-                    />
-                </TouchableOpacity>
+                    {backButtonConfig.label}
+                </ButtonText>
             )}
         </View>
     );

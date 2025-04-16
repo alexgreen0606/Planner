@@ -10,7 +10,7 @@ import {
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
-import { Pages } from '../../foundation/navigation/constants';
+import { Screens } from '../../foundation/navigation/constants';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
@@ -20,7 +20,7 @@ import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { selectableColors } from '../../foundation/theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
-import { useNavigator } from '../../foundation/navigation/services/NavProvider';
+import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
 
 interface SortableFolderProps {
     folderId: string;
@@ -37,8 +37,11 @@ const SortedFolder = ({
     parentClickTrigger,
     parentFolderData,
 }: SortableFolderProps) => {
-    const { currentTab } = useNavigator();
+
+    const { currentScreen } = useNavigation();
+
     const { currentTextfield, setCurrentTextfield } = useSortableList();
+
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
 
@@ -123,7 +126,7 @@ const SortedFolder = ({
 
     const getItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps<FolderItem>> => {
         const isNew = item.status === ItemStatus.NEW;
-        const isOpen = currentTab === Pages.LISTS && !deleteModalOpen &&
+        const isOpen = currentScreen === Screens.LISTS && !deleteModalOpen &&
             (isNew ? item.status === ItemStatus.NEW : item.status === ItemStatus.EDIT);
 
         return {
@@ -180,7 +183,7 @@ const SortedFolder = ({
             create: createFolderItem,
             update: (newItem) => {
                 updateFolderItem(newItem);
-                // Manually reload the list
+                // Manually reload the list -> TODO: why?
                 SortedItems.refetchItems();
             },
             delete: (items) => deleteFolderItem(items[0].id, items[0].type)

@@ -35,6 +35,12 @@
             "./assets/fonts/Jersey15-Regular.ttf"
           ]
         }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow planner to access your contacts."
+        }
       ]
     ]
   }
