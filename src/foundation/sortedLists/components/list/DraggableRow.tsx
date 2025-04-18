@@ -25,7 +25,7 @@ import ListTextfield from "../ListTextfield";
 import GenericIcon from "../../../components/GenericIcon";
 import ThinLine from "./ThinLine";
 import { generateSortId, getParentSortIdFromPositions } from "../../utils";
-import { AUTO_SCROLL_SPEED, ItemStatus, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SEPARATOR_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
+import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SEPARATOR_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
 import { useDeleteScheduler } from "../../services/DeleteScheduler";
 import useDimensions from "../../../hooks/useDimensions";
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "../../../navigation/constants";

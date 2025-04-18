@@ -67,6 +67,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         buildList();
     }, [storageObject]);
 
+    // Register the list to reload when the user overscrolls
     useEffect(() => {
         if (!noReload) {
             registerReloadFunction(`${storageKey}-${storageId}`, buildList);

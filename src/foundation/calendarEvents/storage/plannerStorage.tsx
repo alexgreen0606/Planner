@@ -155,8 +155,6 @@ export async function saveEvent(event: PlannerEvent) {
 
     // TODO: why no delete time
 
-    console.log(newPlanner, 'saving planner')
-
     // Save the new planner
     savePlannerToStorage(newEvent.listId, newPlanner);
 
@@ -188,8 +186,8 @@ export async function deleteEvents(eventsToDelete: PlannerEvent[]) {
     }
 
     // Second pass - process each list in parallel
-    await Promise.all(Object.entries(eventsByList).map(async ([listId, listEvents]) => {
-        let newPlanner = await getPlannerFromStorage(listId);
+    Object.entries(eventsByList).map(async ([listId, listEvents]) => {
+        let newPlanner = getPlannerFromStorage(listId);
         const todayDatestamp = getTodayDatestamp();
 
         const recurringOrTodayCalendarIds = new Set<string>();
@@ -207,6 +205,6 @@ export async function deleteEvents(eventsToDelete: PlannerEvent[]) {
             .map(event => (recurringOrTodayCalendarIds.has(event.id) ? { ...event, status: ItemStatus.HIDDEN } : event))
             .filter(event => !regularDeleteIds.has(event.id));
 
-        await savePlannerToStorage(listId, newPlanner);
-    }));
+        savePlannerToStorage(listId, newPlanner);
+    });
 }

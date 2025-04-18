@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Pressable, TouchableOpacity, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, TouchableOpacity, View } from 'react-native';
 import { useSortableList } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
 import Animated, { runOnUI, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
@@ -64,12 +64,10 @@ const SortableList = <
     const {
         currentTextfield,
         setCurrentTextfield,
+        emptySpaceHeight
     } = useSortableList();
 
-    const {
-        isKeyboardOpen,
-        keyboardAbsoluteTop
-    } = useKeyboard();
+    const { keyboardAbsoluteTop } = useKeyboard();
 
     const positions = useSharedValue<Record<string, number>>({});
     const pendingItem = useRef<T | null>(null);
@@ -177,6 +175,13 @@ const SortableList = <
         top: keyboardAbsoluteTop.value
     }), [keyboardAbsoluteTop.value]);
 
+    const handleLayout = (event: LayoutChangeEvent) => {
+        const { height } = event.nativeEvent.layout;
+        if (fillSpace) {
+            emptySpaceHeight.value = height;
+        }
+    };
+
     return (
         <View style={{ flex: fillSpace ? 1 : 0 }}>
             <View>
@@ -210,9 +215,10 @@ const SortableList = <
                 <EmptyLabel
                     {...emptyLabelConfig}
                     onPress={handleEmptySpaceClick}
+                    onLayout={handleLayout}
                 />
             ) : (
-                <Pressable style={{ flex: 1 }} onPress={handleEmptySpaceClick} />
+                <Pressable style={{ flex: 1 }} onPress={handleEmptySpaceClick} onLayout={handleLayout} />
             )}
 
             {/* Modal */}

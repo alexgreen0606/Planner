@@ -3,8 +3,9 @@ import { Pressable, View, ViewStyle } from 'react-native';
 import globalStyles from '../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
+import { PressableProps } from 'react-native-gesture-handler';
 
-export interface EmptyLabelProps {
+export interface EmptyLabelProps extends PressableProps {
     label: string;
     onPress: () => void;
     iconConfig?: GenericIconProps;
@@ -15,11 +16,12 @@ export interface EmptyLabelProps {
 const EmptyLabel = ({
     label,
     iconConfig,
+    onLayout,
     onPress,
     style,
     fontSize = 14
 }: EmptyLabelProps) =>
-    <Pressable onPress={onPress} style={{ ...globalStyles.centered, ...style }}>
+    <Pressable onLayout={onLayout} onPress={onPress} style={{ ...globalStyles.centered, ...style }}>
         <View style={globalStyles.verticallyCentered}>
             <CustomText
                 type='label'
