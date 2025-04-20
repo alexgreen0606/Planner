@@ -42,9 +42,16 @@ const PlannerCard = ({
         setCurrentTextfield,
     } = useSortableList();
 
-    const {
-        isItemDeleting
-    } = useDeleteScheduler();
+    const { pendingDeleteItems } = useDeleteScheduler();
+
+    function isEventDeleting(planEvent: PlannerEvent) {
+        return pendingDeleteItems.some(deleteItem =>
+            // The planner event is deleting
+            deleteItem.id === planEvent.id &&
+            // The deleting event is from today's planner
+            deleteItem.listId === datestamp
+        );
+    }
 
     async function toggleCollapsed() {
         if (currentTextfield) {
@@ -123,8 +130,9 @@ const PlannerCard = ({
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
                 getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items, setCurrentTextfield)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
                 getToolbar={(event) => generateEventToolbar(event, handleToggleTimeModal, timeModalOpen)}
+                customIsItemDeleting={isEventDeleting}
                 onSaveTextfield={async (updatedItem) => {
                     await SortedEvents.persistItemToStorage(updatedItem);
                     if (updatedItem.timeConfig?.allDay) loadAllExternalData();

@@ -71,7 +71,8 @@ const DraggableRow = <
     saveTextfieldAndCreateNew,
     listLength,
     onDragEnd,
-    hideKeyboard
+    hideKeyboard,
+    customIsItemDeleting
 }: RowProps<T, P, M>) => {
 
     const {
@@ -89,6 +90,8 @@ const DraggableRow = <
     } = useSortableList();
 
     const { isItemDeleting } = useDeleteScheduler();
+
+    const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;
 
     /**
      * The current item, either from static props or from the context if it's being edited
@@ -509,8 +512,8 @@ const DraggableRow = <
                             hideKeyboard={hideKeyboard}
                             customStyle={{
                                 color: PlatformColor(customTextPlatformColor ??
-                                    (isItemDeleting(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
-                                textDecorationLine: isItemDeleting(item) ?
+                                    (isItemDeletingCustom(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
+                                textDecorationLine: isItemDeletingCustom(item) ?
                                     'line-through' : undefined,
                                 width: '100%'
                             }}

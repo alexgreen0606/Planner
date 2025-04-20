@@ -12,7 +12,6 @@ import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../.
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
-import { Screens } from '../../foundation/navigation/constants';
 
 interface SortablePlannerProps {
     loadAllExternalData: () => Promise<void>;
@@ -30,11 +29,11 @@ const TodayPlanner = ({
 
     const { isItemDeleting } = useDeleteScheduler();
 
-    const { registerReloadFunction: addReloadFunction } = useNavigation();
+    const { registerReloadFunction } = useNavigation();
 
     async function handleToggleTimeModal(item: PlannerEvent) {
         await toggleTimeModal(item, SortedEvents.toggleItemEdit, setTimeModalOpen);
-    };
+    }
 
     async function handleSaveEvent(planEvent: PlannerEvent): Promise<string | undefined> {
         return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
@@ -61,8 +60,12 @@ const TodayPlanner = ({
     });
 
     useEffect(() => {
-        addReloadFunction(`external-data`, loadAllExternalData);
+        registerReloadFunction(`external-data`, loadAllExternalData);
     }, []);
+
+    useEffect(() => {
+        SortedEvents.refetchItems();
+    }, [calendarEvents]);
 
     return (
         <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>

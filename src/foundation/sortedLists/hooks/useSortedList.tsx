@@ -91,6 +91,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     // Execute item deletion
     useEffect(() => {
         if (deletePending) {
+            console.info(scheduledDeletionItems, 'deleting')
             deleteItemsFromStorage([...scheduledDeletions as T[]]);
             setDeletePending(false);
         }

@@ -29,7 +29,7 @@ const EventChip = ({
 }: EventChipProps) => {
     const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const { pendingDeleteItems } = useDeleteScheduler();
 
     const toggleTimeModal = () => {
         setIsTimeModalOpen(!isTimeModalOpen);
@@ -40,7 +40,13 @@ const EventChip = ({
         toggleTimeModal();
     };
 
-    const isPendingDelete = planEvent && isItemDeleting(planEvent);
+    const isPendingDelete = planEvent &&
+        pendingDeleteItems.some(deleteItem =>
+            // The planner event is deleting
+            deleteItem.id === planEvent.id &&
+            // The deleting event is the end event
+            (deleteItem as PlannerEvent).timeConfig?.multiDayEnd
+        );
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
 
     const ChipContent = () => (

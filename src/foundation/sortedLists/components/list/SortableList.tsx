@@ -41,6 +41,7 @@ export interface DraggableListProps<
     initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     staticList?: boolean;
+    customIsItemDeleting?: (item: T) => boolean;
 }
 
 const SortableList = <
