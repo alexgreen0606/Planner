@@ -122,7 +122,7 @@ export const SortableListProviderContent = <T extends ListItem>({
 
     // Blur the space behind floating banners
     // If no floating banner exists, blur for the default header height
-    const UPPER_FADE_HEIGHT = floatingBannerHeight ? floatingBannerHeight + topSpacer : HEADER_HEIGHT;
+    const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + topSpacer;
 
     // --- List Variables ---
     const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
@@ -340,7 +340,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                         position: 'absolute',
                         top: 0,
                         zIndex: 1,
-                        opacity: 1 / i,
+                        opacity: .1,
                         backgroundColor: PlatformColor('systemBackground')
                     }} />
             )
