@@ -5,37 +5,36 @@ import DayBanner from './components/DayBanner';
 import globalStyles from '../../foundation/theme/globalStyles';
 import EventChip, { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { buildPlanner } from '../../foundation/calendarEvents/storage/plannerStorage';
+import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
 import { WeatherForecast } from '../weather/utils';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
-import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
+import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import Card from '../../foundation/components/Card';
-import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
-import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/timeModal/TimeModal';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
+import { generatePlanner } from '../../foundation/calendarEvents/calendarUtils';
+import EventCountChip from './components/EventCountChip';
+import { LIST_ITEM_HEIGHT } from '../../foundation/sortedLists/constants';
 
 interface PlannerCardProps {
     datestamp: string;
-    forecast?: WeatherForecast;
-    eventChips: EventChipProps[];
-    loadAllExternalData: () => Promise<void>;
     calendarEvents: PlannerEvent[];
+    eventChips: EventChipProps[];
+    forecast?: WeatherForecast;
+    loadAllExternalData: () => Promise<void>;
 };
 
 const PlannerCard = ({
     datestamp,
-    forecast,
+    calendarEvents,
     eventChips,
-    loadAllExternalData,
-    calendarEvents
+    forecast,
+    loadAllExternalData
 }: PlannerCardProps) => {
-    const [timeModalOpen, setTimeModalOpen] = useState(false);
-    const [collapsed, setCollapsed] = useState(false);
 
     const {
         currentTextfield,
@@ -44,11 +43,21 @@ const PlannerCard = ({
 
     const { pendingDeleteItems } = useDeleteScheduler();
 
+    const [timeModalOpen, setTimeModalOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(true);
+
+    // Reload the list whenever the calendar events change
+    useEffect(() => {
+        SortedEvents.refetchItems();
+    }, [calendarEvents]);
+
+    // ------------- Utility Functions -------------
+
     function isEventDeleting(planEvent: PlannerEvent) {
         return pendingDeleteItems.some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
-            // The deleting event is from today's planner
+            // and is rooted in this planner (deleting multi-day start events should not mark the end event as deleting)
             deleteItem.listId === datestamp
         );
     }
@@ -62,6 +71,8 @@ const PlannerCard = ({
         setCollapsed(curr => !curr);
     };
 
+    // ------------- List Management Utils -------------
+
     async function handleToggleTimeModal(planEvent: PlannerEvent) {
         await toggleTimeModal(planEvent, SortedEvents.toggleItemEdit, setTimeModalOpen);
     };
@@ -74,18 +85,15 @@ const PlannerCard = ({
         await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
     }
 
-    const getItemsFromStorageObject = (planner: PlannerEvent[]) => {
-        return buildPlanner(datestamp, planner, calendarEvents);
+    const getItemsFromStorageObject = (planner: Planner) => {
+        return buildPlannerEvents(datestamp, planner, calendarEvents);
     };
 
-    useEffect(() => {
-        SortedEvents.refetchItems();
-    }, [calendarEvents])
-
-    const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
+    const SortedEvents = useSortedList<PlannerEvent, Planner>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: datestamp,
         getItemsFromStorageObject,
+        initializedStorageObject: generatePlanner(datestamp),
         storageConfig: {
             create: handleSaveEvent,
             update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
@@ -96,35 +104,33 @@ const PlannerCard = ({
 
     return (
         <Card
-            header={<DayBanner forecast={forecast} timestamp={datestamp} />}
-            footer={eventChips.length > 0 ?
-                <View style={styles.wrappedChips}>
+            header={
+                <DayBanner
+                    planner={SortedEvents.storageObject as Planner}
+                    toggleCollapsed={toggleCollapsed}
+                    forecast={forecast}
+                />
+            }
+            badge={SortedEvents.items.length > 0 &&
+                <EventCountChip count={SortedEvents.items.length} />
+            }
+            footer={eventChips.length > 0 &&
+                <View style={styles.chips}>
                     {eventChips.map(allDayEvent =>
                         <EventChip
                             key={`${allDayEvent.label}-${datestamp}`}
                             {...allDayEvent}
                         />
                     )}
-                </View> : undefined
+                </View>
             }
         >
-
-            {/* Collapse Control */}
-            <CollapseControl
-                itemCount={SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length}
-                itemName='plan'
-                onClick={toggleCollapsed}
-                display={!!SortedEvents.items.length}
-                collapsed={collapsed}
-            />
-
-            {/* Planner List */}
             <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>
                 listId={datestamp}
                 items={SortedEvents.items}
+                hideList={collapsed}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
-                hideList={collapsed}
                 onContentClick={SortedEvents.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
@@ -135,30 +141,19 @@ const PlannerCard = ({
                 customIsItemDeleting={isEventDeleting}
                 onSaveTextfield={async (updatedItem) => {
                     await SortedEvents.persistItemToStorage(updatedItem);
-                    if (updatedItem.timeConfig?.allDay) loadAllExternalData();
+                    if (updatedItem.timeConfig?.allDay) loadAllExternalData(); // TODO: is this needed?
                 }}
                 emptyLabelConfig={{
                     label: 'No Plans',
-                    style: { height: 40, paddingBottom: 8 }
+                    style: { height: LIST_ITEM_HEIGHT, paddingBottom: 8 }
                 }}
             />
-
-            {/* Collapse Control */}
-            <CollapseControl
-                itemCount={SortedEvents.items.filter(item => item.status !== ItemStatus.NEW).length}
-                itemName='plan'
-                onClick={toggleCollapsed}
-                display={SortedEvents.items.length > 15 && !collapsed}
-                collapsed={collapsed}
-                bottomOfListControl
-            />
-
         </Card>
     );
 };
 
 const styles = StyleSheet.create({
-    wrappedChips: {
+    chips: {
         ...globalStyles.verticallyCentered,
         width: '100%',
         flexWrap: 'wrap',

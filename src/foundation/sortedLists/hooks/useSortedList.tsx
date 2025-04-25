@@ -19,6 +19,7 @@ interface SortedListConfig<T extends ListItem, S> {
     setItemsInStorageObject?: (items: T[], currentObject: S) => S;
     storageConfig?: StorageHandlers<T>;
     noReload?: boolean;
+    initializedStorageObject?: S;
 }
 
 const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) => {
@@ -29,7 +30,8 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         getItemsFromStorageObject,
         setItemsInStorageObject,
         storageConfig,
-        noReload
+        noReload,
+        initializedStorageObject
     } = config;
 
     const {
@@ -58,7 +60,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     );
 
     const buildList = async () => {
-        const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? [] as S);
+        const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);
     };
 
@@ -210,6 +212,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         toggleItemDelete,
         toggleItemEdit,
         deleteSingleItemFromStorage,
+        storageObject: storageObject ?? initializedStorageObject
     };
 };
 

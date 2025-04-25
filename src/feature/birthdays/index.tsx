@@ -6,14 +6,15 @@ import SortableList from '../../foundation/sortedLists/components/list/SortableL
 import { BIRTHDAY_STORAGE_ID } from './constants';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
 import Card from '../../foundation/components/Card';
-import CollapseControl from '../../foundation/sortedLists/components/CollapseControl';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
 import AgeValue from './components/AgeValue';
 import { Birthday } from './types';
 import { markBirthdayContacted } from './storage/birthdayStorage';
 
+// TODO: complete refactor and styling
+
 interface BirthdayChecklistProps {
-    birthdays: Birthday[]; // stores the accurate list of today's birthdays
+    birthdays: Birthday[];
 };
 
 const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
@@ -55,15 +56,6 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                 </CustomText>
             }
             >
-
-                {/* Collapse Control */}
-                <CollapseControl
-                    itemCount={BirthdayList.items.length}
-                    itemName='birthday'
-                    onClick={toggleCollapsed}
-                    display={true}
-                    collapsed={collapsed}
-                />
 
                 {/* Birthday List */}
                 <SortableList<Birthday, never, never>

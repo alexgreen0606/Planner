@@ -55,7 +55,7 @@ const WeatherDisplay = ({
                     <View style={defaultStyles.icon}>
                         <SFSymbol
                             name={weatherCodeToFontistoIcon(weatherCode)}
-                            size={18}
+                            size={20}
                             multicolor
                             resizeMode='center'
                         />

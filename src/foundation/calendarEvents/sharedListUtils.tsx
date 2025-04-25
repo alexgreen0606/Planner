@@ -1,6 +1,19 @@
 import { isItemTextfield } from '../sortedLists/utils';
 import { deleteEvents, saveEvent } from './storage/plannerStorage';
-import { PlannerEvent } from './types';
+import { Planner, PlannerEvent } from './types';
+
+export function getEventsFromPlanner(
+    planner: Planner,
+): PlannerEvent[] {
+    return planner.events;
+}
+
+export function setEventsInPlanner(
+    events: PlannerEvent[],
+    planner: Planner,
+) {
+    return { planner, events };
+}
 
 /**
  * Toggles the time modal for a planner event

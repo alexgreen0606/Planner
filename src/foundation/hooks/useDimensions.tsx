@@ -6,10 +6,10 @@ const useDimensions = () => {
     const {width, height} = useWindowDimensions();
 
     return {
-        screenWidth: width,
-        screenHeight: height,
-        topSpacer: top,
-        bottomSpacer: bottom,
+        SCREEN_WIDTH: width,
+        SCREEN_HEIGHT: height,
+        TOP_SPACER: top,
+        BOTTOM_SPACER: bottom,
     }
 }
 

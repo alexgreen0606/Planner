@@ -2,14 +2,21 @@ import React, { ReactNode } from 'react';
 import { PlatformColor, StyleSheet, View, ViewStyle } from 'react-native';
 
 interface CardProps {
-    children: ReactNode;
     header?: ReactNode;
+    badge?: ReactNode;
     footer?: ReactNode;
     style?: ViewStyle;
+    children: ReactNode;
 }
 
-const Card = ({ children, header, footer, style }: CardProps) =>
-    <View style={{ ...styles.card, ...style }}>
+const Card = ({
+    header,
+    badge,
+    footer,
+    style,
+    children,
+}: CardProps) =>
+    <View style={[styles.card, style]}>
         {header && (
             <View style={styles.banner}>
                 {header}
@@ -21,17 +28,26 @@ const Card = ({ children, header, footer, style }: CardProps) =>
                 {footer}
             </View>
         )}
+        {badge && (
+            <View style={styles.badge}>
+                {badge}
+            </View>
+        )}
     </View>
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: PlatformColor('systemGray6'),
+        position: 'relative',
         borderRadius: 8,
+        backgroundColor: PlatformColor('systemGray6'),
     },
-    banner: {
-        paddingVertical: 8,
-        paddingHorizontal: 8
-    },
+    banner: { padding: 8 },
+    badge: {
+        position: 'absolute',
+        bottom: '100%',
+        right: 0,
+        transform: 'translate(8px,10px)'
+    }
 });
 
 export default Card;

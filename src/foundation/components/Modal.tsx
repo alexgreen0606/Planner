@@ -1,197 +1,252 @@
-import React, { ReactNode, useEffect, useState } from 'react';
-import { View, StyleSheet, ViewStyle, PlatformColor, TouchableOpacity } from 'react-native';
+import React, { ReactNode, useEffect } from 'react';
+import { View, StyleSheet, ViewStyle, PlatformColor, TouchableOpacity, ScrollView } from 'react-native';
 import { Portal } from 'react-native-paper';
 import CustomText from './text/CustomText';
-import LabelSublabel from './text/LabelSublabel';
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { LIST_SPRING_CONFIG } from '../sortedLists/constants';
-import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
-import { BlurView } from "@react-native-community/blur";
+import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BlurView } from "expo-blur";
 import ButtonText from './text/ButtonText';
 import useDimensions from '../hooks/useDimensions';
 
-const AnimatedModal = Animated.createAnimatedComponent(View);
+const Backdrop = Animated.createAnimatedComponent(View);
+const ModalContainer = Animated.createAnimatedComponent(View);
+const TopBlurBar = Animated.createAnimatedComponent(View);
+const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
+
+const MODAL_HEIGHT = 700;
+const TOP_BLUR_BAR_HEIGHT = 50;
 
 interface ModalProps {
+    open: boolean;
+    toggleModalOpen: () => void;
     title: string;
-    subTitle?: string;
     primaryButtonConfig: {
         label: string;
         onClick: () => void;
         platformColor?: string;
         disabled?: boolean;
     };
+    deleteButtonConfig?: {
+        label: string;
+        onClick: () => void;
+        hidden?: boolean
+    };
+    customStyle?: ViewStyle;
     children: ReactNode;
-    open: boolean;
-    width: number;
-    height: number;
-    toggleModalOpen: () => void;
-    style?: ViewStyle;
 }
 
 const Modal = ({
+    open,
+    toggleModalOpen,
     title,
     primaryButtonConfig,
+    deleteButtonConfig,
+    customStyle,
     children,
-    open,
-    width,
-    height,
-    subTitle,
-    toggleModalOpen,
-    style: customStyle
 }: ModalProps) => {
 
     const {
-        screenHeight,
-        bottomSpacer
+        SCREEN_HEIGHT,
+        BOTTOM_SPACER
     } = useDimensions();
 
-    const [isOnScreen, setIsOnScreen] = useState(false);
-    const top = useSharedValue(screenHeight);
+    const scrollRef = useAnimatedRef();
+    const scrollOffset = useSharedValue(0);
+    const modalAbsoluteTop = useSharedValue(SCREEN_HEIGHT);
 
+    // Animate modal open and closed
     useEffect(() => {
-        top.value = withSpring(
-            open ? (screenHeight - height) : screenHeight,
-            LIST_SPRING_CONFIG,
-            () => {
-            }
+        modalAbsoluteTop.value = withTiming(
+            open ? (SCREEN_HEIGHT - MODAL_HEIGHT) : SCREEN_HEIGHT,
+            { duration: 300 }
         );
     }, [open]);
 
-    useAnimatedReaction(
-        () => top.value,
-        (currentValue) => {
-            runOnJS(setIsOnScreen)(currentValue < screenHeight);
+    // Keep track of modal scroll position
+    const handler = useAnimatedScrollHandler({
+        onScroll: (event) => {
+            scrollOffset.value = event.contentOffset.y;
         }
-    );
+    });
 
     const backdropStyle = useAnimatedStyle(() => {
-        const progress = 1 - (top.value / screenHeight);
+        const opacity = interpolate(
+            modalAbsoluteTop.value,
+            [SCREEN_HEIGHT - MODAL_HEIGHT, SCREEN_HEIGHT],
+            [.8, 0],
+            Extrapolation.CLAMP
+        );
         return {
-            opacity: progress * 0.8,
-            display: top.value < screenHeight ? 'flex' : 'none',
+            opacity,
+            pointerEvents: modalAbsoluteTop.value === SCREEN_HEIGHT ? 'none' : 'auto'
         };
     });
 
-    const modalStyle = useAnimatedStyle(
-        () => {
-            return {
-                top: top.value,
-            }
-        },
-        [top.value]
-    );
+    const modalContainerStyle = useAnimatedStyle(() => ({
+        top: modalAbsoluteTop.value,
+    }));
+
+    const topBlurBarStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(
+            scrollOffset.value,
+            [0, 10],
+            [0, 1],
+            Extrapolation.CLAMP
+        )
+        return { opacity };
+    });
+
 
     return (
         <Portal>
 
             {/* Backdrop */}
-            {isOnScreen && (
-                <Animated.View
-                    style={[
-                        {
-                            flex: 1,
-                            backgroundColor: PlatformColor('systemBackground'),
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                        },
-                        backdropStyle
-                    ]}
-                >
-                    <TouchableOpacity
-                        onPress={toggleModalOpen}
-                        style={{ flex: 1 }}
-                        activeOpacity={1}
-                    />
-                </Animated.View>
-            )}
+            <Backdrop style={[
+                backdropStyle,
+                styles.backdrop
+            ]}>
+                <TouchableOpacity
+                    onPress={toggleModalOpen}
+                    activeOpacity={1}
+                    style={{ flex: 1 }}
+                />
+            </Backdrop>
 
             {/* Modal */}
-            <Portal>
-                <GestureHandlerRootView>
-                    <AnimatedModal style={modalStyle}>
-                        <View style={{
-                            ...styles.card,
-                            ...customStyle,
-                            width,
-                            height,
-                            position: 'relative'
-                        }}
+            <ModalContainer style={modalContainerStyle}>
+                <View style={[
+                    customStyle,
+                    styles.modal
+                ]}>
+                    <GestureHandlerRootView>
+                        <ScrollContainer
+                            ref={scrollRef}
+                            onScroll={handler}
+                            contentContainerStyle={[
+                                styles.scrollContainer,
+                                { paddingBottom: BOTTOM_SPACER }
+                            ]}
                         >
-                            <ScrollView contentContainerStyle={{
-                                paddingHorizontal: 16,
-                                paddingBottom: bottomSpacer,
-                                paddingTop: 50,
-                                flexGrow: 1
-                            }}
-                            >
 
-                                {/* Title */}
-                                <View style={{ display: 'flex', alignItems: 'center', paddingBottom: 32 }}>
-                                    {subTitle ?
-                                        <LabelSublabel
-                                            label={title}
-                                            subLabel={subTitle}
-                                            type='medium'
-                                        /> :
-                                        <CustomText type='header'>
-                                            {title}
-                                        </CustomText>
-                                    }
+                            {/* Title */}
+                            <View style={styles.title}>
+                                <CustomText type='header'>
+                                    {title}
+                                </CustomText>
+                            </View>
+
+                            {/* Content */}
+                            {children}
+
+                            <View style={{ flex: 1 }} />
+
+                            {/* Delete Button */}
+                            {!deleteButtonConfig?.hidden && (
+                                <View style={styles.deleteButton}>
+                                    <ButtonText
+                                        onClick={deleteButtonConfig?.onClick!}
+                                        platformColor='systemRed'
+                                    >
+                                        {deleteButtonConfig?.label}
+                                    </ButtonText>
                                 </View>
+                            )}
 
-                                {/* Content */}
-                                {children}
+                        </ScrollContainer>
 
-                            </ScrollView>
-
-                            {/* Blur Bar */}
+                        {/* Top Blur Bar */}
+                        <TopBlurBar style={[
+                            topBlurBarStyle,
+                            styles.topBlurBarContainer
+                        ]}>
                             <BlurView
-                                blurAmount={10}
-                                blurType='dark'
-                                style={{
-                                    height: 50,
-                                    width,
-                                    position: 'absolute',
-                                    borderTopRightRadius: 16,
-                                    borderTopLeftRadius: 16,
-                                    overflow: 'hidden',
-                                    top: 0
-                                }} />
+                                intensity={50}
+                                tint='systemUltraThinMaterial'
+                                style={styles.topBlurBar}
+                            />
+                        </TopBlurBar>
 
-                            {/* Cancel Button */}
-                            <View style={{ position: 'absolute', left: 16, top: 16 }}>
-                                <ButtonText
-                                    platformColor='secondaryLabel'
-                                    onClick={toggleModalOpen}
-                                >
-                                    Cancel
-                                </ButtonText>
-                            </View>
-
-                            {/* Primary Button */}
-                            <View style={{ position: 'absolute', right: 16, top: 16 }}>
-                                <ButtonText
-                                    platformColor={primaryButtonConfig.platformColor ?? 'systemBlue'}
-                                    onClick={primaryButtonConfig.onClick}
-                                >
-                                    {primaryButtonConfig.label}
-                                </ButtonText>
-                            </View>
+                        {/* Cancel Button */}
+                        <View style={styles.cancelButton}>
+                            <ButtonText
+                                onClick={toggleModalOpen}
+                                platformColor='secondaryLabel'
+                            >
+                                Cancel
+                            </ButtonText>
                         </View>
-                    </AnimatedModal>
-                </GestureHandlerRootView>
-            </Portal>
+
+                        {/* Primary Button */}
+                        <View style={styles.primaryButton}>
+                            <ButtonText
+                                onClick={primaryButtonConfig.onClick}
+                                platformColor={
+                                    primaryButtonConfig.disabled ? 'tertiaryLabel' :
+                                        primaryButtonConfig.platformColor
+                                }
+                            >
+                                {primaryButtonConfig.label}
+                            </ButtonText>
+                        </View>
+
+                    </GestureHandlerRootView>
+                </View>
+            </ModalContainer>
         </Portal>
     )
 }
 
 const styles = StyleSheet.create({
-    card: {
+    backdrop: {
+        position: 'absolute',
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        backgroundColor: PlatformColor('systemBackground')
+    },
+    modal: {
+        position: 'relative',
+        width: '100%',
+        height: MODAL_HEIGHT,
         backgroundColor: PlatformColor('systemGray6'),
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        paddingHorizontal: 16,
+        paddingTop: TOP_BLUR_BAR_HEIGHT
+    },
+    topBlurBarContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        height: TOP_BLUR_BAR_HEIGHT,
+        width: '100%'
+    },
+    topBlurBar: {
+        flex: 1,
+        borderTopRightRadius: 16,
+        borderTopLeftRadius: 16,
+        overflow: 'hidden',
+    },
+    title: {
+        alignItems: 'center',
+        paddingBottom: 32
+    },
+    primaryButton: {
+        position: 'absolute',
+        right: 16,
+        top: 16
+    },
+    cancelButton: {
+        position: 'absolute',
+        left: 16,
+        top: 16
+    },
+    deleteButton: {
+        alignItems: 'center',
+        width: '100%'
     },
 });
 

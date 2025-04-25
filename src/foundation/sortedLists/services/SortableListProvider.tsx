@@ -102,9 +102,9 @@ export const SortableListProviderContent = <T extends ListItem>({
 }: SortableListProviderProps) => {
 
     const {
-        screenWidth,
-        topSpacer,
-        bottomSpacer
+        SCREEN_WIDTH,
+        TOP_SPACER,
+        BOTTOM_SPACER
     } = useDimensions();
 
     const {
@@ -122,7 +122,7 @@ export const SortableListProviderContent = <T extends ListItem>({
 
     // Blur the space behind floating banners
     // If no floating banner exists, blur for the default header height
-    const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + topSpacer;
+    const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + TOP_SPACER;
 
     // --- List Variables ---
     const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
@@ -250,7 +250,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                 Extrapolation.CLAMP
             ),
             height: UPPER_FADE_HEIGHT,
-            width: screenWidth,
+            width: SCREEN_WIDTH,
             position: 'absolute',
             top: 0,
             zIndex: 2,
@@ -271,7 +271,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                 { rotate: `${loadingRotation.value}deg` },
             ],
             position: 'absolute',
-            top: topSpacer + OVERSCROLL_RELOAD_THRESHOLD / 3,
+            top: TOP_SPACER + OVERSCROLL_RELOAD_THRESHOLD / 3,
             alignSelf: 'center',
             zIndex: 1,
         };
@@ -279,7 +279,7 @@ export const SortableListProviderContent = <T extends ListItem>({
 
     const floatingBannerStyle = useAnimatedStyle(
         () => ({
-            top: Math.max(topSpacer, (header ? HEADER_HEIGHT : 0) + topSpacer - scrollOffset.value),
+            top: Math.max(TOP_SPACER, (header ? HEADER_HEIGHT : 0) + TOP_SPACER - scrollOffset.value),
         }),
         [scrollOffset.value]
     );
@@ -292,17 +292,25 @@ export const SortableListProviderContent = <T extends ListItem>({
         [keyboardHeight.value]
     );
 
-    const bottomBlurBarStyle = useAnimatedStyle(
-        () => {
-            const opacity = interpolate(
-                scrollOffset.value,
-                [scrollOffsetBounds.value.max - LIST_ITEM_HEIGHT, scrollOffsetBounds.value.max],
-                [1, 0],
-            );
-            return { opacity };
-        },
-        [scrollOffset.value, scrollOffsetBounds.value, emptySpaceHeight.value]
-    );
+    const bottomBlurBarStyle = useAnimatedStyle(() => {
+        const currentScrollBottom = scrollOffset.value + visibleHeight.value + BOTTOM_NAVIGATION_HEIGHT;
+        const shouldBeVisible = currentScrollBottom < contentHeight.value;
+
+        const opacity = interpolate(
+            currentScrollBottom,
+            [contentHeight.value - LIST_ITEM_HEIGHT, contentHeight.value],
+            [1, 0],
+            Extrapolation.CLAMP
+        );
+
+        return {
+            opacity: shouldBeVisible ? opacity : 0,
+        };
+    }, [
+        scrollOffset.value,
+        visibleHeight.value,
+        contentHeight.value,
+    ]);
 
     // ------------- Render Helper Functions -------------
 
@@ -314,7 +322,7 @@ export const SortableListProviderContent = <T extends ListItem>({
         const blurViews = [];
         const INTENSITY = 5;
         const NUM_VIEWS = 10;
-        const ADDITIONAL_BLUR_PADDING = 8;
+        const ADDITIONAL_BLUR_PADDING = 16;
 
         for (let i = 1; i <= NUM_VIEWS; i++) {
             blurViews.push(
@@ -323,8 +331,8 @@ export const SortableListProviderContent = <T extends ListItem>({
                     intensity={INTENSITY}
                     tint='systemUltraThinMaterialDark'
                     style={{
-                        height: ((UPPER_FADE_HEIGHT / NUM_VIEWS) * i) + ADDITIONAL_BLUR_PADDING,
-                        width: screenWidth,
+                        height: (UPPER_FADE_HEIGHT / NUM_VIEWS) * i,
+                        width: SCREEN_WIDTH,
                         position: 'absolute',
                         top: 0,
                         zIndex: 1,
@@ -335,8 +343,8 @@ export const SortableListProviderContent = <T extends ListItem>({
                 <View
                     key={`${i}-fade`}
                     style={{
-                        height: ((UPPER_FADE_HEIGHT / NUM_VIEWS) * i) + ADDITIONAL_BLUR_PADDING,
-                        width: screenWidth,
+                        height: ((UPPER_FADE_HEIGHT / NUM_VIEWS) * i),
+                        width: SCREEN_WIDTH,
                         position: 'absolute',
                         top: 0,
                         zIndex: 1,
@@ -350,6 +358,17 @@ export const SortableListProviderContent = <T extends ListItem>({
             <View>
                 {fadeViews}
                 {blurViews}
+                <BlurView
+                    intensity={4}
+                    tint='systemUltraThinMaterialDark'
+                    style={{
+                        height: UPPER_FADE_HEIGHT + ADDITIONAL_BLUR_PADDING,
+                        width: SCREEN_WIDTH,
+                        position: 'absolute',
+                        top: 0,
+                        zIndex: 1,
+                    }}
+                />
             </View>
         );
     };
@@ -387,7 +406,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                 scrollEventThrottle={SCROLL_THROTTLE}
                 scrollToOverflowEnabled={true}
                 onScroll={handler}
-                contentContainerStyle={{ flexGrow: 1, paddingTop: topSpacer }}
+                contentContainerStyle={{ flexGrow: 1, paddingTop: TOP_SPACER }}
                 onLayout={(event) => {
                     const { height } = event.nativeEvent.layout;
                     visibleHeight.value = height - BOTTOM_NAVIGATION_HEIGHT - keyboardHeight.value;
@@ -427,7 +446,7 @@ export const SortableListProviderContent = <T extends ListItem>({
 
                     {children}
 
-                    {/* Fill Space Behind Keyboard */}
+                    {/* Fill Space Behind Keyboard  TODO is this needed*/}
                     <KeyboardFiller style={keyboardFillerStyle} />
                 </View>
             </ScrollContainer>
@@ -443,8 +462,8 @@ export const SortableListProviderContent = <T extends ListItem>({
                     tint='systemUltraThinMaterial'
                     intensity={100}
                     style={{
-                        height: BOTTOM_NAVIGATION_HEIGHT + bottomSpacer,
-                        width: screenWidth,
+                        height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER,
+                        width: SCREEN_WIDTH,
                         position: 'absolute',
                         bottom: 0,
                         left: 0,

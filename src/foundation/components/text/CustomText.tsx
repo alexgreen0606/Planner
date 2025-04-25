@@ -2,14 +2,16 @@ import React from 'react';
 import { PlatformColor, StyleSheet, TextStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 
+export type TextType = keyof typeof styles;
+
 interface TextProps extends React.ComponentProps<typeof Text> {
-    type: keyof typeof styles;
+    type: TextType;
     children: React.ReactNode;
     style?: TextStyle;
 }
 
 const CustomText = ({ type, children, style, ...rest }: TextProps) =>
-    <Text style={{ ...styles[type], ...style }} {...rest} >
+    <Text style={[styles[type], style]} {...rest} >
         {children}
     </Text>
 
@@ -91,9 +93,13 @@ const styles = StyleSheet.create({
     },
     button: {
         fontSize: 16,
-        fontWeight: 400,
-        fontFamily: 'System',
+        fontWeight: 500,
     },
+    badge: {
+        fontSize: 14,
+        color: 'white',
+        fontWeight: 600
+    }
 });
 
 export default CustomText;

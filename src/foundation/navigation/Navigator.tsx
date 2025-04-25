@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { BOTTOM_NAVIGATION_HEIGHT, Screens } from './constants';
 import GenericIcon from '../components/GenericIcon';
 import useDimensions from '../hooks/useDimensions';
@@ -16,39 +16,53 @@ const Navigator = () => {
     } = useNavigation();
 
     const {
-        screenWidth,
-        bottomSpacer,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT,
+        BOTTOM_SPACER,
     } = useDimensions();
+
+    const screenStyles = [
+        styles.screen,
+        { height: SCREEN_HEIGHT, width: SCREEN_WIDTH }
+    ];
 
     return (
         <View style={{ flex: 1 }}>
-            <View style={{ flex: 1 }}>
 
-                {/* Screens */}
-                {currentScreen === Screens.DASHBOARD ? (
-                    <Today />
-                ) : currentScreen === Screens.LISTS ? (
-                    <Lists />
-                ) : (
-                    <Planners />
-                )}
-
+            {/* Screens */}
+            <View style={[
+                ...screenStyles,
+                {
+                    opacity: currentScreen === Screens.DASHBOARD ? 1 : 0,
+                    pointerEvents: currentScreen === Screens.DASHBOARD ? 'auto' : 'none'
+                }
+            ]}>
+                <Today />
+            </View>
+            <View style={[
+                ...screenStyles,
+                {
+                    opacity: currentScreen === Screens.LISTS ? 1 : 0,
+                    pointerEvents: currentScreen === Screens.LISTS ? 'auto' : 'none',
+                }
+            ]}>
+                <Lists />
+            </View>
+            <View style={[
+                ...screenStyles,
+                {
+                    opacity: ![Screens.LISTS, Screens.DASHBOARD].includes(currentScreen) ? 1 : 0,
+                    pointerEvents: ![Screens.LISTS, Screens.DASHBOARD].includes(currentScreen) ? 'auto' : 'none',
+                }
+            ]}>
+                <Planners />
             </View>
 
             {/* Bottom Navbar */}
-            <View style={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-evenly',
-                alignItems: 'flex-end',
-                width: screenWidth,
-                height: BOTTOM_NAVIGATION_HEIGHT,
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                paddingBottom: bottomSpacer - 8,
-                backgroundColor: 'transparent'
-            }}>
+            <View style={[
+                styles.navBar,
+                { paddingBottom: BOTTOM_SPACER - 8 }
+            ]}>
                 <GenericIcon
                     type='lists'
                     size='xl'
@@ -74,5 +88,25 @@ const Navigator = () => {
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    screen: {
+        position: 'absolute',
+        top: 0,
+        left: 0
+    },
+    navBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        height: BOTTOM_NAVIGATION_HEIGHT,
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems: 'flex-end',
+        backgroundColor: 'transparent',
+        zIndex: 1000
+    }
+});
 
 export default Navigator;

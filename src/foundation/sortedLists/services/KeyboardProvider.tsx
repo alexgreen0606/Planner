@@ -35,7 +35,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
     const keyboard = useAnimatedKeyboard();
 
     const {
-        screenHeight
+        SCREEN_HEIGHT
     } = useDimensions();
 
     const keyboardHeight = useDerivedValue(() => {
@@ -43,7 +43,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
     });
 
     const keyboardAbsoluteTop = useDerivedValue(() => {
-        return screenHeight - keyboardHeight.value;
+        return SCREEN_HEIGHT - keyboardHeight.value;
     });
 
     const isKeyboardOpen = useDerivedValue(() => {

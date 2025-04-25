@@ -1,29 +1,41 @@
 import React from 'react';
-import { View } from 'react-native';
+import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { WeatherForecast } from '../../weather/utils';
 import globalStyles from '../../../foundation/theme/globalStyles';
 import WeatherDisplay from '../../weather';
-import LabelSublabel from '../../../foundation/components/text/LabelSublabel';
-import { datestampToDayOfWeek, datestampToMonthDate, getTomorrowDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
+import { datestampToMonthDate, getTomorrowDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
+import { Planner } from '../../../foundation/calendarEvents/types';
+import CustomText from '../../../foundation/components/text/CustomText';
 
 interface DayBannerProps {
-    timestamp: string; // YYYY-MM-DD
+    planner: Planner;
+    toggleCollapsed: () => void;
     forecast?: WeatherForecast;
 }
 
 const DayBanner = ({
-    timestamp,
+    planner,
+    toggleCollapsed,
     forecast
-}: DayBannerProps) =>
-    <View style={globalStyles.spacedApart}>
+}: DayBannerProps) => planner &&
+    <TouchableOpacity onPress={toggleCollapsed} style={globalStyles.spacedApart}>
 
         {/* Date */}
-        <LabelSublabel
-            subLabel={datestampToMonthDate(timestamp)}
-            label={getTomorrowDatestamp() === timestamp ? 'Tomorrow' : datestampToDayOfWeek(timestamp)}
-            upperSublabel={getTomorrowDatestamp() === timestamp ? datestampToDayOfWeek(timestamp) : undefined}
-            type='medium'
-        />
+        <View>
+            <View style={{ flexDirection: 'row' }}>
+                {getTomorrowDatestamp() === planner.datestamp && (
+                    <CustomText type='subHeader' style={{ color: PlatformColor('label') }}>
+                        {planner.title}{' '}
+                    </CustomText>
+                )}
+                <CustomText type='subHeader'>
+                    {datestampToMonthDate(planner.datestamp)}
+                </CustomText>
+            </View>
+            <CustomText type='header'>
+                {getTomorrowDatestamp() === planner.datestamp ? 'Tomorrow' : planner.title}
+            </CustomText>
+        </View>
 
         {/* Weather */}
         {forecast && (
@@ -33,6 +45,6 @@ const DayBanner = ({
                 weatherCode={forecast.weatherCode}
             />
         )}
-    </View>
+    </TouchableOpacity>
 
 export default DayBanner;

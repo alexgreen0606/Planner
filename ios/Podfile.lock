@@ -1285,27 +1285,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-blur (4.4.1):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.01.01.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - react-native-date-picker (5.0.11):
     - DoubleConversion
     - glog
@@ -2032,7 +2011,6 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
-  - "react-native-blur (from `../node_modules/@react-native-community/blur`)"
   - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
@@ -2174,8 +2152,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
-  react-native-blur:
-    :path: "../node_modules/@react-native-community/blur"
   react-native-date-picker:
     :path: "../node_modules/react-native-date-picker"
   react-native-geolocation:
@@ -2308,7 +2284,6 @@ SPEC CHECKSUMS:
   React-logger: a11c709603e1a43c7a3d87746ab6981b21b7c5b5
   React-Mapbuffer: d126b87e242b2ad54c095c098cd73b18ebcf2798
   React-microtasksnativemodule: a68e53dbdea90ce0c96aa2566695141079c7dc5f
-  react-native-blur: d480b382e8ddb4d0c29cd5c4ebacd9f3eb997cc3
   react-native-date-picker: 463e4a22592dbc27a4d1d8a3356f81a88a50e0a7
   react-native-geolocation: 79343c06877301c296102ceef9d64e7e077a2af0
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba

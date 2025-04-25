@@ -30,6 +30,13 @@ export type CalendarDetails = {
     isBirthday: boolean;
 }
 
+export interface Planner {
+    datestamp: string;
+    title: string;
+    events: PlannerEvent[];
+    excludeRecurring: boolean;
+}
+
 export type TimeConfig = {
     allDay: boolean;
     startTime: string; // ISO timestamp

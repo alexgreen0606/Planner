@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import { buildPlanner } from '../../foundation/calendarEvents/storage/plannerStorage';
+import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/timeModal/TimeModal';
-import { PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
+import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
@@ -31,6 +31,14 @@ const TodayPlanner = ({
 
     const { registerReloadFunction } = useNavigation();
 
+    useEffect(() => {
+        registerReloadFunction(`external-data`, loadAllExternalData);
+    }, []);
+
+    useEffect(() => {
+        SortedEvents.refetchItems();
+    }, [calendarEvents]);
+
     async function handleToggleTimeModal(item: PlannerEvent) {
         await toggleTimeModal(item, SortedEvents.toggleItemEdit, setTimeModalOpen);
     }
@@ -43,11 +51,11 @@ const TodayPlanner = ({
         await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
     }
 
-    async function getItemsFromStorageObject(planner: PlannerEvent[]) {
-        return buildPlanner(datestamp, planner, calendarEvents);
+    async function getItemsFromStorageObject(planner: Planner) {
+        return buildPlannerEvents(datestamp, planner, calendarEvents);
     }
 
-    const SortedEvents = useSortedList<PlannerEvent, PlannerEvent[]>({
+    const SortedEvents = useSortedList<PlannerEvent, Planner>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: datestamp,
         getItemsFromStorageObject,
@@ -58,14 +66,6 @@ const TodayPlanner = ({
         },
         noReload: true
     });
-
-    useEffect(() => {
-        registerReloadFunction(`external-data`, loadAllExternalData);
-    }, []);
-
-    useEffect(() => {
-        SortedEvents.refetchItems();
-    }, [calendarEvents]);
 
     return (
         <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>

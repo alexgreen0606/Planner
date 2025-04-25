@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { LayoutChangeEvent, Pressable, TouchableOpacity, View } from 'react-native';
+import React, { useMemo, useRef } from 'react';
+import { LayoutChangeEvent, Pressable, View } from 'react-native';
 import { useSortableList } from '../../services/SortableListProvider';
 import uuid from 'react-native-uuid';
-import Animated, { runOnUI, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
     ListItem,
     ModifyItemConfig,
@@ -17,6 +17,9 @@ import { useKeyboard } from '../../services/KeyboardProvider';
 import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
 import { Portal } from 'react-native-paper';
 
+const ListContainer = Animated.createAnimatedComponent(View);
+const ToolbarContainer = Animated.createAnimatedComponent(View);
+
 export interface DraggableListProps<
     T extends ListItem,
     P extends ListItemUpdateComponentProps<T> = never,
@@ -24,24 +27,24 @@ export interface DraggableListProps<
 > {
     listId: string;
     items: T[];
-    hideList?: boolean;
-    fillSpace?: boolean;
-    disableDrag?: boolean;
     onSaveTextfield: (updatedItem: T) => Promise<void> | void | Promise<string | void>;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
-    getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
-    getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
+    getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
+    getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
     getToolbar?: (item: T) => ModifyItemConfig<T, P>;
     getModal?: (item: T) => ModifyItemConfig<T, M>;
-    initializeItem?: (item: ListItem) => T;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
-    staticList?: boolean;
+    initializeItem?: (item: ListItem) => T;
     customIsItemDeleting?: (item: T) => boolean;
+    hideList?: boolean;
+    fillSpace?: boolean;
+    disableDrag?: boolean;
+    staticList?: boolean;
 }
 
 const SortableList = <
@@ -77,7 +80,7 @@ const SortableList = <
     const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
-    // ------------- Utility Function -------------
+    // ------------- Empty Space Utilities -------------
 
     /**
      * Handles click on empty space to create a new textfield
@@ -87,6 +90,13 @@ const SortableList = <
             saveTextfieldAndCreateNew(currentList[currentList.length - 1]?.sortId ?? -1);
         }
     }
+
+    const computeEmptySpaceHeight = (event: LayoutChangeEvent) => {
+        const { height } = event.nativeEvent.layout;
+        if (fillSpace) {
+            emptySpaceHeight.value = height;
+        }
+    };
 
     // ------------- List Building -------------
 
@@ -161,65 +171,56 @@ const SortableList = <
     // ------------- Animations -------------
 
     // Animate the opening and closing of the list
-    const listContainerStyle = useAnimatedStyle(() => {
-        return {
-            height: withSpring(hideList ? 0 : currentList.length * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG),
-            position: 'relative',
-            overflow: 'hidden'
-        }
-    }, [currentList.length, hideList]);
+    const listContainerStyle = useAnimatedStyle(() => ({
+        height: withSpring(hideList ? 0 : currentList.length * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG),
+        position: 'relative',
+        overflow: 'hidden'
+    }));
 
     // Animate the toolbar above the textfield
     const toolbarStyle = useAnimatedStyle(() => ({
         left: 0,
         position: 'absolute',
         top: keyboardAbsoluteTop.value
-    }), [keyboardAbsoluteTop.value]);
-
-    const handleLayout = (event: LayoutChangeEvent) => {
-        const { height } = event.nativeEvent.layout;
-        if (fillSpace) {
-            emptySpaceHeight.value = height;
-        }
-    };
+    }));
 
     return (
         <View style={{ flex: fillSpace ? 1 : 0 }}>
-            <View>
 
-                {/* Upper Item Creator */}
+            {/* Upper Item Creator */}
+            {!hideList && currentList.length > 0 && (
                 <Pressable
                     onPress={() => saveTextfieldAndCreateNew(-1)}
                 >
                     <ThinLine />
                 </Pressable>
+            )}
 
-                {/* List */}
-                <Animated.View style={listContainerStyle}>
-                    {currentList.map((item) =>
-                        <DraggableRow<T, P, M>
-                            key={`${item.id}-row`}
-                            item={item}
-                            hideKeyboard={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
-                            positions={positions}
-                            saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
-                            listLength={currentList.length}
-                            {...rest}
-                            items={currentList}
-                        />
-                    )}
-                </Animated.View>
-            </View>
+            {/* List */}
+            <ListContainer style={listContainerStyle}>
+                {currentList.map((item) =>
+                    <DraggableRow<T>
+                        key={`${item.id}-row`}
+                        item={item}
+                        hideKeyboard={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
+                        positions={positions}
+                        saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
+                        listLength={currentList.length}
+                        {...rest}
+                        items={currentList}
+                    />
+                )}
+            </ListContainer>
 
             {/* Empty Label or Click Area */}
-            {currentList.length === 0 && emptyLabelConfig ? (
+            {currentList.length === 0 && emptyLabelConfig && !hideList ? (
                 <EmptyLabel
                     {...emptyLabelConfig}
                     onPress={handleEmptySpaceClick}
-                    onLayout={handleLayout}
+                    onLayout={computeEmptySpaceHeight}
                 />
-            ) : (
-                <Pressable style={{ flex: 1 }} onPress={handleEmptySpaceClick} onLayout={handleLayout} />
+            ) : !hideList && (
+                <Pressable style={{ flex: 1 }} onPress={handleEmptySpaceClick} onLayout={computeEmptySpaceHeight} />
             )}
 
             {/* Modal */}
@@ -230,9 +231,9 @@ const SortableList = <
             {/* Toolbar */}
             {Toolbar && toolbarConfig &&
                 <Portal>
-                    <Animated.View style={toolbarStyle}>
+                    <ToolbarContainer style={toolbarStyle}>
                         <Toolbar {...toolbarConfig.props} />
-                    </Animated.View>
+                    </ToolbarContainer>
                 </Portal>
             }
         </View>

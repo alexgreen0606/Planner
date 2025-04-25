@@ -17,10 +17,12 @@ import RecurringPlanner from '../../feature/recurringPlanners/components/Recurri
 import Deadlines from '../../feature/deadlines';
 import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
 import { Screens } from '../../foundation/navigation/constants';
+import PopoverList from '../../foundation/components/PopoverList';
+import PlannerSetModal from '../../feature/planner/components/PlannerSetModal';
+import { MMKV, useMMKVObject } from 'react-native-mmkv';
+import { PLANNER_SETS_KEY, PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../feature/planner/types';
 
-const defaultPlannerOptions = [
-  { label: 'Next 7 Days', value: getNextSevenDayDatestamps() },
-];
+const defaultPlannerSet = { id: 'default', title: 'Next 7 Days', dates: getNextSevenDayDatestamps() };
 
 const Planners = () => {
   const datestamps = useMemo(() => getNextSevenDayDatestamps(), []);
@@ -32,11 +34,16 @@ const Planners = () => {
       }
     })
   }, [])
+
+  const storage = new MMKV({ id: PLANNER_SETS_STORAGE_ID });
+  const [plannerSets] = useMMKVObject<PlannerSet[]>(PLANNER_SETS_KEY, storage);
+
+  const [plannerSetModalOpen, setPlannerSetModalOpen] = useState(false);
   const [selectedRecurring, setSelectedRecurring] = useState({ label: 'Weekdays', value: [RecurringPlannerKeys.WEEKDAYS] });
-  const [selectedPlanners, setSelectedPlanners] = useState({ label: 'Next 7 Days', value: getNextSevenDayDatestamps() });
+  const [plannerSet, setPlannerSet] = useState(defaultPlannerSet);
   const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
-    "2025-03-27": {
-      "date": "2025-03-27",
+    "2025-04-23": {
+      "date": "2025-04-23",
       "weatherCode": 61,
       "weatherDescription": "Slight rain",
       "temperatureMax": 57,
@@ -44,7 +51,7 @@ const Planners = () => {
       "precipitationSum": 0.06,
       "precipitationProbabilityMax": 24
     },
-    "2025-03-28": {
+    "2025-04-24": {
       "date": "2025-03-28",
       "weatherCode": 65,
       "weatherDescription": "Heavy rain",
@@ -53,7 +60,7 @@ const Planners = () => {
       "precipitationSum": 1.19,
       "precipitationProbabilityMax": 32
     },
-    "2025-03-29": {
+    "2025-04-25": {
       "date": "2025-03-29",
       "weatherCode": 3,
       "weatherDescription": "Overcast",
@@ -62,7 +69,7 @@ const Planners = () => {
       "precipitationSum": 0,
       "precipitationProbabilityMax": 3
     },
-    "2025-03-30": {
+    "2025-04-26": {
       "date": "2025-03-30",
       "weatherCode": 63,
       "weatherDescription": "Moderate rain",
@@ -71,7 +78,7 @@ const Planners = () => {
       "precipitationSum": 0.46,
       "precipitationProbabilityMax": 66
     },
-    "2025-03-31": {
+    "2025-04-27": {
       "date": "2025-03-31",
       "weatherCode": 51,
       "weatherDescription": "Light drizzle",
@@ -80,7 +87,7 @@ const Planners = () => {
       "precipitationSum": 0.02,
       "precipitationProbabilityMax": 34
     },
-    "2025-04-01": {
+    "2025-04-28": {
       "date": "2025-04-01",
       "weatherCode": 53,
       "weatherDescription": "Moderate drizzle",
@@ -89,7 +96,7 @@ const Planners = () => {
       "precipitationSum": 0.09,
       "precipitationProbabilityMax": 34
     },
-    "2025-04-02": {
+    "2025-04-29": {
       "date": "2025-04-02",
       "weatherCode": 53,
       "weatherDescription": "Moderate drizzle",
@@ -106,6 +113,10 @@ const Planners = () => {
     setCurrentScreen,
     currentScreen
   } = useNavigation();
+
+  function togglePlannerSetModalOpen() {
+    setPlannerSetModalOpen(curr => !curr);
+  }
 
   /**
    * Loads in all chip, weather, and calendar data.
@@ -160,25 +171,19 @@ const Planners = () => {
 
             {/* Planners */}
             <View style={styles.dropdownContainer} >
-              <Dropdown
-                data={defaultPlannerOptions}
-                maxHeight={300}
-                selectedTextStyle={styles.selectedTextStyle}
-                style={styles.dropdown}
-                containerStyle={{ borderWidth: 0 }}
-                renderItem={renderDropdownItem}
-                labelField="label"
-                valueField="value"
-                value={selectedPlanners}
-                onChange={setSelectedPlanners}
+              <PopoverList<PlannerSet>
+                getLabelFromObject={(set) => set.title}
+                options={[defaultPlannerSet, ...(plannerSets ?? [])]}
+                onChange={(newSet) => setPlannerSet(newSet)}
               />
               <GenericIcon
                 type='add'
-                platformColor='secondaryLabel'
+                platformColor='systemBlue'
+                onClick={togglePlannerSetModalOpen}
               />
             </View>
             <View style={styles.planners}>
-              {selectedPlanners.value.map((datestamp) =>
+              {plannerSet.dates.map((datestamp) =>
                 <PlannerCard
                   key={`${datestamp}-planner`}
                   datestamp={datestamp}
@@ -224,6 +229,8 @@ const Planners = () => {
           <Deadlines />
         )}
       </SortableListProvider>
+
+      <PlannerSetModal open={plannerSetModalOpen} toggleModalOpen={togglePlannerSetModalOpen} />
     </View>
   );
 };
@@ -233,9 +240,8 @@ const styles = StyleSheet.create({
     height: 600
   },
   planners: {
-    paddingHorizontal: 16,
-    gap: 32,
-    paddingBottom: 32
+    padding: 8,
+    gap: 26,
   },
   selectedTextStyle: {
     color: PlatformColor('secondaryLabel'),

@@ -10,6 +10,7 @@ const sizeMap = {
     l: 18,
     xl: 25
 };
+
 const iconMap = {
     transfer: 'arrow.uturn.down',
     recurringCalendar: 'arrow.trianglehead.2.clockwise.rotate.90',
@@ -40,6 +41,7 @@ const iconMap = {
 };
 
 export type IconType = keyof typeof iconMap;
+
 export interface GenericIconProps<T = void> {
     type: IconType;
     size?: 'xs' | 's' | 'm' | 'l' | 'xl';
@@ -59,14 +61,23 @@ const GenericIcon = <T,>({
 }: GenericIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
     return (
-        <Wrapper activeOpacity={hideRipple ? 1 : 0} onPress={() => onClick?.()} style={{
-            width: sizeMap[size],
-            height: sizeMap[size],
-            alignItems: 'center',
-            justifyContent: 'center',
-            ...style
-        }}>
-            <SFSymbol resizeMode='center' name={iconMap[type]} size={sizeMap[size]} color={isValidPlatformColor(color) ? PlatformColor(color) : color} />
+        <Wrapper
+            activeOpacity={hideRipple ? 1 : 0}
+            onPress={() => onClick?.()}
+            style={{
+                width: sizeMap[size],
+                height: sizeMap[size],
+                alignItems: 'center',
+                justifyContent: 'center',
+                ...style
+            }}
+        >
+            <SFSymbol
+                resizeMode='center'
+                name={iconMap[type]}
+                size={sizeMap[size]}
+                color={isValidPlatformColor(color) ? PlatformColor(color) : color}
+            />
         </Wrapper>
     )
 };

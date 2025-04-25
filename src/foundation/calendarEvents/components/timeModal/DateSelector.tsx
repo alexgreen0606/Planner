@@ -62,16 +62,14 @@ const DateSelector = ({
         }
     }, [mode, hide]);
 
-    const animatedContainerStyle = useAnimatedStyle(() => {
-        return {
-            height: containerHeight.value,
-            overflow: 'hidden',
-        };
-    }, [containerHeight.value]);
+    const animatedContainerStyle = useAnimatedStyle(() => ({
+        height: containerHeight.value,
+        overflow: 'hidden',
+    }));
 
     return (
         <View style={{ alignItems: 'center' }}>
-            <View style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: TIME_MODAL_INPUT_HEIGHT }}>
+            <View style={{ alignItems: 'center', justifyContent: 'center', height: TIME_MODAL_INPUT_HEIGHT }}>
                 <View style={globalStyles.spacedApart}>
                     <CustomText type='standard' style={{ color: PlatformColor(hide ? 'tertiaryLabel' : 'label') }}>{label}</CustomText>
                     <View style={{ flex: 1 }} />

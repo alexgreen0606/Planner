@@ -9,8 +9,8 @@ import {
     isTimestampValid,
     datestampToDayOfWeek,
 } from '../timestampUtils';
-import { getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from '../calendarUtils';
-import { PLANNER_STORAGE_ID, PlannerEvent } from '../types';
+import { generatePlanner, getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from '../calendarUtils';
+import { Planner, PLANNER_STORAGE_ID, PlannerEvent, RecurringEvent } from '../types';
 import { ItemStatus } from '../../sortedLists/constants';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
@@ -18,8 +18,18 @@ const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 /**
  * Fetches the planner with the given ID from storage.
  */
-export function getPlannerFromStorage(plannerId: string): PlannerEvent[] {
-    const eventsString = storage.getString(plannerId);
+export function getPlannerFromStorage(datestamp: string): Planner {
+    const eventsString = storage.getString(datestamp);
+    if (eventsString)
+        return JSON.parse(eventsString);
+    return generatePlanner(datestamp);
+};
+
+/**
+ * Fetches the planner with the given ID from storage.
+ */
+export function getRecurringPlannerFromStorage(datestamp: string): RecurringEvent[] {
+    const eventsString = storage.getString(datestamp);
     if (eventsString)
         return JSON.parse(eventsString);
     return [];
@@ -28,8 +38,8 @@ export function getPlannerFromStorage(plannerId: string): PlannerEvent[] {
 /**
  * Saves a planner to storage.
  */
-export function savePlannerToStorage(plannerId: string, newPlanner: PlannerEvent[]) {
-    storage.set(plannerId, JSON.stringify(newPlanner));
+export function savePlannerToStorage(datestamp: string, newPlanner: Planner) {
+    storage.set(datestamp, JSON.stringify(newPlanner));
 };
 
 /**
@@ -74,16 +84,20 @@ function getCarryoverEventsAndCleanStorage(): PlannerEvent[] {
 /**
  * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
  */
-export async function buildPlanner(datestamp: string, planner: PlannerEvent[], calendarEvents: PlannerEvent[]): Promise<PlannerEvent[]> {
+export async function buildPlannerEvents(
+    datestamp: string,
+    planner: Planner,
+    calendarEvents: PlannerEvent[]
+): Promise<PlannerEvent[]> {
 
     // Sync the planner with the recurring weekday planner
     if ([getTodayDatestamp(), getTomorrowDatestamp()].includes(datestamp)) {
-        const recurringPlanner = getPlannerFromStorage(datestampToDayOfWeek(datestamp));
-        planner = syncPlannerWithRecurring(recurringPlanner, planner, datestamp);
+        const recurringPlanner = getRecurringPlannerFromStorage(datestampToDayOfWeek(datestamp));
+        planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
     }
 
-    // Sync the planner with the apple calendar
-    planner = syncPlannerWithCalendar(calendarEvents, planner, datestamp);
+    // Sync the planner with the device calendar
+    planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
 
     // Delete past planners and carry over incomplete yesterday events
     if (datestamp === getTodayDatestamp()) {
@@ -97,14 +111,14 @@ export async function buildPlanner(datestamp: string, planner: PlannerEvent[], c
                     listId: datestamp,
                     sortId: -1,
                 };
-                planner.push(newEvent);
-                newEvent.sortId = generateSortIdByTime(newEvent, planner);
+                planner.events.push(newEvent);
+                newEvent.sortId = generateSortIdByTime(newEvent, planner.events);
             });
             savePlannerToStorage(datestamp, planner);
         }
     }
 
-    return planner;
+    return planner.events;
 };
 
 /**
@@ -134,23 +148,24 @@ export async function saveEvent(event: PlannerEvent) {
 
         // Remove the event from its planner if it is an all-day event
         if (event.timeConfig?.allDay) {
-            const plannerWithoutEvent = newPlanner.filter(existingEvent => existingEvent.id !== event.id);
-            savePlannerToStorage(newEvent.listId, plannerWithoutEvent);
+            newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
+            savePlannerToStorage(newEvent.listId, newPlanner);
+            return;
         }
     }
 
     // Update the list with the new event
-    const existingIndex = newPlanner.findIndex(existingEvent => existingEvent.id === event.id);
+    const existingIndex = newPlanner.events.findIndex(existingEvent => existingEvent.id === event.id);
     if (existingIndex !== -1) {
-        const existingEventCalendarId = newPlanner[existingIndex]!.calendarId;
+        const existingEventCalendarId = newPlanner.events[existingIndex]!.calendarId;
         if (existingEventCalendarId && !newEvent.calendarId) {
             // Handle deletion of calendar events
             await getCalendarAccess();
             await RNCalendarEvents.removeEvent(existingEventCalendarId);
         }
-        newPlanner.splice(existingIndex, 1, newEvent);
+        newPlanner.events.splice(existingIndex, 1, newEvent);
     } else {
-        newPlanner.push(newEvent);
+        newPlanner.events.push(newEvent);
     }
 
     // TODO: why no delete time
@@ -201,7 +216,7 @@ export async function deleteEvents(eventsToDelete: PlannerEvent[]) {
             }
         }
 
-        newPlanner = newPlanner
+        newPlanner.events = newPlanner.events
             .map(event => (recurringOrTodayCalendarIds.has(event.id) ? { ...event, status: ItemStatus.HIDDEN } : event))
             .filter(event => !regularDeleteIds.has(event.id));
 

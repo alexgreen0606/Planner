@@ -16,17 +16,17 @@ interface PlannerBannerProps {
 const PlannersBanner = ({ mode, setMode }: PlannerBannerProps) => {
 
     const {
-        topSpacer,
-        screenWidth
+        TOP_SPACER,
+        SCREEN_WIDTH
     } = useDimensions();
 
     return (
         <View style={{
             display: 'flex',
             position: 'absolute',
-            left: screenWidth * 0.05,
+            left: SCREEN_WIDTH * 0.05,
             top: 0,
-            width: screenWidth * 0.9,
+            width: SCREEN_WIDTH * 0.9,
             height: HEADER_HEIGHT,
         }
         }>

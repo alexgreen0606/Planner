@@ -14,9 +14,7 @@ import Animated, {
 import {
     ListItem,
     ListItemIconConfig,
-    ListItemUpdateComponentProps,
 } from "../../types";
-import { DraggableListProps } from "./SortableList";
 import { useSortableList } from "../../services/SortableListProvider";
 import { useCallback, useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
@@ -31,32 +29,37 @@ import useDimensions from "../../../hooks/useDimensions";
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "../../../navigation/constants";
 import globalStyles from "../../../theme/globalStyles";
 
+const Row = Animated.createAnimatedComponent(View);
+
 enum AutoScrollDirection {
     UP = 'UP',
     DOWN = 'DOWN'
 }
 
-interface RowProps<
-    T extends ListItem,
-    P extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>,
-    M extends ListItemUpdateComponentProps<T> = ListItemUpdateComponentProps<T>
-> extends Omit<DraggableListProps<T, P, M>, 'initializeNewItem' | 'staticList' | 'hideList' | 'listId' | 'handleSaveTextfield' | 'onSaveTextfield' | 'emptyLabelConfig' | 'getModal' | 'getToolbar'> {
+export interface RowProps<T extends ListItem> {
     item: T;
-    positions: SharedValue<Record<string, number>>;
-    saveTextfieldAndCreateNew: (parentSortId?: number) => Promise<void>;
+    items: T[];
     listLength: number;
+    positions: SharedValue<Record<string, number>>;
+    disableDrag?: boolean;
     hideKeyboard: boolean;
+    saveTextfieldAndCreateNew: (parentSortId?: number) => Promise<void>;
+    onDeleteItem: (item: T) => Promise<void> | void;
+    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
+    onContentClick: (item: T) => void;
+    getTextfieldKey: (item: T) => string;
+    handleValueChange?: (text: string, item: T) => T;
+    getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
+    getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
+    getRowTextPlatformColor?: (item: T) => string;
+    customIsItemDeleting?: (item: T) => boolean;
 }
 
 /**
  * A draggable row component for sortable lists that supports drag-to-reorder,
- * textfields, icons, modals, and popovers.
+ * textfields, and icons.
  */
-const DraggableRow = <
-    T extends ListItem,
-    P extends ListItemUpdateComponentProps<T>,
-    M extends ListItemUpdateComponentProps<T>
->({
+const DraggableRow = <T extends ListItem>({
     positions,
     getTextfieldKey,
     item: staticItem,
@@ -73,12 +76,12 @@ const DraggableRow = <
     onDragEnd,
     hideKeyboard,
     customIsItemDeleting
-}: RowProps<T, P, M>) => {
+}: RowProps<T>) => {
 
     const {
-        bottomSpacer,
-        screenHeight,
-        topSpacer
+        BOTTOM_SPACER,
+        SCREEN_HEIGHT,
+        TOP_SPACER
     } = useDimensions();
 
     const {
@@ -90,23 +93,21 @@ const DraggableRow = <
     } = useSortableList();
 
     const { isItemDeleting } = useDeleteScheduler();
-
     const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;
 
     /**
-     * The current item, either from static props or from the context if it's being edited
+     * The current item, either from static props or from the context if it is being edited.
      */
     const item = useMemo(() =>
         currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
         [currentTextfield, staticItem]
     );
 
-    const isLoadingInitialPosition = useSharedValue(!!positions.value[item.id]);
-
     // ------------- Animation Variables -------------
-    const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + topSpacer; // TODO: add in height of floating navbar too
-    const BOTTOM_AUTO_SCROLL_BOUND = screenHeight - bottomSpacer - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
+    const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER; // TODO: add in height of floating navbar too
+    const BOTTOM_AUTO_SCROLL_BOUND = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
+    const isAwaitingInitialPosition = useSharedValue(!!positions.value[item.id]);
     const isDragging = useSharedValue(0);
     const isManualScrolling = useSharedValue(false);
     const top = useSharedValue(0);
@@ -400,9 +401,9 @@ const DraggableRow = <
         () => positions.value[item.id],
         (currPosition, prevPosition) => {
             if (currPosition !== prevPosition && !isDragging.value) {
-                if (isLoadingInitialPosition.value || item.status === ItemStatus.NEW) {
+                if (isAwaitingInitialPosition.value || item.status === ItemStatus.NEW) {
                     top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
-                    isLoadingInitialPosition.value = false;
+                    isAwaitingInitialPosition.value = false;
                 } else {
                     top.value = withSpring(positions.value[item.id] * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG);
                 }
@@ -437,30 +438,28 @@ const DraggableRow = <
     /**
      * Animated style for positioning the row and scaling when dragged.
      */
-    const animatedRowStyle = useAnimatedStyle(() => {
-        return {
-            top: top.value,
-            transform: [
-                {
-                    scale: withSpring(isDragging.value ? 0.8 : 1, {
-                        damping: 15,
-                        stiffness: 200,
-                        mass: 1,
-                        overshootClamping: true, // TODO: make opacity instead
-                    }),
-                },
-            ],
-        }
-    }, [top.value, isDragging.value]);
+    const animatedRowStyle = useAnimatedStyle(() => ({
+        top: top.value,
+        transform: [
+            {
+                scale: withSpring(isDragging.value ? 0.8 : 1, {
+                    damping: 15,
+                    stiffness: 200,
+                    mass: 1,
+                    overshootClamping: true, // TODO: make opacity instead
+                })
+            }
+        ]
+    }));
 
     // ------------- Render Helper Functions -------------
 
     const renderIcon = (config: ListItemIconConfig<T>, type: 'left' | 'right') => {
         if (config.hideIcon) return null;
 
-        const iconStyle = type === 'left' ? { 
-            marginLeft: LIST_ICON_SPACING, 
-            marginBottom: LIST_SEPARATOR_HEIGHT 
+        const iconStyle = type === 'left' ? {
+            marginLeft: LIST_ICON_SPACING,
+            marginBottom: LIST_SEPARATOR_HEIGHT
         } : {
             marginRight: LIST_ICON_SPACING / 2
         }
@@ -492,9 +491,8 @@ const DraggableRow = <
         return null;
     };
 
-
     return (
-        <Animated.View style={[animatedRowStyle, styles.row]}>
+        <Row style={[animatedRowStyle, styles.row]}>
 
             {/* Left Icon */}
             {leftIconConfig && renderIcon(leftIconConfig, 'left')}
@@ -506,16 +504,17 @@ const DraggableRow = <
                         <ListTextfield<T>
                             key={getTextfieldKey(item)}
                             item={item}
-                            isLoadingInitialPosition={isLoadingInitialPosition}
                             onChange={handleTextfieldChange}
                             onSubmit={handleTextfieldSave}
                             hideKeyboard={hideKeyboard}
+                            isAwaitingInitialPosition={isAwaitingInitialPosition}
                             customStyle={{
                                 color: PlatformColor(customTextPlatformColor ??
-                                    (isItemDeletingCustom(item) ? 'tertiaryLabel' : item.recurringId ? 'secondaryLabel' : 'label')),
+                                    (isItemDeletingCustom(item) ? 'tertiaryLabel' :
+                                        item.recurringId ? 'secondaryLabel' : 'label')
+                                ),
                                 textDecorationLine: isItemDeletingCustom(item) ?
                                     'line-through' : undefined,
-                                width: '100%'
                             }}
                         />
                     </GestureDetector>
@@ -532,17 +531,17 @@ const DraggableRow = <
                 </GestureDetector>
             </View>
 
-        </Animated.View>
+        </Row>
     )
 };
 
 const styles = StyleSheet.create({
     row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        height: LIST_ITEM_HEIGHT,
-        width: '100%',
         position: 'absolute',
+        alignItems: 'center',
+        flexDirection: 'row',
+        width: '100%',
+        height: LIST_ITEM_HEIGHT,
     },
     content: {
         flex: 1,

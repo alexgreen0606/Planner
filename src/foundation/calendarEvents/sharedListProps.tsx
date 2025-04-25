@@ -1,12 +1,10 @@
-import { View } from "react-native";
-import { IconType } from "../components/GenericIcon";
 import Toolbar, { ToolbarProps } from "../sortedLists/components/ListItemToolbar";
 import { ModifyItemConfig } from "../sortedLists/types";
 import { isItemTextfield } from "../sortedLists/utils";
 import TimeModal from "./components/timeModal/TimeModal";
 import TimeValue from "./components/values/TimeValue";
 import { extractTimeValue, generateSortIdByTime, getEventTime } from "./timestampUtils";
-import { Deadline, PlannerEvent, RecurringEvent } from "./types";
+import { PlannerEvent, RecurringEvent } from "./types";
 
 /**
  * SHARED EVENT LIST PROPS
@@ -14,16 +12,18 @@ import { Deadline, PlannerEvent, RecurringEvent } from "./types";
  **/
 
 /**
- * handleValueChange Prop: extracts any typed time value and uses it to mark the event's start time.
- * The time value will be removed from the event's value and place in the event's time config instead.
- * Recurring events and Planner events can both be handled. 
+ * @handleValueChange Prop: extracts any typed time value and uses it to mark the event's start time.
+ * The time value will be removed from the event @value and placed in the @timeConfig instead.
+ * Recurring events and Planner events can both be handled.
+ * 
+ * When param @datestamp is received, the item is a Planner Event. Otherwise it is a Recurring Event.
  */
 export function handleEventInput(
     text: string,
-    item: PlannerEvent | RecurringEvent | Deadline,
-    currentList: (PlannerEvent | RecurringEvent | Deadline)[],
+    item: PlannerEvent | RecurringEvent,
+    currentList: (PlannerEvent | RecurringEvent)[],
     datestamp?: string,
-): PlannerEvent | RecurringEvent | Deadline {
+): PlannerEvent | RecurringEvent {
     const itemTime = getEventTime(item);
     if (!itemTime) {
         const { timeConfig, updatedText } = extractTimeValue(text, datestamp);
@@ -37,7 +37,7 @@ export function handleEventInput(
                 updatedList.push(newEvent);
             }
             if (datestamp) {
-                (newEvent as RecurringEvent | Deadline).startTime = timeConfig.startTime;
+                (newEvent as RecurringEvent).startTime = timeConfig.startTime;
             } else {
                 (newEvent as PlannerEvent).timeConfig = timeConfig;
             }
@@ -49,7 +49,7 @@ export function handleEventInput(
 }
 
 /**
- * onDragEnd Prop: enforces accurate list sorting for any timed events.
+ * @onDragEnd Prop: enforces accurate list sorting for any timed events.
  * If the dragged item has a time specified, its new position will check it doesn't break time logic.
  * If time logic is broken, the drag will be canceled.
  */
@@ -69,8 +69,7 @@ export async function handleDragEnd(
             const newSortId = generateSortIdByTime(item, updatedItems);
             item.sortId = newSortId;
             if (newSortId === initialSortId) {
-
-                // The item has a time conflict. Cancel drag.
+                // The item has a time conflict or has not moved. Cancel Drag.
                 refetchItems();
             }
         }
@@ -79,7 +78,7 @@ export async function handleDragEnd(
 }
 
 /**
- * getModal Prop: generates the config for the event time modal.
+ * @getModal Prop: generates the config for the event time modal.
  */
 export function generateTimeModalConfig(
     item: PlannerEvent,
@@ -92,10 +91,10 @@ export function generateTimeModalConfig(
     return {
         component: TimeModal,
         props: {
+            item,
+            timestamp: datestamp,
             open: timeModalOpen,
             toggleModalOpen: toggleTimeModal,
-            timestamp: datestamp,
-            hideKeyboard: timeModalOpen,
             onSave: (updatedItem: PlannerEvent) => {
                 const updatedList = [...currentList];
                 const itemCurrentIndex = currentList.findIndex(item => item.id === updatedItem.id);
@@ -108,13 +107,13 @@ export function generateTimeModalConfig(
                 toggleTimeModal(updatedItem);
                 setCurrentTextfield(updatedItem);
             },
-            item
-        },
+            hideKeyboard: timeModalOpen
+        }
     }
 }
 
 /**
- * getLeftIcon Prop: generates the config for the event time modal trigger icon.
+ * @getLeftIcon Prop: generates the config for the event time modal trigger icon.
  */
 export function generateTimeIconConfig(
     item: PlannerEvent | RecurringEvent,
@@ -122,45 +121,37 @@ export function generateTimeIconConfig(
 ) {
     const itemTime = getEventTime(item);
     return {
-        hideIcon: !itemTime || isItemTextfield(item),
+        hideIcon: !itemTime,
         onClick: toggleTimeModal,
-        customIcon: itemTime &&
+        customIcon: (
             <TimeValue
                 allDay={!!(item as PlannerEvent).timeConfig?.allDay}
                 endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
                 startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
-                timeValue={itemTime}
+                timeValue={itemTime!}
             />
+        )
     }
 }
 
 /**
- * TODO: comment
+ * @getToolbar Prop: generates the config for the planner event toolbar.
+ * The toolbar allows for opening the time modal.
  */
 export function generateEventToolbar(
     item: PlannerEvent | RecurringEvent,
     toggleTimeModal: (item: PlannerEvent | RecurringEvent) => void,
     timeModalOpen: boolean
 ): ModifyItemConfig<PlannerEvent | RecurringEvent, ToolbarProps<PlannerEvent | RecurringEvent>> {
-    const itemTime = getEventTime(item);
     return {
         component: Toolbar,
         props: {
+            item,
             open: !timeModalOpen && isItemTextfield(item),
             iconSets: [[{
                 type: 'clock',
                 onClick: () => toggleTimeModal(item),
-                customIcon: itemTime ?
-                    <View style={{ transform: 'scale(1.1)' }}>
-                        <TimeValue
-                            allDay={!!(item as PlannerEvent).timeConfig?.allDay}
-                            endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
-                            startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
-                            timeValue={itemTime}
-                        />
-                    </View> : undefined
-            }]],
-            item,
-        },
+            }]]
+        }
     }
 }

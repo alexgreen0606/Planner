@@ -1,8 +1,8 @@
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
-import { datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "./timestampUtils";
+import { datestampToDayOfWeek, datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "./timestampUtils";
 import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
-import { CalendarData, PlannerEvent, RecurringEvent } from "./types";
+import { CalendarData, Planner, PlannerEvent, RecurringEvent } from "./types";
 import { ItemStatus } from "../sortedLists/constants";
 import { extractNameFromBirthdayText, openMessage } from "../../feature/birthdays/utils";
 
@@ -92,6 +92,15 @@ function generateEventChip(event: CalendarEventReadable): EventChipProps {
     }
 
     return chipProps;
+}
+
+export function generatePlanner(datestamp: string): Planner {
+    return {
+        datestamp,
+        title: datestampToDayOfWeek(datestamp),
+        events: [],
+        excludeRecurring: false
+    };
 }
 
 /**
@@ -210,13 +219,13 @@ export async function loadCalendarEventData(datestamps: string[]): Promise<Calen
 /**
  * Syncs an existing planner with a calendar. Calendars have final say on the state of the events.
  * @param calendar - the events to sync within the existing planner
- * @param planner - the planner being updated
+ * @param plannerEvents - the planner being updated
  * @param timestamp
  * @returns - the new planner synced with the calendar
  */
 export function syncPlannerWithCalendar(
     calendar: PlannerEvent[],
-    planner: PlannerEvent[],
+    plannerEvents: PlannerEvent[],
     timestamp: string
 ) {
     // console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
@@ -224,7 +233,7 @@ export function syncPlannerWithCalendar(
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
     // calendar.
-    const newPlanner = planner.reduce<PlannerEvent[]>((accumulator, planEvent) => {
+    const newPlanner = plannerEvents.reduce<PlannerEvent[]>((accumulator, planEvent) => {
 
         // This event isn't related to the calendar -> keep it
         if (!planEvent.calendarId || planEvent.status === ItemStatus.HIDDEN) {
@@ -279,13 +288,13 @@ export function syncPlannerWithCalendar(
  * final say on the state of the events. If a recurring event is manually deleted from a planner, 
  * it will remain deleted.
  * @param recurringPlanner - the events to sync within the existing planner
- * @param planner - the planner being updated
+ * @param plannerEvents - the planner being updated
  * @param timestamp
  * @returns - the new planner synced with the recurring events
  */
 export function syncPlannerWithRecurring(
     recurringPlanner: RecurringEvent[],
-    planner: PlannerEvent[],
+    plannerEvents: PlannerEvent[],
     timestamp: string
 ) {
     // console.info('syncPlannerWithRecurring: START', { recurringPlanner, planner, timestamp })
@@ -302,7 +311,7 @@ export function syncPlannerWithRecurring(
     // Build the new planner out of the recurring planner. All recurring events will prioritize the
     // recurring planner's values.
     const newPlanner = recurringPlanner.reduce<RecurringEvent[]>((accumulator, recEvent) => {
-        const planEvent = planner.find(planEvent => planEvent.recurringId === recEvent.id);
+        const planEvent = plannerEvents.find(planEvent => planEvent.recurringId === recEvent.id);
 
         if (planEvent?.status === ItemStatus.HIDDEN) {
             // This event has been manually deleted -> keep it deleted
@@ -362,7 +371,7 @@ export function syncPlannerWithRecurring(
     }, []);
 
     // Add in any existing events that aren't recurring
-    planner.forEach(existingPlanEvent => {
+    plannerEvents.forEach(existingPlanEvent => {
         if (!newPlanner.find(planEvent => planEvent.id === existingPlanEvent.id)) {
             newPlanner.push(existingPlanEvent);
             existingPlanEvent.sortId = generateSortIdByTime(existingPlanEvent, newPlanner);

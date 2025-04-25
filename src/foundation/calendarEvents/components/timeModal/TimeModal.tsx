@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PlatformColor, View } from 'react-native';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 import globalStyles from '../../../theme/globalStyles';
 import Modal from '../../../components/Modal';
 import {
@@ -11,41 +11,67 @@ import { PlannerEvent } from '../../types';
 import Toggle from './Toggle';
 import DateSelector from './DateSelector';
 import ThinLine from '../../../sortedLists/components/list/ThinLine';
-import ButtonText from '../../../components/text/ButtonText';
-import useDimensions from '../../../hooks/useDimensions';
 import { TIME_MODAL_INPUT_HEIGHT } from '../../constants';
+import ModalInputField from '../../../components/ModalInputField';
+import { ItemStatus } from '../../../sortedLists/constants';
 
 type FormData = {
+    value: string;
     allDay: boolean;
     startDate: Date;
     endDate: Date;
     isCalendarEvent: boolean;
+}
+
+const initialFormData: FormData = {
+    value: '',
+    startDate: new Date(),
+    endDate: new Date(),
+    allDay: false,
+    isCalendarEvent: false
 };
 
 export interface TimeModalProps extends ListItemUpdateComponentProps<PlannerEvent> {
-    toggleModalOpen: (event: PlannerEvent) => void;
     open: boolean;
+    toggleModalOpen: (event: PlannerEvent) => void;
     onSave: (event: PlannerEvent) => void;
 }
 
 const TimeModal = ({
-    toggleModalOpen,
     open,
+    toggleModalOpen,
     onSave,
     item: planEvent
 }: TimeModalProps) => {
+    const [formData, setFormData] = useState<FormData>(initialFormData);
+    const isEditMode = planEvent.status === ItemStatus.EDIT;
+    const formDataFilled = formData.value.length > 0;
 
-    // Form Data Tracker
-    const [formData, setFormData] = useState<FormData>({
-        startDate: new Date(),
-        endDate: new Date(),
-        allDay: false,
-        isCalendarEvent: false
-    });
+    // Sync the form data every time the planEvent changes
+    useEffect(() => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const defaultStartTime = datestampToMidnightDate(planEvent.listId);
+        defaultStartTime.setHours(currentHour);
+        const defaultEndTime = datestampToMidnightDate(planEvent.listId);
+        defaultEndTime.setHours(currentHour + 1);
 
-    const {
-        screenWidth,
-    } = useDimensions();
+        setFormData(planEvent.timeConfig ? {
+            value: planEvent.value,
+            startDate: new Date(planEvent.timeConfig.startTime),
+            endDate: new Date(planEvent.timeConfig.endTime),
+            allDay: planEvent.timeConfig.allDay,
+            isCalendarEvent: !!planEvent.calendarId
+        } : {
+            value: '',
+            allDay: false,
+            isCalendarEvent: false,
+            startDate: defaultStartTime,
+            endDate: defaultEndTime,
+        });
+    }, [planEvent]);
+
+    // ------------- Utility Functions -------------
 
     function getStartOfDay(date: Date) {
         const startOfDate = new Date(date);
@@ -60,14 +86,15 @@ const TimeModal = ({
                 allDay: formData.allDay,
                 startTime: formData.startDate.toISOString(),
                 endTime: formData.endDate.toISOString()
-            }
+            },
+            value: formData.value
         };
         if (formData.isCalendarEvent && !planEvent.calendarId) {
             // Triggers creation of a new calendar event
             updatedItem.calendarId = 'NEW';
         }
         if (formData.allDay && updatedItem.calendarId === 'NEW') {
-            // All day events end at the start of the next day
+            // All-day events end at the start of the next day -> TODO: why is this only needed for NEW events?
             const startOfNextDay = new Date(formData.endDate);
             startOfNextDay.setDate(startOfNextDay.getDate() + 1);
             updatedItem.timeConfig.endTime = startOfNextDay.toISOString();
@@ -82,41 +109,34 @@ const TimeModal = ({
         onSave(updatedItem);
     }
 
-    // Sync the form data every time the planEvent changes
-    useEffect(() => {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const defaultStartTime = datestampToMidnightDate(planEvent.listId);
-        defaultStartTime.setHours(currentHour);
-        const defaultEndTime = datestampToMidnightDate(planEvent.listId);
-        defaultEndTime.setHours(currentHour + 1);
-
-        setFormData(planEvent.timeConfig ? {
-            startDate: new Date(planEvent.timeConfig.startTime),
-            endDate: new Date(planEvent.timeConfig.endTime),
-            allDay: planEvent.timeConfig.allDay,
-            isCalendarEvent: !!planEvent.calendarId
-        } : {
-            allDay: false,
-            isCalendarEvent: false,
-            startDate: defaultStartTime,
-            endDate: defaultEndTime,
-        });
-    }, [planEvent]);
-
     return (
         <Modal
-            title={planEvent.value}
             open={open}
             toggleModalOpen={() => toggleModalOpen(planEvent)}
+            title={isEditMode ? 'Edit Event' : 'Create Event'}
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSave,
+                disabled: !formDataFilled
             }}
-            width={screenWidth}
-            height={600}
-            style={{ gap: 4 }}
+            deleteButtonConfig={{
+                label: 'Unschedule',
+                onClick: handleDelete
+            }}
+            customStyle={{ gap: 4 }}
         >
+
+            {/* Title */}
+            <ModalInputField
+                label='Title'
+                value={formData.value}
+                onChange={(newVal) => {
+                    setFormData({ ...formData, value: newVal });
+                }}
+                focusTrigger={open && planEvent.value.length === 0}
+            />
+
+            <ThinLine />
 
             {/* Start Time */}
             <DateSelector
@@ -150,8 +170,15 @@ const TimeModal = ({
             <ThinLine />
 
             {/* All Day Toggle */}
-            <View style={{ ...globalStyles.spacedApart, height: TIME_MODAL_INPUT_HEIGHT }}>
-                <CustomText type='standard' style={{ color: PlatformColor(!formData.isCalendarEvent ? 'tertiaryLabel' : 'label') }}>All Day</CustomText>
+            <View style={styles.inputField}>
+                <CustomText
+                    type='standard'
+                    style={{
+                        color: PlatformColor(!formData.isCalendarEvent ? 'tertiaryLabel' : 'label')
+                    }}
+                >
+                    All Day
+                </CustomText>
                 {formData.isCalendarEvent && (
                     <Toggle
                         value={formData.allDay}
@@ -170,7 +197,7 @@ const TimeModal = ({
             <ThinLine />
 
             {/* Calendar Toggle */}
-            <View style={{ ...globalStyles.spacedApart, height: TIME_MODAL_INPUT_HEIGHT }}>
+            <View style={styles.inputField}>
                 <CustomText type='standard'>Calendar Event</CustomText>
                 <Toggle
                     value={formData.isCalendarEvent}
@@ -182,20 +209,15 @@ const TimeModal = ({
                     }}
                 />
             </View>
-
-            <View style={{ flex: 1 }} />
-
-            {/* Delete Button */}
-            <View style={{ alignItems: 'center', width: '100%' }}>
-                <ButtonText
-                    platformColor='systemRed'
-                    onClick={handleDelete}
-                >
-                    Unschedule
-                </ButtonText>
-            </View>
         </Modal>
     );
 };
+
+const styles = StyleSheet.create({
+    inputField: {
+        ...globalStyles.spacedApart,
+        height: TIME_MODAL_INPUT_HEIGHT
+    }
+})
 
 export default TimeModal;

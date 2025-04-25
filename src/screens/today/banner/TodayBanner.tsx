@@ -1,9 +1,9 @@
 import React from 'react';
-import { View } from 'react-native';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 import globalStyles from '../../../foundation/theme/globalStyles';
-import LabelSublabel from '../../../foundation/components/text/LabelSublabel';
 import { datestampToDayOfWeek, datestampToMonthDate } from '../../../foundation/calendarEvents/timestampUtils';
 import WeatherDisplay from '../../../feature/weather';
+import CustomText from '../../../foundation/components/text/CustomText';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD
@@ -17,29 +17,50 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
     const currentTemp = 37;
 
     return (
-            <View style={globalStyles.pageLabelContainer}>
+        <View style={globalStyles.pageLabelContainer}>
 
-                <View style={globalStyles.verticallyCentered}>
-
-                    {/* Date */}
-                    <LabelSublabel
-                        label="Today's Plans"
-                        subLabel={datestampToMonthDate(timestamp)}
-                        upperSublabel={datestampToDayOfWeek(timestamp)}
-                        type='large'
-                        horizontal
-                    />
+            {/* Date */}
+            <View style={styles.pageLabel}>
+                <CustomText type='pageLabel'>Today's Plans</CustomText>
+                <View style={styles.date}>
+                    <CustomText
+                        type='subPageLabel'
+                        style={{ color: PlatformColor('label') }}
+                    >
+                        {datestampToDayOfWeek(timestamp)}{' '}
+                    </CustomText>
+                    <CustomText
+                        type='subPageLabel'
+                        style={{ color: PlatformColor('secondaryLabel') }}
+                    >
+                        {datestampToMonthDate(timestamp)}
+                    </CustomText>
                 </View>
-
-                {/* Weather */}
-                <WeatherDisplay
-                    low={low}
-                    high={high}
-                    currentTemp={currentTemp}
-                    weatherCode={weatherCode}
-                />
             </View>
+
+            {/* Weather */}
+            <WeatherDisplay
+                low={low}
+                high={high}
+                currentTemp={currentTemp}
+                weatherCode={weatherCode}
+            />
+        </View>
     );
 };
+
+const styles = StyleSheet.create({
+    pageLabel: {
+        position: 'relative',
+    },
+    date: {
+        position: 'absolute',
+        left: 0,
+        bottom: '100%',
+        transform: 'translateY(16px)',
+        display: 'flex',
+        flexDirection: 'row',
+    },
+});
 
 export default TodayBanner;

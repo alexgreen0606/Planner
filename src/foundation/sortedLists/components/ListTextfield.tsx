@@ -10,23 +10,19 @@ interface ListTextfieldProps<T extends ListItem> {
     item: T;
     onChange: (newText: string) => void;
     onSubmit: (blurred: boolean) => void;
+    isAwaitingInitialPosition: SharedValue<boolean>;
     hideKeyboard: boolean;
     customStyle: TextStyle;
-    isLoadingInitialPosition: SharedValue<boolean>;
 }
 
 const ListTextfield = <T extends ListItem>({
     item,
     onChange,
     onSubmit,
-    isLoadingInitialPosition,
+    isAwaitingInitialPosition,
     hideKeyboard,
     customStyle,
 }: ListTextfieldProps<T>) => {
-    const inputRef = useRef<TextInput>(null);
-    const hasSaved = useRef(false);
-    const isFocused = useSharedValue(false);
-    const textfieldBottom = useSharedValue<number>(0);
 
     const {
         currentTextfield,
@@ -42,15 +38,38 @@ const ListTextfield = <T extends ListItem>({
         scrollTextfieldIntoView
     } = useKeyboard();
 
+    const inputRef = useRef<TextInput>(null);
+    const isFocused = useSharedValue(false);
+    const absoluteBottom = useSharedValue<number>(0);
+
+    // Ensures textfield will only save once, whether blurred or entered
+    const hasSaved = useRef(false);
+
+    /**
+     * Determine if the textfield can be edited.
+     * During transition between two textfields, both will be editable. This allows the device keyboard
+     * to be remain open.
+     * Once the new textfield is focused, the previous one will become un-editable.
+     */
     const editable = useMemo(() => {
         const isEditable = [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard;
-
-        if (!isEditable) {
-            isFocused.value = false;
-        }
+        if (!isEditable) isFocused.value = false;
 
         return isEditable;
     }, [pendingItem, currentTextfield?.id, item.id, hideKeyboard]);
+
+    // ------------- Utility Function -------------
+
+    function evaluateAbsoluteBottom() {
+        inputRef.current?.measureInWindow((_, y) => {
+            absoluteBottom.value = y + LIST_ITEM_HEIGHT;
+        });
+    }
+
+    function handleInputChange(newVal: string) {
+        evaluateAbsoluteBottom();
+        onChange(newVal);
+    }
 
     function handleSave(createNew: boolean) {
         if (hasSaved.current) return;
@@ -59,20 +78,14 @@ const ListTextfield = <T extends ListItem>({
         onSubmit(createNew);
     }
 
-    // ---------- Scroll Logic ----------
-
-    const evaluateBottomPosition = () => {
-        inputRef.current?.measureInWindow((_, y) => {
-            textfieldBottom.value = y + LIST_ITEM_HEIGHT;
-        });
-    };
+    // ---------- Scroll Handler ----------
 
     // Evaluate position of textfield after initialization
     useAnimatedReaction(
-        () => isLoadingInitialPosition.value,
+        () => isAwaitingInitialPosition.value,
         (loading) => {
             if (!loading) {
-                runOnJS(evaluateBottomPosition)();
+                runOnJS(evaluateAbsoluteBottom)();
             }
         }
     )
@@ -81,13 +94,13 @@ const ListTextfield = <T extends ListItem>({
     useAnimatedReaction(
         () => ({
             shouldCheck: isFocused.value && isKeyboardOpen.value,
-            textfieldBottom: textfieldBottom.value,
+            textfieldBottom: absoluteBottom.value,
             keyboardTop: keyboardAbsoluteTop.value
         }),
         (data) => {
             if (data.shouldCheck && data.textfieldBottom > data.keyboardTop) {
                 scrollTextfieldIntoView(
-                    textfieldBottom,
+                    absoluteBottom,
                     scrollOffset,
                     disableNativeScroll
                 );
@@ -95,9 +108,9 @@ const ListTextfield = <T extends ListItem>({
         }
     );
 
-    // ---------- Focus Logic ----------
+    // ---------- Focus Handler ----------
 
-    // Focus the textfield when clicked and evaluate position
+    // Focus the textfield when clicked and evaluate its position
     useEffect(() => {
         if (currentTextfield?.id === item.id && !isFocused.value) {
             setTimeout(() => {
@@ -106,7 +119,7 @@ const ListTextfield = <T extends ListItem>({
                 hasSaved.current = false;
 
                 // Evaluate in case item has moved since initial render
-                evaluateBottomPosition();
+                evaluateAbsoluteBottom();
 
                 // Trigger the previous textfield to become static
                 setCurrentTextfield(currentTextfield)
@@ -118,13 +131,13 @@ const ListTextfield = <T extends ListItem>({
         <TextInput
             ref={inputRef}
             value={item.value}
-            submitBehavior='submit'
             editable={editable}
-            onChangeText={onChange}
-            selectionColor={PlatformColor('systemBlue')}
-            style={{ ...styles.textInput, ...customStyle }}
+            onChangeText={handleInputChange}
             onSubmitEditing={() => handleSave(true)}
             onBlur={() => handleSave(false)}
+            submitBehavior='submit'
+            selectionColor={PlatformColor('systemBlue')}
+            style={[styles.textInput, customStyle]}
         />
     )
 }
@@ -133,8 +146,8 @@ const styles = StyleSheet.create({
     textInput: {
         flex: 1,
         height: LIST_CONTENT_HEIGHT,
-        fontSize: 16,
         marginRight: LIST_ICON_SPACING / 2,
+        fontSize: 16,
         color: PlatformColor('label'),
         backgroundColor: 'transparent',
     },
