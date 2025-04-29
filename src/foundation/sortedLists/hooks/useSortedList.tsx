@@ -1,10 +1,10 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { useSortableList } from '../services/SortableListProvider';
+import { useScrollContainer } from '../services/ScrollContainerProvider';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useReload } from '../../navigation/services/NavigationProvider';
+import { useReload } from '../../reload/ReloadProvider';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -37,7 +37,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     const {
         currentTextfield,
         setCurrentTextfield,
-    } = useSortableList();
+    } = useScrollContainer();
 
     const {
         pendingDeleteItems,

@@ -4,7 +4,7 @@ import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
 import { CalendarData, Planner, PlannerEvent, RecurringEvent } from "./types";
 import { ItemStatus } from "../sortedLists/constants";
-import { extractNameFromBirthdayText, openMessage } from "../../feature/birthdays/utils";
+import { extractNameFromBirthdayText, openMessage } from "../../feature/birthdayCard/utils";
 
 // ---------- Data Model Generation ----------
 

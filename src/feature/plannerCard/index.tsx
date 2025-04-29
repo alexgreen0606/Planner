@@ -7,7 +7,7 @@ import EventChip, { EventChipProps } from '../../foundation/calendarEvents/compo
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
 import { WeatherForecast } from '../weather/utils';
-import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
 import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
@@ -39,7 +39,7 @@ const PlannerCard = ({
     const {
         currentTextfield,
         setCurrentTextfield,
-    } = useSortableList();
+    } = useScrollContainer();
 
     const { pendingDeleteItems } = useDeleteScheduler();
 

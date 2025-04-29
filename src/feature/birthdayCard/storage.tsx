@@ -1,6 +1,6 @@
 import { MMKV } from "react-native-mmkv";
-import { Birthday } from "../types";
-import { BIRTHDAY_STORAGE_ID } from "../constants";
+import { Birthday } from "./types";
+import { BIRTHDAY_STORAGE_ID } from "./constants";
 
 const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
 

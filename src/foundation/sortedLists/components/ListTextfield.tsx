@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { ListItem } from '../types';
-import { useSortableList } from '../services/SortableListProvider';
+import { useScrollContainer } from '../services/ScrollContainerProvider';
 import { runOnJS, SharedValue, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useKeyboard } from '../services/KeyboardProvider';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '../constants';
@@ -30,7 +30,7 @@ const ListTextfield = <T extends ListItem>({
         setCurrentTextfield,
         scrollOffset,
         disableNativeScroll
-    } = useSortableList();
+    } = useScrollContainer();
 
     const {
         isKeyboardOpen,

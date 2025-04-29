@@ -9,7 +9,7 @@ import Card from '../../foundation/components/Card';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
 import AgeValue from './components/AgeValue';
 import { Birthday } from './types';
-import { markBirthdayContacted } from './storage/birthdayStorage';
+import { markBirthdayContacted } from './storage';
 
 // TODO: complete refactor and styling
 

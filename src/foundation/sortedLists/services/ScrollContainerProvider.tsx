@@ -20,14 +20,14 @@ import { ListItem } from '../types';
 import { Dimensions, PlatformColor, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
-import { useReload } from '../../navigation/services/NavigationProvider';
+import { useReload } from '../../reload/ReloadProvider';
 import { BlurView } from 'expo-blur';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import useDimensions from '../../hooks/useDimensions';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, Screens } from '../../navigation/constants';
 import { Portal } from 'react-native-paper';
 import GenericIcon from '../../components/GenericIcon';
-import { usePathname } from 'expo-router';
+import globalStyles from '../../theme/globalStyles';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -35,12 +35,6 @@ const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
 const KeyboardFiller = Animated.createAnimatedComponent(View);
 const BottomBlurBar = Animated.createAnimatedComponent(View);
-
-const reloadableScreens = [
-    Screens.DASHBOARD,
-    Screens.DEADLINES,
-    Screens.PLANNERS
-];
 
 export enum LoadingStatus {
     STATIC = 'STATIC', // no overscroll visible
@@ -53,13 +47,13 @@ interface TextFieldState<T> {
     pending?: T | undefined;
 }
 
-interface SortableListProviderProps {
+interface ScrollContainerProps {
     children: React.ReactNode;
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
 }
 
-interface SortableListContextValue<T extends ListItem> {
+interface ScrollContainerContextValue<T extends ListItem> {
     // --- Scroll Variables ---
     scrollOffset: SharedValue<number>;
     scrollOffsetBounds: SharedValue<{ min: number, max: number }>;
@@ -72,20 +66,20 @@ interface SortableListContextValue<T extends ListItem> {
     emptySpaceHeight: SharedValue<number>;
 }
 
-const SortableListContext = createContext<SortableListContextValue<any> | null>(null);
+const ScrollContainerContext = createContext<ScrollContainerContextValue<any> | null>(null);
 
-export const SortableListProvider = ({
+export const ScrollContainerProvider = ({
     children,
     header,
     floatingBanner
-}: SortableListProviderProps) => {
+}: ScrollContainerProps) => {
     return (
         <KeyboardProvider>
-            <SortableListProviderContent
+            <ScrollContainerContent
                 floatingBanner={floatingBanner}
                 header={header}>
                 {children}
-            </SortableListProviderContent>
+            </ScrollContainerContent>
         </KeyboardProvider>
     );
 };
@@ -96,11 +90,11 @@ export const SortableListProvider = ({
  * Container allows for native scrolling, or manual scrolling by exposing the @scrollOffset variable.
  * Manual scroll will only work while @disableNativeScroll variable is set to true.
  */
-export const SortableListProviderContent = <T extends ListItem>({
+export const ScrollContainerContent = <T extends ListItem>({
     children,
     header,
     floatingBanner
-}: SortableListProviderProps) => {
+}: ScrollContainerProps) => {
 
     const {
         SCREEN_WIDTH,
@@ -374,7 +368,7 @@ export const SortableListProviderContent = <T extends ListItem>({
     };
 
     return (
-        <SortableListContext.Provider
+        <ScrollContainerContext.Provider
             value={{
                 currentTextfield: textFieldState.current,
                 pendingItem: textFieldState.pending,
@@ -406,7 +400,10 @@ export const SortableListProviderContent = <T extends ListItem>({
                 scrollEventThrottle={SCROLL_THROTTLE}
                 scrollToOverflowEnabled={true}
                 onScroll={handler}
-                contentContainerStyle={{ flexGrow: 1, paddingTop: TOP_SPACER }}
+                contentContainerStyle={[
+                    globalStyles.blackFilledSpace,
+                    { flexGrow: 1, paddingTop: TOP_SPACER }
+                ]}
                 onLayout={(event) => {
                     const { height } = event.nativeEvent.layout;
                     visibleHeight.value = height - BOTTOM_NAVIGATION_HEIGHT - keyboardHeight.value;
@@ -469,7 +466,7 @@ export const SortableListProviderContent = <T extends ListItem>({
                 />
             </BottomBlurBar>
 
-        </SortableListContext.Provider>
+        </ScrollContainerContext.Provider>
     );
 };
 
@@ -483,8 +480,8 @@ const styles = StyleSheet.create({
     }
 });
 
-export const useSortableList = () => {
-    const context = useContext(SortableListContext);
+export const useScrollContainer = () => {
+    const context = useContext(ScrollContainerContext);
     if (!context) {
         throw new Error("useSortableList must be used within a Provider");
     }

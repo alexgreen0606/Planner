@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useSortableList } from '../../src/foundation/sortedLists/services/SortableListProvider';
+import { useScrollContainer } from '../../src/foundation/sortedLists/services/ScrollContainerProvider';
 import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../src/foundation/calendarEvents/timestampUtils';
 import { ListItem, ModifyItemConfig } from '../../src/foundation/sortedLists/types';
 import { generateSortId, isItemTextfield } from '../../src/foundation/sortedLists/utils';
@@ -16,12 +16,16 @@ import CustomText from '../../src/foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
 
 const Deadlines = () => {
-    const { currentTextfield, setCurrentTextfield } = useSortableList();
-    const [dateSelectOpen, setDateSelectOpen] = useState(false);
 
     const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
 
-    function initializedeadline(item: ListItem) {
+    const { currentTextfield, setCurrentTextfield } = useScrollContainer();
+
+    const [dateSelectOpen, setDateSelectOpen] = useState(false);
+
+    // ------------- Utility Functions -------------
+
+    function initializeDeadline(item: ListItem) {
         const newSortId = generateSortId(-1, DeadlineItems.items);
         return {
             ...item,
@@ -93,7 +97,7 @@ const Deadlines = () => {
                 fillSpace
                 disableDrag
                 items={DeadlineItems.items}
-                initializeItem={initializedeadline}
+                initializeItem={initializeDeadline}
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
@@ -144,6 +148,7 @@ const Deadlines = () => {
                 }}
                 onCancel={() => toggleDateSelector(currentTextfield)}
             />
+
         </View>
     );
 };

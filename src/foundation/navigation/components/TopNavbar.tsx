@@ -3,7 +3,7 @@ import { View, StyleSheet, PlatformColor, LayoutChangeEvent } from 'react-native
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
-import { SortableListProvider } from '../../sortedLists/services/SortableListProvider';
+import { ScrollContainerProvider } from '../../sortedLists/services/ScrollContainerProvider';
 import globalStyles from '../../theme/globalStyles';
 import ButtonText from '../../components/text/ButtonText';
 
@@ -76,7 +76,7 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
 
     return (
         <View style={globalStyles.blackFilledSpace}>
-            <SortableListProvider
+            <ScrollContainerProvider
                 floatingBanner={
                     <View style={styles.container}>
                         <View style={styles.bar} ref={barRef}>
@@ -85,10 +85,7 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
                             <BlurView
                                 tint='default'
                                 intensity={100}
-                                style={[
-                                    styles.blur,
-                                    { width: barWidth }
-                                ]}
+                                style={styles.blur}
                             />
 
                             {/* Current Tab Highlight */}
@@ -111,7 +108,7 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
                 }
             >
                 {children}
-            </SortableListProvider>
+            </ScrollContainerProvider>
         </View>
     )
 }
@@ -129,12 +126,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: TAB_SPACING,
         borderRadius: BAR_HEIGHT / 2,
+        overflow: 'hidden',
         paddingHorizontal: (TAB_SPACING / 2) + INDICATOR_GAP
     },
     blur: {
         position: 'absolute',
-        top: 0,
-        left: 0,
+        width: '100%',
         height: BAR_HEIGHT,
         borderRadius: BAR_HEIGHT / 2,
         overflow: 'hidden'

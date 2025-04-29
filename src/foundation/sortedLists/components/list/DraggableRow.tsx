@@ -15,7 +15,7 @@ import {
     ListItem,
     ListItemIconConfig,
 } from "../../types";
-import { useSortableList } from "../../services/SortableListProvider";
+import { useScrollContainer } from "../../services/ScrollContainerProvider";
 import { useCallback, useMemo } from "react";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
@@ -90,7 +90,7 @@ const DraggableRow = <T extends ListItem>({
         setCurrentTextfield,
         disableNativeScroll,
         scrollOffsetBounds,
-    } = useSortableList();
+    } = useScrollContainer();
 
     const { isItemDeleting } = useDeleteScheduler();
     const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;

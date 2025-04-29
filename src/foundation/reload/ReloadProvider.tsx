@@ -63,7 +63,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
 export const useReload = () => {
     const context = useContext(ReloadContext);
     if (!context) {
-        throw new Error("useNavigation must be used within a NavigationProvider");
+        throw new Error("useReload must be used within a ReloadProvider");
     }
     return context;
 };

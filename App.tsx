@@ -3,7 +3,7 @@ import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
 import { DeleteSchedulerProvider } from './src/foundation/sortedLists/services/DeleteScheduler';
-import { ReloadProvider } from './src/foundation/navigation/services/NavigationProvider';
+import { ReloadProvider } from './src/foundation/reload/ReloadProvider';
 import { Slot } from 'expo-router';
 
 const App = () => {

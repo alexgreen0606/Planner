@@ -1,5 +1,4 @@
 import React, { createContext, useContext } from 'react';
-import { useWindowDimensions } from 'react-native';
 import {
     useAnimatedKeyboard,
     useDerivedValue,

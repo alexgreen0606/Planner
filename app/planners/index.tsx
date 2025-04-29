@@ -2,29 +2,25 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import { getNextSevenDayDatestamps } from '../../src/foundation/calendarEvents/timestampUtils';
-import { PLANNER_SETS_KEY, PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../src/feature/planner/types';
+import { PLANNER_SETS_KEY, PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../src/feature/plannerCard/types';
 import { WeatherForecast } from '../../src/feature/weather/utils';
 import { CalendarData } from '../../src/foundation/calendarEvents/types';
 import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../src/foundation/calendarEvents/calendarUtils';
-import { useReload } from '../../src/foundation/navigation/services/NavigationProvider';
-import { SortableListProvider } from '../../src/foundation/sortedLists/services/SortableListProvider';
+import { useReload } from '../../src/foundation/reload/ReloadProvider';
 import globalStyles from '../../src/foundation/theme/globalStyles';
-import TopNavbar from '../../src/foundation/navigation/components/TopNavbar';
 import PopoverList from '../../src/foundation/components/PopoverList';
 import GenericIcon from '../../src/foundation/components/GenericIcon';
-import PlannerCard from '../../src/feature/planner';
-import PlannerSetModal from '../../src/feature/planner/components/PlannerSetModal';
-import { usePathname } from 'expo-router';
+import PlannerCard from '../../src/feature/plannerCard';
+import PlannerSetModal from '../../src/feature/plannerCard/components/PlannerSetModal';
 
-const defaultPlannerSet = { id: 'default', title: 'Next 7 Days', dates: getNextSevenDayDatestamps() };
+const defaultPlannerSet = {
+    id: 'default',
+    title: 'Next 7 Days',
+    dates: getNextSevenDayDatestamps()
+};
 
 const Planners = () => {
     const datestamps = useMemo(() => getNextSevenDayDatestamps(), []);
-    const pathname = usePathname()
-
-    useEffect(() => {
-        console.log(pathname)
-    }, [pathname])
 
     const storage = new MMKV({ id: PLANNER_SETS_STORAGE_ID });
     const [plannerSets] = useMMKVObject<PlannerSet[]>(PLANNER_SETS_KEY, storage);
@@ -123,7 +119,10 @@ const Planners = () => {
         <View style={globalStyles.blackFilledSpace}>
 
             {/* Planner Set Selection */}
-            <View style={styles.dropdownContainer} >
+            <View style={[
+                globalStyles.spacedApart,
+                styles.dropdownContainer
+            ]} >
                 <PopoverList<PlannerSet>
                     getLabelFromObject={(set) => set.title}
                     options={[defaultPlannerSet, ...(plannerSets ?? [])]}
@@ -136,7 +135,7 @@ const Planners = () => {
                 />
             </View>
 
-            {/* Planner Cards */}
+            {/* Planner Set Display */}
             <View style={styles.planners}>
                 {plannerSet.dates.map((datestamp) =>
                     <PlannerCard
@@ -149,21 +148,23 @@ const Planners = () => {
                     />
                 )}
             </View>
+
+            {/* Planner Set Modal */}
             <PlannerSetModal open={plannerSetModalOpen} toggleModalOpen={togglePlannerSetModalOpen} />
+
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    planners: {
-        padding: 8,
-        gap: 26,
-    },
     dropdownContainer: {
-        ...globalStyles.spacedApart,
         paddingVertical: 8,
         paddingHorizontal: 16
     },
+    planners: {
+        padding: 8,
+        gap: 26,
+    }
 });
 
 export default Planners;

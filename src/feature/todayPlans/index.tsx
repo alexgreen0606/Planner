@@ -7,10 +7,10 @@ import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, 
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { TimeModalProps } from '../../foundation/calendarEvents/components/timeModal/TimeModal';
 import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
-import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { useReload } from '../../foundation/navigation/services/NavigationProvider';
+import { useReload } from '../../foundation/reload/ReloadProvider';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
 
 interface SortablePlannerProps {
@@ -25,7 +25,7 @@ const TodayPlanner = ({
     const datestamp = getTodayDatestamp();
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
-    const { setCurrentTextfield } = useSortableList();
+    const { setCurrentTextfield } = useScrollContainer();
 
     const { isItemDeleting } = useDeleteScheduler();
 

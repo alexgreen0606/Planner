@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, PlatformColor, TextInput } from 'react-native';
+import { View, StyleSheet, PlatformColor, TextInput } from 'react-native';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { LISTS_STORAGE_ID } from '../../../feature/checklists/constants';
-import { FolderItem, FolderItemTypes } from '../../../feature/checklists/types';
-import { getFolderItem, updateFolderItem } from '../../../feature/checklists/storage/folderStorage';
+import { LISTS_STORAGE_ID } from '../constants';
+import { FolderItem, FolderItemTypes } from '../types';
+import { getFolderItem, updateFolderItem } from '../storage';
 import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import globalStyles from '../../../foundation/theme/globalStyles';
-import GenericIcon from '../../../foundation/components/GenericIcon';
 import CustomText from '../../../foundation/components/text/CustomText';
 import ButtonText from '../../../foundation/components/text/ButtonText';
+import { useRouter } from 'expo-router';
 
 interface FolderItemBannerProps {
     itemId: string;
     backButtonConfig: {
         display: boolean;
         label: string | undefined;
-        onClick: () => void;
     };
     itemType: FolderItemTypes;
 }
@@ -25,6 +24,7 @@ const FolderItemBanner = ({
     backButtonConfig,
     itemType
 }: FolderItemBannerProps) => {
+    const router = useRouter();
     const [item, setItem] = useState<FolderItem>();
     const folderStorage = useMMKV({ id: LISTS_STORAGE_ID });
 
@@ -82,7 +82,7 @@ const FolderItemBanner = ({
             {backButtonConfig.display && (
                 <ButtonText
                     platformColor='systemBlue'
-                    onClick={backButtonConfig.onClick}
+                    onClick={() => router.back()}
                     iconConfig={{
                         type: 'chevronLeft',
                         platformColor: 'systemBlue'

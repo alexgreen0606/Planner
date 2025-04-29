@@ -1,39 +1,34 @@
 import React, { useMemo, useState } from 'react';
-import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
-import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
-import { useSortableList } from '../../../foundation/sortedLists/services/SortableListProvider';
-import { isItemTextfield } from '../../../foundation/sortedLists/utils';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
-import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '../storage/recurringStorage';
-import globalStyles from '../../../foundation/theme/globalStyles';
+import { RecurringPlannerKeys } from '../constants';
+import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
+import { useScrollContainer } from '../../../foundation/sortedLists/services/ScrollContainerProvider';
+import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
 import { View } from 'react-native';
+import globalStyles from '../../../foundation/theme/globalStyles';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../foundation/calendarEvents/sharedListProps';
-import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/commonProps';
+import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import DatePicker from 'react-native-date-picker';
+import { isItemTextfield } from '../../../foundation/sortedLists/utils';
 import { useDeleteScheduler } from '../../../foundation/sortedLists/services/DeleteScheduler';
 
-const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
+interface SortedRecurringPlannerProps {
+    plannerKey: RecurringPlannerKeys;
+}
 
-const RecurringWeekdayPlanner = () => {
+const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
 
-    const {
-        currentTextfield,
-        setCurrentTextfield
-    } = useSortableList();
+    const { 
+        currentTextfield, 
+        setCurrentTextfield 
+    } = useScrollContainer();
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const {isItemDeleting} = useDeleteScheduler();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
-
-    function initializeEvent(event: RecurringEvent): RecurringEvent {
-        return {
-            ...event,
-            isWeekdayEvent: true
-        }
-    };
 
     async function toggleTimeModal(item: RecurringEvent) {
         if (!isItemTextfield(item))
@@ -70,33 +65,15 @@ const RecurringWeekdayPlanner = () => {
 
     const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>({
         storageId: PLANNER_STORAGE_ID,
-        storageKey: RECURRING_WEEKDAY_PLANNER_KEY,
-        getItemsFromStorageObject: generateRecurringWeekdayPlanner,
-        storageConfig: {
-            create: (event) => {
-                saveRecurringWeekdayEvent(event);
-                SortedEvents.refetchItems();
-            },
-            update: (event) => {
-                saveRecurringWeekdayEvent(event);
-                SortedEvents.refetchItems();
-            },
-            delete: (events) => {
-                deleteRecurringWeekdayEvent(events);
-                // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
-                SortedEvents.refetchItems();
-            },
-        }
+        storageKey: plannerKey
     });
 
     return (
         <View style={globalStyles.blackFilledSpace}>
-
             <SortableList<RecurringEvent, never, never>
                 items={SortedEvents.items}
-                listId={RECURRING_WEEKDAY_PLANNER_KEY}
+                listId={plannerKey}
                 fillSpace
-                initializeItem={initializeEvent}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
@@ -106,7 +83,7 @@ const RecurringWeekdayPlanner = () => {
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
-                    label: `No recurring weekday plans`,
+                    label: `No recurring ${plannerKey} plans`,
                     style: { flex: 1 }
                 }}
             />
@@ -125,4 +102,4 @@ const RecurringWeekdayPlanner = () => {
     );
 };
 
-export default RecurringWeekdayPlanner;
+export default RecurringPlanner;

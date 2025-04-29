@@ -4,7 +4,7 @@ import { BOTTOM_NAVIGATION_HEIGHT } from '../src/foundation/navigation/constants
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DeleteSchedulerProvider } from '../src/foundation/sortedLists/services/DeleteScheduler';
-import { ReloadProvider } from '../src/foundation/navigation/services/NavigationProvider';
+import { ReloadProvider } from '../src/foundation/reload/ReloadProvider';
 import useDimensions from '../src/foundation/hooks/useDimensions';
 
 export default function TabLayout() {

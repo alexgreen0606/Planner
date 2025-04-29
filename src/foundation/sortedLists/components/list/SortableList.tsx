@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { LayoutChangeEvent, Pressable, View } from 'react-native';
-import { useSortableList } from '../../services/SortableListProvider';
+import { useScrollContainer } from '../../services/ScrollContainerProvider';
 import uuid from 'react-native-uuid';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
@@ -69,7 +69,7 @@ const SortableList = <
         currentTextfield,
         setCurrentTextfield,
         emptySpaceHeight
-    } = useSortableList();
+    } = useScrollContainer();
 
     const { keyboardAbsoluteTop } = useKeyboard();
 

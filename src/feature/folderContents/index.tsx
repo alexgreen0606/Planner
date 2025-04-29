@@ -6,13 +6,12 @@ import {
     updateFolderItem,
     deleteFolderItem,
     getFolderItems,
-} from '../checklists/storage/folderStorage';
+} from '../checklists/storage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
-import { Screens } from '../../foundation/navigation/constants';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
-import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
+import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
 import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId } from '../../foundation/sortedLists/utils';
@@ -20,11 +19,10 @@ import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { selectableColors } from '../../foundation/theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
-import { useReload } from '../../foundation/navigation/services/NavigationProvider';
+import { usePathname, useRouter } from 'expo-router';
 
 interface SortableFolderProps {
     folderId: string;
-    onBackClick: (listId: string) => void;
     onOpenItem: (id: string, type: FolderItemTypes) => void;
     parentClickTrigger: number;
     parentFolderData?: Folder;
@@ -32,15 +30,14 @@ interface SortableFolderProps {
 
 const SortedFolder = ({
     folderId,
-    onBackClick,
     onOpenItem,
     parentClickTrigger,
     parentFolderData,
 }: SortableFolderProps) => {
 
-    const { currentScreen } = useReload();
+    const { currentTextfield, setCurrentTextfield } = useScrollContainer();
 
-    const { currentTextfield, setCurrentTextfield } = useSortableList();
+    const router = useRouter();
 
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
@@ -91,7 +88,7 @@ const SortedFolder = ({
                 return;
 
             } else if (folderData.listId) {
-                onBackClick(folderData.listId);
+                router.back();
             }
         }
     }, [parentClickTrigger])
@@ -124,9 +121,11 @@ const SortedFolder = ({
         }));
     };
 
+    const pathname = usePathname();
+
     const getItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps<FolderItem>> => {
         const isNew = item.status === ItemStatus.NEW;
-        const isOpen = currentScreen === Screens.LISTS && !deleteModalOpen &&
+        const isOpen = pathname.includes('checklist') && !deleteModalOpen &&
             (isNew ? item.status === ItemStatus.NEW : item.status === ItemStatus.EDIT);
 
         return {

@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { PlannerEvent } from '../src/foundation/calendarEvents/types';
-import { Birthday } from '../src/feature/birthdays/types';
-import { BIRTHDAY_STORAGE_ID } from '../src/feature/birthdays/constants';
+import { Birthday } from '../src/feature/birthdayCard/types';
+import { BIRTHDAY_STORAGE_ID } from '../src/feature/birthdayCard/constants';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
 import { getTodayDatestamp } from '../src/foundation/calendarEvents/timestampUtils';
 import { loadCalendarEventData } from '../src/foundation/calendarEvents/calendarUtils';
-import { getContactedBirthdaysByDatestamp } from '../src/feature/birthdays/storage/birthdayStorage';
-import { eventChipToBirthday, extractNameFromBirthdayText } from '../src/feature/birthdays/utils';
+import { getContactedBirthdaysByDatestamp } from '../src/feature/birthdayCard/storage';
+import { eventChipToBirthday, extractNameFromBirthdayText } from '../src/feature/birthdayCard/utils';
 import globalStyles from '../src/foundation/theme/globalStyles';
-import { SortableListProvider } from '../src/foundation/sortedLists/services/SortableListProvider';
-import TodayBanner from '../src/feature/today/TodayBanner';
+import { ScrollContainerProvider } from '../src/foundation/sortedLists/services/ScrollContainerProvider';
+import TodayBanner from '../src/feature/todayPlans/TodayBanner';
 import EventChip, { EventChipProps } from '../src/foundation/calendarEvents/components/EventChip';
-import BirthdayCard from '../src/feature/birthdays';
-import TodayPlanner from '../src/feature/today';
+import BirthdayCard from '../src/feature/birthdayCard';
+import TodayPlanner from '../src/feature/todayPlans';
 
 interface TodayData {
   planner: PlannerEvent[];
@@ -75,7 +75,7 @@ const Today = () => {
   return (
     <View style={globalStyles.blackFilledSpace}>
 
-      <SortableListProvider
+      <ScrollContainerProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
         floatingBanner={pageData.chips.length > 0 && (
           <View style={styles.chips}>
@@ -101,7 +101,7 @@ const Today = () => {
           />
         </View>
 
-      </SortableListProvider>
+      </ScrollContainerProvider>
     </View>
   );
 };
