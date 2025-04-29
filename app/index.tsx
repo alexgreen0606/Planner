@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import TodayBanner from './banner/TodayBanner';
-import EventChip, { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
-import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
-import { loadCalendarEventData } from '../../foundation/calendarEvents/calendarUtils';
-import globalStyles from '../../foundation/theme/globalStyles';
-import { SortableListProvider } from '../../foundation/sortedLists/services/SortableListProvider';
-import BirthdayCard from '../../feature/birthdays';
-import TodayPlanner from '../../feature/today';
-import { PlannerEvent } from '../../foundation/calendarEvents/types';
-import { Birthday } from '../../feature/birthdays/types';
-import { eventChipToBirthday, extractNameFromBirthdayText } from '../../feature/birthdays/utils';
+import { PlannerEvent } from '../src/foundation/calendarEvents/types';
+import { Birthday } from '../src/feature/birthdays/types';
+import { BIRTHDAY_STORAGE_ID } from '../src/feature/birthdays/constants';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
-import { BIRTHDAY_STORAGE_ID } from '../../feature/birthdays/constants';
-import { getContactedBirthdaysByDatestamp } from '../../feature/birthdays/storage/birthdayStorage';
+import { getTodayDatestamp } from '../src/foundation/calendarEvents/timestampUtils';
+import { loadCalendarEventData } from '../src/foundation/calendarEvents/calendarUtils';
+import { getContactedBirthdaysByDatestamp } from '../src/feature/birthdays/storage/birthdayStorage';
+import { eventChipToBirthday, extractNameFromBirthdayText } from '../src/feature/birthdays/utils';
+import globalStyles from '../src/foundation/theme/globalStyles';
+import { SortableListProvider } from '../src/foundation/sortedLists/services/SortableListProvider';
+import TodayBanner from '../src/feature/today/TodayBanner';
+import EventChip, { EventChipProps } from '../src/foundation/calendarEvents/components/EventChip';
+import BirthdayCard from '../src/feature/birthdays';
+import TodayPlanner from '../src/feature/today';
 
 interface TodayData {
   planner: PlannerEvent[];

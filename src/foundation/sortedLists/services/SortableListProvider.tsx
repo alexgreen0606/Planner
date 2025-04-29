@@ -20,13 +20,14 @@ import { ListItem } from '../types';
 import { Dimensions, PlatformColor, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
-import { useNavigation } from '../../navigation/services/NavigationProvider';
+import { useReload } from '../../navigation/services/NavigationProvider';
 import { BlurView } from 'expo-blur';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import useDimensions from '../../hooks/useDimensions';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, Screens } from '../../navigation/constants';
 import { Portal } from 'react-native-paper';
 import GenericIcon from '../../components/GenericIcon';
+import { usePathname } from 'expo-router';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -108,9 +109,8 @@ export const SortableListProviderContent = <T extends ListItem>({
     } = useDimensions();
 
     const {
-        currentScreen,
         reloadCurrentPage,
-    } = useNavigation();
+    } = useReload();
 
     const { keyboardHeight } = useKeyboard();
 
@@ -194,7 +194,7 @@ export const SortableListProviderContent = <T extends ListItem>({
             scrollTo(scrollRef, 0, current, false);
 
             // Detect pull-to-refresh action
-            if (reloadableScreens.includes(currentScreen)) {
+            if (true) { // todo: check if reloadable screen
 
                 // Trigger a reload of the list
                 if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
@@ -432,17 +432,15 @@ export const SortableListProviderContent = <T extends ListItem>({
                     <View style={{ height: floatingBannerHeight }} />
 
                     {/* Loading Spinner */}
-                    {reloadableScreens.includes(currentScreen) && (
-                        <Portal>
-                            <LoadingSpinner style={loadingSpinnerStyle}>
-                                <GenericIcon
-                                    size='l'
-                                    platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
-                                    type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
-                                />
-                            </LoadingSpinner>
-                        </Portal>
-                    )}
+                    <Portal>
+                        <LoadingSpinner style={loadingSpinnerStyle}>
+                            <GenericIcon
+                                size='l'
+                                platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
+                                type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
+                            />
+                        </LoadingSpinner>
+                    </Portal>
 
                     {children}
 

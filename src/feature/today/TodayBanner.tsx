@@ -1,9 +1,9 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-import globalStyles from '../../../foundation/theme/globalStyles';
-import { datestampToDayOfWeek, datestampToMonthDate } from '../../../foundation/calendarEvents/timestampUtils';
-import WeatherDisplay from '../../../feature/weather';
-import CustomText from '../../../foundation/components/text/CustomText';
+import globalStyles from '../../foundation/theme/globalStyles';
+import { datestampToDayOfWeek, datestampToMonthDate } from '../../foundation/calendarEvents/timestampUtils';
+import WeatherDisplay from '../weather';
+import CustomText from '../../foundation/components/text/CustomText';
 
 interface TodayBannerProps {
     timestamp: string; // YYYY-MM-DD

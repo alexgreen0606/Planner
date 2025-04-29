@@ -7,6 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "scheme": "your-app-scheme",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -41,7 +42,8 @@
         {
           "contactsPermission": "Allow planner to access your contacts."
         }
-      ]
+      ],
+      "expo-router"
     ]
   }
 }

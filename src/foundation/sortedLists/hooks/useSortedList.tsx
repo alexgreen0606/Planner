@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useNavigation } from '../../navigation/services/NavigationProvider';
+import { useReload } from '../../navigation/services/NavigationProvider';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -46,7 +46,7 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
         isItemDeleting
     } = useDeleteScheduler();
 
-    const { registerReloadFunction } = useNavigation();
+    const { registerReloadFunction } = useReload();
 
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);

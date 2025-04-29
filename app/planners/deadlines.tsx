@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
-import { daysBetweenToday, datestampToMidnightDate, getTodayDatestamp, generateSortIdByTime } from '../../foundation/calendarEvents/timestampUtils';
-import globalStyles from '../../foundation/theme/globalStyles';
-import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import DateValue from '../../foundation/calendarEvents/components/values/DateValue';
-import CustomText from '../../foundation/components/text/CustomText';
+import { useSortableList } from '../../src/foundation/sortedLists/services/SortableListProvider';
+import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../src/foundation/calendarEvents/timestampUtils';
+import { ListItem, ModifyItemConfig } from '../../src/foundation/sortedLists/types';
+import { generateSortId, isItemTextfield } from '../../src/foundation/sortedLists/utils';
+import { Deadline } from '../../src/feature/deadlines/types';
+import Toolbar, { ToolbarProps } from '../../src/foundation/sortedLists/components/ListItemToolbar';
+import DateValue from '../../src/foundation/calendarEvents/components/values/DateValue';
+import useSortedList from '../../src/foundation/sortedLists/hooks/useSortedList';
+import { DEADLINE_LIST_KEY } from '../../src/feature/deadlines/constants';
+import { deleteDeadlines, getDeadlines, saveDeadline } from '../../src/feature/deadlines/deadlineUtils';
+import globalStyles from '../../src/foundation/theme/globalStyles';
+import SortableList from '../../src/foundation/sortedLists/components/list/SortableList';
+import CustomText from '../../src/foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
-import { deleteDeadlines, getDeadlines, saveDeadline } from './deadlineUtils';
-import { DEADLINE_LIST_KEY } from './constants';
-import { Deadline } from './types';
-import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
-import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 
 const Deadlines = () => {
     const { currentTextfield, setCurrentTextfield } = useSortableList();

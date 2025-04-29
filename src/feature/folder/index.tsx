@@ -20,7 +20,7 @@ import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { selectableColors } from '../../foundation/theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
-import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
+import { useReload } from '../../foundation/navigation/services/NavigationProvider';
 
 interface SortableFolderProps {
     folderId: string;
@@ -38,7 +38,7 @@ const SortedFolder = ({
     parentFolderData,
 }: SortableFolderProps) => {
 
-    const { currentScreen } = useNavigation();
+    const { currentScreen } = useReload();
 
     const { currentTextfield, setCurrentTextfield } = useSortableList();
 

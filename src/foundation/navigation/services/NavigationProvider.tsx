@@ -1,30 +1,28 @@
-import React, { createContext, useContext, useState, useRef } from 'react';
-import { Screens } from '../constants';
+import React, { createContext, useContext, useRef } from 'react';
+import { usePathname } from 'expo-router';
 
 // Each page gets a collection of unique functions to reload the page data
 type ReloadMap = Record<
-    Screens,
+    string, // the path of the current page
     Record<string, () => Promise<void>>
 >;
 
-interface NavigationProviderProps {
+interface ReloadProviderProps {
     children: React.ReactNode;
 }
 
-interface NavigationContextType {
-    currentScreen: Screens;
-    setCurrentScreen: (newTab: Screens) => void;
+interface ReloadContextType {
     registerReloadFunction: (functionId: string, reloadFunc: () => Promise<void>) => void;
     reloadCurrentPage: () => Promise<void>;
 }
 
-const NavigationContext = createContext<NavigationContextType | null>(null);
+const ReloadContext = createContext<ReloadContextType | null>(null);
 
-export const NavigationProvider: React.FC<NavigationProviderProps> = ({
+export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     children,
 }) => {
     const reloadMap = useRef<ReloadMap>({} as ReloadMap);
-    const [currentScreen, setCurrentScreen] = useState<Screens>(Screens.DASHBOARD);
+    const currentPath = usePathname();
 
     // Register a function for a specific page
     function registerReloadFunction(
@@ -33,8 +31,8 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
     ) {
         reloadMap.current = {
             ...reloadMap.current,
-            [currentScreen]: {
-                ...reloadMap.current[currentScreen],
+            [currentPath]: {
+                ...reloadMap.current[currentPath],
                 [functionId]: reloadFunc
             },
         };
@@ -42,7 +40,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
 
     // Execute all registered functions for a specific page
     async function reloadCurrentPage() {
-        const reloadFunctionsMap = reloadMap.current[currentScreen];
+        const reloadFunctionsMap = reloadMap.current[currentPath];
         if (!reloadFunctionsMap) return;
 
         try {
@@ -53,21 +51,19 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
     };
 
     return (
-        <NavigationContext.Provider value={{
-            currentScreen,
-            setCurrentScreen,
+        <ReloadContext.Provider value={{
             registerReloadFunction,
             reloadCurrentPage,
         }}>
             {children}
-        </NavigationContext.Provider>
+        </ReloadContext.Provider>
     );
 };
 
-export const useNavigation = () => {
-    const context = useContext(NavigationContext);
+export const useReload = () => {
+    const context = useContext(ReloadContext);
     if (!context) {
-        throw new Error("useReload must be used within a ReloadProvider");
+        throw new Error("useNavigation must be used within a NavigationProvider");
     }
     return context;
 };

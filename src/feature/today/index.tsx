@@ -10,7 +10,7 @@ import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/cale
 import { useSortableList } from '../../foundation/sortedLists/services/SortableListProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { useNavigation } from '../../foundation/navigation/services/NavigationProvider';
+import { useReload } from '../../foundation/navigation/services/NavigationProvider';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
 
 interface SortablePlannerProps {
@@ -29,7 +29,7 @@ const TodayPlanner = ({
 
     const { isItemDeleting } = useDeleteScheduler();
 
-    const { registerReloadFunction } = useNavigation();
+    const { registerReloadFunction } = useReload();
 
     useEffect(() => {
         registerReloadFunction(`external-data`, loadAllExternalData);
