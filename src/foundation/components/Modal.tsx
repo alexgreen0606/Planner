@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         backgroundColor: PlatformColor('systemGray6'),
+        gap: 4
     },
     scrollContainer: {
         flexGrow: 1,

@@ -1,36 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { PlatformColor, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { PlatformColor } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { getTodayDatestamp } from '../timestampUtils';
 
 interface CalendarSelectProps {
-    handleDatesChange: (dates: string[]) => void;
-    clearSelection: boolean;
+    dates: string[];
+    onChange: (dates: string[]) => void;
 }
 
 const CalendarSelect = ({
-    handleDatesChange,
-    clearSelection
+    dates,
+    onChange
 }: CalendarSelectProps) => {
     const [monthIndex, setMonthIndex] = useState(0);
-    const [range, setRange] = useState<{ startDate: string | null, endDate: string | null }>({
-        startDate: null,
-        endDate: null,
-    });
-
-    useEffect(() => {
-        if (clearSelection) {
-            setRange({
-                startDate: null,
-                endDate: null
-            });
-            handleDatesChange([]);
-        }
-    }, [clearSelection])
 
     const handleDayPress = (day: { dateString: string }) => {
         const { dateString } = day;
-        const { startDate, endDate } = range;
+        const [startDate, endDate] = dates.length > 0 ? [dates[0], dates[dates.length - 1]] : [null, null];
         let newRange;
 
         if (startDate === dateString) {
@@ -54,8 +40,7 @@ const CalendarSelect = ({
             }
         }
 
-        setRange(newRange);
-        handleDatesChange(newRange.startDate ? getDateRangeArray(newRange.startDate, newRange.endDate) : []);
+        onChange(newRange.startDate ? getDateRangeArray(newRange.startDate, newRange.endDate) : []);
     };
 
     const getDateRangeArray = (start: string, end: string): string[] => {
@@ -72,11 +57,9 @@ const CalendarSelect = ({
         return dates;
     };
 
-
-
     const getMarkedDates = () => {
         const marks: any = {};
-        const { startDate, endDate } = range;
+        const [startDate, endDate] = dates.length > 0 ? [dates[0], dates[dates.length - 1]] : [null, null];
 
         if (startDate && !endDate) {
             marks[startDate] = { selected: true, startingDay: true, endingDay: true, color: PlatformColor('systemBlue'), textColor: 'white' };
@@ -113,7 +96,7 @@ const CalendarSelect = ({
             markingType='period'
             minDate={getTodayDatestamp()}
             hideExtraDays
-            disableLeftArrow={monthIndex === 0}
+            disableLeftArrow={monthIndex <= 0}
             onPressArrowLeft={(subtract: () => void) => {
                 setMonthIndex(curr => curr - 1)
                 subtract();
@@ -138,9 +121,5 @@ const CalendarSelect = ({
         />
     );
 };
-
-const styles = StyleSheet.create({
-
-});
 
 export default CalendarSelect;

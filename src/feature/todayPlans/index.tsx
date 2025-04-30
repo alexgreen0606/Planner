@@ -11,7 +11,7 @@ import { deleteEventsLoadChips, saveEventLoadChips, openTimeModal } from '../../
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { useReload } from '../../foundation/reload/ReloadProvider';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
-import { useTimeModal } from '../../modals/timeModal/TimeModalProvider';
+import { useTimeModal } from '../timeModal/TimeModalProvider';
 import { usePathname } from 'expo-router';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 

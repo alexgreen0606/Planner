@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import useDimensions from '../../src/foundation/hooks/useDimensions';
-import { BOTTOM_NAVIGATION_HEIGHT } from '../../src/foundation/navigation/constants';
+import { BOTTOM_NAVIGATION_HEIGHT } from '../../src/foundation/constants';
 import GenericIcon from '../../src/foundation/components/GenericIcon';
 
 export default function TabLayout() {

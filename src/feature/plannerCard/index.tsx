@@ -18,7 +18,7 @@ import { useDeleteScheduler } from '../../foundation/sortedLists/services/Delete
 import { generatePlanner } from '../../foundation/calendarEvents/calendarUtils';
 import EventCountChip from './components/EventCountChip';
 import { LIST_ITEM_HEIGHT } from '../../foundation/sortedLists/constants';
-import { useTimeModal } from '../../modals/timeModal/TimeModalProvider';
+import { useTimeModal } from '../timeModal/TimeModalProvider';
 import { usePathname } from 'expo-router';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 

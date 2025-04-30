@@ -9,7 +9,7 @@ import globalStyles from '../../../src/foundation/theme/globalStyles';
 import PopoverList from '../../../src/foundation/components/PopoverList';
 import GenericIcon from '../../../src/foundation/components/GenericIcon';
 import PlannerCard from '../../../src/feature/plannerCard';
-import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
+import { getPlannerSet, getPlannerSetTitles } from '../../../src/feature/plannerSets/plannerSetsStorage';
 import { usePathname, useRouter } from 'expo-router';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { NULL } from '../../../src/feature/checklists/constants';

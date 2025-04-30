@@ -24,7 +24,7 @@ import { useReload } from '../../reload/ReloadProvider';
 import { BlurView } from 'expo-blur';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import useDimensions from '../../hooks/useDimensions';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../navigation/constants';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../constants';
 import { Portal } from 'react-native-paper';
 import GenericIcon from '../../components/GenericIcon';
 import globalStyles from '../../theme/globalStyles';

@@ -4,7 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DeleteSchedulerProvider } from '../src/foundation/sortedLists/services/DeleteScheduler';
 import { ReloadProvider } from '../src/foundation/reload/ReloadProvider';
 import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';
-import { TimeModalProvider } from '../src/modals/timeModal/TimeModalProvider';
+import { TimeModalProvider } from '../src/feature/timeModal/TimeModalProvider';
 import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerSetKey]';
 
 export default function TabLayout() {

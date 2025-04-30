@@ -7,7 +7,7 @@ import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
 import { isValidPlatformColor } from '../../theme/colors';
 import { useDeleteScheduler } from '../../sortedLists/services/DeleteScheduler';
-import { useTimeModal } from '../../../modals/timeModal/TimeModalProvider';
+import { useTimeModal } from '../../../feature/timeModal/TimeModalProvider';
 import { useReload } from '../../reload/ReloadProvider';
 
 export interface EventChipProps {

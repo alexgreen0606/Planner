@@ -1,5 +1,5 @@
 import { PlatformColor, ViewStyle } from "react-native";
-import { HEADER_HEIGHT } from "../navigation/constants";
+import { HEADER_HEIGHT } from "../constants";
 
 type GlobalStyles = {
   spacedApart: ViewStyle;

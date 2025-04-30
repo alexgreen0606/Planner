@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import { datestampToMidnightDate } from "../../src/foundation/calendarEvents/timestampUtils";
 import { ItemStatus } from "../../src/foundation/sortedLists/constants";
 import Toggle from "../../src/foundation/calendarEvents/components/timeModal/Toggle";
-import { useTimeModal } from "../../src/modals/timeModal/TimeModalProvider";
+import { useTimeModal } from "../../src/feature/timeModal/TimeModalProvider";
 
 export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
 
