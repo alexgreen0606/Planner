@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { FolderItemTypes } from '../../../../src/feature/checklists/types';
-import { NULL } from '../../../../src/feature/checklists/constants';
-import { getFolderFromStorage } from '../../../../src/feature/checklists/storage';
-import { ScrollContainerProvider } from '../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import globalStyles from '../../../../src/foundation/theme/globalStyles';
-import FolderItemBanner from '../../../../src/feature/checklists/components/FolderItemBanner';
-import SortedFolder from '../../../../src/feature/folderContents';
+import { FolderItemTypes } from '../../../../../src/feature/checklists/types';
+import { NULL } from '../../../../../src/feature/checklists/constants';
+import { getFolderFromStorage } from '../../../../../src/feature/checklists/storage';
+import { ScrollContainerProvider } from '../../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
+import globalStyles from '../../../../../src/foundation/theme/globalStyles';
+import FolderItemBanner from '../../../../../src/feature/checklists/components/FolderItemBanner';
+import SortedFolder from '../../../../../src/feature/folderContents';
 
 const Lists = () => {
   const router = useRouter();

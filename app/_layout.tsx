@@ -1,74 +1,31 @@
-import { Tabs } from 'expo-router';
-import GenericIcon from '../src/foundation/components/GenericIcon';
-import { BOTTOM_NAVIGATION_HEIGHT } from '../src/foundation/navigation/constants';
+import { Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DeleteSchedulerProvider } from '../src/foundation/sortedLists/services/DeleteScheduler';
 import { ReloadProvider } from '../src/foundation/reload/ReloadProvider';
-import useDimensions from '../src/foundation/hooks/useDimensions';
+import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';
+import { TimeModalProvider } from '../src/modals/timeModal/TimeModalProvider';
+import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerSetKey]';
 
 export default function TabLayout() {
-    const { BOTTOM_SPACER } = useDimensions();
     return (
         <PaperProvider>
             <GestureHandlerRootView>
                 <DeleteSchedulerProvider>
                     <ReloadProvider>
-                        <Tabs
-                            screenOptions={{
-                                tabBarStyle: {
-                                    height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER,
-                                    backgroundColor: 'transparent',
-                                    borderTopWidth: 0,
-                                    position: 'absolute',
-                                    paddingTop: 8
-                                },
-                                headerShown: false,
-                                tabBarActiveTintColor: 'systemBlue',
-                                tabBarInactiveTintColor: 'secondaryLabel',
-                                tabBarLabel: () => null
-                            }}
-                        >
-                            <Tabs.Screen
-                                name="lists"
-                                options={{
-                                    tabBarIcon: ({ color }) => (
-                                        <GenericIcon
-                                            type="lists"
-                                            size="xl"
-                                            hideRipple
-                                            platformColor={color}
-                                        />
-                                    ),
-                                }}
-                            />
-                            <Tabs.Screen
-                                name="index"
-                                options={{
-                                    tabBarIcon: ({ color }) => (
-                                        <GenericIcon
-                                            type="coffee"
-                                            size="xl"
-                                            hideRipple
-                                            platformColor={color}
-                                        />
-                                    ),
-                                }}
-                            />
-                            <Tabs.Screen
-                                name="planners"
-                                options={{
-                                    tabBarIcon: ({ color }) => (
-                                        <GenericIcon
-                                            type="planners"
-                                            size="xl"
-                                            hideRipple
-                                            platformColor={color}
-                                        />
-                                    ),
-                                }}
-                            />
-                        </Tabs>
+                        <TimeModalProvider>
+                            <Stack>
+                                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                <Stack.Screen
+                                    name={TIME_MODAL_PATHNAME}
+                                    options={{ presentation: 'modal', headerShown: false }}
+                                />
+                                <Stack.Screen
+                                    name={`${PLANNER_SET_MODAL_PATHNAME}[plannerSetKey]`}
+                                    options={{ presentation: 'modal', headerShown: false }}
+                                />
+                            </Stack>
+                        </TimeModalProvider>
                     </ReloadProvider>
                 </DeleteSchedulerProvider>
             </GestureHandlerRootView>

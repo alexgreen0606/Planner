@@ -1,32 +1,32 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { MMKV, useMMKVObject } from 'react-native-mmkv';
-import { getNextSevenDayDatestamps } from '../../src/foundation/calendarEvents/timestampUtils';
-import { PLANNER_SETS_KEY, PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../src/feature/plannerCard/types';
-import { WeatherForecast } from '../../src/feature/weather/utils';
-import { CalendarData } from '../../src/foundation/calendarEvents/types';
-import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../src/foundation/calendarEvents/calendarUtils';
-import { useReload } from '../../src/foundation/reload/ReloadProvider';
-import globalStyles from '../../src/foundation/theme/globalStyles';
-import PopoverList from '../../src/foundation/components/PopoverList';
-import GenericIcon from '../../src/foundation/components/GenericIcon';
-import PlannerCard from '../../src/feature/plannerCard';
-import PlannerSetModal from '../../src/feature/plannerCard/components/PlannerSetModal';
+import { getNextSevenDayDatestamps } from '../../../src/foundation/calendarEvents/timestampUtils';
+import { WeatherForecast } from '../../../src/feature/weather/utils';
+import { CalendarData } from '../../../src/foundation/calendarEvents/types';
+import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/foundation/calendarEvents/calendarUtils';
+import { useReload } from '../../../src/foundation/reload/ReloadProvider';
+import globalStyles from '../../../src/foundation/theme/globalStyles';
+import PopoverList from '../../../src/foundation/components/PopoverList';
+import GenericIcon from '../../../src/foundation/components/GenericIcon';
+import PlannerCard from '../../../src/feature/plannerCard';
+import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
+import { usePathname, useRouter } from 'expo-router';
+import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
+import { NULL } from '../../../src/feature/checklists/constants';
 
-const defaultPlannerSet = {
-    id: 'default',
-    title: 'Next 7 Days',
-    dates: getNextSevenDayDatestamps()
-};
+const defaultPlannerSet = 'Next 7 Days';
 
 const Planners = () => {
-    const datestamps = useMemo(() => getNextSevenDayDatestamps(), []);
 
-    const storage = new MMKV({ id: PLANNER_SETS_STORAGE_ID });
-    const [plannerSets] = useMMKVObject<PlannerSet[]>(PLANNER_SETS_KEY, storage);
+    const router = useRouter();
+    const allPlannerSetTitles = getPlannerSetTitles();
+    const [plannerSetKey, setPlannerSetKey] = useState(defaultPlannerSet);
 
-    const [plannerSetModalOpen, setPlannerSetModalOpen] = useState(false);
-    const [plannerSet, setPlannerSet] = useState(defaultPlannerSet);
+    const plannerDatestamps = useMemo(() => {
+        if (plannerSetKey === 'Next 7 Days') return getNextSevenDayDatestamps();
+        return getPlannerSet(plannerSetKey)?.dates ?? [];
+    }, [plannerSetKey]);
+
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-04-23": {
             "date": "2025-04-23",
@@ -92,13 +92,9 @@ const Planners = () => {
             "precipitationProbabilityMax": 41
         }
     });
-    const [calendarEventData, setCalendarEventData] = useState<CalendarData>(generateEmptyCalendarDataMaps(datestamps))
+    const [calendarEventData, setCalendarEventData] = useState<CalendarData>(generateEmptyCalendarDataMaps(plannerDatestamps))
 
     const { registerReloadFunction } = useReload();
-
-    function togglePlannerSetModalOpen() {
-        setPlannerSetModalOpen(curr => !curr);
-    }
 
     /**
      * Loads in all chip, weather, and calendar data.
@@ -106,7 +102,7 @@ const Planners = () => {
     async function loadAllExternalData() {
         // TODO: add in forecasts from apple weather kit
 
-        setCalendarEventData(await loadCalendarEventData(datestamps));
+        setCalendarEventData(await loadCalendarEventData(plannerDatestamps));
     };
 
     // Load in the initial planners
@@ -123,21 +119,21 @@ const Planners = () => {
                 globalStyles.spacedApart,
                 styles.dropdownContainer
             ]} >
-                <PopoverList<PlannerSet>
-                    getLabelFromObject={(set) => set.title}
-                    options={[defaultPlannerSet, ...(plannerSets ?? [])]}
-                    onChange={(newSet) => setPlannerSet(newSet)}
+                <PopoverList<string>
+                    getLabelFromObject={(set) => set} // TODO remove this prop
+                    options={[defaultPlannerSet, ...allPlannerSetTitles]}
+                    onChange={(newSet) => setPlannerSetKey(newSet)}
                 />
                 <GenericIcon
                     type='add'
                     platformColor='systemBlue'
-                    onClick={togglePlannerSetModalOpen}
+                    onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${NULL}`)}
                 />
             </View>
 
             {/* Planner Set Display */}
             <View style={styles.planners}>
-                {plannerSet.dates.map((datestamp) =>
+                {plannerDatestamps.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
                         datestamp={datestamp}
@@ -148,9 +144,6 @@ const Planners = () => {
                     />
                 )}
             </View>
-
-            {/* Planner Set Modal */}
-            <PlannerSetModal open={plannerSetModalOpen} toggleModalOpen={togglePlannerSetModalOpen} />
 
         </View>
     );

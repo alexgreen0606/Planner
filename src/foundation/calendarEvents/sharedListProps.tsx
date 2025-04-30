@@ -1,7 +1,6 @@
 import Toolbar, { ToolbarProps } from "../sortedLists/components/ListItemToolbar";
 import { ModifyItemConfig } from "../sortedLists/types";
 import { isItemTextfield } from "../sortedLists/utils";
-import TimeModal from "./components/timeModal/TimeModal";
 import TimeValue from "./components/values/TimeValue";
 import { extractTimeValue, generateSortIdByTime, getEventTime } from "./timestampUtils";
 import { PlannerEvent, RecurringEvent } from "./types";
@@ -78,56 +77,21 @@ export async function handleDragEnd(
 }
 
 /**
- * @getModal Prop: generates the config for the event time modal.
- */
-export function generateTimeModalConfig(
-    item: PlannerEvent,
-    timeModalOpen: boolean,
-    toggleTimeModal: (item: PlannerEvent) => void,
-    datestamp: string,
-    currentList: PlannerEvent[],
-    setCurrentTextfield: React.Dispatch<PlannerEvent>
-) {
-    return {
-        component: TimeModal,
-        props: {
-            item,
-            timestamp: datestamp,
-            open: timeModalOpen,
-            toggleModalOpen: toggleTimeModal,
-            onSave: (updatedItem: PlannerEvent) => {
-                const updatedList = [...currentList];
-                const itemCurrentIndex = currentList.findIndex(item => item.id === updatedItem.id);
-                if (itemCurrentIndex !== -1) {
-                    updatedList[itemCurrentIndex] = updatedItem;
-                } else {
-                    updatedList.push(updatedItem);
-                }
-                updatedItem.sortId = generateSortIdByTime(updatedItem, updatedList);
-                toggleTimeModal(updatedItem);
-                setCurrentTextfield(updatedItem);
-            },
-            hideKeyboard: timeModalOpen
-        }
-    }
-}
-
-/**
  * @getLeftIcon Prop: generates the config for the event time modal trigger icon.
  */
 export function generateTimeIconConfig(
-    item: PlannerEvent | RecurringEvent,
-    toggleTimeModal: (item: PlannerEvent | RecurringEvent) => void
+    event: PlannerEvent | RecurringEvent,
+    openTimeModal: (item: PlannerEvent | RecurringEvent) => void
 ) {
-    const itemTime = getEventTime(item);
+    const itemTime = getEventTime(event);
     return {
         hideIcon: !itemTime,
-        onClick: toggleTimeModal,
+        onClick: () => openTimeModal(event),
         customIcon: (
             <TimeValue
-                allDay={!!(item as PlannerEvent).timeConfig?.allDay}
-                endEvent={!!(item as PlannerEvent).timeConfig?.multiDayEnd}
-                startEvent={!!(item as PlannerEvent).timeConfig?.multiDayStart}
+                allDay={!!(event as PlannerEvent).timeConfig?.allDay}
+                endEvent={!!(event as PlannerEvent).timeConfig?.multiDayEnd}
+                startEvent={!!(event as PlannerEvent).timeConfig?.multiDayStart}
                 timeValue={itemTime!}
             />
         )
@@ -139,18 +103,18 @@ export function generateTimeIconConfig(
  * The toolbar allows for opening the time modal.
  */
 export function generateEventToolbar(
-    item: PlannerEvent | RecurringEvent,
-    toggleTimeModal: (item: PlannerEvent | RecurringEvent) => void,
+    event: PlannerEvent | RecurringEvent,
+    openTimeModal: (event: PlannerEvent) => void,
     timeModalOpen: boolean
 ): ModifyItemConfig<PlannerEvent | RecurringEvent, ToolbarProps<PlannerEvent | RecurringEvent>> {
     return {
         component: Toolbar,
         props: {
-            item,
-            open: !timeModalOpen && isItemTextfield(item),
+            item: event,
+            open: !timeModalOpen && isItemTextfield(event),
             iconSets: [[{
                 type: 'clock',
-                onClick: () => toggleTimeModal(item),
+                onClick: () => openTimeModal(event),
             }]]
         }
     }

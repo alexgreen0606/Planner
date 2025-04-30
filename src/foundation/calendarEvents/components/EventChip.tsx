@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, PlatformColor } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
 import globalStyles from '../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
-import TimeModal from './timeModal/TimeModal';
 import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
 import { isValidPlatformColor } from '../../theme/colors';
 import { useDeleteScheduler } from '../../sortedLists/services/DeleteScheduler';
+import { useTimeModal } from '../../../modals/timeModal/TimeModalProvider';
+import { useReload } from '../../reload/ReloadProvider';
 
 export interface EventChipProps {
     planEvent?: PlannerEvent;
@@ -27,18 +28,21 @@ const EventChip = ({
     color,
     onClick
 }: EventChipProps) => {
-    const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
+
+    const { onOpen } = useTimeModal();
 
     const { pendingDeleteItems } = useDeleteScheduler();
 
-    const toggleTimeModal = () => {
-        setIsTimeModalOpen(!isTimeModalOpen);
-    };
+    const { reloadCurrentPage } = useReload();
 
-    const handleSave = async (updatedEvent: PlannerEvent) => {
+    function handleOpen() {
+        if (planEvent) onOpen(planEvent, handleSave);
+    }
+
+    async function handleSave(updatedEvent: PlannerEvent) {
         await saveEvent(updatedEvent);
-        toggleTimeModal();
-    };
+        reloadCurrentPage();
+    }
 
     const isPendingDelete = planEvent &&
         pendingDeleteItems.some(deleteItem =>
@@ -79,16 +83,9 @@ const EventChip = ({
         <>
             {planEvent ? (
                 <>
-                    <TouchableOpacity onPress={() => toggleTimeModal()}>
+                    <TouchableOpacity onPress={handleOpen}>
                         <ChipContent />
                     </TouchableOpacity>
-
-                    <TimeModal
-                        toggleModalOpen={toggleTimeModal}
-                        open={isTimeModalOpen}
-                        onSave={handleSave}
-                        item={planEvent}
-                    />
                 </>
             ) : onClick ? (
                 <TouchableOpacity onPress={onClick}>

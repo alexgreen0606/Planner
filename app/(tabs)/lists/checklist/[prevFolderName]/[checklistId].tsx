@@ -1,18 +1,18 @@
 import React from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Checklist, FolderItemTypes } from '../../../../src/feature/checklists/types';
-import { LISTS_STORAGE_ID } from '../../../../src/feature/checklists/constants';
-import { ScrollContainerProvider } from '../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import globalStyles from '../../../../src/foundation/theme/globalStyles';
-import { useDeleteScheduler } from '../../../../src/foundation/sortedLists/services/DeleteScheduler';
-import { ListItem } from '../../../../src/foundation/sortedLists/types';
-import useSortedList from '../../../../src/foundation/sortedLists/hooks/useSortedList';
-import SortableList from '../../../../src/foundation/sortedLists/components/list/SortableList';
-import { generateCheckboxIconConfig } from '../../../../src/foundation/sortedLists/commonProps';
-import { isItemTextfield } from '../../../../src/foundation/sortedLists/utils';
-import { ItemStatus } from '../../../../src/foundation/sortedLists/constants';
-import FolderItemBanner from '../../../../src/feature/checklists/components/FolderItemBanner';
+import { Checklist, FolderItemTypes } from '../../../../../src/feature/checklists/types';
+import { LISTS_STORAGE_ID } from '../../../../../src/feature/checklists/constants';
+import { ScrollContainerProvider } from '../../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
+import globalStyles from '../../../../../src/foundation/theme/globalStyles';
+import { useDeleteScheduler } from '../../../../../src/foundation/sortedLists/services/DeleteScheduler';
+import { ListItem } from '../../../../../src/foundation/sortedLists/types';
+import useSortedList from '../../../../../src/foundation/sortedLists/hooks/useSortedList';
+import SortableList from '../../../../../src/foundation/sortedLists/components/list/SortableList';
+import { generateCheckboxIconConfig } from '../../../../../src/foundation/sortedLists/commonProps';
+import { isItemTextfield } from '../../../../../src/foundation/sortedLists/utils';
+import { ItemStatus } from '../../../../../src/foundation/sortedLists/constants';
+import FolderItemBanner from '../../../../../src/feature/checklists/components/FolderItemBanner';
 
 const ChecklistScreen = () => {
     const { checklistId, prevFolderName } = useLocalSearchParams<{ checklistId: string, prevFolderName: string }>();

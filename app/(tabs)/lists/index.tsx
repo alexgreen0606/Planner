@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { ROOT_FOLDER_KEY } from '../../src/feature/checklists/constants';
+import { ROOT_FOLDER_KEY } from '../../../src/feature/checklists/constants';
 
 export default function IndexPage() {
 

@@ -1,5 +1,6 @@
 import { isItemTextfield } from '../sortedLists/utils';
 import { deleteEvents, saveEvent } from './storage/plannerStorage';
+import { generateSortIdByTime } from './timestampUtils';
 import { Planner, PlannerEvent } from './types';
 
 export function getEventsFromPlanner(
@@ -18,27 +19,50 @@ export function setEventsInPlanner(
 /**
  * Toggles the time modal for a planner event
  * @param planEvent - The planner event to toggle
- * @param isItemTextfield - Function to check if the item is a textfield
  * @param toggleItemEdit - Function to toggle item edit
  * @param setTimeModalOpen - Function to set the time modal open state
  */
-export async function toggleTimeModal(
+export async function openTimeModal(
     planEvent: PlannerEvent,
     toggleItemEdit: (event: PlannerEvent) => Promise<void>,
-    setTimeModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+    openTimeModal: (item: PlannerEvent, saveItem: (item: PlannerEvent) => Promise<void>) => void,
+    currentList: PlannerEvent[],
+    setCurrentTextfield: React.Dispatch<PlannerEvent>
 ) {
     if (!isItemTextfield(planEvent)) {
         await toggleItemEdit(planEvent);
     }
-    setTimeModalOpen(curr => !curr);
+    openTimeModal(planEvent, (newEvent) => handleTimeModalSave(newEvent, currentList, setCurrentTextfield));
+}
+
+/**
+ * Updates the current textfield with the new data entered in the time modal.
+ * The item may be shifted in the list to maintain sorted time logic.
+ * @param updatedEvent - New item to save
+ * @param currentList - The current list of items
+ * @param setCurrentTextfield - Function to save the current textfield
+ */
+async function handleTimeModalSave(
+    updatedEvent: PlannerEvent,
+    currentList: PlannerEvent[],
+    setCurrentTextfield: React.Dispatch<PlannerEvent>
+) {
+    const updatedList = [...currentList];
+    const itemCurrentIndex = updatedList.findIndex(existingItem => existingItem.id === updatedEvent.id);
+    if (itemCurrentIndex !== -1) {
+        updatedList[itemCurrentIndex] = updatedEvent;
+    } else {
+        updatedList.push(updatedEvent);
+    }
+    updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedList);
+    setCurrentTextfield(updatedEvent);
 }
 
 /**
  * Handles saving a planner event
  * @param planEvent - The planner event to save
- * @param saveEvent - Function to save the event
  * @param reloadChips - Function to reload chips
- * @param getItems - Optional function to get all items (for weekly planner)
+ * @param items - The current list items
  */
 export async function saveEventLoadChips(
     planEvent: PlannerEvent,

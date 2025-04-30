@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { RecurringPlannerKeys } from '../../src/feature/recurringPlanner/constants';
-import globalStyles from '../../src/foundation/theme/globalStyles';
-import GenericIcon from '../../src/foundation/components/GenericIcon';
-import RecurringWeekdayPlanner from '../../src/feature/recurringPlanner/components/RecurringWeekdayPlanner';
-import RecurringPlanner from '../../src/feature/recurringPlanner/components/RecurringPlanner';
-import PopoverList from '../../src/foundation/components/PopoverList';
+import { RecurringPlannerKeys } from '../../../src/feature/recurringPlanner/constants';
+import globalStyles from '../../../src/foundation/theme/globalStyles';
+import GenericIcon from '../../../src/foundation/components/GenericIcon';
+import RecurringWeekdayPlanner from '../../../src/feature/recurringPlanner/components/RecurringWeekdayPlanner';
+import RecurringPlanner from '../../../src/feature/recurringPlanner/components/RecurringPlanner';
+import PopoverList from '../../../src/foundation/components/PopoverList';
 
 type RecurringOption = {
     label: string;

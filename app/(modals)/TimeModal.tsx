@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { PlatformColor, StyleSheet, View } from 'react-native';
-import globalStyles from '../../../theme/globalStyles';
-import Modal from '../../../components/Modal';
-import {
-    datestampToMidnightDate,
-} from '../../timestampUtils';
-import CustomText from '../../../components/text/CustomText';
-import { ListItemUpdateComponentProps } from '../../../sortedLists/types';
-import { PlannerEvent } from '../../types';
-import Toggle from './Toggle';
-import DateSelector from './DateSelector';
-import ThinLine from '../../../sortedLists/components/list/ThinLine';
-import { TIME_MODAL_INPUT_HEIGHT } from '../../constants';
-import ModalInputField from '../../../components/ModalInputField';
-import { ItemStatus } from '../../../sortedLists/constants';
+import { PlatformColor, StyleSheet, View } from "react-native"
+import { usePathname } from "expo-router";
+import Modal from "../../src/foundation/components/Modal";
+import ModalInputField from "../../src/foundation/components/ModalInputField";
+import ThinLine from "../../src/foundation/sortedLists/components/list/ThinLine";
+import DateSelector from "../../src/foundation/calendarEvents/components/timeModal/DateSelector";
+import CustomText from "../../src/foundation/components/text/CustomText";
+import globalStyles from "../../src/foundation/theme/globalStyles";
+import { TIME_MODAL_INPUT_HEIGHT } from "../../src/foundation/calendarEvents/constants";
+import { useEffect, useMemo, useState } from "react";
+import { datestampToMidnightDate } from "../../src/foundation/calendarEvents/timestampUtils";
+import { ItemStatus } from "../../src/foundation/sortedLists/constants";
+import Toggle from "../../src/foundation/calendarEvents/components/timeModal/Toggle";
+import { useTimeModal } from "../../src/modals/timeModal/TimeModalProvider";
+
+export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
 
 type FormData = {
     value: string;
@@ -31,24 +31,22 @@ const initialFormData: FormData = {
     isCalendarEvent: false
 };
 
-export interface TimeModalProps extends ListItemUpdateComponentProps<PlannerEvent> {
-    open: boolean;
-    toggleModalOpen: (event: PlannerEvent) => void;
-    onSave: (event: PlannerEvent) => void;
-}
+const TimeModal = () => {
+    const pathname = usePathname();
+    const { initialEvent, onSave, onClose } = useTimeModal();
 
-const TimeModal = ({
-    open,
-    toggleModalOpen,
-    onSave,
-    item: planEvent
-}: TimeModalProps) => {
+    const planEvent = useMemo(() => {
+        console.log(initialEvent.current)
+        return initialEvent.current;
+    }, [pathname]);
+
     const [formData, setFormData] = useState<FormData>(initialFormData);
-    const isEditMode = planEvent.status === ItemStatus.EDIT;
+    const isEditMode = planEvent?.status === ItemStatus.EDIT;
     const formDataFilled = formData.value.length > 0;
 
     // Sync the form data every time the planEvent changes
     useEffect(() => {
+        if (!planEvent) return;
         const now = new Date();
         const currentHour = now.getHours();
         const defaultStartTime = datestampToMidnightDate(planEvent.listId);
@@ -63,7 +61,7 @@ const TimeModal = ({
             allDay: planEvent.timeConfig.allDay,
             isCalendarEvent: !!planEvent.calendarId
         } : {
-            value: '',
+            value: planEvent.value,
             allDay: false,
             isCalendarEvent: false,
             startDate: defaultStartTime,
@@ -80,6 +78,7 @@ const TimeModal = ({
     }
 
     function handleSave() {
+        if (!planEvent) return;
         const updatedItem = {
             ...planEvent,
             timeConfig: {
@@ -103,6 +102,7 @@ const TimeModal = ({
     }
 
     function handleDelete() {
+        if (!planEvent) return;
         const updatedItem = { ...planEvent };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
@@ -111,9 +111,7 @@ const TimeModal = ({
 
     return (
         <Modal
-            open={open}
-            toggleModalOpen={() => toggleModalOpen(planEvent)}
-            title={isEditMode ? 'Edit Event' : 'Create Event'}
+            title='Time Modal'
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSave,
@@ -123,9 +121,8 @@ const TimeModal = ({
                 label: 'Unschedule',
                 onClick: handleDelete
             }}
-            customStyle={{ gap: 4 }}
+            onClose={onClose}
         >
-
             {/* Title */}
             <ModalInputField
                 label='Title'
@@ -133,7 +130,7 @@ const TimeModal = ({
                 onChange={(newVal) => {
                     setFormData({ ...formData, value: newVal });
                 }}
-                focusTrigger={open && planEvent.value.length === 0}
+                focusTrigger={pathname === TIME_MODAL_PATHNAME && planEvent?.value.length === 0}
             />
 
             <ThinLine />
@@ -211,13 +208,13 @@ const TimeModal = ({
             </View>
         </Modal>
     );
-};
+}
 
 const styles = StyleSheet.create({
     inputField: {
         ...globalStyles.spacedApart,
         height: TIME_MODAL_INPUT_HEIGHT
     }
-})
+});
 
 export default TimeModal;

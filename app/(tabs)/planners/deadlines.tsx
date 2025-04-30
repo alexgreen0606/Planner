@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useScrollContainer } from '../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../src/foundation/calendarEvents/timestampUtils';
-import { ListItem, ModifyItemConfig } from '../../src/foundation/sortedLists/types';
-import { generateSortId, isItemTextfield } from '../../src/foundation/sortedLists/utils';
-import { Deadline } from '../../src/feature/deadlines/types';
-import Toolbar, { ToolbarProps } from '../../src/foundation/sortedLists/components/ListItemToolbar';
-import DateValue from '../../src/foundation/calendarEvents/components/values/DateValue';
-import useSortedList from '../../src/foundation/sortedLists/hooks/useSortedList';
-import { DEADLINE_LIST_KEY } from '../../src/feature/deadlines/constants';
-import { deleteDeadlines, getDeadlines, saveDeadline } from '../../src/feature/deadlines/deadlineUtils';
-import globalStyles from '../../src/foundation/theme/globalStyles';
-import SortableList from '../../src/foundation/sortedLists/components/list/SortableList';
-import CustomText from '../../src/foundation/components/text/CustomText';
+import { useScrollContainer } from '../../../src/foundation/sortedLists/services/ScrollContainerProvider';
+import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../../src/foundation/calendarEvents/timestampUtils';
+import { ListItem, ModifyItemConfig } from '../../../src/foundation/sortedLists/types';
+import { generateSortId, isItemTextfield } from '../../../src/foundation/sortedLists/utils';
+import { Deadline } from '../../../src/feature/deadlines/types';
+import Toolbar, { ToolbarProps } from '../../../src/foundation/sortedLists/components/ListItemToolbar';
+import DateValue from '../../../src/foundation/calendarEvents/components/values/DateValue';
+import useSortedList from '../../../src/foundation/sortedLists/hooks/useSortedList';
+import { DEADLINE_LIST_KEY } from '../../../src/feature/deadlines/constants';
+import { deleteDeadlines, getDeadlines, saveDeadline } from '../../../src/feature/deadlines/deadlineUtils';
+import globalStyles from '../../../src/foundation/theme/globalStyles';
+import SortableList from '../../../src/foundation/sortedLists/components/list/SortableList';
+import CustomText from '../../../src/foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
 
 const Deadlines = () => {

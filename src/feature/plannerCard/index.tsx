@@ -8,17 +8,19 @@ import SortableList from '../../foundation/sortedLists/components/list/SortableL
 import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
 import { WeatherForecast } from '../weather/utils';
 import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
-import { generateEventToolbar, generateTimeIconConfig, generateTimeModalConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
+import { generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
 import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import Card from '../../foundation/components/Card';
-import { TimeModalProps } from '../../foundation/calendarEvents/components/timeModal/TimeModal';
-import { deleteEventsLoadChips, saveEventLoadChips, toggleTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
+import { deleteEventsLoadChips, saveEventLoadChips, openTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
 import { generatePlanner } from '../../foundation/calendarEvents/calendarUtils';
 import EventCountChip from './components/EventCountChip';
 import { LIST_ITEM_HEIGHT } from '../../foundation/sortedLists/constants';
+import { useTimeModal } from '../../modals/timeModal/TimeModalProvider';
+import { usePathname } from 'expo-router';
+import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -41,9 +43,14 @@ const PlannerCard = ({
         setCurrentTextfield,
     } = useScrollContainer();
 
+    const { onOpen } = useTimeModal();
+
+    const pathname = usePathname();
+
+    const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
+
     const { pendingDeleteItems } = useDeleteScheduler();
 
-    const [timeModalOpen, setTimeModalOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(true);
 
     // Reload the list whenever the calendar events change
@@ -73,9 +80,15 @@ const PlannerCard = ({
 
     // ------------- List Management Utils -------------
 
-    async function handleToggleTimeModal(planEvent: PlannerEvent) {
-        await toggleTimeModal(planEvent, SortedEvents.toggleItemEdit, setTimeModalOpen);
-    };
+    async function handleOpenTimeModal(item: PlannerEvent) {
+        await openTimeModal(
+            item,
+            SortedEvents.toggleItemEdit,
+            onOpen,
+            SortedEvents.items,
+            setCurrentTextfield
+        );
+    }
 
     async function handleSaveEvent(planEvent: PlannerEvent): Promise<string | undefined> {
         return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
@@ -125,24 +138,20 @@ const PlannerCard = ({
                 </View>
             }
         >
-            <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, TimeModalProps>
+            <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, never>
                 listId={datestamp}
                 items={SortedEvents.items}
                 hideList={collapsed}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
-                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${timeModalOpen}`}
+                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
-                getModal={(item) => generateTimeModalConfig(item, timeModalOpen, handleToggleTimeModal, datestamp, SortedEvents.items, setCurrentTextfield)}
-                getRightIconConfig={(item) => generateTimeIconConfig(item, handleToggleTimeModal)}
+                getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
-                getToolbar={(event) => generateEventToolbar(event, handleToggleTimeModal, timeModalOpen)}
+                getToolbar={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
                 customIsItemDeleting={isEventDeleting}
-                onSaveTextfield={async (updatedItem) => {
-                    await SortedEvents.persistItemToStorage(updatedItem);
-                    if (updatedItem.timeConfig?.allDay) loadAllExternalData(); // TODO: is this needed?
-                }}
+                onSaveTextfield={SortedEvents.persistItemToStorage}
                 emptyLabelConfig={{
                     label: 'No Plans',
                     style: { height: LIST_ITEM_HEIGHT, paddingBottom: 8 }

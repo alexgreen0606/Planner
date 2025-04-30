@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
-import { PlannerSet } from '../types';
-import Modal from '../../../foundation/components/Modal';
-import ThinLine from '../../../foundation/sortedLists/components/list/ThinLine';
-import CalendarSelect from '../../../foundation/calendarEvents/components/CalendarSelect';
-import CustomText from '../../../foundation/components/text/CustomText';
-import globalStyles from '../../../foundation/theme/globalStyles';
-import DateValue from '../../../foundation/calendarEvents/components/values/DateValue';
-import { datestampToMidnightDate } from '../../../foundation/calendarEvents/timestampUtils';
-import { TIME_MODAL_INPUT_HEIGHT } from '../../../foundation/calendarEvents/constants';
-import { LIST_CONTENT_HEIGHT } from '../../../foundation/sortedLists/constants';
-import { deletePlannerSet, savePlannerSet } from '../storage/plannerSetsStorage';
-import { uuid } from 'expo-modules-core';
-import ModalInputField from '../../../foundation/components/ModalInputField';
+import Modal from '../../../src/foundation/components/Modal';
+import ModalInputField from '../../../src/foundation/components/ModalInputField';
+import ThinLine from '../../../src/foundation/sortedLists/components/list/ThinLine';
+import CalendarSelect from '../../../src/foundation/calendarEvents/components/CalendarSelect';
+import CustomText from '../../../src/foundation/components/text/CustomText';
+import { TIME_MODAL_INPUT_HEIGHT } from '../../../src/foundation/calendarEvents/constants';
+import { LIST_CONTENT_HEIGHT } from '../../../src/foundation/sortedLists/constants';
+import { datestampToMidnightDate } from '../../../src/foundation/calendarEvents/timestampUtils';
+import globalStyles from '../../../src/foundation/theme/globalStyles';
+import DateValue from '../../../src/foundation/calendarEvents/components/values/DateValue';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../../src/feature/plannerCard/types';
+import { deletePlannerSet, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
+
+export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
 type FormData = {
     title: string;
@@ -24,37 +27,36 @@ const initialFormData: FormData = {
     dates: []
 };
 
-export interface PlannerSetModalProps {
-    initialPlannerSet?: PlannerSet;
-    toggleModalOpen: () => void;
-    open: boolean;
-}
+const PlannerSetModal = () => {
+    const { plannerSetKey } = useLocalSearchParams<{ plannerSetKey: string }>();
 
-const PlannerSetModal = ({
-    initialPlannerSet,
-    toggleModalOpen,
-    open
-}: PlannerSetModalProps) => {
+    const router = useRouter();
+    const pathname = usePathname();
+    const isModalOpen = pathname.includes(PLANNER_SET_MODAL_PATHNAME);
+
+    const storage = useMMKV({ id: PLANNER_SETS_STORAGE_ID });
+    const [plannerSet, setPlannerSet] = useMMKVObject<PlannerSet>(plannerSetKey, storage);
+
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const formDataFilled = formData.title.length > 0 && formData.dates.length > 0;
-    const isEditMode = !!initialPlannerSet;
+    const isEditMode = !!plannerSetKey;
 
     // Populate the form for edit mode
     useEffect(() => {
-        if (initialPlannerSet) {
+        if (plannerSet) {
             setFormData({
-                title: initialPlannerSet.title,
-                dates: initialPlannerSet.dates
+                title: plannerSet.title,
+                dates: plannerSet.dates
             });
         }
-    }, [initialPlannerSet]);
+    }, [plannerSet]);
 
     // Clear the form when the modal closes
     useEffect(() => {
-        if (!open) {
+        if (!isModalOpen) {
             setFormData(initialFormData);
         }
-    }, [open]);
+    }, [isModalOpen]);
 
     // ------------- Utility Functions -------------
 
@@ -63,24 +65,23 @@ const PlannerSetModal = ({
     }
 
     function handleSave() {
-        savePlannerSet({
-            ...formData,
-            id: uuid.v4(),
-        })
-        toggleModalOpen();
+        if (plannerSet) {
+            setPlannerSet(formData)
+        } else {
+            savePlannerSet(formData)
+        }
+        router.back();
     }
 
     function handleDelete() {
-        if (initialPlannerSet) {
-            deletePlannerSet(initialPlannerSet);
+        if (plannerSet) {
+            deletePlannerSet(plannerSet);
         }
-        toggleModalOpen();
+        router.back();
     }
 
     return (
         <Modal
-            open={open}
-            toggleModalOpen={toggleModalOpen}
             title={isEditMode ? 'Edit Planner' : 'Create Planner'}
             primaryButtonConfig={{
                 label: 'Save',
@@ -92,6 +93,7 @@ const PlannerSetModal = ({
                 onClick: handleDelete,
                 hidden: !isEditMode
             }}
+            onClose={() => router.back()}
             customStyle={{ gap: 4 }}
         >
 
@@ -101,12 +103,12 @@ const PlannerSetModal = ({
                 onChange={(newVal) => {
                     setFormData({ ...formData, title: newVal });
                 }}
-                focusTrigger={open && !isEditMode}
+                focusTrigger={isModalOpen && !isEditMode}
             />
 
             <ThinLine />
 
-            <CalendarSelect clearSelection={!open} handleDatesChange={handleDatesChange} />
+            <CalendarSelect clearSelection={!isModalOpen} handleDatesChange={handleDatesChange} />
 
             <ThinLine />
 
