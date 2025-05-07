@@ -4,8 +4,8 @@ import { selectableColors } from "../../foundation/theme/colors";
 type SelectableColor = (typeof selectableColors)[number];
 
 export enum FolderItemTypes {
-    FOLDER = 'FOLDER',
-    LIST = 'LIST'
+    FOLDER = 'folder',
+    LIST = 'list'
 };
 
 export interface ColoredListItem extends ListItem {

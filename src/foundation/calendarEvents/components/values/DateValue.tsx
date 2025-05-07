@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import CustomText from '../../../components/text/CustomText';
+import { LIST_CONTENT_HEIGHT } from '../../../sortedLists/constants';
 
 interface DateValue {
     timestamp?: string;
@@ -27,6 +28,7 @@ const DateValue = ({ timestamp, date }: DateValue) => {
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
+        height: LIST_CONTENT_HEIGHT
     },
     hour: {
         height: '100%'

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import {
     createFolderItem,
@@ -12,14 +12,15 @@ import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/L
 import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
 import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
 import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
-import DeleteModal, { DeleteModalProps } from './components/DeleteModal';
 import CustomText from '../../foundation/components/text/CustomText';
-import { generateSortId } from '../../foundation/sortedLists/utils';
+import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
 import { selectableColors } from '../../foundation/theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
-import { usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
+
+import { Alert } from 'react-native';
 
 interface SortableFolderProps {
     folderId: string;
@@ -39,7 +40,6 @@ const SortedFolder = ({
 
     const router = useRouter();
 
-    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
 
     // Creates a new empty brown folder item
@@ -52,11 +52,7 @@ const SortedFolder = ({
     });
 
     function beginItemTransfer(item: FolderItem) {
-        return { ...item, status: ItemStatus.TRANSFER };
-    }
-
-    function toggleDeleteModal() {
-        setDeleteModalOpen(curr => !curr);
+        setCurrentTextfield({ ...item, status: ItemStatus.TRANSFER });
     }
 
     /**
@@ -121,12 +117,9 @@ const SortedFolder = ({
         }));
     };
 
-    const pathname = usePathname();
-
     const getItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps<FolderItem>> => {
         const isNew = item.status === ItemStatus.NEW;
-        const isOpen = pathname.includes('checklist') && !deleteModalOpen &&
-            (isNew ? item.status === ItemStatus.NEW : item.status === ItemStatus.EDIT);
+        const isOpen = isItemTextfield(item);
 
         return {
             component: Toolbar,
@@ -154,7 +147,34 @@ const SortedFolder = ({
                             onClick: () => beginItemTransfer(item),
                         }],
                         [{
-                            onClick: toggleDeleteModal,
+                            onClick: () => {
+                                const title = `Delete ${item.type}?`;
+
+                                let message = '';
+                                if (!!item.childrenCount) {
+                                    message += `This ${item.type} has ${item.childrenCount} items. Deleting is irreversible and will lose all inner contents.`;
+                                } else {
+                                    message += `Would you like to delete this ${item.type}?`;
+                                }
+
+                                Alert.alert(
+                                    title,
+                                    message,
+                                    [
+                                        {
+                                            text: 'Cancel',
+                                            style: 'cancel'
+                                        },
+                                        {
+                                            text: !!item.childrenCount ? 'Force Delete' : 'Delete',
+                                            style: 'destructive',
+                                            onPress: () => {
+                                                SortedItems.deleteSingleItemFromStorage(item);
+                                            }
+                                        }
+                                    ]
+                                );
+                            },
                             type: 'trash',
                         }],
                         createColorSelectionIconSet(item),
@@ -166,10 +186,7 @@ const SortedFolder = ({
 
     const isItemTransfering = (item: FolderItem) => item.status === ItemStatus.TRANSFER;
     const isTransferMode = () => currentTextfield?.status === ItemStatus.TRANSFER;
-    const getIconType = (item: FolderItem) =>
-        isItemTransfering(item) ? 'transfer' :
-            item.type === FolderItemTypes.FOLDER ? 'folder' :
-                'list';
+    const getIconType = (item: FolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
     const getIconPlatformColor = (item: FolderItem) => isItemTransfering(item) ?
         'systemBlue' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
             'secondaryLabel' : item.platformColor;
@@ -190,7 +207,7 @@ const SortedFolder = ({
     });
 
     return (
-        <SortableList<FolderItem, ToolbarProps<FolderItem>, DeleteModalProps>
+        <SortableList<FolderItem, ToolbarProps<FolderItem>, never>
             listId={folderId}
             items={SortedItems.items}
             fillSpace
@@ -208,20 +225,6 @@ const SortedFolder = ({
                     <CustomText type='label'>
                         {item.childrenCount}
                     </CustomText>
-            })}
-            getModal={(item: FolderItem) => ({
-                component: DeleteModal,
-                props: {
-                    parentFolderName: folderData.value,
-                    open: deleteModalOpen,
-                    hideKeyboard: deleteModalOpen,
-                    toggleModalOpen: toggleDeleteModal,
-                    onSave: (updatedItem: FolderItem) => {
-                        SortedItems.deleteSingleItemFromStorage(updatedItem);
-                        toggleDeleteModal();
-                    },
-                    item
-                },
             })}
             getLeftIconConfig={item => ({
                 icon: {

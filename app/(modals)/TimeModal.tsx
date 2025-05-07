@@ -1,7 +1,7 @@
 import { PlatformColor, StyleSheet, View } from "react-native"
 import { usePathname } from "expo-router";
 import Modal from "../../src/foundation/components/Modal";
-import ModalInputField from "../../src/foundation/components/ModalInputField";
+import ModalTextfield from "../../src/foundation/components/modal/ModalTextfield";
 import ThinLine from "../../src/foundation/sortedLists/components/list/ThinLine";
 import DateSelector from "../../src/foundation/calendarEvents/components/timeModal/DateSelector";
 import CustomText from "../../src/foundation/components/text/CustomText";
@@ -41,7 +41,6 @@ const TimeModal = () => {
     }, [pathname]);
 
     const [formData, setFormData] = useState<FormData>(initialFormData);
-    const isEditMode = planEvent?.status === ItemStatus.EDIT;
     const formDataFilled = formData.value.length > 0;
 
     // Sync the form data every time the planEvent changes
@@ -111,7 +110,7 @@ const TimeModal = () => {
 
     return (
         <Modal
-            title='Time Modal'
+            title='Schedule Event Time'
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSave,
@@ -124,7 +123,7 @@ const TimeModal = () => {
             onClose={onClose}
         >
             {/* Title */}
-            <ModalInputField
+            <ModalTextfield
                 label='Title'
                 value={formData.value}
                 onChange={(newVal) => {

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { PlatformColor } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { getTodayDatestamp } from '../timestampUtils';
+import { datestampToMidnightDate, getTodayDatestamp } from '../timestampUtils';
+import ModalDisplayValue from '../../components/modal/ModalDisplayValue';
+import DateValue from './values/DateValue';
+import ThinLine from '../../sortedLists/components/list/ThinLine';
 
 interface CalendarSelectProps {
     dates: string[];
@@ -85,40 +88,73 @@ const CalendarSelect = ({
         return marks;
     };
 
+    // Determine if we have a single date or multiple dates
+    const hasSingleDate = dates.length === 1;
+    const hasMultipleDates = dates.length > 1;
+
     return (
-        <Calendar
-            onDayPress={handleDayPress}
-            markedDates={getMarkedDates()}
-            style={{
-                border: 'none',
-                backgroundColor: 'transparent',
-            }}
-            markingType='period'
-            minDate={getTodayDatestamp()}
-            hideExtraDays
-            disableLeftArrow={monthIndex <= 0}
-            onPressArrowLeft={(subtract: () => void) => {
-                setMonthIndex(curr => curr - 1)
-                subtract();
-            }}
-            onPressArrowRight={(add: () => void) => {
-                setMonthIndex(curr => curr + 1)
-                add();
-            }}
-            theme={{
-                backgroundColor: 'transparent',
-                calendarBackground: 'transparent',
-                textSectionTitleColor: PlatformColor('secondaryLabel'),
-                selectedDayBackgroundColor: PlatformColor('systemBlue'),
-                selectedDayTextColor: 'white',
-                todayTextColor: PlatformColor('systemBlue'),
-                dayTextColor: PlatformColor('label'),
-                textDisabledColor: PlatformColor('tertiaryLabel'),
-                monthTextColor: 'white',
-                arrowColor: PlatformColor('systemBlue'),
-                disabledArrowColor: PlatformColor('tertiaryLabel')
-            }}
-        />
+        <View style={{ width: '100%' }}>
+            <Calendar
+                onDayPress={handleDayPress}
+                markedDates={getMarkedDates()}
+                style={{
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                }}
+                markingType='period'
+                minDate={getTodayDatestamp()}
+                hideExtraDays
+                disableLeftArrow={monthIndex <= 0}
+                onPressArrowLeft={(subtract: () => void) => {
+                    setMonthIndex(curr => curr - 1)
+                    subtract();
+                }}
+                onPressArrowRight={(add: () => void) => {
+                    setMonthIndex(curr => curr + 1)
+                    add();
+                }}
+                theme={{
+                    backgroundColor: 'transparent',
+                    calendarBackground: 'transparent',
+                    textSectionTitleColor: PlatformColor('secondaryLabel'),
+                    selectedDayBackgroundColor: PlatformColor('systemBlue'),
+                    selectedDayTextColor: 'white',
+                    todayTextColor: PlatformColor('systemBlue'),
+                    dayTextColor: PlatformColor('label'),
+                    textDisabledColor: PlatformColor('tertiaryLabel'),
+                    monthTextColor: 'white',
+                    arrowColor: PlatformColor('systemBlue'),
+                    disabledArrowColor: PlatformColor('tertiaryLabel')
+                }}
+            />
+            <View style={{ marginTop: 16 }}>
+                {hasSingleDate && (
+                    <ModalDisplayValue
+                        label='Date'
+                        value={<DateValue date={datestampToMidnightDate(dates[0])} />}
+                        hide={false}
+                    />
+                )}
+
+                {hasMultipleDates && (
+                    <>
+                        <ModalDisplayValue
+                            label='Start Date'
+                            value={<DateValue date={datestampToMidnightDate(dates[0])} />}
+                            hide={false}
+                        />
+
+                        <ThinLine />
+
+                        <ModalDisplayValue
+                            label='End Date'
+                            value={<DateValue date={datestampToMidnightDate(dates[dates.length - 1])} />}
+                            hide={false}
+                        />
+                    </>
+                )}
+            </View>
+        </View>
     );
 };
 
