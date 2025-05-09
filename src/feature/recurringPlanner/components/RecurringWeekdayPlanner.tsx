@@ -5,7 +5,7 @@ import { useScrollContainer } from '../../../foundation/sortedLists/services/Scr
 import { isItemTextfield } from '../../../foundation/sortedLists/utils';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '../storage/recurringStorage';
-import globalStyles from '../../../foundation/theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import { View } from 'react-native';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../foundation/calendarEvents/sharedListProps';

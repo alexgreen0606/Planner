@@ -27,19 +27,10 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>your-app-scheme</string>
           <string>com.anonymous.Assistant</string>
         </array>
       </dict>
-    </array>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>Use to gather weather info.</string>
-    <key>NSContactsUsageDescription</key>
-    <string>This app requires access to contacts to send birthday messages</string>
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>This app requires location access</string>
-    <key>LSApplicationQueriesSchemes</key>
-    <array>
-      <string>sms</string>
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
@@ -56,10 +47,25 @@
     </dict>
     <key>NSContactsUsageDescription</key>
     <string>Allow planner to access your contacts.</string>
+    <key>NSUserActivityTypes</key>
+    <array>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+    </array>
     <key>UIAppFonts</key>
     <array>
       <string>Jersey15-Regular.ttf</string>
+      <string>Coiny-Regular.ttf</string>
     </array>
+    <key>NSLocationWhenInUseUsageDescription</key>
+<string>Use to gather weather info.</string>
+<key>NSContactsUsageDescription</key>
+<string>This app requires access to contacts to send birthday messages</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app requires location access</string>
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>sms</string>
+</array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

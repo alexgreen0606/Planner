@@ -1,5 +1,5 @@
 import { ListItem } from "../../foundation/sortedLists/types";
-import { selectableColors } from "../../foundation/theme/colors";
+import { selectableColors } from "../../theme/colors";
 
 type SelectableColor = (typeof selectableColors)[number];
 

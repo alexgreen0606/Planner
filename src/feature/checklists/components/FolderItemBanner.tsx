@@ -5,10 +5,12 @@ import { LISTS_STORAGE_ID } from '../constants';
 import { FolderItem, FolderItemTypes } from '../types';
 import { getFolderItem, updateFolderItem } from '../storage';
 import { ItemStatus } from '../../../foundation/sortedLists/constants';
-import globalStyles from '../../../foundation/theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import CustomText from '../../../foundation/components/text/CustomText';
 import ButtonText from '../../../foundation/components/text/ButtonText';
 import { useRouter } from 'expo-router';
+import useDimensions from '../../../foundation/hooks/useDimensions';
+import { HEADER_HEIGHT } from '../../../constants';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -27,6 +29,8 @@ const FolderItemBanner = ({
     const router = useRouter();
     const [item, setItem] = useState<FolderItem>();
     const folderStorage = useMMKV({ id: LISTS_STORAGE_ID });
+
+    const { SCREEN_WIDTH } = useDimensions();
 
     // Build the item data from storage
     const loadItemData = () => {
@@ -53,66 +57,69 @@ const FolderItemBanner = ({
     const isItemEditing = item.status === ItemStatus.EDIT;
 
     return (
-        <View style={globalStyles.pageLabelContainer}>
-            <View style={styles.name}>
+        <View style={[
+            globalStyles.pageLabelContainer,
+            styles.container
+        ]}>
 
-                {/* Name */}
-                {isItemEditing ? (
-                    <TextInput
-                        autoFocus
-                        value={item.value}
-                        onChangeText={updateItem}
-                        style={styles.inputField}
-                        cursorColor={PlatformColor('systemBlue')}
-                        onSubmitEditing={saveItem}
-                    />
-                ) : (
-                    <CustomText
-                        type='pageLabel'
-                        onPress={beginEditItem}
-                        ellipsizeMode='tail'
-                        numberOfLines={1}
-                    >
-                        {item.value}
-                    </CustomText>
-                )}
-            </View>
+            {/* Name */}
+            {isItemEditing ? (
+                <TextInput
+                    autoFocus
+                    value={item.value}
+                    onChangeText={updateItem}
+                    style={styles.inputField}
+                    cursorColor={PlatformColor('systemBlue')}
+                    onSubmitEditing={saveItem}
+                />
+            ) : (
+                <CustomText
+                    type='pageLabel'
+                    onPress={beginEditItem}
+                    ellipsizeMode='tail'
+                    numberOfLines={1}
+                >
+                    {item.value}
+                </CustomText>
+            )}
 
             {/* Back Button */}
             {backButtonConfig.display && (
-                <ButtonText
-                    platformColor='systemBlue'
-                    onClick={() => router.back()}
-                    iconConfig={{
-                        type: 'chevronLeft',
-                        platformColor: 'systemBlue'
-                    }}
-                >
-                    {backButtonConfig.label}
-                </ButtonText>
+                <View style={styles.backButton}>
+                    <ButtonText
+                        platformColor='systemBlue'
+                        onClick={() => router.back()}
+                        iconConfig={{
+                            type: 'chevronLeft',
+                            platformColor: 'systemBlue'
+                        }}
+                        containerStyle={{ width: SCREEN_WIDTH - 60 }}
+                    >
+                        {backButtonConfig.label}
+                    </ButtonText>
+                </View>
             )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    name: {
-        ...globalStyles.verticallyCentered,
-        flex: 1,
-        marginRight: 40
+    container: {
+        position: 'relative'
     },
     inputField: {
-        ...globalStyles.blackFilledSpace,
-        height: 25,
+        height: HEADER_HEIGHT,
+        width: '100%',
         fontSize: 25,
         backgroundColor: 'transparent',
         color: PlatformColor('label'),
     },
     backButton: {
-        ...globalStyles.verticallyCentered,
         gap: 0,
-        maxWidth: 70,
-        justifyContent: 'flex-end'
+        position: 'absolute',
+        left: 0,
+        bottom: 50,
+        transform: 'translateY(10px)'
     }
 });
 

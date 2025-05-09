@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import Modal from '../../../src/foundation/components/Modal';
+import Modal from '../../../src/modals';
 import { useForm } from 'react-hook-form';
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../../src/feature/plannerCard/types';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/feature/plannerSets/plannerSetsStorage';
-import { EFieldType, IFormField } from '../../../src/foundation/forms/types';
-import Form from '../../../src/foundation/forms/Form';
+import { EFieldType, IFormField } from '../../../src/modals/components/form/types';
+import Form from '../../../src/modals/components/form';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
@@ -58,7 +58,7 @@ const PlannerSetModal = () => {
         },
         {
             name: 'dates',
-            type: EFieldType.DATE,
+            type: EFieldType.DATE_RANGE,
             rules: {
                 validate: (value: string[]) => value.length > 0
             }

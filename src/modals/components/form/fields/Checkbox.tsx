@@ -1,6 +1,6 @@
 import React from 'react';
-import ModalDisplayValue from './ModalDisplayValue';
-import Toggle from '../../calendarEvents/components/timeModal/Toggle';
+import ModalDisplayValue from '../../ModalDisplayValue';
+import { PlatformColor, Switch } from 'react-native';
 
 export interface ModalCheckboxProps {
     label: string;
@@ -21,7 +21,13 @@ const ModalCheckbox = ({
         label={label}
         hide={hide}
         value={
-            <Toggle value={value} onValueChange={onChange} disabled={disabled} />
+            <Switch
+                value={value}
+                disabled={disabled}
+                onValueChange={onChange}
+                ios_backgroundColor={PlatformColor('secondaryLabel')}
+                trackColor={{ true: PlatformColor('systemBlue') }}
+            />
         }
     />
 

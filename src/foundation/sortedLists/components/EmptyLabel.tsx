@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, View, ViewStyle } from 'react-native';
-import globalStyles from '../../theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
 import { PressableProps } from 'react-native-gesture-handler';

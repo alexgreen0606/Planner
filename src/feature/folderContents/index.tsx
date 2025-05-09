@@ -15,26 +15,26 @@ import { useScrollContainer } from '../../foundation/sortedLists/services/Scroll
 import CustomText from '../../foundation/components/text/CustomText';
 import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
-import { selectableColors } from '../../foundation/theme/colors';
+import { selectableColors } from '../../theme/colors';
 import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
 import { useRouter } from 'expo-router';
 
 import { Alert } from 'react-native';
 
-interface SortableFolderProps {
+interface SortedFolderProps {
     folderId: string;
-    onOpenItem: (id: string, type: FolderItemTypes) => void;
+    handleOpenItem: (id: string, type: FolderItemTypes) => void;
     parentClickTrigger: number;
     parentFolderData?: Folder;
 };
 
 const SortedFolder = ({
     folderId,
-    onOpenItem,
+    handleOpenItem,
     parentClickTrigger,
     parentFolderData,
-}: SortableFolderProps) => {
+}: SortedFolderProps) => {
 
     const { currentTextfield, setCurrentTextfield } = useScrollContainer();
 
@@ -42,14 +42,33 @@ const SortedFolder = ({
 
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
 
-    // Creates a new empty brown folder item
-    const initializeFolderItem = (newItem: ListItem) => ({
-        ...newItem,
-        childrenCount: 0,
-        listId: folderId,
-        type: FolderItemTypes.FOLDER,
-        platformColor: 'systemBrown',
-    });
+    /**
+     * If the focused item is being transferred, transfer it to the parent folder.
+     * Otherwise, open the parent folder.
+     */
+    useEffect(() => {
+        if (parentClickTrigger > 0) {
+
+            // Handle parent folder click
+            if (currentTextfield?.status === ItemStatus.TRANSFER) {
+                handleItemTransfer();
+                return;
+
+            } else if (folderData.listId) {
+                router.back();
+            }
+        }
+    }, [parentClickTrigger]);
+
+    function initializeEmptyFolder(newItem: ListItem) {
+        return {
+            ...newItem,
+            childrenCount: 0,
+            listId: folderId,
+            type: FolderItemTypes.FOLDER,
+            platformColor: 'systemBrown',
+        }
+    };
 
     function beginItemTransfer(item: FolderItem) {
         setCurrentTextfield({ ...item, status: ItemStatus.TRANSFER });
@@ -72,24 +91,6 @@ const SortedFolder = ({
     };
 
     /**
-     * If the focused item is being transferred, transfer it to the parent folder.
-     * Otherwise, open the parent folder.
-     */
-    useEffect(() => {
-        if (parentClickTrigger > 0) {
-
-            // Handle parent folder click
-            if (currentTextfield?.status === ItemStatus.TRANSFER) {
-                handleItemTransfer();
-                return;
-
-            } else if (folderData.listId) {
-                router.back();
-            }
-        }
-    }, [parentClickTrigger])
-
-    /**
      * Handles clicking a list item. In transfer mode, the textfield item will transfer to the clicked item.
      * Otherwise, the focused item will be saved and the clicked item will be opened.
      * @param item - the item that was clicked
@@ -105,7 +106,7 @@ const SortedFolder = ({
         } else if (currentTextfield) {
             SortedItems.persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
         }
-        onOpenItem(item.id, item.type);
+        handleOpenItem(item.id, item.type);
     };
 
     // Helper function to create the color selection icon set
@@ -216,7 +217,7 @@ const SortedFolder = ({
             onSaveTextfield={SortedItems.persistItemToStorage}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getToolbar={item => getItemToolbarConfig(item)}
-            initializeItem={initializeFolderItem}
+            initializeItem={initializeEmptyFolder}
             onContentClick={handleItemClick}
             getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
                 (isTransferMode() && item.type === FolderItemTypes.LIST) ? 'systemGray3' : 'label'}

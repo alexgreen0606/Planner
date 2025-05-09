@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import DayBanner from './components/DayBanner';
-import globalStyles from '../../foundation/theme/globalStyles';
+import globalStyles from '../../theme/globalStyles';
 import EventChip, { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
@@ -18,7 +18,7 @@ import { useDeleteScheduler } from '../../foundation/sortedLists/services/Delete
 import { generatePlanner } from '../../foundation/calendarEvents/calendarUtils';
 import EventCountChip from './components/EventCountChip';
 import { LIST_ITEM_HEIGHT } from '../../foundation/sortedLists/constants';
-import { useTimeModal } from '../timeModal/TimeModalProvider';
+import { useTimeModal } from '../../modals/services/TimeModalProvider';
 import { usePathname } from 'expo-router';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 

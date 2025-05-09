@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { datestampToMidnightDate, getTodayDatestamp } from '../timestampUtils';
-import ModalDisplayValue from '../../components/modal/ModalDisplayValue';
-import DateValue from './values/DateValue';
-import ThinLine from '../../sortedLists/components/list/ThinLine';
+import { getTodayDatestamp } from '../../../../foundation/calendarEvents/timestampUtils';
 
 interface CalendarSelectProps {
     dates: string[];
     onChange: (dates: string[]) => void;
 }
 
-const CalendarSelect = ({
+const DateRangeSelector = ({
     dates,
     onChange
 }: CalendarSelectProps) => {
@@ -88,10 +85,6 @@ const CalendarSelect = ({
         return marks;
     };
 
-    // Determine if we have a single date or multiple dates
-    const hasSingleDate = dates.length === 1;
-    const hasMultipleDates = dates.length > 1;
-
     return (
         <View style={{ width: '100%' }}>
             <Calendar
@@ -127,35 +120,8 @@ const CalendarSelect = ({
                     disabledArrowColor: PlatformColor('tertiaryLabel')
                 }}
             />
-            <View style={{ marginTop: 16 }}>
-                {hasSingleDate && (
-                    <ModalDisplayValue
-                        label='Date'
-                        value={<DateValue date={datestampToMidnightDate(dates[0])} />}
-                        hide={false}
-                    />
-                )}
-
-                {hasMultipleDates && (
-                    <>
-                        <ModalDisplayValue
-                            label='Start Date'
-                            value={<DateValue date={datestampToMidnightDate(dates[0])} />}
-                            hide={false}
-                        />
-
-                        <ThinLine />
-
-                        <ModalDisplayValue
-                            label='End Date'
-                            value={<DateValue date={datestampToMidnightDate(dates[dates.length - 1])} />}
-                            hide={false}
-                        />
-                    </>
-                )}
-            </View>
         </View>
     );
 };
 
-export default CalendarSelect;
+export default DateRangeSelector;

@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import { ScrollContainerProvider } from '../sortedLists/services/ScrollContainerProvider';
-import globalStyles from '../theme/globalStyles';
+import globalStyles from '../../theme/globalStyles';
 import ButtonText from './text/ButtonText';
 
 const TabHighlight = Animated.createAnimatedComponent(View);

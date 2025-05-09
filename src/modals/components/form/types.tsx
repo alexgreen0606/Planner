@@ -2,8 +2,8 @@ import { RegisterOptions } from "react-hook-form";
 
 export enum EFieldType {
     TEXT = 'text',
-    DATE = 'date',
-    TIME = 'time',
+    DATE_RANGE = 'date',
+    TIME_RANGE = 'date',
     SELECT = 'select',
     CHECKBOX = 'checkbox'
 }

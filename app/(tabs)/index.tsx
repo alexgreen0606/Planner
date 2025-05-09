@@ -8,7 +8,7 @@ import { getTodayDatestamp } from '../../src/foundation/calendarEvents/timestamp
 import { loadCalendarEventData } from '../../src/foundation/calendarEvents/calendarUtils';
 import { getContactedBirthdaysByDatestamp } from '../../src/feature/birthdayCard/storage';
 import { eventChipToBirthday, extractNameFromBirthdayText } from '../../src/feature/birthdayCard/utils';
-import globalStyles from '../../src/foundation/theme/globalStyles';
+import globalStyles from '../../src/theme/globalStyles';
 import { ScrollContainerProvider } from '../../src/foundation/sortedLists/services/ScrollContainerProvider';
 import TodayBanner from '../../src/feature/todayPlans/TodayBanner';
 import EventChip, { EventChipProps } from '../../src/foundation/calendarEvents/components/EventChip';

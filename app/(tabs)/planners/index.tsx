@@ -4,8 +4,8 @@ import { getNextSevenDayDatestamps } from '../../../src/foundation/calendarEvent
 import { WeatherForecast } from '../../../src/feature/weather/utils';
 import { CalendarData } from '../../../src/foundation/calendarEvents/types';
 import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/foundation/calendarEvents/calendarUtils';
-import { useReload } from '../../../src/foundation/reload/ReloadProvider';
-import globalStyles from '../../../src/foundation/theme/globalStyles';
+import { useReload } from '../../../src/services/ReloadProvider';
+import globalStyles from '../../../src/theme/globalStyles';
 import PopoverList from '../../../src/foundation/components/PopoverList';
 import GenericIcon from '../../../src/foundation/components/GenericIcon';
 import PlannerCard from '../../../src/feature/plannerCard';

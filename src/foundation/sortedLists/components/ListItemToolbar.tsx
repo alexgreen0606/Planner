@@ -1,5 +1,5 @@
 import { View, StyleSheet, PlatformColor, Dimensions, TouchableOpacity } from 'react-native';
-import globalStyles from '../../theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
 import { ListItem, ListItemUpdateComponentProps } from '../types';
 import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';

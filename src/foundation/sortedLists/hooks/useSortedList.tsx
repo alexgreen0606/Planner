@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useReload } from '../../reload/ReloadProvider';
+import { useReload } from '../../../services/ReloadProvider';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;

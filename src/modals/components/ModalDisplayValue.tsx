@@ -1,8 +1,8 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-import { TIME_MODAL_INPUT_HEIGHT } from '../../calendarEvents/constants';
+import { TIME_MODAL_INPUT_HEIGHT } from '../../foundation/calendarEvents/constants';
 import globalStyles from '../../theme/globalStyles';
-import CustomText from '../text/CustomText';
+import CustomText from '../../foundation/components/text/CustomText';
 
 export interface ModalDisplayValueProps {
     label: string;

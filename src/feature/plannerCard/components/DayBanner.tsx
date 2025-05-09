@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { WeatherForecast } from '../../weather/utils';
-import globalStyles from '../../../foundation/theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import WeatherDisplay from '../../weather';
 import { datestampToMonthDate, getTomorrowDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
 import { Planner } from '../../../foundation/calendarEvents/types';

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, PlatformColor } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../../components/GenericIcon';
-import globalStyles from '../../theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import CustomText from '../../components/text/CustomText';
 import { PlannerEvent } from '../types';
 import { saveEvent } from '../storage/plannerStorage';
-import { isValidPlatformColor } from '../../theme/colors';
+import { isValidPlatformColor } from '../../../theme/colors';
 import { useDeleteScheduler } from '../../sortedLists/services/DeleteScheduler';
-import { useTimeModal } from '../../../feature/timeModal/TimeModalProvider';
-import { useReload } from '../../reload/ReloadProvider';
+import { useTimeModal } from '../../../modals/services/TimeModalProvider';
+import { useReload } from '../../../services/ReloadProvider';
 
 export interface EventChipProps {
     planEvent?: PlannerEvent;

@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { Checklist, FolderItemTypes } from '../../../../../src/feature/checklists/types';
 import { LISTS_STORAGE_ID } from '../../../../../src/feature/checklists/constants';
 import { ScrollContainerProvider } from '../../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import globalStyles from '../../../../../src/foundation/theme/globalStyles';
+import globalStyles from '../../../../../src/theme/globalStyles';
 import { useDeleteScheduler } from '../../../../../src/foundation/sortedLists/services/DeleteScheduler';
 import { ListItem } from '../../../../../src/foundation/sortedLists/types';
 import useSortedList from '../../../../../src/foundation/sortedLists/hooks/useSortedList';

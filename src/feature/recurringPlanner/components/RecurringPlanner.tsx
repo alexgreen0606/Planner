@@ -5,7 +5,7 @@ import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundati
 import { useScrollContainer } from '../../../foundation/sortedLists/services/ScrollContainerProvider';
 import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
 import { View } from 'react-native';
-import globalStyles from '../../../foundation/theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 import SortableList from '../../../foundation/sortedLists/components/list/SortableList';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../foundation/calendarEvents/sharedListProps';
 import { generateCheckboxIconConfig } from '../../../foundation/sortedLists/commonProps';

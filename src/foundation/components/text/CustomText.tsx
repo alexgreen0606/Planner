@@ -58,32 +58,32 @@ const styles = StyleSheet.create({
     },
     hour: {
         fontSize: 24,
-        fontFamily: 'Jersey15-Regular',
+        fontFamily: 'Coiny-Regular',
         color: PlatformColor('systemPurple'),
     },
     minute: {
         fontSize: 14,
-        fontFamily: 'Jersey15-Regular',
+        fontFamily: 'Coiny-Regular',
         color: PlatformColor('systemPurple'),
     },
     day: {
         fontSize: 24,
-        fontFamily: 'Jersey15-Regular',
+        fontFamily: 'Coiny-Regular',
         color: PlatformColor('systemIndigo'),
     },
     month: {
         fontSize: 14,
-        fontFamily: 'Jersey15-Regular',
+        fontFamily: 'Coiny-Regular',
         color: PlatformColor('systemIndigo'),
     },
     age: {
         fontSize: 24,
-        fontFamily: 'Jersey15-Regular',
+        fontFamily: 'Coiny-Regular',
         color: PlatformColor('systemGreen'),
     },
     year: {
         fontSize: 14,
-        fontFamily: 'Jersey15-Regular',
+        fontFamily: 'Coiny-Regular',
         color: PlatformColor('systemGreen'),
     },
     indicator: {
@@ -99,6 +99,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: 'white',
         fontWeight: 600
+    },
+    time: {
+        fontFamily: 'Coiny-Regular',
+        fontSize: 16,
+        color: PlatformColor('label')
+    },
+    indicator2: {
+        fontFamily: 'Coiny-Regular',
+        fontSize: 12,
+        color: PlatformColor('secondaryLabel')
     }
 });
 

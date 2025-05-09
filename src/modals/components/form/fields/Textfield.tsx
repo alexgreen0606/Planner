@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput } from 'react-native';
-import { LIST_CONTENT_HEIGHT } from '../../sortedLists/constants';
+import { LIST_CONTENT_HEIGHT } from '../../../../foundation/sortedLists/constants';
 
 export interface ModalTextfieldProps {
     label: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlatformColor, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { PlatformColor, StyleSheet, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import CustomText, { TextType } from './CustomText';
 import GenericIcon, { GenericIconProps } from '../GenericIcon';
@@ -11,6 +11,7 @@ interface ButtonTextProps extends React.ComponentProps<typeof Text> {
     platformColor?: string;
     onClick: () => void;
     children: React.ReactNode;
+    containerStyle?: ViewStyle;
     iconConfig?: GenericIconProps;
     textType?: TextType;
 }
@@ -20,6 +21,7 @@ const ButtonText = ({
     textType = 'button',
     onClick,
     children,
+    containerStyle,
     iconConfig,
     ...rest
 }: ButtonTextProps) => {
@@ -45,7 +47,7 @@ const ButtonText = ({
 
     return (
         <TouchableWithoutFeedback onPressIn={handlePressStart} onPressOut={handlePressEnd}>
-            <AnimatedText style={[textStyle, styles.container]}>
+            <AnimatedText style={[textStyle, styles.container, containerStyle]}>
                 {iconConfig && (
                     <GenericIcon
                         {...iconConfig}

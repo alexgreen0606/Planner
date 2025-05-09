@@ -20,14 +20,14 @@ import { ListItem } from '../types';
 import { Dimensions, PlatformColor, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
-import { useReload } from '../../reload/ReloadProvider';
+import { useReload } from '../../../services/ReloadProvider';
 import { BlurView } from 'expo-blur';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import useDimensions from '../../hooks/useDimensions';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../constants';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../../constants';
 import { Portal } from 'react-native-paper';
 import GenericIcon from '../../components/GenericIcon';
-import globalStyles from '../../theme/globalStyles';
+import globalStyles from '../../../theme/globalStyles';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);

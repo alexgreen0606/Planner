@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SFSymbol } from 'react-native-sfsymbols';
-import { isValidPlatformColor } from '../theme/colors';
+import { isValidPlatformColor } from '../../theme/colors';
 
 const sizeMap = {
     xs: 10,

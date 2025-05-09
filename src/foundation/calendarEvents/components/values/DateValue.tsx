@@ -1,64 +1,64 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, PlatformColor } from 'react-native';
 import CustomText from '../../../components/text/CustomText';
-import { LIST_CONTENT_HEIGHT } from '../../../sortedLists/constants';
+import { DateTime } from 'luxon';
 
-interface DateValue {
-    timestamp?: string;
-    date?: Date;
+interface DateValueProps {
+    isoTimestamp: string;
+    concise?: boolean;
+    platformColor?: string;
 }
 
-const DateValue = ({ timestamp, date }: DateValue) => {
-    const dateObject = date || (timestamp ? new Date(timestamp) : new Date());
-    const month = dateObject.toLocaleString(undefined, { month: 'short' }).slice(0, 3).toUpperCase();
-    const day = dateObject.toLocaleString(undefined, { day: 'numeric' });
-    const year = dateObject.toLocaleString(undefined, { year: 'numeric' });
+const DateValue = ({ isoTimestamp, concise, platformColor = 'label' }: DateValueProps) => {
+    const dayFormat = concise ? 'MMM d' : 'MMMM d';
+    const yearFormat = concise ? 'yy' : 'yyyy';
+    const date = DateTime.fromISO(isoTimestamp);
+    const monthDay = date.toFormat(dayFormat);
+    const year = date.toFormat(yearFormat);
 
-    return (
-        <View style={styles.container}>
-            <CustomText type='day' style={styles.hour}>{day}</CustomText>
-            <View style={styles.details}>
-                <CustomText type='month' style={styles.minute}>{month}</CustomText>
-                <CustomText type='indicator' style={styles.indicator}>{year}</CustomText>
-            </View>
+    // Compute 11 months from now
+    const elevenMonthsLater = DateTime.now().plus({ months: 11 });
+
+    // Only show year if date is more than 11 months away
+    const showYear = date > elevenMonthsLater;
+
+    return concise ?
+        <View style={styles.time}>
+            <CustomText type='time' style={{ flexDirection: 'row', color: PlatformColor(platformColor) }}>
+                {monthDay}
+            </CustomText>
+            {showYear && (
+                <View style={styles.conciseYear}>
+                    <CustomText type='indicator2'>
+                        {year}
+                    </CustomText>
+                </View>
+            )}
         </View>
-    )
+        :
+        <View style={styles.time}>
+            <CustomText type='time' style={{ marginRight: showYear ? 2 : 0, color: PlatformColor(platformColor) }}>
+                {monthDay}
+            </CustomText>
+            {showYear && (
+                <CustomText type='indicator2'>
+                    {year}
+                </CustomText>
+            )}
+        </View>
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        height: LIST_CONTENT_HEIGHT
+    time: {
+        position: 'relative',
+        flexDirection: 'row'
     },
-    hour: {
-        height: '100%'
-    },
-    details: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-        marginLeft: 2
-    },
-    minute: {
-        height: '50%',
-        paddingTop: 2,
-        letterSpacing: 1.6,
-        textAlignVertical: 'bottom'
-    },
-    indicator: {
-        height: '50%',
-        textAlignVertical: 'bottom',
-        textAlign: 'right',
-        letterSpacing: .2,
-    },
-    all: {
-        height: '50%',
-        textAlign: 'center',
-        letterSpacing: .6,
-    },
-    day: {
-        height: '50%',
-        textAlign: 'center',
+    conciseYear: {
+        position: 'absolute',
+        bottom: 0,
+        left: '100%',
+        transform: 'translateX(-8px)',
+        opacity: 0.8,
     }
 });
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Linking, PlatformColor } from 'react-native';
 import CustomText from '../../foundation/components/text/CustomText';
 import { weatherCodeToFontistoIcon } from './utils';
-import globalStyles from '../../foundation/theme/globalStyles';
+import globalStyles from '../../theme/globalStyles';
 import { SFSymbol } from 'react-native-sfsymbols';
 
 interface WeatherDisplayProps {

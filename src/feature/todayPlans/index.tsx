@@ -9,9 +9,9 @@ import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/cale
 import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
 import { deleteEventsLoadChips, saveEventLoadChips, openTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { useReload } from '../../foundation/reload/ReloadProvider';
+import { useReload } from '../../services/ReloadProvider';
 import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
-import { useTimeModal } from '../timeModal/TimeModalProvider';
+import { useTimeModal } from '../../modals/services/TimeModalProvider';
 import { usePathname } from 'expo-router';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 
