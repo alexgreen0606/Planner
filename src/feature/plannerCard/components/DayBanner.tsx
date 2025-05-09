@@ -3,7 +3,7 @@ import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { WeatherForecast } from '../../weather/utils';
 import globalStyles from '../../../theme/globalStyles';
 import WeatherDisplay from '../../weather';
-import { datestampToMonthDate, getTomorrowDatestamp } from '../../../foundation/calendarEvents/timestampUtils';
+import { datestampToMonthDate, getTomorrowDatestamp } from '../../../utils/timestampUtils';
 import { Planner } from '../../../foundation/calendarEvents/types';
 import CustomText from '../../../foundation/components/text/CustomText';
 

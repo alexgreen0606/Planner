@@ -6,14 +6,15 @@ import { EFieldType } from "../../src/modals/components/form/types";
 import { DateTime } from 'luxon';
 import { useForm } from "react-hook-form";
 import Form from "../../src/modals/components/form";
+import { ItemStatus } from "../../src/foundation/sortedLists/constants";
 
 export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
 
 type FormData = {
     title: string;
     timeRange: {
-        startTime: string;
-        endTime: string;
+        startTime: string | null;
+        endTime: string | null;
     };
     isCalendarEvent: boolean;
     allDay: boolean;
@@ -27,6 +28,8 @@ const TimeModal = () => {
         return initialEvent.current;
     }, [pathname]);
 
+    const isEditMode = planEvent?.status === ItemStatus.EDIT;
+
     // Set up react-hook-form
     const { control, watch, setValue, formState: { isValid } } = useForm<FormData>();
     const formValues = watch();
@@ -35,10 +38,10 @@ const TimeModal = () => {
     useEffect(() => {
         if (!planEvent) return;
         const now = DateTime.now();
-        const defaultStartTime = DateTime.fromISO(planEvent.listId || now.toISOString())
+        const defaultStartTime = DateTime.fromISO(planEvent.listId || now.toISO())
             .set({ hour: now.hour, minute: 0, second: 0, millisecond: 0 })
             .toISO();
-        const defaultEndTime = DateTime.fromISO(planEvent.listId || now.toISOString())
+        const defaultEndTime = DateTime.fromISO(planEvent.listId || now.toISO())
             .set({ hour: now.hour + 1, minute: 0, second: 0, millisecond: 0 })
             .toISO();
 
@@ -69,18 +72,20 @@ const TimeModal = () => {
         if (isAllDay) {
             // If all day is toggled on, set times to start of day
             const timeRange = watch('timeRange');
-            if (timeRange) {
+            if (timeRange && timeRange.startTime) {
                 const startOfDayStart = DateTime.fromISO(timeRange.startTime)
                     .startOf('day')
                     .toISO();
-                const startOfDayEnd = DateTime.fromISO(timeRange.endTime)
-                    .startOf('day')
-                    .toISO();
+                if (timeRange.endTime) {
+                    const startOfDayEnd = DateTime.fromISO(timeRange.endTime)
+                        .startOf('day')
+                        .toISO();
 
-                setValue('timeRange', {
-                    startTime: startOfDayStart,
-                    endTime: startOfDayEnd
-                });
+                    setValue('timeRange', {
+                        startTime: startOfDayStart,
+                        endTime: startOfDayEnd
+                    });
+                }
             }
         }
     }, [isAllDay, setValue, watch]);
@@ -91,6 +96,8 @@ const TimeModal = () => {
         if (!planEvent) return;
 
         const { title, timeRange, isCalendarEvent, allDay } = formValues;
+
+        if (!timeRange.startTime || !timeRange.endTime) return;
 
         const updatedItem = {
             ...planEvent,
@@ -111,7 +118,7 @@ const TimeModal = () => {
             // All-day events end at the start of the next day
             const endDate = DateTime.fromISO(timeRange.endTime);
             const startOfNextDay = endDate.plus({ days: 1 }).startOf('day').toISO();
-            updatedItem.timeConfig.endTime = startOfNextDay;
+            updatedItem.timeConfig.endTime = startOfNextDay!;
         }
 
         onSave(updatedItem);
@@ -145,7 +152,7 @@ const TimeModal = () => {
         {
             name: 'isCalendarEvent',
             type: EFieldType.CHECKBOX,
-            label: 'Add to Device Calendar',
+            label: 'Add to Calendar',
             defaultValue: false
         },
         {
@@ -160,7 +167,7 @@ const TimeModal = () => {
 
     return (
         <Modal
-            title='Schedule Event Time'
+            title={isEditMode ? 'Edit Event' : 'Create Event'}
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSave,

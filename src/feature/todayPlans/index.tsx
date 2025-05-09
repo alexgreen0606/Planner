@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { generateSortIdByTime, getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
 import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
@@ -14,6 +13,7 @@ import { useDeleteScheduler } from '../../foundation/sortedLists/services/Delete
 import { useTimeModal } from '../../modals/services/TimeModalProvider';
 import { usePathname } from 'expo-router';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
+import { getTodayDatestamp } from '../../utils/timestampUtils';
 
 interface SortablePlannerProps {
     loadAllExternalData: () => Promise<void>;

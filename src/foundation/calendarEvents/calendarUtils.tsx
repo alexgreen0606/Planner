@@ -1,5 +1,5 @@
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
-import { datestampToDayOfWeek, datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "./timestampUtils";
+import { datestampToDayOfWeek, datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "../../utils/timestampUtils";
 import { EventChipProps } from "./components/EventChip";
 import { uuid } from "expo-modules-core";
 import { CalendarData, Planner, PlannerEvent, RecurringEvent } from "./types";

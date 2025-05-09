@@ -1,5 +1,5 @@
 import { MMKV } from "react-native-mmkv";
-import { PLANNER_SETS_STORAGE_ID, PlannerSet } from "../plannerCard/types";
+import { PLANNER_SETS_STORAGE_ID, PlannerSet } from "./types";
 
 const storage = new MMKV({ id: PLANNER_SETS_STORAGE_ID });
 

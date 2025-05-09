@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useScrollContainer } from '../../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../../src/foundation/calendarEvents/timestampUtils';
 import { ListItem, ModifyItemConfig } from '../../../src/foundation/sortedLists/types';
 import { generateSortId, isItemTextfield } from '../../../src/foundation/sortedLists/utils';
 import { Deadline } from '../../../src/feature/deadlines/types';
 import Toolbar, { ToolbarProps } from '../../../src/foundation/sortedLists/components/ListItemToolbar';
-import DateValueProps from '../../../src/foundation/calendarEvents/components/values/DateValue';
 import useSortedList from '../../../src/foundation/sortedLists/hooks/useSortedList';
 import { DEADLINE_LIST_KEY } from '../../../src/feature/deadlines/constants';
 import { deleteDeadlines, getDeadlines, saveDeadline } from '../../../src/feature/deadlines/deadlineUtils';
@@ -14,6 +12,8 @@ import globalStyles from '../../../src/theme/globalStyles';
 import SortableList from '../../../src/foundation/sortedLists/components/list/SortableList';
 import CustomText from '../../../src/foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
+import DateValue from '../../../src/foundation/calendarEvents/components/values/DateValue';
+import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../../src/utils/timestampUtils';
 
 const Deadlines = () => {
 
@@ -30,7 +30,7 @@ const Deadlines = () => {
         return {
             ...item,
             sortId: newSortId,
-            startTime: todayMidnight
+            startTime: todayMidnight.toISOString() // TODO: use luxon?
         }
     };
 
@@ -58,7 +58,7 @@ const Deadlines = () => {
                         onClick: () => { toggleDateSelector(deadline) },
                         customIcon:
                             <View style={{ transform: 'scale(1.1)' }}>
-                                <DateValue timestamp={deadline.startTime.toISOString()} />
+                                <DateValue isoTimestamp={deadline.startTime} />
                             </View>
                     }]],
                 item: deadline,
@@ -110,7 +110,7 @@ const Deadlines = () => {
                 getLeftIconConfig={(item) => ({
                     onClick: toggleDateSelector,
                     hideIcon: isItemTextfield(item),
-                    customIcon: <DateValue timestamp={item.startTime.toISOString()} />
+                    customIcon: <DateValue isoTimestamp={item.startTime} />
                 })}
                 getRightIconConfig={(deadline) => ({
                     customIcon:

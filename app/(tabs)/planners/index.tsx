@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { getNextSevenDayDatestamps } from '../../../src/foundation/calendarEvents/timestampUtils';
 import { WeatherForecast } from '../../../src/feature/weather/utils';
 import { CalendarData } from '../../../src/foundation/calendarEvents/types';
 import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/foundation/calendarEvents/calendarUtils';
@@ -10,9 +9,10 @@ import PopoverList from '../../../src/foundation/components/PopoverList';
 import GenericIcon from '../../../src/foundation/components/GenericIcon';
 import PlannerCard from '../../../src/feature/plannerCard';
 import { getPlannerSet, getPlannerSetTitles } from '../../../src/feature/plannerSets/plannerSetsStorage';
-import { usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { NULL } from '../../../src/feature/checklists/constants';
+import { getDatesInRange, getNextSevenDayDatestamps } from '../../../src/utils/timestampUtils';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -24,7 +24,11 @@ const Planners = () => {
 
     const plannerDatestamps = useMemo(() => {
         if (plannerSetKey === 'Next 7 Days') return getNextSevenDayDatestamps();
-        return getPlannerSet(plannerSetKey)?.dates ?? [];
+
+        const plannerSet = getPlannerSet(plannerSetKey);
+        if (!plannerSet) return [];
+
+        return getDatesInRange(plannerSet.startDate, plannerSet.endDate)
     }, [plannerSetKey]);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({

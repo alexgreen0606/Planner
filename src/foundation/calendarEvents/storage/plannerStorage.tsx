@@ -8,7 +8,7 @@ import {
     getYesterdayDatestamp,
     isTimestampValid,
     datestampToDayOfWeek,
-} from '../timestampUtils';
+} from '../../../utils/timestampUtils';
 import { generatePlanner, getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from '../calendarUtils';
 import { Planner, PLANNER_STORAGE_ID, PlannerEvent, RecurringEvent } from '../types';
 import { ItemStatus } from '../../sortedLists/constants';

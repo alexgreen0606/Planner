@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import useSortedList from '../../../foundation/sortedLists/hooks/useSortedList';
 import { RecurringPlannerKeys } from '../constants';
-import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
 import { useScrollContainer } from '../../../foundation/sortedLists/services/ScrollContainerProvider';
 import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
 import { View } from 'react-native';
@@ -13,6 +12,7 @@ import { ItemStatus } from '../../../foundation/sortedLists/constants';
 import DatePicker from 'react-native-date-picker';
 import { isItemTextfield } from '../../../foundation/sortedLists/utils';
 import { useDeleteScheduler } from '../../../foundation/sortedLists/services/DeleteScheduler';
+import { datestampToMidnightDate, generateSortIdByTime } from '../../../utils/timestampUtils';
 
 interface SortedRecurringPlannerProps {
     plannerKey: RecurringPlannerKeys;

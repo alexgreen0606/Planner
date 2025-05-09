@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { datestampToMidnightDate, generateSortIdByTime } from '../../../foundation/calendarEvents/timestampUtils';
+import { datestampToMidnightDate, generateSortIdByTime } from '../../../utils/timestampUtils';
 import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../foundation/calendarEvents/types';
 import { useScrollContainer } from '../../../foundation/sortedLists/services/ScrollContainerProvider';
 import { isItemTextfield } from '../../../foundation/sortedLists/utils';

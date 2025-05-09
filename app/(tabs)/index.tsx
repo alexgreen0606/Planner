@@ -4,7 +4,6 @@ import { PlannerEvent } from '../../src/foundation/calendarEvents/types';
 import { Birthday } from '../../src/feature/birthdayCard/types';
 import { BIRTHDAY_STORAGE_ID } from '../../src/feature/birthdayCard/constants';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
-import { getTodayDatestamp } from '../../src/foundation/calendarEvents/timestampUtils';
 import { loadCalendarEventData } from '../../src/foundation/calendarEvents/calendarUtils';
 import { getContactedBirthdaysByDatestamp } from '../../src/feature/birthdayCard/storage';
 import { eventChipToBirthday, extractNameFromBirthdayText } from '../../src/feature/birthdayCard/utils';
@@ -14,6 +13,7 @@ import TodayBanner from '../../src/feature/todayPlans/TodayBanner';
 import EventChip, { EventChipProps } from '../../src/foundation/calendarEvents/components/EventChip';
 import BirthdayCard from '../../src/feature/birthdayCard';
 import TodayPlanner from '../../src/feature/todayPlans';
+import { getTodayDatestamp } from '../../src/utils/timestampUtils';
 
 interface TodayData {
   planner: PlannerEvent[];

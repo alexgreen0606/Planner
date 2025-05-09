@@ -18,11 +18,11 @@ enum SelectorMode {
     END_TIME = 'end_time'
 }
 
-export interface DateSelectorProps {
-    startTimestamp: string;
-    endTimestamp: string;
-    setStartTimestamp: (timestamp: string) => void;
-    setEndTimestamp: (timestamp: string) => void;
+export interface TimeRangeSelectorProps {
+    startTimestamp: string | null;
+    endTimestamp: string | null;
+    setStartTimestamp: (timestamp: string | null) => void;
+    setEndTimestamp: (timestamp: string | null) => void;
 }
 
 const TimeRangeSelector = ({
@@ -30,7 +30,7 @@ const TimeRangeSelector = ({
     endTimestamp,
     setStartTimestamp,
     setEndTimestamp,
-}: DateSelectorProps) => {
+}: TimeRangeSelectorProps) => {
     const [mode, setMode] = useState<SelectorMode | null>(null);
     const timeSelectorHeight = useSharedValue(0);
     const dateSelectorHeight = useSharedValue(0);
@@ -95,57 +95,50 @@ const TimeRangeSelector = ({
         return type === mode ? 'systemBlue' : 'label';
     }
 
-    // This replaces your current getDateRangeArray
-    const getDateRangeArray = (start: string, end: string): string[] => {
-        const startDate = DateTime.fromISO(start).startOf('day');
-        const endDate = DateTime.fromISO(end).startOf('day');
-        const dates: string[] = [];
-
-        let current = startDate;
-
-        while (current <= endDate) {
-            dates.push(current.toISODate()); // Format: YYYY-MM-DD
-            current = current.plus({ days: 1 });
-        }
-
-        return dates;
-    };
+    console.log(startTimestamp, endTimestamp)
 
     return (
         <View>
             <View>
                 <TouchableOpacity onPress={() => toggleMode(SelectorMode.DATES)} style={styles.dates}>
-                    <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={startTimestamp} />
-                    <View style={styles.through}>
-                        <CustomText type='indicator2'>
-                            to
-                        </CustomText>
-                    </View>
-                    <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={endTimestamp} />
+                    {startTimestamp && (
+                        <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={startTimestamp} />
+                    )}
+                    {endTimestamp && (
+                        <View style={styles.through}>
+                            <CustomText type='indicator2'>
+                                to
+                            </CustomText>
+                        </View>
+                    )}
+                    {endTimestamp && (
+                        <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={endTimestamp} />
+                    )}
                 </TouchableOpacity>
                 <DateSelectorContainer style={dateSelectorContainerStyle}>
                     <DateRangeSelector
-                        dates={getDateRangeArray(startTimestamp, endTimestamp)}
-                        onChange={(dates: string[]) => {
-                            if (dates.length === 0) return;
-
-                            // Get the first and last dates from the array
-                            const startDate = dates[0]; // YYYY-MM-DD format
-                            const endDate = dates[dates.length - 1]; // YYYY-MM-DD format
+                        startDate={startTimestamp ? DateTime.fromISO(startTimestamp).toFormat('yyyy-MM-dd') : null}
+                        endDate={endTimestamp ? DateTime.fromISO(endTimestamp).toFormat('yyyy-MM-dd') : null}
+                        onChange={(newStartDate: string | null, newEndDate: string | null) => {
+                            if (!newStartDate || !newEndDate) {
+                                setStartTimestamp(null);
+                                setEndTimestamp(null);
+                                return;
+                            }
 
                             // Parse current timestamps to get the times
-                            const currentStartDateTime = DateTime.fromISO(startTimestamp);
-                            const currentEndDateTime = DateTime.fromISO(endTimestamp);
+                            const currentStartDateTime = startTimestamp ? DateTime.fromISO(startTimestamp) : DateTime.now();
+                            const currentEndDateTime = endTimestamp ? DateTime.fromISO(endTimestamp) : DateTime.now();
 
                             // Create new DateTime objects with new dates but preserving times
-                            const newStartDateTime = DateTime.fromISO(startDate).set({
+                            const newStartDateTime = DateTime.fromISO(newStartDate).set({
                                 hour: currentStartDateTime.hour,
                                 minute: currentStartDateTime.minute,
                                 second: currentStartDateTime.second,
                                 millisecond: currentStartDateTime.millisecond
                             });
 
-                            const newEndDateTime = DateTime.fromISO(endDate).set({
+                            const newEndDateTime = DateTime.fromISO(newEndDate).set({
                                 hour: currentEndDateTime.hour,
                                 minute: currentEndDateTime.minute,
                                 second: currentEndDateTime.second,
@@ -159,40 +152,44 @@ const TimeRangeSelector = ({
                     />
                 </DateSelectorContainer>
             </View>
-            <View>
-                <View style={globalStyles.spacedApart}>
-                    <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
-                        <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => toggleMode(SelectorMode.END_TIME)}>
-                        <TimeValue platformColor={getColor(SelectorMode.END_TIME)} isoTimestamp={endTimestamp} />
-                    </TouchableOpacity>
+            {timestamp && startTimestamp && (
+                <View>
+                    <View style={globalStyles.spacedApart}>
+                        <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
+                            <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
+                        </TouchableOpacity>
+                        {endTimestamp && (
+                            <TouchableOpacity onPress={() => toggleMode(SelectorMode.END_TIME)}>
+                                <TimeValue platformColor={getColor(SelectorMode.END_TIME)} isoTimestamp={endTimestamp} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    <TimeSelectorContainer style={timeSelectorContainerStyle}>
+                        <DatePicker
+                            mode='time'
+                            theme='dark'
+                            date={DateTime.fromISO(timestamp).toJSDate()}
+                            onDateChange={(date) => {
+                                // Parse the current timestamp and new date using luxon
+                                const currentDateTime = DateTime.fromISO(timestamp);
+                                const newTime = DateTime.fromJSDate(date);
+
+                                // Create a new DateTime with the original date but new time
+                                const updatedDateTime = currentDateTime.set({
+                                    hour: newTime.hour,
+                                    minute: newTime.minute,
+                                    second: newTime.second,
+                                    millisecond: newTime.millisecond
+                                });
+
+                                // Update the timestamp
+                                updateTimestamp(updatedDateTime.toISO());
+                            }}
+                            minuteInterval={5}
+                        />
+                    </TimeSelectorContainer>
                 </View>
-                <TimeSelectorContainer style={timeSelectorContainerStyle}>
-                    <DatePicker
-                        mode='time'
-                        theme='dark'
-                        date={DateTime.fromISO(timestamp).toJSDate()}
-                        onDateChange={(date) => {
-                            // Parse the current timestamp and new date using luxon
-                            const currentDateTime = DateTime.fromISO(timestamp);
-                            const newTime = DateTime.fromJSDate(date);
-
-                            // Create a new DateTime with the original date but new time
-                            const updatedDateTime = currentDateTime.set({
-                                hour: newTime.hour,
-                                minute: newTime.minute,
-                                second: newTime.second,
-                                millisecond: newTime.millisecond
-                            });
-
-                            // Update the timestamp
-                            updateTimestamp(updatedDateTime.toISO());
-                        }}
-                        minuteInterval={5}
-                    />
-                </TimeSelectorContainer>
-            </View>
+            )}
         </View>
     )
 };

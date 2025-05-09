@@ -1,6 +1,6 @@
 import { isItemTextfield } from '../sortedLists/utils';
 import { deleteEvents, saveEvent } from './storage/plannerStorage';
-import { generateSortIdByTime } from './timestampUtils';
+import { generateSortIdByTime } from '../../utils/timestampUtils';
 import { Planner, PlannerEvent } from './types';
 
 export function getEventsFromPlanner(

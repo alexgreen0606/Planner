@@ -1,65 +1,49 @@
 import React, { useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { getTodayDatestamp } from '../../../../foundation/calendarEvents/timestampUtils';
+import { getTodayDatestamp } from '../../../../utils/timestampUtils';
 
-interface CalendarSelectProps {
-    dates: string[];
-    onChange: (dates: string[]) => void;
+interface DateRangeSelectorProps {
+    startDate: string | null;
+    endDate: string | null;
+    onChange: (startDate: string | null, endDate: string | null) => void;
 }
 
 const DateRangeSelector = ({
-    dates,
+    startDate,
+    endDate,
     onChange
-}: CalendarSelectProps) => {
+}: DateRangeSelectorProps) => {
     const [monthIndex, setMonthIndex] = useState(0);
 
     const handleDayPress = (day: { dateString: string }) => {
         const { dateString } = day;
-        const [startDate, endDate] = dates.length > 0 ? [dates[0], dates[dates.length - 1]] : [null, null];
-        let newRange;
 
         if (startDate === dateString) {
-            newRange = { startDate: null, endDate: null };
+            // Deselect if clicking the start date when it's the only selection
+            onChange(null, null);
         } else if (!startDate) {
             // Start new range
-            newRange = { startDate: dateString, endDate: dateString };
-        } else if (!endDate) {
+            onChange(dateString, dateString);
+        } else if (!endDate || startDate === endDate) {
             // Set end date
             if (dateString < startDate) {
-                newRange = { startDate: dateString, endDate: startDate };
+                onChange(dateString, startDate);
             } else {
-                newRange = { startDate, endDate: dateString };
+                onChange(startDate, dateString);
             }
         } else {
             // Adjust the existing range
             if (dateString < startDate) {
-                newRange = { startDate: dateString, endDate };
+                onChange(dateString, endDate);
             } else {
-                newRange = { startDate, endDate: dateString };
+                onChange(startDate, dateString);
             }
         }
-
-        onChange(newRange.startDate ? getDateRangeArray(newRange.startDate, newRange.endDate) : []);
-    };
-
-    const getDateRangeArray = (start: string, end: string): string[] => {
-        const dates: string[] = [];
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        const curr = new Date(startDate);
-
-        while (curr <= endDate) {
-            dates.push(curr.toISOString().split('T')[0]);
-            curr.setDate(curr.getDate() + 1);
-        }
-
-        return dates;
     };
 
     const getMarkedDates = () => {
         const marks: any = {};
-        const [startDate, endDate] = dates.length > 0 ? [dates[0], dates[dates.length - 1]] : [null, null];
 
         if (startDate && !endDate) {
             marks[startDate] = { selected: true, startingDay: true, endingDay: true, color: PlatformColor('systemBlue'), textColor: 'white' };

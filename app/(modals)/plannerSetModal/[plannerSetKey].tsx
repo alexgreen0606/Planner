@@ -3,16 +3,23 @@ import Modal from '../../../src/modals';
 import { useForm } from 'react-hook-form';
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../../src/feature/plannerCard/types';
+import { PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../../src/feature/plannerSets/types';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/feature/plannerSets/plannerSetsStorage';
 import { EFieldType, IFormField } from '../../../src/modals/components/form/types';
 import Form from '../../../src/modals/components/form';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
-const emptyFormData: PlannerSet = {
+type PendingPlannerSet = {
+    title: string;
+    startDate: string | null;
+    endDate: string | null;
+}
+
+const emptyFormData: PendingPlannerSet = {
     title: '',
-    dates: []
+    startDate: null,
+    endDate: null
 };
 
 const PlannerSetModal = () => {
@@ -34,7 +41,7 @@ const PlannerSetModal = () => {
         reset,
         watch,
         formState: { isValid }
-    } = useForm<PlannerSet>({
+    } = useForm<PendingPlannerSet>({
         defaultValues: {
             ...emptyFormData,
             ...plannerSet
@@ -60,7 +67,7 @@ const PlannerSetModal = () => {
             name: 'dates',
             type: EFieldType.DATE_RANGE,
             rules: {
-                validate: (value: string[]) => value.length > 0
+                validate: ({ startDate, endDate }: { startDate: string, endDate: string }) => startDate && endDate
             }
         }
     ];
@@ -75,9 +82,10 @@ const PlannerSetModal = () => {
 
     // ------------- Utility Functions -------------
 
-    function onSubmit(data: PlannerSet) {
+    function onSubmit(data: PendingPlannerSet) {
         data.title = data.title.trim();
-        savePlannerSet(data);
+        if (!data.startDate || !data.endDate) return;
+        savePlannerSet(data as PlannerSet);
         router.back();
     }
 

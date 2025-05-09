@@ -33,10 +33,12 @@ const FormField = ({
                 />
             );
         case EFieldType.DATE_RANGE:
-            const dates = Array.isArray(value) ? value : [];
+            const { startTime: start, endTime: end } = value || {};
+
             return (
                 <DateRangeSelector
-                    dates={dates}
+                    startDate={start}
+                    endDate={end}
                     onChange={onChange}
                 />
             );

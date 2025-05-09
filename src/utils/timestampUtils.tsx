@@ -1,6 +1,29 @@
-import { ItemStatus } from "../sortedLists/constants";
-import { generateSortId, getParentSortId } from "../sortedLists/utils";
-import { DaysOfWeek, PlannerEvent, RecurringEvent, TimeConfig, Weekdays } from "./types";
+
+
+import { DateTime } from 'luxon';
+import { DaysOfWeek, PlannerEvent, RecurringEvent, TimeConfig, Weekdays } from '../foundation/calendarEvents/types';
+import { generateSortId, getParentSortId } from '../foundation/sortedLists/utils';
+import { ItemStatus } from '../foundation/sortedLists/constants';
+
+export function getDatesInRange(start: string, end: string): string[] {
+    const startDate = DateTime.fromISO(start);
+    const endDate = DateTime.fromISO(end);
+
+    if (!startDate.isValid || !endDate.isValid || endDate < startDate) {
+        throw new Error('Invalid date range');
+    }
+
+    const dates: string[] = [];
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+        dates.push(currentDate.toISODate()); // Returns in 'YYYY-MM-DD' format
+        currentDate = currentDate.plus({ days: 1 });
+    }
+
+    return dates;
+}
+
 
 enum Months {
     January = "January",
@@ -77,17 +100,20 @@ export function isoToDatestamp(isoTimestamp: string): string {
 };
 
 /**
- * Calculates the number of days between today and a given date in YYYY-MM-DD format.
- * @param dateStr - The date string in YYYY-MM-DD format.
- * @returns - Number of days between today and the given date.
+ * Calculates the number of days between today and a given ISO timestamp.
+ * @param isoTimestamp - The ISO timestamp string.
+ * @returns Number of days between today and the given date.
  */
-export function daysBetweenToday(targetDate: Date): number {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const diffTime = targetDate.getTime() - today.getTime();
-    return Math.round(diffTime / (1000 * 60 * 60 * 24));
-}
+export function daysBetweenToday(isoTimestamp: string): number {
+    const today = DateTime.local().startOf('day');
+    const target = DateTime.fromISO(isoTimestamp).startOf('day');
 
+    if (!target.isValid) {
+        throw new Error('Invalid ISO timestamp');
+    }
+
+    return Math.round(target.diff(today, 'days').days);
+}
 
 /**
  * Compares two time values.

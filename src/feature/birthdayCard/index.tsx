@@ -4,12 +4,12 @@ import { StyleSheet, View } from 'react-native';
 import CustomText from '../../foundation/components/text/CustomText';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { BIRTHDAY_STORAGE_ID } from './constants';
-import { getTodayDatestamp } from '../../foundation/calendarEvents/timestampUtils';
 import Card from '../../foundation/components/Card';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
 import AgeValue from './components/AgeValue';
 import { Birthday } from './types';
 import { markBirthdayContacted } from './storage';
+import { getTodayDatestamp } from '../../utils/timestampUtils';
 
 // TODO: complete refactor and styling
 

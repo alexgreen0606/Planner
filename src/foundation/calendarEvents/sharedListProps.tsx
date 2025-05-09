@@ -2,7 +2,7 @@ import Toolbar, { ToolbarProps } from "../sortedLists/components/ListItemToolbar
 import { ModifyItemConfig } from "../sortedLists/types";
 import { isItemTextfield } from "../sortedLists/utils";
 import TimeValue from "./components/values/TimeValue";
-import { extractTimeValue, generateSortIdByTime, getEventTime } from "./timestampUtils";
+import { extractTimeValue, generateSortIdByTime, getEventTime } from "../../utils/timestampUtils";
 import { PlannerEvent, RecurringEvent } from "./types";
 
 /**
