@@ -2,22 +2,12 @@ import { IconType } from "../components/GenericIcon";
 import { ListItem } from "../sortedLists/types";
 import { EventChipProps } from "./components/EventChip";
 
-export enum DaysOfWeek {
-    Sunday = "Sunday",
-    Monday = "Monday",
-    Tuesday = "Tuesday",
-    Wednesday = "Wednesday",
-    Thursday = "Thursday",
-    Friday = "Friday",
-    Saturday = "Saturday",
-}
-
 export enum Weekdays {
-    Monday = DaysOfWeek.Monday,
-    Tuesday = DaysOfWeek.Tuesday,
-    Wednesday = DaysOfWeek.Wednesday,
-    Thursday = DaysOfWeek.Thursday,
-    Friday = DaysOfWeek.Friday,
+    Monday = 'Monday',
+    Tuesday = 'Tuesday',
+    Wednesday = 'Wednesday',
+    Thursday = 'Thursday',
+    Friday = 'Friday',
 }
 
 export const PLANNER_STORAGE_ID = 'PLANNER_STORAGE';

@@ -12,7 +12,7 @@ import { getPlannerSet, getPlannerSetTitles } from '../../../src/feature/planner
 import { useRouter } from 'expo-router';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { NULL } from '../../../src/feature/checklists/constants';
-import { getDatesInRange, getNextSevenDayDatestamps } from '../../../src/utils/timestampUtils';
+import { generateDatestampRange, getNextSevenDayDatestamps } from '../../../src/utils/timestampUtils';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -28,7 +28,7 @@ const Planners = () => {
         const plannerSet = getPlannerSet(plannerSetKey);
         if (!plannerSet) return [];
 
-        return getDatesInRange(plannerSet.startDate, plannerSet.endDate)
+        return generateDatestampRange(plannerSet.startDate, plannerSet.endDate)
     }, [plannerSetKey]);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({

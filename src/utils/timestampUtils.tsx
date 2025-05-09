@@ -1,11 +1,15 @@
-
-
 import { DateTime } from 'luxon';
-import { DaysOfWeek, PlannerEvent, RecurringEvent, TimeConfig, Weekdays } from '../foundation/calendarEvents/types';
+import { PlannerEvent, RecurringEvent, TimeConfig } from '../foundation/calendarEvents/types';
 import { generateSortId, getParentSortId } from '../foundation/sortedLists/utils';
 import { ItemStatus } from '../foundation/sortedLists/constants';
 
-export function getDatesInRange(start: string, end: string): string[] {
+/**
+ * Generates an array of datestamps encompassing the given start date, end date, and all days in between.
+ * @param start - Start of range YYYY-MM-DD
+ * @param end - End of range YYYY-MM-DD
+ * @returns - Array of datestamps from start to end.
+ */
+export function generateDatestampRange(start: string, end: string): string[] {
     const startDate = DateTime.fromISO(start);
     const endDate = DateTime.fromISO(end);
 
@@ -17,28 +21,12 @@ export function getDatesInRange(start: string, end: string): string[] {
     let currentDate = startDate;
 
     while (currentDate <= endDate) {
-        dates.push(currentDate.toISODate()); // Returns in 'YYYY-MM-DD' format
+        dates.push(currentDate.toISODate());
         currentDate = currentDate.plus({ days: 1 });
     }
 
     return dates;
 }
-
-
-enum Months {
-    January = "January",
-    February = "February",
-    March = "March",
-    April = "April",
-    May = "May",
-    June = "June",
-    July = "July",
-    August = "August",
-    September = "September",
-    October = "October",
-    November = "November",
-    December = "December",
-};
 
 /**
  * Determines if the given string is a valid timestamp.
@@ -51,53 +39,36 @@ export function isTimestampValid(timestamp: string): boolean {
 };
 
 /**
- * Determines if the given timestamp represents a weekday.
- * @param timestamp - YYYY-MM-DD
- * @returns - true if a weekday, else false
- */
-export function isDatestampWeekday(timestamp: string): boolean {
-    if (!isTimestampValid(timestamp)) return false;
-    return (Object.values(Weekdays) as string[]).includes(datestampToDayOfWeek(timestamp));
-};
-
-/**
- * Combines a generic hour/minute combo with a given generic timestamp and returns a valid timestamp.
+ * Combines a generic hour/minute combo with a given generic timestamp and returns a valid ISO timestamp.
  * @param baseDate - YYYY-MM-DD
  * @param timeValue - HH:MM
- * @returns - YYYY-MM-DDT00:00:00
+ * @returns - ISO timestamp string in format YYYY-MM-DDTHH:MM:00.000Z
  */
 export function timeValueToIso(baseDate: string, timeValue: string): string {
-    const [year, month, day] = baseDate.split('-').map(Number);
     const [hour, minute] = timeValue.split(':').map(Number);
-    const localDate = new Date(year, month - 1, day, hour, minute);
-    return localDate.toISOString();
-};
+    const dateTime = DateTime.fromISO(baseDate).set({ hour, minute });
 
-/**
- * Extracts the hour and minute from a given ISO timestamp in local time.
- * @param isoTimestamp - YYYY-MM-DDTHH:mm:ss.sssZ
- * @returns - HH:MM (in local time)
- */
-export function isoToTimeValue(isoTimestamp: string): string {
-    const date = new Date(isoTimestamp);
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-};
+    if (!dateTime.isValid) {
+        throw new Error('Invalid date or time input');
+    }
+
+    return dateTime.toISO();
+}
 
 /**
  * Converts an ISO timestamp to YYYY-MM-DD format.
  * @param isoTimestamp - The ISO timestamp string (e.g., "2025-02-03T12:34:56Z").
- * @returns - Formatted date in YYYY-MM-DD.
+ * @returns Formatted date in YYYY-MM-DD.
  */
 export function isoToDatestamp(isoTimestamp: string): string {
-    return new Date(isoTimestamp).toLocaleDateString('en-CA', {
-        timeZone: 'UTC',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-    });
-};
+    const date = DateTime.fromISO(isoTimestamp, { zone: 'utc' });
+
+    if (!date.isValid) {
+        throw new Error('Invalid ISO timestamp');
+    }
+
+    return date.toISODate();
+}
 
 /**
  * Calculates the number of days between today and a given ISO timestamp.
@@ -108,61 +79,50 @@ export function daysBetweenToday(isoTimestamp: string): number {
     const today = DateTime.local().startOf('day');
     const target = DateTime.fromISO(isoTimestamp).startOf('day');
 
-    if (!target.isValid) {
-        throw new Error('Invalid ISO timestamp');
-    }
+    if (!target.isValid) return 0;
 
     return Math.round(target.diff(today, 'days').days);
 }
 
 /**
- * Compares two time values.
- * @param time1 - The first time (either ISO or HH:MM).
- * @param time2 - The second time (either ISO or HH:MM).
- * @returns - A negative number if time1 is earlier, 0 if equal, positive if time1 is later.
+ * Compares two time values (both in the same format: either ISO or HH:MM).
+ * @param time1 - The first time string.
+ * @param time2 - The second time string.
+ * @returns A negative number if time1 < time2, 0 if equal, positive if time1 > time2.
  */
 export function compareTimes(time1: string, time2: string): number {
-    if (isTimestampValid(time1)) {
-        const date1 = new Date(time1).getTime();
-        const date2 = new Date(time2).getTime();
-        return date1 - date2;
-    } else {
-        const [hour1, minute1] = time1.split(':').map(Number);
-        const [hour2, minute2] = time2.split(':').map(Number);
-        const totalMinutes1 = hour1 * 60 + minute1;
-        const totalMinutes2 = hour2 * 60 + minute2;
-        return totalMinutes1 - totalMinutes2;
-    }
-};
+    return time1.localeCompare(time2);
+}
 
 /**
  * Converts a timestamp to the day of the week for that date.
  * @param timestamp - YYYY-MM-DD
  * @returns - the day of the week as a string
  */
-export function datestampToDayOfWeek(timestamp: string): DaysOfWeek {
-    const date = new Date(timestamp + 'T00:00:00');
-    return DaysOfWeek[Object.keys(DaysOfWeek)[date.getDay()] as keyof typeof DaysOfWeek];
+export function datestampToDayOfWeek(timestamp: string): string {
+    const date = DateTime.fromISO(timestamp, { zone: 'utc' });
+
+    if (!date.isValid) {
+        throw new Error('Invalid timestamp format');
+    }
+
+    return date.toFormat('cccc');
 }
 
 /**
  * Converts a timestamp to the month and day of the month.
  * @param timestamp - YYYY-MM-DD
- * @returns - month and day of the format:  January 5
+ * @returns - month and day in the format: January 5
  */
 export function datestampToMonthDate(timestamp: string): string {
-    const date = new Date(timestamp + 'T00:00:00');
-    return `${Object.values(Months)[date.getMonth()]} ${date.getDate()}`;
-}
+    const date = DateTime.fromISO(timestamp, { zone: 'utc' });
 
-/**
- * Converts a timestamp to the month and day of the month.
- * @param timestamp - YYYY-MM-DD
- * @returns - month and day of the format:  January 5
- */
-export function isoToMonthDate(timestamp: string): string {
-    const date = new Date(timestamp);
-    return `${Object.values(Months)[date.getMonth()]} ${date.getDate()}`;
+    if (!date.isValid) {
+        throw new Error('Invalid timestamp format');
+    }
+
+    const month = date.toFormat('LLLL');
+    return `${month} ${date.day}`;
 }
 
 /**
@@ -170,89 +130,56 @@ export function isoToMonthDate(timestamp: string): string {
  * @returns - yesterday's timestamp YYYY-MM-DD
  */
 export function getYesterdayDatestamp(): string {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1); // Move to the previous day
-    const year = yesterday.getFullYear();
-    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-    const day = String(yesterday.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
+    return DateTime.utc().minus({ days: 1 }).toISODate();
+}
 
 /**
  * Generates the timestamp for today's date in YYYY-MM-DD format.
  * @returns - today's timestamp YYYY-MM-DD
  */
 export function getTodayDatestamp(): string {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
+    return DateTime.utc().toISODate();
+}
 
 /**
  * Generates the timestamp for tomorrow's date in YYYY-MM-DD format.
  * @returns - tomorrow's timestamp YYYY-MM-DD
  */
 export function getTomorrowDatestamp(): string {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1); // Move to the next day
-    const year = tomorrow.getFullYear();
-    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-    const day = String(tomorrow.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
+    return DateTime.utc().plus({ days: 1 }).toISODate();
+}
 
 /**
  * Gets the Date object for a given timestamp's start (midnight local time).
  * @param timestamp - YYYY-MM-DD string
- * @param dayShift - Number of days to shift from the timestamp
+ * @param dayOffset - Number of days to shift from the timestamp
  * @returns - Date object representing the midnight time of the computed date
  */
 export function datestampToMidnightDate(timestamp: string, dayOffset: number = 0): Date {
-    const [year, month, day] = timestamp.split('-').map(Number); // Destructuring
+    const date = DateTime.fromISO(timestamp, { zone: 'local' }).plus({ days: dayOffset });
 
-    // Create date in local time at midnight
-    const baseDate = new Date(year, month - 1, day);
-
-    // Apply day offset
-    baseDate.setDate(baseDate.getDate() + dayOffset);
-
-    // Ensure time is exactly at midnight
-    baseDate.setHours(0, 0, 0, 0);
-
-    return baseDate;
-};
+    // Convert Luxon DateTime back to a native JavaScript Date at midnight
+    return date.startOf('day').toJSDate();
+}
 
 /**
- * Generates the timestamp for the date 10 years into the future in YYYY-MM-DD format.
+ * Generates the timestamp for the date 3 years into the future in YYYY-MM-DD format.
  * @returns - future timestamp YYYY-MM-DD
  */
 export function getDatestampThreeYearsFromToday(): string {
-    const futureDate = new Date();
-    futureDate.setFullYear(futureDate.getFullYear() + 3);
-    const year = futureDate.getFullYear();
-    const month = String(futureDate.getMonth() + 1).padStart(2, '0');
-    const day = String(futureDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
+    return DateTime.utc().plus({ years: 3 }).toISODate();
+}
 
 /**
- * Builds a list of timestamps for the next seven days from tomorrow to tomorrow + 6.
+ * Generates an array of datestamps for the next seven days from tomorrow to tomorrow + 6.
  * @returns - list of timestamps YYYY-MM-DD
  */
 export function getNextSevenDayDatestamps(): string[] {
-    const today = new Date();
-    today.setDate(today.getDate() + 1);
-    return Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    });
-};
+    const tomorrow = DateTime.utc().plus({ days: 1 }).toISODate(); // Tomorrow's date
+    const sixDaysAfterTomorrow = DateTime.utc().plus({ days: 7 }).toISODate(); // Tomorrow + 6 days
+
+    return generateDatestampRange(tomorrow, sixDaysAfterTomorrow);
+}
 
 export function getEventTime(item: PlannerEvent | RecurringEvent | undefined): string | undefined {
     if (!item) return undefined;
