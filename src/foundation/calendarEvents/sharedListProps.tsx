@@ -68,7 +68,7 @@ export async function handleDragEnd(
             const newSortId = generateSortIdByTime(item, updatedItems);
             item.sortId = newSortId;
             if (newSortId === initialSortId) {
-                // The item has a time conflict or has not moved. Cancel Drag.
+                // The item has a time conflict or has not moved. Undo Drag.
                 refetchItems();
             }
         }

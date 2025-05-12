@@ -33,7 +33,7 @@ const EventChip = ({
 
     const { pendingDeleteItems } = useDeleteScheduler();
 
-    const { reloadCurrentPage } = useReload();
+    const { reloadPage } = useReload();
 
     function handleOpen() {
         if (planEvent) onOpen(planEvent, handleSave);
@@ -41,7 +41,7 @@ const EventChip = ({
 
     async function handleSave(updatedEvent: PlannerEvent) {
         await saveEvent(updatedEvent);
-        reloadCurrentPage();
+        reloadPage();
     }
 
     const isPendingDelete = planEvent &&

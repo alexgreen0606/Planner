@@ -110,7 +110,7 @@ const PlannerSetModal = () => {
             onClose={() => router.back()}
         >
             <Form
-                options={formFields}
+                fields={formFields}
                 control={control}
             />
         </Modal>

@@ -21,12 +21,12 @@ interface SortedRecurringPlannerProps {
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
 
-    const { 
-        currentTextfield, 
-        setCurrentTextfield 
+    const {
+        currentTextfield,
+        setCurrentTextfield
     } = useScrollContainer();
 
-    const {isItemDeleting} = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
@@ -84,7 +84,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
                     label: `No recurring ${plannerKey} plans`,
-                    style: { flex: 1 }
+                    className: 'flex-1'
                 }}
             />
             <DatePicker

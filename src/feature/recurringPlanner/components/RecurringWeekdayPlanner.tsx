@@ -107,7 +107,7 @@ const RecurringWeekdayPlanner = () => {
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
                     label: `No recurring weekday plans`,
-                    style: { flex: 1 }
+                    className: 'flex-1'
                 }}
             />
             <DatePicker

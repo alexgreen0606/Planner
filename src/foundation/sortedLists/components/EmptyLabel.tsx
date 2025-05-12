@@ -9,7 +9,7 @@ export interface EmptyLabelProps extends PressableProps {
     label: string;
     onPress: () => void;
     iconConfig?: GenericIconProps;
-    style?: ViewStyle;
+    className?: string;
     fontSize?: number;
 };
 
@@ -18,10 +18,14 @@ const EmptyLabel = ({
     iconConfig,
     onLayout,
     onPress,
-    style,
+    className,
     fontSize = 14
 }: EmptyLabelProps) =>
-    <Pressable onLayout={onLayout} onPress={onPress} style={{ ...globalStyles.centered, ...style }}>
+    <Pressable
+        onLayout={onLayout}
+        onPress={onPress}
+        className={`flex items-center justify-center ${className}`}
+    >
         <View style={globalStyles.verticallyCentered}>
             <CustomText
                 type='label'

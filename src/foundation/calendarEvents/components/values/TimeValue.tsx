@@ -10,7 +10,7 @@ interface TimeProps {
     endEvent?: boolean;
     startEvent?: boolean;
     disabled?: boolean;
-    isShortMode?: boolean;
+    concise?: boolean;
     platformColor?: string;
 }
 
@@ -20,7 +20,7 @@ const TimeValue = ({
     allDay,
     endEvent,
     startEvent,
-    isShortMode,
+    concise,
     platformColor = 'label'
 }: TimeProps) => {
     const [hour, setHour] = useState('');
@@ -54,12 +54,12 @@ const TimeValue = ({
         }
     }, [timeValue, isoTimestamp]);
 
-    return isShortMode ?
+    return concise ?
         <View style={styles.time}>
             <CustomText type='time' style={{color: PlatformColor(platformColor)}}>
                 {hour}{minute}
             </CustomText>
-            <View style={[styles.indicator, isShortMode ? styles.short : styles.long]}>
+            <View style={[styles.indicator, concise ? styles.short : styles.long]}>
                 <CustomText type='indicator2'>
                     {indicator}
                 </CustomText>

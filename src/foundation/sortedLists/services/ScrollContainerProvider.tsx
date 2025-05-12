@@ -103,7 +103,8 @@ export const ScrollContainerContent = <T extends ListItem>({
     } = useDimensions();
 
     const {
-        reloadCurrentPage,
+        reloadPage,
+        canReloadPath
     } = useReload();
 
     const { keyboardHeight } = useKeyboard();
@@ -140,7 +141,7 @@ export const ScrollContainerContent = <T extends ListItem>({
     // Trigger a page reload
     useEffect(() => {
         if (loadingStatus === LoadingStatus.LOADING) {
-            reloadCurrentPage().then(() => {
+            reloadPage().then(() => {
                 updateLoadingStatus(LoadingStatus.COMPLETE);
             });
         }
@@ -429,15 +430,17 @@ export const ScrollContainerContent = <T extends ListItem>({
                     <View style={{ height: floatingBannerHeight }} />
 
                     {/* Loading Spinner */}
-                    <Portal>
-                        <LoadingSpinner style={loadingSpinnerStyle}>
-                            <GenericIcon
-                                size='l'
-                                platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
-                                type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
-                            />
-                        </LoadingSpinner>
-                    </Portal>
+                    {canReloadPath && (
+                        <Portal>
+                            <LoadingSpinner style={loadingSpinnerStyle}>
+                                <GenericIcon
+                                    size='l'
+                                    platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
+                                    type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
+                                />
+                            </LoadingSpinner>
+                        </Portal>
+                    )}
 
                     {children}
 

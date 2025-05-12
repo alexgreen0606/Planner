@@ -1,21 +1,16 @@
 import React, { useMemo, useRef } from 'react';
 import { LayoutChangeEvent, Pressable, View } from 'react-native';
-import { useScrollContainer } from '../../services/ScrollContainerProvider';
-import uuid from 'react-native-uuid';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import {
-    ListItem,
-    ModifyItemConfig,
-    ListItemUpdateComponentProps,
-    ListItemIconConfig,
-} from '../../types';
-import DraggableRow from './DraggableRow';
-import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
-import ThinLine from './ThinLine';
-import { buildItemPositions, generateSortId } from '../../utils';
-import { useKeyboard } from '../../services/KeyboardProvider';
-import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
 import { Portal } from 'react-native-paper';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import uuid from 'react-native-uuid';
+import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
+import { useKeyboard } from '../../services/KeyboardProvider';
+import { useScrollContainer } from '../../services/ScrollContainerProvider';
+import { ListItem, ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '../../types';
+import { buildItemPositions, generateSortId } from '../../utils';
+import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
+import DraggableRow from './DraggableRow';
+import ThinLine from './ThinLine';
 
 const ListContainer = Animated.createAnimatedComponent(View);
 const ToolbarContainer = Animated.createAnimatedComponent(View);
@@ -41,6 +36,7 @@ export interface DraggableListProps<
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     initializeItem?: (item: ListItem) => T;
     customIsItemDeleting?: (item: T) => boolean;
+    hideKeyboard?: boolean;
     hideList?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
@@ -62,6 +58,7 @@ const SortableList = <
     staticList,
     getModal,
     getToolbar,
+    hideKeyboard,
     ...rest
 }: DraggableListProps<T, P, M>) => {
 
@@ -202,7 +199,7 @@ const SortableList = <
                     <DraggableRow<T>
                         key={`${item.id}-row`}
                         item={item}
-                        hideKeyboard={!!modalConfig?.props.hideKeyboard || !!toolbarConfig?.props.hideKeyboard}
+                        hideKeyboard={Boolean(hideKeyboard)}
                         positions={positions}
                         saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
                         listLength={currentList.length}

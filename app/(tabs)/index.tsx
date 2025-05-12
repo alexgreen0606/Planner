@@ -94,7 +94,7 @@ const Today = () => {
         <BirthdayCard birthdays={pageData.uncontactedBirthdays} />
 
         {/* Planner */}
-        <View style={styles.planner}>
+        <View className='flex-1'>
           <TodayPlanner
             loadAllExternalData={loadCalendarData}
             calendarEvents={pageData.planner}
@@ -107,14 +107,6 @@ const Today = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    gap: 4,
-    alignItems: 'center'
-  },
-  planner: {
-    flex: 1,
-  },
   chips: {
     ...globalStyles.verticallyCentered,
     paddingBottom: 4,

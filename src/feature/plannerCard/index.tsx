@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import DayBanner from './components/DayBanner';
-import globalStyles from '../../theme/globalStyles';
+import { usePathname } from 'expo-router';
+import React, { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
+import { generatePlanner } from '../../foundation/calendarEvents/calendarUtils';
 import EventChip, { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
-import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
-import { WeatherForecast } from '../weather/utils';
-import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
 import { generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
-import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
+import { deleteEventsLoadChips, openTimeModal, saveEventLoadChips } from '../../foundation/calendarEvents/sharedListUtils';
+import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
 import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
 import Card from '../../foundation/components/Card';
-import { deleteEventsLoadChips, saveEventLoadChips, openTimeModal } from '../../foundation/calendarEvents/sharedListUtils';
+import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
+import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
-import { generatePlanner } from '../../foundation/calendarEvents/calendarUtils';
-import EventCountChip from './components/EventCountChip';
 import { LIST_ITEM_HEIGHT } from '../../foundation/sortedLists/constants';
+import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
+import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
+import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
 import { useTimeModal } from '../../modals/services/TimeModalProvider';
-import { usePathname } from 'expo-router';
-import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
+import globalStyles from '../../theme/globalStyles';
+import { WeatherForecast } from '../weather/utils';
+import DayBanner from './components/DayBanner';
+import EventCountChip from './components/EventCountChip';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -52,11 +52,6 @@ const PlannerCard = ({
     const { pendingDeleteItems } = useDeleteScheduler();
 
     const [collapsed, setCollapsed] = useState(true);
-
-    // Reload the list whenever the calendar events change
-    useEffect(() => {
-        SortedEvents.refetchItems();
-    }, [calendarEvents]);
 
     // ------------- Utility Functions -------------
 
@@ -112,7 +107,7 @@ const PlannerCard = ({
             update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
             delete: handleDeleteEvent
         },
-        noReload: true
+        reloadTriggers: [calendarEvents]
     });
 
     return (
@@ -154,7 +149,7 @@ const PlannerCard = ({
                 onSaveTextfield={SortedEvents.persistItemToStorage}
                 emptyLabelConfig={{
                     label: 'No Plans',
-                    style: { height: LIST_ITEM_HEIGHT, paddingBottom: 8 }
+                    className: `h-[${LIST_ITEM_HEIGHT}px] pb-2`
                 }}
             />
         </Card>

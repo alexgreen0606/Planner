@@ -9,7 +9,7 @@ import PopoverList from '../../../src/foundation/components/PopoverList';
 import GenericIcon from '../../../src/foundation/components/GenericIcon';
 import PlannerCard from '../../../src/feature/plannerCard';
 import { getPlannerSet, getPlannerSetTitles } from '../../../src/feature/plannerSets/plannerSetsStorage';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { NULL } from '../../../src/feature/checklists/constants';
 import { generateDatestampRange, getNextSevenDayDatestamps } from '../../../src/utils/timestampUtils';
@@ -109,20 +109,19 @@ const Planners = () => {
         setCalendarEventData(await loadCalendarEventData(plannerDatestamps));
     };
 
+    const pathname = usePathname();
+
     // Load in the initial planners
     useEffect(() => {
         loadAllExternalData();
-        registerReloadFunction('planners-reload-trigger', loadAllExternalData);
+        registerReloadFunction('planners-reload-trigger', loadAllExternalData, pathname);
     }, []);
 
     return (
         <View style={globalStyles.blackFilledSpace}>
 
             {/* Planner Set Selection */}
-            <View style={[
-                globalStyles.spacedApart,
-                styles.dropdownContainer
-            ]} >
+            <View className='py-2 px-4 flex-row justify-between items-center w-full' >
                 <PopoverList<string>
                     getLabelFromObject={(set) => set} // TODO remove this prop
                     options={[defaultPlannerSet, ...allPlannerSetTitles]}
@@ -136,7 +135,7 @@ const Planners = () => {
             </View>
 
             {/* Planner Set Display */}
-            <View style={styles.planners}>
+            <View className='p-2 gap-[26px]'>
                 {plannerDatestamps.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
@@ -152,16 +151,5 @@ const Planners = () => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    dropdownContainer: {
-        paddingVertical: 8,
-        paddingHorizontal: 16
-    },
-    planners: {
-        padding: 8,
-        gap: 26,
-    }
-});
 
 export default Planners;

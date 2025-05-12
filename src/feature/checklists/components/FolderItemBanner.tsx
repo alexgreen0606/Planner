@@ -1,59 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, PlatformColor, TextInput } from 'react-native';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { LISTS_STORAGE_ID } from '../constants';
-import { FolderItem, FolderItemTypes } from '../types';
-import { getFolderItem, updateFolderItem } from '../storage';
-import { ItemStatus } from '../../../foundation/sortedLists/constants';
-import globalStyles from '../../../theme/globalStyles';
-import CustomText from '../../../foundation/components/text/CustomText';
-import ButtonText from '../../../foundation/components/text/ButtonText';
+import { HEADER_HEIGHT } from '@/constants';
+import ButtonText from '@/foundation/components/text/ButtonText';
+import CustomText from '@/foundation/components/text/CustomText';
+import useDimensions from '@/foundation/hooks/useDimensions';
+import { ItemStatus } from '@/foundation/sortedLists/constants';
+import globalStyles from '@/theme/globalStyles';
 import { useRouter } from 'expo-router';
-import useDimensions from '../../../foundation/hooks/useDimensions';
-import { HEADER_HEIGHT } from '../../../constants';
+import React, { useState } from 'react';
+import { PlatformColor, StyleSheet, TextInput, View } from 'react-native';
+import { getFolderItem, updateFolderItem } from '../storage';
+import { FolderItem, FolderItemTypes } from '../types';
 
 interface FolderItemBannerProps {
     itemId: string;
-    backButtonConfig: {
-        display: boolean;
-        label: string | undefined;
-    };
     itemType: FolderItemTypes;
+    backButtonConfig: {
+        pathname: string;
+        label: string | undefined;
+        hide?: boolean;
+    };
 }
 
 const FolderItemBanner = ({
     itemId,
-    backButtonConfig,
-    itemType
+    itemType,
+    backButtonConfig
 }: FolderItemBannerProps) => {
     const router = useRouter();
-    const [item, setItem] = useState<FolderItem>();
-    const folderStorage = useMMKV({ id: LISTS_STORAGE_ID });
-
+    const [item, setItem] = useState<FolderItem>(getFolderItem(itemId, itemType));
     const { SCREEN_WIDTH } = useDimensions();
-
-    // Build the item data from storage
-    const loadItemData = () => {
-        setItem(getFolderItem(itemId, itemType));
-    };
-
-    // Load in the initial data
-    useEffect(() => {
-        loadItemData();
-    }, []);
-
-    // Keep the data in sync with storage
-    useMMKVListener((key) => {
-        if (key === itemId) {
-            loadItemData();
-        }
-    }, folderStorage);
-
-    if (!item) return;
 
     const beginEditItem = () => setItem({ ...item, status: ItemStatus.EDIT });
     const updateItem = (text: string) => setItem({ ...item, value: text });
-    const saveItem = () => updateFolderItem({ ...item, status: ItemStatus.STATIC });
+    const saveItem = () => {
+        updateFolderItem({ ...item, status: ItemStatus.STATIC });
+        setItem(getFolderItem(itemId, itemType));
+    };
+
     const isItemEditing = item.status === ItemStatus.EDIT;
 
     return (
@@ -84,7 +66,7 @@ const FolderItemBanner = ({
             )}
 
             {/* Back Button */}
-            {backButtonConfig.display && (
+            {!backButtonConfig.hide && (
                 <View style={styles.backButton}>
                     <ButtonText
                         platformColor='systemBlue'

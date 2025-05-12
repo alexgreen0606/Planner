@@ -1,10 +1,11 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useScrollContainer } from '../services/ScrollContainerProvider';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ListItem } from '../types';
 import { ItemStatus } from '../constants';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReload } from '../../../services/ReloadProvider';
+import { useFocusEffect, usePathname } from 'expo-router';
 
 type StorageHandlers<T extends ListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -18,21 +19,25 @@ interface SortedListConfig<T extends ListItem, S> {
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
     setItemsInStorageObject?: (items: T[], currentObject: S) => S;
     storageConfig?: StorageHandlers<T>;
-    noReload?: boolean;
     initializedStorageObject?: S;
+    reloadOnNavigate?: boolean;
+    reloadOnOverscroll?: boolean;
+    reloadTriggers?: any[];
 }
 
-const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) => {
+const useSortedList = <T extends ListItem, S>({
+    storageKey,
+    storageId,
+    getItemsFromStorageObject,
+    setItemsInStorageObject,
+    storageConfig,
+    initializedStorageObject,
+    reloadOnNavigate = false,
+    reloadOnOverscroll = false,
+    reloadTriggers
+}: SortedListConfig<T, S>) => {
 
-    const {
-        storageKey,
-        storageId,
-        getItemsFromStorageObject,
-        setItemsInStorageObject,
-        storageConfig,
-        noReload,
-        initializedStorageObject
-    } = config;
+    const pathname = usePathname();
 
     const {
         currentTextfield,
@@ -48,33 +53,54 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
 
     const { registerReloadFunction } = useReload();
 
+    // List Contents Variables
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
+
+    // Deletion Variables
     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [deletePending, setDeletePending] = useState(false);
-
     const scheduledDeletions = useMemo(
         () => scheduledDeletionItems(storageKey),
         [scheduledDeletionItems]
     );
 
-    const buildList = async () => {
+    // ------------- List Generation -------------
+
+    async function buildList() {
         const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);
     };
 
-    // Build the list whenever storage changes
     useEffect(() => {
         buildList();
     }, [storageObject]);
 
-    // Register the list to reload when the user overscrolls
+    // ------------- Reload Handling -------------
+
+    // Custom Reload Triggering
     useEffect(() => {
-        if (!noReload) {
-            registerReloadFunction(`${storageKey}-${storageId}`, buildList);
+        if (reloadTriggers) {
+            buildList();
+        }
+    }, reloadTriggers);
+
+    // Navigation Focus Reload Triggering
+    useFocusEffect(useCallback(() => {
+        if (reloadOnNavigate) {
+            buildList();
+        }
+    }, []));
+
+    // Overscroll Reload Registering
+    useEffect(() => {
+        if (reloadOnOverscroll) {
+            registerReloadFunction(`${storageKey}-${storageId}`, buildList, pathname);
         }
     }, []);
+
+    // ------------- Deletion Handling -------------
 
     // Schedule items for deletion
     useEffect(() => {
@@ -93,11 +119,12 @@ const useSortedList = <T extends ListItem, S>(config: SortedListConfig<T, S>) =>
     // Execute item deletion
     useEffect(() => {
         if (deletePending) {
-            console.info(scheduledDeletionItems, 'deleting')
             deleteItemsFromStorage([...scheduledDeletions as T[]]);
             setDeletePending(false);
         }
     }, [deletePending]);
+
+    // ------------- Utility Functions -------------
 
     /**
      * Updates or creates an item in storage.

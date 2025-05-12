@@ -1,21 +1,26 @@
+import FolderItemBanner from '@/feature/checklists/components/FolderItemBanner';
+import { LISTS_STORAGE_ID } from '@/feature/checklists/constants';
+import { Checklist, FolderItemTypes } from '@/feature/checklists/types';
+import { generateCheckboxIconConfig } from '@/foundation/sortedLists/commonProps';
+import SortableList from '@/foundation/sortedLists/components/list/SortableList';
+import { ItemStatus } from '@/foundation/sortedLists/constants';
+import useSortedList from '@/foundation/sortedLists/hooks/useSortedList';
+import { useDeleteScheduler } from '@/foundation/sortedLists/services/DeleteScheduler';
+import { ScrollContainerProvider } from '@/foundation/sortedLists/services/ScrollContainerProvider';
+import { ListItem } from '@/foundation/sortedLists/types';
+import { isItemTextfield } from '@/foundation/sortedLists/utils';
+import globalStyles from '@/theme/globalStyles';
+import { LISTS_STACK_ID } from 'app/(tabs)/lists';
+import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Checklist, FolderItemTypes } from '../../../../../src/feature/checklists/types';
-import { LISTS_STORAGE_ID } from '../../../../../src/feature/checklists/constants';
-import { ScrollContainerProvider } from '../../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import globalStyles from '../../../../../src/theme/globalStyles';
-import { useDeleteScheduler } from '../../../../../src/foundation/sortedLists/services/DeleteScheduler';
-import { ListItem } from '../../../../../src/foundation/sortedLists/types';
-import useSortedList from '../../../../../src/foundation/sortedLists/hooks/useSortedList';
-import SortableList from '../../../../../src/foundation/sortedLists/components/list/SortableList';
-import { generateCheckboxIconConfig } from '../../../../../src/foundation/sortedLists/commonProps';
-import { isItemTextfield } from '../../../../../src/foundation/sortedLists/utils';
-import { ItemStatus } from '../../../../../src/foundation/sortedLists/constants';
-import FolderItemBanner from '../../../../../src/feature/checklists/components/FolderItemBanner';
 
 const ChecklistScreen = () => {
-    const { checklistId, prevFolderName } = useLocalSearchParams<{ checklistId: string, prevFolderName: string }>();
+    const { checklistId, prevFolderName, prevFolderId } = useLocalSearchParams<{
+        checklistId: string,
+        prevFolderName: string,
+        prevFolderId: string
+    }>();
 
     const { isItemDeleting } = useDeleteScheduler();
 
@@ -41,7 +46,7 @@ const ChecklistScreen = () => {
                     <FolderItemBanner
                         itemId={checklistId}
                         backButtonConfig={{
-                            display: true,
+                            pathname: `/lists/folder/${prevFolderName}/${prevFolderId}`,
                             label: prevFolderName
                         }}
                         itemType={FolderItemTypes.LIST}
@@ -62,7 +67,7 @@ const ChecklistScreen = () => {
                     }}
                     emptyLabelConfig={{
                         label: "It's a ghost town in here.",
-                        style: { height: 500 }
+                        className: 'h-[500px]'
                     }}
                 />
             </ScrollContainerProvider>

@@ -30,10 +30,7 @@ const RecurringPlanners = () => {
         <View style={globalStyles.blackFilledSpace}>
 
             {/* Recurring Planner Selection */}
-            <View style={[
-                globalStyles.spacedApart,
-                styles.dropdownContainer
-            ]} >
+            <View className='py-8 px-16 flex-row justify-between items-center w-full' >
                 <PopoverList<RecurringOption>
                     getLabelFromObject={(set) => set.label}
                     options={recurringPlannerOptions}
@@ -55,12 +52,5 @@ const RecurringPlanners = () => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    dropdownContainer: {
-        paddingVertical: 8,
-        paddingHorizontal: 16
-    }
-});
 
 export default RecurringPlanners;

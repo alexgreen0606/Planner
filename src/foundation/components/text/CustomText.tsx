@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     time: {
         fontFamily: 'Coiny-Regular',
         fontSize: 16,
-        color: PlatformColor('label')
+        color: PlatformColor('systemPurple')
     },
     indicator2: {
         fontFamily: 'Coiny-Regular',

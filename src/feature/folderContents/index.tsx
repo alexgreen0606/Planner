@@ -1,24 +1,24 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import {
-    createFolderItem,
-    getFolderFromStorage,
-    updateFolderItem,
-    deleteFolderItem,
-    getFolderItems,
-} from '../checklists/storage';
+import { GenericIconProps } from '../../foundation/components/GenericIcon';
+import CustomText from '../../foundation/components/text/CustomText';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
 import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
-import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
-import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
-import CustomText from '../../foundation/components/text/CustomText';
-import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
 import { ItemStatus } from '../../foundation/sortedLists/constants';
+import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
+import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
+import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
+import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
 import { selectableColors } from '../../theme/colors';
-import { GenericIconProps } from '../../foundation/components/GenericIcon';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
-import { useRouter } from 'expo-router';
+import {
+    createFolderItem,
+    deleteFolderItem,
+    getFolderFromStorage,
+    getFolderItems,
+    updateFolderItem,
+} from '../checklists/storage';
+import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
 
 import { Alert } from 'react-native';
 
@@ -191,7 +191,7 @@ const SortedFolder = ({
     const getIconPlatformColor = (item: FolderItem) => isItemTransfering(item) ?
         'systemBlue' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
             'secondaryLabel' : item.platformColor;
-
+            
     const SortedItems = useSortedList<FolderItem, Folder>({
         storageId: LISTS_STORAGE_ID,
         storageKey: folderId,
@@ -200,11 +200,13 @@ const SortedFolder = ({
             create: createFolderItem,
             update: (newItem) => {
                 updateFolderItem(newItem);
-                // Manually reload the list -> TODO: why?
+                
+                // Rebuild the list to sync the updated item
                 SortedItems.refetchItems();
             },
             delete: (items) => deleteFolderItem(items[0].id, items[0].type)
-        }
+        },
+        reloadOnNavigate: true
     });
 
     return (
@@ -236,7 +238,7 @@ const SortedFolder = ({
             })}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",
-                style: { height: '90%' }
+                className: 'flex-1'
             }}
         />
     );

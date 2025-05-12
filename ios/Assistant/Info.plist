@@ -56,16 +56,6 @@
       <string>Jersey15-Regular.ttf</string>
       <string>Coiny-Regular.ttf</string>
     </array>
-    <key>NSLocationWhenInUseUsageDescription</key>
-<string>Use to gather weather info.</string>
-<key>NSContactsUsageDescription</key>
-<string>This app requires access to contacts to send birthday messages</string>
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>This app requires location access</string>
-<key>LSApplicationQueriesSchemes</key>
-<array>
-    <string>sms</string>
-</array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
@@ -90,6 +80,16 @@
     </array>
     <key>UIUserInterfaceStyle</key>
     <string>Automatic</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+<string>Use to gather weather info.</string>
+<key>NSContactsUsageDescription</key>
+<string>This app requires access to contacts to send birthday messages</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app requires location access</string>
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>sms</string>
+</array>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
   </dict>

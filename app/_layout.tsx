@@ -6,6 +6,9 @@ import { ReloadProvider } from '../src/services/ReloadProvider';
 import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';
 import { TimeModalProvider } from '../src/modals/services/TimeModalProvider';
 import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerSetKey]';
+import '../global.css';
+import globalStyles from '@/theme/globalStyles';
+import { View } from 'react-native';
 
 export default function TabLayout() {
     return (

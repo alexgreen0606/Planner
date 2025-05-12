@@ -1,3 +1,10 @@
+import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT } from "@/constants";
+import GenericIcon from "@/foundation/components/GenericIcon";
+import useDimensions from "@/foundation/hooks/useDimensions";
+import globalStyles from "@/theme/globalStyles";
+import { useCallback, useMemo } from "react";
+import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import Animated, {
     cancelAnimation,
     runOnJS,
@@ -11,23 +18,13 @@ import Animated, {
     withSpring,
     withTiming,
 } from "react-native-reanimated";
-import {
-    ListItem,
-    ListItemIconConfig,
-} from "../../types";
-import { useScrollContainer } from "../../services/ScrollContainerProvider";
-import { useCallback, useMemo } from "react";
-import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
-import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
-import ListTextfield from "../ListTextfield";
-import GenericIcon from "../../../components/GenericIcon";
-import ThinLine from "./ThinLine";
-import { generateSortId, getParentSortIdFromPositions } from "../../utils";
-import { AUTO_SCROLL_SPEED, ItemStatus, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SEPARATOR_HEIGHT, LIST_SPRING_CONFIG, SCROLL_OUT_OF_BOUNDS_RESISTANCE } from "../../constants";
+import { LIST_ITEM_HEIGHT, ItemStatus, AUTO_SCROLL_SPEED, SCROLL_OUT_OF_BOUNDS_RESISTANCE, LIST_SPRING_CONFIG, LIST_ICON_SPACING, LIST_SEPARATOR_HEIGHT } from "../../constants";
 import { useDeleteScheduler } from "../../services/DeleteScheduler";
-import useDimensions from "../../../hooks/useDimensions";
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "../../../../constants";
-import globalStyles from "../../../../theme/globalStyles";
+import { useScrollContainer } from "../../services/ScrollContainerProvider";
+import { ListItem, ListItemIconConfig } from "../../types";
+import { generateSortId, getParentSortIdFromPositions } from "../../utils";
+import ListTextfield from "../ListTextfield";
+import ThinLine from "./ThinLine";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -107,10 +104,10 @@ const DraggableRow = <T extends ListItem>({
     const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER; // TODO: add in height of floating navbar too
     const BOTTOM_AUTO_SCROLL_BOUND = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
-    const isAwaitingInitialPosition = useSharedValue(!!positions.value[item.id]);
+    const isAwaitingInitialPosition = useSharedValue(positions.value[item.id] === undefined);
     const isDragging = useSharedValue(0);
     const isManualScrolling = useSharedValue(false);
-    const top = useSharedValue(0);
+    const top = useSharedValue(positions.value[item.id] ?? 0);
     const initialGesturePosition = useSharedValue(0);
     const autoScrollTrigger = useSharedValue<number | null>(null);
 
@@ -252,7 +249,7 @@ const DraggableRow = <T extends ListItem>({
 
     // ------------- Scroll Utilities -------------
 
-    const sanitizeScrollOffset = (newPosition: number = scrollOffset.value) => {
+    const sanitizeScrollOffset = (newPosition: number) => {
         'worklet';
         return Math.max(scrollOffsetBounds.value.min, Math.min(newPosition, scrollOffsetBounds.value.max));
     };
@@ -309,7 +306,7 @@ const DraggableRow = <T extends ListItem>({
         if (isScrollOutOfBounds) {
             // --- Rebound to valid position ---
             scrollOffset.value = withSpring(
-                sanitizeScrollOffset(),
+                sanitizeScrollOffset(scrollOffset.value),
                 {
                     stiffness: 100,
                     damping: 40,
@@ -401,7 +398,7 @@ const DraggableRow = <T extends ListItem>({
         () => positions.value[item.id],
         (currPosition, prevPosition) => {
             if (currPosition !== prevPosition && !isDragging.value) {
-                if (isAwaitingInitialPosition.value || item.status === ItemStatus.NEW) {
+                if (isAwaitingInitialPosition.value || (item.status === ItemStatus.NEW)) {
                     top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
                     isAwaitingInitialPosition.value = false;
                 } else {

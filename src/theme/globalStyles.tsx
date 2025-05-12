@@ -11,7 +11,7 @@ type GlobalStyles = {
 }
 
 const globalStyles: GlobalStyles = {
-  spacedApart: {
+  spacedApart: { // flex-row justify-between items-center w-full
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',

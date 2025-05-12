@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import { StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import Card from '../../foundation/components/Card';
 import CustomText from '../../foundation/components/text/CustomText';
 import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { BIRTHDAY_STORAGE_ID } from './constants';
-import Card from '../../foundation/components/Card';
-import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
-import AgeValue from './components/AgeValue';
-import { Birthday } from './types';
-import { markBirthdayContacted } from './storage';
+import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
 import { getTodayDatestamp } from '../../utils/timestampUtils';
+import AgeValue from './components/AgeValue';
+import { BIRTHDAY_STORAGE_ID } from './constants';
+import { markBirthdayContacted } from './storage';
+import { Birthday } from './types';
+import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
 
 // TODO: complete refactor and styling
 
@@ -37,26 +37,20 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
         markBirthdayContacted(birthday);
     }
 
-    useEffect(() => {
-        BirthdayList.refetchItems();
-    }, [birthdays]);
-
     const BirthdayList = useSortedList<Birthday, Birthday[]>({
         storageId: BIRTHDAY_STORAGE_ID,
         storageKey: todayDatestamp,
         getItemsFromStorageObject,
-        noReload: true
+        reloadTriggers: [birthdays]
     });
 
     return BirthdayList.items.length > 0 &&
-        <View style={styles.card}>
+        <View className='px-4 mt-2 w-full'>
             <Card header={
                 <CustomText type='header'>
                     Birthday Wishes
                 </CustomText>
-            }
-            >
-
+            }>
                 {/* Birthday List */}
                 <SortableList<Birthday, never, never>
                     listId={BIRTHDAY_STORAGE_ID}
@@ -83,13 +77,5 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
             </Card>
         </View>
 };
-
-const styles = StyleSheet.create({
-    card: {
-        paddingHorizontal: 16,
-        marginTop: 8,
-        width: '100%'
-    }
-});
 
 export default BirthdayCard;

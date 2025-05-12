@@ -71,11 +71,13 @@ const ListTextfield = <T extends ListItem>({
         onChange(newVal);
     }
 
-    function handleSave(createNew: boolean) {
+    function handleSave(fromBlur: boolean) {
         if (hasSaved.current) return;
         hasSaved.current = true;
 
-        onSubmit(createNew);
+        // TODO: increase the scroll offset by LIST_ITEM_HEIGHT
+
+        onSubmit(fromBlur);
     }
 
     // ---------- Scroll Handler ----------

@@ -1,19 +1,19 @@
+import { DEADLINE_LIST_KEY } from '@/feature/deadlines/constants';
+import { deleteDeadlines, getDeadlines, saveDeadline } from '@/feature/deadlines/deadlineUtils';
+import { Deadline } from '@/feature/deadlines/types';
+import DateValue from '@/foundation/calendarEvents/components/values/DateValue';
+import CustomText from '@/foundation/components/text/CustomText';
+import SortableList from '@/foundation/sortedLists/components/list/SortableList';
+import Toolbar, { ToolbarProps } from '@/foundation/sortedLists/components/ListItemToolbar';
+import useSortedList from '@/foundation/sortedLists/hooks/useSortedList';
+import { useScrollContainer } from '@/foundation/sortedLists/services/ScrollContainerProvider';
+import { ListItem, ModifyItemConfig } from '@/foundation/sortedLists/types';
+import { generateSortId, isItemTextfield } from '@/foundation/sortedLists/utils';
+import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '@/utils/timestampUtils';
+import { DateTime } from 'luxon';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import { useScrollContainer } from '../../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import { ListItem, ModifyItemConfig } from '../../../src/foundation/sortedLists/types';
-import { generateSortId, isItemTextfield } from '../../../src/foundation/sortedLists/utils';
-import { Deadline } from '../../../src/feature/deadlines/types';
-import Toolbar, { ToolbarProps } from '../../../src/foundation/sortedLists/components/ListItemToolbar';
-import useSortedList from '../../../src/foundation/sortedLists/hooks/useSortedList';
-import { DEADLINE_LIST_KEY } from '../../../src/feature/deadlines/constants';
-import { deleteDeadlines, getDeadlines, saveDeadline } from '../../../src/feature/deadlines/deadlineUtils';
-import globalStyles from '../../../src/theme/globalStyles';
-import SortableList from '../../../src/foundation/sortedLists/components/list/SortableList';
-import CustomText from '../../../src/foundation/components/text/CustomText';
 import DatePicker from 'react-native-date-picker';
-import DateValue from '../../../src/foundation/calendarEvents/components/values/DateValue';
-import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '../../../src/utils/timestampUtils';
 
 const Deadlines = () => {
 
@@ -30,14 +30,11 @@ const Deadlines = () => {
         return {
             ...item,
             sortId: newSortId,
-            startTime: todayMidnight.toISOString() // TODO: use luxon?
+            startTime: DateTime.fromJSDate(todayMidnight).toISO()!
         }
     };
 
-    async function toggleDateSelector(deadline: Deadline) {
-        if (!isItemTextfield(deadline)) {
-            await DeadlineItems.toggleItemEdit(deadline);
-        }
+    function toggleDateSelector() {
         setDateSelectOpen(curr => !curr);
     };
 
@@ -51,18 +48,15 @@ const Deadlines = () => {
                 iconSets: [
                     [{
                         type: 'trash',
-                        onClick: () => { DeadlineItems.toggleItemDelete(deadline) }
+                        onClick: () => {
+                            DeadlineItems.toggleItemDelete(deadline);
+                        }
                     }],
                     [{
-                        type: 'clock',
-                        onClick: () => { toggleDateSelector(deadline) },
-                        customIcon:
-                            <View style={{ transform: 'scale(1.1)' }}>
-                                <DateValue isoTimestamp={deadline.startTime} />
-                            </View>
+                        type: 'planners',
+                        onClick: toggleDateSelector
                     }]],
-                item: deadline,
-                hideKeyboard: dateSelectOpen
+                item: deadline
             },
         }
     }
@@ -74,22 +68,25 @@ const Deadlines = () => {
         storageConfig: {
             create: async (deadline) => {
                 const newId = await saveDeadline(deadline, true);
-                DeadlineItems.refetchItems();
+                await DeadlineItems.refetchItems();
+
+                // Return the newly generated ID. Prevents duplicates of the same deadline in the list.
                 return newId;
             },
             update: async (deadline) => {
                 await saveDeadline(deadline, false);
-                DeadlineItems.refetchItems();
+                await DeadlineItems.refetchItems();
             },
             delete: async (deadlines) => {
                 await deleteDeadlines(deadlines);
-                DeadlineItems.refetchItems();
+                await DeadlineItems.refetchItems();
             }
-        }
+        },
+        reloadOnOverscroll: true
     });
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View className='flex-1'>
 
             {/* Deadline List */}
             <SortableList<Deadline, ToolbarProps<Deadline>, never>
@@ -102,20 +99,19 @@ const Deadlines = () => {
                 onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 onSaveTextfield={DeadlineItems.persistItemToStorage}
-                getToolbar={(deadline) => generateToolbar(deadline)}
+                getToolbar={generateToolbar}
                 emptyLabelConfig={{
                     label: 'No deadlines',
-                    style: { flex: 1 }
+                    className: 'flex-1'
                 }}
                 getLeftIconConfig={(item) => ({
-                    onClick: toggleDateSelector,
-                    hideIcon: isItemTextfield(item),
-                    customIcon: <DateValue isoTimestamp={item.startTime} />
+                    onClick: DeadlineItems.toggleItemEdit,
+                    customIcon: <DateValue concise isoTimestamp={item.startTime} />
                 })}
                 getRightIconConfig={(deadline) => ({
                     customIcon:
-                        <View style={{ width: 55 }}>
-                            <CustomText adjustsFontSizeToFit numberOfLines={1} style={{ width: 55 }} type='soft'>
+                        <View className="[width:55px] items-end">
+                            <CustomText adjustsFontSizeToFit numberOfLines={1} type='soft'>
                                 {daysBetweenToday(deadline.startTime)} days
                             </CustomText>
                         </View>
@@ -126,27 +122,44 @@ const Deadlines = () => {
             <DatePicker
                 modal
                 mode='date'
-                title={`"${currentTextfield?.value}" deadline`}
+                title={currentTextfield?.value}
                 theme='dark'
                 minimumDate={datestampToMidnightDate(getTodayDatestamp())}
                 open={dateSelectOpen && currentTextfield}
-                date={currentTextfield?.startTime ?? todayMidnight}
-                timeZoneOffsetInMinutes={new Date().getTimezoneOffset()}
+                date={
+                    currentTextfield?.startTime
+                        ? DateTime.fromISO(currentTextfield.startTime).toJSDate()
+                        : todayMidnight
+                }
                 onConfirm={(date) => {
                     if (!currentTextfield) return;
-                    const updatedDeadline = { ...currentTextfield, startTime: date.toISOString() };
+
+                    const selected = DateTime.fromJSDate(date);
+                    const updatedDeadline = {
+                        ...currentTextfield,
+                        startTime: selected.toISO(),
+                    };
+
                     const updatedList = [...DeadlineItems.items];
-                    const itemCurrentIndex = updatedList.findIndex(listItem => listItem.id === currentTextfield.id);
+                    const itemCurrentIndex = updatedList.findIndex(
+                        (listItem) => listItem.id === currentTextfield.id
+                    );
+
                     if (itemCurrentIndex !== -1) {
                         updatedList[itemCurrentIndex] = updatedDeadline;
                     } else {
                         updatedList.push(updatedDeadline);
                     }
+
                     updatedDeadline.sortId = generateSortIdByTime(updatedDeadline, updatedList);
-                    setCurrentTextfield({ ...updatedDeadline, startTime: date });
-                    toggleDateSelector(currentTextfield);
+                    setCurrentTextfield({
+                        ...updatedDeadline,
+                        startTime: selected.toISO(),
+                    });
+
+                    toggleDateSelector();
                 }}
-                onCancel={() => toggleDateSelector(currentTextfield)}
+                onCancel={toggleDateSelector}
             />
 
         </View>

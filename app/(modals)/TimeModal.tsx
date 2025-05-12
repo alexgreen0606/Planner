@@ -1,12 +1,12 @@
+import { ItemStatus } from "@/foundation/sortedLists/constants";
+import Modal from "@/modals";
+import Form from "@/modals/components/form";
+import { EFieldType } from "@/modals/components/form/types";
+import { useTimeModal } from "@/modals/services/TimeModalProvider";
 import { usePathname } from "expo-router";
-import Modal from "../../src/modals";
-import { useEffect, useMemo } from "react";
-import { useTimeModal } from "../../src/modals/services/TimeModalProvider";
-import { EFieldType } from "../../src/modals/components/form/types";
 import { DateTime } from 'luxon';
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import Form from "../../src/modals/components/form";
-import { ItemStatus } from "../../src/foundation/sortedLists/constants";
 
 export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
 
@@ -30,14 +30,20 @@ const TimeModal = () => {
 
     const isEditMode = planEvent?.status === ItemStatus.EDIT;
 
-    // Set up react-hook-form
-    const { control, watch, setValue, formState: { isValid } } = useForm<FormData>();
-    const formValues = watch();
+    const {
+        control,
+        watch,
+        reset,
+        formState: { isValid },
+        handleSubmit,
+        setValue
+    } = useForm<FormData>();
 
     // Sync the form data every time the planEvent changes
     useEffect(() => {
         if (!planEvent) return;
         const now = DateTime.now();
+
         const defaultStartTime = DateTime.fromISO(planEvent.listId || now.toISO())
             .set({ hour: now.hour, minute: 0, second: 0, millisecond: 0 })
             .toISO();
@@ -45,24 +51,21 @@ const TimeModal = () => {
             .set({ hour: now.hour + 1, minute: 0, second: 0, millisecond: 0 })
             .toISO();
 
-        if (planEvent.timeConfig) {
-            setValue('title', planEvent.value);
-            setValue('timeRange', {
-                startTime: planEvent.timeConfig.startTime,
-                endTime: planEvent.timeConfig.endTime
-            });
-            setValue('allDay', planEvent.timeConfig.allDay);
-            setValue('isCalendarEvent', !!planEvent.calendarId);
-        } else {
-            setValue('title', planEvent.value);
-            setValue('timeRange', {
-                startTime: defaultStartTime,
-                endTime: defaultEndTime
-            });
-            setValue('allDay', false);
-            setValue('isCalendarEvent', false);
-        }
-    }, [planEvent, setValue]);
+        reset({
+            title: planEvent.value,
+            timeRange: planEvent.timeConfig
+                ? {
+                    startTime: planEvent.timeConfig.startTime,
+                    endTime: planEvent.timeConfig.endTime
+                }
+                : {
+                    startTime: defaultStartTime,
+                    endTime: defaultEndTime
+                },
+            allDay: planEvent.timeConfig?.allDay ?? false,
+            isCalendarEvent: !!planEvent.calendarId
+        });
+    }, [planEvent, reset]);
 
     // Watch allDay to apply date-only timestamps when toggled on
     const isAllDay = watch('allDay');
@@ -92,10 +95,10 @@ const TimeModal = () => {
 
     // ------------- Utility Functions -------------
 
-    function handleSave() {
+    function handleSave(data: FormData) {
         if (!planEvent) return;
 
-        const { title, timeRange, isCalendarEvent, allDay } = formValues;
+        const { title, timeRange, isCalendarEvent, allDay } = data;
 
         if (!timeRange.startTime || !timeRange.endTime) return;
 
@@ -132,7 +135,7 @@ const TimeModal = () => {
         onSave(updatedItem);
     }
 
-    const formOptions = [
+    const formFields = [
         {
             name: 'title',
             type: EFieldType.TEXT,
@@ -170,7 +173,7 @@ const TimeModal = () => {
             title={isEditMode ? 'Edit Event' : 'Create Event'}
             primaryButtonConfig={{
                 label: 'Schedule',
-                onClick: handleSave,
+                onClick: handleSubmit(handleSave),
                 disabled: !isValid
             }}
             deleteButtonConfig={{
@@ -179,7 +182,7 @@ const TimeModal = () => {
             }}
             onClose={onClose}
         >
-            <Form options={formOptions} control={control} />
+            <Form fields={formFields} control={control} />
         </Modal>
     );
 }

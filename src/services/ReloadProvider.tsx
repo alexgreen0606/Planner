@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'expo-router';
 
 // Each page gets a collection of unique functions to reload the page data
@@ -12,8 +12,13 @@ interface ReloadProviderProps {
 }
 
 interface ReloadContextType {
-    registerReloadFunction: (functionId: string, reloadFunc: () => Promise<void>) => void;
-    reloadCurrentPage: () => Promise<void>;
+    registerReloadFunction: (
+        functionId: string,
+        reloadFunc: () => Promise<void>,
+        path: string
+    ) => void;
+    reloadPage: () => Promise<void>;
+    canReloadPath: boolean;
 }
 
 const ReloadContext = createContext<ReloadContextType | null>(null);
@@ -23,23 +28,29 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
 }) => {
     const reloadMap = useRef<ReloadMap>({} as ReloadMap);
     const currentPath = usePathname();
+    const [canReloadPath, setCanReloadPath] = useState(false);
+
+    useEffect(() => {
+        setCanReloadPath(!!reloadMap.current[currentPath]);
+    }, [currentPath]);
 
     // Register a function for a specific page
     function registerReloadFunction(
         functionId: string,
-        reloadFunc: () => Promise<void>
+        reloadFunc: () => Promise<void>,
+        path: string
     ) {
         reloadMap.current = {
             ...reloadMap.current,
-            [currentPath]: {
-                ...reloadMap.current[currentPath],
+            [path]: {
+                ...reloadMap.current[path],
                 [functionId]: reloadFunc
             },
         };
     };
 
     // Execute all registered functions for a specific page
-    async function reloadCurrentPage() {
+    async function reloadPage() {
         const reloadFunctionsMap = reloadMap.current[currentPath];
         if (!reloadFunctionsMap) return;
 
@@ -53,7 +64,8 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     return (
         <ReloadContext.Provider value={{
             registerReloadFunction,
-            reloadCurrentPage,
+            reloadPage,
+            canReloadPath
         }}>
             {children}
         </ReloadContext.Provider>

@@ -18,7 +18,6 @@ export type ListItemIconConfig<T extends ListItem> = {
 
 export interface ListItemUpdateComponentProps<T extends ListItem> {
     item: T;
-    hideKeyboard?: boolean; // temporarily close the keyboard when a modal opens
 }
 
 export type ModifyItemConfig<T extends ListItem, P extends ListItemUpdateComponentProps<T>> = {

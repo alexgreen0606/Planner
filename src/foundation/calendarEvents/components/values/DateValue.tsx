@@ -9,9 +9,9 @@ interface DateValueProps {
     platformColor?: string;
 }
 
-const DateValue = ({ isoTimestamp, concise, platformColor = 'label' }: DateValueProps) => {
+const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: DateValueProps) => {
     const dayFormat = concise ? 'MMM d' : 'MMMM d';
-    const yearFormat = concise ? 'yy' : 'yyyy';
+    const yearFormat = concise ? 'yyyy' : 'yyyy';
     const date = DateTime.fromISO(isoTimestamp);
     const monthDay = date.toFormat(dayFormat);
     const year = date.toFormat(yearFormat);
@@ -25,7 +25,7 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'label' }: DateValue
     return concise ?
         <View style={styles.time}>
             <CustomText type='time' style={{ flexDirection: 'row', color: PlatformColor(platformColor) }}>
-                {monthDay}
+                {monthDay.toUpperCase()}
             </CustomText>
             {showYear && (
                 <View style={styles.conciseYear}>
@@ -55,10 +55,8 @@ const styles = StyleSheet.create({
     },
     conciseYear: {
         position: 'absolute',
-        bottom: 0,
-        left: '100%',
-        transform: 'translateX(-8px)',
-        opacity: 0.8,
+        top: '80%',
+        right: 0
     }
 });
 
