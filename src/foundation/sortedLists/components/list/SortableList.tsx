@@ -1,18 +1,16 @@
 import React, { useMemo, useRef } from 'react';
 import { LayoutChangeEvent, Pressable, View } from 'react-native';
 import { Portal } from 'react-native-paper';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import uuid from 'react-native-uuid';
-import { ItemStatus, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from '../../constants';
+import { ItemStatus, LIST_ITEM_HEIGHT } from '../../constants';
 import { useKeyboard } from '../../services/KeyboardProvider';
 import { useScrollContainer } from '../../services/ScrollContainerProvider';
 import { ListItem, ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '../../types';
 import { buildItemPositions, generateSortId } from '../../utils';
 import EmptyLabel, { EmptyLabelProps } from '../EmptyLabel';
 import DraggableRow from './DraggableRow';
-import ThinLine from './ThinLine';
 
-const ListContainer = Animated.createAnimatedComponent(View);
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
 export interface DraggableListProps<
@@ -37,7 +35,7 @@ export interface DraggableListProps<
     initializeItem?: (item: ListItem) => T;
     customIsItemDeleting?: (item: T) => boolean;
     hideKeyboard?: boolean;
-    hideList?: boolean;
+    isLoading?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
     staticList?: boolean;
@@ -50,7 +48,7 @@ const SortableList = <
 >({
     listId,
     items,
-    hideList,
+    isLoading,
     onSaveTextfield,
     initializeItem,
     emptyLabelConfig,
@@ -65,7 +63,7 @@ const SortableList = <
     const {
         currentTextfield,
         setCurrentTextfield,
-        emptySpaceHeight
+        // emptySpaceHeight
     } = useScrollContainer();
 
     const { keyboardAbsoluteTop } = useKeyboard();
@@ -84,16 +82,16 @@ const SortableList = <
      */
     function handleEmptySpaceClick() {
         if (!currentTextfield) {
-            saveTextfieldAndCreateNew(currentList[currentList.length - 1]?.sortId ?? -1);
+            saveTextfieldAndCreateNew(-1, true);
         }
     }
 
-    const computeEmptySpaceHeight = (event: LayoutChangeEvent) => {
-        const { height } = event.nativeEvent.layout;
-        if (fillSpace) {
-            emptySpaceHeight.value = height;
-        }
-    };
+    // const computeEmptySpaceHeight = (event: LayoutChangeEvent) => {
+    //     const { height } = event.nativeEvent.layout;
+    //     if (fillSpace) {
+    //         emptySpaceHeight.value = height;
+    //     }
+    // };
 
     // ------------- List Building -------------
 
@@ -134,9 +132,10 @@ const SortableList = <
 
     /**
      * Saves the existing textfield to storage and generates a new one at the requested position.
-     * @param parentSortId The sort ID of the item the new textfield must go below
+     * @param referenceSortId The sort ID of an item to place the new textfield near
+     * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
      */
-    async function saveTextfieldAndCreateNew(parentSortId?: number) {
+    async function saveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
         if (staticList) return;
 
         if (currentTextfield && currentTextfield.value.trim() !== '') {
@@ -148,31 +147,24 @@ const SortableList = <
             }
         }
 
-        if (!parentSortId) {
+        if (!referenceSortId) {
             setCurrentTextfield(undefined);
             return;
         }
 
-        let newTextfield = {
+        let newTextfield: ListItem = {
             id: uuid.v4(),
-            sortId: generateSortId(parentSortId, currentList),
-            value: '',
+            sortId: generateSortId(referenceSortId, currentList, isChildId),
             status: ItemStatus.NEW,
-            listId: listId
-        } as ListItem;
+            listId: listId,
+            value: '',
+        };
 
         newTextfield = initializeItem?.(newTextfield) ?? newTextfield as T;
         setCurrentTextfield(newTextfield, pendingItem.current);
     }
 
     // ------------- Animations -------------
-
-    // Animate the opening and closing of the list
-    const listContainerStyle = useAnimatedStyle(() => ({
-        height: withSpring(hideList ? 0 : currentList.length * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG),
-        position: 'relative',
-        overflow: 'hidden'
-    }));
 
     // Animate the toolbar above the textfield
     const toolbarStyle = useAnimatedStyle(() => ({
@@ -184,17 +176,10 @@ const SortableList = <
     return (
         <View style={{ flex: fillSpace ? 1 : 0 }}>
 
-            {/* Upper Item Creator */}
-            {!hideList && currentList.length > 0 && (
-                <Pressable
-                    onPress={() => saveTextfieldAndCreateNew(-1)}
-                >
-                    <ThinLine />
-                </Pressable>
-            )}
+            {/* TODO: Loading SVG */}
 
             {/* List */}
-            <ListContainer style={listContainerStyle}>
+            <View style={{ height: currentList.length * LIST_ITEM_HEIGHT, width: '100%' }}>
                 {currentList.map((item) =>
                     <DraggableRow<T>
                         key={`${item.id}-row`}
@@ -207,17 +192,19 @@ const SortableList = <
                         items={currentList}
                     />
                 )}
-            </ListContainer>
+            </View>
 
             {/* Empty Label or Click Area */}
-            {currentList.length === 0 && emptyLabelConfig && !hideList ? (
+            {emptyLabelConfig && currentList.length === 0 && !isLoading ? (
                 <EmptyLabel
                     {...emptyLabelConfig}
                     onPress={handleEmptySpaceClick}
-                    onLayout={computeEmptySpaceHeight}
                 />
-            ) : !hideList && (
-                <Pressable style={{ flex: 1 }} onPress={handleEmptySpaceClick} onLayout={computeEmptySpaceHeight} />
+            ) : !isLoading && (
+                <Pressable
+                    style={{ flex: 1 }}
+                    onPress={handleEmptySpaceClick}
+                />
             )}
 
             {/* Modal */}

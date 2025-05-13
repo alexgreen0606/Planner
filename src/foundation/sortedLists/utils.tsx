@@ -10,30 +10,79 @@ import { ItemStatus } from "./constants";
 * @param listItems The current list (MUST contain an event with the parentSortId)
 * @returns A new sort id that places an item below its parent
 */
+// export function generateSortId(
+//     parentSortId: number,
+//     listItems: ListItem[],
+// ): number {
+//     'worklet';
+//     const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
+
+//     if (parentSortId === -1) {
+//         const smallestId = sortedList.length > 0 ? sortedList[0].sortId : 2;
+//         return smallestId / 2;
+//     }
+
+//     for (let i = 0; i < sortedList.length; i++) {
+//         if (sortedList[i].sortId === parentSortId) {
+//             if (i === sortedList.length - 1) {
+//                 return parentSortId + 1;
+//             }
+//             const nextId = sortedList[i + 1].sortId;
+//             return parentSortId + (nextId - parentSortId) / 2;
+//         }
+//     }
+
+//     throw new Error(`No item exists in the list with sort ID ${parentSortId}.`);
+// }
+
+/**
+ * Generates a new sort ID for inserting an item relative to another item in the list.
+ * @param referenceSortId The sort ID of the reference item (parent if inserting below, child if inserting above)
+ * @param listItems The current list (MUST contain an item with the referenceSortId unless -1)
+ * @param isChildId If true, places the new item above the reference item (child); if false, below it (parent)
+ * @returns A new sort ID that correctly positions the item
+ */
 export function generateSortId(
-    parentSortId: number,
+    referenceSortId: number,
     listItems: ListItem[],
+    isChildId: boolean = false
 ): number {
     'worklet';
     const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
 
-    if (parentSortId === -1) {
-        const smallestId = sortedList.length > 0 ? sortedList[0].sortId : 2;
-        return smallestId / 2;
-    }
-
-    for (let i = 0; i < sortedList.length; i++) {
-        if (sortedList[i].sortId === parentSortId) {
-            if (i === sortedList.length - 1) {
-                return parentSortId + 1;
-            }
-            const nextId = sortedList[i + 1].sortId;
-            return parentSortId + (nextId - parentSortId) / 2;
+    if (referenceSortId === -1) {
+        if (isChildId) {
+            const largestId = sortedList.length > 0 ? sortedList[sortedList.length - 1].sortId : 1;
+            return largestId + 1;
+        } else {
+            const smallestId = sortedList.length > 0 ? sortedList[0].sortId : 2;
+            return smallestId / 2;
         }
     }
 
-    throw new Error(`No item exists in the list with sort ID ${parentSortId}.`);
+    for (let i = 0; i < sortedList.length; i++) {
+        if (sortedList[i].sortId === referenceSortId) {
+            if (isChildId) {
+                // Insert above the child
+                if (i === 0) {
+                    return referenceSortId / 2;
+                }
+                const prevId = sortedList[i - 1].sortId;
+                return prevId + (referenceSortId - prevId) / 2;
+            } else {
+                // Insert below the parent
+                if (i === sortedList.length - 1) {
+                    return referenceSortId + 1;
+                }
+                const nextId = sortedList[i + 1].sortId;
+                return referenceSortId + (nextId - referenceSortId) / 2;
+            }
+        }
+    }
+
+    throw new Error(`No item exists in the list with sort ID ${referenceSortId}.`);
 }
+
 
 /**
 * Gets the sort ID of the parent item (the one directly above this item)

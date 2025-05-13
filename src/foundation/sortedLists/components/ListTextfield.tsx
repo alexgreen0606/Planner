@@ -110,6 +110,10 @@ const ListTextfield = <T extends ListItem>({
         }
     );
 
+    // 2. When the keyboard is closed, execute rebound
+
+    // 3. When a new item is created, 
+
     // ---------- Focus Handler ----------
 
     // Focus the textfield when clicked and evaluate its position

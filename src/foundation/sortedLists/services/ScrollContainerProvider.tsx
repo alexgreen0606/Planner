@@ -1,39 +1,37 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import Animated, {
-    useSharedValue,
-    useAnimatedScrollHandler,
-    scrollTo,
-    useAnimatedRef,
-    useAnimatedReaction,
-    SharedValue,
-    useAnimatedStyle,
-    interpolate,
-    Extrapolation,
-    runOnJS,
-    cancelAnimation,
-    withTiming,
-    Easing,
-    withRepeat,
-    useDerivedValue,
-} from 'react-native-reanimated';
-import { ListItem } from '../types';
-import { Dimensions, PlatformColor, ScrollView, StyleSheet, View } from 'react-native';
-import { KeyboardProvider, useKeyboard } from './KeyboardProvider';
-import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
-import { useReload } from '../../../services/ReloadProvider';
 import { BlurView } from 'expo-blur';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Dimensions, PlatformColor, ScrollView, StyleSheet, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-import useDimensions from '../../hooks/useDimensions';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../../constants';
 import { Portal } from 'react-native-paper';
+import Animated, {
+    cancelAnimation,
+    Easing,
+    Extrapolation,
+    interpolate,
+    runOnJS,
+    scrollTo,
+    SharedValue,
+    useAnimatedReaction,
+    useAnimatedRef,
+    useAnimatedScrollHandler,
+    useAnimatedStyle,
+    useDerivedValue,
+    useSharedValue,
+    withRepeat,
+    withTiming,
+} from 'react-native-reanimated';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../../constants';
+import { useReload } from '../../../services/ReloadProvider';
 import GenericIcon from '../../components/GenericIcon';
-import globalStyles from '../../../theme/globalStyles';
+import useDimensions from '../../hooks/useDimensions';
+import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
+import { ListItem } from '../types';
+import { KeyboardProvider } from './KeyboardProvider';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
-const KeyboardFiller = Animated.createAnimatedComponent(View);
 const BottomBlurBar = Animated.createAnimatedComponent(View);
 
 export enum LoadingStatus {
@@ -62,8 +60,8 @@ interface ScrollContainerContextValue<T extends ListItem> {
     currentTextfield: T | undefined;
     pendingItem: T | undefined;
     setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
-    // --- Height Trackers ---
-    emptySpaceHeight: SharedValue<number>;
+
+    floatingBannerHeight: number;
 }
 
 const ScrollContainerContext = createContext<ScrollContainerContextValue<any> | null>(null);
@@ -98,6 +96,7 @@ export const ScrollContainerContent = <T extends ListItem>({
 
     const {
         SCREEN_WIDTH,
+        SCREEN_HEIGHT,
         TOP_SPACER,
         BOTTOM_SPACER
     } = useDimensions();
@@ -107,13 +106,12 @@ export const ScrollContainerContent = <T extends ListItem>({
         canReloadPath
     } = useReload();
 
-    const { keyboardHeight } = useKeyboard();
-
     // --- Page Layout Variables ---
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
     const contentHeight = useSharedValue(0);
-    const visibleHeight = useSharedValue(0);
-    const emptySpaceHeight = useSharedValue(0);
+    const visibleHeight = useMemo(() => {
+        return SCREEN_HEIGHT - HEADER_HEIGHT - TOP_SPACER - floatingBannerHeight - BOTTOM_NAVIGATION_HEIGHT - BOTTOM_SPACER;
+    }, [floatingBannerHeight]);
 
     // Blur the space behind floating banners
     // If no floating banner exists, blur for the default header height
@@ -134,9 +132,10 @@ export const ScrollContainerContent = <T extends ListItem>({
     const scrollOffset = useSharedValue(0);
     const scrollOffsetBounds = useDerivedValue(() => {
         const min = 0;
-        const max = Math.max(0, contentHeight.value - visibleHeight.value - emptySpaceHeight.value);
+        const max = Math.max(0, contentHeight.value - visibleHeight);
         return { min, max };
     });
+
 
     // Trigger a page reload
     useEffect(() => {
@@ -178,6 +177,7 @@ export const ScrollContainerContent = <T extends ListItem>({
         onScroll: (event) => {
             if (!disableNativeScroll.value) {
                 scrollOffset.value = event.contentOffset.y;
+                console.log(scrollOffset.value, scrollOffsetBounds.value.max)
             }
         }
     });
@@ -189,7 +189,7 @@ export const ScrollContainerContent = <T extends ListItem>({
             scrollTo(scrollRef, 0, current, false);
 
             // Detect pull-to-refresh action
-            if (true) { // todo: check if reloadable screen
+            if (canReloadPath) {
 
                 // Trigger a reload of the list
                 if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
@@ -279,16 +279,8 @@ export const ScrollContainerContent = <T extends ListItem>({
         [scrollOffset.value]
     );
 
-    const keyboardFillerStyle = useAnimatedStyle(
-        () => ({
-            width: 100,
-            height: keyboardHeight.value
-        }),
-        [keyboardHeight.value]
-    );
-
     const bottomBlurBarStyle = useAnimatedStyle(() => {
-        const currentScrollBottom = scrollOffset.value + visibleHeight.value + BOTTOM_NAVIGATION_HEIGHT;
+        const currentScrollBottom = scrollOffset.value + SCREEN_HEIGHT;
         const shouldBeVisible = currentScrollBottom < contentHeight.value;
 
         const opacity = interpolate(
@@ -303,8 +295,7 @@ export const ScrollContainerContent = <T extends ListItem>({
         };
     }, [
         scrollOffset.value,
-        visibleHeight.value,
-        contentHeight.value,
+        contentHeight.value
     ]);
 
     // ------------- Render Helper Functions -------------
@@ -369,17 +360,15 @@ export const ScrollContainerContent = <T extends ListItem>({
     };
 
     return (
-        <ScrollContainerContext.Provider
-            value={{
-                currentTextfield: textFieldState.current,
-                pendingItem: textFieldState.pending,
-                setCurrentTextfield,
-                scrollOffset,
-                disableNativeScroll,
-                scrollOffsetBounds,
-                emptySpaceHeight
-            }}
-        >
+        <ScrollContainerContext.Provider value={{
+            currentTextfield: textFieldState.current,
+            pendingItem: textFieldState.pending,
+            setCurrentTextfield,
+            scrollOffset,
+            disableNativeScroll,
+            scrollOffsetBounds,
+            floatingBannerHeight
+        }}>
 
             {/* Floating Banner */}
             <FloatingBanner
@@ -401,52 +390,46 @@ export const ScrollContainerContent = <T extends ListItem>({
                 scrollEventThrottle={SCROLL_THROTTLE}
                 scrollToOverflowEnabled={true}
                 onScroll={handler}
-                contentContainerStyle={[
-                    globalStyles.blackFilledSpace,
-                    { flexGrow: 1, paddingTop: TOP_SPACER }
-                ]}
+                contentContainerStyle={{
+                    paddingTop: TOP_SPACER,
+                    paddingBottom: BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT,
+                    flexGrow: 1
+                }}
                 onLayout={(event) => {
                     const { height } = event.nativeEvent.layout;
-                    visibleHeight.value = height - BOTTOM_NAVIGATION_HEIGHT - keyboardHeight.value;
+                    contentHeight.value = height;
                 }}
             >
-                <View style={{ flex: 1 }} onLayout={(event) => {
-                    const { height } = event.nativeEvent.layout;
-                    contentHeight.value = height;
-                }}>
 
-                    {/* Header */}
-                    {header && (
-                        <View style={{
-                            height: HEADER_HEIGHT,
-                            paddingVertical: 8,
-                            paddingHorizontal: 16,
-                        }}>
-                            {header}
-                        </View>
-                    )}
+                {/* Header */}
+                {header && (
+                    <View style={{
+                        height: HEADER_HEIGHT,
+                        paddingVertical: 8,
+                        paddingHorizontal: 16,
+                    }}>
+                        {header}
+                    </View>
+                )}
 
-                    {/* Fill Space Behind Floating Banner */}
-                    <View style={{ height: floatingBannerHeight }} />
+                {/* Floating Banner Spacer */}
+                <View style={{ width: '100%', height: floatingBannerHeight }} />
 
-                    {/* Loading Spinner */}
-                    {canReloadPath && (
-                        <Portal>
-                            <LoadingSpinner style={loadingSpinnerStyle}>
-                                <GenericIcon
-                                    size='l'
-                                    platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
-                                    type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
-                                />
-                            </LoadingSpinner>
-                        </Portal>
-                    )}
+                {/* Loading Spinner */}
+                {canReloadPath && (
+                    <Portal>
+                        <LoadingSpinner style={loadingSpinnerStyle}>
+                            <GenericIcon
+                                size='l'
+                                platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
+                                type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
+                            />
+                        </LoadingSpinner>
+                    </Portal>
+                )}
 
-                    {children}
+                {children}
 
-                    {/* Fill Space Behind Keyboard  TODO is this needed*/}
-                    <KeyboardFiller style={keyboardFillerStyle} />
-                </View>
             </ScrollContainer>
 
             {/* Upper Blur Bar */}

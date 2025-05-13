@@ -48,6 +48,7 @@ export interface GenericIconProps<T = void> {
     platformColor?: string;
     onClick?: (item?: T) => T | void;
     style?: ViewStyle;
+    className?: string;
     hideRipple?: boolean;
 };
 
@@ -57,6 +58,7 @@ const GenericIcon = <T,>({
     platformColor: color = 'secondaryLabel',
     onClick,
     style,
+    className,
     hideRipple = false
 }: GenericIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
@@ -71,6 +73,7 @@ const GenericIcon = <T,>({
                 justifyContent: 'center',
                 ...style
             }}
+            className={className}
         >
             <SFSymbol
                 resizeMode='center'

@@ -54,6 +54,7 @@ const useSortedList = <T extends ListItem, S>({
     const { registerReloadFunction } = useReload();
 
     // List Contents Variables
+    const [isLoading, setIsLoading] = useState(true);
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
@@ -71,6 +72,7 @@ const useSortedList = <T extends ListItem, S>({
     async function buildList() {
         const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
         setItems(fetchedItems ?? storageObject as T[] ?? []);
+        setIsLoading(false);
     };
 
     useEffect(() => {
@@ -239,7 +241,8 @@ const useSortedList = <T extends ListItem, S>({
         toggleItemDelete,
         toggleItemEdit,
         deleteSingleItemFromStorage,
-        storageObject: storageObject ?? initializedStorageObject
+        storageObject: storageObject ?? initializedStorageObject,
+        isLoading: isLoading === true
     };
 };
 

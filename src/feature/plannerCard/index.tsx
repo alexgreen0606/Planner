@@ -136,7 +136,7 @@ const PlannerCard = ({
             <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, never>
                 listId={datestamp}
                 items={SortedEvents.items}
-                hideList={collapsed}
+                isLoading={collapsed}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onContentClick={SortedEvents.toggleItemEdit}

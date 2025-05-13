@@ -94,12 +94,10 @@ const Today = () => {
         <BirthdayCard birthdays={pageData.uncontactedBirthdays} />
 
         {/* Planner */}
-        <View className='flex-1'>
-          <TodayPlanner
-            loadAllExternalData={loadCalendarData}
-            calendarEvents={pageData.planner}
-          />
-        </View>
+        <TodayPlanner
+          loadAllExternalData={loadCalendarData}
+          calendarEvents={pageData.planner}
+        />
 
       </ScrollContainerProvider>
     </View>

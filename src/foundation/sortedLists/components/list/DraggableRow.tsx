@@ -1,8 +1,7 @@
-import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT } from "@/constants";
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "@/constants";
 import GenericIcon from "@/foundation/components/GenericIcon";
 import useDimensions from "@/foundation/hooks/useDimensions";
-import globalStyles from "@/theme/globalStyles";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import Animated, {
@@ -12,13 +11,11 @@ import Animated, {
     useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
-    withDecay,
-    withDelay,
     withRepeat,
     withSpring,
-    withTiming,
+    withTiming
 } from "react-native-reanimated";
-import { LIST_ITEM_HEIGHT, ItemStatus, AUTO_SCROLL_SPEED, SCROLL_OUT_OF_BOUNDS_RESISTANCE, LIST_SPRING_CONFIG, LIST_ICON_SPACING, LIST_SEPARATOR_HEIGHT } from "../../constants";
+import { AUTO_SCROLL_SPEED, ItemStatus, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "../../constants";
 import { useDeleteScheduler } from "../../services/DeleteScheduler";
 import { useScrollContainer } from "../../services/ScrollContainerProvider";
 import { ListItem, ListItemIconConfig } from "../../types";
@@ -40,7 +37,7 @@ export interface RowProps<T extends ListItem> {
     positions: SharedValue<Record<string, number>>;
     disableDrag?: boolean;
     hideKeyboard: boolean;
-    saveTextfieldAndCreateNew: (parentSortId?: number) => Promise<void>;
+    saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
@@ -87,6 +84,7 @@ const DraggableRow = <T extends ListItem>({
         setCurrentTextfield,
         disableNativeScroll,
         scrollOffsetBounds,
+        floatingBannerHeight
     } = useScrollContainer();
 
     const { isItemDeleting } = useDeleteScheduler();
@@ -100,13 +98,18 @@ const DraggableRow = <T extends ListItem>({
         [currentTextfield, staticItem]
     );
 
+    const topBoundaries = useMemo(() => {
+        const min = 0;
+        const max = Math.max(0, LIST_ITEM_HEIGHT * (listLength - 1));
+        return { min, max };
+    }, [listLength]);
+
     // ------------- Animation Variables -------------
-    const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER; // TODO: add in height of floating navbar too
+    const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const BOTTOM_AUTO_SCROLL_BOUND = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
     const isAwaitingInitialPosition = useSharedValue(positions.value[item.id] === undefined);
-    const isDragging = useSharedValue(0);
-    const isManualScrolling = useSharedValue(false);
+    const isDragging = useSharedValue(false);
     const top = useSharedValue(positions.value[item.id] ?? 0);
     const initialGesturePosition = useSharedValue(0);
     const autoScrollTrigger = useSharedValue<number | null>(null);
@@ -143,21 +146,17 @@ const DraggableRow = <T extends ListItem>({
 
     // ------------- Drag Utilities -------------
 
-    /**
-     * Finds the smallest and largest number the top value can be to keep it within its relative container.
-     * @returns Minimum and Maximum numbers the top can contain.
-     */
-    const getTopBoundaries = () => {
+    const sanitizeTopValue = (value: number) => {
         'worklet';
-        const minBound = 0;
-        const maxBound = Math.max(0, LIST_ITEM_HEIGHT * (listLength - 1));
-        return { minBound, maxBound };
+        const { min, max } = topBoundaries;
+        return Math.max(min, Math.min(value, max));
     };
 
-    const sanitizeTopValue = (newPosition: number = scrollOffset.value) => {
+    const sanitizeScrollOffset = (value: number) => {
         'worklet';
-        const { minBound, maxBound } = getTopBoundaries();
-        return Math.max(minBound, Math.min(newPosition, maxBound));
+        const { min, max } = scrollOffsetBounds.value;
+        console.log(max, 'scroll offset max')
+        return Math.max(min, Math.min(value, max));
     };
 
     /**
@@ -241,155 +240,10 @@ const DraggableRow = <T extends ListItem>({
     const endDrag = () => {
         'worklet';
         cancelAnimation(autoScrollTrigger);
-        cancelAnimation(isDragging);
-        isDragging.value = 0;
+        isDragging.value = false;
         initialGesturePosition.value = 0;
         top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
     };
-
-    // ------------- Scroll Utilities -------------
-
-    const sanitizeScrollOffset = (newPosition: number) => {
-        'worklet';
-        return Math.max(scrollOffsetBounds.value.min, Math.min(newPosition, scrollOffsetBounds.value.max));
-    };
-
-    const beginManulaScroll = () => {
-        'worklet';
-        cancelAnimation(isDragging);
-        isManualScrolling.value = true;
-        disableNativeScroll.value = true;
-        initialGesturePosition.value = scrollOffset.value;
-    };
-
-    /**
-     * Handles scrolling with elastic resistance.
-     * @param distance Scroll distance (negative for down, positive for up)
-     */
-    const manualScroll = (currentDragDisplacement: number) => {
-        'worklet';
-        const unresistedScrollPosition = initialGesturePosition.value - currentDragDisplacement;
-
-        // --- Apply Resistance When Out of Bounds ---
-        let resistedScrollPosition;
-        if (unresistedScrollPosition < scrollOffsetBounds.value.min) {
-            const overscroll = scrollOffsetBounds.value.min - unresistedScrollPosition;
-            resistedScrollPosition = scrollOffsetBounds.value.min - (overscroll * SCROLL_OUT_OF_BOUNDS_RESISTANCE);
-        } else if (unresistedScrollPosition > scrollOffsetBounds.value.max) {
-            const overscroll = unresistedScrollPosition - scrollOffsetBounds.value.max;
-            resistedScrollPosition = scrollOffsetBounds.value.max + (overscroll * SCROLL_OUT_OF_BOUNDS_RESISTANCE);
-        } else {
-            resistedScrollPosition = unresistedScrollPosition;
-        }
-
-        scrollOffset.value = withTiming(resistedScrollPosition, { duration: 16 });
-    };
-
-    /**
-     * Executes a scroll rebound if user scrolled past container bounds,
-     * or continues scrolling with momentum if within bounds.
-     * @param velocity The velocity at which the user was scrolling
-     */
-    const endManualScroll = (velocity: number = 0) => {
-        'worklet';
-        const isScrollOutOfBounds =
-            scrollOffset.value < scrollOffsetBounds.value.min ||
-            scrollOffset.value > scrollOffsetBounds.value.max;
-
-        const handleScrollEnd = () => {
-            'worklet';
-            isManualScrolling.value = false;
-            disableNativeScroll.value = false;
-            initialGesturePosition.value = 0;
-        };
-
-        if (isScrollOutOfBounds) {
-            // --- Rebound to valid position ---
-            scrollOffset.value = withSpring(
-                sanitizeScrollOffset(scrollOffset.value),
-                {
-                    stiffness: 100,
-                    damping: 40,
-                    mass: .6,
-                    overshootClamping: true
-                },
-                handleScrollEnd
-            );
-        } else {
-            // --- Momentum Decay ---
-            scrollOffset.value = withDecay(
-                {
-                    velocity: -velocity,
-                    rubberBandEffect: true,
-                    clamp: [scrollOffsetBounds.value.min, scrollOffsetBounds.value.max],
-                    rubberBandFactor: SCROLL_OUT_OF_BOUNDS_RESISTANCE
-                },
-                handleScrollEnd
-            );
-        }
-    };
-
-    /**
-     * Creates a gesture handler for item content or separator lines.
-     * Content areas can be dragged (after long press) or clicked, while
-     * separator lines can only be scrolled or clicked to create new items.
-     * 
-     * @param isContentArea Whether this handler is for content (true) or separator (false)
-     * @returns A Gesture.Pan() handler with appropriate behavior
-     */
-    const createGestureHandler = useCallback((onClick: () => void) => {
-        return Gesture.Pan()
-            .onTouchesDown(() => {
-                if (disableDrag) return;
-                // --- Initiate Drag After Delay ---
-                isDragging.value = withDelay(500, withTiming(1, { duration: 0 }, (finished) => {
-                    if (finished) {
-                        initialGesturePosition.value = top.value;
-                    }
-                }));
-            })
-            .onStart(() => {
-                if (isDragging.value) return;
-                // --- Initiate Scroll If Drag Hasn't Begun ---
-                beginManulaScroll();
-            })
-            .onUpdate((event) => {
-                if (isManualScrolling.value) {
-                    // --- Scroll ---
-                    manualScroll(event.translationY);
-                } else if (isDragging.value) {
-                    // --- Drag ---
-                    drag(
-                        event.translationY,
-                        event.absoluteY
-                    );
-                }
-            })
-            .onFinalize((event) => {
-                if (isManualScrolling.value) {
-                    // --- End Manual Scroll ---
-                    endManualScroll(event.velocityY);
-                } else if (isDragging.value) {
-                    // --- End Drag ---
-                    endDrag();
-                    if (onDragEnd) {
-                        runOnJS(onDragEnd)({
-                            ...item,
-                            sortId: generateSortId(
-                                getParentSortIdFromPositions(item, positions, items),
-                                items
-                            )
-                        });
-                    }
-                } else {
-                    // --- Click ---
-                    cancelAnimation(isDragging);
-                    if (item.id !== currentTextfield?.id) {
-                        runOnJS(onClick)();
-                    }
-                }
-            })
-    }, [item]);
 
     // ------------- Animations -------------
 
@@ -419,8 +273,8 @@ const DraggableRow = <T extends ListItem>({
 
             const newTop = sanitizeTopValue(top.value + trigger);
             const newScroll = sanitizeScrollOffset(scrollOffset.value + trigger);
-            const { maxBound } = getTopBoundaries();
-            if ([0, maxBound].includes(newTop) || [0, 2000].includes(newScroll)) {
+
+            if ([topBoundaries.min, topBoundaries.max].includes(newTop)) {
                 cancelAnimation(autoScrollTrigger);
             }
 
@@ -449,17 +303,58 @@ const DraggableRow = <T extends ListItem>({
         ]
     }));
 
+    // ------------- Gestures -------------
+
+    const pressGesture = Gesture.Tap()
+        .onEnd(() => {
+            runOnJS(onContentClick)(item)
+        });
+
+    const longPressGesture = Gesture.LongPress()
+        .minDuration(500)
+        .onStart(() => {
+            if (disableDrag) return;
+
+            isDragging.value = true;
+            initialGesturePosition.value = top.value;
+        });
+
+    const dragGesture = Gesture.Pan()
+        .manualActivation(true)
+        .onTouchesMove((_e, state) => {
+            if (isDragging.value) {
+                state.activate();
+            } else {
+                state.fail();
+            }
+        })
+        .onUpdate((event) => {
+            drag(
+                event.translationY,
+                event.absoluteY
+            );
+        })
+        .onFinalize(() => {
+            endDrag();
+            if (onDragEnd) {
+                runOnJS(onDragEnd)({
+                    ...item,
+                    sortId: generateSortId(
+                        getParentSortIdFromPositions(item, positions, items),
+                        items
+                    )
+                });
+            }
+        })
+        .simultaneousWithExternalGesture(longPressGesture);
+
+    const contentGesture = Gesture.Race(dragGesture, longPressGesture, pressGesture);
+
     // ------------- Render Helper Functions -------------
 
     const renderIcon = (config: ListItemIconConfig<T>, type: 'left' | 'right') => {
         if (config.hideIcon) return null;
 
-        const iconStyle = type === 'left' ? {
-            marginLeft: LIST_ICON_SPACING,
-            marginBottom: LIST_SEPARATOR_HEIGHT
-        } : {
-            marginRight: LIST_ICON_SPACING / 2
-        }
         const size = type === 'left' ? 'm' : 's';
 
         if (config.customIcon) {
@@ -467,7 +362,7 @@ const DraggableRow = <T extends ListItem>({
                 <TouchableOpacity
                     activeOpacity={config.onClick ? 0 : 1}
                     onPress={() => config.onClick?.(item)}
-                    style={iconStyle}
+                    className='mr-4'
                 >
                     {config.customIcon}
                 </TouchableOpacity>
@@ -480,7 +375,7 @@ const DraggableRow = <T extends ListItem>({
                     {...config.icon}
                     onClick={() => config.onClick?.(item)}
                     size={size}
-                    style={iconStyle}
+                    className='mr-4'
                 />
             );
         }
@@ -491,41 +386,39 @@ const DraggableRow = <T extends ListItem>({
     return (
         <Row style={[animatedRowStyle, styles.row]}>
 
-            {/* Left Icon */}
-            {leftIconConfig && renderIcon(leftIconConfig, 'left')}
+            {/* Separator Line */}
+            <Pressable onPress={() => saveTextfieldAndCreateNew(item.sortId, true)}>
+                <ThinLine />
+            </Pressable>
 
-            {/* Content */}
             <View style={styles.content}>
-                <View style={globalStyles.verticallyCentered}>
-                    <GestureDetector gesture={createGestureHandler(() => onContentClick(item))}>
-                        <ListTextfield<T>
-                            key={getTextfieldKey(item)}
-                            item={item}
-                            onChange={handleTextfieldChange}
-                            onSubmit={handleTextfieldSave}
-                            hideKeyboard={hideKeyboard}
-                            isAwaitingInitialPosition={isAwaitingInitialPosition}
-                            customStyle={{
-                                color: PlatformColor(customTextPlatformColor ??
-                                    (isItemDeletingCustom(item) ? 'tertiaryLabel' :
-                                        item.recurringId ? 'secondaryLabel' : 'label')
-                                ),
-                                textDecorationLine: isItemDeletingCustom(item) ?
-                                    'line-through' : undefined,
-                            }}
-                        />
-                    </GestureDetector>
 
-                    {/* Right Icon */}
-                    {rightIconConfig && renderIcon(rightIconConfig, 'right')}
-                </View>
+                {/* Left Icon */}
+                {leftIconConfig && renderIcon(leftIconConfig, 'left')}
 
-                {/* Separator Line */}
-                <GestureDetector gesture={createGestureHandler(() => saveTextfieldAndCreateNew(item.sortId))}>
-                    <Pressable>
-                        <ThinLine />
-                    </Pressable>
+                {/* Content */}
+                <GestureDetector gesture={contentGesture}>
+                    <ListTextfield<T>
+                        key={getTextfieldKey(item)}
+                        item={item}
+                        onChange={handleTextfieldChange}
+                        onSubmit={handleTextfieldSave}
+                        hideKeyboard={hideKeyboard}
+                        isAwaitingInitialPosition={isAwaitingInitialPosition}
+                        customStyle={{
+                            color: PlatformColor(customTextPlatformColor ??
+                                (isItemDeletingCustom(item) ? 'tertiaryLabel' :
+                                    item.recurringId ? 'secondaryLabel' : 'label')
+                            ),
+                            textDecorationLine: isItemDeletingCustom(item) ?
+                                'line-through' : undefined,
+                        }}
+                    />
                 </GestureDetector>
+
+                {/* Right Icon */}
+                {rightIconConfig && renderIcon(rightIconConfig, 'right')}
+
             </View>
 
         </Row>
@@ -535,14 +428,15 @@ const DraggableRow = <T extends ListItem>({
 const styles = StyleSheet.create({
     row: {
         position: 'absolute',
-        alignItems: 'center',
-        flexDirection: 'row',
         width: '100%',
         height: LIST_ITEM_HEIGHT,
     },
     content: {
         flex: 1,
-        height: LIST_ITEM_HEIGHT,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: LIST_CONTENT_HEIGHT,
         marginLeft: LIST_ICON_SPACING
     },
 });

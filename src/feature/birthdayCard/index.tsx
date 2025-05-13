@@ -56,7 +56,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     listId={BIRTHDAY_STORAGE_ID}
                     staticList
                     disableDrag
-                    hideList={collapsed}
+                    isLoading={collapsed}
                     items={BirthdayList.items}
                     onDeleteItem={BirthdayList.deleteSingleItemFromStorage}
                     onContentClick={() => { }}

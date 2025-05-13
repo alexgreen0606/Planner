@@ -1,19 +1,19 @@
+import { handleDragEnd, handleEventInput, generateTimeIconConfig, generateEventToolbar } from '@/foundation/calendarEvents/sharedListProps';
+import { openTimeModal, saveEventLoadChips, deleteEventsLoadChips } from '@/foundation/calendarEvents/sharedListUtils';
+import { buildPlannerEvents } from '@/foundation/calendarEvents/storage/plannerStorage';
+import { PlannerEvent, Planner, PLANNER_STORAGE_ID } from '@/foundation/calendarEvents/types';
+import { generateCheckboxIconConfig } from '@/foundation/sortedLists/commonProps';
+import SortableList from '@/foundation/sortedLists/components/list/SortableList';
+import { ToolbarProps } from '@/foundation/sortedLists/components/ListItemToolbar';
+import useSortedList from '@/foundation/sortedLists/hooks/useSortedList';
+import { useDeleteScheduler } from '@/foundation/sortedLists/services/DeleteScheduler';
+import { useScrollContainer } from '@/foundation/sortedLists/services/ScrollContainerProvider';
+import { useTimeModal } from '@/modals/services/TimeModalProvider';
+import { useReload } from '@/services/ReloadProvider';
+import { getTodayDatestamp } from '@/utils/timestampUtils';
+import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
 import { usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
-import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
-import { generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../foundation/calendarEvents/sharedListProps';
-import { deleteEventsLoadChips, openTimeModal, saveEventLoadChips } from '../../foundation/calendarEvents/sharedListUtils';
-import { buildPlannerEvents } from '../../foundation/calendarEvents/storage/plannerStorage';
-import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../foundation/calendarEvents/types';
-import { generateCheckboxIconConfig } from '../../foundation/sortedLists/commonProps';
-import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import { useDeleteScheduler } from '../../foundation/sortedLists/services/DeleteScheduler';
-import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
-import { useTimeModal } from '../../modals/services/TimeModalProvider';
-import { useReload } from '../../services/ReloadProvider';
-import { getTodayDatestamp } from '../../utils/timestampUtils';
 
 interface SortablePlannerProps {
     loadAllExternalData: () => Promise<void>;
@@ -90,6 +90,7 @@ const TodayPlanner = ({
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
             getToolbar={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
             onSaveTextfield={SortedEvents.persistItemToStorage}
+            isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{
                 label: 'All Plans Complete',
                 className: 'flex-1'

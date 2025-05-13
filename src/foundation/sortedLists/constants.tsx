@@ -4,11 +4,11 @@ export const LIST_ITEM_HEIGHT = 40;
 
 export const LIST_SEPARATOR_HEIGHT = 15;
 
-export const LIST_ICON_SPACING = 12;
+export const LIST_ICON_SPACING = 8;
 
 export const LIST_CONTENT_HEIGHT = LIST_ITEM_HEIGHT - LIST_SEPARATOR_HEIGHT;
 
-export const AUTO_SCROLL_SPEED = 2;
+export const AUTO_SCROLL_SPEED = 1;
 
 export const SCROLL_THROTTLE = 16;
 
