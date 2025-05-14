@@ -14,16 +14,16 @@ import Animated, {
     withSpring,
     withTiming
 } from "react-native-reanimated";
-import { AUTO_SCROLL_SPEED, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "../constants";
 import { useDeleteScheduler } from "../services/DeleteScheduler";
 import { useScrollContainer } from "../services/ScrollContainerProvider";
 import { generateSortId, getParentSortIdFromPositions } from "../utils";
 import ListTextfield from "./ListTextfield";
-import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT } from "@/constants/size";
+import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/constants/size";
 import { useDimensions } from "@/services/DimensionsProvider";
 import { ListItemIconConfig } from "../lib/listRowConfig";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { EItemStatus } from "@/enums/EItemStatus";
+import { AUTO_SCROLL_SPEED, LIST_SPRING_CONFIG } from "@/constants/listConstants";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -405,7 +405,6 @@ const DraggableRow = <T extends IListItem>({
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
                         hideKeyboard={hideKeyboard}
-                        isAwaitingInitialPosition={isAwaitingInitialPosition}
                         customStyle={{
                             color: PlatformColor(customTextPlatformColor ??
                                 (isItemDeletingCustom(item) ? 'tertiaryLabel' :

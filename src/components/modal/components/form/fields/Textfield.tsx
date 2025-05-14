@@ -1,4 +1,4 @@
-import { LIST_CONTENT_HEIGHT } from '@/feature/sortedList/constants';
+import { LIST_CONTENT_HEIGHT } from '@/constants/size';
 import React, { useEffect, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput } from 'react-native';
 

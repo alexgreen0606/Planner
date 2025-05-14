@@ -5,13 +5,13 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import uuid from 'react-native-uuid';
 import DraggableRow from './components/DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './components/EmptyLabel';
-import { LIST_ITEM_HEIGHT } from './constants';
 import { useKeyboard } from './services/KeyboardProvider';
 import { useScrollContainer } from './services/ScrollContainerProvider';
 import { buildItemPositions, generateSortId } from './utils';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { ListItemUpdateComponentProps, ListItemIconConfig, ModifyItemConfig } from './lib/listRowConfig';
 import { IListItem } from '@/types/listItems/core/TListItem';
+import { LIST_ITEM_HEIGHT } from '@/constants/size';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 

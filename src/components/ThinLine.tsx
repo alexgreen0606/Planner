@@ -1,7 +1,6 @@
+import { THIN_LINE_HEIGHT } from '@/constants/size';
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-
-export const THIN_LINE_HEIGHT = 15;
 
 const ThinLine = () =>
     <View style={styles.lineContainer}>

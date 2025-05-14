@@ -374,7 +374,7 @@ export function syncPlannerWithRecurring(
     }, []);
 
     // Add in any existing events that aren't recurring
-    plannerEvents.forEach(existingPlanEvent => {
+    plannerEvents?.forEach(existingPlanEvent => {
         if (!newPlanner.find(planEvent => planEvent.id === existingPlanEvent.id)) {
             newPlanner.push(existingPlanEvent);
             existingPlanEvent.sortId = generateSortIdByTime(existingPlanEvent, newPlanner);

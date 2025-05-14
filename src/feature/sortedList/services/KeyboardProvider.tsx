@@ -1,26 +1,18 @@
+import { TOOLBAR_HEIGHT } from '@/constants/size';
+import { useDimensions } from '@/services/DimensionsProvider';
 import React, { createContext, useContext } from 'react';
 import {
-    useAnimatedKeyboard,
-    useDerivedValue,
-    DerivedValue,
     AnimatedKeyboardInfo,
-    SharedValue,
-    withSpring,
+    DerivedValue,
+    useAnimatedKeyboard,
+    useDerivedValue
 } from 'react-native-reanimated';
-import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';
-import { LIST_SPRING_CONFIG } from '../constants';
-import { useDimensions } from '@/services/DimensionsProvider';
 
 interface KeyboardContextValue {
     keyboard: AnimatedKeyboardInfo;
     keyboardHeight: DerivedValue<number>;
     keyboardAbsoluteTop: DerivedValue<number>;
     isKeyboardOpen: DerivedValue<boolean>;
-    scrollTextfieldIntoView: (
-        textfieldBottom: SharedValue<number>,
-        scrollOffset: SharedValue<number>,
-        disableNativeScroll: SharedValue<boolean>
-    ) => void;
 }
 
 const KeyboardContext = createContext<KeyboardContextValue | null>(null);
@@ -38,7 +30,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
     } = useDimensions();
 
     const keyboardHeight = useDerivedValue(() => {
-        return keyboard.height.value + LIST_ITEM_TOOLBAR_HEIGHT;
+        return keyboard.height.value + TOOLBAR_HEIGHT;
     });
 
     const keyboardAbsoluteTop = useDerivedValue(() => {
@@ -49,42 +41,13 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
         return keyboard.state.value === 2;
     });
 
-    // TODO: after brief typing, the textfield moves up slightly -> not scrolling enough sometimes
-
-    /**
-     * Calculates and applies scrolling to keep a textfield visible above the keyboard
-     * 
-     * @param textfieldBottom The bottom Y coordinate of the textfield
-     * @param scrollOffset The current scroll offset shared value
-     * @param disableNativeScroll The shared value to disable native scrolling
-     */
-    const scrollTextfieldIntoView = (
-        textfieldBottom: SharedValue<number>,
-        scrollOffset: SharedValue<number>,
-        disableNativeScroll: SharedValue<boolean>
-    ) => {
-        'worklet';
-        const scrollAmount = textfieldBottom.value - keyboardAbsoluteTop.value;
-
-        disableNativeScroll.value = true;
-        scrollOffset.value = withSpring(
-            scrollOffset.value + scrollAmount,
-            LIST_SPRING_CONFIG,
-            () => {
-                textfieldBottom.value -= scrollAmount;
-                disableNativeScroll.value = false;
-            }
-        );
-    };
-
     return (
         <KeyboardContext.Provider
             value={{
                 keyboard,
                 keyboardHeight,
                 keyboardAbsoluteTop,
-                isKeyboardOpen,
-                scrollTextfieldIntoView
+                isKeyboardOpen
             }}
         >
             {children}

@@ -1,9 +1,9 @@
 import GenericIcon, { GenericIconProps } from '@/components/GenericIcon';
 import { Dimensions, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 import globalStyles from '../../../theme/globalStyles';
-import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { ListItemUpdateComponentProps } from '../lib/listRowConfig';
+import { TOOLBAR_HEIGHT } from '@/constants/size';
 
 interface IconSet<T extends IListItem> extends GenericIconProps<T> {
     customIcon?: React.ReactNode;
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     toolbar: {
         backgroundColor: PlatformColor('systemGray6'),
         padding: 12,
-        height: LIST_ITEM_TOOLBAR_HEIGHT,
+        height: TOOLBAR_HEIGHT,
         width: Dimensions.get('window').width,
         flexDirection: 'row',
         justifyContent: 'space-evenly',

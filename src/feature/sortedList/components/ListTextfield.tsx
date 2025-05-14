@@ -1,16 +1,14 @@
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/size';
+import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
 import { useScrollContainer } from '../services/ScrollContainerProvider';
-import { runOnJS, SharedValue, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
-import { useKeyboard } from '../services/KeyboardProvider';
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '../constants';
-import { IListItem } from '@/types/listItems/core/TListItem';
 
 interface ListTextfieldProps<T extends IListItem> {
     item: T;
     onChange: (newText: string) => void;
     onSubmit: (blurred: boolean) => void;
-    isAwaitingInitialPosition: SharedValue<boolean>;
     hideKeyboard: boolean;
     customStyle: TextStyle;
 }
@@ -19,28 +17,18 @@ const ListTextfield = <T extends IListItem>({
     item,
     onChange,
     onSubmit,
-    isAwaitingInitialPosition,
     hideKeyboard,
-    customStyle,
+    customStyle
 }: ListTextfieldProps<T>) => {
 
     const {
         currentTextfield,
         pendingItem,
-        setCurrentTextfield,
-        scrollOffset,
-        disableNativeScroll
+        setCurrentTextfield
     } = useScrollContainer();
-
-    const {
-        isKeyboardOpen,
-        keyboardAbsoluteTop,
-        scrollTextfieldIntoView
-    } = useKeyboard();
 
     const inputRef = useRef<TextInput>(null);
     const isFocused = useSharedValue(false);
-    const absoluteBottom = useSharedValue<number>(0);
 
     // Ensures textfield will only save once, whether blurred or entered
     const hasSaved = useRef(false);
@@ -60,59 +48,12 @@ const ListTextfield = <T extends IListItem>({
 
     // ------------- Utility Function -------------
 
-    function evaluateAbsoluteBottom() {
-        inputRef.current?.measureInWindow((_, y) => {
-            absoluteBottom.value = y + LIST_ITEM_HEIGHT;
-        });
-    }
-
-    function handleInputChange(newVal: string) {
-        evaluateAbsoluteBottom();
-        onChange(newVal);
-    }
-
     function handleSave(fromBlur: boolean) {
         if (hasSaved.current) return;
         hasSaved.current = true;
 
-        // TODO: increase the scroll offset by LIST_ITEM_HEIGHT
-
         onSubmit(fromBlur);
     }
-
-    // ---------- Scroll Handler ----------
-
-    // Evaluate position of textfield after initialization
-    useAnimatedReaction(
-        () => isAwaitingInitialPosition.value,
-        (loading) => {
-            if (!loading) {
-                runOnJS(evaluateAbsoluteBottom)();
-            }
-        }
-    )
-
-    // Scroll the textfield into view
-    useAnimatedReaction(
-        () => ({
-            shouldCheck: isFocused.value && isKeyboardOpen.value,
-            textfieldBottom: absoluteBottom.value,
-            keyboardTop: keyboardAbsoluteTop.value
-        }),
-        (data) => {
-            if (data.shouldCheck && data.textfieldBottom > data.keyboardTop) {
-                scrollTextfieldIntoView(
-                    absoluteBottom,
-                    scrollOffset,
-                    disableNativeScroll
-                );
-            }
-        }
-    );
-
-    // 2. When the keyboard is closed, execute rebound
-
-    // 3. When a new item is created, 
 
     // ---------- Focus Handler ----------
 
@@ -123,9 +64,6 @@ const ListTextfield = <T extends IListItem>({
                 inputRef.current?.focus();
                 isFocused.value = true;
                 hasSaved.current = false;
-
-                // Evaluate in case item has moved since initial render
-                evaluateAbsoluteBottom();
 
                 // Trigger the previous textfield to become static
                 setCurrentTextfield(currentTextfield)
@@ -138,7 +76,7 @@ const ListTextfield = <T extends IListItem>({
             ref={inputRef}
             value={item.value}
             editable={editable}
-            onChangeText={handleInputChange}
+            onChangeText={onChange}
             onSubmitEditing={() => handleSave(true)}
             onBlur={() => handleSave(false)}
             submitBehavior='submit'

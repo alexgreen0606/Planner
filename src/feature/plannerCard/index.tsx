@@ -12,7 +12,6 @@ import { deleteEventsLoadChips, openTimeModal, saveEventLoadChips } from '../../
 import SortableList from '../sortedList';
 import { generateCheckboxIconConfig } from '../sortedList/commonProps';
 import { ToolbarProps } from '../sortedList/components/ListItemToolbar';
-import { LIST_ITEM_HEIGHT } from '../sortedList/constants';
 import useSortedList from '../sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '../sortedList/services/DeleteScheduler';
 import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
@@ -23,6 +22,7 @@ import { useTimeModal } from '@/components/modal/services/TimeModalProvider';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { buildPlannerEvents } from '@/storage/plannerStorage';
 import { TPlanner } from '@/types/planner/TPlanner';
+import { LIST_ITEM_HEIGHT } from '@/constants/size';
 
 interface PlannerCardProps {
     datestamp: string;

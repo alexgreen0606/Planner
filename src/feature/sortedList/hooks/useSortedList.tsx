@@ -70,9 +70,14 @@ const useSortedList = <T extends IListItem, S>({
     // ------------- List Generation -------------
 
     async function buildList() {
-        const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
-        setItems(fetchedItems ?? storageObject as T[] ?? []);
-        setIsLoading(false);
+        try {
+            const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
+            setItems(fetchedItems ?? storageObject as T[] ?? []);
+            setIsLoading(false);
+        } catch (error) {
+            console.log(error);
+
+        }
     };
 
     useEffect(() => {

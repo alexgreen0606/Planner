@@ -22,11 +22,12 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { KeyboardProvider } from './KeyboardProvider';
-import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT } from '@/constants/size';
+import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT, LIST_ITEM_HEIGHT } from '@/constants/size';
 import { useDimensions } from '@/services/DimensionsProvider';
 import { useReload } from '@/services/ReloadProvider';
-import { OVERSCROLL_RELOAD_THRESHOLD, LIST_ITEM_HEIGHT, SCROLL_THROTTLE } from '../constants';
 import { IListItem } from '@/types/listItems/core/TListItem';
+import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
+import { KeyboardAvoidingView } from 'react-native';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -382,52 +383,54 @@ export const ScrollContainerContent = <T extends IListItem>({
             </FloatingBanner>
 
             {/* Scroll Container */}
-            <ScrollContainer
-                ref={scrollRef}
-                scrollEventThrottle={SCROLL_THROTTLE}
-                scrollToOverflowEnabled={true}
-                onScroll={handler}
-                contentContainerStyle={{
-                    paddingTop: TOP_SPACER,
-                    paddingBottom: BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT,
-                    flexGrow: 1
-                }}
-                onLayout={(event) => {
-                    const { height } = event.nativeEvent.layout;
-                    contentHeight.value = height;
-                }}
-            >
+            <KeyboardAvoidingView keyboardVerticalOffset={60} behavior='padding' style={{flex: 1}}>
+                <ScrollContainer
+                    ref={scrollRef}
+                    scrollEventThrottle={SCROLL_THROTTLE}
+                    scrollToOverflowEnabled={true}
+                    onScroll={handler}
+                    contentContainerStyle={{
+                        paddingTop: TOP_SPACER,
+                        paddingBottom: BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT,
+                        flexGrow: 1
+                    }}
+                    onLayout={(event) => {
+                        const { height } = event.nativeEvent.layout;
+                        contentHeight.value = height;
+                    }}
+                >
 
-                {/* Header */}
-                {header && (
-                    <View style={{
-                        height: HEADER_HEIGHT,
-                        paddingVertical: 8,
-                        paddingHorizontal: 16,
-                    }}>
-                        {header}
-                    </View>
-                )}
+                    {/* Header */}
+                    {header && (
+                        <View style={{
+                            height: HEADER_HEIGHT,
+                            paddingVertical: 8,
+                            paddingHorizontal: 16,
+                        }}>
+                            {header}
+                        </View>
+                    )}
 
-                {/* Floating Banner Spacer */}
-                <View style={{ width: '100%', height: floatingBannerHeight }} />
+                    {/* Floating Banner Spacer */}
+                    <View style={{ width: '100%', height: floatingBannerHeight }} />
 
-                {/* Loading Spinner */}
-                {canReloadPath && (
-                    <Portal>
-                        <LoadingSpinner style={loadingSpinnerStyle}>
-                            <GenericIcon
-                                size='l'
-                                platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
-                                type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
-                            />
-                        </LoadingSpinner>
-                    </Portal>
-                )}
+                    {/* Loading Spinner */}
+                    {canReloadPath && (
+                        <Portal>
+                            <LoadingSpinner style={loadingSpinnerStyle}>
+                                <GenericIcon
+                                    size='l'
+                                    platformColor={loadingStatus === LoadingStatus.COMPLETE ? 'systemBlue' : 'secondaryLabel'}
+                                    type={loadingStatus === LoadingStatus.COMPLETE ? 'refreshComplete' : 'refresh'}
+                                />
+                            </LoadingSpinner>
+                        </Portal>
+                    )}
 
-                {children}
+                    {children}
 
-            </ScrollContainer>
+                </ScrollContainer>
+            </KeyboardAvoidingView>
 
             {/* Upper Blur Bar */}
             <TopBlurBar style={topBlurBarStyle}>
