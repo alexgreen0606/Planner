@@ -1,1 +1,0 @@
-export const TIME_MODAL_INPUT_HEIGHT = 32;

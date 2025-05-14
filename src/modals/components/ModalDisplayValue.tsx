@@ -1,8 +1,8 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-import { TIME_MODAL_INPUT_HEIGHT } from '../../foundation/calendarEvents/constants';
+import { MODAL_INPUT_HEIGHT } from '../constants';
 import globalStyles from '../../theme/globalStyles';
-import CustomText from '../../foundation/components/text/CustomText';
+import CustomText from '../../components/text/CustomText';
 
 export interface ModalDisplayValueProps {
     label: string;
@@ -28,7 +28,7 @@ const ModalDisplayValue = ({
 const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
-        height: TIME_MODAL_INPUT_HEIGHT
+        height: MODAL_INPUT_HEIGHT
     },
 
 });

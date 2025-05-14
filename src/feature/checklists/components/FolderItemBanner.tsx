@@ -1,8 +1,8 @@
-import { HEADER_HEIGHT } from '@/constants';
-import ButtonText from '@/foundation/components/text/ButtonText';
-import CustomText from '@/foundation/components/text/CustomText';
-import useDimensions from '@/foundation/hooks/useDimensions';
-import { ItemStatus } from '@/foundation/sortedLists/constants';
+import { HEADER_HEIGHT } from '@/utils/sizeUtils';
+import ButtonText from '@/components/text/ButtonText';
+import CustomText from '@/components/text/CustomText';
+import useDimensions from '@/hooks/useDimensions';
+import { ItemStatus } from '@/feature/sortedList/constants';
 import globalStyles from '@/theme/globalStyles';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';

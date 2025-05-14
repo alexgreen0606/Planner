@@ -1,14 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { GenericIconProps } from '../../foundation/components/GenericIcon';
-import CustomText from '../../foundation/components/text/CustomText';
-import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import Toolbar, { ToolbarProps } from '../../foundation/sortedLists/components/ListItemToolbar';
-import { ItemStatus } from '../../foundation/sortedLists/constants';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import { useScrollContainer } from '../../foundation/sortedLists/services/ScrollContainerProvider';
-import { ListItem, ModifyItemConfig } from '../../foundation/sortedLists/types';
-import { generateSortId, isItemTextfield } from '../../foundation/sortedLists/utils';
+import CustomText from '../../components/text/CustomText';
 import { selectableColors } from '../../theme/colors';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
 import {
@@ -19,8 +11,16 @@ import {
     updateFolderItem,
 } from '../checklists/storage';
 import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
+import Toolbar, { ToolbarProps } from '../sortedList/components/ListItemToolbar';
+import { ItemStatus } from '../sortedList/constants';
+import useSortedList from '../sortedList/hooks/useSortedList';
+import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
+import { ListItem, ModifyItemConfig } from '../sortedList/types';
+import { generateSortId, isItemTextfield } from '../sortedList/utils';
 
+import { GenericIconProps } from '@/components/GenericIcon';
 import { Alert } from 'react-native';
+import SortableList from '../sortedList';
 
 interface SortedFolderProps {
     folderId: string;

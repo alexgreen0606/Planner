@@ -1,19 +1,19 @@
+import EventChip, { EventChipProps } from '@/components/EventChip';
+import BirthdayCard from '@/feature/birthdayCard';
+import { BIRTHDAY_STORAGE_ID } from '@/feature/birthdayCard/constants';
+import { getContactedBirthdaysByDatestamp } from '@/feature/birthdayCard/storage';
+import { Birthday } from '@/feature/birthdayCard/types';
+import { eventChipToBirthday, extractNameFromBirthdayText } from '@/feature/birthdayCard/utils';
+import { ScrollContainerProvider } from '@/feature/sortedList/services/ScrollContainerProvider';
+import TodayPlanner from '@/feature/todayPlans';
+import TodayBanner from '@/feature/todayPlans/TodayBanner';
+import globalStyles from '@/theme/globalStyles';
+import { loadCalendarEventData } from '@/utils/calendarUtils/calendarUtils';
+import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
+import { PlannerEvent } from '@/utils/calendarUtils/types';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { PlannerEvent } from '../../src/foundation/calendarEvents/types';
-import { Birthday } from '../../src/feature/birthdayCard/types';
-import { BIRTHDAY_STORAGE_ID } from '../../src/feature/birthdayCard/constants';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
-import { loadCalendarEventData } from '../../src/foundation/calendarEvents/calendarUtils';
-import { getContactedBirthdaysByDatestamp } from '../../src/feature/birthdayCard/storage';
-import { eventChipToBirthday, extractNameFromBirthdayText } from '../../src/feature/birthdayCard/utils';
-import globalStyles from '../../src/theme/globalStyles';
-import { ScrollContainerProvider } from '../../src/foundation/sortedLists/services/ScrollContainerProvider';
-import TodayBanner from '../../src/feature/todayPlans/TodayBanner';
-import EventChip, { EventChipProps } from '../../src/foundation/calendarEvents/components/EventChip';
-import BirthdayCard from '../../src/feature/birthdayCard';
-import TodayPlanner from '../../src/feature/todayPlans';
-import { getTodayDatestamp } from '../../src/utils/timestampUtils';
 
 interface TodayData {
   planner: PlannerEvent[];

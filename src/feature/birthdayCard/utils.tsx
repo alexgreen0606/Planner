@@ -1,8 +1,8 @@
 import * as Contacts from 'expo-contacts';
 import * as Linking from 'expo-linking';
-import { EventChipProps } from '../../foundation/calendarEvents/components/EventChip';
+import { EventChipProps } from '../../components/EventChip';
 import { Birthday } from './types';
-import { ItemStatus } from '../../foundation/sortedLists/constants';
+import { ItemStatus } from '../sortedList/constants';
 
 export function eventChipToBirthday(chip: EventChipProps, datestamp: string): Birthday {
     const age = chip.label.match(/\d+/);

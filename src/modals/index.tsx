@@ -1,11 +1,11 @@
 import React, { ReactNode } from 'react';
 import { View, StyleSheet, ViewStyle, PlatformColor, ScrollView } from 'react-native';
-import CustomText from '../foundation/components/text/CustomText';
+import CustomText from '../components/text/CustomText';
 import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BlurView } from "expo-blur";
-import ButtonText from '../foundation/components/text/ButtonText';
-import useDimensions from '../foundation/hooks/useDimensions';
+import ButtonText from '../components/text/ButtonText';
+import useDimensions from '../hooks/useDimensions';
 import { useRouter } from 'expo-router';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);

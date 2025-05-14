@@ -1,15 +1,15 @@
+import CustomText from '@/components/text/CustomText';
+import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import Card from '../../foundation/components/Card';
-import CustomText from '../../foundation/components/text/CustomText';
-import SortableList from '../../foundation/sortedLists/components/list/SortableList';
-import useSortedList from '../../foundation/sortedLists/hooks/useSortedList';
-import { getTodayDatestamp } from '../../utils/timestampUtils';
+import SortableList from '../sortedList';
+import useSortedList from '../sortedList/hooks/useSortedList';
 import AgeValue from './components/AgeValue';
 import { BIRTHDAY_STORAGE_ID } from './constants';
 import { markBirthdayContacted } from './storage';
 import { Birthday } from './types';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
+import Card from '@/components/Card';
 
 // TODO: complete refactor and styling
 

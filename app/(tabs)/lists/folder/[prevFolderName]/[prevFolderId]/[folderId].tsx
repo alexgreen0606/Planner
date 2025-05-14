@@ -5,7 +5,7 @@ import { NULL } from '../../../../../../src/feature/checklists/constants';
 import { getFolderFromStorage } from '../../../../../../src/feature/checklists/storage';
 import { FolderItemTypes } from '../../../../../../src/feature/checklists/types';
 import SortedFolder from '../../../../../../src/feature/folderContents';
-import { ScrollContainerProvider } from '../../../../../../src/foundation/sortedLists/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '../../../../../../src/feature/sortedList/services/ScrollContainerProvider';
 import globalStyles from '@/theme/globalStyles';
 import { View } from 'react-native';
 

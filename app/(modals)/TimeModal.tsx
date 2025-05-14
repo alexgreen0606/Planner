@@ -1,4 +1,4 @@
-import { ItemStatus } from "@/foundation/sortedLists/constants";
+import { ItemStatus } from "@/feature/sortedList/constants";
 import Modal from "@/modals";
 import Form from "@/modals/components/form";
 import { EFieldType } from "@/modals/components/form/types";

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import CustomText from '../../../foundation/components/text/CustomText';
+import CustomText from '../../../components/text/CustomText';
 import globalStyles from '../../../theme/globalStyles';
 
 interface RecurringPlannerBannerProps {

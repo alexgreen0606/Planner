@@ -1,7 +1,7 @@
+import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import React, { useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { getTodayDatestamp } from '../../../../utils/timestampUtils';
 
 interface DateRangeSelectorProps {
     startDate: string | null;

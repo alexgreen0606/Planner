@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useRef } from 'react';
-import { PlannerEvent } from '../../foundation/calendarEvents/types';
+import { PlannerEvent } from '../../utils/calendarUtils/types';
 import { useRouter } from 'expo-router';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 

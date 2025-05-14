@@ -1,5 +1,5 @@
+import TopNavbar from '@/components/TopNavbar';
 import { Slot } from 'expo-router';
-import TopNavbar from '../../../src/foundation/components/TopNavbar';
 
 export default function PlannersLayout() {
     return (

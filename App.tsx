@@ -2,7 +2,7 @@ import React from 'react';
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
-import { DeleteSchedulerProvider } from './src/foundation/sortedLists/services/DeleteScheduler';
+import { DeleteSchedulerProvider } from './src/feature/sortedList/services/DeleteScheduler';
 import { ReloadProvider } from './src/services/ReloadProvider';
 import { Slot } from 'expo-router';
 

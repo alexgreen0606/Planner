@@ -1,4 +1,4 @@
-import { ListItem } from "../../foundation/sortedLists/types";
+import { ListItem } from "../sortedList/types";
 
 export interface Birthday extends ListItem {
     contacted: boolean;

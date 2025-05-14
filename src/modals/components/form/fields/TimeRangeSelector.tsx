@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import TimeValue from '../../../../foundation/calendarEvents/components/values/TimeValue';
-import CustomText from '../../../../foundation/components/text/CustomText';
-import DateValue from '../../../../foundation/calendarEvents/components/values/DateValue';
+import TimeValue from '../../../../components/text/TimeValue';
+import CustomText from '../../../../components/text/CustomText';
+import DateValue from '../../../../components/text/DateValue';
 import { DateTime } from 'luxon';
 import globalStyles from '../../../../theme/globalStyles';
 import DateRangeSelector from './DateRangeSelector';
@@ -106,7 +106,7 @@ const TimeRangeSelector = ({
                     )}
                     {endTimestamp && (
                         <View style={styles.through}>
-                            <CustomText type='indicator2'>
+                            <CustomText type='indicator'>
                                 to
                             </CustomText>
                         </View>
