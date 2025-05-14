@@ -1,11 +1,11 @@
+import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { createContext, useCallback, useContext, useState } from 'react';
-import { ListItem } from '../types';
 
 interface DeleteSchedulerContextValue {
-    pendingDeleteItems: Required<ListItem>[];
-    setPendingDeleteItems: React.Dispatch<React.SetStateAction<Required<ListItem>[]>>;
-    scheduledDeletionItems: (listId: string) => Required<ListItem>[];
-    isItemDeleting: (item: Required<ListItem>) => boolean;
+    pendingDeleteItems: Required<IListItem>[];
+    setPendingDeleteItems: React.Dispatch<React.SetStateAction<Required<IListItem>[]>>;
+    scheduledDeletionItems: (listId: string) => Required<IListItem>[];
+    isItemDeleting: (item: Required<IListItem>) => boolean;
 }
 
 const DeleteSchedulerContext = createContext<DeleteSchedulerContextValue | null>(null);
@@ -17,9 +17,9 @@ interface DeleteSchedulerProviderProps {
 export const DeleteSchedulerProvider = ({
     children
 }: DeleteSchedulerProviderProps) => {
-    const [pendingDeleteItems, setPendingDeleteItems] = useState<Required<ListItem>[]>([]);
+    const [pendingDeleteItems, setPendingDeleteItems] = useState<Required<IListItem>[]>([]);
 
-    const scheduledDeletionItems = useCallback((listId: string): Required<ListItem>[] => {
+    const scheduledDeletionItems = useCallback((listId: string): Required<IListItem>[] => {
         return pendingDeleteItems.filter(item => item.listId === listId);
     }, [pendingDeleteItems]);
 
@@ -29,7 +29,7 @@ export const DeleteSchedulerProvider = ({
      * @param item - The item to check
      * @returns true if the item is in the pending delete list, false otherwise
      */
-    function isItemDeleting(item: Required<ListItem>) {
+    function isItemDeleting(item: Required<IListItem>) {
         return pendingDeleteItems.some(deleteItem => deleteItem.id === item.id);
     }
 

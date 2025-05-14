@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import useDimensions from '../../src/hooks/useDimensions';
-import { BOTTOM_NAVIGATION_HEIGHT } from '../../src/utils/sizeUtils';
 import GenericIcon from '@/components/GenericIcon';
+import { BOTTOM_NAVIGATION_HEIGHT } from '@/constants/size';
+import { useDimensions } from '@/services/DimensionsProvider';
 
 export default function TabLayout() {
     const { BOTTOM_SPACER } = useDimensions();

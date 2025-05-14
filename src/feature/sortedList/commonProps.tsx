@@ -1,5 +1,5 @@
 import { IconType } from "@/components/GenericIcon";
-import { ListItem } from "./types";
+import { IListItem } from "@/types/listItems/core/TListItem";
 
 // ------------- Icon Configuration -------------
 
@@ -10,7 +10,7 @@ import { ListItem } from "./types";
 * @param pendingDeleteItems The items about to be deleted
 * @returns Icon configuration object containing icon type, color and click handler
 */
-export function generateCheckboxIconConfig<T extends ListItem>(
+export function generateCheckboxIconConfig<T extends IListItem>(
     item: T,
     toggleItemDelete: (item: T) => void,
     isDeleting: boolean

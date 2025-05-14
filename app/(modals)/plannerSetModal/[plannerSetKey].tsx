@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react';
-import Modal from '../../../src/modals';
 import { useForm } from 'react-hook-form';
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { PLANNER_SETS_STORAGE_ID, PlannerSet } from '../../../src/feature/plannerSets/types';
-import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/feature/plannerSets/plannerSetsStorage';
-import { EFieldType, IFormField } from '../../../src/modals/components/form/types';
-import Form from '../../../src/modals/components/form';
+import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
+
+import { PLANNER_SETS_STORAGE_ID } from '@/constants/storageIds';
+import Modal from '@/components/modal';
+import Form from '@/components/modal/components/form';
+import { IFormField } from '@/types/form/IFormField';
+import { TPlannerSet } from '@/types/planner/TPlannerSet';
+import { EFormFieldType } from '@/enums/EFormFieldType';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
@@ -31,7 +34,7 @@ const PlannerSetModal = () => {
     const isModalOpen = pathname.includes(PLANNER_SET_MODAL_PATHNAME);
 
     const storage = useMMKV({ id: PLANNER_SETS_STORAGE_ID });
-    const [plannerSet] = useMMKVObject<PlannerSet>(plannerSetKey, storage);
+    const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
 
     const isEditMode = !!plannerSetKey;
 
@@ -53,7 +56,7 @@ const PlannerSetModal = () => {
     const formFields: IFormField[] = [
         {
             name: 'title',
-            type: EFieldType.TEXT,
+            type: EFormFieldType.TEXT,
             label: 'Title',
             focusTrigger: isModalOpen && !isEditMode,
             rules: {
@@ -65,7 +68,7 @@ const PlannerSetModal = () => {
         },
         {
             name: 'dates',
-            type: EFieldType.DATE_RANGE,
+            type: EFormFieldType.DATE_RANGE,
             rules: {
                 validate: ({ startDate, endDate }: { startDate: string, endDate: string }) => startDate && endDate
             }
@@ -85,7 +88,7 @@ const PlannerSetModal = () => {
     function onSubmit(data: PendingPlannerSet) {
         data.title = data.title.trim();
         if (!data.startDate || !data.endDate) return;
-        savePlannerSet(data as PlannerSet);
+        savePlannerSet(data as TPlannerSet);
         router.back();
     }
 

@@ -21,12 +21,12 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '../../../utils/sizeUtils';
-import useDimensions from '../../../hooks/useDimensions';
-import { useReload } from '../../../services/ReloadProvider';
-import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '../constants';
-import { ListItem } from '../types';
 import { KeyboardProvider } from './KeyboardProvider';
+import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT } from '@/constants/size';
+import { useDimensions } from '@/services/DimensionsProvider';
+import { useReload } from '@/services/ReloadProvider';
+import { OVERSCROLL_RELOAD_THRESHOLD, LIST_ITEM_HEIGHT, SCROLL_THROTTLE } from '../constants';
+import { IListItem } from '@/types/listItems/core/TListItem';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -51,7 +51,7 @@ interface ScrollContainerProps {
     floatingBanner?: React.ReactNode;
 }
 
-interface ScrollContainerContextValue<T extends ListItem> {
+interface ScrollContainerContextValue<T extends IListItem> {
     // --- Scroll Variables ---
     scrollOffset: SharedValue<number>;
     scrollOffsetBounds: SharedValue<{ min: number, max: number }>;
@@ -88,7 +88,7 @@ export const ScrollContainerProvider = ({
  * Container allows for native scrolling, or manual scrolling by exposing the @scrollOffset variable.
  * Manual scroll will only work while @disableNativeScroll variable is set to true.
  */
-export const ScrollContainerContent = <T extends ListItem>({
+export const ScrollContainerContent = <T extends IListItem>({
     children,
     header,
     floatingBanner
@@ -177,7 +177,6 @@ export const ScrollContainerContent = <T extends ListItem>({
         onScroll: (event) => {
             if (!disableNativeScroll.value) {
                 scrollOffset.value = event.contentOffset.y;
-                console.log(scrollOffset.value, scrollOffsetBounds.value.max)
             }
         }
     });

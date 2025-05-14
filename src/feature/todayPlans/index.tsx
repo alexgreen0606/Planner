@@ -3,21 +3,23 @@ import { ToolbarProps } from '@/feature/sortedList/components/ListItemToolbar';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '@/feature/sortedList/services/DeleteScheduler';
 import { useScrollContainer } from '@/feature/sortedList/services/ScrollContainerProvider';
-import { useTimeModal } from '@/modals/services/TimeModalProvider';
-import { useReload } from '@/services/ReloadProvider';
-import { generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput } from '@/utils/calendarUtils/sharedListProps';
-import { deleteEventsLoadChips, openTimeModal, saveEventLoadChips } from '@/utils/calendarUtils/sharedListUtils';
-import { buildPlannerEvents } from '@/utils/calendarUtils/storage/plannerStorage';
-import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
-import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '@/utils/calendarUtils/types';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
 import { usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
 import SortableList from '../sortedList';
+import { useTimeModal } from '@/components/modal/services/TimeModalProvider';
+import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { useReload } from '@/services/ReloadProvider';
+import { buildPlannerEvents } from '@/storage/plannerStorage';
+import { handleDragEnd, handleEventInput, generateTimeIconConfig, generateEventToolbar } from '@/utils/calendarUtils/sharedListProps';
+import { openTimeModal, saveEventLoadChips, deleteEventsLoadChips } from '@/utils/calendarUtils/sharedListUtils';
+import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { TPlanner } from '@/types/planner/TPlanner';
 
 interface SortablePlannerProps {
     loadAllExternalData: () => Promise<void>;
-    calendarEvents: PlannerEvent[];
+    calendarEvents: IPlannerEvent[];
 };
 
 const TodayPlanner = ({
@@ -42,7 +44,7 @@ const TodayPlanner = ({
         registerReloadFunction(`today_calendar_data`, loadAllExternalData, pathname);
     }, []);
 
-    async function handleOpenTimeModal(item: PlannerEvent) {
+    async function handleOpenTimeModal(item: IPlannerEvent) {
         await openTimeModal(
             item,
             SortedEvents.toggleItemEdit,
@@ -52,19 +54,19 @@ const TodayPlanner = ({
         );
     }
 
-    async function handleSaveEvent(planEvent: PlannerEvent): Promise<string | undefined> {
+    async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {
         return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
     }
 
-    async function handleDeleteEvents(planEvents: PlannerEvent[]) {
+    async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
         await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
     }
 
-    async function getItemsFromStorageObject(planner: Planner) {
+    async function getItemsFromStorageObject(planner: TPlanner) {
         return buildPlannerEvents(datestamp, planner, calendarEvents);
     }
 
-    const SortedEvents = useSortedList<PlannerEvent, Planner>({
+    const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: datestamp,
         getItemsFromStorageObject,
@@ -77,7 +79,7 @@ const TodayPlanner = ({
     });
 
     return (
-        <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, never>
+        <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
             listId={datestamp}
             items={SortedEvents.items}
             fillSpace

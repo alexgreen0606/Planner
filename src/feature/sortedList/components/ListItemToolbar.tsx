@@ -2,18 +2,19 @@ import GenericIcon, { GenericIconProps } from '@/components/GenericIcon';
 import { Dimensions, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 import globalStyles from '../../../theme/globalStyles';
 import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';
-import { ListItem, ListItemUpdateComponentProps } from '../types';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { ListItemUpdateComponentProps } from '../lib/listRowConfig';
 
-interface IconSet<T extends ListItem> extends GenericIconProps<T> {
+interface IconSet<T extends IListItem> extends GenericIconProps<T> {
     customIcon?: React.ReactNode;
 }
 
-export interface ToolbarProps<T extends ListItem> extends ListItemUpdateComponentProps<T> {
+export interface ToolbarProps<T extends IListItem> extends ListItemUpdateComponentProps<T> {
     iconSets: IconSet<T>[][];
     open: boolean;
 };
 
-const Toolbar = <T extends ListItem>({
+const Toolbar = <T extends IListItem>({
     item,
     iconSets,
     open,

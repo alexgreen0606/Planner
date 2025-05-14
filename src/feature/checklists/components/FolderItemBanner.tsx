@@ -1,18 +1,19 @@
-import { HEADER_HEIGHT } from '@/utils/sizeUtils';
 import ButtonText from '@/components/text/ButtonText';
 import CustomText from '@/components/text/CustomText';
-import useDimensions from '@/hooks/useDimensions';
-import { ItemStatus } from '@/feature/sortedList/constants';
 import globalStyles from '@/theme/globalStyles';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, View } from 'react-native';
-import { getFolderItem, updateFolderItem } from '../storage';
-import { FolderItem, FolderItemTypes } from '../types';
+import { getFolderItem, updateFolderItem } from '../../../storage/checklistsStorage';
+import { IFolderItem } from '@/types/listItems/IFolderItem';
+import { useDimensions } from '@/services/DimensionsProvider';
+import { HEADER_HEIGHT } from '@/constants/size';
+import { EItemStatus } from '@/enums/EItemStatus';
+import { EFolderItemType } from '@/enums/EFolderItemType';
 
 interface FolderItemBannerProps {
     itemId: string;
-    itemType: FolderItemTypes;
+    itemType: EFolderItemType;
     backButtonConfig: {
         pathname: string;
         label: string | undefined;
@@ -26,17 +27,17 @@ const FolderItemBanner = ({
     backButtonConfig
 }: FolderItemBannerProps) => {
     const router = useRouter();
-    const [item, setItem] = useState<FolderItem>(getFolderItem(itemId, itemType));
+    const [item, setItem] = useState<IFolderItem>(getFolderItem(itemId, itemType));
     const { SCREEN_WIDTH } = useDimensions();
 
-    const beginEditItem = () => setItem({ ...item, status: ItemStatus.EDIT });
+    const beginEditItem = () => setItem({ ...item, status: EItemStatus.EDIT });
     const updateItem = (text: string) => setItem({ ...item, value: text });
     const saveItem = () => {
-        updateFolderItem({ ...item, status: ItemStatus.STATIC });
+        updateFolderItem({ ...item, status: EItemStatus.STATIC });
         setItem(getFolderItem(itemId, itemType));
     };
 
-    const isItemEditing = item.status === ItemStatus.EDIT;
+    const isItemEditing = item.status === EItemStatus.EDIT;
 
     return (
         <View style={[

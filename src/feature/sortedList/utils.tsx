@@ -1,6 +1,6 @@
+import { EItemStatus } from "@/enums/EItemStatus";
+import { IListItem } from "@/types/listItems/core/TListItem";
 import { SharedValue } from "react-native-reanimated";
-import {  ListItem } from "./types";
-import { ItemStatus } from "./constants";
 
 // ------------- Sort ID Management -------------
 
@@ -44,7 +44,7 @@ import { ItemStatus } from "./constants";
  */
 export function generateSortId(
     referenceSortId: number,
-    listItems: ListItem[],
+    listItems: IListItem[],
     isChildId: boolean = false
 ): number {
     'worklet';
@@ -91,7 +91,7 @@ export function generateSortId(
 * @param items The full array of items in the list
 * @returns The sortId of the parent item, or -1 if this is the first item
 */
-export function getParentSortIdFromPositions<T extends ListItem>(
+export function getParentSortIdFromPositions<T extends IListItem>(
     item: T,
     positions: SharedValue<Record<string, number>>,
     items: T[]
@@ -116,7 +116,7 @@ export function getParentSortIdFromPositions<T extends ListItem>(
 * @param listItems The current list (MUST contain the item)
 * @returns The sort ID of the parent item
 */
-export function getParentSortId(item: ListItem, listItems: ListItem[]): number {
+export function getParentSortId(item: IListItem, listItems: IListItem[]): number {
     const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
     const itemIndex = sortedList.findIndex(existingItem => existingItem.id === item.id);
 
@@ -134,8 +134,8 @@ export function getParentSortId(item: ListItem, listItems: ListItem[]): number {
 * @param item The item to check
 * @returns Whether the item is a textfield
 */
-export function isItemTextfield(item: ListItem): boolean {
-    return [ItemStatus.NEW, ItemStatus.EDIT].includes(item.status);
+export function isItemTextfield(item: IListItem): boolean {
+    return [EItemStatus.NEW, EItemStatus.EDIT].includes(item.status);
 }
 
 // ------------- Position Management -------------
@@ -145,7 +145,7 @@ export function isItemTextfield(item: ListItem): boolean {
 * @param currentList The current list of items
 * @returns Record mapping item IDs to their positions
 */
-export function buildItemPositions<T extends ListItem>(currentList: T[]): Record<string, number> {
+export function buildItemPositions<T extends IListItem>(currentList: T[]): Record<string, number> {
     'worklet';
     return [...currentList].reduce<Record<string, number>>((acc, item, index) => {
         acc[item.id] = index;

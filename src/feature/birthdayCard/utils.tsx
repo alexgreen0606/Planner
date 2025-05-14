@@ -1,10 +1,10 @@
 import * as Contacts from 'expo-contacts';
 import * as Linking from 'expo-linking';
 import { EventChipProps } from '../../components/EventChip';
-import { Birthday } from './types';
-import { ItemStatus } from '../sortedList/constants';
+import { IBirthday } from '@/types/listItems/IBirthday';
+import { EItemStatus } from '@/enums/EItemStatus';
 
-export function eventChipToBirthday(chip: EventChipProps, datestamp: string): Birthday {
+export function eventChipToBirthday(chip: EventChipProps, datestamp: string): IBirthday {
     const age = chip.label.match(/\d+/);
     return {
         id: `${chip.label}-list_item-${age}`,
@@ -13,7 +13,7 @@ export function eventChipToBirthday(chip: EventChipProps, datestamp: string): Bi
         contacted: false,
         listId: datestamp,
         sortId: -1,
-        status: ItemStatus.STATIC,
+        status: EItemStatus.STATIC,
     }
 }
 

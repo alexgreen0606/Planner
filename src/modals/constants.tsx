@@ -1,1 +1,0 @@
-export const MODAL_INPUT_HEIGHT = 32;

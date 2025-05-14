@@ -9,7 +9,7 @@ import {
 } from 'react-native-reanimated';
 import { LIST_ITEM_TOOLBAR_HEIGHT } from '../constants';
 import { LIST_SPRING_CONFIG } from '../constants';
-import useDimensions from '../../../hooks/useDimensions';
+import { useDimensions } from '@/services/DimensionsProvider';
 
 interface KeyboardContextValue {
     keyboard: AnimatedKeyboardInfo;

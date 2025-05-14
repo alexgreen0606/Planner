@@ -2,19 +2,19 @@ import CustomText from '@/components/text/CustomText';
 import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import React, { useState } from 'react';
 import { View } from 'react-native';
+import Card from '@/components/Card';
+import { BIRTHDAY_STORAGE_ID } from '@/constants/storageIds';
+import { markBirthdayContacted } from '@/storage/birthdayStorage';
 import SortableList from '../sortedList';
 import useSortedList from '../sortedList/hooks/useSortedList';
 import AgeValue from './components/AgeValue';
-import { BIRTHDAY_STORAGE_ID } from './constants';
-import { markBirthdayContacted } from './storage';
-import { Birthday } from './types';
 import { extractNameFromBirthdayText, openBirthdayMessage } from './utils';
-import Card from '@/components/Card';
+import { IBirthday } from '@/types/listItems/IBirthday';
 
 // TODO: complete refactor and styling
 
 interface BirthdayChecklistProps {
-    birthdays: Birthday[];
+    birthdays: IBirthday[];
 };
 
 const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
@@ -29,7 +29,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
         return birthdays;
     }
 
-    async function contactBirthdayPerson(birthday: Birthday) {
+    async function contactBirthdayPerson(birthday: IBirthday) {
         const personName = extractNameFromBirthdayText(birthday.value);
         if (personName) {
             await openBirthdayMessage(personName);
@@ -37,7 +37,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
         markBirthdayContacted(birthday);
     }
 
-    const BirthdayList = useSortedList<Birthday, Birthday[]>({
+    const BirthdayList = useSortedList<IBirthday, IBirthday[]>({
         storageId: BIRTHDAY_STORAGE_ID,
         storageKey: todayDatestamp,
         getItemsFromStorageObject,
@@ -52,7 +52,7 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                 </CustomText>
             }>
                 {/* Birthday List */}
-                <SortableList<Birthday, never, never>
+                <SortableList<IBirthday, never, never>
                     listId={BIRTHDAY_STORAGE_ID}
                     staticList
                     disableDrag

@@ -2,9 +2,12 @@ import { uuid } from "expo-modules-core";
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
 import { EventChipProps } from "../../components/EventChip";
 import { extractNameFromBirthdayText, openMessage } from "../../feature/birthdayCard/utils";
-import { ItemStatus } from "../../feature/sortedList/constants";
 import { datestampToDayOfWeek, datestampToMidnightDate, generateSortIdByTime, isoToDatestamp, timeValueToIso } from "./timestampUtils";
-import { CalendarData, Planner, PlannerEvent, RecurringEvent } from "./types";
+import { EItemStatus } from "@/enums/EItemStatus";
+import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
+import { TPlanner } from "@/types/planner/TPlanner";
+import { TCalendarData } from "@/types/calendar/TCalendarData";
+import { IRecurringEvent } from "@/types/listItems/IRecurringEvent";
 
 // ---------- Data Model Generation ----------
 
@@ -27,7 +30,7 @@ function getCalendarIcon(calendarName: string) {
  * @param datestamp 
  * @returns 
  */
-function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): PlannerEvent {
+function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): IPlannerEvent {
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
     const eventStart = new Date(event.startDate);
@@ -46,7 +49,7 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
             multiDayEnd,
             multiDayStart
         },
-        status: ItemStatus.STATIC
+        status: EItemStatus.STATIC
     };
 }
 
@@ -74,7 +77,7 @@ function generateEventChip(event: CalendarEventReadable): EventChipProps {
 
     if (calendar.isPrimary || calendar.title === 'Calendar') {
         chipProps.planEvent = {
-            status: ItemStatus.STATIC,
+            status: EItemStatus.STATIC,
             sortId: 1,
             calendarId: event.id,
             value: event.title,
@@ -94,7 +97,7 @@ function generateEventChip(event: CalendarEventReadable): EventChipProps {
     return chipProps;
 }
 
-export function generatePlanner(datestamp: string): Planner {
+export function generatePlanner(datestamp: string): TPlanner {
     return {
         datestamp,
         title: datestampToDayOfWeek(datestamp),
@@ -179,7 +182,7 @@ export function generateEmptyCalendarDataMaps(datestamps: string[]) {
         datestamps.map((date) => [date, []])
     );
 
-    const plannersMap: Record<string, PlannerEvent[]> = Object.fromEntries(
+    const plannersMap: Record<string, IPlannerEvent[]> = Object.fromEntries(
         datestamps.map((date) => [date, []])
     );
 
@@ -190,7 +193,7 @@ export function generateEmptyCalendarDataMaps(datestamps: string[]) {
  *TODO: comment
  * @param datestamps - YYYY-MM-DD
  */
-export async function loadCalendarEventData(datestamps: string[]): Promise<CalendarData> {
+export async function loadCalendarEventData(datestamps: string[]): Promise<TCalendarData> {
     await getCalendarAccess();
 
     const calendarData = generateEmptyCalendarDataMaps(datestamps);
@@ -224,8 +227,8 @@ export async function loadCalendarEventData(datestamps: string[]): Promise<Calen
  * @returns - the new planner synced with the calendar
  */
 export function syncPlannerWithCalendar(
-    calendar: PlannerEvent[],
-    plannerEvents: PlannerEvent[],
+    calendar: IPlannerEvent[],
+    plannerEvents: IPlannerEvent[],
     timestamp: string
 ) {
     // console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
@@ -233,10 +236,10 @@ export function syncPlannerWithCalendar(
     // Loop over the existing planner, removing any calendar events that no longer exist
     // in the new device calendar. All existing linked events will also be updated to reflect the
     // calendar.
-    const newPlanner = plannerEvents.reduce<PlannerEvent[]>((accumulator, planEvent) => {
+    const newPlanner = plannerEvents.reduce<IPlannerEvent[]>((accumulator, planEvent) => {
 
         // This event isn't related to the calendar -> keep it
-        if (!planEvent.calendarId || planEvent.status === ItemStatus.HIDDEN) {
+        if (!planEvent.calendarId || planEvent.status === EItemStatus.HIDDEN) {
             return [...accumulator, planEvent];
         }
 
@@ -293,13 +296,13 @@ export function syncPlannerWithCalendar(
  * @returns - the new planner synced with the recurring events
  */
 export function syncPlannerWithRecurring(
-    recurringPlanner: RecurringEvent[],
-    plannerEvents: PlannerEvent[],
+    recurringPlanner: IRecurringEvent[],
+    plannerEvents: IPlannerEvent[],
     timestamp: string
 ) {
     // console.info('syncPlannerWithRecurring: START', { recurringPlanner, planner, timestamp })
 
-    function getRecurringEventTimeConfig(recEvent: RecurringEvent) {
+    function getRecurringEventTimeConfig(recEvent: IRecurringEvent) {
         return {
             startTime: timeValueToIso(timestamp, recEvent.startTime!),
             allDay: false,
@@ -310,17 +313,17 @@ export function syncPlannerWithRecurring(
 
     // Build the new planner out of the recurring planner. All recurring events will prioritize the
     // recurring planner's values.
-    const newPlanner = recurringPlanner.reduce<RecurringEvent[]>((accumulator, recEvent) => {
+    const newPlanner = recurringPlanner.reduce<IRecurringEvent[]>((accumulator, recEvent) => {
         const planEvent = plannerEvents.find(planEvent => planEvent.recurringId === recEvent.id);
 
-        if (planEvent?.status === ItemStatus.HIDDEN) {
+        if (planEvent?.status === EItemStatus.HIDDEN) {
             // This event has been manually deleted -> keep it deleted
             return [...accumulator, planEvent];
         }
 
         if (planEvent) {
             // This recurring event is in the current planner -> update it
-            const updatedEvent: PlannerEvent = {
+            const updatedEvent: IPlannerEvent = {
                 id: planEvent.id,
                 listId: timestamp,
                 status: planEvent.status,
@@ -348,7 +351,7 @@ export function syncPlannerWithRecurring(
             return updatedPlanner;
         } else {
             // This recurring event hasn't been added to the planner yet -> add it 
-            const newEvent: PlannerEvent = {
+            const newEvent: IPlannerEvent = {
                 id: uuid.v4(),
                 listId: timestamp,
                 recurringId: recEvent.id,

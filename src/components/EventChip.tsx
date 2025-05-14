@@ -1,17 +1,17 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useDeleteScheduler } from '../feature/sortedList/services/DeleteScheduler';
-import { useTimeModal } from '../modals/services/TimeModalProvider';
 import { useReload } from '../services/ReloadProvider';
-import { isValidPlatformColor } from '../theme/colors';
+import { isValidPlatformColor } from '../utils/colorUtils';
 import globalStyles from '../theme/globalStyles';
-import { saveEvent } from '../utils/calendarUtils/storage/plannerStorage';
-import { PlannerEvent } from '../utils/calendarUtils/types';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { saveEvent } from '@/storage/plannerStorage';
+import { useTimeModal } from './modal/services/TimeModalProvider';
 
 export interface EventChipProps {
-    planEvent?: PlannerEvent;
+    planEvent?: IPlannerEvent;
     iconConfig: GenericIconProps;
     backgroundPlatformColor?: string;
     color: string;
@@ -39,7 +39,7 @@ const EventChip = ({
         if (planEvent) onOpen(planEvent, handleSave);
     }
 
-    async function handleSave(updatedEvent: PlannerEvent) {
+    async function handleSave(updatedEvent: IPlannerEvent) {
         await saveEvent(updatedEvent);
         reloadPage();
     }
@@ -49,7 +49,7 @@ const EventChip = ({
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // The deleting event is the end event
-            (deleteItem as PlannerEvent).timeConfig?.multiDayEnd
+            (deleteItem as IPlannerEvent).timeConfig?.multiDayEnd
         );
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
 

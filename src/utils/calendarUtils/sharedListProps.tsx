@@ -1,9 +1,10 @@
+import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import TimeValue from "../../components/text/TimeValue";
 import Toolbar, { ToolbarProps } from "../../feature/sortedList/components/ListItemToolbar";
-import { ModifyItemConfig } from "../../feature/sortedList/types";
 import { isItemTextfield } from "../../feature/sortedList/utils";
 import { extractTimeValue, generateSortIdByTime, getEventTime } from "./timestampUtils";
-import { PlannerEvent, RecurringEvent } from "./types";
+import { IRecurringEvent } from "@/types/listItems/IRecurringEvent";
+import { ModifyItemConfig } from "@/feature/sortedList/lib/listRowConfig";
 
 /**
  * SHARED EVENT LIST PROPS
@@ -19,10 +20,10 @@ import { PlannerEvent, RecurringEvent } from "./types";
  */
 export function handleEventInput(
     text: string,
-    item: PlannerEvent | RecurringEvent,
-    currentList: (PlannerEvent | RecurringEvent)[],
+    item: IPlannerEvent | IRecurringEvent,
+    currentList: (IPlannerEvent | IRecurringEvent)[],
     datestamp?: string,
-): PlannerEvent | RecurringEvent {
+): IPlannerEvent | IRecurringEvent {
     const itemTime = getEventTime(item);
     if (!itemTime) {
         const { timeConfig, updatedText } = extractTimeValue(text, datestamp);
@@ -36,9 +37,9 @@ export function handleEventInput(
                 updatedList.push(newEvent);
             }
             if (datestamp) {
-                (newEvent as RecurringEvent).startTime = timeConfig.startTime;
+                (newEvent as IRecurringEvent).startTime = timeConfig.startTime;
             } else {
-                (newEvent as PlannerEvent).timeConfig = timeConfig;
+                (newEvent as IPlannerEvent).timeConfig = timeConfig;
             }
             newEvent.sortId = generateSortIdByTime(newEvent, updatedList);
             return newEvent;
@@ -53,10 +54,10 @@ export function handleEventInput(
  * If time logic is broken, the drag will be canceled.
  */
 export async function handleDragEnd(
-    item: PlannerEvent | RecurringEvent,
-    currentList: (PlannerEvent | RecurringEvent)[],
+    item: IPlannerEvent | IRecurringEvent,
+    currentList: (IPlannerEvent | IRecurringEvent)[],
     refetchItems: () => void,
-    saveItem: (item: PlannerEvent | RecurringEvent) => Promise<void | string>
+    saveItem: (item: IPlannerEvent | IRecurringEvent) => Promise<void | string>
 ) {
     const itemTime = getEventTime(item);
     if (itemTime) {
@@ -80,8 +81,8 @@ export async function handleDragEnd(
  * @getLeftIcon Prop: generates the config for the event time modal trigger icon.
  */
 export function generateTimeIconConfig(
-    event: PlannerEvent | RecurringEvent,
-    openTimeModal: (item: PlannerEvent | RecurringEvent) => void
+    event: IPlannerEvent | IRecurringEvent,
+    openTimeModal: (item: IPlannerEvent | IRecurringEvent) => void
 ) {
     const itemTime = getEventTime(event);
     return {
@@ -89,9 +90,9 @@ export function generateTimeIconConfig(
         onClick: () => openTimeModal(event),
         customIcon: (
             <TimeValue
-                allDay={!!(event as PlannerEvent).timeConfig?.allDay}
-                endEvent={!!(event as PlannerEvent).timeConfig?.multiDayEnd}
-                startEvent={!!(event as PlannerEvent).timeConfig?.multiDayStart}
+                allDay={!!(event as IPlannerEvent).timeConfig?.allDay}
+                endEvent={!!(event as IPlannerEvent).timeConfig?.multiDayEnd}
+                startEvent={!!(event as IPlannerEvent).timeConfig?.multiDayStart}
                 timeValue={itemTime!}
             />
         )
@@ -103,10 +104,10 @@ export function generateTimeIconConfig(
  * The toolbar allows for opening the time modal.
  */
 export function generateEventToolbar(
-    event: PlannerEvent | RecurringEvent,
-    openTimeModal: (event: PlannerEvent) => void,
+    event: IPlannerEvent | IRecurringEvent,
+    openTimeModal: (event: IPlannerEvent) => void,
     timeModalOpen: boolean
-): ModifyItemConfig<PlannerEvent | RecurringEvent, ToolbarProps<PlannerEvent | RecurringEvent>> {
+): ModifyItemConfig<IPlannerEvent | IRecurringEvent, ToolbarProps<IPlannerEvent | IRecurringEvent>> {
     return {
         component: Toolbar,
         props: {

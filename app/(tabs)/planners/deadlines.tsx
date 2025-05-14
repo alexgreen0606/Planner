@@ -2,13 +2,14 @@ import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import { DEADLINE_LIST_KEY } from '@/feature/deadlines/constants';
 import { deleteDeadlines, getDeadlines, saveDeadline } from '@/feature/deadlines/deadlineUtils';
-import { Deadline } from '@/feature/deadlines/types';
 import SortableList from '@/feature/sortedList';
 import Toolbar, { ToolbarProps } from '@/feature/sortedList/components/ListItemToolbar';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
+import { ModifyItemConfig } from '@/feature/sortedList/lib/listRowConfig';
 import { useScrollContainer } from '@/feature/sortedList/services/ScrollContainerProvider';
-import { ListItem, ModifyItemConfig } from '@/feature/sortedList/types';
 import { generateSortId, isItemTextfield } from '@/feature/sortedList/utils';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { Deadline } from '@/types/listItems/IDeadline';
 import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
@@ -25,7 +26,7 @@ const Deadlines = () => {
 
     // ------------- Utility Functions -------------
 
-    function initializeDeadline(item: ListItem) {
+    function initializeDeadline(item: IListItem) {
         const newSortId = generateSortId(-1, DeadlineItems.items);
         return {
             ...item,

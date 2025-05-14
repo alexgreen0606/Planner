@@ -1,7 +1,8 @@
-import { ItemStatus } from '@/feature/sortedList/constants';
+import { EItemStatus } from '@/enums/EItemStatus';
 import { generateSortId, getParentSortId } from '@/feature/sortedList/utils';
+import { IPlannerEvent, TimeConfig } from '@/types/listItems/IPlannerEvent';
+import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { DateTime } from 'luxon';
-import { PlannerEvent, RecurringEvent, TimeConfig } from './types';
 
 /**
  * Generates an array of datestamps encompassing the given start date, end date, and all days in between.
@@ -181,7 +182,7 @@ export function getNextSevenDayDatestamps(): string[] {
     return generateDatestampRange(tomorrow, sixDaysAfterTomorrow);
 }
 
-export function getEventTime(item: PlannerEvent | RecurringEvent | undefined): string | undefined {
+export function getEventTime(item: IPlannerEvent | IRecurringEvent | undefined): string | undefined {
     if (!item) return undefined;
     if ("timeConfig" in item) {
         return item.timeConfig?.multiDayEnd ? item.timeConfig.endTime : item.timeConfig?.startTime;
@@ -199,8 +200,8 @@ export function getEventTime(item: PlannerEvent | RecurringEvent | undefined): s
  * @returns - the new sort ID for the event
  */
 export function generateSortIdByTime(
-    event: PlannerEvent | RecurringEvent,
-    planner: (PlannerEvent | RecurringEvent)[]
+    event: IPlannerEvent | IRecurringEvent,
+    planner: (IPlannerEvent | IRecurringEvent)[]
 ): number {
     // console.info('generateSortIdByTime START', { event: {...event}, planner: [...planner] });
 
@@ -223,7 +224,7 @@ export function generateSortIdByTime(
     const eventTime = getEventTime(event);
 
     // The event does not need to account for a timestamp
-    if (!eventTime || event.status === ItemStatus.HIDDEN) return persistEventPosition();
+    if (!eventTime || event.status === EItemStatus.HIDDEN) return persistEventPosition();
 
     planner.sort((a, b) => a.sortId - b.sortId);
 

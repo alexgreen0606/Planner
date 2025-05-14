@@ -7,12 +7,13 @@ import { View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { NULL } from '../../../src/feature/checklists/constants';
 import PlannerCard from '../../../src/feature/plannerCard';
-import { getPlannerSet, getPlannerSetTitles } from '../../../src/feature/plannerSets/plannerSetsStorage';
+import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
 import { WeatherForecast } from '../../../src/feature/weather/utils';
 import { useReload } from '../../../src/services/ReloadProvider';
 import globalStyles from '../../../src/theme/globalStyles';
 import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/utils/calendarUtils/calendarUtils';
-import { CalendarData } from '../../../src/utils/calendarUtils/types';
+import { TCalendarData } from '@/types/calendar/TCalendarData';
+
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -96,7 +97,7 @@ const Planners = () => {
             "precipitationProbabilityMax": 41
         }
     });
-    const [calendarEventData, setCalendarEventData] = useState<CalendarData>(generateEmptyCalendarDataMaps(plannerDatestamps))
+    const [calendarEventData, setCalendarEventData] = useState<TCalendarData>(generateEmptyCalendarDataMaps(plannerDatestamps))
 
     const { registerReloadFunction } = useReload();
 

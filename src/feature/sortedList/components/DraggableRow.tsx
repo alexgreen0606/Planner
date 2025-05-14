@@ -1,7 +1,5 @@
 import GenericIcon from "@/components/GenericIcon";
 import ThinLine from "@/components/ThinLine";
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from "@/utils/sizeUtils";
-import useDimensions from "@/hooks/useDimensions";
 import { useMemo } from "react";
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
@@ -16,12 +14,16 @@ import Animated, {
     withSpring,
     withTiming
 } from "react-native-reanimated";
-import { AUTO_SCROLL_SPEED, ItemStatus, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "../constants";
+import { AUTO_SCROLL_SPEED, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "../constants";
 import { useDeleteScheduler } from "../services/DeleteScheduler";
 import { useScrollContainer } from "../services/ScrollContainerProvider";
-import { ListItem, ListItemIconConfig } from "../types";
 import { generateSortId, getParentSortIdFromPositions } from "../utils";
 import ListTextfield from "./ListTextfield";
+import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT } from "@/constants/size";
+import { useDimensions } from "@/services/DimensionsProvider";
+import { ListItemIconConfig } from "../lib/listRowConfig";
+import { IListItem } from "@/types/listItems/core/TListItem";
+import { EItemStatus } from "@/enums/EItemStatus";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -30,7 +32,7 @@ enum AutoScrollDirection {
     DOWN = 'DOWN'
 }
 
-export interface RowProps<T extends ListItem> {
+export interface RowProps<T extends IListItem> {
     item: T;
     items: T[];
     listLength: number;
@@ -53,7 +55,7 @@ export interface RowProps<T extends ListItem> {
  * A draggable row component for sortable lists that supports drag-to-reorder,
  * textfields, and icons.
  */
-const DraggableRow = <T extends ListItem>({
+const DraggableRow = <T extends IListItem>({
     positions,
     getTextfieldKey,
     item: staticItem,
@@ -136,7 +138,7 @@ const DraggableRow = <T extends ListItem>({
         if (item.value.trim() !== '') {
             saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
         } else {
-            if (item.status === ItemStatus.NEW) {
+            if (item.status === EItemStatus.NEW) {
                 setCurrentTextfield(undefined);
             } else {
                 onDeleteItem(item);
@@ -155,7 +157,6 @@ const DraggableRow = <T extends ListItem>({
     const sanitizeScrollOffset = (value: number) => {
         'worklet';
         const { min, max } = scrollOffsetBounds.value;
-        console.log(max, 'scroll offset max')
         return Math.max(min, Math.min(value, max));
     };
 
@@ -252,7 +253,7 @@ const DraggableRow = <T extends ListItem>({
         () => positions.value[item.id],
         (currPosition, prevPosition) => {
             if (currPosition !== prevPosition && !isDragging.value) {
-                if (isAwaitingInitialPosition.value || (item.status === ItemStatus.NEW)) {
+                if (isAwaitingInitialPosition.value || (item.status === EItemStatus.NEW)) {
                     top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
                     isAwaitingInitialPosition.value = false;
                 } else {

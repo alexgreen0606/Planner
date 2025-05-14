@@ -1,19 +1,19 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useScrollContainer } from '../services/ScrollContainerProvider';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ListItem } from '../types';
-import { ItemStatus } from '../constants';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReload } from '../../../services/ReloadProvider';
 import { useFocusEffect, usePathname } from 'expo-router';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { EItemStatus } from '@/enums/EItemStatus';
 
-type StorageHandlers<T extends ListItem> = {
+type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
     create: (item: T) => Promise<void> | void | Promise<string | undefined>;
     delete: (items: T[]) => Promise<void> | void;
 };
 
-interface SortedListConfig<T extends ListItem, S> {
+interface SortedListConfig<T extends IListItem, S> {
     storageId: string;
     storageKey: string;
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
@@ -25,7 +25,7 @@ interface SortedListConfig<T extends ListItem, S> {
     reloadTriggers?: any[];
 }
 
-const useSortedList = <T extends ListItem, S>({
+const useSortedList = <T extends IListItem, S>({
     storageKey,
     storageId,
     getItemsFromStorageObject,
@@ -136,7 +136,7 @@ const useSortedList = <T extends ListItem, S>({
         if (storageConfig) {
 
             // Handle the storage update directly
-            if (item.status === ItemStatus.NEW) {
+            if (item.status === EItemStatus.NEW) {
                 return await storageConfig.create(item);
             } else {
                 await storageConfig.update(item);
@@ -187,10 +187,10 @@ const useSortedList = <T extends ListItem, S>({
         if (isItemDeleting(item)) return;
         const togglingItem = currentTextfield?.id === item.id;
         if (currentTextfield && currentTextfield.value.trim() !== '') {
-            await persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
+            await persistItemToStorage({ ...currentTextfield, status: EItemStatus.STATIC });
         }
         if (!togglingItem) {
-            setCurrentTextfield({ ...item, status: ItemStatus.EDIT });
+            setCurrentTextfield({ ...item, status: EItemStatus.EDIT });
         } else {
             setCurrentTextfield(undefined);
         }

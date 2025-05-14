@@ -2,12 +2,12 @@ import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import FolderItemBanner from '../../../../../../src/feature/checklists/components/FolderItemBanner';
 import { NULL } from '../../../../../../src/feature/checklists/constants';
-import { getFolderFromStorage } from '../../../../../../src/feature/checklists/storage';
-import { FolderItemTypes } from '../../../../../../src/feature/checklists/types';
+import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 import SortedFolder from '../../../../../../src/feature/folderContents';
 import { ScrollContainerProvider } from '../../../../../../src/feature/sortedList/services/ScrollContainerProvider';
 import globalStyles from '@/theme/globalStyles';
 import { View } from 'react-native';
+import { EFolderItemType } from '@/enums/EFolderItemType';
 
 const Lists = () => {
   const router = useRouter();
@@ -22,10 +22,10 @@ const Lists = () => {
     [folderId]
   );
 
-  const onOpenItem = (id: string, type: FolderItemTypes) => {
-    if (type === FolderItemTypes.FOLDER) {
+  const onOpenItem = (id: string, type: EFolderItemType) => {
+    if (type === EFolderItemType.FOLDER) {
       router.push(`/lists/folder/${pageData.value}/${pageData.id}/${id}`);
-    } else if (type === FolderItemTypes.LIST) {
+    } else if (type === EFolderItemType.LIST) {
       router.push(`/lists/checklist/${pageData.value}/${id}`);
     }
   };
@@ -41,7 +41,7 @@ const Lists = () => {
               hide: prevFolderName === NULL,
               label: prevFolderName
             }}
-            itemType={FolderItemTypes.FOLDER}
+            itemType={EFolderItemType.FOLDER}
           />
         }
       >

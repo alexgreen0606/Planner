@@ -55,7 +55,6 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
             .slice(0, activeTab.index)
             .reduce((acc, width) => acc + width + TAB_SPACING, 0) + INDICATOR_GAP;
         const targetWidth = tabWidths.current[activeTab.pathname] || 0;
-        console.log(targetLeft, targetWidth)
 
         indicatorLeft.value = withTiming(targetLeft, { duration: 300 });
         indicatorWidth.value = withTiming(targetWidth, { duration: 300 });

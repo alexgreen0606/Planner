@@ -1,17 +1,18 @@
+import { saveEvent, deleteEvents } from '@/storage/plannerStorage';
 import { isItemTextfield } from '../../feature/sortedList/utils';
-import { deleteEvents, saveEvent } from './storage/plannerStorage';
 import { generateSortIdByTime } from './timestampUtils';
-import { Planner, PlannerEvent } from './types';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { TPlanner } from '@/types/planner/TPlanner';
 
 export function getEventsFromPlanner(
-    planner: Planner,
-): PlannerEvent[] {
+    planner: TPlanner,
+): IPlannerEvent[] {
     return planner.events;
 }
 
 export function setEventsInPlanner(
-    events: PlannerEvent[],
-    planner: Planner,
+    events: IPlannerEvent[],
+    planner: TPlanner,
 ) {
     return { planner, events };
 }
@@ -23,11 +24,11 @@ export function setEventsInPlanner(
  * @param setTimeModalOpen - Function to set the time modal open state
  */
 export async function openTimeModal(
-    planEvent: PlannerEvent,
-    toggleItemEdit: (event: PlannerEvent) => Promise<void>,
-    openTimeModal: (item: PlannerEvent, saveItem: (item: PlannerEvent) => Promise<void>) => void,
-    currentList: PlannerEvent[],
-    setCurrentTextfield: React.Dispatch<PlannerEvent>
+    planEvent: IPlannerEvent,
+    toggleItemEdit: (event: IPlannerEvent) => Promise<void>,
+    openTimeModal: (item: IPlannerEvent, saveItem: (item: IPlannerEvent) => Promise<void>) => void,
+    currentList: IPlannerEvent[],
+    setCurrentTextfield: React.Dispatch<IPlannerEvent>
 ) {
     if (!isItemTextfield(planEvent)) {
         await toggleItemEdit(planEvent);
@@ -43,9 +44,9 @@ export async function openTimeModal(
  * @param setCurrentTextfield - Function to save the current textfield
  */
 async function handleTimeModalSave(
-    updatedEvent: PlannerEvent,
-    currentList: PlannerEvent[],
-    setCurrentTextfield: React.Dispatch<PlannerEvent>
+    updatedEvent: IPlannerEvent,
+    currentList: IPlannerEvent[],
+    setCurrentTextfield: React.Dispatch<IPlannerEvent>
 ) {
     // TODO: save textfield and create new
     const updatedList = [...currentList];
@@ -66,9 +67,9 @@ async function handleTimeModalSave(
  * @param items - The current list items
  */
 export async function saveEventLoadChips(
-    planEvent: PlannerEvent,
+    planEvent: IPlannerEvent,
     reloadChips: () => Promise<void>,
-    items: PlannerEvent[]
+    items: IPlannerEvent[]
 ) {
     const eventCalendarId = await saveEvent(planEvent);
     if (planEvent.calendarId || (items.find(i => i.id === planEvent.id)?.calendarId)) {
@@ -85,9 +86,9 @@ export async function saveEventLoadChips(
  * @param getItems - Optional function to get all items (for weekly planner)
  */
 export async function deleteEventsLoadChips(
-    planEvents: PlannerEvent[],
+    planEvents: IPlannerEvent[],
     reloadChips: () => Promise<void>,
-    items: PlannerEvent[]
+    items: IPlannerEvent[]
 ) {
     await deleteEvents(planEvents);
     if (planEvents.some(item => item.calendarId) || (planEvents.some(planEvent => items.find(i => i.id === planEvent.id)?.calendarId))) {

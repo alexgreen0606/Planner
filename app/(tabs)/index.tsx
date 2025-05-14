@@ -1,8 +1,6 @@
 import EventChip, { EventChipProps } from '@/components/EventChip';
 import BirthdayCard from '@/feature/birthdayCard';
-import { BIRTHDAY_STORAGE_ID } from '@/feature/birthdayCard/constants';
-import { getContactedBirthdaysByDatestamp } from '@/feature/birthdayCard/storage';
-import { Birthday } from '@/feature/birthdayCard/types';
+import { getContactedBirthdaysByDatestamp } from '@/storage/birthdayStorage';
 import { eventChipToBirthday, extractNameFromBirthdayText } from '@/feature/birthdayCard/utils';
 import { ScrollContainerProvider } from '@/feature/sortedList/services/ScrollContainerProvider';
 import TodayPlanner from '@/feature/todayPlans';
@@ -10,15 +8,17 @@ import TodayBanner from '@/feature/todayPlans/TodayBanner';
 import globalStyles from '@/theme/globalStyles';
 import { loadCalendarEventData } from '@/utils/calendarUtils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
-import { PlannerEvent } from '@/utils/calendarUtils/types';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
+import { BIRTHDAY_STORAGE_ID } from '@/constants/storageIds';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { IBirthday } from '@/types/listItems/IBirthday';
 
 interface TodayData {
-  planner: PlannerEvent[];
+  planner: IPlannerEvent[];
   chips: EventChipProps[];
-  uncontactedBirthdays: Birthday[];
+  uncontactedBirthdays: IBirthday[];
 }
 
 const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
@@ -42,7 +42,7 @@ const Today = () => {
 
     const contactedBirthdayPersons = getContactedBirthdaysByDatestamp(todayDatestamp);
 
-    const uncontactedBirthdays: Birthday[] = [];
+    const uncontactedBirthdays: IBirthday[] = [];
     chipsMap[todayDatestamp].forEach((chip) => {
       if (
         // The chip is a birthday chip

@@ -5,17 +5,18 @@ import { View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import globalStyles from '../../../theme/globalStyles';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../utils/calendarUtils/sharedListProps';
-import { PLANNER_STORAGE_ID, RecurringEvent } from '../../../utils/calendarUtils/types';
 import { generateCheckboxIconConfig } from '../../sortedList/commonProps';
-import { ItemStatus } from '../../sortedList/constants';
 import useSortedList from '../../sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '../../sortedList/services/DeleteScheduler';
 import { useScrollContainer } from '../../sortedList/services/ScrollContainerProvider';
 import { isItemTextfield } from '../../sortedList/utils';
-import { RecurringPlannerKeys } from '../constants';
+import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
+import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
+import { EItemStatus } from '@/enums/EItemStatus';
 
 interface SortedRecurringPlannerProps {
-    plannerKey: RecurringPlannerKeys;
+    plannerKey: ERecurringPlannerKeys;
 }
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
@@ -30,7 +31,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
-    async function toggleTimeModal(item: RecurringEvent) {
+    async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
             await SortedEvents.toggleItemEdit(item);
         setTimeModalOpen(curr => !curr);
@@ -63,23 +64,23 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         toggleTimeModal(currentTextfield);
     };
 
-    const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>({
+    const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: plannerKey
     });
 
     return (
         <View style={globalStyles.blackFilledSpace}>
-            <SortableList<RecurringEvent, never, never>
+            <SortableList<IRecurringEvent, never, never>
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
-                onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
+                onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: EItemStatus.STATIC })}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}
-                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as RecurringEvent}
+                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{

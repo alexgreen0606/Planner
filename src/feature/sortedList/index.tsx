@@ -5,16 +5,18 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import uuid from 'react-native-uuid';
 import DraggableRow from './components/DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './components/EmptyLabel';
-import { ItemStatus, LIST_ITEM_HEIGHT } from './constants';
+import { LIST_ITEM_HEIGHT } from './constants';
 import { useKeyboard } from './services/KeyboardProvider';
 import { useScrollContainer } from './services/ScrollContainerProvider';
-import { ListItem, ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from './types';
 import { buildItemPositions, generateSortId } from './utils';
+import { EItemStatus } from '@/enums/EItemStatus';
+import { ListItemUpdateComponentProps, ListItemIconConfig, ModifyItemConfig } from './lib/listRowConfig';
+import { IListItem } from '@/types/listItems/core/TListItem';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
 export interface DraggableListProps<
-    T extends ListItem,
+    T extends IListItem,
     P extends ListItemUpdateComponentProps<T> = never,
     M extends ListItemUpdateComponentProps<T> = never,
 > {
@@ -32,7 +34,7 @@ export interface DraggableListProps<
     getToolbar?: (item: T) => ModifyItemConfig<T, P>;
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
-    initializeItem?: (item: ListItem) => T;
+    initializeItem?: (item: IListItem) => T;
     customIsItemDeleting?: (item: T) => boolean;
     hideKeyboard?: boolean;
     isLoading?: boolean;
@@ -42,7 +44,7 @@ export interface DraggableListProps<
 }
 
 const SortableList = <
-    T extends ListItem,
+    T extends IListItem,
     P extends ListItemUpdateComponentProps<T>,
     M extends ListItemUpdateComponentProps<T>
 >({
@@ -92,9 +94,9 @@ const SortableList = <
      * @returns Array of list items sorted by sortId
      */
     function buildFullList() {
-        const fullList = items.filter(item => item.status !== ItemStatus.HIDDEN);
+        const fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
         if (currentTextfield?.listId === listId) {
-            if (currentTextfield?.status === ItemStatus.NEW) {
+            if (currentTextfield?.status === EItemStatus.NEW) {
                 fullList.push(currentTextfield);
             } else {
                 const textfieldIndex = fullList.findIndex(item => item.id === currentTextfield.id);
@@ -144,10 +146,10 @@ const SortableList = <
             return;
         }
 
-        let newTextfield: ListItem = {
+        let newTextfield: IListItem = {
             id: uuid.v4(),
             sortId: generateSortId(referenceSortId, currentList, isChildId),
-            status: ItemStatus.NEW,
+            status: EItemStatus.NEW,
             listId: listId,
             value: '',
         };

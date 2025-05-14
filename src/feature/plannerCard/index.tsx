@@ -5,13 +5,10 @@ import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
 import EventChip, { EventChipProps } from '../../components/EventChip';
-import { useTimeModal } from '../../modals/services/TimeModalProvider';
 import globalStyles from '../../theme/globalStyles';
 import { generatePlanner } from '../../utils/calendarUtils/calendarUtils';
 import { generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../utils/calendarUtils/sharedListProps';
 import { deleteEventsLoadChips, openTimeModal, saveEventLoadChips } from '../../utils/calendarUtils/sharedListUtils';
-import { buildPlannerEvents } from '../../utils/calendarUtils/storage/plannerStorage';
-import { Planner, PLANNER_STORAGE_ID, PlannerEvent } from '../../utils/calendarUtils/types';
 import SortableList from '../sortedList';
 import { generateCheckboxIconConfig } from '../sortedList/commonProps';
 import { ToolbarProps } from '../sortedList/components/ListItemToolbar';
@@ -21,10 +18,15 @@ import { useDeleteScheduler } from '../sortedList/services/DeleteScheduler';
 import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
 import { WeatherForecast } from '../weather/utils';
 import DayBanner from './components/DayBanner';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { useTimeModal } from '@/components/modal/services/TimeModalProvider';
+import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { buildPlannerEvents } from '@/storage/plannerStorage';
+import { TPlanner } from '@/types/planner/TPlanner';
 
 interface PlannerCardProps {
     datestamp: string;
-    calendarEvents: PlannerEvent[];
+    calendarEvents: IPlannerEvent[];
     eventChips: EventChipProps[];
     forecast?: WeatherForecast;
     loadAllExternalData: () => Promise<void>;
@@ -55,7 +57,7 @@ const PlannerCard = ({
 
     // ------------- Utility Functions -------------
 
-    function isEventDeleting(planEvent: PlannerEvent) {
+    function isEventDeleting(planEvent: IPlannerEvent) {
         return pendingDeleteItems.some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
@@ -75,7 +77,7 @@ const PlannerCard = ({
 
     // ------------- List Management Utils -------------
 
-    async function handleOpenTimeModal(item: PlannerEvent) {
+    async function handleOpenTimeModal(item: IPlannerEvent) {
         await openTimeModal(
             item,
             SortedEvents.toggleItemEdit,
@@ -85,19 +87,19 @@ const PlannerCard = ({
         );
     }
 
-    async function handleSaveEvent(planEvent: PlannerEvent): Promise<string | undefined> {
+    async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {
         return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
     }
 
-    async function handleDeleteEvent(planEvents: PlannerEvent[]) {
+    async function handleDeleteEvent(planEvents: IPlannerEvent[]) {
         await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
     }
 
-    const getItemsFromStorageObject = (planner: Planner) => {
+    const getItemsFromStorageObject = (planner: TPlanner) => {
         return buildPlannerEvents(datestamp, planner, calendarEvents);
     };
 
-    const SortedEvents = useSortedList<PlannerEvent, Planner>({
+    const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: datestamp,
         getItemsFromStorageObject,
@@ -114,7 +116,7 @@ const PlannerCard = ({
         <Card
             header={
                 <DayBanner
-                    planner={SortedEvents.storageObject as Planner}
+                    planner={SortedEvents.storageObject as TPlanner}
                     toggleCollapsed={toggleCollapsed}
                     forecast={forecast}
                 />
@@ -133,7 +135,7 @@ const PlannerCard = ({
                 </View>
             }
         >
-            <SortableList<PlannerEvent, ToolbarProps<PlannerEvent>, never>
+            <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
                 listId={datestamp}
                 items={SortedEvents.items}
                 isLoading={collapsed}

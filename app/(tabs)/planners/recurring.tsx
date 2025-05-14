@@ -4,23 +4,24 @@ import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import RecurringPlanner from '../../../src/feature/recurringPlanner/components/RecurringPlanner';
 import RecurringWeekdayPlanner from '../../../src/feature/recurringPlanner/components/RecurringWeekdayPlanner';
-import { RecurringPlannerKeys } from '../../../src/feature/recurringPlanner/constants';
+
 import globalStyles from '../../../src/theme/globalStyles';
+import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 
 type RecurringOption = {
     label: string;
-    value: RecurringPlannerKeys;
+    value: ERecurringPlannerKeys;
 }
 
 const RecurringPlanners = () => {
     const recurringPlannerOptions = useMemo(() => {
-        return Object.entries(RecurringPlannerKeys).map(([value, label]) => {
-            return { label, value: value as RecurringPlannerKeys }
+        return Object.entries(ERecurringPlannerKeys).map(([value, label]) => {
+            return { label, value: value as ERecurringPlannerKeys }
         })
     }, []);
 
     const [recurringModalOpen, setRecurringModalOpen] = useState(false);
-    const [selectedRecurring, setSelectedRecurring] = useState(RecurringPlannerKeys.WEEKDAYS);
+    const [selectedRecurring, setSelectedRecurring] = useState(ERecurringPlannerKeys.WEEKDAYS);
 
     function toggleRecurringModalOpen() {
         setRecurringModalOpen(curr => !curr);
@@ -44,7 +45,7 @@ const RecurringPlanners = () => {
             </View>
 
             {/* Recurring Planner Events */}
-            {selectedRecurring === RecurringPlannerKeys.WEEKDAYS ?
+            {selectedRecurring === ERecurringPlannerKeys.WEEKDAYS ?
                 <RecurringWeekdayPlanner key='weekday-recurring-planner' /> :
                 <RecurringPlanner plannerKey={selectedRecurring} />
             }

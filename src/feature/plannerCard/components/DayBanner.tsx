@@ -1,14 +1,14 @@
+import CustomText from '@/components/text/CustomText';
+import WeatherDisplay from '@/feature/weather';
+import { WeatherForecast } from '@/feature/weather/utils';
+import globalStyles from '@/theme/globalStyles';
+import { TPlanner } from '@/types/planner/TPlanner';
 import { datestampToMonthDate, getTomorrowDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
-import CustomText from '../../../components/text/CustomText';
-import globalStyles from '../../../theme/globalStyles';
-import { Planner } from '../../../utils/calendarUtils/types';
-import WeatherDisplay from '../../weather';
-import { WeatherForecast } from '../../weather/utils';
 
 interface DayBannerProps {
-    planner: Planner;
+    planner: TPlanner;
     toggleCollapsed: () => void;
     forecast?: WeatherForecast;
 }

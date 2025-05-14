@@ -1,32 +1,28 @@
+import { GenericIconProps } from '@/components/GenericIcon';
+import CustomText from '@/components/text/CustomText';
+import { selectableColors } from '@/constants/selectableColors';
+import { getFolderFromStorage, getFolderItems, updateFolderItem, createFolderItem, deleteFolderItem } from '@/storage/checklistsStorage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import CustomText from '../../components/text/CustomText';
-import { selectableColors } from '../../theme/colors';
-import { LISTS_STORAGE_ID } from '../checklists/constants';
-import {
-    createFolderItem,
-    deleteFolderItem,
-    getFolderFromStorage,
-    getFolderItems,
-    updateFolderItem,
-} from '../checklists/storage';
-import { Folder, FolderItem, FolderItemTypes } from '../checklists/types';
-import Toolbar, { ToolbarProps } from '../sortedList/components/ListItemToolbar';
-import { ItemStatus } from '../sortedList/constants';
-import useSortedList from '../sortedList/hooks/useSortedList';
-import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
-import { ListItem, ModifyItemConfig } from '../sortedList/types';
-import { generateSortId, isItemTextfield } from '../sortedList/utils';
-
-import { GenericIconProps } from '@/components/GenericIcon';
 import { Alert } from 'react-native';
+import { LISTS_STORAGE_ID } from '../checklists/constants';
 import SortableList from '../sortedList';
+import Toolbar, { ToolbarProps } from '../sortedList/components/ListItemToolbar';
+import useSortedList from '../sortedList/hooks/useSortedList';
+import { ModifyItemConfig } from '../sortedList/lib/listRowConfig';
+import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
+import { generateSortId, isItemTextfield } from '../sortedList/utils';
+import { IFolderItem } from '@/types/listItems/IFolderItem';
+import { EFolderItemType } from '@/enums/EFolderItemType';
+import { IFolder } from '@/types/checklists/IFolder';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { EItemStatus } from '@/enums/EItemStatus';
 
 interface SortedFolderProps {
     folderId: string;
-    handleOpenItem: (id: string, type: FolderItemTypes) => void;
+    handleOpenItem: (id: string, type: EFolderItemType) => void;
     parentClickTrigger: number;
-    parentFolderData?: Folder;
+    parentFolderData?: IFolder;
 };
 
 const SortedFolder = ({
@@ -50,7 +46,7 @@ const SortedFolder = ({
         if (parentClickTrigger > 0) {
 
             // Handle parent folder click
-            if (currentTextfield?.status === ItemStatus.TRANSFER) {
+            if (currentTextfield?.status === EItemStatus.TRANSFER) {
                 handleItemTransfer();
                 return;
 
@@ -60,25 +56,25 @@ const SortedFolder = ({
         }
     }, [parentClickTrigger]);
 
-    function initializeEmptyFolder(newItem: ListItem) {
+    function initializeEmptyFolder(newItem: IListItem) {
         return {
             ...newItem,
             childrenCount: 0,
             listId: folderId,
-            type: FolderItemTypes.FOLDER,
+            type: EFolderItemType.FOLDER,
             platformColor: 'systemBrown',
         }
     };
 
-    function beginItemTransfer(item: FolderItem) {
-        setCurrentTextfield({ ...item, status: ItemStatus.TRANSFER });
+    function beginItemTransfer(item: IFolderItem) {
+        setCurrentTextfield({ ...item, status: EItemStatus.TRANSFER });
     }
 
     /**
      * Transfers the textfield item to a new folder.
      * @param destination - the folder being transferred to
      */
-    const handleItemTransfer = (destination?: FolderItem) => {
+    const handleItemTransfer = (destination?: IFolderItem) => {
         if (!destination && !parentFolderData?.id || !currentTextfield) return;
         const destinationId = destination ? destination.id : parentFolderData?.id;
 
@@ -86,7 +82,7 @@ const SortedFolder = ({
         const destinationItems = getFolderItems(
             destination ? getFolderFromStorage(destination.id) : parentFolderData!
         );
-        updateFolderItem({ ...currentTextfield, status: ItemStatus.STATIC, listId: destinationId, sortId: generateSortId(-1, destinationItems) });
+        updateFolderItem({ ...currentTextfield, status: EItemStatus.STATIC, listId: destinationId, sortId: generateSortId(-1, destinationItems) });
         setCurrentTextfield(undefined);
     };
 
@@ -95,22 +91,22 @@ const SortedFolder = ({
      * Otherwise, the focused item will be saved and the clicked item will be opened.
      * @param item - the item that was clicked
      */
-    const handleItemClick = (item: FolderItem) => {
-        if (currentTextfield && currentTextfield.status === ItemStatus.TRANSFER) {
+    const handleItemClick = (item: IFolderItem) => {
+        if (currentTextfield && currentTextfield.status === EItemStatus.TRANSFER) {
             if (item.id === currentTextfield.id) {
-                setCurrentTextfield({ ...currentTextfield, status: ItemStatus.EDIT });
-            } else if (item.type === FolderItemTypes.FOLDER) {
+                setCurrentTextfield({ ...currentTextfield, status: EItemStatus.EDIT });
+            } else if (item.type === EFolderItemType.FOLDER) {
                 handleItemTransfer(item);
             }
             return;
         } else if (currentTextfield) {
-            SortedItems.persistItemToStorage({ ...currentTextfield, status: ItemStatus.STATIC });
+            SortedItems.persistItemToStorage({ ...currentTextfield, status: EItemStatus.STATIC });
         }
         handleOpenItem(item.id, item.type);
     };
 
     // Helper function to create the color selection icon set
-    const createColorSelectionIconSet = (item: FolderItem): GenericIconProps<FolderItem>[] => {
+    const createColorSelectionIconSet = (item: IFolderItem): GenericIconProps<IFolderItem>[] => {
         return Object.values(selectableColors).map(color => ({
             type: item.platformColor === color ? 'circleFilled' : 'circle',
             platformColor: color,
@@ -118,8 +114,8 @@ const SortedFolder = ({
         }));
     };
 
-    const getItemToolbarConfig = (item: FolderItem): ModifyItemConfig<FolderItem, ToolbarProps<FolderItem>> => {
-        const isNew = item.status === ItemStatus.NEW;
+    const getItemToolbarConfig = (item: IFolderItem): ModifyItemConfig<IFolderItem, ToolbarProps<IFolderItem>> => {
+        const isNew = item.status === EItemStatus.NEW;
         const isOpen = isItemTextfield(item);
 
         return {
@@ -131,13 +127,13 @@ const SortedFolder = ({
                         [
                             {
                                 type: 'folder',
-                                onClick: () => setCurrentTextfield({ ...item, type: FolderItemTypes.FOLDER }),
-                                platformColor: item.type === FolderItemTypes.FOLDER ? item.platformColor : 'secondaryLabel'
+                                onClick: () => setCurrentTextfield({ ...item, type: EFolderItemType.FOLDER }),
+                                platformColor: item.type === EFolderItemType.FOLDER ? item.platformColor : 'secondaryLabel'
                             },
                             {
                                 type: 'list',
-                                onClick: () => setCurrentTextfield({ ...item, type: FolderItemTypes.LIST }),
-                                platformColor: item.type === FolderItemTypes.LIST ? item.platformColor : 'secondaryLabel'
+                                onClick: () => setCurrentTextfield({ ...item, type: EFolderItemType.LIST }),
+                                platformColor: item.type === EFolderItemType.LIST ? item.platformColor : 'secondaryLabel'
                             }
                         ],
                         createColorSelectionIconSet(item)
@@ -185,14 +181,14 @@ const SortedFolder = ({
         };
     };
 
-    const isItemTransfering = (item: FolderItem) => item.status === ItemStatus.TRANSFER;
-    const isTransferMode = () => currentTextfield?.status === ItemStatus.TRANSFER;
-    const getIconType = (item: FolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
-    const getIconPlatformColor = (item: FolderItem) => isItemTransfering(item) ?
-        'systemBlue' : (item.type === FolderItemTypes.LIST && isTransferMode()) ?
+    const isItemTransfering = (item: IFolderItem) => item.status === EItemStatus.TRANSFER;
+    const isTransferMode = () => currentTextfield?.status === EItemStatus.TRANSFER;
+    const getIconType = (item: IFolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
+    const getIconPlatformColor = (item: IFolderItem) => isItemTransfering(item) ?
+        'systemBlue' : (item.type === EFolderItemType.LIST && isTransferMode()) ?
             'secondaryLabel' : item.platformColor;
             
-    const SortedItems = useSortedList<FolderItem, Folder>({
+    const SortedItems = useSortedList<IFolderItem, IFolder>({
         storageId: LISTS_STORAGE_ID,
         storageKey: folderId,
         getItemsFromStorageObject: getFolderItems,
@@ -210,7 +206,7 @@ const SortedFolder = ({
     });
 
     return (
-        <SortableList<FolderItem, ToolbarProps<FolderItem>, never>
+        <SortableList<IFolderItem, ToolbarProps<IFolderItem>, never>
             listId={folderId}
             items={SortedItems.items}
             fillSpace
@@ -222,7 +218,7 @@ const SortedFolder = ({
             initializeItem={initializeEmptyFolder}
             onContentClick={handleItemClick}
             getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
-                (isTransferMode() && item.type === FolderItemTypes.LIST) ? 'systemGray3' : 'label'}
+                (isTransferMode() && item.type === EFolderItemType.LIST) ? 'systemGray3' : 'label'}
             getRightIconConfig={item => ({
                 customIcon:
                     <CustomText type='label'>

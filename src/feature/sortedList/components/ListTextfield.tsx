@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
-import { ListItem } from '../types';
 import { useScrollContainer } from '../services/ScrollContainerProvider';
 import { runOnJS, SharedValue, useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useKeyboard } from '../services/KeyboardProvider';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '../constants';
+import { IListItem } from '@/types/listItems/core/TListItem';
 
-interface ListTextfieldProps<T extends ListItem> {
+interface ListTextfieldProps<T extends IListItem> {
     item: T;
     onChange: (newText: string) => void;
     onSubmit: (blurred: boolean) => void;
@@ -15,7 +15,7 @@ interface ListTextfieldProps<T extends ListItem> {
     customStyle: TextStyle;
 }
 
-const ListTextfield = <T extends ListItem>({
+const ListTextfield = <T extends IListItem>({
     item,
     onChange,
     onSubmit,

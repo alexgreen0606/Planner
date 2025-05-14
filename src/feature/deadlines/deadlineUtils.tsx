@@ -1,12 +1,12 @@
 import { getDatestampThreeYearsFromToday, getTodayDatestamp } from "@/utils/calendarUtils/timestampUtils";
 import ReactNativeCalendarEvents from "react-native-calendar-events";
 import { getCalendarAccess } from "../../utils/calendarUtils/calendarUtils";
-import { CalendarDetails } from "../../utils/calendarUtils/types";
-import { ItemStatus } from "../sortedList/constants";
 import { DEADLINE_LIST_KEY } from "./constants";
-import { Deadline } from "./types";
+import { Deadline } from "@/types/listItems/IDeadline";
+import { TCalendarDetails } from "@/types/calendar/TCalendarDetails";
+import { EItemStatus } from "@/enums/EItemStatus";
 
-async function getDeadlineCalendarDetails(): Promise<CalendarDetails> {
+async function getDeadlineCalendarDetails(): Promise<TCalendarDetails> {
     await getCalendarAccess();
     const calendars = await ReactNativeCalendarEvents.findCalendars();
     const deadlineCalendar = calendars.find(calendar => calendar.title === 'Deadlines');
@@ -44,7 +44,7 @@ export async function getDeadlines(): Promise<Deadline[]> {
         value: deadlineEvent.title,
         sortId: i + 1,
         listId: DEADLINE_LIST_KEY,
-        status: ItemStatus.STATIC,
+        status: EItemStatus.STATIC,
         startTime: deadlineEvent.startDate
     }));
 };

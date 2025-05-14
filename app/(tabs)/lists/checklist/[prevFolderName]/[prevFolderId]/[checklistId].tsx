@@ -1,18 +1,19 @@
 import FolderItemBanner from '@/feature/checklists/components/FolderItemBanner';
 import { LISTS_STORAGE_ID } from '@/feature/checklists/constants';
-import { Checklist, FolderItemTypes } from '@/feature/checklists/types';
 import SortableList from '@/feature/sortedList';
 import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
-import { ItemStatus } from '@/feature/sortedList/constants';
+import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '@/feature/sortedList/services/DeleteScheduler';
 import { ScrollContainerProvider } from '@/feature/sortedList/services/ScrollContainerProvider';
-import { ListItem } from '@/feature/sortedList/types';
 import { isItemTextfield } from '@/feature/sortedList/utils';
 import globalStyles from '@/theme/globalStyles';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { IChecklist } from '@/types/checklists/IChecklist';
+import { EFolderItemType } from '@/enums/EFolderItemType';
 
 const ChecklistScreen = () => {
     const { checklistId, prevFolderName, prevFolderId } = useLocalSearchParams<{
@@ -23,15 +24,15 @@ const ChecklistScreen = () => {
 
     const { isItemDeleting } = useDeleteScheduler();
 
-    function getItemsFromStorageObject(storageObject: Checklist) {
+    function getItemsFromStorageObject(storageObject: IChecklist) {
         return storageObject.items;
     }
 
-    function setItemsInStorageObject(newItems: ListItem[], currentObject: Checklist) {
+    function setItemsInStorageObject(newItems: IListItem[], currentObject: IChecklist) {
         return { ...currentObject, items: newItems };
     }
 
-    const SortedItems = useSortedList<ListItem, Checklist>({
+    const SortedItems = useSortedList<IListItem, IChecklist>({
         storageId: LISTS_STORAGE_ID,
         storageKey: checklistId,
         getItemsFromStorageObject,
@@ -48,11 +49,11 @@ const ChecklistScreen = () => {
                             pathname: `/lists/folder/${prevFolderName}/${prevFolderId}`,
                             label: prevFolderName
                         }}
-                        itemType={FolderItemTypes.LIST}
+                        itemType={EFolderItemType.LIST}
                     />
                 }
             >
-                <SortableList<ListItem, never, never>
+                <SortableList<IListItem, never, never>
                     listId={checklistId}
                     items={SortedItems.items}
                     onDragEnd={SortedItems.persistItemToStorage}
@@ -60,8 +61,8 @@ const ChecklistScreen = () => {
                     onDeleteItem={SortedItems.deleteSingleItemFromStorage}
                     getTextfieldKey={item => `${item.id}-${item.sortId}`}
                     getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, isItemDeleting(item))}
-                    onSaveTextfield={(updatedItem: ListItem) => {
-                        const item = { ...updatedItem, status: isItemTextfield(updatedItem) ? ItemStatus.STATIC : updatedItem.status }
+                    onSaveTextfield={(updatedItem) => {
+                        const item = { ...updatedItem, status: isItemTextfield(updatedItem) ? EItemStatus.STATIC : updatedItem.status }
                         SortedItems.persistItemToStorage(item);
                     }}
                     emptyLabelConfig={{

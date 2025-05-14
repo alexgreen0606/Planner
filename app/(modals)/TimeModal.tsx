@@ -1,8 +1,8 @@
-import { ItemStatus } from "@/feature/sortedList/constants";
-import Modal from "@/modals";
-import Form from "@/modals/components/form";
-import { EFieldType } from "@/modals/components/form/types";
-import { useTimeModal } from "@/modals/services/TimeModalProvider";
+import Modal from "@/components/modal";
+import Form from "@/components/modal/components/form";
+import { useTimeModal } from "@/components/modal/services/TimeModalProvider";
+import { EFormFieldType } from "@/enums/EFormFieldType";
+import { EItemStatus } from "@/enums/EItemStatus";
 import { usePathname } from "expo-router";
 import { DateTime } from 'luxon';
 import { useEffect, useMemo } from "react";
@@ -28,7 +28,7 @@ const TimeModal = () => {
         return initialEvent.current;
     }, [pathname]);
 
-    const isEditMode = planEvent?.status === ItemStatus.EDIT;
+    const isEditMode = planEvent?.status === EItemStatus.EDIT;
 
     const {
         control,
@@ -138,14 +138,14 @@ const TimeModal = () => {
     const formFields = [
         {
             name: 'title',
-            type: EFieldType.TEXT,
+            type: EFormFieldType.TEXT,
             label: 'Title',
             rules: { required: true },
             focusTrigger: pathname === TIME_MODAL_PATHNAME && planEvent?.value?.length === 0
         },
         {
             name: 'timeRange',
-            type: EFieldType.TIME_RANGE,
+            type: EFormFieldType.TIME_RANGE,
             defaultValue: {
                 startTime: DateTime.now().toISO(),
                 endTime: DateTime.now().plus({ hours: 1 }).toISO()
@@ -154,13 +154,13 @@ const TimeModal = () => {
         },
         {
             name: 'isCalendarEvent',
-            type: EFieldType.CHECKBOX,
+            type: EFormFieldType.CHECKBOX,
             label: 'Add to Calendar',
             defaultValue: false
         },
         {
             name: 'allDay',
-            type: EFieldType.CHECKBOX,
+            type: EFormFieldType.CHECKBOX,
             label: 'All Day',
             defaultValue: false,
             disabled: !isCalendarEvent,

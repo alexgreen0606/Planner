@@ -1,18 +1,19 @@
+import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import SortableList from '@/feature/sortedList';
 import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
-import { ItemStatus } from '@/feature/sortedList/constants';
+import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '@/feature/sortedList/services/DeleteScheduler';
 import { useScrollContainer } from '@/feature/sortedList/services/ScrollContainerProvider';
 import { isItemTextfield } from '@/feature/sortedList/utils';
+import { generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent, deleteRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import globalStyles from '@/theme/globalStyles';
+import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '@/utils/calendarUtils/sharedListProps';
 import { datestampToMidnightDate, generateSortIdByTime } from '@/utils/calendarUtils/timestampUtils';
-import { PLANNER_STORAGE_ID, RecurringEvent } from '@/utils/calendarUtils/types';
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '../storage/recurringStorage';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
@@ -28,14 +29,14 @@ const RecurringWeekdayPlanner = () => {
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
-    function initializeEvent(event: RecurringEvent): RecurringEvent {
+    function initializeEvent(event: IRecurringEvent): IRecurringEvent {
         return {
             ...event,
             isWeekdayEvent: true
         }
     };
 
-    async function toggleTimeModal(item: RecurringEvent) {
+    async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
             await SortedEvents.toggleItemEdit(item);
         setTimeModalOpen(curr => !curr);
@@ -68,7 +69,7 @@ const RecurringWeekdayPlanner = () => {
         toggleTimeModal(currentTextfield);
     };
 
-    const SortedEvents = useSortedList<RecurringEvent, RecurringEvent[]>({
+    const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: RECURRING_WEEKDAY_PLANNER_KEY,
         getItemsFromStorageObject: generateRecurringWeekdayPlanner,
@@ -92,17 +93,17 @@ const RecurringWeekdayPlanner = () => {
     return (
         <View style={globalStyles.blackFilledSpace}>
 
-            <SortableList<RecurringEvent, never, never>
+            <SortableList<IRecurringEvent, never, never>
                 items={SortedEvents.items}
                 listId={RECURRING_WEEKDAY_PLANNER_KEY}
                 fillSpace
                 initializeItem={initializeEvent}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
-                onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: ItemStatus.STATIC })}
+                onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: EItemStatus.STATIC })}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}
-                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as RecurringEvent}
+                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{

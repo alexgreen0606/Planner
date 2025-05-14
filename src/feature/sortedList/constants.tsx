@@ -21,12 +21,4 @@ export const LIST_SPRING_CONFIG = {
 
 export const DECELERATION_RATE = 0.998;
 
-export enum ItemStatus {
-    NEW = 'NEW',
-    EDIT = 'EDIT',
-    TRANSFER = 'TRANSFER',
-    STATIC = 'STATIC',
-    HIDDEN = 'HIDDEN'
-};
-
 export const OVERSCROLL_RELOAD_THRESHOLD = 64;

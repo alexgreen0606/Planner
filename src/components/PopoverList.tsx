@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { PlatformColor, Pressable, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { LIST_ITEM_HEIGHT } from '@/feature/sortedList/constants';
 import { BlurView } from 'expo-blur';
 import { Portal } from 'react-native-paper';
-import useDimensions from '../hooks/useDimensions';
 import ButtonText from './text/ButtonText';
 import CustomText from './text/CustomText';
+import { useDimensions } from '@/services/DimensionsProvider';
+import { LIST_ITEM_HEIGHT } from '@/feature/sortedList/constants';
 
 const PopoverContainer = Animated.createAnimatedComponent(View);
 const BackdropContainer = Animated.createAnimatedComponent(View);
