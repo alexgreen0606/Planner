@@ -152,7 +152,7 @@ const TimeRangeSelector = ({
             </View>
             {timestamp && startTimestamp && (
                 <View>
-                    <View style={globalStyles.spacedApart}>
+                    <View className='flex-row justify-between items-center w-full'>
                         <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
                             <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
                         </TouchableOpacity>

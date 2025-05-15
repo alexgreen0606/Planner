@@ -3,25 +3,33 @@ import { PlatformColor, View, StyleSheet } from 'react-native';
 import CustomText from './text/CustomText';
 
 interface EventCountChipProps {
-    count: number
+    count: number,
+    color?: string
 }
 
 const BadgeNumber = ({
-    count
+    count,
+    color
 }: EventCountChipProps) =>
-    <View style={styles.chip}>
-        <CustomText type='badge'>
+    <View style={[styles.chip, {
+        borderColor: color ?? PlatformColor('label'),
+    }]}>
+        <CustomText
+            type='badge'
+            style={{ color: color ?? PlatformColor('label') }}
+        >
             {count}
         </CustomText>
     </View>
 
 const styles = StyleSheet.create({
     chip: {
-        height: 24,
-        minWidth: 24,
-        borderRadius: 12,
+        height: 18,
+        minWidth: 18,
+        borderRadius: 9,
         paddingHorizontal: 5,
-        backgroundColor: PlatformColor('systemBlue'),
+        borderWidth: 1,
+        backgroundColor: PlatformColor('systemBackground'),
         justifyContent: 'center',
         alignItems: 'center'
     }

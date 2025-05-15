@@ -1,16 +1,16 @@
-import { LIST_CONTENT_HEIGHT } from '@/constants/size';
+import { LIST_CONTENT_HEIGHT } from '@/constants/layout';
 import React, { useEffect, useRef } from 'react';
-import { PlatformColor, StyleSheet, TextInput } from 'react-native';
+import { PlatformColor, TextInput } from 'react-native';
 
 export interface ModalTextfieldProps {
-    label: string;
+    placeholder: string;
     value: string;
     onChange: (newVal: string) => void;
     focusTrigger: boolean;
 };
 
 const ModalTextfield = ({
-    label,
+    placeholder,
     value,
     onChange,
     focusTrigger
@@ -30,22 +30,16 @@ const ModalTextfield = ({
         <TextInput
             ref={inputRef}
             value={value}
-            placeholder={label}
+            placeholder={placeholder}
             onChangeText={onChange}
             selectionColor={PlatformColor('systemBlue')}
-            style={styles.textInput}
+            className='w-full text-base bg-transparent'
+            style={{
+                height: LIST_CONTENT_HEIGHT,
+                color: PlatformColor('label')
+            }}
         />
     );
 };
-
-const styles = StyleSheet.create({
-    textInput: {
-        height: LIST_CONTENT_HEIGHT,
-        width: '100%',
-        fontSize: 16,
-        color: PlatformColor('label'),
-        backgroundColor: 'transparent',
-    },
-});
 
 export default ModalTextfield;

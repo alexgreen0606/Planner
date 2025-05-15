@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
         fontWeight: 500,
     },
     badge: {
-        fontSize: 14,
-        color: 'white',
+        fontSize: 10,
+        color: PlatformColor('label'),
         fontWeight: 600
     },
     conciseTime: {

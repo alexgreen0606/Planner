@@ -1,22 +1,13 @@
-import { HEADER_HEIGHT } from "@/constants/size";
+import { HEADER_HEIGHT } from "@/constants/layout";
 import { PlatformColor, ViewStyle } from "react-native";
 
 type GlobalStyles = {
-  spacedApart: ViewStyle;
   verticallyCentered: ViewStyle;
   blackFilledSpace: ViewStyle;
   pageLabelContainer: ViewStyle;
-  centered: ViewStyle;
-  fullWidth: ViewStyle;
 }
 
 const globalStyles: GlobalStyles = {
-  spacedApart: { // flex-row justify-between items-center w-full
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexDirection: 'row',
-    width: '100%'
-  },
   blackFilledSpace: {
     flex: 1,
     backgroundColor: PlatformColor('systemBackground')
@@ -33,13 +24,6 @@ const globalStyles: GlobalStyles = {
     width: '100%',
     height: HEADER_HEIGHT,
     position: 'relative'
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  fullWidth: {
-    width: '100%'
   }
 };
 

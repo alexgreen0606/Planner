@@ -4,7 +4,7 @@ import FolderItemBanner from '../../../../../../src/feature/checklists/component
 import { NULL } from '../../../../../../src/feature/checklists/constants';
 import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 import SortedFolder from '../../../../../../src/feature/folderContents';
-import { ScrollContainerProvider } from '../../../../../../src/feature/sortedList/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '../../../../../../src/services/ScrollContainerProvider';
 import globalStyles from '@/theme/globalStyles';
 import { View } from 'react-native';
 import { EFolderItemType } from '@/enums/EFolderItemType';

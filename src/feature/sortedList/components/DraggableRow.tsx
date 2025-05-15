@@ -6,6 +6,7 @@ import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handle
 import Animated, {
     cancelAnimation,
     runOnJS,
+    scrollTo,
     SharedValue,
     useAnimatedReaction,
     useAnimatedStyle,
@@ -14,11 +15,11 @@ import Animated, {
     withSpring,
     withTiming
 } from "react-native-reanimated";
-import { useDeleteScheduler } from "../services/DeleteScheduler";
-import { useScrollContainer } from "../services/ScrollContainerProvider";
+import { useDeleteScheduler } from "../../../services/DeleteScheduler";
+import { useScrollContainer } from "../../../services/ScrollContainerProvider";
 import { generateSortId, getParentSortIdFromPositions } from "../utils";
 import ListTextfield from "./ListTextfield";
-import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/constants/size";
+import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, spacing } from "@/constants/layout";
 import { useDimensions } from "@/services/DimensionsProvider";
 import { ListItemIconConfig } from "../lib/listRowConfig";
 import { IListItem } from "@/types/listItems/core/TListItem";
@@ -82,6 +83,7 @@ const DraggableRow = <T extends IListItem>({
 
     const {
         scrollOffset,
+        scrollRef,
         currentTextfield,
         setCurrentTextfield,
         disableNativeScroll,
@@ -110,6 +112,7 @@ const DraggableRow = <T extends IListItem>({
     const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const BOTTOM_AUTO_SCROLL_BOUND = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
+    const isAutoScrolling = useSharedValue(false);
     const isAwaitingInitialPosition = useSharedValue(positions.value[item.id] === undefined);
     const isDragging = useSharedValue(false);
     const top = useSharedValue(positions.value[item.id] ?? 0);
@@ -242,6 +245,7 @@ const DraggableRow = <T extends IListItem>({
         'worklet';
         cancelAnimation(autoScrollTrigger);
         isDragging.value = false;
+        isAutoScrolling.value = false;
         initialGesturePosition.value = 0;
         top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
     };

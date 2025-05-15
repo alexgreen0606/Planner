@@ -27,8 +27,8 @@ const FormField = ({
         case EFormFieldType.TEXT:
             return (
                 <ModalTextfield
-                    label={label || placeholder || ''}
-                    value={value || ''}
+                    placeholder={placeholder ?? ''}
+                    value={value ?? ''}
                     onChange={onChange}
                     focusTrigger={focusTrigger}
                 />
@@ -71,7 +71,6 @@ const FormField = ({
             return (
                 <ModalCheckbox
                     label={label ?? ''}
-                    hide={Boolean(hide)}
                     value={Boolean(value)}
                     onChange={onChange}
                     disabled={disabled}

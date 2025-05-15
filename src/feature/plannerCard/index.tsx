@@ -1,6 +1,6 @@
 import { usePathname } from 'expo-router';
-import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
@@ -13,8 +13,8 @@ import SortableList from '../sortedList';
 import { generateCheckboxIconConfig } from '../sortedList/commonProps';
 import { ToolbarProps } from '../sortedList/components/ListItemToolbar';
 import useSortedList from '../sortedList/hooks/useSortedList';
-import { useDeleteScheduler } from '../sortedList/services/DeleteScheduler';
-import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
+import { useDeleteScheduler } from '../../services/DeleteScheduler';
+import { useScrollContainer } from '../../services/ScrollContainerProvider';
 import { WeatherForecast } from '../weather/utils';
 import DayBanner from './components/DayBanner';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -22,7 +22,8 @@ import { useTimeModal } from '@/components/modal/services/TimeModalProvider';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { buildPlannerEvents } from '@/storage/plannerStorage';
 import { TPlanner } from '@/types/planner/TPlanner';
-import { LIST_ITEM_HEIGHT } from '@/constants/size';
+import { LIST_ITEM_HEIGHT } from '@/constants/layout';
+import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -31,6 +32,24 @@ interface PlannerCardProps {
     forecast?: WeatherForecast;
     loadAllExternalData: () => Promise<void>;
 };
+
+interface ColorCount {
+    color?: string;
+    count: number;
+}
+
+function getColorCounts(chips: EventChipProps[]): ColorCount[] {
+    const colorMap: Record<string, number> = {};
+
+    for (const chip of chips) {
+        const { color } = chip;
+        colorMap[color] = (colorMap[color] || 0) + 1;
+    }
+
+    return Object.entries(colorMap)
+        .sort(([colorA], [colorB]) => colorA.localeCompare(colorB)) // Alphabetical sort
+        .map(([color, count]) => ({ color, count }));
+}
 
 const PlannerCard = ({
     datestamp,
@@ -112,6 +131,16 @@ const PlannerCard = ({
         reloadTriggers: [calendarEvents]
     });
 
+    const badgesConfig = useMemo(() => {
+        const eventColorCounts = getColorCounts(eventChips);
+        if (SortedEvents.items.length > 0) {
+            eventColorCounts.push({
+                count: SortedEvents.items.length
+            })
+        }
+        return eventColorCounts;
+    }, [eventChips, SortedEvents.items.length]);
+
     return (
         <Card
             header={
@@ -120,9 +149,6 @@ const PlannerCard = ({
                     toggleCollapsed={toggleCollapsed}
                     forecast={forecast}
                 />
-            }
-            badge={SortedEvents.items.length > 0 &&
-                <BadgeNumber count={SortedEvents.items.length} />
             }
             footer={eventChips.length > 0 &&
                 <View style={styles.chips}>
@@ -134,6 +160,15 @@ const PlannerCard = ({
                     )}
                 </View>
             }
+            badges={collapsed &&
+                <View className='flex-row items-center gap-1'>
+                    {badgesConfig.map((config) => (
+                        <BadgeNumber key={`chip-color-${config.color}`} {...config} />
+                    ))}
+                </View>
+            }
+            collapsed={collapsed}
+            contentHeight={((SortedEvents.items.length + 1) * LIST_ITEM_HEIGHT) + (eventChips.length * 30) + 30}
         >
             <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
                 listId={datestamp}

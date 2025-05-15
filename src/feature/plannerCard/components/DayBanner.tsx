@@ -1,7 +1,6 @@
 import CustomText from '@/components/text/CustomText';
 import WeatherDisplay from '@/feature/weather';
 import { WeatherForecast } from '@/feature/weather/utils';
-import globalStyles from '@/theme/globalStyles';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { datestampToMonthDate, getTomorrowDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import React from 'react';
@@ -18,11 +17,14 @@ const DayBanner = ({
     toggleCollapsed,
     forecast
 }: DayBannerProps) => planner &&
-    <TouchableOpacity onPress={toggleCollapsed} style={globalStyles.spacedApart}>
+    <TouchableOpacity
+        className='flex-row justify-between items-center w-full'
+        onPress={toggleCollapsed}
+    >
 
         {/* Date */}
         <View>
-            <View style={{ flexDirection: 'row' }}>
+            <View className='flex-row'>
                 {getTomorrowDatestamp() === planner.datestamp && (
                     <CustomText type='subHeader' style={{ color: PlatformColor('label') }}>
                         {planner.title}{' '}

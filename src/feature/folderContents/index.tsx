@@ -10,7 +10,7 @@ import SortableList from '../sortedList';
 import Toolbar, { ToolbarProps } from '../sortedList/components/ListItemToolbar';
 import useSortedList from '../sortedList/hooks/useSortedList';
 import { ModifyItemConfig } from '../sortedList/lib/listRowConfig';
-import { useScrollContainer } from '../sortedList/services/ScrollContainerProvider';
+import { useScrollContainer } from '../../services/ScrollContainerProvider';
 import { generateSortId, isItemTextfield } from '../sortedList/utils';
 import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { EFolderItemType } from '@/enums/EFolderItemType';

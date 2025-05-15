@@ -1,4 +1,4 @@
-import { TOOLBAR_HEIGHT } from '@/constants/size';
+import { TOOLBAR_HEIGHT } from '@/constants/layout';
 import { useDimensions } from '@/services/DimensionsProvider';
 import React, { createContext, useContext } from 'react';
 import {

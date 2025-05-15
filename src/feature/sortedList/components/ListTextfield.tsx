@@ -1,9 +1,9 @@
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/size';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/layout';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { useScrollContainer } from '../services/ScrollContainerProvider';
+import { useScrollContainer } from '../../../services/ScrollContainerProvider';
 
 interface ListTextfieldProps<T extends IListItem> {
     item: T;

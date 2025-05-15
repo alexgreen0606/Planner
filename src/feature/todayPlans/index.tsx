@@ -1,8 +1,8 @@
 import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
 import { ToolbarProps } from '@/feature/sortedList/components/ListItemToolbar';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
-import { useDeleteScheduler } from '@/feature/sortedList/services/DeleteScheduler';
-import { useScrollContainer } from '@/feature/sortedList/services/ScrollContainerProvider';
+import { useDeleteScheduler } from '@/services/DeleteScheduler';
+import { useScrollContainer } from '@/services/ScrollContainerProvider';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
 import { usePathname } from 'expo-router';
 import React, { useEffect } from 'react';

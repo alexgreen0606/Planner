@@ -5,7 +5,6 @@ import { PlatformColor, Switch } from 'react-native';
 export interface ModalCheckboxProps {
     label: string;
     value: boolean;
-    hide: boolean;
     onChange: (newVal: boolean) => void;
     disabled?: boolean;
 };
@@ -13,13 +12,11 @@ export interface ModalCheckboxProps {
 const ModalCheckbox = ({
     label,
     value,
-    hide = false,
     onChange,
     disabled
 }: ModalCheckboxProps) =>
     <ModalDisplayValue
         label={label}
-        hide={hide}
         value={
             <Switch
                 value={value}

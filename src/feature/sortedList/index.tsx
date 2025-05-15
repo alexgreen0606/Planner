@@ -5,13 +5,14 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import uuid from 'react-native-uuid';
 import DraggableRow from './components/DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './components/EmptyLabel';
-import { useKeyboard } from './services/KeyboardProvider';
-import { useScrollContainer } from './services/ScrollContainerProvider';
+import { useKeyboard } from '../../services/KeyboardProvider';
+import { useScrollContainer } from '../../services/ScrollContainerProvider';
 import { buildItemPositions, generateSortId } from './utils';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { ListItemUpdateComponentProps, ListItemIconConfig, ModifyItemConfig } from './lib/listRowConfig';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import { LIST_ITEM_HEIGHT } from '@/constants/size';
+import { LIST_ITEM_HEIGHT } from '@/constants/layout';
+import ThinLine from '@/components/ThinLine';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -188,10 +189,17 @@ const SortableList = <
                 )}
             </View>
 
+            {currentList.length > 0 && (
+                <Pressable onPress={handleEmptySpaceClick}>
+                    <ThinLine />
+                </Pressable>
+            )}
+
             {/* Empty Label or Click Area */}
-            {emptyLabelConfig && currentList.length === 0 && !isLoading ? (
+            {emptyLabelConfig && currentList.length === 0 ? (
                 <EmptyLabel
                     {...emptyLabelConfig}
+                    style={{ opacity: isLoading ? 0 : 1 }}
                     onPress={handleEmptySpaceClick}
                 />
             ) : !isLoading && (

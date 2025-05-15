@@ -7,7 +7,7 @@ import { PlatformColor, StyleSheet, TextInput, View } from 'react-native';
 import { getFolderItem, updateFolderItem } from '../../../storage/checklistsStorage';
 import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { useDimensions } from '@/services/DimensionsProvider';
-import { HEADER_HEIGHT } from '@/constants/size';
+import { HEADER_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { EFolderItemType } from '@/enums/EFolderItemType';
 

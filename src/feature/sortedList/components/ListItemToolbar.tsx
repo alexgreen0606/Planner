@@ -3,7 +3,7 @@ import { Dimensions, PlatformColor, StyleSheet, TouchableOpacity, View } from 'r
 import globalStyles from '../../../theme/globalStyles';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { ListItemUpdateComponentProps } from '../lib/listRowConfig';
-import { TOOLBAR_HEIGHT } from '@/constants/size';
+import { TOOLBAR_HEIGHT } from '@/constants/layout';
 
 interface IconSet<T extends IListItem> extends GenericIconProps<T> {
     customIcon?: React.ReactNode;

@@ -1,4 +1,4 @@
-import { ScrollContainerProvider } from '@/feature/sortedList/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
 import globalStyles from '@/theme/globalStyles';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
@@ -77,7 +77,7 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
         <View style={globalStyles.blackFilledSpace}>
             <ScrollContainerProvider
                 floatingBanner={
-                    <View style={styles.container}>
+                    <View className='w-full flex items-center'>
                         <View style={styles.bar} ref={barRef}>
 
                             {/* Blurred Background */}
@@ -113,11 +113,6 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center'
-    },
     bar: {
         position: 'relative',
         height: BAR_HEIGHT,

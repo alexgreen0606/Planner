@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
 import '../global.css';
-import { DeleteSchedulerProvider } from '../src/feature/sortedList/services/DeleteScheduler';
+import { DeleteSchedulerProvider } from '../src/services/DeleteScheduler';
 import { ReloadProvider } from '../src/services/ReloadProvider';
 import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerSetKey]';
 import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';

@@ -5,37 +5,6 @@ import { SharedValue } from "react-native-reanimated";
 // ------------- Sort ID Management -------------
 
 /**
-* Generates a new sort ID for an item below the item with the given sort ID.
-* @param parentSortId -1 if at the top of the list, otherwise the sort ID of the item above the new item
-* @param listItems The current list (MUST contain an event with the parentSortId)
-* @returns A new sort id that places an item below its parent
-*/
-// export function generateSortId(
-//     parentSortId: number,
-//     listItems: ListItem[],
-// ): number {
-//     'worklet';
-//     const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
-
-//     if (parentSortId === -1) {
-//         const smallestId = sortedList.length > 0 ? sortedList[0].sortId : 2;
-//         return smallestId / 2;
-//     }
-
-//     for (let i = 0; i < sortedList.length; i++) {
-//         if (sortedList[i].sortId === parentSortId) {
-//             if (i === sortedList.length - 1) {
-//                 return parentSortId + 1;
-//             }
-//             const nextId = sortedList[i + 1].sortId;
-//             return parentSortId + (nextId - parentSortId) / 2;
-//         }
-//     }
-
-//     throw new Error(`No item exists in the list with sort ID ${parentSortId}.`);
-// }
-
-/**
  * Generates a new sort ID for inserting an item relative to another item in the list.
  * @param referenceSortId The sort ID of the reference item (parent if inserting below, child if inserting above)
  * @param listItems The current list (MUST contain an item with the referenceSortId unless -1)

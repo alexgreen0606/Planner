@@ -42,7 +42,7 @@ const Planners = () => {
             "precipitationSum": 0.06,
             "precipitationProbabilityMax": 24
         },
-        "2025-04-24": {
+        "2025-05-16": {
             "date": "2025-03-28",
             "weatherCode": 65,
             "weatherDescription": "Heavy rain",
@@ -136,7 +136,7 @@ const Planners = () => {
             </View>
 
             {/* Planner Set Display */}
-            <View className='p-2 gap-[26px]'>
+            <View className='p-2 gap-4'>
                 {plannerDatestamps.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}

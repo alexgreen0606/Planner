@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useDeleteScheduler } from '../feature/sortedList/services/DeleteScheduler';
+import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReload } from '../services/ReloadProvider';
 import { isValidPlatformColor } from '../utils/colorUtils';
 import globalStyles from '../theme/globalStyles';
@@ -17,7 +17,6 @@ export interface EventChipProps {
     color: string;
     label: string;
     onClick?: () => void;
-
 };
 
 const EventChip = ({

@@ -6,7 +6,7 @@ import { Portal } from 'react-native-paper';
 import ButtonText from './text/ButtonText';
 import CustomText from './text/CustomText';
 import { useDimensions } from '@/services/DimensionsProvider';
-import { LIST_ITEM_HEIGHT } from '@/constants/size';
+import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 
 const PopoverContainer = Animated.createAnimatedComponent(View);
 const BackdropContainer = Animated.createAnimatedComponent(View);

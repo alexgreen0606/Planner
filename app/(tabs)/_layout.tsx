@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import GenericIcon from '@/components/GenericIcon';
-import { BOTTOM_NAVIGATION_HEIGHT } from '@/constants/size';
+import { BOTTOM_NAVIGATION_HEIGHT } from '@/constants/layout';
 import { useDimensions } from '@/services/DimensionsProvider';
 
 export default function TabLayout() {

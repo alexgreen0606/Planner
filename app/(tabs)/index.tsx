@@ -2,7 +2,7 @@ import EventChip, { EventChipProps } from '@/components/EventChip';
 import BirthdayCard from '@/feature/birthdayCard';
 import { getContactedBirthdaysByDatestamp } from '@/storage/birthdayStorage';
 import { eventChipToBirthday, extractNameFromBirthdayText } from '@/feature/birthdayCard/utils';
-import { ScrollContainerProvider } from '@/feature/sortedList/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
 import TodayPlanner from '@/feature/todayPlans';
 import TodayBanner from '@/feature/todayPlans/TodayBanner';
 import globalStyles from '@/theme/globalStyles';
