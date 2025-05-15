@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Linking, PlatformColor } from 'react-native';
 import CustomText from '../../components/text/CustomText';
 import { weatherCodeToFontistoIcon } from './utils';
-import globalStyles from '../../theme/globalStyles';
 import { SFSymbol } from 'react-native-sfsymbols';
 
 interface WeatherDisplayProps {
@@ -29,7 +28,7 @@ const WeatherDisplay = ({
     if (currentTemp !== undefined) {
         return (
             <TouchableOpacity activeOpacity={1} onPress={openWeatherApp}>
-                <View style={currentStyles.container}>
+                <View className='flex-row gap-2 justify-between items-center'>
                     <CustomText type='header'>{Math.round(currentTemp)}°</CustomText>
                     <View style={currentStyles.icon}>
                         <SFSymbol
@@ -48,7 +47,7 @@ const WeatherDisplay = ({
     if (high !== undefined && low !== undefined) {
         return (
             <TouchableOpacity activeOpacity={1} onPress={openWeatherApp}>
-                <View style={defaultStyles.container}>
+                <View className='flex-row gap-1 items-center'>
                     <CustomText type='highTemp'>{Math.round(high)}°</CustomText>
                     <View style={defaultStyles.divider} />
                     <CustomText type='lowTemp'>{Math.round(low)}°</CustomText>
@@ -71,11 +70,6 @@ const WeatherDisplay = ({
 
 // Default layout styles (high/low temperatures)
 const defaultStyles = StyleSheet.create({
-    container: {
-        ...globalStyles.verticallyCentered,
-        gap: 4,
-        flexDirection: 'row',
-    },
     divider: {
         width: StyleSheet.hairlineWidth,
         height: '80%',
@@ -89,12 +83,6 @@ const defaultStyles = StyleSheet.create({
 
 // Current temperature layout styles
 const currentStyles = StyleSheet.create({
-    container: {
-        ...globalStyles.verticallyCentered,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
     icon: {
         marginHorizontal: 8,
     }

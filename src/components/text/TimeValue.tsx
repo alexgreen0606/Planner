@@ -63,18 +63,24 @@ const TimeValue = ({
             </CustomText>
         </View>
     ) : concise ? (
-        <View style={styles.time}>
+        <View className='flex-row relative'>
             <CustomText type='conciseTime' style={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
             </CustomText>
-            <View style={[styles.indicator, concise ? styles.short : styles.long]}>
-                <CustomText type='indicator'>
-                    {indicator}
-                </CustomText>
-            </View>
+            <View className='w-[1px]'/>
+            <CustomText type='conciseIndicator'>
+                {indicator}
+            </CustomText>
+            {(startEvent || endEvent) && (
+                <View className='absolute top-full left-0 w-full items-center'>
+                    <CustomText type='tinyIndicator'>
+                        {startEvent ? 'START' : 'END'}
+                    </CustomText>
+                </View>
+            )}
         </View>
     ) : (
-        <View style={styles.time}>
+        <View className='flex-row relative'>
             <CustomText type='time' style={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
             </CustomText>
@@ -87,10 +93,6 @@ const TimeValue = ({
 
 
 const styles = StyleSheet.create({
-    time: {
-        position: 'relative',
-        flexDirection: 'row'
-    },
     indicator: {
         position: 'absolute',
         bottom: 0,
@@ -100,7 +102,6 @@ const styles = StyleSheet.create({
     short: {
         transform: 'translateX(-50%)'
     },
-    long: {}
 });
 
 export default TimeValue;

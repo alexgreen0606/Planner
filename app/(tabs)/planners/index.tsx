@@ -1,18 +1,17 @@
 import GenericIcon from '@/components/GenericIcon';
 import PopoverList from '@/components/PopoverList';
+import { TCalendarData } from '@/types/calendar/TCalendarData';
 import { generateDatestampRange, getNextSevenDayDatestamps } from '@/utils/calendarUtils/timestampUtils';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { NULL } from '../../../src/feature/checklists/constants';
 import PlannerCard from '../../../src/feature/plannerCard';
-import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
 import { WeatherForecast } from '../../../src/feature/weather/utils';
 import { useReload } from '../../../src/services/ReloadProvider';
-import globalStyles from '../../../src/theme/globalStyles';
+import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
 import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/utils/calendarUtils/calendarUtils';
-import { TCalendarData } from '@/types/calendar/TCalendarData';
 
 
 const defaultPlannerSet = 'Next 7 Days';
@@ -119,7 +118,10 @@ const Planners = () => {
     }, []);
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View
+            className='flex-1'
+            style={{ backgroundColor: PlatformColor('systemBackground') }}
+        >
 
             {/* Planner Set Selection */}
             <View className='py-2 px-4 flex-row justify-between items-center w-full' >

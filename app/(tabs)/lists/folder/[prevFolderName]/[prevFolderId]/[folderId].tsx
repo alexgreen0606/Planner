@@ -1,13 +1,12 @@
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { EFolderItemType } from '@/enums/EFolderItemType';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
+import { PlatformColor, View } from 'react-native';
 import FolderItemBanner from '../../../../../../src/feature/checklists/components/FolderItemBanner';
 import { NULL } from '../../../../../../src/feature/checklists/constants';
-import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 import SortedFolder from '../../../../../../src/feature/folderContents';
 import { ScrollContainerProvider } from '../../../../../../src/services/ScrollContainerProvider';
-import globalStyles from '@/theme/globalStyles';
-import { View } from 'react-native';
-import { EFolderItemType } from '@/enums/EFolderItemType';
+import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 
 const Lists = () => {
   const router = useRouter();
@@ -31,7 +30,10 @@ const Lists = () => {
   };
 
   return (
-    <View style={globalStyles.blackFilledSpace}>
+    <View
+      className='flex-1'
+      style={{ backgroundColor: PlatformColor('systemBackground') }}
+    >
       <ScrollContainerProvider
         header={
           <FolderItemBanner

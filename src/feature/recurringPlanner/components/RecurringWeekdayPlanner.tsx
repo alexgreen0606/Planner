@@ -1,18 +1,17 @@
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { EItemStatus } from '@/enums/EItemStatus';
 import SortableList from '@/feature/sortedList';
 import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
-import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
+import { isItemTextfield } from '@/feature/sortedList/utils';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { useScrollContainer } from '@/services/ScrollContainerProvider';
-import { isItemTextfield } from '@/feature/sortedList/utils';
-import { generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent, deleteRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
-import globalStyles from '@/theme/globalStyles';
+import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '@/utils/calendarUtils/sharedListProps';
 import { datestampToMidnightDate, generateSortIdByTime } from '@/utils/calendarUtils/timestampUtils';
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
@@ -91,7 +90,10 @@ const RecurringWeekdayPlanner = () => {
     });
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View
+            className='flex-1'
+            style={{ backgroundColor: PlatformColor('systemBackground') }}
+        >
 
             <SortableList<IRecurringEvent, never, never>
                 items={SortedEvents.items}

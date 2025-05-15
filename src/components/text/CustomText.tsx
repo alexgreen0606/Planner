@@ -77,13 +77,23 @@ const styles = StyleSheet.create({
     },
     conciseTime: {
         fontFamily: 'Coiny-Regular',
-        fontSize: 12,
+        fontSize: 14,
         color: PlatformColor('systemTeal')
     },
     time: {
         fontFamily: 'Coiny-Regular',
         fontSize: 16,
         color: PlatformColor('systemTeal')
+    },
+    conciseIndicator: {
+        fontFamily: 'Coiny-Regular',
+        fontSize: 10,
+        color: PlatformColor('secondaryLabel')
+    },
+    tinyIndicator: {
+        fontFamily: 'Coiny-Regular',
+        fontSize: 8,
+        color: PlatformColor('secondaryLabel')
     },
     indicator: {
         fontFamily: 'Coiny-Regular',

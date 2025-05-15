@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReload } from '../services/ReloadProvider';
 import { isValidPlatformColor } from '../utils/colorUtils';
-import globalStyles from '../theme/globalStyles';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -53,11 +52,13 @@ const EventChip = ({
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
 
     const ChipContent = () => (
-        <View style={{
-            ...styles.chip,
-            borderColor: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor,
-            backgroundColor: PlatformColor(backgroundPlatformColor)
-        }}
+        <View
+            className='flex-row gap-2 h-5 max-w-full px-[10px] items-center rounded-[16px]'
+            style={{
+                borderWidth: StyleSheet.hairlineWidth,
+                borderColor: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor,
+                backgroundColor: PlatformColor(backgroundPlatformColor)
+            }}
         >
             <GenericIcon
                 {...iconConfig}
@@ -96,18 +97,5 @@ const EventChip = ({
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    chip: {
-        ...globalStyles.verticallyCentered,
-        height: 20,
-        gap: 4,
-        maxWidth: '100%',
-        borderWidth: StyleSheet.hairlineWidth,
-        paddingHorizontal: 10,
-        alignItems: 'center',
-        borderRadius: 16,
-    },
-});
 
 export default EventChip;

@@ -199,7 +199,6 @@ const SortableList = <
             {emptyLabelConfig && currentList.length === 0 ? (
                 <EmptyLabel
                     {...emptyLabelConfig}
-                    style={{ opacity: isLoading ? 0 : 1 }}
                     onPress={handleEmptySpaceClick}
                 />
             ) : !isLoading && (

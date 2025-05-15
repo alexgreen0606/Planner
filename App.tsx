@@ -1,10 +1,10 @@
+import { Slot } from 'expo-router';
 import React from 'react';
-import { PaperProvider } from 'react-native-paper';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PaperProvider } from 'react-native-paper';
 import { DeleteSchedulerProvider } from './src/services/DeleteScheduler';
 import { ReloadProvider } from './src/services/ReloadProvider';
-import { Slot } from 'expo-router';
 
 const App = () => {
   return (
@@ -13,8 +13,7 @@ const App = () => {
         <DeleteSchedulerProvider>
           <ReloadProvider>
             <StatusBar translucent backgroundColor='transparent' barStyle='default' />
-            {/* <Navigator /> */}
-            <Slot/>
+            <Slot />
           </ReloadProvider>
         </DeleteSchedulerProvider>
       </GestureHandlerRootView>

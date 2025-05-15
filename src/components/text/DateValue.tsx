@@ -24,12 +24,12 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
 
     return concise ?
         <View style={styles.time}>
-            <CustomText type='time' style={{ flexDirection: 'row', color: PlatformColor(platformColor) }}>
+            <CustomText type='conciseTime' style={{ flexDirection: 'row', color: PlatformColor(platformColor) }}>
                 {monthDay.toUpperCase()}
             </CustomText>
             {showYear && (
                 <View style={styles.conciseYear}>
-                    <CustomText type='indicator'>
+                    <CustomText type='conciseIndicator'>
                         {year}
                     </CustomText>
                 </View>

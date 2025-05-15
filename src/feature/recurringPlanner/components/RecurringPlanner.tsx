@@ -1,19 +1,18 @@
+import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { EItemStatus } from '@/enums/EItemStatus';
+import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 import SortableList from '@/feature/sortedList';
+import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate, generateSortIdByTime } from '@/utils/calendarUtils/timestampUtils';
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import globalStyles from '../../../theme/globalStyles';
+import { useDeleteScheduler } from '../../../services/DeleteScheduler';
+import { useScrollContainer } from '../../../services/ScrollContainerProvider';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../utils/calendarUtils/sharedListProps';
 import { generateCheckboxIconConfig } from '../../sortedList/commonProps';
 import useSortedList from '../../sortedList/hooks/useSortedList';
-import { useDeleteScheduler } from '../../../services/DeleteScheduler';
-import { useScrollContainer } from '../../../services/ScrollContainerProvider';
 import { isItemTextfield } from '../../sortedList/utils';
-import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
-import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
-import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
-import { EItemStatus } from '@/enums/EItemStatus';
 
 interface SortedRecurringPlannerProps {
     plannerKey: ERecurringPlannerKeys;
@@ -70,7 +69,10 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     });
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View
+            className='flex-1'
+            style={{ backgroundColor: PlatformColor('systemBackground') }}
+        >
             <SortableList<IRecurringEvent, never, never>
                 items={SortedEvents.items}
                 listId={plannerKey}

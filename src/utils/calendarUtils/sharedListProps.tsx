@@ -85,6 +85,9 @@ export function generateTimeIconConfig(
     openTimeModal: (item: IPlannerEvent | IRecurringEvent) => void
 ) {
     const itemTime = getEventTime(event);
+    if (itemTime) {
+        console.log(event)
+    }
     return {
         hideIcon: !itemTime,
         onClick: () => openTimeModal(event),
@@ -93,7 +96,9 @@ export function generateTimeIconConfig(
                 allDay={!!(event as IPlannerEvent).timeConfig?.allDay}
                 endEvent={!!(event as IPlannerEvent).timeConfig?.multiDayEnd}
                 startEvent={!!(event as IPlannerEvent).timeConfig?.multiDayStart}
-                timeValue={itemTime!}
+                timeValue={itemTime}
+                isoTimestamp={itemTime}
+                concise
             />
         )
     }

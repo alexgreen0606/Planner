@@ -1,11 +1,10 @@
 import { usePathname } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
-import { PlatformColor, StyleSheet, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View } from 'react-native';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
 import EventChip, { EventChipProps } from '../../components/EventChip';
-import globalStyles from '../../theme/globalStyles';
 import { generatePlanner } from '../../utils/calendarUtils/calendarUtils';
 import { generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../utils/calendarUtils/sharedListProps';
 import { deleteEventsLoadChips, openTimeModal, saveEventLoadChips } from '../../utils/calendarUtils/sharedListUtils';
@@ -23,7 +22,6 @@ import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { buildPlannerEvents } from '@/storage/plannerStorage';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -151,7 +149,7 @@ const PlannerCard = ({
                 />
             }
             footer={eventChips.length > 0 &&
-                <View style={styles.chips}>
+                <View className='flex-row gap-2 items-center flex-wrap w-full'>
                     {eventChips.map(allDayEvent =>
                         <EventChip
                             key={`${allDayEvent.label}-${datestamp}`}
@@ -168,12 +166,15 @@ const PlannerCard = ({
                 </View>
             }
             collapsed={collapsed}
-            contentHeight={((SortedEvents.items.length + 1) * LIST_ITEM_HEIGHT) + (eventChips.length * 30) + 30}
+            contentHeight={
+                ((SortedEvents.items.length + 1) * LIST_ITEM_HEIGHT) +
+                (eventChips.length * LIST_ITEM_HEIGHT) +
+                LIST_ITEM_HEIGHT
+            }
         >
             <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
                 listId={datestamp}
                 items={SortedEvents.items}
-                isLoading={collapsed}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
@@ -186,19 +187,11 @@ const PlannerCard = ({
                 onSaveTextfield={SortedEvents.persistItemToStorage}
                 emptyLabelConfig={{
                     label: 'No Plans',
-                    className: `h-[${LIST_ITEM_HEIGHT}px] pb-2`
+                    className: 'h-20 flex justify-center items-center'
                 }}
             />
         </Card>
     );
 };
-
-const styles = StyleSheet.create({
-    chips: {
-        ...globalStyles.verticallyCentered,
-        width: '100%',
-        flexWrap: 'wrap',
-    }
-});
 
 export default PlannerCard;

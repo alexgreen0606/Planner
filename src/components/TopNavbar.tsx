@@ -1,5 +1,4 @@
 import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
-import globalStyles from '@/theme/globalStyles';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -74,7 +73,10 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
     }));
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View
+            className='flex-1'
+            style={{ backgroundColor: PlatformColor('systemBackground') }}
+        >
             <ScrollContainerProvider
                 floatingBanner={
                     <View className='w-full flex items-center'>

@@ -1,7 +1,6 @@
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
-import globalStyles from '@/theme/globalStyles';
 import { DateTime } from 'luxon';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';

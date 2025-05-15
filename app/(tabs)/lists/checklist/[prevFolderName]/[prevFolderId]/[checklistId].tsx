@@ -1,19 +1,18 @@
+import { EFolderItemType } from '@/enums/EFolderItemType';
+import { EItemStatus } from '@/enums/EItemStatus';
 import FolderItemBanner from '@/feature/checklists/components/FolderItemBanner';
 import { LISTS_STORAGE_ID } from '@/feature/checklists/constants';
 import SortableList from '@/feature/sortedList';
 import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
-import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
+import { isItemTextfield } from '@/feature/sortedList/utils';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
-import { isItemTextfield } from '@/feature/sortedList/utils';
-import globalStyles from '@/theme/globalStyles';
+import { IChecklist } from '@/types/checklists/IChecklist';
+import { IListItem } from '@/types/listItems/core/TListItem';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
-import { IListItem } from '@/types/listItems/core/TListItem';
-import { IChecklist } from '@/types/checklists/IChecklist';
-import { EFolderItemType } from '@/enums/EFolderItemType';
+import { PlatformColor, View } from 'react-native';
 
 const ChecklistScreen = () => {
     const { checklistId, prevFolderName, prevFolderId } = useLocalSearchParams<{
@@ -40,7 +39,10 @@ const ChecklistScreen = () => {
     });
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View
+            className='flex-1'
+            style={{ backgroundColor: PlatformColor('systemBackground') }}
+        >
             <ScrollContainerProvider
                 header={
                     <FolderItemBanner

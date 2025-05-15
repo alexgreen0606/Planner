@@ -1,9 +1,8 @@
 import GenericIcon, { GenericIconProps } from '@/components/GenericIcon';
-import { Dimensions, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
-import globalStyles from '../../../theme/globalStyles';
-import { IListItem } from '@/types/listItems/core/TListItem';
-import { ListItemUpdateComponentProps } from '../lib/listRowConfig';
 import { TOOLBAR_HEIGHT } from '@/constants/layout';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { Dimensions, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ListItemUpdateComponentProps } from '../lib/listRowConfig';
 
 interface IconSet<T extends IListItem> extends GenericIconProps<T> {
     customIcon?: React.ReactNode;
@@ -21,7 +20,10 @@ const Toolbar = <T extends IListItem>({
 }: ToolbarProps<T>) => open &&
     <View style={styles.toolbar}>
         {iconSets.map((iconSet, setIndex) => (
-            <View key={`${item.value}-${setIndex}-toolbar-set-${open}-${item.id}`} style={globalStyles.verticallyCentered}>
+            <View
+                key={`${item.value}-${setIndex}-toolbar-set-${open}-${item.id}`}
+                className='flex-row gap-2 items-center'
+            >
                 {iconSet.map((iconConfig, iconIndex) => iconConfig.customIcon ? (
                     <TouchableOpacity key={`${item.value}-${setIndex}-toolbar-set-${iconConfig.type}-${iconIndex}`} onPress={() => iconConfig.onClick?.()}>
                         {iconConfig.customIcon}

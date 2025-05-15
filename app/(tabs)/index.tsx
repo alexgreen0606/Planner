@@ -5,11 +5,10 @@ import { eventChipToBirthday, extractNameFromBirthdayText } from '@/feature/birt
 import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
 import TodayPlanner from '@/feature/todayPlans';
 import TodayBanner from '@/feature/todayPlans/TodayBanner';
-import globalStyles from '@/theme/globalStyles';
 import { loadCalendarEventData } from '@/utils/calendarUtils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
 import { BIRTHDAY_STORAGE_ID } from '@/constants/storageIds';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -73,12 +72,17 @@ const Today = () => {
   }, birthdayStorage);
 
   return (
-    <View style={globalStyles.blackFilledSpace}>
+    <View
+      className='flex-1'
+      style={{ backgroundColor: PlatformColor('systemBackground') }}
+    >
 
       <ScrollContainerProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
         floatingBanner={pageData.chips.length > 0 && (
-          <View style={styles.chips}>
+          <View
+            className="pb-1 pt-2 px-2 w-full flex flex-wrap flex-row gap-2 items-center"
+          >
             {pageData.chips.map((chipConfig, i) => (
               <EventChip
                 key={`event-chip-${i}`}
@@ -103,16 +107,5 @@ const Today = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  chips: {
-    ...globalStyles.verticallyCentered,
-    paddingBottom: 4,
-    paddingTop: 8,
-    paddingHorizontal: 8,
-    width: '100%',
-    flexWrap: 'wrap',
-  }
-});
 
 export default Today;

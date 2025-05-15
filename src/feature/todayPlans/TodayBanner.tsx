@@ -1,8 +1,8 @@
+import { HEADER_HEIGHT } from '@/constants/layout';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/calendarUtils/timestampUtils';
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
 import CustomText from '../../components/text/CustomText';
-import globalStyles from '../../theme/globalStyles';
 import WeatherDisplay from '../weather';
 
 interface TodayBannerProps {
@@ -17,7 +17,10 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
     const currentTemp = 37;
 
     return (
-        <View style={globalStyles.pageLabelContainer}>
+        <View
+            className='flex-row items-center justify-between w-full relative'
+            style={{ height: HEADER_HEIGHT }}
+        >
 
             {/* Date */}
             <View style={styles.pageLabel}>

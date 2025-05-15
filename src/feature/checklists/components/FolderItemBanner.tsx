@@ -1,15 +1,14 @@
 import ButtonText from '@/components/text/ButtonText';
 import CustomText from '@/components/text/CustomText';
-import globalStyles from '@/theme/globalStyles';
+import { HEADER_HEIGHT } from '@/constants/layout';
+import { EFolderItemType } from '@/enums/EFolderItemType';
+import { EItemStatus } from '@/enums/EItemStatus';
+import { useDimensions } from '@/services/DimensionsProvider';
+import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, View } from 'react-native';
 import { getFolderItem, updateFolderItem } from '../../../storage/checklistsStorage';
-import { IFolderItem } from '@/types/listItems/IFolderItem';
-import { useDimensions } from '@/services/DimensionsProvider';
-import { HEADER_HEIGHT } from '@/constants/layout';
-import { EItemStatus } from '@/enums/EItemStatus';
-import { EFolderItemType } from '@/enums/EFolderItemType';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -40,10 +39,10 @@ const FolderItemBanner = ({
     const isItemEditing = item.status === EItemStatus.EDIT;
 
     return (
-        <View style={[
-            globalStyles.pageLabelContainer,
-            styles.container
-        ]}>
+        <View
+            className='flex-row items-center justify-between w-full relative'
+            style={{ height: HEADER_HEIGHT }}
+        >
 
             {/* Name */}
             {isItemEditing ? (
@@ -87,9 +86,6 @@ const FolderItemBanner = ({
 };
 
 const styles = StyleSheet.create({
-    container: {
-        position: 'relative'
-    },
     inputField: {
         height: HEADER_HEIGHT,
         width: '100%',

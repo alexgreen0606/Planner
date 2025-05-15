@@ -57,6 +57,7 @@ async function handleTimeModalSave(
         updatedList.push(updatedEvent);
     }
     updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedList);
+    console.log(updatedEvent, 'updated')
     setCurrentTextfield(updatedEvent);
 }
 

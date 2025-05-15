@@ -1,11 +1,10 @@
 import GenericIcon from '@/components/GenericIcon';
 import PopoverList from '@/components/PopoverList';
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import RecurringPlanner from '../../../src/feature/recurringPlanner/components/RecurringPlanner';
 import RecurringWeekdayPlanner from '../../../src/feature/recurringPlanner/components/RecurringWeekdayPlanner';
 
-import globalStyles from '../../../src/theme/globalStyles';
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 
 type RecurringOption = {
@@ -28,7 +27,10 @@ const RecurringPlanners = () => {
     }
 
     return (
-        <View style={globalStyles.blackFilledSpace}>
+        <View
+            className='flex-1'
+            style={{ backgroundColor: PlatformColor('systemBackground') }}
+        >
 
             {/* Recurring Planner Selection */}
             <View className='py-8 px-16 flex-row justify-between items-center w-full' >
