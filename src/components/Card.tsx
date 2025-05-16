@@ -1,6 +1,7 @@
+import { useScrollContainer } from '@/services/ScrollContainer';
 import React, { ReactNode, useEffect } from 'react';
 import { PlatformColor, StyleSheet, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const ContentContainer = Animated.createAnimatedComponent(View);
 
@@ -23,20 +24,28 @@ const Card = ({
     contentHeight,
     children,
 }: CardProps) => {
-    const plannerContainerMaxHeight = useSharedValue(0);
+
+    const { measureContentHeight } = useScrollContainer();
+
+    const contentContainerHeight = useSharedValue(0);
 
     useEffect(() => {
         if (contentHeight) {
             const newHeight = collapsed ? 0 : contentHeight;
-            plannerContainerMaxHeight.value = withTiming(newHeight, {
-                duration: 300
-            })
+            contentContainerHeight.value = withTiming(
+                newHeight,
+                { duration: 300 }
+            );
         }
     }, [collapsed, contentHeight]);
 
+    useAnimatedReaction(
+        () => contentContainerHeight.value,
+        measureContentHeight
+    );
+
     const plannerContainerStyle = useAnimatedStyle(() => ({
-        maxHeight: plannerContainerMaxHeight.value,
-        overflow: 'hidden'
+        maxHeight: contentContainerHeight.value
     }));
 
     return (
@@ -46,7 +55,10 @@ const Card = ({
                     {header}
                 </View>
             )}
-            <ContentContainer style={contentHeight ? plannerContainerStyle : undefined}>
+            <ContentContainer
+                className='overflow-hidden'
+                style={contentHeight ? plannerContainerStyle : undefined}
+            >
                 {children}
                 {footer && (
                     <View style={styles.banner}>

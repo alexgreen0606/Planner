@@ -2,6 +2,8 @@ export const AUTO_SCROLL_SPEED = 1;
 
 export const SCROLL_THROTTLE = 16;
 
+export const NAVBAR_OVERFLOW_FADE_THRESHOLD = 20;
+
 export const LIST_SPRING_CONFIG = {
     overshootClamping: true,
     mass: .5

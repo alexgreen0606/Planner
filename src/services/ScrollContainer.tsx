@@ -1,20 +1,20 @@
 import GenericIcon from '@/components/GenericIcon';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/constants/layout';
-import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
+import { NAVBAR_OVERFLOW_FADE_THRESHOLD, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
 import { useLayoutTracker } from '@/services/LayoutTracker';
 import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { BlurView } from 'expo-blur';
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, PlatformColor, ScrollView, UIManager, View } from 'react-native';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { KeyboardAvoidingView, PlatformColor, ScrollView, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { Portal } from 'react-native-paper';
 import Animated, {
-    AnimatedRef,
     cancelAnimation,
     Easing,
     Extrapolation,
     interpolate,
+    measure,
     runOnJS,
     scrollTo,
     SharedValue,
@@ -22,20 +22,20 @@ import Animated, {
     useAnimatedRef,
     useAnimatedScrollHandler,
     useAnimatedStyle,
-    measure,
     useDerivedValue,
     useSharedValue,
     withRepeat,
-    withTiming,
+    withTiming
 } from 'react-native-reanimated';
 import { KeyboardProvider } from './KeyboardTracker';
-import ButtonText from '@/components/text/ButtonText';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
 const BottomBlurBar = Animated.createAnimatedComponent(View);
+
+const BottomOfContainer = Animated.createAnimatedComponent(View);
 
 export enum LoadingStatus {
     STATIC = 'STATIC', // no overscroll visible
@@ -65,6 +65,7 @@ interface ScrollContainerContextValue<T extends IListItem> {
     setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
+    measureContentHeight: () => void;
 }
 
 const ScrollContainerContext = createContext<ScrollContainerContextValue<any> | null>(null);
@@ -131,17 +132,12 @@ export const ScrollContainerContent = <T extends IListItem>({
     // --- Scroll Variables ---
     const disableNativeScroll = useSharedValue(false);
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
+    const bottomScrollRef = useAnimatedRef<Animated.View>();
     const scrollOffset = useSharedValue(0);
 
-    const bottomOfContainerRef = useRef<View>(null);
-    const bottomOfContainerPosition = useSharedValue(SCREEN_HEIGHT);
-
-    // TODO: remove and replace with a containerBottom value
-    const scrollOffsetBounds = useDerivedValue(() => {
-        const min = 0;
-        const max = Math.max(0, contentHeight.value - VISIBLE_HEIGHT);
-        return { min, max };
-    });
+    const scrollOffsetMax = useDerivedValue(() =>
+        Math.max(0, contentHeight.value - VISIBLE_HEIGHT)
+    );
 
     // ------------- Utility Functions -------------
 
@@ -157,6 +153,16 @@ export const ScrollContainerContent = <T extends IListItem>({
             enableVibrateFallback: true,
             ignoreAndroidSystemSettings: false
         });
+    };
+
+    const measureContentHeight = () => {
+        'worklet';
+        try {
+            const measured = measure(bottomScrollRef);
+            if (measured) {
+                contentHeight.value = measured.pageY - LOWER_CONTAINER_PADDING;
+            }
+        } catch (e) { }
     };
 
     // ------------- Reload Logic -------------
@@ -253,6 +259,25 @@ export const ScrollContainerContent = <T extends IListItem>({
         }
     );
 
+    // Auto Scroll
+    const autoScroll = (displacement: number) => {
+        'worklet';
+        const SECONDS_PER_ITEM = .25;
+
+        const newOffset = scrollOffset.value + displacement;
+        const durationMs = Math.abs(
+            (displacement / LIST_ITEM_HEIGHT) * SECONDS_PER_ITEM * 1000
+        );
+        disableNativeScroll.value = true;
+        scrollOffset.value = withTiming(
+            newOffset,
+            { duration: durationMs, easing: Easing.linear },
+            () => {
+                disableNativeScroll.value = false;
+            }
+        )
+    };
+
     // ------------- Floating Banner Logic -------------
 
     const floatingBannerStyle = useAnimatedStyle(() => ({
@@ -326,45 +351,12 @@ export const ScrollContainerContent = <T extends IListItem>({
 
     const bottomBlurBarStyle = useAnimatedStyle(() => ({
         opacity: interpolate(
-            scrollOffset.value + LOWER_CONTAINER_PADDING,
-            [scrollOffsetBounds.value.max - LOWER_CONTAINER_PADDING / 2, scrollOffsetBounds.value.max],
+            scrollOffset.value,
+            [scrollOffsetMax.value - NAVBAR_OVERFLOW_FADE_THRESHOLD, scrollOffsetMax.value],
             [1, 0],
             Extrapolation.CLAMP
         )
     }));
-
-    // ---------- TODO: relocate these ----------
-
-    const evaluateContainerBottomPosition = () => {
-        if (bottomOfContainerRef.current) {
-            bottomOfContainerRef.current.measure((x, y, width, height, pageX, pageY) => {
-                console.log(pageY, 'absolute container bottom');
-            })
-        }
-    };
-
-    useAnimatedReaction(() => scrollOffset.value,
-        () => {
-            runOnJS(evaluateContainerBottomPosition)()
-        })
-
-    const autoScroll = (displacement: number) => {
-        'worklet';
-        const SECONDS_PER_ITEM = .25;
-
-        const newOffset = scrollOffset.value + displacement;
-        const durationMs = Math.abs(
-            (displacement / LIST_ITEM_HEIGHT) * SECONDS_PER_ITEM * 1000
-        );
-        disableNativeScroll.value = true;
-        scrollOffset.value = withTiming(
-            newOffset,
-            { duration: durationMs, easing: Easing.linear },
-            () => {
-                disableNativeScroll.value = false;
-            }
-        )
-    };
 
     return (
         <ScrollContainerContext.Provider value={{
@@ -373,6 +365,7 @@ export const ScrollContainerContent = <T extends IListItem>({
             setCurrentTextfield,
             scrollOffset,
             autoScroll,
+            measureContentHeight,
             disableNativeScroll,
             floatingBannerHeight
         }}>
@@ -406,12 +399,7 @@ export const ScrollContainerContent = <T extends IListItem>({
                         flexGrow: 1,
                     }}
                     onContentSizeChange={(_, height) => {
-                        contentHeight.value = height;
-                        console.log(height, 'onContentSizeChange')
-                    }}
-                    onLayout={(e) => {
-                        const { height } = e.nativeEvent.layout;
-                        console.log(height, 'onLayout')
+                        contentHeight.value = height - LOWER_CONTAINER_PADDING;
                     }}
                 >
 
@@ -453,12 +441,7 @@ export const ScrollContainerContent = <T extends IListItem>({
 
                     {children}
 
-                    <View
-                        ref={bottomOfContainerRef}
-                        onLayout={() => {
-                            evaluateContainerBottomPosition();
-                        }}
-                    />
+                    <BottomOfContainer ref={bottomScrollRef} />
 
                 </ScrollContainer>
             </KeyboardAvoidingView>
