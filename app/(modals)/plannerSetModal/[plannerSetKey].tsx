@@ -57,7 +57,7 @@ const PlannerSetModal = () => {
         {
             name: 'title',
             type: EFormFieldType.TEXT,
-            label: 'Title',
+            placeholder: 'Title',
             focusTrigger: isModalOpen && !isEditMode,
             rules: {
                 required: 'Title is required',

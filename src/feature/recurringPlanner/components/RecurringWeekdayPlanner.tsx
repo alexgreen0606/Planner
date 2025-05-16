@@ -5,7 +5,7 @@ import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { isItemTextfield } from '@/feature/sortedList/utils';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { useScrollContainer } from '@/services/ScrollContainerProvider';
+import { useScrollContainer } from '@/services/ScrollContainer';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '@/utils/calendarUtils/sharedListProps';

@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { useDeleteScheduler } from '../../../services/DeleteScheduler';
-import { useScrollContainer } from '../../../services/ScrollContainerProvider';
+import { useScrollContainer } from '../../../services/ScrollContainer';
 import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '../../../utils/calendarUtils/sharedListProps';
 import { generateCheckboxIconConfig } from '../../sortedList/commonProps';
 import useSortedList from '../../sortedList/hooks/useSortedList';

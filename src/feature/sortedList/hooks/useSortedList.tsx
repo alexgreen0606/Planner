@@ -1,8 +1,8 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { useScrollContainer } from '../../../services/ScrollContainerProvider';
+import { useScrollContainer } from '../../../services/ScrollContainer';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDeleteScheduler } from '../../../services/DeleteScheduler';
-import { useReload } from '../../../services/ReloadProvider';
+import { useReloadScheduler } from '../../../services/ReloadScheduler';
 import { useFocusEffect, usePathname } from 'expo-router';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { EItemStatus } from '@/enums/EItemStatus';
@@ -51,7 +51,7 @@ const useSortedList = <T extends IListItem, S>({
         isItemDeleting
     } = useDeleteScheduler();
 
-    const { registerReloadFunction } = useReload();
+    const { registerReloadFunction } = useReloadScheduler();
 
     // List Contents Variables
     const [isLoading, setIsLoading] = useState(true);

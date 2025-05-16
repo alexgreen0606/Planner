@@ -9,7 +9,7 @@ import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plan
 import { NULL } from '../../../src/feature/checklists/constants';
 import PlannerCard from '../../../src/feature/plannerCard';
 import { WeatherForecast } from '../../../src/feature/weather/utils';
-import { useReload } from '../../../src/services/ReloadProvider';
+import { useReloadScheduler } from '../../../src/services/ReloadScheduler';
 import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
 import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/utils/calendarUtils/calendarUtils';
 
@@ -32,7 +32,7 @@ const Planners = () => {
     }, [plannerSetKey]);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
-        "2025-04-23": {
+        "2025-05-17": {
             "date": "2025-04-23",
             "weatherCode": 61,
             "weatherDescription": "Slight rain",
@@ -50,7 +50,7 @@ const Planners = () => {
             "precipitationSum": 1.19,
             "precipitationProbabilityMax": 32
         },
-        "2025-04-25": {
+        "2025-05-18": {
             "date": "2025-03-29",
             "weatherCode": 3,
             "weatherDescription": "Overcast",
@@ -59,7 +59,7 @@ const Planners = () => {
             "precipitationSum": 0,
             "precipitationProbabilityMax": 3
         },
-        "2025-04-26": {
+        "2025-05-19": {
             "date": "2025-03-30",
             "weatherCode": 63,
             "weatherDescription": "Moderate rain",
@@ -68,7 +68,7 @@ const Planners = () => {
             "precipitationSum": 0.46,
             "precipitationProbabilityMax": 66
         },
-        "2025-04-27": {
+        "2025-05-20": {
             "date": "2025-03-31",
             "weatherCode": 51,
             "weatherDescription": "Light drizzle",
@@ -77,7 +77,7 @@ const Planners = () => {
             "precipitationSum": 0.02,
             "precipitationProbabilityMax": 34
         },
-        "2025-04-28": {
+        "2025-05-21": {
             "date": "2025-04-01",
             "weatherCode": 53,
             "weatherDescription": "Moderate drizzle",
@@ -86,7 +86,7 @@ const Planners = () => {
             "precipitationSum": 0.09,
             "precipitationProbabilityMax": 34
         },
-        "2025-04-29": {
+        "2025-05-22": {
             "date": "2025-04-02",
             "weatherCode": 53,
             "weatherDescription": "Moderate drizzle",
@@ -98,7 +98,7 @@ const Planners = () => {
     });
     const [calendarEventData, setCalendarEventData] = useState<TCalendarData>(generateEmptyCalendarDataMaps(plannerDatestamps))
 
-    const { registerReloadFunction } = useReload();
+    const { registerReloadFunction } = useReloadScheduler();
 
     /**
      * Loads in all chip, weather, and calendar data.

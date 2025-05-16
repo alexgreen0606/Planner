@@ -3,7 +3,7 @@ import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
-import { useScrollContainer } from '../../../services/ScrollContainerProvider';
+import { useScrollContainer } from '../../../services/ScrollContainer';
 
 interface ListTextfieldProps<T extends IListItem> {
     item: T;

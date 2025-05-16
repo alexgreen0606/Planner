@@ -85,9 +85,6 @@ export function generateTimeIconConfig(
     openTimeModal: (item: IPlannerEvent | IRecurringEvent) => void
 ) {
     const itemTime = getEventTime(event);
-    if (itemTime) {
-        console.log(event)
-    }
     return {
         hideIcon: !itemTime,
         onClick: () => openTimeModal(event),

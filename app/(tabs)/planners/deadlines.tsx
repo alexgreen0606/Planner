@@ -6,7 +6,7 @@ import SortableList from '@/feature/sortedList';
 import Toolbar, { ToolbarProps } from '@/feature/sortedList/components/ListItemToolbar';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { ModifyItemConfig } from '@/feature/sortedList/lib/listRowConfig';
-import { useScrollContainer } from '@/services/ScrollContainerProvider';
+import { useScrollContainer } from '@/services/ScrollContainer';
 import { generateSortId, isItemTextfield } from '@/feature/sortedList/utils';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { Deadline } from '@/types/listItems/IDeadline';

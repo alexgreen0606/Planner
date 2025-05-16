@@ -5,8 +5,8 @@ import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanima
 import uuid from 'react-native-uuid';
 import DraggableRow from './components/DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './components/EmptyLabel';
-import { useKeyboard } from '../../services/KeyboardProvider';
-import { useScrollContainer } from '../../services/ScrollContainerProvider';
+import { useKeyboardTracker } from '../../services/KeyboardTracker';
+import { useScrollContainer } from '../../services/ScrollContainer';
 import { buildItemPositions, generateSortId } from './utils';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { ListItemUpdateComponentProps, ListItemIconConfig, ModifyItemConfig } from './lib/listRowConfig';
@@ -68,7 +68,7 @@ const SortableList = <
         setCurrentTextfield
     } = useScrollContainer();
 
-    const { keyboardAbsoluteTop } = useKeyboard();
+    const { keyboardAbsoluteTop } = useKeyboardTracker();
 
     const positions = useSharedValue<Record<string, number>>({});
     const pendingItem = useRef<T | null>(null);

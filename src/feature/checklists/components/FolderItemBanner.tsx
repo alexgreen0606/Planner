@@ -3,7 +3,7 @@ import CustomText from '@/components/text/CustomText';
 import { HEADER_HEIGHT } from '@/constants/layout';
 import { EFolderItemType } from '@/enums/EFolderItemType';
 import { EItemStatus } from '@/enums/EItemStatus';
-import { useDimensions } from '@/services/DimensionsProvider';
+import { useLayoutTracker } from '@/services/LayoutTracker';
 import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -27,7 +27,7 @@ const FolderItemBanner = ({
 }: FolderItemBannerProps) => {
     const router = useRouter();
     const [item, setItem] = useState<IFolderItem>(getFolderItem(itemId, itemType));
-    const { SCREEN_WIDTH } = useDimensions();
+    const { SCREEN_WIDTH } = useLayoutTracker();
 
     const beginEditItem = () => setItem({ ...item, status: EItemStatus.EDIT });
     const updateItem = (text: string) => setItem({ ...item, value: text });

@@ -33,7 +33,7 @@ const ModalTextfield = ({
             placeholder={placeholder}
             onChangeText={onChange}
             selectionColor={PlatformColor('systemBlue')}
-            className='w-full text-base bg-transparent'
+            className='w-full text-lg bg-transparent'
             style={{
                 height: LIST_CONTENT_HEIGHT,
                 color: PlatformColor('label')

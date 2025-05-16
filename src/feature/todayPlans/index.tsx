@@ -2,14 +2,14 @@ import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
 import { ToolbarProps } from '@/feature/sortedList/components/ListItemToolbar';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { useScrollContainer } from '@/services/ScrollContainerProvider';
+import { useScrollContainer } from '@/services/ScrollContainer';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
 import { usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
 import SortableList from '../sortedList';
 import { useTimeModal } from '@/components/modal/services/TimeModalProvider';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
-import { useReload } from '@/services/ReloadProvider';
+import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { buildPlannerEvents } from '@/storage/plannerStorage';
 import { handleDragEnd, handleEventInput, generateTimeIconConfig, generateEventToolbar } from '@/utils/calendarUtils/sharedListProps';
 import { openTimeModal, saveEventLoadChips, deleteEventsLoadChips } from '@/utils/calendarUtils/sharedListUtils';
@@ -32,7 +32,7 @@ const TodayPlanner = ({
 
     const { isItemDeleting } = useDeleteScheduler();
 
-    const { registerReloadFunction } = useReload();
+    const { registerReloadFunction } = useReloadScheduler();
 
     const { onOpen } = useTimeModal();
 

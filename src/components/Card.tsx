@@ -32,7 +32,7 @@ const Card = ({
                 duration: 300
             })
         }
-    }, [collapsed]);
+    }, [collapsed, contentHeight]);
 
     const plannerContainerStyle = useAnimatedStyle(() => ({
         maxHeight: plannerContainerMaxHeight.value,

@@ -1,5 +1,5 @@
 import { TOOLBAR_HEIGHT } from '@/constants/layout';
-import { useDimensions } from '@/services/DimensionsProvider';
+import { useLayoutTracker } from '@/services/LayoutTracker';
 import React, { createContext, useContext } from 'react';
 import {
     AnimatedKeyboardInfo,
@@ -27,7 +27,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
 
     const {
         SCREEN_HEIGHT
-    } = useDimensions();
+    } = useLayoutTracker();
 
     const keyboardHeight = useDerivedValue(() => {
         return keyboard.height.value + TOOLBAR_HEIGHT;
@@ -55,7 +55,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
     );
 };
 
-export const useKeyboard = () => {
+export const useKeyboardTracker = () => {
     const context = useContext(KeyboardContext);
     if (!context) {
         throw new Error("useKeyboard must be used within a KeyboardProvider");

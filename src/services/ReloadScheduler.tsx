@@ -72,7 +72,7 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     );
 };
 
-export const useReload = () => {
+export const useReloadScheduler = () => {
     const context = useContext(ReloadContext);
     if (!context) {
         throw new Error("useReload must be used within a ReloadProvider");

@@ -1,10 +1,10 @@
-import { DimensionsProvider } from '@/services/DimensionsProvider';
+import { DimensionsProvider } from '@/services/LayoutTracker';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
 import '../global.css';
 import { DeleteSchedulerProvider } from '../src/services/DeleteScheduler';
-import { ReloadProvider } from '../src/services/ReloadProvider';
+import { ReloadProvider } from '../src/services/ReloadScheduler';
 import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerSetKey]';
 import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';
 import { TimeModalProvider } from '@/components/modal/services/TimeModalProvider';

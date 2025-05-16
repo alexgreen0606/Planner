@@ -20,7 +20,7 @@ const TimeValue = ({
     endEvent,
     startEvent,
     concise,
-    platformColor = 'label'
+    platformColor = 'systemTeal'
 }: TimeProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
@@ -67,7 +67,7 @@ const TimeValue = ({
             <CustomText type='conciseTime' style={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
             </CustomText>
-            <View className='w-[1px]'/>
+            <View className='w-[1px]' />
             <CustomText type='conciseIndicator'>
                 {indicator}
             </CustomText>

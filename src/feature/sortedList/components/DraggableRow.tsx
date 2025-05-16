@@ -16,11 +16,11 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import { useDeleteScheduler } from "../../../services/DeleteScheduler";
-import { useScrollContainer } from "../../../services/ScrollContainerProvider";
+import { useScrollContainer } from "../../../services/ScrollContainer";
 import { generateSortId, getParentSortIdFromPositions } from "../utils";
 import ListTextfield from "./ListTextfield";
 import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, spacing } from "@/constants/layout";
-import { useDimensions } from "@/services/DimensionsProvider";
+import { useLayoutTracker } from "@/services/LayoutTracker";
 import { ListItemIconConfig } from "../lib/listRowConfig";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { EItemStatus } from "@/enums/EItemStatus";
@@ -79,15 +79,13 @@ const DraggableRow = <T extends IListItem>({
         BOTTOM_SPACER,
         SCREEN_HEIGHT,
         TOP_SPACER
-    } = useDimensions();
+    } = useLayoutTracker();
 
     const {
         scrollOffset,
-        scrollRef,
+        autoScroll,
         currentTextfield,
         setCurrentTextfield,
-        disableNativeScroll,
-        scrollOffsetBounds,
         floatingBannerHeight
     } = useScrollContainer();
 
@@ -112,12 +110,15 @@ const DraggableRow = <T extends IListItem>({
     const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const BOTTOM_AUTO_SCROLL_BOUND = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
-    const isAutoScrolling = useSharedValue(false);
     const isAwaitingInitialPosition = useSharedValue(positions.value[item.id] === undefined);
     const isDragging = useSharedValue(false);
     const top = useSharedValue(positions.value[item.id] ?? 0);
-    const initialGesturePosition = useSharedValue(0);
-    const autoScrollTrigger = useSharedValue<number | null>(null);
+
+    // ------ Drag Variables ------
+    const initialScrollOffset = useSharedValue(0);
+    const initialTop = useSharedValue(0);
+    const scrollOffsetDelta = useSharedValue(0);
+    const isAutoScrolling = useSharedValue(false);
 
     // ------------- Row Configuration Variables -------------
     const customTextPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
@@ -157,12 +158,6 @@ const DraggableRow = <T extends IListItem>({
         return Math.max(min, Math.min(value, max));
     };
 
-    const sanitizeScrollOffset = (value: number) => {
-        'worklet';
-        const { min, max } = scrollOffsetBounds.value;
-        return Math.max(min, Math.min(value, max));
-    };
-
     /**
      * Updates the position map so that this row aligns with the user's
      * drag.
@@ -193,25 +188,18 @@ const DraggableRow = <T extends IListItem>({
 
         const beginAutoScroll = (direction: AutoScrollDirection) => {
             'worklet';
-            const displacement = direction === AutoScrollDirection.UP ? -AUTO_SCROLL_SPEED : AUTO_SCROLL_SPEED;
-            disableNativeScroll.value = true;
+            let distanceToBound = 0;
+            if (direction === AutoScrollDirection.UP) {
+                distanceToBound = topBoundaries.min - top.value;
+            } else {
+                distanceToBound = topBoundaries.max - top.value;
+            }
 
-            const handleAutoScrollEnd = () => {
-                'worklet';
-                autoScrollTrigger.value = null;
-                disableNativeScroll.value = false;
-            };
-
-            autoScrollTrigger.value = withRepeat(
-                withTiming(displacement, { duration: 0 }),
-                -1,
-                false,
-                handleAutoScrollEnd
-            );
-            return;
+            isAutoScrolling.value = true;
+            autoScroll(distanceToBound);
         };
 
-        if (!autoScrollTrigger.value) {
+        if (!isAutoScrolling.value) {
             if (currentTopAbsoluteYPosition <= TOP_AUTO_SCROLL_BOUND) {
                 // --- Auto Scroll Up ---
                 beginAutoScroll(AutoScrollDirection.UP)
@@ -227,12 +215,13 @@ const DraggableRow = <T extends IListItem>({
             currentTopAbsoluteYPosition < BOTTOM_AUTO_SCROLL_BOUND
         ) {
             // --- Cancel Auto Scroll ---
-            cancelAnimation(autoScrollTrigger);
+            cancelAnimation(scrollOffset);
+            isAutoScrolling.value = false;
         }
 
         // --- Drag the item ---
         top.value = withTiming(
-            sanitizeTopValue(initialGesturePosition.value + currentDragDisplacement),
+            sanitizeTopValue(initialTop.value + currentDragDisplacement),
             { duration: 16 }
         );
         updateRowPosition();
@@ -243,10 +232,10 @@ const DraggableRow = <T extends IListItem>({
      */
     const endDrag = () => {
         'worklet';
-        cancelAnimation(autoScrollTrigger);
+        cancelAnimation(scrollOffset);
         isDragging.value = false;
-        isAutoScrolling.value = false;
-        initialGesturePosition.value = 0;
+        initialScrollOffset.value = 0;
+        initialTop.value = 0;
         top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
     };
 
@@ -268,27 +257,21 @@ const DraggableRow = <T extends IListItem>({
         [isDragging.value]
     );
 
-    // Auto Scroll
+    // Auto scroll
     useAnimatedReaction(
         () => ({
-            trigger: autoScrollTrigger.value
+            dragging: isDragging.value,
+            displacement: scrollOffset.value - initialScrollOffset.value,
+            delta: scrollOffsetDelta.value
         }),
-        ({ trigger }) => {
-            if (!trigger) return;
-
-            const newTop = sanitizeTopValue(top.value + trigger);
-            const newScroll = sanitizeScrollOffset(scrollOffset.value + trigger);
-
-            if ([topBoundaries.min, topBoundaries.max].includes(newTop)) {
-                cancelAnimation(autoScrollTrigger);
+        ({ dragging, displacement, delta }) => {
+            if (dragging) {
+                top.value += (displacement - delta);
+                scrollOffsetDelta.value = displacement;
+                initialTop.value += (displacement - delta);
+                updateRowPosition();
             }
-
-            top.value = newTop;
-            scrollOffset.value = newScroll;
-            initialGesturePosition.value += trigger;
-            updateRowPosition();
-        },
-        [isDragging.value]
+        }
     );
 
     /**
@@ -320,8 +303,9 @@ const DraggableRow = <T extends IListItem>({
         .onStart(() => {
             if (disableDrag) return;
 
+            initialScrollOffset.value = scrollOffset.value;
+            initialTop.value = top.value;
             isDragging.value = true;
-            initialGesturePosition.value = top.value;
         });
 
     const dragGesture = Gesture.Pan()
@@ -367,7 +351,7 @@ const DraggableRow = <T extends IListItem>({
                 <TouchableOpacity
                     activeOpacity={config.onClick ? 0 : 1}
                     onPress={() => config.onClick?.(item)}
-                    className='mr-4'
+                    className='mr-2'
                 >
                     {config.customIcon}
                 </TouchableOpacity>

@@ -91,7 +91,7 @@ const TimeRangeSelector = ({
         setStartTimestamp : setEndTimestamp;
 
     const getColor = (type: SelectorMode) => {
-        return type === mode ? 'systemBlue' : 'label';
+        return type === mode ? 'systemBlue' : 'systemTeal';
     }
 
     return (
@@ -104,7 +104,7 @@ const TimeRangeSelector = ({
                     {endTimestamp && (
                         <View style={styles.through}>
                             <CustomText type='indicator'>
-                                to
+                                TO
                             </CustomText>
                         </View>
                     )}
@@ -149,9 +149,9 @@ const TimeRangeSelector = ({
                     />
                 </DateSelectorContainer>
             </View>
-            {timestamp && startTimestamp && (
+            {timestamp && startTimestamp && mode !== SelectorMode.DATES && (
                 <View>
-                    <View className='flex-row justify-between items-center w-full'>
+                    <View className='flex-row justify-evenly items-center w-full'>
                         <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
                             <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
                         </TouchableOpacity>
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     dates: {
         flexDirection: 'row',
         position: 'relative',
-        justifyContent: 'space-between',
+        justifyContent: 'space-evenly',
         alignItems: 'center',
         paddingBottom: 4
     },

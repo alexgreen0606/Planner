@@ -4,7 +4,7 @@ import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScroll
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BlurView } from "expo-blur";
 import { useRouter } from 'expo-router';
-import { useDimensions } from '@/services/DimensionsProvider';
+import { useLayoutTracker } from '@/services/LayoutTracker';
 import ButtonText from '../text/ButtonText';
 import CustomText from '../text/CustomText';
 
@@ -42,7 +42,7 @@ const Modal = ({
 
     const router = useRouter();
 
-    const { BOTTOM_SPACER } = useDimensions();
+    const { BOTTOM_SPACER } = useLayoutTracker();
 
     const scrollRef = useAnimatedRef();
     const scrollOffset = useSharedValue(0);

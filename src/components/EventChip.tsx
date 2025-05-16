@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useReload } from '../services/ReloadProvider';
+import { useReloadScheduler } from '../services/ReloadScheduler';
 import { isValidPlatformColor } from '../utils/colorUtils';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
@@ -31,7 +31,7 @@ const EventChip = ({
 
     const { pendingDeleteItems } = useDeleteScheduler();
 
-    const { reloadPage } = useReload();
+    const { reloadPage } = useReloadScheduler();
 
     function handleOpen() {
         if (planEvent) onOpen(planEvent, handleSave);

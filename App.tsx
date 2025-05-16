@@ -4,7 +4,7 @@ import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
 import { DeleteSchedulerProvider } from './src/services/DeleteScheduler';
-import { ReloadProvider } from './src/services/ReloadProvider';
+import { ReloadProvider } from './src/services/ReloadScheduler';
 
 const App = () => {
   return (

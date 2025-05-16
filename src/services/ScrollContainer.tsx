@@ -1,12 +1,12 @@
 import GenericIcon from '@/components/GenericIcon';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/constants/layout';
 import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
-import { useDimensions } from '@/services/DimensionsProvider';
-import { useReload } from '@/services/ReloadProvider';
+import { useLayoutTracker } from '@/services/LayoutTracker';
+import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { BlurView } from 'expo-blur';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, PlatformColor, ScrollView, View } from 'react-native';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, PlatformColor, ScrollView, UIManager, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { Portal } from 'react-native-paper';
 import Animated, {
@@ -22,12 +22,14 @@ import Animated, {
     useAnimatedRef,
     useAnimatedScrollHandler,
     useAnimatedStyle,
+    measure,
     useDerivedValue,
     useSharedValue,
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
-import { KeyboardProvider } from './KeyboardProvider';
+import { KeyboardProvider } from './KeyboardTracker';
+import ButtonText from '@/components/text/ButtonText';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -54,10 +56,9 @@ interface ScrollContainerProps {
 
 interface ScrollContainerContextValue<T extends IListItem> {
     // --- Scroll Variables ---
-    scrollRef: AnimatedRef<Animated.ScrollView>;
     scrollOffset: SharedValue<number>;
-    scrollOffsetBounds: SharedValue<{ min: number, max: number }>;
     disableNativeScroll: SharedValue<boolean>;
+    autoScroll: (newOffset: number) => void;
     // --- List Variables ---
     currentTextfield: T | undefined;
     pendingItem: T | undefined;
@@ -100,12 +101,12 @@ export const ScrollContainerContent = <T extends IListItem>({
         SCREEN_HEIGHT,
         TOP_SPACER,
         BOTTOM_SPACER
-    } = useDimensions();
+    } = useLayoutTracker();
 
     const {
         reloadPage,
         canReloadPath
-    } = useReload();
+    } = useReloadScheduler();
 
     // --- Page Layout Variables ---
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
@@ -131,6 +132,11 @@ export const ScrollContainerContent = <T extends IListItem>({
     const disableNativeScroll = useSharedValue(false);
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
     const scrollOffset = useSharedValue(0);
+
+    const bottomOfContainerRef = useRef<View>(null);
+    const bottomOfContainerPosition = useSharedValue(SCREEN_HEIGHT);
+
+    // TODO: remove and replace with a containerBottom value
     const scrollOffsetBounds = useDerivedValue(() => {
         const min = 0;
         const max = Math.max(0, contentHeight.value - VISIBLE_HEIGHT);
@@ -321,11 +327,44 @@ export const ScrollContainerContent = <T extends IListItem>({
     const bottomBlurBarStyle = useAnimatedStyle(() => ({
         opacity: interpolate(
             scrollOffset.value + LOWER_CONTAINER_PADDING,
-            [scrollOffsetBounds.value.max - LOWER_CONTAINER_PADDING, scrollOffsetBounds.value.max],
+            [scrollOffsetBounds.value.max - LOWER_CONTAINER_PADDING / 2, scrollOffsetBounds.value.max],
             [1, 0],
             Extrapolation.CLAMP
         )
     }));
+
+    // ---------- TODO: relocate these ----------
+
+    const evaluateContainerBottomPosition = () => {
+        if (bottomOfContainerRef.current) {
+            bottomOfContainerRef.current.measure((x, y, width, height, pageX, pageY) => {
+                console.log(pageY, 'absolute container bottom');
+            })
+        }
+    };
+
+    useAnimatedReaction(() => scrollOffset.value,
+        () => {
+            runOnJS(evaluateContainerBottomPosition)()
+        })
+
+    const autoScroll = (displacement: number) => {
+        'worklet';
+        const SECONDS_PER_ITEM = .25;
+
+        const newOffset = scrollOffset.value + displacement;
+        const durationMs = Math.abs(
+            (displacement / LIST_ITEM_HEIGHT) * SECONDS_PER_ITEM * 1000
+        );
+        disableNativeScroll.value = true;
+        scrollOffset.value = withTiming(
+            newOffset,
+            { duration: durationMs, easing: Easing.linear },
+            () => {
+                disableNativeScroll.value = false;
+            }
+        )
+    };
 
     return (
         <ScrollContainerContext.Provider value={{
@@ -333,9 +372,8 @@ export const ScrollContainerContent = <T extends IListItem>({
             pendingItem: textFieldState.pending,
             setCurrentTextfield,
             scrollOffset,
-            scrollRef,
+            autoScroll,
             disableNativeScroll,
-            scrollOffsetBounds,
             floatingBannerHeight
         }}>
 
@@ -369,6 +407,11 @@ export const ScrollContainerContent = <T extends IListItem>({
                     }}
                     onContentSizeChange={(_, height) => {
                         contentHeight.value = height;
+                        console.log(height, 'onContentSizeChange')
+                    }}
+                    onLayout={(e) => {
+                        const { height } = e.nativeEvent.layout;
+                        console.log(height, 'onLayout')
                     }}
                 >
 
@@ -409,6 +452,13 @@ export const ScrollContainerContent = <T extends IListItem>({
                     )}
 
                     {children}
+
+                    <View
+                        ref={bottomOfContainerRef}
+                        onLayout={() => {
+                            evaluateContainerBottomPosition();
+                        }}
+                    />
 
                 </ScrollContainer>
             </KeyboardAvoidingView>

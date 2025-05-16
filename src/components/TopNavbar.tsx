@@ -1,4 +1,4 @@
-import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '@/services/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';

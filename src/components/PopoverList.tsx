@@ -5,7 +5,7 @@ import { BlurView } from 'expo-blur';
 import { Portal } from 'react-native-paper';
 import ButtonText from './text/ButtonText';
 import CustomText from './text/CustomText';
-import { useDimensions } from '@/services/DimensionsProvider';
+import { useLayoutTracker } from '@/services/LayoutTracker';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 
 const PopoverContainer = Animated.createAnimatedComponent(View);
@@ -25,7 +25,7 @@ const PopoverList = <T,>({
     getLabelFromObject
 }: PopoverProps<T>) => {
 
-    const { SCREEN_HEIGHT, SCREEN_WIDTH } = useDimensions();
+    const { SCREEN_HEIGHT, SCREEN_WIDTH } = useLayoutTracker();
 
     const selectedValueRef = useRef<View>(null);
     const [value, setValue] = useState(options[0]);
@@ -63,15 +63,14 @@ const PopoverList = <T,>({
         const scale = popoverVisibility.value;
 
         return {
-            top: y,
-            left: x,
             transform: [
                 { translateX: -POPOVER_WIDTH / 2 },
-                { translateY: -height / 3 },
                 { scale },
                 { translateX: POPOVER_WIDTH / 2 },
-                { translateY: height / 3 }
-            ]
+                { translateY: height }
+            ],
+            top: y,
+            left: x,
         };
     });
 

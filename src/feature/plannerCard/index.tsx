@@ -13,7 +13,7 @@ import { generateCheckboxIconConfig } from '../sortedList/commonProps';
 import { ToolbarProps } from '../sortedList/components/ListItemToolbar';
 import useSortedList from '../sortedList/hooks/useSortedList';
 import { useDeleteScheduler } from '../../services/DeleteScheduler';
-import { useScrollContainer } from '../../services/ScrollContainerProvider';
+import { useScrollContainer } from '../../services/ScrollContainer';
 import { WeatherForecast } from '../weather/utils';
 import DayBanner from './components/DayBanner';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';

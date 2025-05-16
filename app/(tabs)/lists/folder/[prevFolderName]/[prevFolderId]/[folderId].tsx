@@ -5,7 +5,7 @@ import { PlatformColor, View } from 'react-native';
 import FolderItemBanner from '../../../../../../src/feature/checklists/components/FolderItemBanner';
 import { NULL } from '../../../../../../src/feature/checklists/constants';
 import SortedFolder from '../../../../../../src/feature/folderContents';
-import { ScrollContainerProvider } from '../../../../../../src/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '../../../../../../src/services/ScrollContainer';
 import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 
 const Lists = () => {

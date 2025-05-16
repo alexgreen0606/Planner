@@ -7,7 +7,7 @@ import { generateCheckboxIconConfig } from '@/feature/sortedList/commonProps';
 import useSortedList from '@/feature/sortedList/hooks/useSortedList';
 import { isItemTextfield } from '@/feature/sortedList/utils';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { ScrollContainerProvider } from '@/services/ScrollContainerProvider';
+import { ScrollContainerProvider } from '@/services/ScrollContainer';
 import { IChecklist } from '@/types/checklists/IChecklist';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { useLocalSearchParams } from 'expo-router';

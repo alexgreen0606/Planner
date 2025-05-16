@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     tinyIndicator: {
         fontFamily: 'Coiny-Regular',
         fontSize: 8,
-        color: PlatformColor('secondaryLabel')
+        color: PlatformColor('tertiaryLabel')
     },
     indicator: {
         fontFamily: 'Coiny-Regular',

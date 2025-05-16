@@ -29,7 +29,7 @@ export const DimensionsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
-export const useDimensions = (): DimensionsContextType => {
+export const useLayoutTracker = (): DimensionsContextType => {
   const context = useContext(DimensionsContext);
   if (context === undefined) {
     throw new Error("useDimensions must be used within a DimensionsProvider");

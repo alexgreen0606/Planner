@@ -1,19 +1,18 @@
 import { Tabs } from 'expo-router';
 import GenericIcon from '@/components/GenericIcon';
-import { BOTTOM_NAVIGATION_HEIGHT } from '@/constants/layout';
-import { useDimensions } from '@/services/DimensionsProvider';
+import { BOTTOM_NAVIGATION_HEIGHT, spacing } from '@/constants/layout';
+import { useLayoutTracker } from '@/services/LayoutTracker';
 
 export default function TabLayout() {
-    const { BOTTOM_SPACER } = useDimensions();
+    const { BOTTOM_SPACER } = useLayoutTracker();
     return (
         <Tabs
             screenOptions={{
                 tabBarStyle: {
-                    height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER,
+                    height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER - spacing.medium,
                     backgroundColor: 'transparent',
                     borderTopWidth: 0,
                     position: 'absolute',
-                    paddingTop: 8
                 },
                 headerShown: false,
                 tabBarActiveTintColor: 'systemBlue',
