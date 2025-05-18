@@ -152,7 +152,7 @@ const useSortedList = <T extends IListItem, S>({
 
     useEffect(() => {
         registerDeleteFunction(storageKey, deleteItemsFromStorage);
-    }, [items, storageObject]);
+    }, [items]);
 
     /**
      * Deletes a batch of items from storage.

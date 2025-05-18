@@ -84,7 +84,11 @@ export const DeleteSchedulerProvider = ({
                     }
                 });
 
-                setPendingDeleteMap({});
+                setTimeout(() => {
+                    // Allow time for chips to be reloaded.
+                    // Prevents flicker of deleted multi-day chips.
+                    setPendingDeleteMap({});
+                }, 1500);
                 deleteFunctionsMap.current = {};
                 deleteTimeoutRef.current = null;
             }, DELETE_ITEMS_DELAY_MS);

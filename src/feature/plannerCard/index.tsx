@@ -22,6 +22,8 @@ import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { buildPlannerEvents } from '@/storage/plannerStorage';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
+import { useReloadScheduler } from '@/services/ReloadScheduler';
+import { getTodayDatestamp, isoToDatestamp } from '@/utils/calendarUtils/timestampUtils';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -68,6 +70,8 @@ const PlannerCard = ({
 
     const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
 
+    const { reloadPage } = useReloadScheduler();
+
     const { getDeletingItems } = useDeleteScheduler();
 
     const [collapsed, setCollapsed] = useState(true);
@@ -109,8 +113,15 @@ const PlannerCard = ({
         return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
     }
 
-    async function handleDeleteEvent(planEvents: IPlannerEvent[]) {
+    async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
         await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
+
+        if (planEvents.some(event => 
+            event.timeConfig && (isoToDatestamp(event.timeConfig.startTime) === getTodayDatestamp())
+        )) {
+            // Reload today's planner to remove the deleted chip
+            reloadPage('/');
+        }
     }
 
     const getItemsFromStorageObject = (planner: TPlanner) => {
@@ -125,7 +136,7 @@ const PlannerCard = ({
         storageConfig: {
             create: handleSaveEvent,
             update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
-            delete: handleDeleteEvent
+            delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
         reloadOnNavigate: true

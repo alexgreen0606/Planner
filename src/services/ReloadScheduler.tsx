@@ -17,7 +17,7 @@ interface ReloadContextType {
         reloadFunc: () => Promise<void>,
         path: string
     ) => void;
-    reloadPage: () => Promise<void>;
+    reloadPage: (pathname?: string) => Promise<void>;
     canReloadPath: boolean;
 }
 
@@ -50,8 +50,9 @@ export const ReloadProvider: React.FC<ReloadProviderProps> = ({
     };
 
     // Execute all registered functions for a specific page
-    async function reloadPage() {
-        const reloadFunctionsMap = reloadMap.current[currentPath];
+    async function reloadPage(pathname?: string) {
+        const path = pathname ?? currentPath;
+        const reloadFunctionsMap = reloadMap.current[path];
         if (!reloadFunctionsMap) return;
 
         try {
