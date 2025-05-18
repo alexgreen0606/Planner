@@ -14,7 +14,6 @@ interface FolderItemBannerProps {
     itemId: string;
     itemType: EFolderItemType;
     backButtonConfig: {
-        pathname: string;
         label: string | undefined;
         hide?: boolean;
     };

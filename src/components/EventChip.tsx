@@ -29,7 +29,7 @@ const EventChip = ({
 
     const { onOpen } = useTimeModal();
 
-    const { pendingDeleteItems } = useDeleteScheduler();
+    const { getDeletingItems } = useDeleteScheduler();
 
     const { reloadPage } = useReloadScheduler();
 
@@ -43,7 +43,7 @@ const EventChip = ({
     }
 
     const isPendingDelete = planEvent &&
-        pendingDeleteItems.some(deleteItem =>
+        getDeletingItems().some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // The deleting event is the end event

@@ -2,9 +2,9 @@ import { GenericIconProps } from '@/components/GenericIcon';
 import CustomText from '@/components/text/CustomText';
 import { selectableColors } from '@/constants/selectableColors';
 import { getFolderFromStorage, getFolderItems, updateFolderItem, createFolderItem, deleteFolderItem } from '@/storage/checklistsStorage';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo } from 'react';
-import { Alert } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Alert, PlatformColor } from 'react-native';
 import { LISTS_STORAGE_ID } from '../checklists/constants';
 import SortableList from '../sortedList';
 import Toolbar, { ToolbarProps } from '../sortedList/components/ListItemToolbar';
@@ -19,24 +19,26 @@ import { IListItem } from '@/types/listItems/core/TListItem';
 import { EItemStatus } from '@/enums/EItemStatus';
 
 interface SortedFolderProps {
-    folderId: string;
     handleOpenItem: (id: string, type: EFolderItemType) => void;
     parentClickTrigger: number;
     parentFolderData?: IFolder;
 };
 
 const SortedFolder = ({
-    folderId,
     handleOpenItem,
     parentClickTrigger,
     parentFolderData,
 }: SortedFolderProps) => {
+
+    const { folderId } = useLocalSearchParams<{ folderId: string }>();
 
     const { currentTextfield, setCurrentTextfield } = useScrollContainer();
 
     const router = useRouter();
 
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
+
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
     /**
      * If the focused item is being transferred, transfer it to the parent folder.
@@ -154,19 +156,24 @@ const SortedFolder = ({
                                     message += `Would you like to delete this ${item.type}?`;
                                 }
 
+                                setIsDeleteAlertOpen(true);
                                 Alert.alert(
                                     title,
                                     message,
                                     [
                                         {
                                             text: 'Cancel',
-                                            style: 'cancel'
+                                            style: 'cancel',
+                                            onPress: () => {
+                                                setIsDeleteAlertOpen(false);
+                                            }
                                         },
                                         {
                                             text: !!item.childrenCount ? 'Force Delete' : 'Delete',
                                             style: 'destructive',
                                             onPress: () => {
                                                 SortedItems.deleteSingleItemFromStorage(item);
+                                                setIsDeleteAlertOpen(false);
                                             }
                                         }
                                     ]
@@ -186,8 +193,8 @@ const SortedFolder = ({
     const getIconType = (item: IFolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
     const getIconPlatformColor = (item: IFolderItem) => isItemTransfering(item) ?
         'systemBlue' : (item.type === EFolderItemType.LIST && isTransferMode()) ?
-            'secondaryLabel' : item.platformColor;
-            
+            'tertiaryLabel' : item.platformColor;
+
     const SortedItems = useSortedList<IFolderItem, IFolder>({
         storageId: LISTS_STORAGE_ID,
         storageKey: folderId,
@@ -196,11 +203,14 @@ const SortedFolder = ({
             create: createFolderItem,
             update: (newItem) => {
                 updateFolderItem(newItem);
-                
+
                 // Rebuild the list to sync the updated item
                 SortedItems.refetchItems();
             },
-            delete: (items) => deleteFolderItem(items[0].id, items[0].type)
+            delete: (items) => {
+                deleteFolderItem(items[0].id, items[0].type);
+                setCurrentTextfield(undefined);
+            }
         },
         reloadOnNavigate: true
     });
@@ -217,11 +227,18 @@ const SortedFolder = ({
             getToolbar={item => getItemToolbarConfig(item)}
             initializeItem={initializeEmptyFolder}
             onContentClick={handleItemClick}
+            hideKeyboard={isDeleteAlertOpen || (currentTextfield?.status === EItemStatus.TRANSFER)}
             getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
-                (isTransferMode() && item.type === EFolderItemType.LIST) ? 'systemGray3' : 'label'}
+                (isTransferMode() && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
             getRightIconConfig={item => ({
                 customIcon:
-                    <CustomText type='label'>
+                    <CustomText
+                        type='label'
+                        style={{
+                            color: PlatformColor((item.type === EFolderItemType.LIST && isTransferMode()) ?
+                                'tertiaryLabel' : 'secondaryLabel')
+                        }}
+                    >
                         {item.childrenCount}
                     </CustomText>
             })}

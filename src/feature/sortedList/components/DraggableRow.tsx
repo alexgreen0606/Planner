@@ -1,30 +1,28 @@
 import GenericIcon from "@/components/GenericIcon";
 import ThinLine from "@/components/ThinLine";
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/constants/layout";
+import { LIST_SPRING_CONFIG } from "@/constants/listConstants";
+import { EItemStatus } from "@/enums/EItemStatus";
+import { useLayoutTracker } from "@/services/LayoutTracker";
+import { IListItem } from "@/types/listItems/core/TListItem";
 import { useMemo } from "react";
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import Animated, {
     cancelAnimation,
     runOnJS,
-    scrollTo,
     SharedValue,
     useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
-    withRepeat,
     withSpring,
     withTiming
 } from "react-native-reanimated";
 import { useDeleteScheduler } from "../../../services/DeleteScheduler";
 import { useScrollContainer } from "../../../services/ScrollContainer";
+import { ListItemIconConfig } from "../lib/listRowConfig";
 import { generateSortId, getParentSortIdFromPositions } from "../utils";
 import ListTextfield from "./ListTextfield";
-import { HEADER_HEIGHT, BOTTOM_NAVIGATION_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, spacing } from "@/constants/layout";
-import { useLayoutTracker } from "@/services/LayoutTracker";
-import { ListItemIconConfig } from "../lib/listRowConfig";
-import { IListItem } from "@/types/listItems/core/TListItem";
-import { EItemStatus } from "@/enums/EItemStatus";
-import { AUTO_SCROLL_SPEED, LIST_SPRING_CONFIG } from "@/constants/listConstants";
 
 const Row = Animated.createAnimatedComponent(View);
 

@@ -136,14 +136,14 @@ const TimeModal = () => {
     }
 
     const formFields = [
-        {
+        [{
             name: 'title',
             type: EFormFieldType.TEXT,
-            label: 'Title',
+            placeholder: 'Title',
             rules: { required: true },
             focusTrigger: pathname === TIME_MODAL_PATHNAME && planEvent?.value?.length === 0
-        },
-        {
+        }],
+        [{
             name: 'timeRange',
             type: EFormFieldType.TIME_RANGE,
             defaultValue: {
@@ -151,8 +151,8 @@ const TimeModal = () => {
                 endTime: DateTime.now().plus({ hours: 1 }).toISO()
             },
             hide: false
-        },
-        {
+        }],
+        [{
             name: 'isCalendarEvent',
             type: EFormFieldType.CHECKBOX,
             label: 'Add to Calendar',
@@ -165,7 +165,7 @@ const TimeModal = () => {
             defaultValue: false,
             disabled: !isCalendarEvent,
             hide: !isCalendarEvent
-        }
+        }]
     ];
 
     return (

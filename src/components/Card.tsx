@@ -1,6 +1,6 @@
 import { useScrollContainer } from '@/services/ScrollContainer';
 import React, { ReactNode, useEffect } from 'react';
-import { PlatformColor, StyleSheet, View, ViewStyle } from 'react-native';
+import { PlatformColor, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const ContentContainer = Animated.createAnimatedComponent(View);
@@ -49,9 +49,15 @@ const Card = ({
     }));
 
     return (
-        <View style={[styles.card, style]}>
+        <View
+            className='relative rounded-xl'
+            style={[
+                { backgroundColor: PlatformColor('systemGray6') },
+                style
+            ]}
+        >
             {header && (
-                <View style={styles.banner}>
+                <View className='p-2'>
                     {header}
                 </View>
             )}
@@ -61,33 +67,18 @@ const Card = ({
             >
                 {children}
                 {footer && (
-                    <View style={styles.banner}>
+                    <View className='p-2'>
                         {footer}
                     </View>
                 )}
             </ContentContainer>
             {badges && (
-                <View style={styles.badge}>
+                <View className='absolute bottom-full right-0 translate-y-[10px]'>
                     {badges}
                 </View>
             )}
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    card: {
-        position: 'relative',
-        borderRadius: 8,
-        backgroundColor: PlatformColor('systemGray6')
-    },
-    banner: { padding: 8 },
-    badge: {
-        position: 'absolute',
-        bottom: '100%',
-        right: 0,
-        transform: 'translateY(10px)'
-    }
-});
 
 export default Card;

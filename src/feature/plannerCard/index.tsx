@@ -1,5 +1,5 @@
 import { usePathname } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 import BadgeNumber from '../../components/BadgeNumber';
@@ -68,20 +68,21 @@ const PlannerCard = ({
 
     const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
 
-    const { pendingDeleteItems } = useDeleteScheduler();
+    const { getDeletingItems } = useDeleteScheduler();
 
     const [collapsed, setCollapsed] = useState(true);
 
     // ------------- Utility Functions -------------
 
-    function isEventDeleting(planEvent: IPlannerEvent) {
-        return pendingDeleteItems.some(deleteItem =>
+    const isEventDeleting = useCallback((planEvent: IPlannerEvent) => {
+        const deletingItems = getDeletingItems();
+        return deletingItems.some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // and is rooted in this planner (deleting multi-day start events should not mark the end event as deleting)
             deleteItem.listId === datestamp
         );
-    }
+    }, [getDeletingItems]);
 
     async function toggleCollapsed() {
         if (currentTextfield) {
@@ -126,7 +127,8 @@ const PlannerCard = ({
             update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
             delete: handleDeleteEvent
         },
-        reloadTriggers: [calendarEvents]
+        reloadTriggers: [calendarEvents],
+        reloadOnNavigate: true
     });
 
     const badgesConfig = useMemo(() => {

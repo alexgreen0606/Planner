@@ -1,12 +1,12 @@
-export const AUTO_SCROLL_SPEED = 1;
-
 export const SCROLL_THROTTLE = 16;
 
+export const OVERSCROLL_RELOAD_THRESHOLD = 64;
+
 export const NAVBAR_OVERFLOW_FADE_THRESHOLD = 20;
+
+export const DELETE_ITEMS_DELAY_MS = 3000;
 
 export const LIST_SPRING_CONFIG = {
     overshootClamping: true,
     mass: .5
 };
-
-export const OVERSCROLL_RELOAD_THRESHOLD = 64;

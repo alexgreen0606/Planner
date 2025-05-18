@@ -1,11 +1,11 @@
+import { EItemStatus } from '@/enums/EItemStatus';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { useFocusEffect, usePathname } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { useScrollContainer } from '../../../services/ScrollContainer';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDeleteScheduler } from '../../../services/DeleteScheduler';
 import { useReloadScheduler } from '../../../services/ReloadScheduler';
-import { useFocusEffect, usePathname } from 'expo-router';
-import { IListItem } from '@/types/listItems/core/TListItem';
-import { EItemStatus } from '@/enums/EItemStatus';
+import { useScrollContainer } from '../../../services/ScrollContainer';
 
 type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -45,29 +45,20 @@ const useSortedList = <T extends IListItem, S>({
     } = useScrollContainer();
 
     const {
-        pendingDeleteItems,
-        setPendingDeleteItems,
-        scheduledDeletionItems,
-        isItemDeleting
+        isItemDeleting,
+        cancelItemDeletion,
+        scheduleItemDeletion,
+        registerDeleteFunction
     } = useDeleteScheduler();
 
     const { registerReloadFunction } = useReloadScheduler();
 
-    // List Contents Variables
     const [isLoading, setIsLoading] = useState(true);
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
 
-    // Deletion Variables
-    const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const [deletePending, setDeletePending] = useState(false);
-    const scheduledDeletions = useMemo(
-        () => scheduledDeletionItems(storageKey),
-        [scheduledDeletionItems]
-    );
-
-    // ------------- List Generation -------------
+    // ------------- GENERATION Logic -------------
 
     async function buildList() {
         try {
@@ -76,7 +67,6 @@ const useSortedList = <T extends IListItem, S>({
             setIsLoading(false);
         } catch (error) {
             console.log(error);
-
         }
     };
 
@@ -84,7 +74,7 @@ const useSortedList = <T extends IListItem, S>({
         buildList();
     }, [storageObject]);
 
-    // ------------- Reload Handling -------------
+    // ------------- RELOAD Logic -------------
 
     // Custom Reload Triggering
     useEffect(() => {
@@ -98,7 +88,7 @@ const useSortedList = <T extends IListItem, S>({
         if (reloadOnNavigate) {
             buildList();
         }
-    }, []));
+    }, [storageObject]));
 
     // Overscroll Reload Registering
     useEffect(() => {
@@ -107,31 +97,7 @@ const useSortedList = <T extends IListItem, S>({
         }
     }, []);
 
-    // ------------- Deletion Handling -------------
-
-    // Schedule items for deletion
-    useEffect(() => {
-        if (deleteTimeoutRef.current) {
-            clearTimeout(deleteTimeoutRef.current);
-            deleteTimeoutRef.current = null;
-        }
-
-        if (pendingDeleteItems.length > 0) {
-            deleteTimeoutRef.current = setTimeout(() => {
-                setDeletePending(true);
-            }, 3000);
-        }
-    }, [scheduledDeletions]);
-
-    // Execute item deletion
-    useEffect(() => {
-        if (deletePending) {
-            deleteItemsFromStorage([...scheduledDeletions as T[]]);
-            setDeletePending(false);
-        }
-    }, [deletePending]);
-
-    // ------------- Utility Functions -------------
+    // ------------- EDIT Logic -------------
 
     /**
      * Updates or creates an item in storage.
@@ -163,26 +129,6 @@ const useSortedList = <T extends IListItem, S>({
         }
     };
 
-    /**
-     * Deletes a batch of items from storage.
-     * For custom storage config, it calls delete on each item individually.
-     * For standard storage, it filters out all items in a single operation.
-     */
-    async function deleteItemsFromStorage(itemsToDelete: T[]) {
-        if (storageConfig) {
-            await storageConfig.delete(itemsToDelete);
-        } else {
-            const updatedList = items.filter(({ id }) =>
-                !itemsToDelete.some(item => item.id === id)
-            );
-
-            setStorageObject(
-                setItemsInStorageObject && storageObject
-                    ? setItemsInStorageObject(updatedList, storageObject)
-                    : updatedList as S
-            );
-        }
-    }
 
     /**
      * Toggles an item between a textfield and static.
@@ -202,6 +148,33 @@ const useSortedList = <T extends IListItem, S>({
 
     };
 
+    // ------------- DELETION Logic -------------
+
+    useEffect(() => {
+        registerDeleteFunction(storageKey, deleteItemsFromStorage);
+    }, [items, storageObject]);
+
+    /**
+     * Deletes a batch of items from storage.
+     * For custom storage config, it calls delete on each item individually.
+     * For standard storage, it filters out all items in a single operation.
+     */
+    async function deleteItemsFromStorage(itemsToDelete: T[]) {
+        if (storageConfig) {
+            await storageConfig.delete(itemsToDelete);
+        } else {
+            const updatedList = items.filter(({ id }) =>
+                !itemsToDelete.some(item => item.id === id)
+            );
+
+            setStorageObject(
+                setItemsInStorageObject && storageObject
+                    ? setItemsInStorageObject(updatedList, storageObject)
+                    : (updatedList as S)
+            );
+        }
+    }
+
     /**
      * Toggles an item in and out of deleting state.
      * Adds or removes the item from the pendingDeleteItems array.
@@ -216,19 +189,11 @@ const useSortedList = <T extends IListItem, S>({
             }
         }
 
-        // Check if item is already in the pending delete array
-        const itemIndex = pendingDeleteItems.findIndex(deleteItem => deleteItem.id === item.id);
-        const isDeleting = itemIndex !== -1;
-
-        setPendingDeleteItems(prevItems => {
-            if (isDeleting) {
-                // Remove item from pending delete array
-                return prevItems.filter(deleteItem => deleteItem.id !== item.id);
-            } else {
-                // Add item to pending delete array
-                return [...prevItems, item];
-            }
-        });
+        if (isItemDeleting(item)) {
+            cancelItemDeletion(item);
+        } else {
+            scheduleItemDeletion(item);
+        }
     }
 
     /**

@@ -135,9 +135,11 @@ const SortableList = <
 
         if (currentTextfield && currentTextfield.value.trim() !== '') {
             // Save the current textfield before creating a new one
-            pendingItem.current = { ...currentTextfield };
+            if (currentTextfield.status !== EItemStatus.TRANSFER) {
+                pendingItem.current = { ...currentTextfield };
+            }
             const newId = await onSaveTextfield(currentTextfield);
-            if (newId) {
+            if (newId && (currentTextfield.status !== EItemStatus.TRANSFER)) {
                 pendingItem.current!.id = newId;
             }
         }
@@ -214,7 +216,7 @@ const SortableList = <
             }
 
             {/* Toolbar */}
-            {Toolbar && toolbarConfig &&
+            {Toolbar && toolbarConfig && !hideKeyboard &&
                 <Portal>
                     <ToolbarContainer style={toolbarStyle}>
                         <Toolbar {...toolbarConfig.props} />

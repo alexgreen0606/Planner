@@ -40,8 +40,6 @@ const Modal = ({
     children,
 }: ModalProps) => {
 
-    const router = useRouter();
-
     const { BOTTOM_SPACER } = useLayoutTracker();
 
     const scrollRef = useAnimatedRef();
@@ -77,7 +75,7 @@ const Modal = ({
                         onScroll={handler}
                         contentContainerStyle={[
                             styles.scrollContainer,
-                            { paddingBottom: BOTTOM_SPACER }
+                            { paddingBottom: BOTTOM_SPACER * 3 }
                         ]}
                     >
 
@@ -91,7 +89,7 @@ const Modal = ({
                         {/* Content */}
                         {children}
 
-                        <View style={{ flex: 1 }} />
+                        <View className='flex-1' />
 
                         {/* Delete Button */}
                         {!deleteButtonConfig?.hidden && (

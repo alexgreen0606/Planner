@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     },
     indicator: {
         fontFamily: 'Coiny-Regular',
-        fontSize: 12,
+        fontSize: 10,
         color: PlatformColor('secondaryLabel')
     }
 });

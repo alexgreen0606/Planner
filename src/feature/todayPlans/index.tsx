@@ -75,7 +75,8 @@ const TodayPlanner = ({
             update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
             delete: handleDeleteEvents
         },
-        reloadTriggers: [calendarEvents]
+        reloadTriggers: [calendarEvents],
+        reloadOnNavigate: true
     });
 
     return (

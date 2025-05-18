@@ -10,6 +10,7 @@ import Form from '@/components/modal/components/form';
 import { IFormField } from '@/types/form/IFormField';
 import { TPlannerSet } from '@/types/planner/TPlannerSet';
 import { EFormFieldType } from '@/enums/EFormFieldType';
+import { NULL } from '@/feature/checklists/constants';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
@@ -36,13 +37,12 @@ const PlannerSetModal = () => {
     const storage = useMMKV({ id: PLANNER_SETS_STORAGE_ID });
     const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
 
-    const isEditMode = !!plannerSetKey;
+    const isEditMode = plannerSetKey !== NULL;
 
     const {
         control,
         handleSubmit,
         reset,
-        watch,
         formState: { isValid }
     } = useForm<PendingPlannerSet>({
         defaultValues: {
@@ -53,8 +53,8 @@ const PlannerSetModal = () => {
     });
 
     // Create form fields configuration
-    const formFields: IFormField[] = [
-        {
+    const formFields: IFormField[][] = [
+        [{
             name: 'title',
             type: EFormFieldType.TEXT,
             placeholder: 'Title',
@@ -65,14 +65,14 @@ const PlannerSetModal = () => {
                     existingPlannerTitles.indexOf(value.trim()) === -1 ||
                     plannerSet?.title === value.trim()
             }
-        },
-        {
+        }],
+        [{
             name: 'dates',
             type: EFormFieldType.DATE_RANGE,
             rules: {
                 validate: ({ startDate, endDate }: { startDate: string, endDate: string }) => startDate && endDate
             }
-        }
+        }]
     ];
 
     // Populate the form in edit mode
@@ -99,7 +99,7 @@ const PlannerSetModal = () => {
 
     return (
         <Modal
-            title={isEditMode ? 'Edit Planner' : 'Create Planner'}
+            title={isEditMode ? 'Edit Planner Set' : 'Create Planner Set'}
             primaryButtonConfig={{
                 label: 'Save',
                 onClick: handleSubmit(onSubmit),

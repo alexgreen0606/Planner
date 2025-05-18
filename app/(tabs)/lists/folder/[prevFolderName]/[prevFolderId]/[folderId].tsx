@@ -16,16 +16,16 @@ const Lists = () => {
     prevFolderId: string
   }>();
 
-  const pageData = useMemo(() =>
+  const folder = useMemo(() =>
     getFolderFromStorage(folderId),
     [folderId]
   );
 
   const onOpenItem = (id: string, type: EFolderItemType) => {
     if (type === EFolderItemType.FOLDER) {
-      router.push(`/lists/folder/${pageData.value}/${pageData.id}/${id}`);
+      router.push(`/lists/folder/${folder.value}/${folder.id}/${id}`);
     } else if (type === EFolderItemType.LIST) {
-      router.push(`/lists/checklist/${pageData.value}/${id}`);
+      router.push(`/lists/checklist/${folder.value}/${folder.id}/${id}`);
     }
   };
 
@@ -39,7 +39,6 @@ const Lists = () => {
           <FolderItemBanner
             itemId={folderId}
             backButtonConfig={{
-              pathname: `/lists/folder/${prevFolderName}/${prevFolderId}/${folderId}`,
               hide: prevFolderName === NULL,
               label: prevFolderName
             }}
@@ -49,7 +48,6 @@ const Lists = () => {
       >
         <SortedFolder
           parentFolderData={prevFolderId !== NULL ? getFolderFromStorage(prevFolderId) : undefined}
-          folderId={folderId}
           handleOpenItem={onOpenItem}
           parentClickTrigger={0} // you probably don't need parentClickTrigger anymore
         />

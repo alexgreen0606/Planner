@@ -72,7 +72,7 @@ const TimeValue = ({
                 {indicator}
             </CustomText>
             {(startEvent || endEvent) && (
-                <View className='absolute top-full left-0 w-full items-center'>
+                <View className='absolute top-full left-1/2 -translate-x-1/2 items-center'>
                     <CustomText type='tinyIndicator'>
                         {startEvent ? 'START' : 'END'}
                     </CustomText>
