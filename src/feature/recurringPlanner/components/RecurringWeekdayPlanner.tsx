@@ -86,7 +86,8 @@ const RecurringWeekdayPlanner = () => {
                 // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
                 SortedEvents.refetchItems();
             },
-        }
+        },
+        initializeListItem: initializeEvent
     });
 
     return (
@@ -99,9 +100,12 @@ const RecurringWeekdayPlanner = () => {
                 items={SortedEvents.items}
                 listId={RECURRING_WEEKDAY_PLANNER_KEY}
                 fillSpace
-                initializeItem={initializeEvent}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
-                onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: EItemStatus.STATIC })}
+                saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedEvents.saveTextfieldAndCreateNew(
+                    item ? { ...item, status: EItemStatus.STATIC } : undefined,
+                    refId,
+                    isChildId
+                )}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}

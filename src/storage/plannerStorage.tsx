@@ -1,6 +1,6 @@
 import { PLANNER_STORAGE_ID } from "@/constants/storageIds";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { isItemTextfield } from "@/feature/sortedList/utils";
+import { generateSortId, isItemTextfield } from "@/feature/sortedList/utils";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/types/planner/TPlanner";
 import { generatePlanner, syncPlannerWithRecurring, syncPlannerWithCalendar, getCalendarAccess } from "@/utils/calendarUtils/calendarUtils";
@@ -72,17 +72,17 @@ function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
  */
 export async function buildPlannerEvents(
     datestamp: string,
-    planner: TPlanner,
+    storagePlanner: TPlanner,
     calendarEvents: IPlannerEvent[]
 ): Promise<IPlannerEvent[]> {
 
-    // Sync the planner with the recurring weekday planner
-    if ([getTodayDatestamp(), getTomorrowDatestamp()].includes(datestamp)) {
-        const recurringPlanner = getRecurringPlannerFromStorage(datestampToDayOfWeek(datestamp));
-        planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
-    }
+    const planner = { ...storagePlanner };
 
-    // Sync the planner with the device calendar
+    // Phase 1: Sync in any recurring events for the day of the week.
+    const recurringPlanner = getRecurringPlannerFromStorage(datestampToDayOfWeek(datestamp));
+    planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
+
+    // Phase 2: Sync in any recurring events for the day of the week.
     planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
 
     // Delete past planners and carry over incomplete yesterday events
@@ -98,11 +98,15 @@ export async function buildPlannerEvents(
                     sortId: -1,
                 };
                 planner.events.push(newEvent);
-                newEvent.sortId = generateSortIdByTime(newEvent, planner.events);
+                newEvent.sortId = generateSortId(-1, planner.events);
             });
-            savePlannerToStorage(datestamp, planner);
         }
     }
+
+    // Phase 4: TODO comment
+    if (planner.events.some(planEvent =>
+        !storagePlanner.events.some(existingEvent => existingEvent.id === planEvent.id)
+    )) savePlannerToStorage(datestamp, planner);
 
     return planner.events;
 };

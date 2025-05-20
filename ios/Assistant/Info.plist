@@ -8,6 +8,16 @@
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
     <string>Assistant</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+<string>Use to gather weather info.</string>
+<key>NSContactsUsageDescription</key>
+<string>This app requires access to contacts to send birthday messages</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app requires location access</string>
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>sms</string>
+</array>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>

@@ -11,7 +11,7 @@ import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
 const Checklist = () => {
-    
+
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
 
     const { isItemDeleting } = useDeleteScheduler();
@@ -41,13 +41,11 @@ const Checklist = () => {
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, isItemDeleting(item))}
-            onSaveTextfield={(updatedItem) => {
-                const item = {
-                    ...updatedItem,
-                    status: isItemTextfield(updatedItem) ? EItemStatus.STATIC : updatedItem.status
-                };
-                SortedItems.persistItemToStorage(item);
-            }}
+            saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedItems.saveTextfieldAndCreateNew(
+                item ? { ...item, status: isItemTextfield(item) ? EItemStatus.STATIC : item.status } : undefined,
+                refId,
+                isChildId
+            )}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",
                 className: 'flex-1'

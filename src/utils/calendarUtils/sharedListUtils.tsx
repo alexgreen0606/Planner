@@ -28,12 +28,12 @@ export async function openTimeModal(
     toggleItemEdit: (event: IPlannerEvent) => Promise<void>,
     openTimeModal: (item: IPlannerEvent, saveItem: (item: IPlannerEvent) => Promise<void>) => void,
     currentList: IPlannerEvent[],
-    setCurrentTextfield: React.Dispatch<IPlannerEvent>
+    saveTextfieldAndCreateNew: (item: IPlannerEvent, referenceId?: number, isChildId?: boolean) => void
 ) {
     if (!isItemTextfield(planEvent)) {
         await toggleItemEdit(planEvent);
     }
-    openTimeModal(planEvent, (newEvent) => handleTimeModalSave(newEvent, currentList, setCurrentTextfield));
+    openTimeModal(planEvent, (newEvent) => handleTimeModalSave(newEvent, currentList, saveTextfieldAndCreateNew));
 }
 
 /**
@@ -46,9 +46,8 @@ export async function openTimeModal(
 async function handleTimeModalSave(
     updatedEvent: IPlannerEvent,
     currentList: IPlannerEvent[],
-    setCurrentTextfield: React.Dispatch<IPlannerEvent>
+    saveTextfieldAndCreateNew: (item: IPlannerEvent, referenceId?: number, isChildId?: boolean) => void
 ) {
-    // TODO: save textfield and create new
     const updatedList = [...currentList];
     const itemCurrentIndex = updatedList.findIndex(existingItem => existingItem.id === updatedEvent.id);
     if (itemCurrentIndex !== -1) {
@@ -57,8 +56,7 @@ async function handleTimeModalSave(
         updatedList.push(updatedEvent);
     }
     updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedList);
-    console.log(updatedEvent, 'updated')
-    setCurrentTextfield(updatedEvent);
+    saveTextfieldAndCreateNew(updatedEvent, updatedEvent.sortId);
 }
 
 /**

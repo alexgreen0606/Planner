@@ -23,7 +23,6 @@ export interface DraggableListProps<
 > {
     listId: string;
     items: T[];
-    onSaveTextfield: (updatedItem: T) => Promise<void> | void | Promise<string | void>;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
@@ -32,10 +31,10 @@ export interface DraggableListProps<
     getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
+    saveTextfieldAndCreateNew: (item?: T, referenceId?: number, isChildId?: boolean) => void;
     getToolbar?: (item: T) => ModifyItemConfig<T, P>;
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
-    initializeItem?: (item: IListItem) => T;
     customIsItemDeleting?: (item: T) => boolean;
     hideKeyboard?: boolean;
     isLoading?: boolean;
@@ -52,8 +51,7 @@ const SortableList = <
     listId,
     items,
     isLoading,
-    onSaveTextfield,
-    initializeItem,
+    saveTextfieldAndCreateNew,
     emptyLabelConfig,
     fillSpace,
     staticList,
@@ -83,9 +81,7 @@ const SortableList = <
      * Handles click on empty space to create a new textfield
      */
     function handleEmptySpaceClick() {
-        if (!currentTextfield) {
-            saveTextfieldAndCreateNew(-1, true);
-        }
+        handleSaveTextfieldAndCreateNew(-1);
     }
 
     // ------------- List Building -------------
@@ -130,35 +126,14 @@ const SortableList = <
      * @param referenceSortId The sort ID of an item to place the new textfield near
      * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
      */
-    async function saveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
+    async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
         if (staticList) return;
 
-        if (currentTextfield && currentTextfield.value.trim() !== '') {
-            // Save the current textfield before creating a new one
-            if (currentTextfield.status !== EItemStatus.TRANSFER) {
-                pendingItem.current = { ...currentTextfield };
-            }
-            const newId = await onSaveTextfield(currentTextfield);
-            if (newId && (currentTextfield.status !== EItemStatus.TRANSFER)) {
-                pendingItem.current!.id = newId;
-            }
-        }
+        // if (currentTextfield.status !== EItemStatus.TRANSFER) {
+        //         pendingItem.current = { ...currentTextfield };
+        //     }
 
-        if (!referenceSortId) {
-            setCurrentTextfield(undefined);
-            return;
-        }
-
-        let newTextfield: IListItem = {
-            id: uuid.v4(),
-            sortId: generateSortId(referenceSortId, currentList, isChildId),
-            status: EItemStatus.NEW,
-            listId: listId,
-            value: '',
-        };
-
-        newTextfield = initializeItem?.(newTextfield) ?? newTextfield as T;
-        setCurrentTextfield(newTextfield, pendingItem.current);
+        saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }
 
     // ------------- Animations -------------
@@ -183,7 +158,7 @@ const SortableList = <
                         item={item}
                         hideKeyboard={Boolean(hideKeyboard)}
                         positions={positions}
-                        saveTextfieldAndCreateNew={saveTextfieldAndCreateNew}
+                        saveTextfieldAndCreateNew={handleSaveTextfieldAndCreateNew}
                         listLength={currentList.length}
                         {...rest}
                         items={currentList}

@@ -188,6 +188,7 @@ const PlannerCard = ({
             <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
                 listId={datestamp}
                 items={SortedEvents.items}
+                saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
@@ -197,7 +198,6 @@ const PlannerCard = ({
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
                 getToolbar={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
                 customIsItemDeleting={isEventDeleting}
-                onSaveTextfield={SortedEvents.persistItemToStorage}
                 emptyLabelConfig={{
                     label: 'No Plans',
                     className: 'h-20 flex justify-center items-center'

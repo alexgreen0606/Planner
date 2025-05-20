@@ -6,6 +6,8 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useDeleteScheduler } from '../../../services/DeleteScheduler';
 import { useReloadScheduler } from '../../../services/ReloadScheduler';
 import { useScrollContainer } from '../../../services/ScrollContainer';
+import { uuid } from 'expo-modules-core';
+import { generateSortId } from '../utils';
 
 type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -18,6 +20,7 @@ interface SortedListConfig<T extends IListItem, S> {
     storageKey: string;
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
     setItemsInStorageObject?: (items: T[], currentObject: S) => S;
+    initializeListItem?: (item: IListItem) => T;
     storageConfig?: StorageHandlers<T>;
     initializedStorageObject?: S;
     reloadOnNavigate?: boolean;
@@ -30,6 +33,7 @@ const useSortedList = <T extends IListItem, S>({
     storageId,
     getItemsFromStorageObject,
     setItemsInStorageObject,
+    initializeListItem,
     storageConfig,
     initializedStorageObject,
     reloadOnNavigate = false,
@@ -96,6 +100,49 @@ const useSortedList = <T extends IListItem, S>({
             registerReloadFunction(`${storageKey}-${storageId}`, buildList, pathname);
         }
     }, []);
+
+    /**
+     * Saves the existing textfield to storage and generates a new one at the requested position.
+     * @param referenceSortId The sort ID of an item to place the new textfield near
+     * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
+     */
+    async function saveTextfieldAndCreateNew(item?: T, referenceSortId?: number, isChildId: boolean = false) {
+
+        const updatedList = [...items];
+
+        if (item) {
+            // Save the current textfield before creating a new one
+
+            await persistItemToStorage(currentTextfield);
+
+            if (!referenceSortId) {
+                setCurrentTextfield(undefined);
+                return;
+            }
+
+            const itemCurrentIndex = updatedList.findIndex(
+                (listItem) => listItem.id === currentTextfield.id
+            );
+
+            if (itemCurrentIndex !== -1) {
+                updatedList[itemCurrentIndex] = item;
+            } else {
+                updatedList.push(item);
+            }
+
+        }
+
+        let newTextfield: IListItem = {
+            id: uuid.v4(),
+            sortId: generateSortId(referenceSortId!, updatedList, isChildId),
+            status: EItemStatus.NEW,
+            listId: storageKey,
+            value: '',
+        };
+
+        newTextfield = initializeListItem?.(newTextfield) ?? newTextfield as T;
+        setCurrentTextfield(newTextfield, item);
+    }
 
     // ------------- EDIT Logic -------------
 
@@ -211,6 +258,7 @@ const useSortedList = <T extends IListItem, S>({
         toggleItemDelete,
         toggleItemEdit,
         deleteSingleItemFromStorage,
+        saveTextfieldAndCreateNew,
         storageObject: storageObject ?? initializedStorageObject,
         isLoading: isLoading === true
     };

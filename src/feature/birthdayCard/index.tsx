@@ -46,7 +46,10 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
 
     return BirthdayList.items.length > 0 &&
         <View className='px-4 mt-2 w-full'>
-            <Card header={
+            <Card 
+            contentHeight={10}
+            collapsed={false}
+            header={
                 <CustomText type='header'>
                     Birthday Wishes
                 </CustomText>
@@ -56,12 +59,12 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                     listId={BIRTHDAY_STORAGE_ID}
                     staticList
                     disableDrag
+                    saveTextfieldAndCreateNew={BirthdayList.saveTextfieldAndCreateNew}
                     isLoading={collapsed}
                     items={BirthdayList.items}
                     onDeleteItem={BirthdayList.deleteSingleItemFromStorage}
                     onContentClick={() => { }}
                     getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
-                    onSaveTextfield={() => { }}
                     getRowTextPlatformColor={(birthday) => birthday.contacted ? 'secondaryLabel' : 'label'}
                     getLeftIconConfig={item => ({
                         icon: {

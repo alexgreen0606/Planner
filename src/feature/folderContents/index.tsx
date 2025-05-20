@@ -212,6 +212,7 @@ const SortedFolder = ({
                 setCurrentTextfield(undefined);
             }
         },
+        initializeListItem: initializeEmptyFolder,
         reloadOnNavigate: true
     });
 
@@ -222,11 +223,10 @@ const SortedFolder = ({
             fillSpace
             onDragEnd={SortedItems.persistItemToStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
-            onSaveTextfield={SortedItems.persistItemToStorage}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getToolbar={item => getItemToolbarConfig(item)}
-            initializeItem={initializeEmptyFolder}
             onContentClick={handleItemClick}
+            saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             hideKeyboard={isDeleteAlertOpen || (currentTextfield?.status === EItemStatus.TRANSFER)}
             getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
                 (isTransferMode() && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}

@@ -78,7 +78,11 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 listId={plannerKey}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
-                onSaveTextfield={(item) => SortedEvents.persistItemToStorage({ ...item, status: EItemStatus.STATIC })}
+                saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedEvents.saveTextfieldAndCreateNew(
+                    item ? { ...item, status: EItemStatus.STATIC } : undefined,
+                    refId,
+                    isChildId
+                )}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
                 onContentClick={SortedEvents.toggleItemEdit}

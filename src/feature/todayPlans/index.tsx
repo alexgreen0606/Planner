@@ -50,7 +50,7 @@ const TodayPlanner = ({
             SortedEvents.toggleItemEdit,
             onOpen,
             SortedEvents.items,
-            setCurrentTextfield
+            SortedEvents.saveTextfieldAndCreateNew
         );
     }
 
@@ -84,6 +84,7 @@ const TodayPlanner = ({
             listId={datestamp}
             items={SortedEvents.items}
             fillSpace
+            saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
             onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
             onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
             onContentClick={SortedEvents.toggleItemEdit}
@@ -92,7 +93,6 @@ const TodayPlanner = ({
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
             getToolbar={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
-            onSaveTextfield={SortedEvents.persistItemToStorage}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{
                 label: 'All Plans Complete',
