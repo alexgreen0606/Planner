@@ -1,13 +1,13 @@
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
+import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 import { DateTime } from 'luxon';
 import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import DateRangeSelector from './DateRangeSelector';
-import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 
 const TimeSelectorContainer = Animated.createAnimatedComponent(View);
 const DateSelectorContainer = Animated.createAnimatedComponent(View);

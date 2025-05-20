@@ -6,12 +6,12 @@ import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
-import { generateTimeIconConfig, handleDragEnd, handleEventInput } from '@/utils/commonProps/plannerEventProps';
 import { datestampToMidnightDate, generateSortIdByTime } from '@/utils/dateUtils';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
+import { handleDragEnd, handleEventInput, generateTimeIconConfig } from '@/utils/plannerUtils';
 
 
 interface SortedRecurringPlannerProps {

@@ -2,12 +2,11 @@ import { PLANNER_STORAGE_ID } from "@/constants/storageIds";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/types/planner/TPlanner";
-import { generatePlanner, getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from "@/utils/calendarUtils";
-import { datestampToDayOfWeek, getTodayDatestamp, getYesterdayDatestamp, isTimestampValid } from "@/utils/dateUtils";
-import { generateSortId, isItemTextfield } from "@/utils/listUtils";
+import { generatePlanner, getCalendarAccess } from "@/utils/calendarUtils";
+import { getTodayDatestamp, getYesterdayDatestamp, isTimestampValid } from "@/utils/dateUtils";
+import { isItemTextfield } from "@/utils/listUtils";
 import RNCalendarEvents from "react-native-calendar-events";
 import { MMKV } from 'react-native-mmkv';
-import { getRecurringPlannerFromStorage } from "./recurringEventStorage";
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
@@ -26,89 +25,6 @@ export function getPlannerFromStorage(datestamp: string): TPlanner {
  */
 export function savePlannerToStorage(datestamp: string, newPlanner: TPlanner) {
     storage.set(datestamp, JSON.stringify(newPlanner));
-};
-
-/**
- * Deletes all the planners from before today's date, and returns the planner from yesterday.
- * @returns - all the remaining events from yesterday
- */
-function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
-    const yesterdayTimestamp = getYesterdayDatestamp();
-    const todayTimestamp = getTodayDatestamp();
-    const yesterdayPlannerString = storage.getString(yesterdayTimestamp);
-    if (yesterdayPlannerString) {
-        const yesterdayPlanner = JSON.parse(yesterdayPlannerString);
-
-        // TODO: delete past birthdays
-
-        // Delete all previous calendars
-        const allStorageKeys = storage.getAllKeys();
-        allStorageKeys.map(timestamp => {
-            if (isTimestampValid(timestamp) && (new Date(timestamp) < new Date(todayTimestamp))) {
-                storage.delete(timestamp);
-            }
-        });
-        return yesterdayPlanner
-            // Remove hidden items
-            .filter((event: IPlannerEvent) => {
-                event.status !== EItemStatus.HIDDEN && !event.recurringId
-            })
-            // Remove any time configs 
-            .map((event: IPlannerEvent) => {
-                delete event.calendarId;
-                if (event.timeConfig) {
-                    const newEvent = { ...event };
-                    delete newEvent.timeConfig;
-                    return newEvent;
-                }
-                return event;
-            });
-    }
-    return [];
-};
-
-/**
- * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
- */
-export async function buildPlannerEvents(
-    datestamp: string,
-    storagePlanner: TPlanner,
-    calendarEvents: IPlannerEvent[]
-): Promise<IPlannerEvent[]> {
-
-    const planner = { ...storagePlanner };
-
-    // Phase 1: Sync in any recurring events for the day of the week.
-    const recurringPlanner = getRecurringPlannerFromStorage(datestampToDayOfWeek(datestamp));
-    planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
-
-    // Phase 2: Sync in any recurring events for the day of the week.
-    planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
-
-    // Delete past planners and carry over incomplete yesterday events
-    if (datestamp === getTodayDatestamp()) {
-        const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
-        if (remainingYesterdayEvents.length > 0) {
-
-            // Carry over yesterday's incomplete events to today
-            remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
-                const newEvent = {
-                    ...yesterdayEvent,
-                    listId: datestamp,
-                    sortId: -1,
-                };
-                planner.events.push(newEvent);
-                newEvent.sortId = generateSortId(-1, planner.events);
-            });
-        }
-    }
-
-    // Phase 4: TODO comment
-    if (planner.events.some(planEvent =>
-        !storagePlanner.events.some(existingEvent => existingEvent.id === planEvent.id)
-    )) savePlannerToStorage(datestamp, planner);
-
-    return planner.events;
 };
 
 /**
@@ -213,3 +129,40 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
         savePlannerToStorage(listId, newPlanner);
     });
 }
+
+/**
+ * Deletes all the planners from before today's date, and returns the planner from yesterday.
+ * @returns - all the remaining events from yesterday
+ */
+export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
+    const yesterdayTimestamp = getYesterdayDatestamp();
+    const todayTimestamp = getTodayDatestamp();
+    const yesterdayPlannerString = storage.getString(yesterdayTimestamp);
+    if (yesterdayPlannerString) {
+        const yesterdayPlanner = JSON.parse(yesterdayPlannerString);
+
+        // Delete all previous calendars
+        const allStorageKeys = storage.getAllKeys();
+        allStorageKeys.map(timestamp => {
+            if (isTimestampValid(timestamp) && (new Date(timestamp) < new Date(todayTimestamp))) {
+                storage.delete(timestamp);
+            }
+        });
+        return yesterdayPlanner
+            // Remove hidden items
+            .filter((event: IPlannerEvent) => {
+                event.status !== EItemStatus.HIDDEN && !event.recurringId
+            })
+            // Remove any time configs 
+            .map((event: IPlannerEvent) => {
+                delete event.calendarId;
+                if (event.timeConfig) {
+                    const newEvent = { ...event };
+                    delete newEvent.timeConfig;
+                    return newEvent;
+                }
+                return event;
+            });
+    }
+    return [];
+};

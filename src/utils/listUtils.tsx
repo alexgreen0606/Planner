@@ -53,7 +53,6 @@ export function generateSortId(
     throw new Error(`No item exists in the list with sort ID ${referenceSortId}.`);
 }
 
-
 /**
 * Gets the sort ID of the parent item (the one directly above this item)
 * @param item The current list item
