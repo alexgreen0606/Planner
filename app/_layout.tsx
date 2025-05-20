@@ -7,7 +7,7 @@ import { DeleteSchedulerProvider } from '../src/services/DeleteScheduler';
 import { ReloadProvider } from '../src/services/ReloadScheduler';
 import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerSetKey]';
 import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';
-import { TimeModalProvider } from '@/components/modal/services/TimeModalProvider';
+import { TimeModalProvider } from '@/services/TimeModalProvider';
 
 export default function TabLayout() {
     return (

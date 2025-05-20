@@ -1,10 +1,10 @@
 import { PLANNER_STORAGE_ID } from "@/constants/storageIds";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { generateSortId, isItemTextfield } from "@/feature/sortedList/utils";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/types/planner/TPlanner";
-import { generatePlanner, syncPlannerWithRecurring, syncPlannerWithCalendar, getCalendarAccess } from "@/utils/calendarUtils/calendarUtils";
-import { getYesterdayDatestamp, getTodayDatestamp, isTimestampValid, getTomorrowDatestamp, datestampToDayOfWeek, generateSortIdByTime } from "@/utils/calendarUtils/timestampUtils";
+import { generatePlanner, getCalendarAccess, syncPlannerWithCalendar, syncPlannerWithRecurring } from "@/utils/calendarUtils";
+import { datestampToDayOfWeek, getTodayDatestamp, getYesterdayDatestamp, isTimestampValid } from "@/utils/dateUtils";
+import { generateSortId, isItemTextfield } from "@/utils/listUtils";
 import RNCalendarEvents from "react-native-calendar-events";
 import { MMKV } from 'react-native-mmkv';
 import { getRecurringPlannerFromStorage } from "./recurringEventStorage";

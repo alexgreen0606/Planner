@@ -1,6 +1,6 @@
 import Modal from "@/components/modal";
-import Form from "@/components/modal/components/form";
-import { useTimeModal } from "@/components/modal/services/TimeModalProvider";
+import Form from "@/components/form";
+import { useTimeModal } from "@/services/TimeModalProvider";
 import { EFormFieldType } from "@/enums/EFormFieldType";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { usePathname } from "expo-router";

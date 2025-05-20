@@ -1,20 +1,20 @@
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
-import { DEADLINE_LIST_KEY } from '@/feature/deadlines/constants';
-import { deleteDeadlines, getDeadlines, saveDeadline } from '@/feature/deadlines/deadlineUtils';
-import SortableList from '@/feature/sortedList';
-import Toolbar, { ToolbarProps } from '@/feature/sortedList/components/ListItemToolbar';
-import useSortedList from '@/feature/sortedList/hooks/useSortedList';
-import { ModifyItemConfig } from '@/feature/sortedList/lib/listRowConfig';
+import { deleteDeadlines, getDeadlines, saveDeadline } from '@/utils/deadlineUtils';
+import useSortedList from '@/hooks/useSortedList';
+import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { useScrollContainer } from '@/services/ScrollContainer';
-import { generateSortId, isItemTextfield } from '@/feature/sortedList/utils';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { Deadline } from '@/types/listItems/IDeadline';
-import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
+import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '@/utils/dateUtils';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
+import { DEADLINE_LIST_KEY } from '@/constants/storageIds';
+import { generateSortId, isItemTextfield } from '@/utils/listUtils';
+import SortableList from '@/components/sortedList';
+import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 
 const Deadlines = () => {
 
@@ -83,6 +83,7 @@ const Deadlines = () => {
                 await DeadlineItems.refetchItems();
             }
         },
+        initializeListItem: initializeDeadline,
         reloadOnOverscroll: true
     });
 
@@ -95,11 +96,10 @@ const Deadlines = () => {
                 fillSpace
                 disableDrag
                 items={DeadlineItems.items}
-                initializeItem={initializeDeadline}
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
-                onSaveTextfield={DeadlineItems.persistItemToStorage}
+                saveTextfieldAndCreateNew={DeadlineItems.saveTextfieldAndCreateNew}
                 getToolbar={generateToolbar}
                 emptyLabelConfig={{
                     label: 'No deadlines',
@@ -140,19 +140,7 @@ const Deadlines = () => {
                         ...currentTextfield,
                         startTime: selected.toISO(),
                     };
-
-                    const updatedList = [...DeadlineItems.items];
-                    const itemCurrentIndex = updatedList.findIndex(
-                        (listItem) => listItem.id === currentTextfield.id
-                    );
-
-                    if (itemCurrentIndex !== -1) {
-                        updatedList[itemCurrentIndex] = updatedDeadline;
-                    } else {
-                        updatedList.push(updatedDeadline);
-                    }
-
-                    updatedDeadline.sortId = generateSortIdByTime(updatedDeadline, updatedList);
+                    updatedDeadline.sortId = generateSortIdByTime(updatedDeadline, DeadlineItems.items);
                     setCurrentTextfield({
                         ...updatedDeadline,
                         startTime: selected.toISO(),

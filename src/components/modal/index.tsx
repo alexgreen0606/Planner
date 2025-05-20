@@ -1,10 +1,9 @@
-import React, { ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle, PlatformColor, ScrollView } from 'react-native';
-import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BlurView } from "expo-blur";
-import { useRouter } from 'expo-router';
 import { useLayoutTracker } from '@/services/LayoutTracker';
+import { BlurView } from "expo-blur";
+import React, { ReactNode } from 'react';
+import { PlatformColor, ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import ButtonText from '../text/ButtonText';
 import CustomText from '../text/CustomText';
 

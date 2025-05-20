@@ -7,7 +7,7 @@ import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { saveEvent } from '@/storage/plannerStorage';
-import { useTimeModal } from './modal/services/TimeModalProvider';
+import { useTimeModal } from '../services/TimeModalProvider';
 
 export interface EventChipProps {
     planEvent?: IPlannerEvent;

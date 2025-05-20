@@ -3,14 +3,13 @@ import { useForm } from 'react-hook-form';
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
-
 import { PLANNER_SETS_STORAGE_ID } from '@/constants/storageIds';
 import Modal from '@/components/modal';
-import Form from '@/components/modal/components/form';
+import Form from '@/components/form';
 import { IFormField } from '@/types/form/IFormField';
 import { TPlannerSet } from '@/types/planner/TPlannerSet';
 import { EFormFieldType } from '@/enums/EFormFieldType';
-import { NULL } from '@/feature/checklists/constants';
+import { NULL } from '@/constants/generic';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 

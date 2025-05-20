@@ -2,10 +2,10 @@ import GenericIcon from '@/components/GenericIcon';
 import PopoverList from '@/components/PopoverList';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
-import RecurringPlanner from '../../../src/feature/recurringPlanner/components/RecurringPlanner';
-import RecurringWeekdayPlanner from '../../../src/feature/recurringPlanner/components/RecurringWeekdayPlanner';
 
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
+import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
+import RecurringWeekdayPlanner from '@/components/recurringPlanner/RecurringWeekdayPlanner';
 
 type RecurringOption = {
     label: string;

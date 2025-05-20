@@ -1,12 +1,12 @@
 import EventChip, { EventChipProps } from '@/components/EventChip';
-import BirthdayCard from '@/feature/birthdayCard';
+import BirthdayCard from '@/components/birthday';
 import { getContactedBirthdaysByDatestamp } from '@/storage/birthdayStorage';
-import { eventChipToBirthday, extractNameFromBirthdayText } from '@/feature/birthdayCard/utils';
+import { eventChipToBirthday, extractNameFromBirthdayText } from '@/utils/birthdayUtils';
 import { ScrollContainerProvider } from '@/services/ScrollContainer';
-import TodayPlanner from '@/feature/todayPlans';
-import TodayBanner from '@/feature/todayPlans/TodayBanner';
-import { loadCalendarEventData } from '@/utils/calendarUtils/calendarUtils';
-import { getTodayDatestamp } from '@/utils/calendarUtils/timestampUtils';
+import TodayPlanner from '@/components/today';
+import TodayBanner from '@/components/today/TodayBanner';
+import { loadCalendarEventData } from '@/utils/calendarUtils';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';

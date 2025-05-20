@@ -1,9 +1,10 @@
-import { generateSortIdByTime } from "@/utils/calendarUtils/timestampUtils";
+import { generateSortIdByTime } from "@/utils/dateUtils";
 import { MMKV } from "react-native-mmkv";
 import { IRecurringEvent } from "@/types/listItems/IRecurringEvent";
 import { PLANNER_STORAGE_ID } from "@/constants/storageIds";
 import { ERecurringPlannerKeys } from "@/enums/ERecurringPlannerKeys";
 import { EWeekdays } from "@/enums/EWeekdays";
+import { sanitizeListForScan } from "@/utils/listUtils";
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
@@ -33,14 +34,8 @@ export function saveRecurringWeekdayEvent(event: IRecurringEvent) {
     Object.values(EWeekdays).forEach((day) => {
         const updatedEvent = { ...event };
         const planner = getRecurringPlannerFromStorage(day);
-        const updatedPlanner = [...planner];
-        const itemCurrentIndex = planner.findIndex(planEvent => planEvent.id === updatedEvent.id);
-        if (itemCurrentIndex !== -1) {
-            updatedPlanner[itemCurrentIndex] = updatedEvent;
-        } else {
-            updatedPlanner.push(updatedEvent);
-        }
-        updatedEvent.sortId = generateSortIdByTime(updatedEvent, planner);
+        const updatedPlanner = sanitizeListForScan(planner, updatedEvent);
+        updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
         savePlannerToStorage(day, updatedPlanner);
     });
 }

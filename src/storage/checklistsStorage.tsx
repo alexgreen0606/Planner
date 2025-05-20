@@ -1,12 +1,13 @@
 import { MMKV } from "react-native-mmkv";
-import { LISTS_STORAGE_ID, NULL, ROOT_FOLDER_KEY } from "../feature/checklists/constants";
 import { IFolder } from "@/types/checklists/IFolder";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { IChecklist } from "@/types/checklists/IChecklist";
 import { EFolderItemType } from "@/enums/EFolderItemType";
 import { IFolderItem } from "@/types/listItems/IFolderItem";
+import { NULL } from "@/constants/generic";
+import { CHECKLISTS_STORAGE_ID, ROOT_CHECKLIST_FOLDER_KEY } from "@/constants/storageIds";
 
-const storage = new MMKV({ id: LISTS_STORAGE_ID });
+const storage = new MMKV({ id: CHECKLISTS_STORAGE_ID });
 
 /**
  * Fetches a folder from storage with the given ID.
@@ -20,11 +21,11 @@ export const getFolderFromStorage = (folderId: string) => {
     if (folderString) {
         const foundFolder: IFolder = JSON.parse(folderString);
         return foundFolder;
-    } else if (folderId === ROOT_FOLDER_KEY) {
+    } else if (folderId === ROOT_CHECKLIST_FOLDER_KEY) {
 
         // @ts-ignore - color must be overridden to blue for the root folder
         const initialRootFolder = {
-            id: ROOT_FOLDER_KEY,
+            id: ROOT_CHECKLIST_FOLDER_KEY,
             listId: NULL,
             folderIds: [],
             listIds: [],

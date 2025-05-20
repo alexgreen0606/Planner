@@ -1,10 +1,10 @@
 import { EFolderItemType } from '@/enums/EFolderItemType';
-import Checklist from '@/feature/checklistContents';
-import FolderItemBanner from '@/feature/checklists/components/FolderItemBanner';
+import Checklist from '@/components/checklist';
 import { ScrollContainerProvider } from '@/services/ScrollContainer';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
+import FolderItemBanner from '@/components/checklist/FolderItemBanner';
 
 const ChecklistScreen = () => {
     const { checklistId, prevFolderName } = useLocalSearchParams<{
