@@ -66,7 +66,7 @@ async function handleTimeModalSave(
 // ------------- List Modification Handlers -------------
 
 /**
- * Handles saving a planner event. If the item was or is a calendar event, 
+ * ✅ Handles saving a planner event. If the item was or is a calendar event, 
  * the calendar data will be refreshed.
  * 
  * @param updatedPlanEvent - The planner event to save
@@ -92,7 +92,7 @@ export async function saveEventLoadChips(
 }
 
 /**
- * Handles deleting a planner event. If any items were a calendar event, 
+ * ✅ Handles deleting a planner event. If any items were a calendar event, 
  * the calendar data will be refreshed.
  * 
  * @param planEvents - The planner events to delete
@@ -109,7 +109,13 @@ export async function deleteEventsLoadChips(
 // ------------- Planner Generation -------------
 
 /**
- * Builds a planner for the given ID out of the storage, calendar, and recurring weekday planner.
+ * ✅ Build a planner out of existing data, the calendar, recurring events, 
+ * and carryover events from past planners.
+ * 
+ * @param datestamp - the date the planner represents
+ * @param storagePlanner - current planner in storage
+ * @param calendarEvents - events in the device calendar
+ * @returns - a newly build planner, synced up with storage
  */
 export async function buildPlannerEvents(
     datestamp: string,
@@ -118,41 +124,45 @@ export async function buildPlannerEvents(
 ): Promise<IPlannerEvent[]> {
     const planner = { ...storagePlanner };
 
-    // Phase 1: Sync in any recurring events for the day of the week.
+    // Phase 1: Merge in any recurring events for the given weekday.
     const recurringPlanner = getRecurringPlannerFromStorage(datestampToDayOfWeek(datestamp));
     planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
 
-    // Phase 2: Sync in any recurring events for the day of the week.
+    // Phase 2: Merge in any events from the calendar.
     planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
 
-    // Delete past planners and carry over incomplete yesterday events
+    // Phase 3: Merge in carryover events from yesterday. Only applicable for today.
     if (datestamp === getTodayDatestamp()) {
         const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
-        if (remainingYesterdayEvents.length > 0) {
+        remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
+            const newEvent = {
+                ...yesterdayEvent,
+                listId: datestamp,
+                sortId: -1,
+            };
 
-            // Carry over yesterday's incomplete events to today
-            remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
-                const newEvent = {
-                    ...yesterdayEvent,
-                    listId: datestamp,
-                    sortId: -1,
-                };
-                planner.events.push(newEvent);
-                newEvent.sortId = generateSortId(-1, planner.events);
-            });
-        }
+            planner.events.push(newEvent);
+            newEvent.sortId = generateSortId(-1, planner.events);
+        });
     }
 
-    // Phase 4: TODO comment
-    if (planner.events.some(planEvent =>
-        !storagePlanner.events.some(existingEvent => existingEvent.id === planEvent.id)
-    )) savePlannerToStorage(datestamp, planner);
+    // Phase 4: Save the planner to storage if any events were added or removed during build.
+    if (
+        // The planner gained new events
+        planner.events.some(planEvent =>
+            !storagePlanner.events.some(existingEvent => existingEvent.id === planEvent.id)
+        ) ||
+        // The planner lost existing events
+        storagePlanner.events.some(existingEvent =>
+            !planner.events.some(planEvent => planEvent.id === existingEvent.id)
+        )
+    ) savePlannerToStorage(datestamp, planner);
 
     return planner.events;
 }
 
 /**
- * Syncs a planner with a calendar. Calendars have final say on the state of the events.
+ * ✅ Syncs a planner with a calendar. Calendars have final say on the state of the events.
  * 
  * @param calendar - the calendar events to sync with
  * @param plannerEvents - the planner being updated
@@ -184,6 +194,7 @@ export function syncPlannerWithCalendar(
                 timeConfig: calEvent.timeConfig,
                 value: calEvent.value,
             }
+
             const updatedPlanner = [...accumulator, updatedEvent];
             updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
             return updatedPlanner;
@@ -215,7 +226,7 @@ export function syncPlannerWithCalendar(
 // precedence the planner event time configs
 
 /**
- * Syncs a planner with a recurring planner. 
+ * ✅ Syncs a planner with a recurring planner. 
  * Planner events have final say on timing. Recurring events have final say on value.
  * 
  * @param recurringPlanner - the events to sync within the planner
@@ -259,16 +270,19 @@ export function syncPlannerWithRecurring(
                 listId: datsetamp,
                 recurringId: recEvent.id,
             };
+
             // Sync event time.
             if (planEvent.timeConfig) {
                 updatedEvent.timeConfig = planEvent.timeConfig;
             } else if (recEvent.startTime) {
                 updatedEvent.timeConfig = getRecurringEventTimeConfig(recEvent);
             }
+
             // Sync calendar link.
             if (planEvent.calendarId) {
                 updatedEvent.calendarId = planEvent.calendarId;
             }
+
             const updatedPlanner = [...accumulator, updatedEvent];
             updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
             return updatedPlanner;
@@ -282,10 +296,12 @@ export function syncPlannerWithRecurring(
                 sortId: recEvent.sortId,
                 status: recEvent.status
             };
+
             // Add event time.
             if (recEvent.startTime) {
                 newEvent.timeConfig = getRecurringEventTimeConfig(recEvent);
             }
+
             const updatedPlanner = [...accumulator, newEvent];
             newEvent.sortId = generateSortIdByTime(newEvent, updatedPlanner);
             return updatedPlanner;
@@ -415,7 +431,7 @@ export function generateEventToolbar(
 // ------------- Sort ID Handling -------------
 
 /**
- * Generate a new sort ID for the event that maintains time logic within the planner.
+ * ✅ Generate a new sort ID for the event that maintains time logic within the planner.
  * @param event - the event to place
  * @param planner - the planner
  * @returns - the new sort ID for the event
@@ -443,10 +459,10 @@ export function generateSortIdByTime(
         }
     };
 
-    // Pre-Check: The event is unscheduled. Keep it at its current position.
+    // Pre-Check 1: The event is unscheduled. Keep it at its current position.
     if (!eventTime || event.status === EItemStatus.HIDDEN) return persistEventPosition();
 
-    // Phase 1: Check if the event conflicts at its current position.
+    // Pre-Check 2: Check if the event conflicts at its current position.
     const timedPlanner = [...planner].filter(existingEvent => getEventTime(existingEvent));
     const currentIndex = timedPlanner.findIndex(e => e.id === event.id);
 
@@ -459,7 +475,7 @@ export function generateSortIdByTime(
         isTimeEarlierOrEqual(eventTime, laterTime!)
     ) return persistEventPosition();
 
-    // Phase 2a: Place the event before the first event that starts after or during it.
+    // Scenario 1: Place the event before the first event that starts after or during it.
     const laterEventIndex = planner.findIndex(existingEvent => {
         const existingTime = getEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
@@ -471,7 +487,7 @@ export function generateSortIdByTime(
         return generateSortId(newChildSortId, plannerWithoutEvent, true);
     }
 
-    // Phase 2b: Place the event after the last event that starts before or during it.
+    // Scenario 2: Place the event after the last event that starts before or during it.
     const earlierEventIndex = planner.findLastIndex(existingEvent => {
         const existingTime = getEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
