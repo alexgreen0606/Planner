@@ -1,6 +1,6 @@
 import { IListItem } from "./core/TListItem";
 
-export type TimeConfig = {
+export type TTimeConfig = {
     allDay: boolean;
     startTime: string; // ISO timestamp
     endTime: string; // ISO timestamp
@@ -10,7 +10,7 @@ export type TimeConfig = {
 
 export interface IPlannerEvent extends IListItem {
     color?: string;
-    timeConfig?: TimeConfig;
+    timeConfig?: TTimeConfig;
     calendarId?: string;
     recurringId?: string;
 }

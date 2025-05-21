@@ -6,12 +6,12 @@ import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
-import { datestampToMidnightDate, generateSortIdByTime } from '@/utils/dateUtils';
+import { datestampToMidnightDate } from '@/utils/dateUtils';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
-import { handleDragEnd, handleEventInput, generateTimeIconConfig } from '@/utils/plannerUtils';
+import { handleDragEnd, handleEventInput, generateTimeIconConfig, generateSortIdByTime } from '@/utils/plannerUtils';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 

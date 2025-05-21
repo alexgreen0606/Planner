@@ -112,7 +112,7 @@ const PlannerCard = ({
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
-        await deleteEventsLoadChips(planEvents, loadAllExternalData, SortedEvents.items);
+        await deleteEventsLoadChips(planEvents, loadAllExternalData);
 
         if (planEvents.some(event => 
             event.timeConfig && (isoToDatestamp(event.timeConfig.startTime) === getTodayDatestamp())

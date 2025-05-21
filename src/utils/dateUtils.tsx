@@ -1,6 +1,6 @@
 import { EItemStatus } from '@/enums/EItemStatus';
 import { generateSortId, getParentSortId, sanitizeListForScan } from '@/utils/listUtils';
-import { IPlannerEvent, TimeConfig } from '@/types/listItems/IPlannerEvent';
+import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { DateTime } from 'luxon';
 
@@ -86,13 +86,14 @@ export function daysBetweenToday(isoTimestamp: string): number {
 }
 
 /**
- * Compares two time values (both in the same format: either ISO or HH:MM).
+ * Returns true if time1 is earlier than time2.
+ * Assumes both time strings are in the same format (ISO or HH:MM).
  * @param time1 - The first time string.
  * @param time2 - The second time string.
- * @returns A negative number if time1 < time2, 0 if equal, positive if time1 > time2.
+ * @returns True if time1 is earlier than time2, false otherwise.
  */
-export function compareTimes(time1: string, time2: string): number {
-    return time1.localeCompare(time2);
+export function isTimeEarlierOrEqual(time1: string, time2: string): boolean {
+    return time1.localeCompare(time2) < 0;
 }
 
 /**
@@ -194,104 +195,12 @@ export function getEventTime(item: IPlannerEvent | IRecurringEvent | undefined):
 };
 
 /**
- * Generate a new sort ID for the event that maintains time logic within the planner.
- * @param event - the event to place
- * @param planner - the planner (MUST contain the event)
- * @returns - the new sort ID for the event
- */
-export function generateSortIdByTime(
-    event: IPlannerEvent | IRecurringEvent,
-    events: (IPlannerEvent | IRecurringEvent)[]
-): number {
-    // console.info('generateSortIdByTime START', { event: {...event}, planner: [...planner] });
-
-    const planner = sanitizeListForScan(events, event);
-
-    const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
-
-    // Handler for situations where the item can remain in its position.
-    function persistEventPosition() {
-        if (event.sortId === -1) {
-            // Event will be at the top of the list
-            return generateSortId(-1, plannerWithoutEvent);
-        } else if (plannerWithoutEvent.find(item => item.sortId === event.sortId)) {
-            // Event has a duplicate sort ID. Generate a new one.
-            return generateSortId(getParentSortId(event, planner), plannerWithoutEvent);
-        } else {
-            // Use the event's current position.
-            return event.sortId;
-        }
-    };
-
-    const eventTime = getEventTime(event);
-
-    // The event does not need to account for a timestamp
-    if (!eventTime || event.status === EItemStatus.HIDDEN) return persistEventPosition();
-
-    planner.sort((a, b) => a.sortId - b.sortId);
-
-    // Check if the event conflicts at its current position
-    const eventsWithTimes = [...planner].filter(existingEvent => getEventTime(existingEvent));
-    const currentIndex = eventsWithTimes.findIndex(e => e.id === event.id);
-    if (currentIndex !== -1) {
-
-        // Ensure the event at the current position does not conflict
-        const prevEvent = eventsWithTimes[currentIndex - 1];
-        const nextEvent = eventsWithTimes[currentIndex + 1];
-        const prevEventTime = getEventTime(prevEvent);
-        const nextEventTime = getEventTime(nextEvent);
-        const hasNoConflict =
-            (!prevEvent || (prevEventTime && compareTimes(eventTime, prevEventTime) >= 0)) &&
-            (!nextEvent || (nextEventTime && compareTimes(eventTime, nextEventTime) < 0));
-
-        if (hasNoConflict) return persistEventPosition();
-    } else {
-        throw new Error(`generateSortIdByTime: Event ${event.value} does not exist in the given planner.`);
-    }
-
-    // Find the first event that starts after or during the new event
-    const eventThatStartsAfterIndex = planner.findIndex(existingEvent => {
-        const existingEventTime = getEventTime(existingEvent);
-        if (!existingEventTime || existingEvent.id === event.id) return false;
-        return compareTimes(eventTime, existingEventTime) <= 0;
-    });
-
-    // Place the new event before the event that starts after it
-    if (eventThatStartsAfterIndex !== -1) {
-        const newParentSortId = planner[eventThatStartsAfterIndex - 1]?.sortId ?? -1;
-        return generateSortId(newParentSortId, plannerWithoutEvent);
-    }
-
-    // Find the last event that starts before the current event
-    let eventThatStartsBeforeIndex = -1;
-    for (let i = planner.length - 1; i >= 0; i--) {
-        const existingEvent = planner[i];
-        const existingEventTime = getEventTime(existingEvent);
-        if (!existingEventTime || existingEvent.id === event.id) continue;
-
-        // This event starts before the current event
-        if (compareTimes(eventTime, existingEventTime) > 0) {
-            eventThatStartsBeforeIndex = i;
-            break;
-        }
-    }
-
-    // Place the new event after the event that starts before it
-    if (eventThatStartsBeforeIndex !== -1) {
-        const newParentSortId = planner[eventThatStartsBeforeIndex].sortId;
-        return generateSortId(newParentSortId, plannerWithoutEvent);
-    }
-
-    throw new Error('generateSortIdByTime: An error occurred during timed sort ID generation.');
-};
-
-/**
  * Parses the given text to find any time values. If one exists, it will be removed and a time object
  * will be generated representing this time of day.
  * @param text - user input
  * @returns - the text with the time value removed, and a time object representing the time value
  */
-export function extractTimeValue(text: string, timestamp?: string): { timeConfig: TimeConfig | undefined, updatedText: string } {
+export function extractTimeValue(text: string, timestamp?: string): { timeConfig: TTimeConfig | undefined, updatedText: string } {
     let timeConfig = undefined;
     let updatedText = text;
 
