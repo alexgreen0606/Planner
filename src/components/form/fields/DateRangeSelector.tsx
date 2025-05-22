@@ -1,105 +1,117 @@
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import React, { useState } from 'react';
+import { DateTime } from 'luxon';
+import React, { useEffect, useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 
 interface DateRangeSelectorProps {
-    startDate: string | null;
-    endDate: string | null;
-    onChange: (startDate: string | null, endDate: string | null) => void;
+    startDatestamp: string | null;
+    endDatestamp: string | null;
+    onChange: (start: string | null, end: string | null) => void;
+    multiDay?: boolean;
 }
 
 const DateRangeSelector = ({
-    startDate,
-    endDate,
-    onChange
+    startDatestamp,
+    endDatestamp,
+    onChange,
+    multiDay
 }: DateRangeSelectorProps) => {
-    const [monthIndex, setMonthIndex] = useState(0);
 
-    const handleDayPress = (day: { dateString: string }) => {
-        const { dateString } = day;
-
-        if (startDate === dateString) {
-            // Deselect if clicking the start date when it's the only selection
-            onChange(null, null);
-        } else if (!startDate) {
-            // Start new range
-            onChange(dateString, dateString);
-        } else if (!endDate || startDate === endDate) {
-            // Set end date
-            if (dateString < startDate) {
-                onChange(dateString, startDate);
-            } else {
-                onChange(startDate, dateString);
-            }
-        } else {
-            // Adjust the existing range
-            if (dateString < startDate) {
-                onChange(dateString, endDate);
-            } else {
-                onChange(startDate, dateString);
-            }
+    // Range of dates between start and end date
+    const markedDates = useMemo(() => {
+        if (!startDatestamp || !endDatestamp) {
+            return {};
         }
-    };
 
-    const getMarkedDates = () => {
         const marks: any = {};
+        const start = DateTime.fromISO(startDatestamp);
+        const end = DateTime.fromISO(endDatestamp);
 
-        if (startDate && !endDate) {
-            marks[startDate] = { selected: true, startingDay: true, endingDay: true, color: PlatformColor('systemBlue'), textColor: 'white' };
-        }
-
-        if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            let current = new Date(start);
-
-            while (current <= end) {
-                const dateStr = current.toISOString().split('T')[0];
-                marks[dateStr] = {
-                    color: PlatformColor('systemBlue'),
-                    textColor: 'white',
-                    startingDay: dateStr === startDate,
-                    endingDay: dateStr === endDate
-                };
-                current.setDate(current.getDate() + 1);
-            }
+        let current = start;
+        while (current <= end) {
+            const dateStr = current.toISODate() ?? '';
+            marks[dateStr] = {
+                selected: true,
+                selectedColor: 'transparent',
+                customStyles: {
+                    container: {
+                        borderColor: PlatformColor('systemTeal'),
+                        borderWidth: 1
+                    }
+                }
+            };
+            current = current.plus({ days: 1 });
         }
 
         return marks;
-    };
+    }, [startDatestamp, endDatestamp]);
+
+    function handleDayPress(day: { dateString: string }) {
+        const { dateString } = day;
+
+        // Case 1: Single day selection or first selection of multiday
+        if (!multiDay || !startDatestamp) {
+            onChange(dateString, dateString);
+            return;
+        }
+
+        // Case 2: If clicked on start or end date, clear selection
+        if (dateString === startDatestamp || dateString === endDatestamp) {
+            onChange(null, null);
+            return;
+        }
+
+        // Case 3: If start equals end (single day selected)
+        if (startDatestamp === endDatestamp) {
+            if (dateString > startDatestamp) {
+                // Clicked date is greater - set as end date
+                onChange(startDatestamp, dateString);
+            } else {
+                // Clicked date is less - set as start date
+                onChange(dateString, startDatestamp);
+            }
+            return;
+        }
+
+        // Case 4: Determine which boundary to move
+        const clicked = DateTime.fromISO(dateString);
+        const start = DateTime.fromISO(startDatestamp);
+        const end = DateTime.fromISO(endDatestamp!);
+
+        const startDistance = Math.abs(clicked.diff(start).milliseconds);
+        const endDistance = Math.abs(clicked.diff(end).milliseconds);
+        if (startDistance < endDistance) {
+            // Closer to start date, move start date
+            onChange(dateString, endDatestamp);
+        } else {
+            // Closer or equal to end date, move end date
+            onChange(startDatestamp, dateString);
+        }
+    }
+
+    // Single-day mode sets end date equal to start date.
+    useEffect(() => {
+        if (!multiDay) onChange(startDatestamp, startDatestamp);
+    }, [multiDay]);
 
     return (
-        <View style={{ width: '100%' }}>
+        <View className='w-full'>
             <Calendar
                 onDayPress={handleDayPress}
-                markedDates={getMarkedDates()}
-                style={{
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                }}
-                markingType='period'
+                markedDates={markedDates}
                 minDate={getTodayDatestamp()}
                 hideExtraDays
-                disableLeftArrow={monthIndex <= 0}
-                onPressArrowLeft={(subtract: () => void) => {
-                    setMonthIndex(curr => curr - 1)
-                    subtract();
-                }}
-                onPressArrowRight={(add: () => void) => {
-                    setMonthIndex(curr => curr + 1)
-                    add();
-                }}
+                enableSwipeMonths
+                disableAllTouchEventsForDisabledDays
+                markingType='custom'
                 theme={{
                     backgroundColor: 'transparent',
                     calendarBackground: 'transparent',
-                    textSectionTitleColor: PlatformColor('secondaryLabel'),
-                    selectedDayBackgroundColor: PlatformColor('systemBlue'),
-                    selectedDayTextColor: 'white',
-                    todayTextColor: PlatformColor('systemBlue'),
+                    todayTextColor: PlatformColor('systemTeal'),
                     dayTextColor: PlatformColor('label'),
                     textDisabledColor: PlatformColor('tertiaryLabel'),
-                    monthTextColor: 'white',
+                    monthTextColor: PlatformColor('label'),
                     arrowColor: PlatformColor('systemBlue'),
                     disabledArrowColor: PlatformColor('tertiaryLabel')
                 }}

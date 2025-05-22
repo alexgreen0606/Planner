@@ -7,6 +7,7 @@ import { usePathname } from "expo-router";
 import { DateTime } from 'luxon';
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { IFormField } from "@/types/form/IFormField";
 
 export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
 
@@ -135,7 +136,7 @@ const TimeModal = () => {
         onSave(updatedItem);
     }
 
-    const formFields = [
+    const formFields: IFormField[][] = [
         [{
             name: 'title',
             type: EFormFieldType.TEXT,
@@ -148,9 +149,11 @@ const TimeModal = () => {
             type: EFormFieldType.TIME_RANGE,
             defaultValue: {
                 startTime: DateTime.now().toISO(),
-                endTime: DateTime.now().plus({ hours: 1 }).toISO()
+                endTime: DateTime.now().toISO()
             },
-            hide: false
+            hide: false,
+            multiDay: isCalendarEvent,
+            allDay: isAllDay
         }],
         [{
             name: 'isCalendarEvent',

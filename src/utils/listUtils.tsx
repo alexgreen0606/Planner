@@ -128,7 +128,7 @@ export function buildItemPositions<T extends IListItem>(currentList: T[]): Recor
  * @param syncItem The item to update within the list. Item will be updated by ID. If no item exists, it will be added in.
  * @returns A clean list sorted by sort ID
  */
-export function sanitizeListForScan<T extends IListItem>(list: T[], syncItem?: T) {
+export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T) {
     const updatedList = [...list];
 
     if (syncItem) {

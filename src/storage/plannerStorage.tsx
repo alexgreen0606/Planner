@@ -4,7 +4,8 @@ import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/types/planner/TPlanner";
 import { generatePlanner, getCalendarAccess } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimestampValid } from "@/utils/dateUtils";
-import { isItemTextfield } from "@/utils/listUtils";
+import { isItemTextfield, sanitizeList } from "@/utils/listUtils";
+import { uuid } from "expo-modules-core";
 import RNCalendarEvents from "react-native-calendar-events";
 import { MMKV } from 'react-native-mmkv';
 
@@ -31,54 +32,67 @@ export function savePlannerToStorage(datestamp: string, newPlanner: TPlanner) {
  * Creates or updates an event. Updates it in the device calendar if needed.
  * @returns - true if the item was persisted, else false
  */
-export async function saveEvent(event: IPlannerEvent) {
-    let newPlanner = getPlannerFromStorage(event.listId);
-    let newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
 
-    // The event is a calendar event -> sync the calendar
-    if (newEvent.calendarId && newEvent.timeConfig) {
+/**
+ * ✅ Creates or updates a planner event.
+ * Calendar events will be synced. Modified recurring events will be hidden and cloned.
+ * Unscheduled events will be removed from the calendar.
+ * 
+ * @param event - the event to update
+ * @returns - the calendar ID of the event if one exists
+ */
+export async function saveEvent(event: IPlannerEvent) {
+    const newPlanner = getPlannerFromStorage(event.listId);
+    const newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
+
+    const newCalendarId = newEvent.calendarId;
+    const oldCalendarId = newPlanner.events.find(existingEvent => existingEvent.id === event.id)?.calendarId;
+
+    // Phase 1: Clone recurring events to allow customization. 
+    // The original event will be hidden and replaced with the clone.
+    if (newEvent.recurringId) {
+        const clonedEvent = { ...newEvent, id: uuid.v4() };
+        delete clonedEvent.recurringId;
+        saveEvent(clonedEvent);
+
+        // Continue saving to mark this recurring event as hidden
+        newEvent.status = EItemStatus.HIDDEN;
+        delete newEvent.timeConfig;
+    }
+
+    // Phase 2: Sync calendar event. If the event is now all day, remove it from the planner.
+    if (newCalendarId) {
         await getCalendarAccess();
         const calendarEventId = await RNCalendarEvents.saveEvent(
             newEvent.value,
             {
-                startDate: newEvent.timeConfig.startTime,
-                endDate: newEvent.timeConfig.endTime,
-                allDay: newEvent.timeConfig.allDay,
+                startDate: newEvent.timeConfig!.startTime,
+                endDate: newEvent.timeConfig!.endTime,
+                allDay: newEvent.timeConfig!.allDay,
                 id: newEvent.calendarId === 'NEW' ? undefined : newEvent.calendarId
             }
         );
 
-        // Sync the planner event ID with the calendar event ID
+        // Sync the planner event ID with the calendar event ID.
         newEvent.calendarId = calendarEventId;
         newEvent.id = calendarEventId;
 
-        // Remove the event from its planner if it is an all-day event
         if (event.timeConfig?.allDay) {
+            // Remove this event from the planner.
             newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
             savePlannerToStorage(newEvent.listId, newPlanner);
             return;
         }
     }
 
-    // Update the list with the new event
-    const existingIndex = newPlanner.events.findIndex(existingEvent => existingEvent.id === event.id);
-    if (existingIndex !== -1) {
-        const existingEventCalendarId = newPlanner.events[existingIndex]!.calendarId;
-        if (existingEventCalendarId && !newEvent.calendarId) {
-            // Handle deletion of calendar events
-            await getCalendarAccess();
-            await RNCalendarEvents.removeEvent(existingEventCalendarId);
-        }
-        newPlanner.events.splice(existingIndex, 1, newEvent);
-    } else {
-        newPlanner.events.push(newEvent);
+    // Phase 3: Delete unscheduled event from the calendar. 
+    if (oldCalendarId && !newCalendarId) {
+        await getCalendarAccess();
+        await RNCalendarEvents.removeEvent(oldCalendarId);
     }
 
-    // TODO: why no delete time
-
-    // Save the new planner
+    newPlanner.events = sanitizeList(newPlanner.events, newEvent);
     savePlannerToStorage(newEvent.listId, newPlanner);
-
     return newEvent.calendarId;
 };
 

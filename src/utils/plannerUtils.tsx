@@ -9,7 +9,7 @@ import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { uuid } from 'expo-modules-core';
 import { datestampToDayOfWeek, extractTimeValue, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
-import { generateSortId, isItemTextfield, sanitizeListForScan } from './listUtils';
+import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 
 // ------------- Storage Getters and Setters -------------
 
@@ -441,7 +441,7 @@ export function generateSortIdByTime(
     events: (IPlannerEvent | IRecurringEvent)[]
 ): number {
     // console.info('generateSortIdByTime START', { event: {...event}, planner: [...planner] });
-    const planner = sanitizeListForScan(events, event);
+    const planner = sanitizeList(events, event);
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
     const eventTime = getEventTime(event);
 

@@ -7,7 +7,7 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReloadScheduler } from '../services/ReloadScheduler';
 import { useScrollContainer } from '../services/ScrollContainer';
-import { generateSortId, sanitizeListForScan } from '../utils/listUtils';
+import { generateSortId, sanitizeList } from '../utils/listUtils';
 
 type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -108,7 +108,7 @@ const useSortedList = <T extends IListItem, S>({
      */
     async function saveTextfieldAndCreateNew(item?: T, referenceSortId?: number, isChildId: boolean = false) {
 
-        const updatedList = sanitizeListForScan(items, item);
+        const updatedList = sanitizeList(items, item);
 
         if (item) {
             // Save the current textfield before creating a new one

@@ -4,7 +4,7 @@ import { IRecurringEvent } from "@/types/listItems/IRecurringEvent";
 import { PLANNER_STORAGE_ID } from "@/constants/storageIds";
 import { ERecurringPlannerKeys } from "@/enums/ERecurringPlannerKeys";
 import { EWeekdays } from "@/enums/EWeekdays";
-import { sanitizeListForScan } from "@/utils/listUtils";
+import { sanitizeList } from "@/utils/listUtils";
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
 
@@ -34,7 +34,7 @@ export function saveRecurringWeekdayEvent(event: IRecurringEvent) {
     Object.values(EWeekdays).forEach((day) => {
         const updatedEvent = { ...event };
         const planner = getRecurringPlannerFromStorage(day);
-        const updatedPlanner = sanitizeListForScan(planner, updatedEvent);
+        const updatedPlanner = sanitizeList(planner, updatedEvent);
         updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
         savePlannerToStorage(day, updatedPlanner);
     });

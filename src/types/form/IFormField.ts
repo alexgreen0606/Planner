@@ -11,4 +11,6 @@ export interface IFormField {
     disabled?: boolean;
     focusTrigger?: boolean;
     hide?: boolean;
+    multiDay?: boolean;
+    allDay?: boolean;
 }

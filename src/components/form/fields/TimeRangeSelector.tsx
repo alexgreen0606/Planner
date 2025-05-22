@@ -8,6 +8,7 @@ import { TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import DateRangeSelector from './DateRangeSelector';
+import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
 
 const TimeSelectorContainer = Animated.createAnimatedComponent(View);
 const DateSelectorContainer = Animated.createAnimatedComponent(View);
@@ -26,15 +27,17 @@ enum SelectorMode {
 export interface TimeRangeSelectorProps {
     startTimestamp: string | null;
     endTimestamp: string | null;
-    setStartTimestamp: (timestamp: string | null) => void;
-    setEndTimestamp: (timestamp: string | null) => void;
+    onChange: (start: string | null, end: string | null) => void;
+    allDay?: boolean;
+    multiDay?: boolean
 }
 
 const TimeRangeSelector = ({
     startTimestamp,
     endTimestamp,
-    setStartTimestamp,
-    setEndTimestamp,
+    onChange,
+    allDay,
+    multiDay
 }: TimeRangeSelectorProps) => {
     const [mode, setMode] = useState<SelectorMode | null>(null);
     const timeSelectorHeight = useSharedValue(0);
@@ -46,6 +49,8 @@ const TimeRangeSelector = ({
     // ---------- Utility Function ----------
 
     function toggleMode(newMode: SelectorMode) {
+        if (mode === SelectorMode.DATES && !startTimestamp) return;
+
         if (mode === newMode) {
             setMode(null);
         } else {
@@ -55,12 +60,9 @@ const TimeRangeSelector = ({
 
     // ---------- Reactions to other input changes ----------
 
-    // TODO: trigger hiding the input fields when all day is initiated
-    // useEffect(() => {
-    //     if (allDay && !!mode) {
-    //         setMode(SelectorMode.DATES)
-    //     }
-    // }, [allDay]);
+    useEffect(() => {
+        if (allDay) setMode(null);
+    }, [allDay]);
 
     // ---------- Animated Date Selector Handling ----------
 
@@ -121,7 +123,7 @@ const TimeRangeSelector = ({
         startTimestamp : endTimestamp;
 
     const updateTimestamp = mode === SelectorMode.START_TIME ?
-        setStartTimestamp : setEndTimestamp;
+        (start: string | null) => onChange(start, endTimestamp) : (end: string | null) => onChange(startTimestamp, end);
 
     const getColor = (type: SelectorMode) => {
         return type === mode ? 'systemTeal' : 'label';
@@ -137,30 +139,34 @@ const TimeRangeSelector = ({
                                 <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={startTimestamp} />
                             </TouchableOpacity>
                         </StartDateContainer>
-                        <StartTimeContainer style={startTimeContainerStyle}>
-                            <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
-                                <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
-                            </TouchableOpacity>
-                        </StartTimeContainer>
+                        {!allDay && (
+                            <StartTimeContainer style={startTimeContainerStyle}>
+                                <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
+                                    <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
+                                </TouchableOpacity>
+                            </StartTimeContainer>
+                        )}
                     </View>
                 )}
-                {endTimestamp && (
+                {endTimestamp && multiDay && (
                     <CustomText type='indicator'>
                         TO
                     </CustomText>
                 )}
-                {endTimestamp && (
+                {endTimestamp && multiDay && (
                     <View className='flex-1 items-center gap-1'>
                         <EndDateContainer style={datesContainerStyle}>
                             <TouchableOpacity onPress={() => toggleMode(SelectorMode.DATES)}>
                                 <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={endTimestamp} />
                             </TouchableOpacity>
                         </EndDateContainer>
-                        <EndTimeContainer style={endTimeContainerStyle}>
-                            <TouchableOpacity onPress={() => toggleMode(SelectorMode.END_TIME)}>
-                                <TimeValue platformColor={getColor(SelectorMode.END_TIME)} isoTimestamp={endTimestamp} />
-                            </TouchableOpacity>
-                        </EndTimeContainer>
+                        {!allDay && (
+                            <EndTimeContainer style={endTimeContainerStyle}>
+                                <TouchableOpacity onPress={() => toggleMode(SelectorMode.END_TIME)}>
+                                    <TimeValue platformColor={getColor(SelectorMode.END_TIME)} isoTimestamp={endTimestamp} />
+                                </TouchableOpacity>
+                            </EndTimeContainer>
+                        )}
                     </View>
                 )}
             </View>
@@ -169,14 +175,15 @@ const TimeRangeSelector = ({
                 style={dateSelectorContainerStyle}
             >
                 <DateRangeSelector
-                    startDate={startTimestamp ? DateTime.fromISO(startTimestamp).toFormat('yyyy-MM-dd') : null}
-                    endDate={endTimestamp ? DateTime.fromISO(endTimestamp).toFormat('yyyy-MM-dd') : null}
+                    startDatestamp={startTimestamp ? DateTime.fromISO(startTimestamp).toFormat('yyyy-MM-dd') : null}
+                    endDatestamp={endTimestamp ? DateTime.fromISO(endTimestamp).toFormat('yyyy-MM-dd') : null}
                     onChange={(newStartDate: string | null, newEndDate: string | null) => {
                         if (!newStartDate || !newEndDate) {
-                            setStartTimestamp(null);
-                            setEndTimestamp(null);
+                            onChange(null, null);
                             return;
                         }
+
+                        console.log(newStartDate, newEndDate)
 
                         // Parse current timestamps to get the times
                         const currentStartDateTime = startTimestamp ? DateTime.fromISO(startTimestamp) : DateTime.now();
@@ -198,9 +205,9 @@ const TimeRangeSelector = ({
                         });
 
                         // Update the timestamps
-                        setStartTimestamp(newStartDateTime.toISO());
-                        setEndTimestamp(newEndDateTime.toISO());
+                        onChange(newStartDateTime.toISO(), newEndDateTime.toISO());
                     }}
+                    multiDay={multiDay}
                 />
             </DateSelectorContainer>
             {timestamp && startTimestamp && mode !== SelectorMode.DATES && (

@@ -20,6 +20,8 @@ const FormField = ({
     hide,
     placeholder,
     disabled,
+    allDay,
+    multiDay,
     focusTrigger = false,
 }: FormFieldProps) => {
     if (hide) return null;
@@ -38,8 +40,8 @@ const FormField = ({
 
             return (
                 <DateRangeSelector
-                    startDate={start}
-                    endDate={end}
+                    startDatestamp={start}
+                    endDatestamp={end}
                     onChange={onChange}
                 />
             );
@@ -53,18 +55,14 @@ const FormField = ({
                 <TimeRangeSelector
                     startTimestamp={startTime}
                     endTimestamp={endTime}
-                    setStartTimestamp={(newStartTime) => {
+                    onChange={(start, end) => {
                         onChange({
-                            ...value,
-                            startTime: newStartTime
+                            startTime: start,
+                            endTime: end
                         });
                     }}
-                    setEndTimestamp={(newEndTime) => {
-                        onChange({
-                            ...value,
-                            endTime: newEndTime
-                        });
-                    }}
+                    allDay={allDay}
+                    multiDay={multiDay}
                 />
             );
         case EFormFieldType.CHECKBOX:

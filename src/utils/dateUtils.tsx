@@ -1,5 +1,5 @@
 import { EItemStatus } from '@/enums/EItemStatus';
-import { generateSortId, getParentSortId, sanitizeListForScan } from '@/utils/listUtils';
+import { generateSortId, getParentSortId, sanitizeList } from '@/utils/listUtils';
 import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { DateTime } from 'luxon';
