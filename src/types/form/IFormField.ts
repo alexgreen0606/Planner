@@ -9,8 +9,9 @@ export interface IFormField {
     label?: string;
     placeholder?: string;
     disabled?: boolean;
-    focusTrigger?: boolean;
     hide?: boolean;
     multiDay?: boolean;
     allDay?: boolean;
+    trigger?: boolean;
+    setTrigger?: React.Dispatch<boolean>
 }

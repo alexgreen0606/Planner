@@ -22,7 +22,8 @@ const FormField = ({
     disabled,
     allDay,
     multiDay,
-    focusTrigger = false,
+    trigger = false,
+    setTrigger
 }: FormFieldProps) => {
     if (hide) return null;
     switch (type) {
@@ -32,7 +33,7 @@ const FormField = ({
                     placeholder={placeholder ?? ''}
                     value={value ?? ''}
                     onChange={onChange}
-                    focusTrigger={focusTrigger}
+                    focusTrigger={trigger}
                 />
             );
         case EFormFieldType.DATE_RANGE:
@@ -53,8 +54,8 @@ const FormField = ({
 
             return (
                 <TimeRangeSelector
-                    startTimestamp={startTime}
-                    endTimestamp={endTime}
+                    startIso={startTime}
+                    endIso={endTime}
                     onChange={(start, end) => {
                         onChange({
                             startTime: start,
@@ -63,6 +64,7 @@ const FormField = ({
                     }}
                     allDay={allDay}
                     multiDay={multiDay}
+                    openInputTrigger={trigger}
                 />
             );
         case EFormFieldType.CHECKBOX:

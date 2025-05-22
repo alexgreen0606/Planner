@@ -19,10 +19,11 @@ const ModalTextfield = ({
 
     // Manually focus and blur the text input
     useEffect(() => {
+        console.log(focusTrigger, 'focus trigger')
         if (focusTrigger) {
-            inputRef.current?.focus();
-        } else {
-            inputRef.current?.blur();
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 50)
         }
     }, [focusTrigger]);
 

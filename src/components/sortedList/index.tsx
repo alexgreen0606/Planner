@@ -3,7 +3,7 @@ import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useMemo, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { PlatformColor, Pressable, StyleSheet, View } from 'react-native';
 import { Portal } from 'react-native-paper';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import DraggableRow from './DraggableRow';
@@ -80,7 +80,7 @@ const SortableList = <
      * Handles click on empty space to create a new textfield
      */
     function handleEmptySpaceClick() {
-        handleSaveTextfieldAndCreateNew(-1);
+        handleSaveTextfieldAndCreateNew(-1, true);
     }
 
     // ------------- List Building -------------
@@ -150,7 +150,12 @@ const SortableList = <
             {/* TODO: Loading SVG */}
 
             {/* List */}
-            <View style={{ height: currentList.length * LIST_ITEM_HEIGHT, width: '100%' }}>
+            <View
+                className='w-full'
+                style={{
+                    height: currentList.length * LIST_ITEM_HEIGHT
+                }}
+            >
                 {currentList.map((item) =>
                     <DraggableRow<T>
                         key={`${item.id}-row`}

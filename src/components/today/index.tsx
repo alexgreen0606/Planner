@@ -87,7 +87,6 @@ const TodayPlanner = ({
             {
                 startDate: datestampToMidnightDate(getTodayDatestamp()).toISOString(),
                 endDate: datestampToMidnightDate('2025-05-24').toISOString(),
-                // endDate: newEvent.timeConfig!.endTime,
                 allDay: true
             }
         );

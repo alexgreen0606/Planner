@@ -2,21 +2,36 @@ import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
 import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
+import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
 import { DateTime } from 'luxon';
 import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import DateRangeSelector from './DateRangeSelector';
-import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
 
-const TimeSelectorContainer = Animated.createAnimatedComponent(View);
-const DateSelectorContainer = Animated.createAnimatedComponent(View);
-
+const InputContainer = Animated.createAnimatedComponent(View);
 const StartTimeContainer = Animated.createAnimatedComponent(View);
 const EndTimeContainer = Animated.createAnimatedComponent(View);
 const StartDateContainer = Animated.createAnimatedComponent(View);
 const EndDateContainer = Animated.createAnimatedComponent(View);
+
+const SELECTOR_MAX_HEIGHTS = {
+    OPEN: 400,
+    CLOSED: 0
+} as const;
+
+const SCALE_VALUES = {
+    NORMAL: 1,
+    HIGHLIGHTED: 1.1
+} as const;
+
+const DEFAULT_ANIMATION_CONFIG = {
+    inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.CLOSED,
+    startTimeScale: SCALE_VALUES.NORMAL,
+    endTimeScale: SCALE_VALUES.NORMAL,
+    datesScale: SCALE_VALUES.NORMAL
+} as const;
 
 enum SelectorMode {
     DATES = 'dates',
@@ -25,90 +40,180 @@ enum SelectorMode {
 }
 
 export interface TimeRangeSelectorProps {
-    startTimestamp: string | null;
-    endTimestamp: string | null;
-    onChange: (start: string | null, end: string | null) => void;
+    startIso: string | null;
+    endIso: string | null;
+    onChange: (
+        start: string | null,
+        end: string | null
+    ) => void;
     allDay?: boolean;
-    multiDay?: boolean
+    multiDay?: boolean;
+    openInputTrigger?: boolean;
 }
 
 const TimeRangeSelector = ({
-    startTimestamp,
-    endTimestamp,
+    startIso,
+    endIso,
     onChange,
     allDay,
-    multiDay
+    multiDay,
+    openInputTrigger
 }: TimeRangeSelectorProps) => {
-    const [mode, setMode] = useState<SelectorMode | null>(null);
-    const timeSelectorHeight = useSharedValue(0);
-    const dateSelectorHeight = useSharedValue(0);
+    const [isInputFieldOpen, setIsInputFieldOpen] = useState(false); // TODO: open by default
+    const [mode, setMode] = useState<SelectorMode>(SelectorMode.START_TIME);
+    const inputContainerMaxHeight = useSharedValue(0);
     const startTimeScale = useSharedValue(1);
     const endTimeScale = useSharedValue(1);
     const datesScale = useSharedValue(1);
 
-    // ---------- Utility Function ----------
+    const isoInEdit = mode === SelectorMode.START_TIME ?
+        startIso : endIso;
+    const setIsoInEdit = mode === SelectorMode.START_TIME ?
+        (start: string | null) => onChange(start, endIso) :
+        (end: string | null) => onChange(startIso, end);
 
-    function toggleMode(newMode: SelectorMode) {
-        if (mode === SelectorMode.DATES && !startTimestamp) return;
-
-        if (mode === newMode) {
-            setMode(null);
-        } else {
-            setMode(newMode);
+    const MODE_ANIMATIONS = {
+        [SelectorMode.START_TIME]: {
+            inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
+            startTimeScale: SCALE_VALUES.HIGHLIGHTED,
+            endTimeScale: SCALE_VALUES.NORMAL,
+            datesScale: SCALE_VALUES.NORMAL
+        },
+        [SelectorMode.END_TIME]: {
+            inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
+            startTimeScale: SCALE_VALUES.NORMAL,
+            endTimeScale: SCALE_VALUES.HIGHLIGHTED,
+            datesScale: SCALE_VALUES.NORMAL
+        },
+        [SelectorMode.DATES]: {
+            inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
+            startTimeScale: SCALE_VALUES.NORMAL,
+            endTimeScale: SCALE_VALUES.NORMAL,
+            datesScale: SCALE_VALUES.HIGHLIGHTED
         }
+    } as const;
+
+    // ---------- Utility Functions ----------
+
+    function getValueColor(type: SelectorMode) {
+        return isInputFieldOpen && type === mode ? 'systemTeal' : 'label';
     }
 
-    // ---------- Reactions to other input changes ----------
+    function toggleMode(newMode: SelectorMode) {
+        if (mode === SelectorMode.DATES && !startIso) return;
+
+        if (isInputFieldOpen && newMode === mode) {
+            setIsInputFieldOpen(false);
+        } else {
+            setMode(newMode);
+            setIsInputFieldOpen(true);
+        }
+    }
+    const updateDateTime = (
+        iso: string | null,
+        newTime: DateTime,
+        defaultIso: string = DateTime.now().toISO()
+    ): string => {
+        const dateTime = DateTime.fromISO(iso ?? defaultIso);
+        return dateTime.set({
+            hour: newTime.hour,
+            minute: newTime.minute,
+            second: newTime.second,
+            millisecond: newTime.millisecond
+        }).toISO()!;
+    };
+
+    function resetTimesToMidnight() {
+        const midnightDate = datestampToMidnightDate(getTodayDatestamp());
+        const newTime = DateTime.fromJSDate(midnightDate);
+        const nowIso = DateTime.now().toISO();
+
+        const newStart = updateDateTime(startIso, newTime, nowIso);
+        const newEnd = updateDateTime(endIso, newTime, nowIso);
+
+        onChange(newStart, newEnd);
+    }
+
+    function handleDatesChange(
+        startDatestamp: string | null,
+        endDatestamp: string | null
+    ) {
+        if (!startDatestamp || !endDatestamp) {
+            onChange(null, null);
+            return;
+        }
+
+        // Parse current timestamps to get the times
+        const currentStartDateTime = startIso ? DateTime.fromISO(startIso) : DateTime.now();
+        const currentEndDateTime = endIso ? DateTime.fromISO(endIso) : DateTime.now();
+
+        // Create new DateTime objects with new dates but preserving times
+        const newStartDateTime = DateTime.fromISO(startDatestamp).set({
+            hour: currentStartDateTime.hour,
+            minute: currentStartDateTime.minute,
+            second: currentStartDateTime.second,
+            millisecond: currentStartDateTime.millisecond
+        });
+
+        const newEndDateTime = DateTime.fromISO(endDatestamp).set({
+            hour: currentEndDateTime.hour,
+            minute: currentEndDateTime.minute,
+            second: currentEndDateTime.second,
+            millisecond: currentEndDateTime.millisecond
+        });
+
+        // Update the timestamps
+        onChange(newStartDateTime.toISO(), newEndDateTime.toISO());
+    }
+
+    function handleTimeChange(date: Date, iso: string) {
+        const newTime = DateTime.fromJSDate(date);
+        const updatedIso = updateDateTime(iso, newTime);
+        setIsoInEdit(updatedIso);
+    }
+
+    function applyAnimationConfig(config: typeof DEFAULT_ANIMATION_CONFIG) {
+        Object.entries(config).forEach(([key, value]) => {
+            switch (key) {
+                case 'inputContainerMaxHeight':
+                    inputContainerMaxHeight.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
+                    break;
+                case 'startTimeScale':
+                    startTimeScale.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
+                    break;
+                case 'endTimeScale':
+                    endTimeScale.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
+                    break;
+                case 'datesScale':
+                    datesScale.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
+                    break;
+            }
+        });
+    };
+
+    // ---------- Reactions ----------
 
     useEffect(() => {
-        if (allDay) setMode(null);
+        if (allDay) resetTimesToMidnight();
     }, [allDay]);
 
-    // ---------- Animated Date Selector Handling ----------
+    useEffect(() => {
+        if (openInputTrigger) setIsInputFieldOpen(true);
+    }, [openInputTrigger]);
 
     useEffect(() => {
-        switch (mode) {
-            case SelectorMode.START_TIME:
-                timeSelectorHeight.value = withTiming(210, LINEAR_ANIMATION_CONFIG);
-                dateSelectorHeight.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
-                startTimeScale.value = withTiming(1.1, LINEAR_ANIMATION_CONFIG);
-                endTimeScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                datesScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                break;
-            case SelectorMode.END_TIME:
-                timeSelectorHeight.value = withTiming(210, LINEAR_ANIMATION_CONFIG);
-                dateSelectorHeight.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
-                startTimeScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                endTimeScale.value = withTiming(1.1, LINEAR_ANIMATION_CONFIG);
-                datesScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                break;
-            case SelectorMode.DATES:
-                timeSelectorHeight.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
-                dateSelectorHeight.value = withTiming(360, LINEAR_ANIMATION_CONFIG);
-                startTimeScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                endTimeScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                datesScale.value = withTiming(1.1, LINEAR_ANIMATION_CONFIG);
-                break;
-            default:
-                timeSelectorHeight.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
-                dateSelectorHeight.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
-                startTimeScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                endTimeScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-                datesScale.value = withTiming(1, LINEAR_ANIMATION_CONFIG);
-        }
-    }, [mode]);
+        const animationConfig: any = MODE_ANIMATIONS[mode];
+        applyAnimationConfig(isInputFieldOpen ? animationConfig : DEFAULT_ANIMATION_CONFIG);
+    }, [mode, isInputFieldOpen]);
 
-    const timeSelectorContainerStyle = useAnimatedStyle(() => ({
-        height: timeSelectorHeight.value
-    }));
+    // ------------- Animations -------------
 
-    const dateSelectorContainerStyle = useAnimatedStyle(() => ({
-        maxHeight: dateSelectorHeight.value
+    const inputContainerStyle = useAnimatedStyle(() => ({
+        maxHeight: inputContainerMaxHeight.value
     }));
 
     const datesContainerStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: datesScale.value }],
-        marginBottom: datesScale.value
+        transform: [{ scale: datesScale.value }]
     }));
 
     const startTimeContainerStyle = useAnimatedStyle(() => ({
@@ -119,126 +224,97 @@ const TimeRangeSelector = ({
         transform: [{ scale: endTimeScale.value }]
     }));
 
-    const timestamp = mode === SelectorMode.START_TIME ?
-        startTimestamp : endTimestamp;
-
-    const updateTimestamp = mode === SelectorMode.START_TIME ?
-        (start: string | null) => onChange(start, endTimestamp) : (end: string | null) => onChange(startTimestamp, end);
-
-    const getColor = (type: SelectorMode) => {
-        return type === mode ? 'systemTeal' : 'label';
-    }
-
     return (
         <View>
             <View className='flex-row items-center'>
-                {startTimestamp && (
+                {startIso && (
                     <View className='flex-1 items-center gap-1'>
                         <StartDateContainer style={datesContainerStyle}>
-                            <TouchableOpacity onPress={() => toggleMode(SelectorMode.DATES)}>
-                                <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={startTimestamp} />
+                            <TouchableOpacity
+                                onPress={() => toggleMode(SelectorMode.DATES)}
+                            >
+                                <DateValue
+                                    isoTimestamp={startIso}
+                                    platformColor={getValueColor(SelectorMode.DATES)}
+                                />
                             </TouchableOpacity>
                         </StartDateContainer>
                         {!allDay && (
                             <StartTimeContainer style={startTimeContainerStyle}>
-                                <TouchableOpacity onPress={() => toggleMode(SelectorMode.START_TIME)}>
-                                    <TimeValue platformColor={getColor(SelectorMode.START_TIME)} isoTimestamp={startTimestamp} />
+                                <TouchableOpacity
+                                    onPress={() => toggleMode(SelectorMode.START_TIME)}
+                                >
+                                    <TimeValue
+                                        isoTimestamp={startIso}
+                                        platformColor={getValueColor(SelectorMode.START_TIME)}
+                                    />
                                 </TouchableOpacity>
                             </StartTimeContainer>
                         )}
                     </View>
                 )}
-                {endTimestamp && multiDay && (
+                {endIso && multiDay && (
                     <CustomText type='indicator'>
                         TO
                     </CustomText>
                 )}
-                {endTimestamp && multiDay && (
+                {endIso && multiDay && (
                     <View className='flex-1 items-center gap-1'>
                         <EndDateContainer style={datesContainerStyle}>
-                            <TouchableOpacity onPress={() => toggleMode(SelectorMode.DATES)}>
-                                <DateValue platformColor={getColor(SelectorMode.DATES)} isoTimestamp={endTimestamp} />
+                            <TouchableOpacity
+                                onPress={() => toggleMode(SelectorMode.DATES)}
+                            >
+                                <DateValue
+                                    isoTimestamp={endIso}
+                                    platformColor={getValueColor(SelectorMode.DATES)}
+                                />
                             </TouchableOpacity>
                         </EndDateContainer>
                         {!allDay && (
                             <EndTimeContainer style={endTimeContainerStyle}>
-                                <TouchableOpacity onPress={() => toggleMode(SelectorMode.END_TIME)}>
-                                    <TimeValue platformColor={getColor(SelectorMode.END_TIME)} isoTimestamp={endTimestamp} />
+                                <TouchableOpacity
+                                    onPress={() => toggleMode(SelectorMode.END_TIME)}
+                                >
+                                    <TimeValue
+                                        isoTimestamp={endIso}
+                                        platformColor={getValueColor(SelectorMode.END_TIME)}
+                                    />
                                 </TouchableOpacity>
                             </EndTimeContainer>
                         )}
                     </View>
                 )}
             </View>
-            <DateSelectorContainer
+            <InputContainer
                 className='overflow-hidden items-center'
-                style={dateSelectorContainerStyle}
+                style={inputContainerStyle}
             >
-                <DateRangeSelector
-                    startDatestamp={startTimestamp ? DateTime.fromISO(startTimestamp).toFormat('yyyy-MM-dd') : null}
-                    endDatestamp={endTimestamp ? DateTime.fromISO(endTimestamp).toFormat('yyyy-MM-dd') : null}
-                    onChange={(newStartDate: string | null, newEndDate: string | null) => {
-                        if (!newStartDate || !newEndDate) {
-                            onChange(null, null);
-                            return;
+                {mode === SelectorMode.DATES ? (
+                    <DateRangeSelector
+                        startDatestamp={startIso ?
+                            DateTime.fromISO(startIso).toFormat('yyyy-MM-dd') : null
                         }
-
-                        console.log(newStartDate, newEndDate)
-
-                        // Parse current timestamps to get the times
-                        const currentStartDateTime = startTimestamp ? DateTime.fromISO(startTimestamp) : DateTime.now();
-                        const currentEndDateTime = endTimestamp ? DateTime.fromISO(endTimestamp) : DateTime.now();
-
-                        // Create new DateTime objects with new dates but preserving times
-                        const newStartDateTime = DateTime.fromISO(newStartDate).set({
-                            hour: currentStartDateTime.hour,
-                            minute: currentStartDateTime.minute,
-                            second: currentStartDateTime.second,
-                            millisecond: currentStartDateTime.millisecond
-                        });
-
-                        const newEndDateTime = DateTime.fromISO(newEndDate).set({
-                            hour: currentEndDateTime.hour,
-                            minute: currentEndDateTime.minute,
-                            second: currentEndDateTime.second,
-                            millisecond: currentEndDateTime.millisecond
-                        });
-
-                        // Update the timestamps
-                        onChange(newStartDateTime.toISO(), newEndDateTime.toISO());
-                    }}
-                    multiDay={multiDay}
-                />
-            </DateSelectorContainer>
-            {timestamp && startTimestamp && mode !== SelectorMode.DATES && (
-                <TimeSelectorContainer
-                    className='overflow-hidden items-center'
-                    style={timeSelectorContainerStyle}
-                >
+                        endDatestamp={endIso ?
+                            DateTime.fromISO(endIso).toFormat('yyyy-MM-dd') : null
+                        }
+                        onChange={handleDatesChange}
+                        multiDay={multiDay}
+                    />
+                ) : isoInEdit && (
                     <DatePicker
                         mode='time'
                         theme='dark'
-                        date={DateTime.fromISO(timestamp).toJSDate()}
-                        onDateChange={(date) => {
-                            // Parse the current timestamp and new date using luxon
-                            const currentDateTime = DateTime.fromISO(timestamp);
-                            const newTime = DateTime.fromJSDate(date);
-
-                            // Create a new DateTime with the original date but new time
-                            const updatedDateTime = currentDateTime.set({
-                                hour: newTime.hour,
-                                minute: newTime.minute,
-                                second: newTime.second,
-                                millisecond: newTime.millisecond
-                            });
-
-                            // Update the timestamp
-                            updateTimestamp(updatedDateTime.toISO());
-                        }}
+                        date={DateTime.fromISO(isoInEdit).toJSDate()}
+                        onDateChange={(date) => handleTimeChange(date, isoInEdit)}
                         minuteInterval={5}
+                        minimumDate={
+                            mode === SelectorMode.END_TIME && startIso
+                                ? DateTime.fromISO(startIso).plus({ minutes: 5 }).toJSDate()
+                                : undefined
+                        }
                     />
-                </TimeSelectorContainer>
-            )}
+                )}
+            </InputContainer>
         </View>
     )
 };

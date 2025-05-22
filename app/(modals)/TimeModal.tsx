@@ -142,7 +142,7 @@ const TimeModal = () => {
             type: EFormFieldType.TEXT,
             placeholder: 'Title',
             rules: { required: true },
-            focusTrigger: pathname === TIME_MODAL_PATHNAME && planEvent?.value?.length === 0
+            trigger: !isEditMode
         }],
         [{
             name: 'timeRange',
@@ -153,7 +153,8 @@ const TimeModal = () => {
             },
             hide: false,
             multiDay: isCalendarEvent,
-            allDay: isAllDay
+            allDay: isAllDay,
+            trigger: !isEditMode
         }],
         [{
             name: 'isCalendarEvent',
