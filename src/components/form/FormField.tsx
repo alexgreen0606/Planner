@@ -5,6 +5,7 @@ import ModalTextfield from "./fields/Textfield";
 import { DateTime } from 'luxon';
 import { IFormField } from "@/types/form/IFormField";
 import { EFormFieldType } from "@/enums/EFormFieldType";
+import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 
 interface FormFieldProps extends Omit<IFormField, 'name'> {
     type: EFormFieldType;
@@ -23,7 +24,6 @@ const FormField = ({
     allDay,
     multiDay,
     trigger = false,
-    setTrigger
 }: FormFieldProps) => {
     if (hide) return null;
     switch (type) {
@@ -47,10 +47,9 @@ const FormField = ({
                 />
             );
         case EFormFieldType.TIME_RANGE:
-            const now = DateTime.now().toISO();
-            const currentValue = value || { startTime: now, endTime: now };
-
-            const { startTime = now, endTime = now } = currentValue;
+            const nowIso = getNowISORoundDown5Minutes();
+            const currentValue = value || { startTime: nowIso, endTime: nowIso };
+            const { startTime = nowIso, endTime = nowIso } = currentValue;
 
             return (
                 <TimeRangeSelector

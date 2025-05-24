@@ -17,6 +17,7 @@ import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import { View } from 'react-native';
 import ButtonText from '../text/ButtonText';
 import RNCalendarEvents from "react-native-calendar-events";
+import { generatePlanner } from '@/utils/calendarUtils';
 
 interface SortablePlannerProps {
     loadAllExternalData: () => Promise<void>;
@@ -28,8 +29,6 @@ const TodayPlanner = ({
     calendarEvents
 }: SortablePlannerProps) => {
     const datestamp = getTodayDatestamp();
-
-    const { setCurrentTextfield } = useScrollContainer();
 
     const { isItemDeleting } = useDeleteScheduler();
 
@@ -77,7 +76,8 @@ const TodayPlanner = ({
             delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
-        reloadOnNavigate: true
+        reloadOnNavigate: true,
+        initializedStorageObject: generatePlanner(datestamp)
     });
 
     const testMultiDayCreation = async () => {

@@ -16,28 +16,49 @@ const EndTimeContainer = Animated.createAnimatedComponent(View);
 const StartDateContainer = Animated.createAnimatedComponent(View);
 const EndDateContainer = Animated.createAnimatedComponent(View);
 
+enum SelectorMode {
+    DATES = 'dates',
+    START_TIME = 'start_time',
+    END_TIME = 'end_time'
+}
+
 const SELECTOR_MAX_HEIGHTS = {
     OPEN: 400,
     CLOSED: 0
 } as const;
 
-const SCALE_VALUES = {
+const FOCUSED_VALUE_SCALES = {
     NORMAL: 1,
     HIGHLIGHTED: 1.1
 } as const;
 
 const DEFAULT_ANIMATION_CONFIG = {
     inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.CLOSED,
-    startTimeScale: SCALE_VALUES.NORMAL,
-    endTimeScale: SCALE_VALUES.NORMAL,
-    datesScale: SCALE_VALUES.NORMAL
+    startTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
+    endTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
+    datesScale: FOCUSED_VALUE_SCALES.NORMAL
 } as const;
 
-enum SelectorMode {
-    DATES = 'dates',
-    START_TIME = 'start_time',
-    END_TIME = 'end_time'
-}
+const MODE_ANIMATIONS = {
+    [SelectorMode.START_TIME]: {
+        inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
+        startTimeScale: FOCUSED_VALUE_SCALES.HIGHLIGHTED,
+        endTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
+        datesScale: FOCUSED_VALUE_SCALES.NORMAL
+    },
+    [SelectorMode.END_TIME]: {
+        inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
+        startTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
+        endTimeScale: FOCUSED_VALUE_SCALES.HIGHLIGHTED,
+        datesScale: FOCUSED_VALUE_SCALES.NORMAL
+    },
+    [SelectorMode.DATES]: {
+        inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
+        startTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
+        endTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
+        datesScale: FOCUSED_VALUE_SCALES.HIGHLIGHTED
+    }
+} as const;
 
 export interface TimeRangeSelectorProps {
     startIso: string | null;
@@ -59,7 +80,7 @@ const TimeRangeSelector = ({
     multiDay,
     openInputTrigger
 }: TimeRangeSelectorProps) => {
-    const [isInputFieldOpen, setIsInputFieldOpen] = useState(false); // TODO: open by default
+    const [isInputFieldOpen, setIsInputFieldOpen] = useState(false);
     const [mode, setMode] = useState<SelectorMode>(SelectorMode.START_TIME);
     const inputContainerMaxHeight = useSharedValue(0);
     const startTimeScale = useSharedValue(1);
@@ -72,27 +93,6 @@ const TimeRangeSelector = ({
         (start: string | null) => onChange(start, endIso) :
         (end: string | null) => onChange(startIso, end);
 
-    const MODE_ANIMATIONS = {
-        [SelectorMode.START_TIME]: {
-            inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
-            startTimeScale: SCALE_VALUES.HIGHLIGHTED,
-            endTimeScale: SCALE_VALUES.NORMAL,
-            datesScale: SCALE_VALUES.NORMAL
-        },
-        [SelectorMode.END_TIME]: {
-            inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
-            startTimeScale: SCALE_VALUES.NORMAL,
-            endTimeScale: SCALE_VALUES.HIGHLIGHTED,
-            datesScale: SCALE_VALUES.NORMAL
-        },
-        [SelectorMode.DATES]: {
-            inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
-            startTimeScale: SCALE_VALUES.NORMAL,
-            endTimeScale: SCALE_VALUES.NORMAL,
-            datesScale: SCALE_VALUES.HIGHLIGHTED
-        }
-    } as const;
-
     // ---------- Utility Functions ----------
 
     function getValueColor(type: SelectorMode) {
@@ -102,34 +102,32 @@ const TimeRangeSelector = ({
     function toggleMode(newMode: SelectorMode) {
         if (mode === SelectorMode.DATES && !startIso) return;
 
-        if (isInputFieldOpen && newMode === mode) {
+        if (newMode === mode && isInputFieldOpen) {
             setIsInputFieldOpen(false);
         } else {
             setMode(newMode);
             setIsInputFieldOpen(true);
         }
     }
-    const updateDateTime = (
+
+    function updateDateTime(
         iso: string | null,
-        newTime: DateTime,
-        defaultIso: string = DateTime.now().toISO()
-    ): string => {
-        const dateTime = DateTime.fromISO(iso ?? defaultIso);
+        newTime: DateTime
+    ): string {
+        const dateTime = DateTime.fromISO(iso ?? DateTime.now().toISO());
         return dateTime.set({
             hour: newTime.hour,
             minute: newTime.minute,
             second: newTime.second,
             millisecond: newTime.millisecond
         }).toISO()!;
-    };
+    }
 
     function resetTimesToMidnight() {
         const midnightDate = datestampToMidnightDate(getTodayDatestamp());
         const newTime = DateTime.fromJSDate(midnightDate);
-        const nowIso = DateTime.now().toISO();
-
-        const newStart = updateDateTime(startIso, newTime, nowIso);
-        const newEnd = updateDateTime(endIso, newTime, nowIso);
+        const newStart = updateDateTime(startIso, newTime);
+        const newEnd = updateDateTime(endIso, newTime);
 
         onChange(newStart, newEnd);
     }
@@ -143,18 +141,16 @@ const TimeRangeSelector = ({
             return;
         }
 
-        // Parse current timestamps to get the times
-        const currentStartDateTime = startIso ? DateTime.fromISO(startIso) : DateTime.now();
-        const currentEndDateTime = endIso ? DateTime.fromISO(endIso) : DateTime.now();
-
-        // Create new DateTime objects with new dates but preserving times
+        const currentStartDateTime = startIso ?
+            DateTime.fromISO(startIso) : DateTime.now();
+        const currentEndDateTime = endIso ?
+            DateTime.fromISO(endIso) : DateTime.now();
         const newStartDateTime = DateTime.fromISO(startDatestamp).set({
             hour: currentStartDateTime.hour,
             minute: currentStartDateTime.minute,
             second: currentStartDateTime.second,
             millisecond: currentStartDateTime.millisecond
         });
-
         const newEndDateTime = DateTime.fromISO(endDatestamp).set({
             hour: currentEndDateTime.hour,
             minute: currentEndDateTime.minute,
@@ -162,13 +158,13 @@ const TimeRangeSelector = ({
             millisecond: currentEndDateTime.millisecond
         });
 
-        // Update the timestamps
         onChange(newStartDateTime.toISO(), newEndDateTime.toISO());
     }
 
     function handleTimeChange(date: Date, iso: string) {
         const newTime = DateTime.fromJSDate(date);
         const updatedIso = updateDateTime(iso, newTime);
+
         setIsoInEdit(updatedIso);
     }
 

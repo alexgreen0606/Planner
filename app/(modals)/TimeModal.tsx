@@ -8,6 +8,7 @@ import { DateTime } from 'luxon';
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { IFormField } from "@/types/form/IFormField";
+import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 
 export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
 
@@ -148,8 +149,8 @@ const TimeModal = () => {
             name: 'timeRange',
             type: EFormFieldType.TIME_RANGE,
             defaultValue: {
-                startTime: DateTime.now().toISO(),
-                endTime: DateTime.now().toISO()
+                startTime: getNowISORoundDown5Minutes(),
+                endTime: getNowISORoundDown5Minutes()
             },
             hide: false,
             multiDay: isCalendarEvent,
