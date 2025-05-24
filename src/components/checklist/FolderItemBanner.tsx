@@ -3,7 +3,6 @@ import CustomText from '@/components/text/CustomText';
 import { HEADER_HEIGHT } from '@/constants/layout';
 import { EFolderItemType } from '@/enums/EFolderItemType';
 import { EItemStatus } from '@/enums/EItemStatus';
-import { useLayoutTracker } from '@/services/LayoutTracker';
 import { getFolderItem, updateFolderItem } from '@/storage/checklistsStorage';
 import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { useRouter } from 'expo-router';
@@ -26,7 +25,6 @@ const FolderItemBanner = ({
 }: FolderItemBannerProps) => {
     const router = useRouter();
     const [item, setItem] = useState<IFolderItem>(getFolderItem(itemId, itemType));
-    const { SCREEN_WIDTH } = useLayoutTracker();
 
     const beginEditItem = () => setItem({ ...item, status: EItemStatus.EDIT });
     const updateItem = (text: string) => setItem({ ...item, value: text });
@@ -74,7 +72,7 @@ const FolderItemBanner = ({
                             type: 'chevronLeft',
                             platformColor: 'systemBlue'
                         }}
-                        containerStyle={{ width: SCREEN_WIDTH - 60 }}
+                        className='w-screen pr-8'
                     >
                         {backButtonConfig.label}
                     </ButtonText>

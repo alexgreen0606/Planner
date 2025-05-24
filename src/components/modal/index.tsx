@@ -1,4 +1,3 @@
-import { useLayoutTracker } from '@/services/LayoutTracker';
 import { BlurView } from "expo-blur";
 import React, { ReactNode } from 'react';
 import { PlatformColor, ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
@@ -6,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import ButtonText from '../text/ButtonText';
 import CustomText from '../text/CustomText';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
@@ -38,8 +38,7 @@ const Modal = ({
     customStyle,
     children,
 }: ModalProps) => {
-
-    const { BOTTOM_SPACER } = useLayoutTracker();
+    const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
     const scrollRef = useAnimatedRef();
     const scrollOffset = useSharedValue(0);

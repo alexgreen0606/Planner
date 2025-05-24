@@ -3,10 +3,9 @@ import ThinLine from "@/components/ThinLine";
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/constants/layout";
 import { LIST_SPRING_CONFIG } from "@/constants/listConstants";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { useLayoutTracker } from "@/services/LayoutTracker";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { useMemo } from "react";
-import { PlatformColor, StyleSheet, TouchableOpacity, View } from "react-native";
+import { PlatformColor, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import Animated, {
     cancelAnimation,
@@ -24,6 +23,7 @@ import { useScrollContainer } from "@/services/ScrollContainer";
 import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
 import { generateSortId, getParentSortIdFromPositions } from "@/utils/listUtils";
 import { useTextFieldState } from "@/atoms/textfieldAtoms";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -74,11 +74,9 @@ const DraggableRow = <T extends IListItem>({
     customIsItemDeleting
 }: RowProps<T>) => {
 
-    const {
-        BOTTOM_SPACER,
-        SCREEN_HEIGHT,
-        TOP_SPACER
-    } = useLayoutTracker();
+    const { height: SCREEN_HEIGHT } = useWindowDimensions();
+
+    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
     const {
         scrollOffset,

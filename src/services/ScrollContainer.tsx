@@ -1,12 +1,11 @@
 import GenericIcon from '@/components/GenericIcon';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/constants/layout';
 import { NAVBAR_OVERFLOW_FADE_THRESHOLD, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
-import { useLayoutTracker } from '@/services/LayoutTracker';
 import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { BlurView } from 'expo-blur';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, PlatformColor, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, PlatformColor, ScrollView, useWindowDimensions, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { Portal } from 'react-native-paper';
 import Animated, {
@@ -27,9 +26,7 @@ import Animated, {
     withRepeat,
     withTiming
 } from 'react-native-reanimated';
-import { KeyboardProvider } from './KeyboardTracker';
-import { useAtom } from 'jotai';
-import { textFieldStateAtom } from '@/atoms/textfieldAtoms';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -61,10 +58,6 @@ interface ScrollContainerContextValue<T extends IListItem> {
     scrollOffset: SharedValue<number>;
     disableNativeScroll: SharedValue<boolean>;
     autoScroll: (newOffset: number) => void;
-    // --- List Variables ---
-    // currentTextfield: T | undefined;
-    // pendingItem: T | undefined;
-    // setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
@@ -72,39 +65,21 @@ interface ScrollContainerContextValue<T extends IListItem> {
 
 const ScrollContainerContext = createContext<ScrollContainerContextValue<any> | null>(null);
 
-export const ScrollContainerProvider = ({
-    children,
-    header,
-    floatingBanner
-}: ScrollContainerProps) => {
-    return (
-        <KeyboardProvider>
-            <ScrollContainerContent
-                floatingBanner={floatingBanner}
-                header={header}>
-                {children}
-            </ScrollContainerContent>
-        </KeyboardProvider>
-    );
-};
-
 /**
  * Provider to allow multiple lists to be rendered within a larger scroll container.
  * 
  * Container allows for native scrolling, or manual scrolling by exposing the @scrollOffset variable.
  * Manual scroll will only work while @disableNativeScroll variable is set to true.
  */
-export const ScrollContainerContent = <T extends IListItem>({
+export const ScrollContainerProvider = <T extends IListItem>({
     children,
     header,
     floatingBanner
 }: ScrollContainerProps) => {
 
-    const {
-        SCREEN_HEIGHT,
-        TOP_SPACER,
-        BOTTOM_SPACER
-    } = useLayoutTracker();
+    const { height: SCREEN_HEIGHT } = useWindowDimensions();
+
+    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
     const {
         reloadPage,
@@ -121,7 +96,7 @@ export const ScrollContainerContent = <T extends IListItem>({
     // Blur the space behind floating banners
     // If no floating banner exists, blur for the default header height
     const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + TOP_SPACER;
-    
+
     const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
     const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
@@ -350,9 +325,6 @@ export const ScrollContainerContent = <T extends IListItem>({
 
     return (
         <ScrollContainerContext.Provider value={{
-            // currentTextfield: textFieldState.current,
-            // pendingItem: textFieldState.pending,
-            // setCurrentTextfield,
             scrollOffset,
             autoScroll,
             measureContentHeight,

@@ -2,7 +2,7 @@ import { useTextFieldState } from '@/atoms/textfieldAtoms';
 import ThinLine from '@/components/ThinLine';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
-import { useKeyboardTracker } from '@/services/KeyboardTracker';
+import { useKeyboardTracker } from '@/hooks/useKeyboardTracker';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { buildItemPositions } from '@/utils/listUtils';

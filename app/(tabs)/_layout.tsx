@@ -1,10 +1,10 @@
 import { Tabs } from 'expo-router';
 import GenericIcon from '@/components/GenericIcon';
 import { BOTTOM_NAVIGATION_HEIGHT, spacing } from '@/constants/layout';
-import { useLayoutTracker } from '@/services/LayoutTracker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-    const { BOTTOM_SPACER } = useLayoutTracker();
+    const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     return (
         <Tabs
             screenOptions={{
