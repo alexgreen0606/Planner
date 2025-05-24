@@ -28,6 +28,8 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { KeyboardProvider } from './KeyboardTracker';
+import { useAtom } from 'jotai';
+import { textFieldStateAtom } from '@/atoms/textfieldAtoms';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -60,9 +62,9 @@ interface ScrollContainerContextValue<T extends IListItem> {
     disableNativeScroll: SharedValue<boolean>;
     autoScroll: (newOffset: number) => void;
     // --- List Variables ---
-    currentTextfield: T | undefined;
-    pendingItem: T | undefined;
-    setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
+    // currentTextfield: T | undefined;
+    // pendingItem: T | undefined;
+    // setCurrentTextfield: (current: T | undefined, pending?: T | undefined) => void;
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
@@ -119,12 +121,7 @@ export const ScrollContainerContent = <T extends IListItem>({
     // Blur the space behind floating banners
     // If no floating banner exists, blur for the default header height
     const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + TOP_SPACER;
-
-    // --- List Variables ---
-    const [textFieldState, setTextFieldState] = useState<TextFieldState<T>>({
-        current: undefined,
-        pending: undefined
-    });
+    
     const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
     const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
@@ -140,13 +137,6 @@ export const ScrollContainerContent = <T extends IListItem>({
     );
 
     // ------------- Utility Functions -------------
-
-    const setCurrentTextfield = (current: T | undefined, pending?: T | undefined) => {
-        setTextFieldState({
-            current,
-            pending
-        });
-    };
 
     const triggerHaptic = () => {
         ReactNativeHapticFeedback.trigger('impactMedium', {
@@ -360,9 +350,9 @@ export const ScrollContainerContent = <T extends IListItem>({
 
     return (
         <ScrollContainerContext.Provider value={{
-            currentTextfield: textFieldState.current,
-            pendingItem: textFieldState.pending,
-            setCurrentTextfield,
+            // currentTextfield: textFieldState.current,
+            // pendingItem: textFieldState.pending,
+            // setCurrentTextfield,
             scrollOffset,
             autoScroll,
             measureContentHeight,

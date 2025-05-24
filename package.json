@@ -29,6 +29,7 @@
     "expo-modules-core": "^2.1.4",
     "expo-router": "~4.0.20",
     "expo-status-bar": "~2.0.1",
+    "jotai": "^2.12.4",
     "luxon": "^3.6.1",
     "metro-runtime": "^0.81.0",
     "nativewind": "^4.1.23",

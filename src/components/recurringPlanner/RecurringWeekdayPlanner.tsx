@@ -12,16 +12,14 @@ import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
 import { handleDragEnd, handleEventInput, generateTimeIconConfig, generateSortIdByTime } from '@/utils/plannerUtils';
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
 const RecurringWeekdayPlanner = () => {
     const genericDate = datestampToMidnightDate('2000-01-01');
 
-    const {
-        currentTextfield,
-        setCurrentTextfield
-    } = useScrollContainer();
+    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IRecurringEvent>();
 
     const { isItemDeleting } = useDeleteScheduler();
 
@@ -115,10 +113,10 @@ const RecurringWeekdayPlanner = () => {
                 title={`"${currentTextfield?.value}" Time`}
                 minuteInterval={5}
                 theme='dark'
-                open={timeModalOpen && currentTextfield}
+                open={timeModalOpen && Boolean(currentTextfield)}
                 date={textfieldDateObject}
                 onConfirm={onSaveEventTime}
-                onCancel={() => toggleTimeModal(currentTextfield)}
+                onCancel={() => toggleTimeModal(currentTextfield!)}
             />
         </View>
     );

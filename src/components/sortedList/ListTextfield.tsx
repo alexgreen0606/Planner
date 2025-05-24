@@ -1,3 +1,4 @@
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/layout';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { IListItem } from '@/types/listItems/core/TListItem';
@@ -20,11 +21,7 @@ const ListTextfield = <T extends IListItem>({
     customStyle
 }: ListTextfieldProps<T>) => {
 
-    const {
-        currentTextfield,
-        pendingItem,
-        setCurrentTextfield
-    } = useScrollContainer();
+    const { currentTextfield, pendingItem, setCurrentTextfield } = useTextFieldState<T>();
 
     const inputRef = useRef<TextInput>(null);
 

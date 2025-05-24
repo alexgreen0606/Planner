@@ -22,6 +22,7 @@ import { useScrollContainer } from '@/services/ScrollContainer';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -57,10 +58,7 @@ const PlannerCard = ({
     loadAllExternalData
 }: PlannerCardProps) => {
 
-    const {
-        currentTextfield,
-        setCurrentTextfield,
-    } = useScrollContainer();
+    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IPlannerEvent>();
 
     const { onOpen } = useTimeModal();
 
@@ -103,7 +101,7 @@ const PlannerCard = ({
             SortedEvents.toggleItemEdit,
             onOpen,
             SortedEvents.items,
-            setCurrentTextfield
+            SortedEvents.saveTextfieldAndCreateNew
         );
     }
 

@@ -12,6 +12,7 @@ import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 
 
 interface SortedRecurringPlannerProps {
@@ -21,10 +22,7 @@ interface SortedRecurringPlannerProps {
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
 
-    const {
-        currentTextfield,
-        setCurrentTextfield
-    } = useScrollContainer();
+    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IRecurringEvent>();
 
     const { isItemDeleting } = useDeleteScheduler();
 
@@ -93,10 +91,10 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 title={`"${currentTextfield?.value}" Time`}
                 minuteInterval={5}
                 theme='dark'
-                open={timeModalOpen && currentTextfield}
+                open={timeModalOpen && Boolean(currentTextfield)}
                 date={textfieldDateObject}
                 onConfirm={onSaveEventTime}
-                onCancel={() => toggleTimeModal(currentTextfield)}
+                onCancel={() => toggleTimeModal(currentTextfield!)}
             />
         </View>
     );

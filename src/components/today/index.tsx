@@ -95,7 +95,7 @@ const TodayPlanner = ({
     }
 
     return (
-        <View>
+        <View className='flex-1'>
             <ButtonText onClick={testMultiDayCreation}>
                 Create All Day
             </ButtonText>

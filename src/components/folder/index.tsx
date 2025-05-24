@@ -17,6 +17,7 @@ import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import SortableList from '../sortedList';
 import Toolbar, { ToolbarProps } from '../sortedList/ListItemToolbar';
 import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -32,7 +33,7 @@ const SortedFolder = ({
 
     const { folderId } = useLocalSearchParams<{ folderId: string }>();
 
-    const { currentTextfield, setCurrentTextfield } = useScrollContainer();
+    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IFolderItem>();
 
     const router = useRouter();
 
@@ -80,11 +81,18 @@ const SortedFolder = ({
         if (!destination && !parentFolderData?.id || !currentTextfield) return;
         const destinationId = destination ? destination.id : parentFolderData?.id;
 
+        if (!destinationId) return;
+
         // Transfer the item to the destination
         const destinationItems = getFolderItems(
             destination ? getFolderFromStorage(destination.id) : parentFolderData!
         );
-        updateFolderItem({ ...currentTextfield, status: EItemStatus.STATIC, listId: destinationId, sortId: generateSortId(-1, destinationItems) });
+        updateFolderItem({
+            ...currentTextfield,
+            status: EItemStatus.STATIC,
+            listId: destinationId,
+            sortId: generateSortId(-1, destinationItems)
+        });
         setCurrentTextfield(undefined);
     };
 

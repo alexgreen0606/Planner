@@ -23,6 +23,7 @@ import { useDeleteScheduler } from "@/services/DeleteScheduler";
 import { useScrollContainer } from "@/services/ScrollContainer";
 import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
 import { generateSortId, getParentSortIdFromPositions } from "@/utils/listUtils";
+import { useTextFieldState } from "@/atoms/textfieldAtoms";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -82,10 +83,10 @@ const DraggableRow = <T extends IListItem>({
     const {
         scrollOffset,
         autoScroll,
-        currentTextfield,
-        setCurrentTextfield,
         floatingBannerHeight
     } = useScrollContainer();
+
+    const { currentTextfield, setCurrentTextfield } = useTextFieldState<T>();
 
     const { isItemDeleting } = useDeleteScheduler();
     const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;
@@ -130,6 +131,7 @@ const DraggableRow = <T extends IListItem>({
      * @param text The new text value from the input field
      */
     function handleTextfieldChange(text: string) {
+        if (!currentTextfield) return;
         setCurrentTextfield(handleValueChange?.(text, currentTextfield) ?? { ...currentTextfield, value: text });
     }
 
@@ -393,8 +395,8 @@ const DraggableRow = <T extends IListItem>({
                         hideKeyboard={hideKeyboard}
                         customStyle={{
                             color: PlatformColor(customTextPlatformColor ??
-                                (isItemDeletingCustom(item) ? 'tertiaryLabel' :
-                                    item.recurringId ? 'secondaryLabel' : 'label')
+                                (isItemDeletingCustom(item) ? 'tertiaryLabel' : 'label'
+                                )
                             ),
                             textDecorationLine: isItemDeletingCustom(item) ?
                                 'line-through' : undefined,

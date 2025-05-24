@@ -8,6 +8,7 @@ import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReloadScheduler } from '../services/ReloadScheduler';
 import { useScrollContainer } from '../services/ScrollContainer';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 
 type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -43,10 +44,7 @@ const useSortedList = <T extends IListItem, S>({
 
     const pathname = usePathname();
 
-    const {
-        currentTextfield,
-        setCurrentTextfield,
-    } = useScrollContainer();
+    const { currentTextfield, setCurrentTextfield } = useTextFieldState<T>();
 
     const {
         isItemDeleting,
@@ -112,17 +110,15 @@ const useSortedList = <T extends IListItem, S>({
 
         if (item) {
             // Save the current textfield before creating a new one
-
-            await persistItemToStorage(currentTextfield);
+            await persistItemToStorage(item);
 
             if (!referenceSortId) {
                 setCurrentTextfield(undefined);
                 return;
             }
-
         }
 
-        let newTextfield: IListItem = {
+        const genericListItem: IListItem = {
             id: uuid.v4(),
             sortId: generateSortId(referenceSortId!, updatedList, isChildId),
             status: EItemStatus.NEW,
@@ -130,8 +126,8 @@ const useSortedList = <T extends IListItem, S>({
             value: '',
         };
 
-        newTextfield = initializeListItem?.(newTextfield) ?? newTextfield as T;
-        setCurrentTextfield(newTextfield, item);
+        const newItem: T = initializeListItem?.(genericListItem) ?? genericListItem as T;
+        setCurrentTextfield(newItem, item);
     }
 
     // ------------- EDIT Logic -------------

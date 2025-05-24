@@ -1,17 +1,17 @@
+import { useTextFieldState } from '@/atoms/textfieldAtoms';
 import ThinLine from '@/components/ThinLine';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
+import { useKeyboardTracker } from '@/services/KeyboardTracker';
+import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
+import { buildItemPositions } from '@/utils/listUtils';
 import React, { useMemo, useRef } from 'react';
-import { PlatformColor, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Portal } from 'react-native-paper';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
-import { useKeyboardTracker } from '@/services/KeyboardTracker';
-import { useScrollContainer } from '@/services/ScrollContainer';
-import { ListItemUpdateComponentProps, ListItemIconConfig, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
-import { buildItemPositions } from '@/utils/listUtils';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -60,10 +60,7 @@ const SortableList = <
     ...rest
 }: DraggableListProps<T, P, M>) => {
 
-    const {
-        currentTextfield,
-        setCurrentTextfield
-    } = useScrollContainer();
+    const { currentTextfield } = useTextFieldState<T>();
 
     const { keyboardAbsoluteTop } = useKeyboardTracker();
 
