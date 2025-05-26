@@ -15,6 +15,7 @@ interface FolderItemBannerProps {
     backButtonConfig: {
         label: string | undefined;
         hide?: boolean;
+        onClick?: () => void;
     };
 }
 
@@ -67,7 +68,7 @@ const FolderItemBanner = ({
                 <View style={styles.backButton}>
                     <ButtonText
                         platformColor='systemBlue'
-                        onClick={() => router.back()}
+                        onClick={() => backButtonConfig.onClick ? backButtonConfig.onClick() : router.back()}
                         iconConfig={{
                             type: 'chevronLeft',
                             platformColor: 'systemBlue'

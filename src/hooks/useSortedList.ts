@@ -45,6 +45,10 @@ const useSortedList = <T extends IListItem, S>({
 
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
 
+    useEffect(() => {
+        console.log(currentTextfield)
+    }, [currentTextfield])
+
     const {
         isItemDeleting,
         cancelItemDeletion,

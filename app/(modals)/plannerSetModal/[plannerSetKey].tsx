@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
 import { PLANNER_SETS_STORAGE_ID } from '@/constants/storageIds';
@@ -15,14 +15,18 @@ export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
 type PendingPlannerSet = {
     title: string;
-    startDate: string | null;
-    endDate: string | null;
+    dates: {
+        startTime: string | null,
+        endTime: string | null
+    }
 }
 
 const emptyFormData: PendingPlannerSet = {
     title: '',
-    startDate: null,
-    endDate: null
+    dates: {
+        startTime: null,
+        endTime: null
+    }
 };
 
 const PlannerSetModal = () => {
@@ -30,8 +34,6 @@ const PlannerSetModal = () => {
     const existingPlannerTitles = getPlannerSetTitles();
 
     const router = useRouter();
-    const pathname = usePathname();
-    const isModalOpen = pathname.includes(PLANNER_SET_MODAL_PATHNAME);
 
     const storage = useMMKV({ id: PLANNER_SETS_STORAGE_ID });
     const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
@@ -57,9 +59,9 @@ const PlannerSetModal = () => {
             name: 'title',
             type: EFormFieldType.TEXT,
             placeholder: 'Title',
-            trigger: isModalOpen && !isEditMode,
+            trigger: !isEditMode,
             rules: {
-                required: 'Title is required',
+                required: 'Title is required.',
                 validate: (value: string) =>
                     existingPlannerTitles.indexOf(value.trim()) === -1 ||
                     plannerSet?.title === value.trim()
@@ -69,7 +71,8 @@ const PlannerSetModal = () => {
             name: 'dates',
             type: EFormFieldType.DATE_RANGE,
             rules: {
-                validate: ({ startDate, endDate }: { startDate: string, endDate: string }) => startDate && endDate
+                required: 'Date range is required',
+                validate: (val) => Boolean(val.startTime) && Boolean(val.endTime)
             }
         }]
     ];
@@ -86,8 +89,12 @@ const PlannerSetModal = () => {
 
     function onSubmit(data: PendingPlannerSet) {
         data.title = data.title.trim();
-        if (!data.startDate || !data.endDate) return;
-        savePlannerSet(data as TPlannerSet);
+        if (!data.dates.startTime || !data.dates.endTime) return;
+        savePlannerSet({
+            title: data.title,
+            startDate: data.dates.startTime,
+            endDate: data.dates.endTime
+        });
         router.back();
     }
 

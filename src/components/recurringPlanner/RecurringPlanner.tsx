@@ -3,7 +3,6 @@ import { EItemStatus } from '@/enums/EItemStatus';
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 import useSortedList from '@/hooks/useSortedList';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';

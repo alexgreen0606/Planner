@@ -43,7 +43,13 @@ const FormField = ({
                 <DateRangeSelector
                     startDatestamp={start}
                     endDatestamp={end}
-                    onChange={onChange}
+                    onChange={(start, end) => {
+                        onChange({
+                            startTime: start,
+                            endTime: end
+                        });
+                    }}
+                    multiDay
                 />
             );
         case EFormFieldType.TIME_RANGE:

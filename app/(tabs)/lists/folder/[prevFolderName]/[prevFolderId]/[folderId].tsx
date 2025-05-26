@@ -1,6 +1,6 @@
 import { EFolderItemType } from '@/enums/EFolderItemType';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { ScrollContainerProvider } from '../../../../../../src/services/ScrollContainer';
 import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
@@ -10,6 +10,7 @@ import { NULL } from '@/constants/generic';
 
 const Lists = () => {
   const router = useRouter();
+  const [parentClickTrigger, setParentClickTrigger] = useState(0);
   const { folderId, prevFolderName, prevFolderId } = useLocalSearchParams<{
     folderId: string,
     prevFolderName: string,
@@ -40,7 +41,8 @@ const Lists = () => {
             itemId={folderId}
             backButtonConfig={{
               hide: prevFolderName === NULL,
-              label: prevFolderName
+              label: prevFolderName,
+              onClick: () => setParentClickTrigger(curr => curr + 1)
             }}
             itemType={EFolderItemType.FOLDER}
           />
@@ -49,7 +51,7 @@ const Lists = () => {
         <SortedFolder
           parentFolderData={prevFolderId !== NULL ? getFolderFromStorage(prevFolderId) : undefined}
           handleOpenItem={onOpenItem}
-          parentClickTrigger={0} // you probably don't need parentClickTrigger anymore
+          parentClickTrigger={parentClickTrigger}
         />
       </ScrollContainerProvider>
     </View>

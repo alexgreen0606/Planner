@@ -1,23 +1,22 @@
 import { GenericIconProps } from '@/components/GenericIcon';
 import CustomText from '@/components/text/CustomText';
 import { selectableColors } from '@/constants/selectableColors';
-import { getFolderFromStorage, getFolderItems, updateFolderItem, createFolderItem, deleteFolderItem } from '@/storage/checklistsStorage';
+import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
+import { EFolderItemType } from '@/enums/EFolderItemType';
+import { EItemStatus } from '@/enums/EItemStatus';
+import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
+import { IFolder } from '@/types/checklists/IFolder';
+import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
+import { IListItem } from '@/types/listItems/core/TListItem';
+import { IFolderItem } from '@/types/listItems/IFolderItem';
+import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
-import { IFolderItem } from '@/types/listItems/IFolderItem';
-import { EFolderItemType } from '@/enums/EFolderItemType';
-import { IFolder } from '@/types/checklists/IFolder';
-import { IListItem } from '@/types/listItems/core/TListItem';
-import { EItemStatus } from '@/enums/EItemStatus';
-import useSortedList from '@/hooks/useSortedList';
-import { useScrollContainer } from '@/services/ScrollContainer';
-import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
-import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import SortableList from '../sortedList';
 import Toolbar, { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -129,7 +128,7 @@ const SortedFolder = ({
         const isOpen = isItemTextfield(item);
 
         return {
-            component: Toolbar,
+            component: Toolbar<IFolderItem>,
             props: {
                 open: isOpen,
                 iconSets: isNew
@@ -197,10 +196,10 @@ const SortedFolder = ({
     };
 
     const isItemTransfering = (item: IFolderItem) => item.status === EItemStatus.TRANSFER;
-    const isTransferMode = () => currentTextfield?.status === EItemStatus.TRANSFER;
+    const isTransferMode = currentTextfield?.status === EItemStatus.TRANSFER;
     const getIconType = (item: IFolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
     const getIconPlatformColor = (item: IFolderItem) => isItemTransfering(item) ?
-        'systemBlue' : (item.type === EFolderItemType.LIST && isTransferMode()) ?
+        'systemBlue' : (item.type === EFolderItemType.LIST && isTransferMode) ?
             'tertiaryLabel' : item.platformColor;
 
     const SortedItems = useSortedList<IFolderItem, IFolder>({
@@ -235,15 +234,15 @@ const SortedFolder = ({
             getToolbar={item => getItemToolbarConfig(item)}
             onContentClick={handleItemClick}
             saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
-            hideKeyboard={isDeleteAlertOpen || (currentTextfield?.status === EItemStatus.TRANSFER)}
+            hideKeyboard={isDeleteAlertOpen || isTransferMode}
             getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
-                (isTransferMode() && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
+                (isTransferMode && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
             getRightIconConfig={item => ({
                 customIcon:
                     <CustomText
                         type='label'
                         style={{
-                            color: PlatformColor((item.type === EFolderItemType.LIST && isTransferMode()) ?
+                            color: PlatformColor((item.type === EFolderItemType.LIST && isTransferMode) ?
                                 'tertiaryLabel' : 'secondaryLabel')
                         }}
                     >

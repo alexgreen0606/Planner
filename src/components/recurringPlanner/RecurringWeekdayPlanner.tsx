@@ -3,7 +3,6 @@ import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
@@ -73,6 +72,7 @@ const RecurringWeekdayPlanner = () => {
             },
             delete: (events) => {
                 deleteRecurringWeekdayEvent(events);
+                
                 // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
                 SortedEvents.refetchItems();
             },
