@@ -18,12 +18,12 @@ import Animated, {
     withTiming
 } from "react-native-reanimated";
 import ListTextfield from "./ListTextfield";
-import { useDeleteScheduler } from "@/services/DeleteScheduler";
 import { useScrollContainer } from "@/services/ScrollContainer";
 import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
 import { generateSortId, getParentSortIdFromPositions } from "@/utils/listUtils";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTextfieldData } from "@/hooks/useTextfieldData";
+import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -86,7 +86,7 @@ const DraggableRow = <T extends IListItem>({
 
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler<T>();
     const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;
 
     /**

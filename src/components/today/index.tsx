@@ -1,7 +1,5 @@
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import useSortedList from '@/hooks/useSortedList';
-import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { useTimeModal } from '@/services/TimeModalProvider';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
@@ -19,15 +17,20 @@ import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import ButtonText from '../text/ButtonText';
 import { useAtom } from 'jotai';
 import { calendarPlannerByDate } from '@/atoms/calendarEvents';
+import { useReloadScheduler } from '@/hooks/useReloadScheduler';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 const TodayPlanner = () => {
     const datestamp = getTodayDatestamp();
 
     const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
 
-    const { registerReloadFunction } = useReloadScheduler();
+        const { registerReloadFunction, canReloadPath } = useReloadScheduler();
+
+        console.log(canReloadPath, 'today')
+
 
     const { onOpen } = useTimeModal();
 

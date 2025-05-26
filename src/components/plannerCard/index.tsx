@@ -14,10 +14,8 @@ import { useTimeModal } from '@/services/TimeModalProvider';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
-import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { getTodayDatestamp, isoToDatestamp } from '@/utils/dateUtils';
 import useSortedList from '@/hooks/useSortedList';
-import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
@@ -26,6 +24,8 @@ import { useAtom } from 'jotai';
 import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { GenericIconProps } from '../GenericIcon';
 import BadgeIcon from '../BadgeIcon';
+import { useReloadScheduler } from '@/hooks/useReloadScheduler';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -86,7 +86,7 @@ const PlannerCard = ({
 
     const { reloadPage } = useReloadScheduler();
 
-    const { getDeletingItems } = useDeleteScheduler();
+    const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
 
     const [collapsed, setCollapsed] = useState(true);
 

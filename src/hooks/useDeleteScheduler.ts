@@ -1,47 +1,33 @@
+import { useAtom } from 'jotai';
+import { useCallback, useEffect, useRef } from 'react';
 import { DELETE_ITEMS_DELAY_MS } from '@/constants/listConstants';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { deleteFunctionsMapAtom, pendingDeleteMapAtom } from '@/atoms/pendingDeletes';
 
-interface DeleteSchedulerContextValue {
-    getDeletingItems: () => Required<IListItem>[];
-    isItemDeleting: (item: Required<IListItem>) => boolean;
-    scheduleItemDeletion: (item: Required<IListItem>) => void;
-    cancelItemDeletion: (item: Required<IListItem>) => void;
-    registerDeleteFunction: (
-        listId: string,
-        deleteFunction: (items: any) => Promise<void>
-    ) => void;
-}
-
-const DeleteSchedulerContext = createContext<DeleteSchedulerContextValue | null>(null);
-
-interface DeleteSchedulerProviderProps {
-    children: React.ReactNode;
-}
-
-export const DeleteSchedulerProvider = ({
-    children
-}: DeleteSchedulerProviderProps) => {
-    const [pendingDeleteMap, setPendingDeleteMap] = useState<Record<string, Required<IListItem>[]>>({});
-    const deleteFunctionsMap = useRef<Record<string, (items: Required<IListItem>[]) => void>>({});
+export function useDeleteScheduler <T extends IListItem>() {
+    const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteMapAtom);
+    const [deleteFunctionsMap, setDeleteFunctionsMap] = useAtom(deleteFunctionsMapAtom);
     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const getDeletingItems = useCallback((): Required<IListItem>[] => {
         return Object.values(pendingDeleteMap).flat();
     }, [pendingDeleteMap]);
 
-    const isItemDeleting = (item: Required<IListItem>) => {
+    const isItemDeleting = (item: T) => {
         return (pendingDeleteMap[item.listId] || []).some(i => i.id === item.id);
     };
 
     const registerDeleteFunction = (
         listId: string,
-        deleteFunction: (items: Required<IListItem>[]) => void
+        deleteFunction: (items: T[]) => void
     ) => {
-        deleteFunctionsMap.current[listId] = deleteFunction;
+        setDeleteFunctionsMap(prev => ({
+            ...prev,
+            [listId]: deleteFunction
+        }));
     };
 
-    const scheduleItemDeletion = (item: Required<IListItem>) => {
+    const scheduleItemDeletion = (item: T) => {
         setPendingDeleteMap(prev => {
             const updatedList = [...(prev[item.listId] || []), item];
             return {
@@ -51,7 +37,7 @@ export const DeleteSchedulerProvider = ({
         });
     };
 
-    const cancelItemDeletion = (item: Required<IListItem>) => {
+    const cancelItemDeletion = (item: T) => {
         setPendingDeleteMap(prev => {
             const currentList = prev[item.listId] || [];
             const filteredList = currentList.filter(i => i.id !== item.id);
@@ -78,7 +64,7 @@ export const DeleteSchedulerProvider = ({
         if (hasPendingItems) {
             deleteTimeoutRef.current = setTimeout(() => {
                 Object.entries(pendingDeleteMap).forEach(([listId, items]) => {
-                    const deleteFn = deleteFunctionsMap.current[listId];
+                    const deleteFn = deleteFunctionsMap[listId];
                     if (deleteFn) {
                         deleteFn(items);
                     }
@@ -89,31 +75,17 @@ export const DeleteSchedulerProvider = ({
                     // Prevents flicker of deleted multi-day chips.
                     setPendingDeleteMap({});
                 }, 1500);
-                deleteFunctionsMap.current = {};
+                setDeleteFunctionsMap({});
                 deleteTimeoutRef.current = null;
             }, DELETE_ITEMS_DELAY_MS);
         }
     }, [pendingDeleteMap]);
 
-    return (
-        <DeleteSchedulerContext.Provider
-            value={{
-                registerDeleteFunction,
-                getDeletingItems,
-                scheduleItemDeletion,
-                isItemDeleting,
-                cancelItemDeletion
-            }}
-        >
-            {children}
-        </DeleteSchedulerContext.Provider>
-    );
-};
-
-export const useDeleteScheduler = () => {
-    const context = useContext(DeleteSchedulerContext);
-    if (!context) {
-        throw new Error("useDeleteScheduler must be used within a DeleteSchedulerProvider");
-    }
-    return context;
-};
+    return {
+        getDeletingItems,
+        isItemDeleting,
+        scheduleItemDeletion,
+        cancelItemDeletion,
+        registerDeleteFunction
+    };
+}

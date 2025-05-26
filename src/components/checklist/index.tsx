@@ -2,18 +2,18 @@ import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
 import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { IChecklist } from '@/types/checklists/IChecklist';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import SortableList from '../sortedList';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 const Checklist = () => {
 
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler<IListItem>();
 
     function getItemsFromStorageObject(storageObject: IChecklist) {
         return storageObject.items;

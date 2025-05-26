@@ -4,10 +4,10 @@ import { uuid } from 'expo-modules-core';
 import { useFocusEffect, usePathname } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useReloadScheduler } from '../services/ReloadScheduler';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useTextfieldData } from './useTextfieldData';
+import { useReloadScheduler } from './useReloadScheduler';
+import { useDeleteScheduler } from './useDeleteScheduler';
 
 type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -45,16 +45,12 @@ const useSortedList = <T extends IListItem, S>({
 
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
 
-    useEffect(() => {
-        console.log(currentTextfield)
-    }, [currentTextfield])
-
     const {
         isItemDeleting,
         cancelItemDeletion,
         scheduleItemDeletion,
         registerDeleteFunction
-    } = useDeleteScheduler();
+    } = useDeleteScheduler<T>();
 
     const { registerReloadFunction } = useReloadScheduler();
 

@@ -1,7 +1,7 @@
 import GenericIcon from '@/components/GenericIcon';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/constants/layout';
 import { NAVBAR_OVERFLOW_FADE_THRESHOLD, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
-import { useReloadScheduler } from '@/services/ReloadScheduler';
+import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { BlurView } from 'expo-blur';
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -81,10 +81,7 @@ export const ScrollContainerProvider = <T extends IListItem>({
 
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
-    const {
-        reloadPage,
-        canReloadPath
-    } = useReloadScheduler();
+    const { reloadPage, canReloadPath } = useReloadScheduler();
 
     // --- Page Layout Variables ---
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);

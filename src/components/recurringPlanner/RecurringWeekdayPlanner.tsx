@@ -2,7 +2,6 @@ import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
@@ -12,6 +11,7 @@ import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
 import { handleDragEnd, handleEventInput, generateTimeIconConfig, generateSortIdByTime } from '@/utils/plannerUtils';
 import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
@@ -20,7 +20,7 @@ const RecurringWeekdayPlanner = () => {
 
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<IRecurringEvent>();
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
@@ -72,7 +72,7 @@ const RecurringWeekdayPlanner = () => {
             },
             delete: (events) => {
                 deleteRecurringWeekdayEvent(events);
-                
+
                 // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
                 SortedEvents.refetchItems();
             },

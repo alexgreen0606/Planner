@@ -6,8 +6,8 @@ import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-e
 import { EventChipProps } from "../components/EventChip";
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToDayOfWeek, datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
-import { jotaiStore } from "@/atoms/jotaiStore";
-import { calendarEventData } from "@/atoms/calendarEvents";
+import { calendarEventDataAtom } from "@/atoms/calendarEvents";
+import { jotaiStore } from "app/_layout";
 
 // ---------- Data Model Generation ----------
 
@@ -192,7 +192,7 @@ export function generateEmptyCalendarDataMaps(datestamps: string[]) {
 // ------------- Jotai Store Utilities -------------
 
 export async function loadCalendarData(range?: string[]) {
-    const currentCalendarData = jotaiStore.get(calendarEventData);
+    const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
     const datestamps = range ?? getNextEightDayDatestamps();
 
     await getCalendarAccess();
@@ -216,7 +216,7 @@ export async function loadCalendarData(range?: string[]) {
         })
     });
 
-    jotaiStore.set(calendarEventData, {
+    jotaiStore.set(calendarEventDataAtom, {
         chipsMap: {
             ...currentCalendarData.chipsMap,
             ...newCalendarData.chipsMap

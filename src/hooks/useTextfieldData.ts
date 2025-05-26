@@ -1,4 +1,4 @@
-import { textFieldStateAtom } from "@/atoms/textfieldAtoms";
+import { textFieldStateAtom } from "@/atoms/textfieldData";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { useAtom } from "jotai";
 

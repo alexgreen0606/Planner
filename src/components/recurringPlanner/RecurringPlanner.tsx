@@ -2,7 +2,6 @@ import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 import useSortedList from '@/hooks/useSortedList';
-import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
@@ -12,6 +11,7 @@ import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
 import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 
 interface SortedRecurringPlannerProps {
@@ -23,7 +23,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
 
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<IRecurringEvent>();
 
-    const { isItemDeleting } = useDeleteScheduler();
+    const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 

@@ -1,13 +1,13 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { useDeleteScheduler } from '../services/DeleteScheduler';
-import { useReloadScheduler } from '../services/ReloadScheduler';
 import { isValidPlatformColor } from '../utils/colorUtils';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { saveEvent } from '@/storage/plannerStorage';
 import { useTimeModal } from '../services/TimeModalProvider';
+import { useReloadScheduler } from '@/hooks/useReloadScheduler';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 export interface EventChipProps {
     planEvent?: IPlannerEvent;
@@ -29,7 +29,7 @@ const EventChip = ({
 
     const { onOpen } = useTimeModal();
 
-    const { getDeletingItems } = useDeleteScheduler();
+    const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
 
     const { reloadPage } = useReloadScheduler();
 

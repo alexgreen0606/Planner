@@ -54,7 +54,6 @@ const SortableList = <
     emptyLabelConfig,
     fillSpace,
     staticList,
-    getModal,
     getToolbar,
     hideKeyboard,
     ...rest
@@ -66,10 +65,10 @@ const SortableList = <
 
     const positions = useSharedValue<Record<string, number>>({});
     const pendingItem = useRef<T | null>(null);
-    const modalConfig = useMemo(() => currentTextfield ? getModal?.(currentTextfield) : null, [currentTextfield, getModal]);
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
-    const Modal = useMemo(() => modalConfig?.component, [modalConfig]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
+
+    console.log(currentTextfield && getToolbar?.(currentTextfield));
 
     // ------------- Empty Space Utilities -------------
 
@@ -186,13 +185,8 @@ const SortableList = <
                 />
             )}
 
-            {/* Modal */}
-            {Modal && modalConfig &&
-                <Modal {...modalConfig.props} />
-            }
-
             {/* Toolbar */}
-            {Toolbar && toolbarConfig && !hideKeyboard &&
+            {Toolbar && toolbarConfig && !hideKeyboard && currentTextfield?.listId === listId &&
                 <Portal>
                     <ToolbarContainer style={toolbarStyle}>
                         <Toolbar {...toolbarConfig.props} />

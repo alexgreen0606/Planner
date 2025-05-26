@@ -1,5 +1,4 @@
 import { atom } from 'jotai';
-import { useAtomValue, useSetAtom } from 'jotai';
 import { IListItem } from '@/types/listItems/core/TListItem';
 
 export const textFieldStateAtom = atom<{
