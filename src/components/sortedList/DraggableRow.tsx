@@ -22,8 +22,8 @@ import { useDeleteScheduler } from "@/services/DeleteScheduler";
 import { useScrollContainer } from "@/services/ScrollContainer";
 import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
 import { generateSortId, getParentSortIdFromPositions } from "@/utils/listUtils";
-import { useTextFieldState } from "@/atoms/textfieldAtoms";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTextfieldData } from "@/hooks/useTextfieldData";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -84,7 +84,7 @@ const DraggableRow = <T extends IListItem>({
         floatingBannerHeight
     } = useScrollContainer();
 
-    const { currentTextfield, setCurrentTextfield } = useTextFieldState<T>();
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
 
     const { isItemDeleting } = useDeleteScheduler();
     const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;

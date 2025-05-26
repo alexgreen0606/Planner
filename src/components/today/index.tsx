@@ -1,34 +1,29 @@
-import { useTimeModal } from '@/services/TimeModalProvider';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import useSortedList from '@/hooks/useSortedList';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
 import { useReloadScheduler } from '@/services/ReloadScheduler';
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useTimeModal } from '@/services/TimeModalProvider';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
-import { datestampToMidnightDate, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
-import { buildPlannerEvents, deleteEventsLoadChips, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventLoadChips } from '@/utils/plannerUtils';
+import { generatePlanner, loadCalendarData } from '@/utils/calendarUtils';
+import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
+import { generateCheckboxIconConfig } from '@/utils/listUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
 import { usePathname } from 'expo-router';
 import React, { useEffect } from 'react';
-import { generateCheckboxIconConfig } from '@/utils/listUtils';
+import { View } from 'react-native';
+import RNCalendarEvents from "react-native-calendar-events";
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { View } from 'react-native';
 import ButtonText from '../text/ButtonText';
-import RNCalendarEvents from "react-native-calendar-events";
-import { generatePlanner } from '@/utils/calendarUtils';
+import { useAtom } from 'jotai';
+import { calendarPlannerByDate } from '@/atoms/calendarEvents';
 
-interface SortablePlannerProps {
-    loadAllExternalData: () => Promise<void>;
-    calendarEvents: IPlannerEvent[];
-};
-
-const TodayPlanner = ({
-    loadAllExternalData,
-    calendarEvents
-}: SortablePlannerProps) => {
+const TodayPlanner = () => {
     const datestamp = getTodayDatestamp();
+
+    const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
 
     const { isItemDeleting } = useDeleteScheduler();
 
@@ -41,7 +36,7 @@ const TodayPlanner = ({
     const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
 
     useEffect(() => {
-        registerReloadFunction(`today_calendar_data`, loadAllExternalData, pathname);
+        registerReloadFunction(`today_calendar_data`, loadCalendarData, pathname);
     }, []);
 
     async function handleOpenTimeModal(item: IPlannerEvent) {
@@ -55,11 +50,11 @@ const TodayPlanner = ({
     }
 
     async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {
-        return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
+        return await saveEventReloadData(planEvent, SortedEvents.items);
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
-        await deleteEventsLoadChips(planEvents, loadAllExternalData);
+        await deleteEventsReloadData(planEvents);
     }
 
     async function getItemsFromStorageObject(planner: TPlanner) {
@@ -81,16 +76,16 @@ const TodayPlanner = ({
     });
 
     const testMultiDayCreation = async () => {
-        console.log(datestampToMidnightDate(getTodayDatestamp()).toISOString())
+        console.log(datestampToMidnightDate(getTodayDatestamp()).toISOString(), 'start date')
         const newId = await RNCalendarEvents.saveEvent(
             'end 24th',
             {
                 startDate: datestampToMidnightDate(getTodayDatestamp()).toISOString(),
-                endDate: datestampToMidnightDate('2025-05-24').toISOString(),
+                endDate: datestampToMidnightDate('2025-05-29').toISOString(),
                 allDay: true
             }
         );
-        SortedEvents.refetchItems();
+        loadCalendarData();
         console.log(await RNCalendarEvents.findEventById(newId))
     }
 

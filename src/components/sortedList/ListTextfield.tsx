@@ -1,6 +1,5 @@
-import { useTextFieldState } from '@/atoms/textfieldAtoms';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/layout';
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
@@ -21,7 +20,7 @@ const ListTextfield = <T extends IListItem>({
     customStyle
 }: ListTextfieldProps<T>) => {
 
-    const { currentTextfield, pendingItem, setCurrentTextfield } = useTextFieldState<T>();
+    const { currentTextfield, pendingItem, setCurrentTextfield } = useTextfieldData<T>();
 
     const inputRef = useRef<TextInput>(null);
 

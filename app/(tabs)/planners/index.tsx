@@ -1,17 +1,16 @@
 import GenericIcon from '@/components/GenericIcon';
+import PlannerCard from '@/components/plannerCard';
 import PopoverList from '@/components/PopoverList';
-import { TCalendarData } from '@/types/calendar/TCalendarData';
-import { generateDatestampRange, getNextSevenDayDatestamps } from '@/utils/dateUtils';
+import { NULL } from '@/constants/generic';
+import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
-import { WeatherForecast } from '../../../src/utils/weatherUtils';
 import { useReloadScheduler } from '../../../src/services/ReloadScheduler';
 import { getPlannerSet, getPlannerSetTitles } from '../../../src/storage/plannerSetsStorage';
-import { generateEmptyCalendarDataMaps, loadCalendarEventData } from '../../../src/utils/calendarUtils';
-import PlannerCard from '@/components/plannerCard';
-import { NULL } from '@/constants/generic';
+import { loadCalendarData } from '../../../src/utils/calendarUtils';
+import { WeatherForecast } from '../../../src/utils/weatherUtils';
 
 
 const defaultPlannerSet = 'Next 7 Days';
@@ -23,7 +22,7 @@ const Planners = () => {
     const [plannerSetKey, setPlannerSetKey] = useState(defaultPlannerSet);
 
     const plannerDatestamps = useMemo(() => {
-        if (plannerSetKey === 'Next 7 Days') return getNextSevenDayDatestamps();
+        if (plannerSetKey === 'Next 7 Days') return getNextEightDayDatestamps().slice(1, 8);
 
         const plannerSet = getPlannerSet(plannerSetKey);
         if (!plannerSet) return [];
@@ -96,25 +95,15 @@ const Planners = () => {
             "precipitationProbabilityMax": 41
         }
     });
-    const [calendarEventData, setCalendarEventData] = useState<TCalendarData>(generateEmptyCalendarDataMaps(plannerDatestamps))
 
     const { registerReloadFunction } = useReloadScheduler();
-
-    /**
-     * Loads in all chip, weather, and calendar data.
-     */
-    async function loadAllExternalData() {
-        // TODO: add in forecasts from apple weather kit
-
-        setCalendarEventData(await loadCalendarEventData(plannerDatestamps));
-    };
 
     const pathname = usePathname();
 
     // Load in the initial planners
     useEffect(() => {
-        loadAllExternalData();
-        registerReloadFunction('planners-reload-trigger', loadAllExternalData, pathname);
+        loadCalendarData();
+        registerReloadFunction('planners-reload-trigger', loadCalendarData, pathname);
     }, []);
 
     return (
@@ -143,10 +132,7 @@ const Planners = () => {
                     <PlannerCard
                         key={`${datestamp}-planner`}
                         datestamp={datestamp}
-                        loadAllExternalData={loadAllExternalData}
                         forecast={forecasts?.[datestamp]}
-                        calendarEvents={calendarEventData.plannersMap[datestamp] ?? []}
-                        eventChips={calendarEventData.chipsMap[datestamp] ?? []}
                     />
                 )}
             </View>

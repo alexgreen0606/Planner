@@ -6,7 +6,7 @@ import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
 import EventChip, { EventChipProps } from '../../components/EventChip';
 import { generatePlanner } from '../../utils/calendarUtils';
-import { buildPlannerEvents, deleteEventsLoadChips, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventLoadChips } from '../../utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -18,23 +18,28 @@ import { useReloadScheduler } from '@/services/ReloadScheduler';
 import { getTodayDatestamp, isoToDatestamp } from '@/utils/dateUtils';
 import useSortedList from '@/hooks/useSortedList';
 import { useDeleteScheduler } from '@/services/DeleteScheduler';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { useTextFieldState } from '@/atoms/textfieldAtoms';
+import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
+import { useAtom } from 'jotai';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { GenericIconProps } from '../GenericIcon';
+import BadgeIcon from '../BadgeIcon';
 
 interface PlannerCardProps {
     datestamp: string;
-    calendarEvents: IPlannerEvent[];
-    eventChips: EventChipProps[];
     forecast?: WeatherForecast;
-    loadAllExternalData: () => Promise<void>;
 };
 
 interface ColorCount {
     color?: string;
     count: number;
+}
+
+interface IconColors {
+    color?: string;
+    iconConfig: GenericIconProps;
 }
 
 function getColorCounts(chips: EventChipProps[]): ColorCount[] {
@@ -50,15 +55,28 @@ function getColorCounts(chips: EventChipProps[]): ColorCount[] {
         .map(([color, count]) => ({ color, count }));
 }
 
+function getIcons(chips: EventChipProps[]): IconColors[] {
+    const colorMap: Record<string, any> = {};
+
+    for (const chip of chips) {
+        const { color, iconConfig } = chip;
+        colorMap[color] = iconConfig
+    }
+
+    return Object.entries(colorMap)
+        .sort(([colorA], [colorB]) => colorA.localeCompare(colorB)) // Alphabetical sort
+        .map(([color, iconConfig]) => ({ color, iconConfig }));
+}
+
 const PlannerCard = ({
     datestamp,
-    calendarEvents,
-    eventChips,
-    forecast,
-    loadAllExternalData
+    forecast
 }: PlannerCardProps) => {
 
-    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IPlannerEvent>();
+    const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
+    const [calendarChips] = useAtom(calendarChipsByDate(datestamp));
+
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IPlannerEvent>();
 
     const { onOpen } = useTimeModal();
 
@@ -106,13 +124,13 @@ const PlannerCard = ({
     }
 
     async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {
-        return await saveEventLoadChips(planEvent, loadAllExternalData, SortedEvents.items);
+        return await saveEventReloadData(planEvent, SortedEvents.items);
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
-        await deleteEventsLoadChips(planEvents, loadAllExternalData);
+        await deleteEventsReloadData(planEvents);
 
-        if (planEvents.some(event => 
+        if (planEvents.some(event =>
             event.timeConfig && (isoToDatestamp(event.timeConfig.startTime) === getTodayDatestamp())
         )) {
             // Reload today's planner to remove the deleted chip
@@ -139,14 +157,9 @@ const PlannerCard = ({
     });
 
     const badgesConfig = useMemo(() => {
-        const eventColorCounts = getColorCounts(eventChips);
-        if (SortedEvents.items.length > 0) {
-            eventColorCounts.push({
-                count: SortedEvents.items.length
-            })
-        }
+        const eventColorCounts = getIcons(calendarChips);
         return eventColorCounts;
-    }, [eventChips, SortedEvents.items.length]);
+    }, [calendarChips, SortedEvents.items.length]);
 
     return (
         <Card
@@ -157,27 +170,33 @@ const PlannerCard = ({
                     forecast={forecast}
                 />
             }
-            footer={eventChips.length > 0 &&
+            footer={calendarChips.length > 0 &&
                 <View className='flex-row gap-2 items-center flex-wrap w-full'>
-                    {eventChips.map(allDayEvent =>
+                    {calendarChips.map((allDayEvent, i) =>
                         <EventChip
-                            key={`${allDayEvent.label}-${datestamp}`}
+                            key={`${datestamp}-chip-${i}`}
                             {...allDayEvent}
                         />
                     )}
                 </View>
             }
             badges={collapsed &&
-                <View className='flex-row items-center gap-1'>
-                    {badgesConfig.map((config) => (
-                        <BadgeNumber key={`chip-color-${config.color}`} {...config} />
+                <View className='flex-row items-center gap-2'>
+                    {badgesConfig.map((config, i) => (
+                        <BadgeIcon
+                            key={`${datestamp}-badge-${i}`}
+                            {...config}
+                        />
                     ))}
+                    {SortedEvents.items.length > 0 && (
+                        <BadgeNumber count={SortedEvents.items.length} />
+                    )}
                 </View>
             }
             collapsed={collapsed}
             contentHeight={
                 ((SortedEvents.items.length + 1) * LIST_ITEM_HEIGHT) +
-                (eventChips.length * LIST_ITEM_HEIGHT) +
+                (calendarChips.length * LIST_ITEM_HEIGHT) +
                 LIST_ITEM_HEIGHT
             }
         >

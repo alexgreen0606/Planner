@@ -6,9 +6,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useDeleteScheduler } from '../services/DeleteScheduler';
 import { useReloadScheduler } from '../services/ReloadScheduler';
-import { useScrollContainer } from '../services/ScrollContainer';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
-import { useTextFieldState } from '@/atoms/textfieldAtoms';
+import { useTextfieldData } from './useTextfieldData';
 
 type StorageHandlers<T extends IListItem> = {
     update: (item: T) => Promise<void> | void;
@@ -44,7 +43,7 @@ const useSortedList = <T extends IListItem, S>({
 
     const pathname = usePathname();
 
-    const { currentTextfield, setCurrentTextfield } = useTextFieldState<T>();
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
 
     const {
         isItemDeleting,

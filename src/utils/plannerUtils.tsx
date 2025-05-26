@@ -10,6 +10,7 @@ import { TPlanner } from '@/types/planner/TPlanner';
 import { uuid } from 'expo-modules-core';
 import { datestampToDayOfWeek, extractTimeValue, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
+import { loadCalendarData } from './calendarUtils';
 
 // ------------- Storage Getters and Setters -------------
 
@@ -70,13 +71,11 @@ async function handleTimeModalSave(
  * the calendar data will be refreshed.
  * 
  * @param updatedPlanEvent - The planner event to save
- * @param reloadChips - Function to reload chips
  * @param items - The current list items
  * @returns The new ID of the event after saving.
  */
-export async function saveEventLoadChips(
+export async function saveEventReloadData(
     updatedPlanEvent: IPlannerEvent,
-    reloadChips: () => Promise<void>,
     items: IPlannerEvent[]
 ) {
     const eventCalendarId = await saveEvent(updatedPlanEvent);
@@ -85,7 +84,7 @@ export async function saveEventLoadChips(
         updatedPlanEvent.calendarId ||
         items.find(i => i.id === updatedPlanEvent.id)?.calendarId
     ) {
-        await reloadChips();
+        await loadCalendarData();
     }
 
     return eventCalendarId;
@@ -96,14 +95,10 @@ export async function saveEventLoadChips(
  * the calendar data will be refreshed.
  * 
  * @param planEvents - The planner events to delete
- * @param reloadChips - Function to reload chips
  */
-export async function deleteEventsLoadChips(
-    planEvents: IPlannerEvent[],
-    reloadChips: () => Promise<void>
-) {
+export async function deleteEventsReloadData(planEvents: IPlannerEvent[]) {
     await deleteEvents(planEvents);
-    if (planEvents.some(item => item.calendarId)) await reloadChips();
+    if (planEvents.some(item => item.calendarId)) await loadCalendarData();
 }
 
 // ------------- Planner Generation -------------

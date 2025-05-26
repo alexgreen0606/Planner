@@ -192,9 +192,9 @@ export function getDatestampThreeYearsFromToday(): string {
  * Generates an array of datestamps for the next seven days from tomorrow to tomorrow + 6.
  * @returns - list of timestamps YYYY-MM-DD
  */
-export function getNextSevenDayDatestamps(): string[] {
-    const tomorrow = DateTime.utc().plus({ days: 1 }).toISODate(); // Tomorrow's date
-    const sixDaysAfterTomorrow = DateTime.utc().plus({ days: 7 }).toISODate(); // Tomorrow + 6 days
+export function getNextEightDayDatestamps(): string[] {
+    const tomorrow = DateTime.utc().toISODate();
+    const sixDaysAfterTomorrow = DateTime.utc().plus({ days: 8 }).toISODate();
 
     return generateDatestampRange(tomorrow, sixDaysAfterTomorrow);
 }

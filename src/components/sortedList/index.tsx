@@ -1,4 +1,3 @@
-import { useTextFieldState } from '@/atoms/textfieldAtoms';
 import ThinLine from '@/components/ThinLine';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
@@ -12,6 +11,7 @@ import { Portal } from 'react-native-paper';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -60,7 +60,7 @@ const SortableList = <
     ...rest
 }: DraggableListProps<T, P, M>) => {
 
-    const { currentTextfield } = useTextFieldState<T>();
+    const { currentTextfield } = useTextfieldData<T>();
 
     const { keyboardAbsoluteTop } = useKeyboardTracker();
 

@@ -1,7 +1,7 @@
 import { getDatestampThreeYearsFromToday, getTodayDatestamp } from "@/utils/dateUtils";
 import ReactNativeCalendarEvents from "react-native-calendar-events";
 import { getCalendarAccess } from "./calendarUtils";
-import { Deadline } from "@/types/listItems/IDeadline";
+import { IDeadline } from "@/types/listItems/IDeadline";
 import { TCalendarDetails } from "@/types/calendar/TCalendarDetails";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { DEADLINE_LIST_KEY } from "@/constants/storageIds";
@@ -33,7 +33,7 @@ async function getDeadlineCalendarDetails(): Promise<TCalendarDetails> {
     return { id: deadlineCalendarId, color: 'systemRed', iconType: 'alert', isPrimary: false, isBirthday: false };
 };
 
-export async function getDeadlines(): Promise<Deadline[]> {
+export async function getDeadlines(): Promise<IDeadline[]> {
     const deadlineDetails = await getDeadlineCalendarDetails();
     const startDate = new Date(`${getTodayDatestamp()}T00:00:00`).toISOString();
     const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`).toISOString();
@@ -49,7 +49,7 @@ export async function getDeadlines(): Promise<Deadline[]> {
     }));
 };
 
-export async function saveDeadline(deadline: Deadline, createNew: boolean): Promise<string> {
+export async function saveDeadline(deadline: IDeadline, createNew: boolean): Promise<string> {
     return await ReactNativeCalendarEvents.saveEvent(
         deadline.value,
         {
@@ -62,7 +62,7 @@ export async function saveDeadline(deadline: Deadline, createNew: boolean): Prom
     );
 };
 
-export async function deleteDeadlines(deadlines: Deadline[]) {
+export async function deleteDeadlines(deadlines: IDeadline[]) {
     await Promise.all(
         deadlines.map((deadline) => ReactNativeCalendarEvents.removeEvent(deadline.id))
     );

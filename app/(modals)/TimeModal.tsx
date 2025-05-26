@@ -155,7 +155,11 @@ const TimeModal = () => {
             hide: false,
             multiDay: isCalendarEvent,
             allDay: isAllDay,
-            trigger: !isEditMode
+            trigger: !isEditMode,
+            rules: {
+                required: true,
+                validate: (val) => Boolean(val.startTime) && Boolean(val.endTime)
+            }
         }],
         [{
             name: 'isCalendarEvent',
@@ -168,7 +172,6 @@ const TimeModal = () => {
             type: EFormFieldType.CHECKBOX,
             label: 'All Day',
             defaultValue: false,
-            disabled: !isCalendarEvent,
             hide: !isCalendarEvent
         }]
     ];

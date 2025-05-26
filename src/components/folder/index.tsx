@@ -17,7 +17,7 @@ import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import SortableList from '../sortedList';
 import Toolbar, { ToolbarProps } from '../sortedList/ListItemToolbar';
 import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
-import { useTextFieldState } from '@/atoms/textfieldAtoms';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -33,7 +33,7 @@ const SortedFolder = ({
 
     const { folderId } = useLocalSearchParams<{ folderId: string }>();
 
-    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IFolderItem>();
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IFolderItem>();
 
     const router = useRouter();
 

@@ -12,7 +12,7 @@ import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
-import { useTextFieldState } from '@/atoms/textfieldAtoms';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
 
 
 interface SortedRecurringPlannerProps {
@@ -22,7 +22,7 @@ interface SortedRecurringPlannerProps {
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
 
-    const { currentTextfield, setCurrentTextfield } = useTextFieldState<IRecurringEvent>();
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IRecurringEvent>();
 
     const { isItemDeleting } = useDeleteScheduler();
 

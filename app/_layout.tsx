@@ -8,11 +8,12 @@ import { PLANNER_SET_MODAL_PATHNAME } from './(modals)/plannerSetModal/[plannerS
 import { TIME_MODAL_PATHNAME } from './(modals)/TimeModal';
 import { TimeModalProvider } from '@/services/TimeModalProvider';
 import { Provider } from 'jotai';
+import { jotaiStore } from '@/atoms/jotaiStore';
 
 export default function TabLayout() {
     return (
         <PaperProvider>
-            <Provider>
+            <Provider store={jotaiStore}>
                 <GestureHandlerRootView>
                     <DeleteSchedulerProvider>
                         <ReloadProvider>

@@ -1,28 +1,29 @@
+import SortableList from '@/components/sortedList';
+import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
-import { deleteDeadlines, getDeadlines, saveDeadline } from '@/utils/deadlineUtils';
+import { DEADLINE_LIST_KEY } from '@/constants/storageIds';
 import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import { Deadline } from '@/types/listItems/IDeadline';
-import { datestampToMidnightDate, daysBetweenToday, generateSortIdByTime, getTodayDatestamp } from '@/utils/dateUtils';
+import { IDeadline } from '@/types/listItems/IDeadline';
+import { datestampToMidnightDate, daysBetweenToday, getTodayDatestamp } from '@/utils/dateUtils';
+import { deleteDeadlines, getDeadlines, saveDeadline } from '@/utils/deadlineUtils';
+import { generateSortId, isItemTextfield } from '@/utils/listUtils';
+import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import { DEADLINE_LIST_KEY } from '@/constants/storageIds';
-import { generateSortId, isItemTextfield } from '@/utils/listUtils';
-import SortableList from '@/components/sortedList';
-import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 
 const Deadlines = () => {
 
     const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
 
-    const { currentTextfield, setCurrentTextfield } = useScrollContainer();
-
     const [dateSelectOpen, setDateSelectOpen] = useState(false);
+
+    const {currentTextfield, setCurrentTextfield} = useTextfieldData<IDeadline>();
 
     // ------------- Utility Functions -------------
 
@@ -40,8 +41,8 @@ const Deadlines = () => {
     };
 
     function generateToolbar(
-        deadline: Deadline,
-    ): ModifyItemConfig<Deadline, ToolbarProps<Deadline>> {
+        deadline: IDeadline,
+    ): ModifyItemConfig<IDeadline, ToolbarProps<IDeadline>> {
         return {
             component: Toolbar,
             props: {
@@ -62,7 +63,7 @@ const Deadlines = () => {
         }
     }
 
-    const DeadlineItems = useSortedList<Deadline, Deadline[]>({
+    const DeadlineItems = useSortedList<IDeadline, IDeadline[]>({
         storageId: DEADLINE_LIST_KEY,
         storageKey: DEADLINE_LIST_KEY,
         getItemsFromStorageObject: getDeadlines,
@@ -91,7 +92,7 @@ const Deadlines = () => {
         <View className='flex-1'>
 
             {/* Deadline List */}
-            <SortableList<Deadline, ToolbarProps<Deadline>, never>
+            <SortableList<IDeadline, ToolbarProps<IDeadline>, never>
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
                 disableDrag
@@ -126,7 +127,7 @@ const Deadlines = () => {
                 title={currentTextfield?.value}
                 theme='dark'
                 minimumDate={datestampToMidnightDate(getTodayDatestamp())}
-                open={dateSelectOpen && currentTextfield}
+                open={dateSelectOpen && Boolean(currentTextfield)}
                 date={
                     currentTextfield?.startTime
                         ? DateTime.fromISO(currentTextfield.startTime).toJSDate()
@@ -143,7 +144,7 @@ const Deadlines = () => {
                     updatedDeadline.sortId = generateSortIdByTime(updatedDeadline, DeadlineItems.items);
                     setCurrentTextfield({
                         ...updatedDeadline,
-                        startTime: selected.toISO(),
+                        startTime: selected.toISO()!
                     });
 
                     toggleDateSelector();

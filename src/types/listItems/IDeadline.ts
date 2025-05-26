@@ -1,5 +1,5 @@
 import { IListItem } from "./core/TListItem";
 
-export interface Deadline extends IListItem {
+export interface IDeadline extends IListItem {
     startTime: string;
 }

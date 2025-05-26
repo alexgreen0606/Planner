@@ -5,7 +5,9 @@ import { TPlanner } from "@/types/planner/TPlanner";
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
 import { EventChipProps } from "../components/EventChip";
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
-import { datestampToDayOfWeek, datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
+import { datestampToDayOfWeek, datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
+import { jotaiStore } from "@/atoms/jotaiStore";
+import { calendarEventData } from "@/atoms/calendarEvents";
 
 // ---------- Data Model Generation ----------
 
@@ -187,14 +189,15 @@ export function generateEmptyCalendarDataMaps(datestamps: string[]) {
     return { chipsMap, plannersMap };
 }
 
-/**
- *TODO: comment
- * @param datestamps - YYYY-MM-DD
- */
-export async function loadCalendarEventData(datestamps: string[]): Promise<TCalendarData> {
+// ------------- Jotai Store Utilities -------------
+
+export async function loadCalendarData(range?: string[]) {
+    const currentCalendarData = jotaiStore.get(calendarEventData);
+    const datestamps = range ?? getNextEightDayDatestamps();
+
     await getCalendarAccess();
 
-    const calendarData = generateEmptyCalendarDataMaps(datestamps);
+    const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
 
     // Find the overall date range
     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
@@ -205,12 +208,22 @@ export async function loadCalendarEventData(datestamps: string[]): Promise<TCale
     datestamps.forEach((datestamp) => {
         calendarEvents.forEach((calEvent) => {
             if (validateEventChip(calEvent, datestamp)) {
-                calendarData.chipsMap[datestamp].push(generateEventChip(calEvent));
+                newCalendarData.chipsMap[datestamp].push(generateEventChip(calEvent));
             }
             if (validateCalendarEvent(calEvent, datestamp)) {
-                calendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
+                newCalendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
             }
         })
     });
-    return calendarData;
-}
+
+    jotaiStore.set(calendarEventData, {
+        chipsMap: {
+            ...currentCalendarData.chipsMap,
+            ...newCalendarData.chipsMap
+        },
+        plannersMap: {
+            ...currentCalendarData.plannersMap,
+            ...newCalendarData.plannersMap
+        }
+    });
+};
