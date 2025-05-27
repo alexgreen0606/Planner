@@ -68,8 +68,6 @@ const SortableList = <
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
-    console.log(currentTextfield && getToolbar?.(currentTextfield));
-
     // ------------- Empty Space Utilities -------------
 
     /**

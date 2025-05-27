@@ -1,24 +1,21 @@
+import { calendarPlannerByDate } from '@/atoms/calendarEvents';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
+import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTimeModal } from '@/services/TimeModalProvider';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { generatePlanner, loadCalendarData } from '@/utils/calendarUtils';
-import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
 import { usePathname } from 'expo-router';
+import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import RNCalendarEvents from "react-native-calendar-events";
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import ButtonText from '../text/ButtonText';
-import { useAtom } from 'jotai';
-import { calendarPlannerByDate } from '@/atoms/calendarEvents';
-import { useReloadScheduler } from '@/hooks/useReloadScheduler';
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 const TodayPlanner = () => {
     const datestamp = getTodayDatestamp();
@@ -27,10 +24,7 @@ const TodayPlanner = () => {
 
     const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
 
-        const { registerReloadFunction, canReloadPath } = useReloadScheduler();
-
-        console.log(canReloadPath, 'today')
-
+    const { registerReloadFunction } = useReloadScheduler();
 
     const { onOpen } = useTimeModal();
 
@@ -78,45 +72,26 @@ const TodayPlanner = () => {
         initializedStorageObject: generatePlanner(datestamp)
     });
 
-    const testMultiDayCreation = async () => {
-        console.log(datestampToMidnightDate(getTodayDatestamp()).toISOString(), 'start date')
-        const newId = await RNCalendarEvents.saveEvent(
-            'end 24th',
-            {
-                startDate: datestampToMidnightDate(getTodayDatestamp()).toISOString(),
-                endDate: datestampToMidnightDate('2025-05-29').toISOString(),
-                allDay: true
-            }
-        );
-        loadCalendarData();
-        console.log(await RNCalendarEvents.findEventById(newId))
-    }
-
     return (
-        <View className='flex-1'>
-            <ButtonText onClick={testMultiDayCreation}>
-                Create All Day
-            </ButtonText>
-            <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
-                listId={datestamp}
-                items={SortedEvents.items}
-                fillSpace
-                saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-                onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
-                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
-                onContentClick={SortedEvents.toggleItemEdit}
-                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
-                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
-                getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
-                getToolbar={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
-                isLoading={SortedEvents.isLoading}
-                emptyLabelConfig={{
-                    label: 'All Plans Complete',
-                    className: 'flex-1'
-                }}
-            />
-        </View>
+        <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
+            listId={datestamp}
+            items={SortedEvents.items}
+            fillSpace
+            saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
+            onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
+            onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
+            onContentClick={SortedEvents.toggleItemEdit}
+            getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
+            handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
+            getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
+            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
+            getToolbar={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
+            isLoading={SortedEvents.isLoading}
+            emptyLabelConfig={{
+                label: 'All Plans Complete',
+                className: 'flex-1'
+            }}
+        />
     );
 };
 

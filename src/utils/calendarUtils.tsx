@@ -1,13 +1,12 @@
+import { calendarEventDataAtom } from "@/atoms/calendarEvents";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { TCalendarData } from "@/types/calendar/TCalendarData";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/types/planner/TPlanner";
+import { jotaiStore } from "app/_layout";
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
 import { EventChipProps } from "../components/EventChip";
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToDayOfWeek, datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
-import { calendarEventDataAtom } from "@/atoms/calendarEvents";
-import { jotaiStore } from "app/_layout";
 
 // ---------- Data Model Generation ----------
 

@@ -128,8 +128,6 @@ export const createFolderItem = (newItem: IFolderItem) => {
         parentFolder.listIds.push(newItem.id);
     }
 
-    console.log(parentFolder, 'parent folder saving...')
-
     // Add the item to its parent
     saveToStorage(parentFolder);
 };

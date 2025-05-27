@@ -190,7 +190,10 @@ const TimeRangeSelector = ({
     // ---------- Reactions ----------
 
     useEffect(() => {
-        if (allDay) resetTimesToMidnight();
+        if (allDay) {
+            resetTimesToMidnight();
+            setMode(SelectorMode.DATES);
+        }
     }, [allDay]);
 
     useEffect(() => {

@@ -155,7 +155,7 @@ export function getTomorrowDatestamp(): string {
  * ✅ Generates an iso timestamp representing the current time, rounded down to the
  * nearest 5 minutes.
  * 
- * @returns - an iso timestamp rounded down
+ * @returns ISO timestamp rounded down to nearest 5 minutes
  */
 export function getNowISORoundDown5Minutes(): string {
     const now = DateTime.now();
