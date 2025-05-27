@@ -1,7 +1,6 @@
 import { usePathname } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
-import { TIME_MODAL_PATHNAME } from '../../../app/(modals)/TimeModal';
 import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
 import EventChip, { EventChipProps } from '../../components/EventChip';
@@ -26,6 +25,7 @@ import { GenericIconProps } from '../GenericIcon';
 import BadgeIcon from '../BadgeIcon';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
+import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 
 interface PlannerCardProps {
     datestamp: string;

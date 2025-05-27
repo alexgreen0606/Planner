@@ -10,12 +10,14 @@ import { generatePlanner, loadCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
-import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
-import { usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
+import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
+import { EItemStatus } from '@/enums/EItemStatus';
+import { NULL } from '@/constants/generic';
 
 const TodayPlanner = () => {
     const datestamp = getTodayDatestamp();
@@ -30,6 +32,8 @@ const TodayPlanner = () => {
 
     const pathname = usePathname();
 
+    const router = useRouter();
+
     const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
 
     useEffect(() => {
@@ -37,13 +41,15 @@ const TodayPlanner = () => {
     }, []);
 
     async function handleOpenTimeModal(item: IPlannerEvent) {
-        await openTimeModal(
-            item,
-            SortedEvents.toggleItemEdit,
-            onOpen,
-            SortedEvents.items,
-            SortedEvents.saveTextfieldAndCreateNew
-        );
+        console.log(`${TIME_MODAL_PATHNAME}${datestamp}/${item.id}/${item.sortId}/${item.value}`)
+        router.push(`${TIME_MODAL_PATHNAME}${datestamp}/${item.status === EItemStatus.NEW ? NULL : item.id}/${item.sortId}/${item.value.length > 0 ? item.value : NULL}`);
+        // await openTimeModal(
+        //     item,
+        //     SortedEvents.toggleItemEdit,
+        //     onOpen,
+        //     SortedEvents.items,
+        //     SortedEvents.saveTextfieldAndCreateNew
+        // );
     }
 
     async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {

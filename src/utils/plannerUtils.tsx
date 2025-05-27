@@ -459,6 +459,7 @@ export function generateSortIdByTime(
 
     // Pre-Check 2: Check if the event conflicts at its current position.
     const timedPlanner = [...planner].filter(existingEvent => getEventTime(existingEvent));
+    console.log(timedPlanner, 'timed planner')
     const currentIndex = timedPlanner.findIndex(e => e.id === event.id);
 
     const earlierEvent = timedPlanner[currentIndex - 1];

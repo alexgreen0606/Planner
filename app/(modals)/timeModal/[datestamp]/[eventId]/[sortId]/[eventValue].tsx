@@ -1,16 +1,23 @@
-import Modal from "@/components/modal";
 import Form from "@/components/form";
-import { useTimeModal } from "@/services/TimeModalProvider";
+import Modal from "@/components/modal";
+import { NULL } from "@/constants/generic";
 import { EFormFieldType } from "@/enums/EFormFieldType";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { usePathname } from "expo-router";
+import { useTextfieldData } from "@/hooks/useTextfieldData";
+import { getPlannerFromStorage, saveEvent } from "@/storage/plannerStorage";
+import { IFormField } from "@/types/form/IFormField";
+import { IListItem } from "@/types/listItems/core/TListItem";
+import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
+import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
+import { generateSortId, sanitizeList } from "@/utils/listUtils";
+import { saveEventReloadData } from "@/utils/plannerUtils";
+import { uuid } from "expo-modules-core";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { DateTime } from 'luxon';
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { IFormField } from "@/types/form/IFormField";
-import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 
-export const TIME_MODAL_PATHNAME = '(modals)/TimeModal';
+export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
 
 type FormData = {
     title: string;
@@ -23,14 +30,37 @@ type FormData = {
 }
 
 const TimeModal = () => {
-    const pathname = usePathname();
-    const { initialEvent, onSave, onClose } = useTimeModal();
+    const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<{
+        eventId: string, // NULL if this is a new event
+        eventValue: string, // More up-to-date than from storage
+        datestamp: string,
+        sortId: string
+    }>();
+
+    const router = useRouter();
+
+    const { setCurrentTextfield } = useTextfieldData<IListItem>();
 
     const planEvent = useMemo(() => {
-        return initialEvent.current;
-    }, [pathname]);
+        const newValue = eventValue === NULL ? '' : eventValue;
+        if (eventId === NULL) {
+            return {
+                id: uuid.v4(),
+                sortId: Number(sortId),
+                status: EItemStatus.NEW,
+                listId: datestamp,
+                value: newValue
+            }
+        }
 
-    const isEditMode = planEvent?.status === EItemStatus.EDIT;
+        const planner = getPlannerFromStorage(datestamp);
+        const event = planner.events.find(e => e.id === eventId);
+        if (!event) router.back();
+
+        return { ...event, value: newValue };
+    }, [eventId]);
+
+    const isEditMode = planEvent.status === EItemStatus.EDIT;
 
     const {
         control,
@@ -126,7 +156,22 @@ const TimeModal = () => {
             updatedItem.timeConfig.endTime = startOfNextDay!;
         }
 
-        onSave(updatedItem);
+        const planner = getPlannerFromStorage(datestamp);
+        saveEventReloadData(updatedItem as IPlannerEvent, planner.events);
+
+        // TODO: causing duplicate item somehow ^
+
+        const updatedList = sanitizeList(planner.events, updatedItem as IPlannerEvent);
+        const newTextfield: IListItem = {
+            id: uuid.v4(),
+            sortId: generateSortId(updatedItem.sortId!, updatedList),
+            status: EItemStatus.NEW,
+            listId: datestamp,
+            value: ''
+        };
+
+        setCurrentTextfield(newTextfield);
+        router.back();
     }
 
     function handleDelete() {
@@ -134,7 +179,10 @@ const TimeModal = () => {
         const updatedItem = { ...planEvent };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
-        onSave(updatedItem);
+
+        // TODO: save the updated item
+
+        router.back();
     }
 
     const formFields: IFormField[][] = [
@@ -188,7 +236,7 @@ const TimeModal = () => {
                 label: 'Unschedule',
                 onClick: handleDelete
             }}
-            onClose={onClose}
+            onClose={() => router.back()}
         >
             <Form fields={formFields} control={control} />
         </Modal>

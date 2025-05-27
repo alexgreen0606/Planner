@@ -86,13 +86,16 @@ export function daysBetweenToday(isoTimestamp: string): number {
 }
 
 /**
- * Returns true if time1 is earlier than time2.
+ * ✅ Returns true if time1 is earlier than time2.
  * Assumes both time strings are in the same format (ISO or HH:MM).
+ * If either of the times doesn't exist, default to true (consider time1 as earlier).
+ * 
  * @param time1 - The first time string.
  * @param time2 - The second time string.
  * @returns True if time1 is earlier than time2, false otherwise.
  */
-export function isTimeEarlierOrEqual(time1: string, time2: string): boolean {
+export function isTimeEarlierOrEqual(time1?: string, time2?: string): boolean {
+    if (!time1 || !time2) return true;
     return time1.localeCompare(time2) < 0;
 }
 

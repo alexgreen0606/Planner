@@ -122,7 +122,7 @@ const useSortedList = <T extends IListItem, S>({
             sortId: generateSortId(referenceSortId!, updatedList, isChildId),
             status: EItemStatus.NEW,
             listId: storageKey,
-            value: '',
+            value: ''
         };
 
         const newItem: T = initializeListItem?.(genericListItem) ?? genericListItem as T;

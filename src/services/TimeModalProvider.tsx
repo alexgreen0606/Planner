@@ -1,5 +1,5 @@
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
-import { TIME_MODAL_PATHNAME } from 'app/(modals)/TimeModal';
+import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { useRouter } from 'expo-router';
 import React, { createContext, useContext, useRef } from 'react';
 

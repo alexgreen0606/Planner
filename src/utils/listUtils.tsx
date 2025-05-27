@@ -123,9 +123,10 @@ export function buildItemPositions<T extends IListItem>(currentList: T[]): Recor
 }
 
 /**
- * Sorts a list and updates the given item within the list.
+ * ✅ Sorts a list and updates the given item within the list.
+ * 
  * @param list The list of items to clean up
- * @param syncItem The item to update within the list. Item will be updated by ID. If no item exists, it will be added in.
+ * @param syncItem An item to update within the list. Item will be updated by ID. If no item exists, it will be appended.
  * @returns A clean list sorted by sort ID
  */
 export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T) {
@@ -144,6 +145,8 @@ export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T) {
 
     return updatedList.sort((a, b) => a.sortId - b.sortId);
 }
+
+// ------------- Common Props -------------
 
 /**
 * Generates the configuration for a checkbox icon used to toggle item deletion
