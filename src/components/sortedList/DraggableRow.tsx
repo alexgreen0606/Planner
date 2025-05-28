@@ -3,9 +3,14 @@ import ThinLine from "@/components/ThinLine";
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/constants/layout";
 import { LIST_SPRING_CONFIG } from "@/constants/listConstants";
 import { EItemStatus } from "@/enums/EItemStatus";
+import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
+import { useTextfieldData } from "@/hooks/useTextfieldData";
+import { useScrollContainer } from "@/services/ScrollContainer";
+import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
 import { IListItem } from "@/types/listItems/core/TListItem";
+import { generateSortId, getParentSortIdFromPositions } from "@/utils/listUtils";
 import { useMemo } from "react";
-import { PlatformColor, StyleSheet, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { PlatformColor, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import Animated, {
     cancelAnimation,
@@ -17,13 +22,8 @@ import Animated, {
     withSpring,
     withTiming
 } from "react-native-reanimated";
-import ListTextfield from "./ListTextfield";
-import { useScrollContainer } from "@/services/ScrollContainer";
-import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
-import { generateSortId, getParentSortIdFromPositions } from "@/utils/listUtils";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTextfieldData } from "@/hooks/useTextfieldData";
-import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
+import ListTextfield from "./ListTextfield";
 
 const Row = Animated.createAnimatedComponent(View);
 
