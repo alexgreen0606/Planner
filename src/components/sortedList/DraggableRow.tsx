@@ -37,6 +37,11 @@ enum IconPosition {
     LEFT = 'LEFT'
 }
 
+enum BoundType {
+    MIN = 'MIN',
+    MAX = 'MAX'
+}
+
 export interface RowProps<T extends IListItem> {
     item: T;
     items: T[];
@@ -78,35 +83,27 @@ const DraggableRow = <T extends IListItem>({
     hideKeyboard,
     customIsItemDeleting
 }: RowProps<T>) => {
-
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
-
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
+    const { isItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
         autoScroll,
         floatingBannerHeight
     } = useScrollContainer();
 
-    const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
-
-    const { isItemDeleting } = useDeleteScheduler<T>();
     const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;
 
-    /**
-     * The current item, either from static props or from the context if it is being edited.
-     */
     const item = useMemo(() =>
         currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
         [currentTextfield, staticItem]
     );
 
-    const topBoundaries = useMemo(() => {
-        const min = 0;
-        const max = Math.max(0, LIST_ITEM_HEIGHT * (listLength - 1));
-        return { min, max };
-    }, [listLength]);
+    const topBoundaries = useMemo(() => ({
+        [BoundType.MIN]: 0,
+        [BoundType.MAX]: Math.max(0, LIST_ITEM_HEIGHT * (listLength - 1))
+    }), [listLength]);
 
     // ------------- Animation Variables -------------
     const TOP_AUTO_SCROLL_BOUND = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
@@ -157,7 +154,8 @@ const DraggableRow = <T extends IListItem>({
 
     const sanitizeTopValue = (value: number) => {
         'worklet';
-        const { min, max } = topBoundaries;
+        const { [BoundType.MIN]: min, [BoundType.MAX]: max } = topBoundaries;
+
         return Math.max(min, Math.min(value, max));
     };
 
@@ -191,12 +189,9 @@ const DraggableRow = <T extends IListItem>({
 
         const beginAutoScroll = (direction: AutoScrollDirection) => {
             'worklet';
-            let distanceToBound = 0;
-            if (direction === AutoScrollDirection.UP) {
-                distanceToBound = topBoundaries.min - top.value;
-            } else {
-                distanceToBound = topBoundaries.max - top.value;
-            }
+            const targetBound = direction === AutoScrollDirection.UP ?
+                BoundType.MIN : BoundType.MAX;
+            const distanceToBound = topBoundaries[targetBound] - top.value;
 
             isAutoScrolling.value = true;
             autoScroll(distanceToBound);
@@ -238,6 +233,8 @@ const DraggableRow = <T extends IListItem>({
         cancelAnimation(scrollOffset);
         isDragging.value = false;
         initialScrollOffset.value = 0;
+        scrollOffsetDelta.value = 0;
+        isAutoScrolling.value = false;
         initialTop.value = 0;
         top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
     };
@@ -246,18 +243,24 @@ const DraggableRow = <T extends IListItem>({
 
     // Move swapped items
     useAnimatedReaction(
-        () => positions.value[item.id],
-        (currPosition, prevPosition) => {
-            if (currPosition !== prevPosition && !isDragging.value) {
-                if (isAwaitingInitialPosition.value || (item.status === EItemStatus.NEW)) {
-                    top.value = positions.value[item.id] * LIST_ITEM_HEIGHT;
+        () => ({
+            dragging: isDragging.value,
+            position: positions.value[item.id],
+            awaitingInitialPosition: isAwaitingInitialPosition.value
+        }),
+        ({ position, dragging, awaitingInitialPosition }, prev) => {
+            if (!dragging && position !== prev?.position) {
+                if (
+                    awaitingInitialPosition ||
+                    (item.status === EItemStatus.NEW)
+                ) {
+                    top.value = position * LIST_ITEM_HEIGHT;
                     isAwaitingInitialPosition.value = false;
                 } else {
-                    top.value = withSpring(positions.value[item.id] * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG);
+                    top.value = withSpring(position * LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG);
                 }
             }
-        },
-        [isDragging.value]
+        }
     );
 
     // Auto scroll
@@ -404,11 +407,10 @@ const DraggableRow = <T extends IListItem>({
                         hideKeyboard={hideKeyboard}
                         customStyle={{
                             color: PlatformColor(customTextPlatformColor ??
-                                (isItemDeletingCustom(item) ? 'tertiaryLabel' : 'label'
-                                )
+                                (isItemDeletingCustom(item) ? 'tertiaryLabel' : 'label')
                             ),
                             textDecorationLine: isItemDeletingCustom(item) ?
-                                'line-through' : undefined,
+                                'line-through' : undefined
                         }}
                     />
                 </GestureDetector>
