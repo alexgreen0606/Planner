@@ -32,6 +32,11 @@ enum AutoScrollDirection {
     DOWN = 'DOWN'
 }
 
+enum IconPosition {
+    RIGHT = 'RIGHT',
+    LEFT = 'LEFT'
+}
+
 export interface RowProps<T extends IListItem> {
     item: T;
     items: T[];
@@ -272,21 +277,15 @@ const DraggableRow = <T extends IListItem>({
         }
     );
 
-    /**
-     * Animated style for positioning the row and scaling when dragged.
-     */
+    // Position the row and style it when dragging
     const animatedRowStyle = useAnimatedStyle(() => ({
         top: top.value,
         transform: [
             {
-                scale: withSpring(isDragging.value ? 0.8 : 1, {
-                    damping: 15,
-                    stiffness: 200,
-                    mass: 1,
-                    overshootClamping: true, // TODO: make opacity instead
-                })
+                translateY: withSpring(isDragging.value ? -6 : 0, LIST_SPRING_CONFIG)
             }
-        ]
+        ],
+        opacity: withSpring(isDragging.value ? 0.6 : 1, LIST_SPRING_CONFIG)
     }));
 
     // ------------- Gestures -------------
@@ -339,10 +338,10 @@ const DraggableRow = <T extends IListItem>({
 
     // ------------- Render Helper Functions -------------
 
-    const renderIcon = (config: ListItemIconConfig<T>, type: 'left' | 'right') => {
+    const renderIcon = (config: ListItemIconConfig<T>, type: IconPosition) => {
         if (config.hideIcon) return null;
 
-        const size = type === 'left' ? 'm' : 's';
+        const size = type === IconPosition.LEFT ? 'm' : 's';
 
         if (config.customIcon) {
             return (
@@ -371,17 +370,29 @@ const DraggableRow = <T extends IListItem>({
     };
 
     return (
-        <Row style={[animatedRowStyle, styles.row]}>
+        <Row
+            className="w-full absolute"
+            style={[
+                animatedRowStyle,
+                { height: LIST_ITEM_HEIGHT }
+            ]}
+        >
 
             {/* Separator Line */}
             <Pressable onPress={() => saveTextfieldAndCreateNew(item.sortId, true)}>
                 <ThinLine />
             </Pressable>
 
-            <View style={styles.content}>
+            <View
+                className="items-center justify-center flex-row"
+                style={{
+                    height: LIST_CONTENT_HEIGHT,
+                    marginLeft: LIST_ICON_SPACING
+                }}
+            >
 
                 {/* Left Icon */}
-                {leftIconConfig && renderIcon(leftIconConfig, 'left')}
+                {leftIconConfig && renderIcon(leftIconConfig, IconPosition.LEFT)}
 
                 {/* Content */}
                 <GestureDetector gesture={contentGesture}>
@@ -403,28 +414,11 @@ const DraggableRow = <T extends IListItem>({
                 </GestureDetector>
 
                 {/* Right Icon */}
-                {rightIconConfig && renderIcon(rightIconConfig, 'right')}
+                {rightIconConfig && renderIcon(rightIconConfig, IconPosition.RIGHT)}
 
             </View>
-
         </Row>
     )
 };
-
-const styles = StyleSheet.create({
-    row: {
-        position: 'absolute',
-        width: '100%',
-        height: LIST_ITEM_HEIGHT,
-    },
-    content: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: LIST_CONTENT_HEIGHT,
-        marginLeft: LIST_ICON_SPACING
-    },
-});
 
 export default DraggableRow;
