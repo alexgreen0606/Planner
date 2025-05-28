@@ -1,11 +1,11 @@
+import { spacing } from "@/constants/layout";
 import { BlurView } from "expo-blur";
 import React, { ReactNode } from 'react';
-import { PlatformColor, ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ButtonText from '../text/ButtonText';
 import CustomText from '../text/CustomText';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
@@ -60,134 +60,89 @@ const Modal = ({
         return { opacity };
     });
 
-
     return (
-        <View>
-            <View style={[
+        <View
+            className='flex-1'
+            style={[
                 customStyle,
-                styles.modal
-            ]}>
-                <GestureHandlerRootView>
-                    <ScrollContainer
-                        ref={scrollRef}
-                        onScroll={handler}
-                        contentContainerStyle={[
-                            styles.scrollContainer,
-                            { paddingBottom: BOTTOM_SPACER * 3 }
-                        ]}
-                    >
+                { backgroundColor: PlatformColor('systemGray6') }
+            ]}
+        >
+            <ScrollContainer
+                ref={scrollRef}
+                onScroll={handler}
+                contentContainerStyle={{
+                    paddingTop: TOP_BLUR_BAR_HEIGHT,
+                    paddingBottom: BOTTOM_SPACER,
+                    paddingHorizontal: spacing.large,
+                    flex: 1
+                }}
+            >
 
-                        {/* Title */}
-                        <View style={styles.title}>
-                            <CustomText type='header'>
-                                {title}
-                            </CustomText>
-                        </View>
+                {/* Title */}
+                <View className='items-center mb-5'>
+                    <CustomText type='header'>
+                        {title}
+                    </CustomText>
+                </View>
 
-                        {/* Content */}
-                        {children}
+                {/* Content */}
+                {children}
 
-                        <View className='flex-1' />
+                <View className='flex-1' />
 
-                        {/* Delete Button */}
-                        {!deleteButtonConfig?.hidden && (
-                            <View style={styles.deleteButton}>
-                                <ButtonText
-                                    onClick={deleteButtonConfig?.onClick!}
-                                    platformColor='systemRed'
-                                >
-                                    {deleteButtonConfig?.label}
-                                </ButtonText>
-                            </View>
-                        )}
-
-                    </ScrollContainer>
-
-                    {/* Top Blur Bar */}
-                    <TopBlurBar style={[
-                        topBlurBarStyle,
-                        styles.topBlurBarContainer
-                    ]}>
-                        <BlurView
-                            intensity={50}
-                            tint='systemUltraThinMaterial'
-                            style={styles.topBlurBar}
-                        />
-                    </TopBlurBar>
-
-                    {/* Cancel Button */}
-                    <View style={styles.cancelButton}>
+                {/* Delete Button */}
+                {!deleteButtonConfig?.hidden && (
+                    <View className="w-full items-center">
                         <ButtonText
-                            onClick={onClose}
-                            platformColor='secondaryLabel'
+                            onClick={deleteButtonConfig?.onClick!}
+                            platformColor='systemRed'
                         >
-                            Cancel
+                            {deleteButtonConfig?.label}
                         </ButtonText>
                     </View>
+                )}
 
-                    {/* Primary Button */}
-                    <View style={styles.primaryButton}>
-                        <ButtonText
-                            onClick={primaryButtonConfig.onClick}
-                            platformColor={
-                                primaryButtonConfig.disabled ? 'tertiaryLabel' :
-                                    primaryButtonConfig.platformColor
-                            }
-                        >
-                            {primaryButtonConfig.label}
-                        </ButtonText>
-                    </View>
+            </ScrollContainer>
 
-                </GestureHandlerRootView>
+            {/* Top Blur Bar */}
+            <TopBlurBar
+                className="absolute top-0 left-0 w-full"
+                style={[
+                    topBlurBarStyle,
+                    { height: TOP_BLUR_BAR_HEIGHT }
+                ]}>
+                <BlurView
+                    intensity={50}
+                    tint='systemUltraThinMaterial'
+                    className="overflow-hidden flex-1"
+                />
+            </TopBlurBar>
+
+            {/* Cancel Button */}
+            <View className="absolute left-4 top-5">
+                <ButtonText
+                    onClick={onClose}
+                    platformColor='secondaryLabel'
+                >
+                    Cancel
+                </ButtonText>
+            </View>
+
+            {/* Primary Button */}
+            <View className="absolute right-4 top-5">
+                <ButtonText
+                    onClick={primaryButtonConfig.onClick}
+                    platformColor={
+                        primaryButtonConfig.disabled ? 'tertiaryLabel' :
+                            primaryButtonConfig.platformColor
+                    }
+                >
+                    {primaryButtonConfig.label}
+                </ButtonText>
             </View>
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    modal: {
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        backgroundColor: PlatformColor('systemGray6'),
-        gap: 4
-    },
-    scrollContainer: {
-        flexGrow: 1,
-        paddingHorizontal: 16,
-        paddingTop: TOP_BLUR_BAR_HEIGHT
-    },
-    topBlurBarContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        height: TOP_BLUR_BAR_HEIGHT,
-        width: '100%'
-    },
-    topBlurBar: {
-        flex: 1,
-        borderTopRightRadius: 16,
-        borderTopLeftRadius: 16,
-        overflow: 'hidden',
-    },
-    title: {
-        alignItems: 'center',
-        paddingBottom: 32
-    },
-    primaryButton: {
-        position: 'absolute',
-        right: 16,
-        top: 16
-    },
-    cancelButton: {
-        position: 'absolute',
-        left: 16,
-        top: 16
-    },
-    deleteButton: {
-        alignItems: 'center',
-        width: '100%'
-    },
-});
 
 export default Modal;

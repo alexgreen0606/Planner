@@ -40,11 +40,9 @@ const useSortedList = <T extends IListItem, S>({
     reloadOnOverscroll = false,
     reloadTriggers
 }: SortedListConfig<T, S>) => {
-
     const pathname = usePathname();
-
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
-
+    const { registerReloadFunction } = useReloadScheduler();
     const {
         isItemDeleting,
         cancelItemDeletion,
@@ -52,14 +50,12 @@ const useSortedList = <T extends IListItem, S>({
         registerDeleteFunction
     } = useDeleteScheduler<T>();
 
-    const { registerReloadFunction } = useReloadScheduler();
-
-    const [isLoading, setIsLoading] = useState(true);
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
     const [items, setItems] = useState<T[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // ------------- GENERATION Logic -------------
+    // ------------- BUILD Logic -------------
 
     async function buildList() {
         try {
@@ -79,44 +75,39 @@ const useSortedList = <T extends IListItem, S>({
 
     // Custom Reload Triggering
     useEffect(() => {
-        if (reloadTriggers) {
-            buildList();
-        }
+        if (reloadTriggers) buildList();
     }, reloadTriggers);
 
     // Navigation Focus Reload Triggering
     useFocusEffect(useCallback(() => {
-        if (reloadOnNavigate) {
-            buildList();
-        }
+        if (reloadOnNavigate) buildList();
     }, [storageObject]));
 
     // Overscroll Reload Registering
     useEffect(() => {
-        if (reloadOnOverscroll) {
-            registerReloadFunction(`${storageKey}-${storageId}`, buildList, pathname);
-        }
+        if (reloadOnOverscroll) registerReloadFunction(`${storageKey}-${storageId}`, buildList, pathname);
     }, []);
 
     /**
-     * Saves the existing textfield to storage and generates a new one at the requested position.
-     * @param referenceSortId The sort ID of an item to place the new textfield near
-     * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
+     * ✅ Saves an item to the current list and creates a new textfield item.
+     * 
+     * @param item - An item (new or existing) to save to the list.
+     * @param referenceSortId - The sort ID of an item to place the new textfield near
+     * @param isChildId - Signifies if the reference ID should be below the new textfield, else above.
      */
     async function saveTextfieldAndCreateNew(item?: T, referenceSortId?: number, isChildId: boolean = false) {
 
-        const updatedList = sanitizeList(items, item);
+        // Phase 1: Save the item if it exists
+        if (item) await persistItemToStorage(item);
 
-        if (item) {
-            // Save the current textfield before creating a new one
-            await persistItemToStorage(item);
-
-            if (!referenceSortId) {
-                setCurrentTextfield(undefined);
-                return;
-            }
+        // Phase 2: Clear the textfield and exit if no reference ID was given
+        if (!referenceSortId) {
+            setCurrentTextfield(undefined);
+            return;
         }
 
+        // Phase 3: Create a new list item
+        const updatedList = sanitizeList(items, item);
         const genericListItem: IListItem = {
             id: uuid.v4(),
             sortId: generateSortId(referenceSortId!, updatedList, isChildId),
@@ -124,9 +115,12 @@ const useSortedList = <T extends IListItem, S>({
             listId: storageKey,
             value: ''
         };
-
         const newItem: T = initializeListItem?.(genericListItem) ?? genericListItem as T;
-        setCurrentTextfield(newItem, item);
+
+        setCurrentTextfield(
+            newItem, // Set the new item as the focused textfield
+            item // Set the old item as the previous textfield (keeps the keyboard open until the new textfield is focused)
+        );
     }
 
     // ------------- EDIT Logic -------------
@@ -180,7 +174,7 @@ const useSortedList = <T extends IListItem, S>({
 
     };
 
-    // ------------- DELETION Logic -------------
+    // ------------- DELETE Logic -------------
 
     useEffect(() => {
         registerDeleteFunction(storageKey, deleteItemsFromStorage);
