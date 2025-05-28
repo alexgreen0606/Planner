@@ -1,31 +1,27 @@
-import { usePathname } from 'expo-router';
+import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
+import { LIST_ITEM_HEIGHT } from '@/constants/layout';
+import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
+import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { TPlanner } from '@/types/planner/TPlanner';
+import { generateCheckboxIconConfig } from '@/utils/listUtils';
+import { WeatherForecast } from '@/utils/weatherUtils';
+import { usePathname, useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import React, { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
 import EventChip, { EventChipProps } from '../../components/EventChip';
 import { generatePlanner } from '../../utils/calendarUtils';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
-import SortableList from '../sortedList';
-import DayBanner from './DayBanner';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
-import { useTimeModal } from '@/services/TimeModalProvider';
-import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
-import { TPlanner } from '@/types/planner/TPlanner';
-import { LIST_ITEM_HEIGHT } from '@/constants/layout';
-import { getTodayDatestamp, isoToDatestamp } from '@/utils/dateUtils';
-import useSortedList from '@/hooks/useSortedList';
-import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { WeatherForecast } from '@/utils/weatherUtils';
-import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
-import { useAtom } from 'jotai';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
-import { GenericIconProps } from '../GenericIcon';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
 import BadgeIcon from '../BadgeIcon';
-import { useReloadScheduler } from '@/hooks/useReloadScheduler';
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
-import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
+import { GenericIconProps } from '../GenericIcon';
+import SortableList from '../sortedList';
+import { ToolbarProps } from '../sortedList/ListItemToolbar';
+import DayBanner from './DayBanner';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -78,13 +74,11 @@ const PlannerCard = ({
 
     const { currentTextfield, setCurrentTextfield } = useTextfieldData<IPlannerEvent>();
 
-    const { onOpen } = useTimeModal();
-
     const pathname = usePathname();
 
-    const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
+    const isTimeModalOpen = pathname.includes('timeModal');
 
-    const { reloadPage } = useReloadScheduler();
+    const router = useRouter();
 
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
 
@@ -113,29 +107,17 @@ const PlannerCard = ({
 
     // ------------- List Management Utils -------------
 
-    async function handleOpenTimeModal(item: IPlannerEvent) {
-        await openTimeModal(
-            item,
-            SortedEvents.toggleItemEdit,
-            onOpen,
-            SortedEvents.items,
-            SortedEvents.saveTextfieldAndCreateNew
-        );
+    function handleOpenTimeModal(item: IPlannerEvent) {
+        openTimeModal(datestamp, item, router);
     }
 
-    async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {
-        return await saveEventReloadData(planEvent, SortedEvents.items);
+    async function handleSaveEvent(event: IPlannerEvent) {
+        const savedEvent = await saveEventReloadData(event);
+        return savedEvent?.calendarId;
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
         await deleteEventsReloadData(planEvents);
-
-        if (planEvents.some(event =>
-            event.timeConfig && (isoToDatestamp(event.timeConfig.startTime) === getTodayDatestamp())
-        )) {
-            // Reload today's planner to remove the deleted chip
-            reloadPage('/');
-        }
     }
 
     const getItemsFromStorageObject = (planner: TPlanner) => {
@@ -149,7 +131,7 @@ const PlannerCard = ({
         initializedStorageObject: generatePlanner(datestamp),
         storageConfig: {
             create: handleSaveEvent,
-            update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
+            update: (updatedEvent) => { saveEventReloadData(updatedEvent) },
             delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
@@ -204,9 +186,10 @@ const PlannerCard = ({
                 listId={datestamp}
                 items={SortedEvents.items}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-                onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
+                onDragEnd={SortedEvents.persistItemToStorage}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
+                hideKeyboard={isTimeModalOpen}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}

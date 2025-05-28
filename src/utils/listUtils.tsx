@@ -127,14 +127,16 @@ export function buildItemPositions<T extends IListItem>(currentList: T[]): Recor
  * 
  * @param list The list of items to clean up
  * @param syncItem An item to update within the list. Item will be updated by ID. If no item exists, it will be appended.
+ * @param replaceId The ID of the item to replace in the list. If not provided, syncItem's ID will be used.
  * @returns A clean list sorted by sort ID
  */
-export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T) {
+export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T, replaceId?: string) {
     const updatedList = [...list];
 
     if (syncItem) {
+        const existingItemId = replaceId ?? syncItem.id;
         const itemCurrentIndex = updatedList.findIndex(
-            (listItem) => listItem.id === syncItem.id
+            (listItem) => listItem.id === existingItemId
         );
         if (itemCurrentIndex !== -1) {
             updatedList[itemCurrentIndex] = syncItem;

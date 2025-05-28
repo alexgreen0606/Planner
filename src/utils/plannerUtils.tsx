@@ -1,7 +1,7 @@
 import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import TimeValue from '@/components/text/TimeValue';
 import { EItemStatus } from '@/enums/EItemStatus';
-import { deleteEvents, getCarryoverEventsAndCleanStorage, saveEvent, savePlannerToStorage } from '@/storage/plannerStorage';
+import { deleteEvents, getCarryoverEventsAndCleanStorage, getPlannerFromStorage, saveEvent, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringEventStorage';
 import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
@@ -11,6 +11,9 @@ import { uuid } from 'expo-modules-core';
 import { datestampToDayOfWeek, extractTimeValue, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { loadCalendarData } from './calendarUtils';
+import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
+import { NULL } from '@/constants/generic';
+import { Router } from 'expo-router';
 
 // ------------- Storage Getters and Setters -------------
 
@@ -29,65 +32,58 @@ export function setEventsInPlanner(
 
 // ------------- Modal Utilities -------------
 
-/**
- * Toggles the time modal for a planner event
- * @param planEvent - The planner event to toggle
- * @param toggleItemEdit - Function to toggle item edit
- * @param setTimeModalOpen - Function to set the time modal open state
- */
-export async function openTimeModal(
-    planEvent: IPlannerEvent,
-    toggleItemEdit: (event: IPlannerEvent) => Promise<void>,
-    openTimeModal: (item: IPlannerEvent, saveItem: (item: IPlannerEvent) => Promise<void>) => void,
-    currentList: IPlannerEvent[],
-    saveTextfieldAndCreateNew: (item: IPlannerEvent, referenceId?: number, isChildId?: boolean) => void
+export function openTimeModal(
+    datestamp: string,
+    item: IPlannerEvent,
+    router: Router
 ) {
-    if (!isItemTextfield(planEvent)) {
-        await toggleItemEdit(planEvent);
-    }
-    openTimeModal(planEvent, (newEvent) => handleTimeModalSave(newEvent, currentList, saveTextfieldAndCreateNew));
+    router.push(`${TIME_MODAL_PATHNAME
+        }${datestamp
+        }/${item.status === EItemStatus.NEW ? NULL : item.id
+        }/${item.sortId
+        }/${item.value.length > 0 ? item.value : NULL
+        }`
+    );
 }
 
-/**
- * Updates the current textfield with the new data entered in the time modal.
- * The item may be shifted in the list to maintain sorted time logic.
- * @param updatedEvent - New item to save
- * @param currentList - The current list of items
- * @param setCurrentTextfield - Function to save the current textfield
- */
-async function handleTimeModalSave(
-    updatedEvent: IPlannerEvent,
-    currentList: IPlannerEvent[],
-    saveTextfieldAndCreateNew: (item: IPlannerEvent, referenceId?: number, isChildId?: boolean) => void
-) {
-    updatedEvent.sortId = generateSortIdByTime(updatedEvent, currentList);
-    saveTextfieldAndCreateNew(updatedEvent, updatedEvent.sortId);
-}
-
-// ------------- List Modification Handlers -------------
+// ------------- List Modification Helpers -------------
 
 /**
- * ✅ Handles saving a planner event. If the item was or is a calendar event, 
- * the calendar data will be refreshed.
+ * ✅ Updates a planner with a new item and enforces time logic within the list.
  * 
- * @param updatedPlanEvent - The planner event to save
- * @param items - The current list items
- * @returns The new ID of the event after saving.
+ * @param planner The planner to update
+ * @param event An item to update within the list. Item will be updated by ID. If no item exists, it will be appended.
+ * @param replaceId The ID of the item to replace in the list. If not provided, event's ID will be used.
+ * @returns A clean planner with logical time ordering
+ */
+export function sanitizePlanner(planner: IPlannerEvent[], event: IPlannerEvent, replaceId: string) {
+    const updatedList = sanitizeList(planner, event, replaceId);
+    event.sortId = generateSortIdByTime(event, updatedList);
+    return updatedList.sort((a, b) => a.sortId - b.sortId);
+}
+
+/**
+ * ✅ Handles all overhead saving a planner event.
+ * If the update affects the calendar, the global calendar data will be reloaded.
+ * 
+ * @param updatedPlanEvent - The event to save
+ * @returns - The updated event in storage if it still exists, else undefined.
  */
 export async function saveEventReloadData(
-    updatedPlanEvent: IPlannerEvent,
-    items: IPlannerEvent[]
-) {
-    const eventCalendarId = await saveEvent(updatedPlanEvent);
+    updatedPlanEvent: IPlannerEvent
+): Promise<IPlannerEvent | undefined> {
+    const oldPlanner = getPlannerFromStorage(updatedPlanEvent.listId);
+    const savedEvent = await saveEvent(updatedPlanEvent);
 
     if (
-        updatedPlanEvent.calendarId ||
-        items.find(i => i.id === updatedPlanEvent.id)?.calendarId
+        !savedEvent || // The event will now be a chip
+        savedEvent?.calendarId || // The event is a calendar event
+        oldPlanner.events.find(i => i.id === updatedPlanEvent.id)?.calendarId // The event was a calendar event
     ) {
         await loadCalendarData();
     }
 
-    return eventCalendarId;
+    return savedEvent;
 }
 
 /**
@@ -100,6 +96,79 @@ export async function deleteEventsReloadData(planEvents: IPlannerEvent[]) {
     await deleteEvents(planEvents);
     if (planEvents.some(item => item.calendarId)) await loadCalendarData();
 }
+
+/**
+ * ✅ Generate a new sort ID for the event that maintains time logic within the planner.
+ * 
+ * @param event - the event to place
+ * @param planner - the planner
+ * @returns - the new sort ID for the event
+ */
+export function generateSortIdByTime(
+    event: IPlannerEvent | IRecurringEvent,
+    events: (IPlannerEvent | IRecurringEvent)[]
+): number {
+    // console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
+    const planner = sanitizeList(events, event);
+    const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
+    const eventTime = getEventTime(event);
+
+    // Handler for situations where the item can remain in its position.
+    function persistEventPosition() {
+        if (event.sortId === -1) {
+            // Event will be at the top of the list
+            return generateSortId(-1, plannerWithoutEvent);
+        } else if (plannerWithoutEvent.find(item => item.sortId === event.sortId)) {
+            // Event has a conflicting sort ID. Place this item above the conflict.
+            return generateSortId(event.sortId, plannerWithoutEvent, true);
+        } else {
+            // Keep the event's current position.
+            return event.sortId;
+        }
+    };
+
+    // Pre-Check 1: The event is unscheduled. Keep it at its current position.
+    if (!eventTime || event.status === EItemStatus.HIDDEN) return persistEventPosition();
+
+    // Pre-Check 2: Check if the event conflicts at its current position.
+    const timedPlanner = [...planner].filter(existingEvent => getEventTime(existingEvent));
+    const currentIndex = timedPlanner.findIndex(e => e.id === event.id);
+
+    const earlierEvent = timedPlanner[currentIndex - 1];
+    const laterEvent = timedPlanner[currentIndex + 1];
+    const earlierTime = getEventTime(earlierEvent);
+    const laterTime = getEventTime(laterEvent);
+    if (
+        isTimeEarlierOrEqual(earlierTime!, eventTime) &&
+        isTimeEarlierOrEqual(eventTime, laterTime!)
+    ) return persistEventPosition();
+
+    // Scenario 1: Place the event before the first event that starts after or during it.
+    const laterEventIndex = planner.findIndex(existingEvent => {
+        const existingTime = getEventTime(existingEvent);
+        if (!existingTime || existingEvent.id === event.id) return false;
+
+        return isTimeEarlierOrEqual(eventTime, existingTime);
+    });
+    if (laterEventIndex !== -1) {
+        const newChildSortId = planner[laterEventIndex].sortId;
+        return generateSortId(newChildSortId, plannerWithoutEvent, true);
+    }
+
+    // Scenario 2: Place the event after the last event that starts before or during it.
+    const earlierEventIndex = planner.findLastIndex(existingEvent => {
+        const existingTime = getEventTime(existingEvent);
+        if (!existingTime || existingEvent.id === event.id) return false;
+
+        return isTimeEarlierOrEqual(existingTime, eventTime);
+    });
+    if (earlierEventIndex !== -1) {
+        const newParentSortId = planner[earlierEventIndex].sortId;
+        return generateSortId(newParentSortId, plannerWithoutEvent);
+    }
+
+    throw new Error('generateSortIdByTime: An error occurred during timed sort ID generation.');
+};
 
 // ------------- Planner Generation -------------
 
@@ -215,10 +284,6 @@ export function syncPlannerWithCalendar(
     // console.info('syncPlannerWithCalendar: END', newPlanner);
     return newPlanner;
 }
-
-// TODO: wherever editing events is, change it so that changing a recurring event will just
-// HIDE that event and create a new clone of it with the updated data -> then no need to 
-// precedence the planner event time configs
 
 /**
  * ✅ Syncs a planner with a recurring planner. 
@@ -348,36 +413,6 @@ export function handleEventInput(
 }
 
 /**
- * @onDragEnd Prop: enforces accurate list sorting for any timed events.
- * If the dragged item has a time specified, its new position will check it doesn't break time logic.
- * If time logic is broken, the drag will be canceled.
- */
-export async function handleDragEnd(
-    item: IPlannerEvent | IRecurringEvent,
-    currentList: (IPlannerEvent | IRecurringEvent)[],
-    refetchItems: () => void,
-    saveItem: (item: IPlannerEvent | IRecurringEvent) => Promise<void | string>
-) {
-    const itemTime = getEventTime(item);
-    if (itemTime) {
-        const currentItemIndex = currentList.findIndex(listItem => listItem.id === item.id);
-        if (currentItemIndex === -1) {
-
-            const initialSortId = currentList[currentItemIndex].sortId;
-            const newSortId = generateSortIdByTime(item, currentList);
-            if (newSortId === initialSortId) {
-                // The item has a time conflict or has not moved. Undo Drag.
-                refetchItems();
-                return;
-            }
-
-            item.sortId = newSortId;
-        }
-    }
-    await saveItem(item);
-}
-
-/**
  * @getLeftIcon Prop: generates the config for the event time modal trigger icon.
  */
 export function generateTimeIconConfig(
@@ -422,78 +457,3 @@ export function generateEventToolbar(
         }
     }
 }
-
-// ------------- Sort ID Handling -------------
-
-/**
- * ✅ Generate a new sort ID for the event that maintains time logic within the planner.
- * @param event - the event to place
- * @param planner - the planner
- * @returns - the new sort ID for the event
- */
-export function generateSortIdByTime(
-    event: IPlannerEvent | IRecurringEvent,
-    events: (IPlannerEvent | IRecurringEvent)[]
-): number {
-    // console.info('generateSortIdByTime START', { event: {...event}, planner: [...planner] });
-    const planner = sanitizeList(events, event);
-    const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
-    const eventTime = getEventTime(event);
-
-    // Handler for situations where the item can remain in its position.
-    function persistEventPosition() {
-        if (event.sortId === -1) {
-            // Event will be at the top of the list
-            return generateSortId(-1, plannerWithoutEvent);
-        } else if (plannerWithoutEvent.find(item => item.sortId === event.sortId)) {
-            // Event has a conflicting sort ID. Place this item above the conflict.
-            return generateSortId(event.sortId, plannerWithoutEvent, true);
-        } else {
-            // Keep the event's current position.
-            return event.sortId;
-        }
-    };
-
-    // Pre-Check 1: The event is unscheduled. Keep it at its current position.
-    if (!eventTime || event.status === EItemStatus.HIDDEN) return persistEventPosition();
-
-    // Pre-Check 2: Check if the event conflicts at its current position.
-    const timedPlanner = [...planner].filter(existingEvent => getEventTime(existingEvent));
-    console.log(timedPlanner, 'timed planner')
-    const currentIndex = timedPlanner.findIndex(e => e.id === event.id);
-
-    const earlierEvent = timedPlanner[currentIndex - 1];
-    const laterEvent = timedPlanner[currentIndex + 1];
-    const earlierTime = getEventTime(earlierEvent);
-    const laterTime = getEventTime(laterEvent);
-    if (
-        isTimeEarlierOrEqual(earlierTime!, eventTime) &&
-        isTimeEarlierOrEqual(eventTime, laterTime!)
-    ) return persistEventPosition();
-
-    // Scenario 1: Place the event before the first event that starts after or during it.
-    const laterEventIndex = planner.findIndex(existingEvent => {
-        const existingTime = getEventTime(existingEvent);
-        if (!existingTime || existingEvent.id === event.id) return false;
-
-        return isTimeEarlierOrEqual(eventTime, existingTime);
-    });
-    if (laterEventIndex !== -1) {
-        const newChildSortId = planner[laterEventIndex].sortId;
-        return generateSortId(newChildSortId, plannerWithoutEvent, true);
-    }
-
-    // Scenario 2: Place the event after the last event that starts before or during it.
-    const earlierEventIndex = planner.findLastIndex(existingEvent => {
-        const existingTime = getEventTime(existingEvent);
-        if (!existingTime || existingEvent.id === event.id) return false;
-
-        return isTimeEarlierOrEqual(existingTime, eventTime);
-    });
-    if (earlierEventIndex !== -1) {
-        const newParentSortId = planner[earlierEventIndex].sortId;
-        return generateSortId(newParentSortId, plannerWithoutEvent);
-    }
-
-    throw new Error('generateSortIdByTime: An error occurred during timed sort ID generation.');
-};

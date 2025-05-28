@@ -4,7 +4,7 @@ import TimeValue from '@/components/text/TimeValue';
 import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
 import { DateTime } from 'luxon';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -60,6 +60,11 @@ const MODE_ANIMATIONS = {
     }
 } as const;
 
+type StoredTimeInfo = {
+    hour: number;
+    minute: number;
+}
+
 export interface TimeRangeSelectorProps {
     startIso: string | null;
     endIso: string | null;
@@ -86,6 +91,11 @@ const TimeRangeSelector = ({
     const startTimeScale = useSharedValue(1);
     const endTimeScale = useSharedValue(1);
     const datesScale = useSharedValue(1);
+
+    // Store the last known times
+    const storedStartTime = useRef<StoredTimeInfo | null>(null);
+    const storedEndTime = useRef<StoredTimeInfo | null>(null);
+
 
     const isoInEdit = mode === SelectorMode.START_TIME ?
         startIso : endIso;
@@ -137,25 +147,44 @@ const TimeRangeSelector = ({
         endDatestamp: string | null
     ) {
         if (!startDatestamp || !endDatestamp) {
+
+            // Store the current times before clearing
+            if (startIso) {
+                const startDateTime = DateTime.fromISO(startIso);
+                storedStartTime.current = {
+                    hour: startDateTime.hour,
+                    minute: startDateTime.minute
+                };
+            }
+            if (endIso) {
+                const endDateTime = DateTime.fromISO(endIso);
+                storedEndTime.current = {
+                    hour: endDateTime.hour,
+                    minute: endDateTime.minute
+                };
+            }
+
             onChange(null, null);
             return;
         }
 
-        const currentStartDateTime = startIso ?
-            DateTime.fromISO(startIso) : DateTime.now();
-        const currentEndDateTime = endIso ?
-            DateTime.fromISO(endIso) : DateTime.now();
+        // Use stored times if available, otherwise use current times or defaults
+        const startTimeToUse = storedStartTime.current || 
+            (startIso ? DateTime.fromISO(startIso) : DateTime.now());
+        const endTimeToUse = storedEndTime.current || 
+            (endIso ? DateTime.fromISO(endIso) : DateTime.now());
+
         const newStartDateTime = DateTime.fromISO(startDatestamp).set({
-            hour: currentStartDateTime.hour,
-            minute: currentStartDateTime.minute,
-            second: currentStartDateTime.second,
-            millisecond: currentStartDateTime.millisecond
+            hour: storedStartTime.current?.hour ?? startTimeToUse.hour ?? 0,
+            minute: storedStartTime.current?.minute ?? startTimeToUse.minute ?? 0,
+            second: 0,
+            millisecond: 0
         });
         const newEndDateTime = DateTime.fromISO(endDatestamp).set({
-            hour: currentEndDateTime.hour,
-            minute: currentEndDateTime.minute,
-            second: currentEndDateTime.second,
-            millisecond: currentEndDateTime.millisecond
+            hour: storedEndTime.current?.hour ?? endTimeToUse.hour ?? 0,
+            minute: storedEndTime.current?.minute ?? endTimeToUse.minute ?? 0,
+            second: 0,
+            millisecond: 0
         });
 
         onChange(newStartDateTime.toISO(), newEndDateTime.toISO());

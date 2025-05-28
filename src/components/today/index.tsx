@@ -3,21 +3,17 @@ import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import useSortedList from '@/hooks/useSortedList';
-import { useTimeModal } from '@/services/TimeModalProvider';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { generatePlanner, loadCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleDragEnd, handleEventInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
-import { EItemStatus } from '@/enums/EItemStatus';
-import { NULL } from '@/constants/generic';
 
 const TodayPlanner = () => {
     const datestamp = getTodayDatestamp();
@@ -28,32 +24,23 @@ const TodayPlanner = () => {
 
     const { registerReloadFunction } = useReloadScheduler();
 
-    const { onOpen } = useTimeModal();
-
     const pathname = usePathname();
 
     const router = useRouter();
 
-    const isTimeModalOpen = pathname === TIME_MODAL_PATHNAME;
+    const isTimeModalOpen = pathname.includes('timeModal');
 
     useEffect(() => {
         registerReloadFunction(`today_calendar_data`, loadCalendarData, pathname);
     }, []);
 
-    async function handleOpenTimeModal(item: IPlannerEvent) {
-        console.log(`${TIME_MODAL_PATHNAME}${datestamp}/${item.id}/${item.sortId}/${item.value}`)
-        router.push(`${TIME_MODAL_PATHNAME}${datestamp}/${item.status === EItemStatus.NEW ? NULL : item.id}/${item.sortId}/${item.value.length > 0 ? item.value : NULL}`);
-        // await openTimeModal(
-        //     item,
-        //     SortedEvents.toggleItemEdit,
-        //     onOpen,
-        //     SortedEvents.items,
-        //     SortedEvents.saveTextfieldAndCreateNew
-        // );
+    function handleOpenTimeModal(item: IPlannerEvent) {
+        openTimeModal(datestamp, item, router);
     }
 
-    async function handleSaveEvent(planEvent: IPlannerEvent): Promise<string | undefined> {
-        return await saveEventReloadData(planEvent, SortedEvents.items);
+    async function handleSaveEvent(event: IPlannerEvent) {
+        const savedEvent = await saveEventReloadData(event);
+        return savedEvent?.calendarId;
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
@@ -70,7 +57,7 @@ const TodayPlanner = () => {
         getItemsFromStorageObject,
         storageConfig: {
             create: handleSaveEvent,
-            update: (updatedEvent) => { handleSaveEvent(updatedEvent) },
+            update: (updatedEvent) => { saveEventReloadData(updatedEvent) },
             delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
@@ -83,8 +70,9 @@ const TodayPlanner = () => {
             listId={datestamp}
             items={SortedEvents.items}
             fillSpace
+            hideKeyboard={isTimeModalOpen}
             saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-            onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)}
+            onDragEnd={SortedEvents.persistItemToStorage}
             onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
             onContentClick={SortedEvents.toggleItemEdit}
             getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}

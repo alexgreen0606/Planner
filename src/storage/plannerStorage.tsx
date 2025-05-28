@@ -5,6 +5,7 @@ import { TPlanner } from "@/types/planner/TPlanner";
 import { generatePlanner, getCalendarAccess } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimestampValid } from "@/utils/dateUtils";
 import { isItemTextfield, sanitizeList } from "@/utils/listUtils";
+import { sanitizePlanner } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import RNCalendarEvents from "react-native-calendar-events";
 import { MMKV } from 'react-native-mmkv';
@@ -35,18 +36,22 @@ export function savePlannerToStorage(datestamp: string, newPlanner: TPlanner) {
 
 /**
  * ✅ Creates or updates a planner event.
- * Calendar events will be synced. Modified recurring events will be hidden and cloned.
+ * Calendar events will be synced. 
+ * Modified recurring events will be hidden and cloned.
  * Unscheduled events will be removed from the calendar.
+ * Time logic will be enforced to ensure the event is placed correctly in the planner.
  * 
  * @param event - the event to update
- * @returns - the calendar ID of the event if one exists
+ * @returns - The updated event in storage. If the item was removed from the planner, it will return undefined.
  */
-export async function saveEvent(event: IPlannerEvent) {
+export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | undefined> {
     const newPlanner = getPlannerFromStorage(event.listId);
     const newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
+    const oldEvent = newPlanner.events.find(existingEvent => existingEvent.id === event.id);
 
     const newCalendarId = newEvent.calendarId;
-    const oldCalendarId = newPlanner.events.find(existingEvent => existingEvent.id === event.id)?.calendarId;
+    const oldCalendarId = oldEvent?.calendarId;
+    const oldId = oldEvent?.id ?? newEvent.id;
 
     // Phase 1: Clone recurring events to allow customization. 
     // The original event will be hidden and replaced with the clone.
@@ -91,10 +96,10 @@ export async function saveEvent(event: IPlannerEvent) {
         await RNCalendarEvents.removeEvent(oldCalendarId);
     }
 
-    newPlanner.events = sanitizeList(newPlanner.events, newEvent);
+    newPlanner.events = sanitizePlanner(newPlanner.events, newEvent, oldId);
     savePlannerToStorage(newEvent.listId, newPlanner);
-    return newEvent.calendarId;
-};
+    return newEvent;
+}
 
 /**
  * 

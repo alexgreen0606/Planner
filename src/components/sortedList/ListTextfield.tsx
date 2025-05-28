@@ -1,6 +1,7 @@
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/layout';
 import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { IListItem } from '@/types/listItems/core/TListItem';
+import { usePathname } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
 

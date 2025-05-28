@@ -5,9 +5,10 @@ import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { saveEvent } from '@/storage/plannerStorage';
-import { useTimeModal } from '../services/TimeModalProvider';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
+import { openTimeModal } from '@/utils/plannerUtils';
+import { useRouter } from 'expo-router';
 
 export interface EventChipProps {
     planEvent?: IPlannerEvent;
@@ -27,19 +28,12 @@ const EventChip = ({
     onClick
 }: EventChipProps) => {
 
-    const { onOpen } = useTimeModal();
-
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
 
-    const { reloadPage } = useReloadScheduler();
+    const router = useRouter();
 
     function handleOpen() {
-        if (planEvent) onOpen(planEvent, handleSave);
-    }
-
-    async function handleSave(updatedEvent: IPlannerEvent) {
-        await saveEvent(updatedEvent);
-        reloadPage();
+        if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
     }
 
     const isPendingDelete = planEvent &&

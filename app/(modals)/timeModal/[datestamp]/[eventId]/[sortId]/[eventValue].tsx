@@ -10,7 +10,7 @@ import { IListItem } from "@/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
 import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 import { generateSortId, sanitizeList } from "@/utils/listUtils";
-import { saveEventReloadData } from "@/utils/plannerUtils";
+import { generateSortIdByTime, saveEventReloadData } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { DateTime } from 'luxon';
@@ -127,7 +127,7 @@ const TimeModal = () => {
 
     // ------------- Utility Functions -------------
 
-    function handleSave(data: FormData) {
+    async function handleSave(data: FormData) {
         if (!planEvent) return;
 
         const { title, timeRange, isCalendarEvent, allDay } = data;
@@ -142,7 +142,7 @@ const TimeModal = () => {
                 endTime: timeRange.endTime
             },
             value: title
-        };
+        } as IPlannerEvent;
 
         if (isCalendarEvent && !planEvent.calendarId) {
             // Triggers creation of a new calendar event
@@ -153,18 +153,20 @@ const TimeModal = () => {
             // All-day events end at the start of the next day
             const endDate = DateTime.fromISO(timeRange.endTime);
             const startOfNextDay = endDate.plus({ days: 1 }).startOf('day').toISO();
-            updatedItem.timeConfig.endTime = startOfNextDay!;
+            updatedItem.timeConfig!.endTime = startOfNextDay!;
         }
 
-        const planner = getPlannerFromStorage(datestamp);
-        saveEventReloadData(updatedItem as IPlannerEvent, planner.events);
+        const savedEvent = await saveEventReloadData(updatedItem);
+        const savedPlanner = getPlannerFromStorage(datestamp);
 
-        // TODO: causing duplicate item somehow ^
+        // Place the new textfield directly below the new item. If the item was removed from the planner, 
+        // place the new textfield directly where the item was.
+        const newTextfieldSortId = savedEvent ? generateSortId(savedEvent.sortId, savedPlanner.events)
+            : updatedItem.sortId;
 
-        const updatedList = sanitizeList(planner.events, updatedItem as IPlannerEvent);
         const newTextfield: IListItem = {
             id: uuid.v4(),
-            sortId: generateSortId(updatedItem.sortId!, updatedList),
+            sortId: newTextfieldSortId,
             status: EItemStatus.NEW,
             listId: datestamp,
             value: ''

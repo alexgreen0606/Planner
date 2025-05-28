@@ -1,17 +1,17 @@
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { generateSortIdByTime, generateTimeIconConfig, handleDragEnd, handleEventInput } from '@/utils/plannerUtils';
+import { generateSortIdByTime, generateTimeIconConfig, handleEventInput } from '@/utils/plannerUtils';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 
 interface SortedRecurringPlannerProps {
@@ -74,7 +74,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                     isChildId
                 )}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
-                onDragEnd={(item) => handleDragEnd(item, SortedEvents.items, SortedEvents.refetchItems, SortedEvents.persistItemToStorage)} // TODO: is this needed? Is the list refetched each time?
+                onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
