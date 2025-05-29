@@ -29,7 +29,7 @@ export interface DraggableListProps<
     listId: string;
     items: T[];
     onDeleteItem: (item: T) => Promise<void> | void;
-    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
+    onDragEnd: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
@@ -44,7 +44,6 @@ export interface DraggableListProps<
     hideKeyboard?: boolean;
     isLoading?: boolean;
     fillSpace?: boolean;
-    disableDrag?: boolean;
     staticList?: boolean;
 }
 
@@ -74,6 +73,9 @@ const SortableList = <
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
+    const isListDragging = useSharedValue<boolean>(false);
+    const isAutoScrolling = useSharedValue(false);
+
     // Builds the list out of the existing items and the textfield.
     const currentList = useMemo(() => {
         const fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
@@ -94,7 +96,11 @@ const SortableList = <
                 pendingItem.current = null;
             }
         }
-        console.log([...fullList.sort((a, b) => a.sortId - b.sortId)], 'LIST')
+
+        if (isListDragging.value) {
+            isListDragging.value = false;
+        }
+
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [currentTextfield?.id, currentTextfield?.sortId, items]);
 
@@ -105,7 +111,6 @@ const SortableList = <
     const dragScrollOffsetDelta = useSharedValue(0);
     const dragTop = useSharedValue<number>(0);
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
-    const isAutoScrolling = useSharedValue(false);
 
     const dragTopMax = useMemo(() =>
         Math.max(0, LIST_ITEM_HEIGHT * (currentList.length - 1)),
@@ -136,19 +141,19 @@ const SortableList = <
         saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }
 
-    function handleDragStart() {
+    function handleDragStart(initialTop: number, initialIndex: number) {
         "worklet";
         dragInitialScrollOffset.value = scrollOffset.value;
         dragScrollOffsetDelta.value = 0;
+        dragInitialIndex.value = initialIndex;
+        dragInitialTop.value = initialTop;
+        dragTop.value = initialTop;
+        isListDragging.value = true;
     }
 
     function handleDragEnd() {
         "worklet";
         cancelAnimation(scrollOffset);
-        dragInitialScrollOffset.value = 0;
-        dragScrollOffsetDelta.value = 0;
-        dragInitialTop.value = 0;
-        dragInitialIndex.value = 0;
         isAutoScrolling.value = false;
     }
 
@@ -194,6 +199,7 @@ const SortableList = <
                         upperAutoScrollBound={upperAutoScrollBound}
                         lowerAutoScrollBound={lowerAutoScrollBound}
                         hideKeyboard={Boolean(hideKeyboard)}
+                        isListDragging={isListDragging}
                         dragControls={{
                             top: dragTop,
                             index: dragIndex,

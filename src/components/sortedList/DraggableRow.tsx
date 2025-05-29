@@ -17,6 +17,7 @@ import Animated, {
     DerivedValue,
     runOnJS,
     SharedValue,
+    useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
     withSpring
@@ -42,8 +43,9 @@ export interface RowProps<T extends IListItem> {
     hideKeyboard: boolean;
     upperAutoScrollBound: number;
     lowerAutoScrollBound: number;
+    isListDragging: SharedValue<boolean>;
     dragControls: {
-        handleDragStart: () => void;
+        handleDragStart: (initialTop: number, initialIndex: number) => void;
         initialIndex: SharedValue<number>;
         initialTop: SharedValue<number>;
         isAutoScrolling: SharedValue<boolean>;
@@ -54,7 +56,7 @@ export interface RowProps<T extends IListItem> {
     },
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDeleteItem: (item: T) => Promise<void> | void;
-    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
+    onDragEnd: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
@@ -79,6 +81,7 @@ const DraggableRow = <T extends IListItem>({
     getRowTextPlatformColor,
     onContentClick,
     itemIndex,
+    isListDragging,
     upperAutoScrollBound,
     lowerAutoScrollBound,
     onDeleteItem,
@@ -93,7 +96,6 @@ const DraggableRow = <T extends IListItem>({
         scrollOffset,
         autoScroll
     } = useScrollContainer();
-
     const {
         handleDragStart,
         handleDragEnd,
@@ -112,12 +114,12 @@ const DraggableRow = <T extends IListItem>({
         [currentTextfield, staticItem]
     );
 
-    const baseTop = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
+    const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
     useEffect(() => {
-        baseTop.value = itemIndex * LIST_ITEM_HEIGHT;
+        basePosition.value = itemIndex * LIST_ITEM_HEIGHT;
     }, [itemIndex]);
 
-    const isDragging = useSharedValue(false);
+    const isRowDragging = useSharedValue(false);
 
     // ------------- Row Configuration Variables -------------
     const customTextPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
@@ -143,18 +145,16 @@ const DraggableRow = <T extends IListItem>({
         }
     }
 
-    const drag = (
+    function handleDrag(
         currentDragDisplacement: number,
         currentTopAbsoluteYPosition: number
-    ) => {
+    ) {
         'worklet';
 
         const beginAutoScroll = (direction: AutoScrollDirection) => {
             'worklet';
-
             const targetBound = direction === AutoScrollDirection.UP ? 0 : topMax;
             const distanceToBound = targetBound - top.value;
-
             isAutoScrolling.value = true;
             autoScroll(distanceToBound);
         };
@@ -181,41 +181,34 @@ const DraggableRow = <T extends IListItem>({
 
         // --- Drag the item ---
         top.value = Math.max(0, Math.min(initialTop.value + currentDragDisplacement, topMax));
-    };
+    }
 
-    // Reset all animated variables to their default values
-    function endDrag() {
-        'worklet';
+    async function handleEndDragAndSave() {
+        if (index.value === initialIndex.value) {
+            // Item didn't move. Clean up and quit.
+            handleDragEnd();
+            isRowDragging.value = false;
+            return;
+        }
 
-        isDragging.value = false;
-        baseTop.value = index.value * LIST_ITEM_HEIGHT;
+        // Snap item into its new position.
+        basePosition.value = index.value * LIST_ITEM_HEIGHT;
+        isRowDragging.value = false;
+
+        // Build the new list after drag.
+        const withoutDragged = items.filter(i => i.id !== item.id);
+        withoutDragged.splice(index.value, 0, item);
+
+        // Generate the item's new sort ID.
+        const parentSortId = withoutDragged[index.value - 1]?.sortId ?? -1;
+        const newSort = generateSortId(parentSortId, withoutDragged);
+
+        const updatedItem = { ...item, sortId: newSort };
+        await onDragEnd(updatedItem);
+
         handleDragEnd();
     }
 
-    // ------------- Row Animation -------------
-
-    // Position the row and style it when dragging
-    const animatedRowStyle = useAnimatedStyle(() => {
-        let rowOffset = 0;
-
-        if (!isDragging.value) {
-            if (itemIndex > initialIndex.value && itemIndex <= index.value) {
-                rowOffset = -LIST_ITEM_HEIGHT;
-            } else if (itemIndex < initialIndex.value && itemIndex >= index.value) {
-                rowOffset = LIST_ITEM_HEIGHT;
-            }
-        }
-
-        return {
-            top: isDragging.value ? top.value : withSpring(baseTop.value + rowOffset, LIST_SPRING_CONFIG),
-            transform: [
-                {
-                    translateY: withSpring(isDragging.value ? -6 : 0, LIST_SPRING_CONFIG)
-                }
-            ],
-            opacity: withSpring(isDragging.value ? 0.6 : 1, LIST_SPRING_CONFIG)
-        }
-    });
 
     // ------------- Gestures -------------
 
@@ -227,41 +220,56 @@ const DraggableRow = <T extends IListItem>({
     const longPressGesture = Gesture.LongPress()
         .minDuration(500)
         .onStart(() => {
-            handleDragStart();
-            initialTop.value = baseTop.value;
-            initialIndex.value = itemIndex;
-            isDragging.value = true;
+            handleDragStart(basePosition.value, itemIndex);
+            isRowDragging.value = true;
         });
 
     const dragGesture = Gesture.Pan()
         .manualActivation(true)
         .onTouchesMove((_e, state) => {
-            if (isDragging.value) {
+            if (isRowDragging.value) {
                 state.activate();
             } else {
                 state.fail();
             }
         })
         .onUpdate((event) => {
-            drag(
+            handleDrag(
                 event.translationY,
                 event.absoluteY
             );
         })
         .onFinalize(() => {
-            if (onDragEnd && index.value !== initialIndex.value) {
-                const updatedItem = {
-                    ...item,
-                    sortId: generateSortId(items[(index.value ?? 0) - 1]?.sortId ?? -1, items)
-                };
-                console.log(updatedItem, 'NEW ITEM')
-                runOnJS(onDragEnd)(updatedItem);
-            }
-            endDrag();
+            runOnJS(handleEndDragAndSave)();
         })
         .simultaneousWithExternalGesture(longPressGesture);
 
     const contentGesture = Gesture.Race(dragGesture, longPressGesture, pressGesture);
+
+    // ------------- Row Animation -------------
+
+    // Position the row and style it when dragging
+    const animatedRowStyle = useAnimatedStyle(() => {
+        
+        let rowOffset = 0;
+        if (isListDragging.value && !isRowDragging.value) {
+            if (itemIndex > initialIndex.value && itemIndex <= index.value) {
+                rowOffset = -LIST_ITEM_HEIGHT;
+            } else if (itemIndex < initialIndex.value && itemIndex >= index.value) {
+                rowOffset = LIST_ITEM_HEIGHT;
+            }
+        }
+
+        return {
+            top: isRowDragging.value ? top.value : withSpring(basePosition.value + rowOffset, LIST_SPRING_CONFIG),
+            transform: [
+                {
+                    translateY: withSpring(isRowDragging.value ? -6 : 0, LIST_SPRING_CONFIG)
+                }
+            ],
+            opacity: withSpring(isRowDragging.value ? 0.6 : 1, LIST_SPRING_CONFIG)
+        }
+    });
 
     // ------------- Render Helper Functions -------------
 

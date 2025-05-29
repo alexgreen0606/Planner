@@ -58,10 +58,10 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                 <SortableList<IBirthday, never, never>
                     listId={BIRTHDAY_STORAGE_ID}
                     staticList
-                    disableDrag
                     saveTextfieldAndCreateNew={BirthdayList.saveTextfieldAndCreateNew}
                     isLoading={collapsed}
                     items={BirthdayList.items}
+                    onDragEnd={() => {}}
                     onDeleteItem={BirthdayList.deleteSingleItemFromStorage}
                     onContentClick={() => { }}
                     getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
