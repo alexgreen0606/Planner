@@ -2,7 +2,6 @@ import GenericIcon from '@/components/GenericIcon';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/constants/layout';
 import { NAVBAR_OVERFLOW_FADE_THRESHOLD, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
-import { IListItem } from '@/types/listItems/core/TListItem';
 import { BlurView } from 'expo-blur';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, PlatformColor, ScrollView, useWindowDimensions, View } from 'react-native';
@@ -33,18 +32,12 @@ const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
 const BottomBlurBar = Animated.createAnimatedComponent(View);
-
-const BottomOfContainer = Animated.createAnimatedComponent(View);
+const BottomOfContainer = Animated.createAnimatedComponent(View); // TODO: make this after the content, not the end of the scroll view
 
 export enum LoadingStatus {
     STATIC = 'STATIC', // no overscroll visible
     LOADING = 'LOADING', // currently rebuilding list
     COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
-}
-
-interface TextFieldState<T> {
-    current: T | undefined;
-    pending?: T | undefined;
 }
 
 interface ScrollContainerProps {
@@ -53,37 +46,33 @@ interface ScrollContainerProps {
     floatingBanner?: React.ReactNode;
 }
 
-interface ScrollContainerContextValue<T extends IListItem> {
+interface ScrollContainerContextValue {
     // --- Scroll Variables ---
     scrollOffset: SharedValue<number>;
-    disableNativeScroll: SharedValue<boolean>;
     autoScroll: (newOffset: number) => void;
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
 }
 
-const ScrollContainerContext = createContext<ScrollContainerContextValue<any> | null>(null);
+const ScrollContainerContext = createContext<ScrollContainerContextValue | null>(null);
 
 /**
  * Provider to allow multiple lists to be rendered within a larger scroll container.
  * 
  * Container allows for native scrolling, or manual scrolling by exposing the @scrollOffset variable.
- * Manual scroll will only work while @disableNativeScroll variable is set to true.
  */
-export const ScrollContainerProvider = <T extends IListItem>({
+export const ScrollContainerProvider = ({
     children,
     header,
     floatingBanner
 }: ScrollContainerProps) => {
-
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
-
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-
     const { reloadPage, canReloadPath } = useReloadScheduler();
 
-    // --- Page Layout Variables ---
+    // ----- Page Layout Variables -----
+
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
     const contentHeight = useSharedValue(0);
 
@@ -94,15 +83,18 @@ export const ScrollContainerProvider = <T extends IListItem>({
     // If no floating banner exists, blur for the default header height
     const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + TOP_SPACER;
 
+    // -----Loading Spinner Variables -----
+
     const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
     const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
 
-    // --- Scroll Variables ---
+    // ----- Scroll Variables -----
+
+    const scrollOffset = useSharedValue(0);
     const disableNativeScroll = useSharedValue(false);
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
     const bottomScrollRef = useAnimatedRef<Animated.View>();
-    const scrollOffset = useSharedValue(0);
 
     const scrollOffsetMax = useDerivedValue(() =>
         Math.max(0, contentHeight.value - VISIBLE_HEIGHT)
@@ -110,14 +102,15 @@ export const ScrollContainerProvider = <T extends IListItem>({
 
     // ------------- Utility Functions -------------
 
-    const triggerHaptic = () => {
+    function triggerHaptic() {
         ReactNativeHapticFeedback.trigger('impactMedium', {
             enableVibrateFallback: true,
             ignoreAndroidSystemSettings: false
         });
-    };
+    }
 
-    const measureContentHeight = () => {
+    // Measures the height of all content within the scroll container.
+    function measureContentHeight() {
         'worklet';
         try {
             const measured = measure(bottomScrollRef);
@@ -125,28 +118,27 @@ export const ScrollContainerProvider = <T extends IListItem>({
                 contentHeight.value = measured.pageY - LOWER_CONTAINER_PADDING;
             }
         } catch (e) { }
-    };
+    }
 
     // ------------- Reload Logic -------------
 
     // Trigger a page reload
     useEffect(() => {
-        if (loadingStatus === LoadingStatus.LOADING) {
-            reloadPage().then(() => {
-                updateLoadingStatus(LoadingStatus.COMPLETE);
-            });
+        const executeReload = async () => {
+            await reloadPage();
+            updateLoadingStatus(LoadingStatus.COMPLETE);
         }
+
+        if (loadingStatus === LoadingStatus.LOADING) executeReload();
     }, [loadingStatus]);
 
-    /**
-     * Ensures accurate allignment of animated and state variables for the loading spinner.
-     */
-    const updateLoadingStatus = (newStatus: LoadingStatus) => {
+    // Aligns both the state and animated values for the loading spinner.
+    function updateLoadingStatus(newStatus: LoadingStatus) {
         setLoadingStatus(newStatus);
         loadingAnimationTrigger.value = newStatus;
-    };
+    }
 
-    // Loading Spinner
+    // Loading Spinner Animation
     useAnimatedReaction(
         () => ({
             status: loadingAnimationTrigger.value,
@@ -189,8 +181,8 @@ export const ScrollContainerProvider = <T extends IListItem>({
 
     // ------------- Scrolling Logic -------------
 
-    // Native Scroll
-    const handler = useAnimatedScrollHandler({
+    // Native Scroll Handler
+    const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
             if (!disableNativeScroll.value) {
                 scrollOffset.value = event.contentOffset.y;
@@ -198,7 +190,7 @@ export const ScrollContainerProvider = <T extends IListItem>({
         }
     });
 
-    // Manual Scroll
+    // Manual Scroll Reaction
     useAnimatedReaction(
         () => scrollOffset.value,
         (current) => {
@@ -325,7 +317,6 @@ export const ScrollContainerProvider = <T extends IListItem>({
             scrollOffset,
             autoScroll,
             measureContentHeight,
-            disableNativeScroll,
             floatingBannerHeight
         }}>
 
@@ -351,7 +342,7 @@ export const ScrollContainerProvider = <T extends IListItem>({
                     ref={scrollRef}
                     scrollEventThrottle={SCROLL_THROTTLE}
                     scrollToOverflowEnabled={true}
-                    onScroll={handler}
+                    onScroll={scrollHandler}
                     contentContainerStyle={{
                         paddingTop: TOP_SPACER,
                         paddingBottom: LOWER_CONTAINER_PADDING,

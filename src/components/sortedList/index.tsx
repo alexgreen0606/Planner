@@ -1,19 +1,25 @@
 import ThinLine from '@/components/ThinLine';
-import { LIST_ITEM_HEIGHT } from '@/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { useKeyboardTracker } from '@/hooks/useKeyboardTracker';
+import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useScrollContainer } from '@/services/ScrollContainer';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import { buildItemPositions } from '@/utils/listUtils';
 import React, { useMemo, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import { Portal } from 'react-native-paper';
-import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
+import Animated, { cancelAnimation, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
+
+export enum BoundType {
+    MIN = 'MIN',
+    MAX = 'MAX'
+}
 
 export interface DraggableListProps<
     T extends IListItem,
@@ -58,32 +64,18 @@ const SortableList = <
     hideKeyboard,
     ...rest
 }: DraggableListProps<T, P, M>) => {
-
     const { currentTextfield } = useTextfieldData<T>();
-
     const { keyboardAbsoluteTop } = useKeyboardTracker();
+    const { height: SCREEN_HEIGHT } = useWindowDimensions();
+    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
+    const { floatingBannerHeight, scrollOffset } = useScrollContainer();
 
-    const positions = useSharedValue<Record<string, number>>({});
     const pendingItem = useRef<T | null>(null);
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
-    // ------------- Empty Space Utilities -------------
-
-    /**
-     * Handles click on empty space to create a new textfield
-     */
-    function handleEmptySpaceClick() {
-        handleSaveTextfieldAndCreateNew(-1, true);
-    }
-
-    // ------------- List Building -------------
-
-    /**
-     * Builds the list out of the existing items and the textfield.
-     * @returns Array of list items sorted by sortId
-     */
-    function buildFullList() {
+    // Builds the list out of the existing items and the textfield.
+    const currentList = useMemo(() => {
         const fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
         if (currentTextfield?.listId === listId) {
             if (currentTextfield?.status === EItemStatus.NEW) {
@@ -102,17 +94,32 @@ const SortableList = <
                 pendingItem.current = null;
             }
         }
+        console.log([...fullList.sort((a, b) => a.sortId - b.sortId)], 'LIST')
         return fullList.sort((a, b) => a.sortId - b.sortId);
-    }
-
-    // Derive the current list out of the items and textfield
-    const currentList = useMemo(() => {
-        const newList = buildFullList();
-        positions.value = buildItemPositions(newList);
-        return newList;
     }, [currentTextfield?.id, currentTextfield?.sortId, items]);
 
-    // ------------- List Management -------------
+    const dragInitialScrollOffset = useSharedValue(0);
+    const dragInitialTop = useSharedValue(0);
+    const dragInitialIndex = useSharedValue<number>(0);
+
+    const dragScrollOffsetDelta = useSharedValue(0);
+    const dragTop = useSharedValue<number>(0);
+    const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
+    const isAutoScrolling = useSharedValue(false);
+
+    const dragTopMax = useMemo(() =>
+        Math.max(0, LIST_ITEM_HEIGHT * (currentList.length - 1)),
+        [currentList.length]
+    );
+
+    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
+    const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
+
+    // ------------- Utility Functions -------------
+
+    function handleEmptySpaceClick() {
+        handleSaveTextfieldAndCreateNew(-1, true);
+    }
 
     /**
      * Saves the existing textfield to storage and generates a new one at the requested position.
@@ -129,7 +136,36 @@ const SortableList = <
         saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }
 
+    function handleDragStart() {
+        "worklet";
+        dragInitialScrollOffset.value = scrollOffset.value;
+        dragScrollOffsetDelta.value = 0;
+    }
+
+    function handleDragEnd() {
+        "worklet";
+        cancelAnimation(scrollOffset);
+        dragInitialScrollOffset.value = 0;
+        dragScrollOffsetDelta.value = 0;
+        dragInitialTop.value = 0;
+        dragInitialIndex.value = 0;
+        isAutoScrolling.value = false;
+    }
+
     // ------------- Animations -------------
+
+    // Auto scroll
+    useAnimatedReaction(
+        () => ({
+            displacement: scrollOffset.value - dragInitialScrollOffset.value,
+            delta: dragScrollOffsetDelta.value
+        }),
+        ({ displacement, delta }) => {
+            dragTop.value += (displacement - delta);
+            dragScrollOffsetDelta.value = displacement;
+            dragInitialTop.value += (displacement - delta);
+        }
+    );
 
     // Animate the toolbar above the textfield
     const toolbarStyle = useAnimatedStyle(() => ({
@@ -150,14 +186,25 @@ const SortableList = <
                     height: currentList.length * LIST_ITEM_HEIGHT
                 }}
             >
-                {currentList.map((item) =>
+                {currentList.map((item, i) =>
                     <DraggableRow<T>
                         key={`${item.id}-row`}
                         item={item}
+                        itemIndex={i}
+                        upperAutoScrollBound={upperAutoScrollBound}
+                        lowerAutoScrollBound={lowerAutoScrollBound}
                         hideKeyboard={Boolean(hideKeyboard)}
-                        positions={positions}
+                        dragControls={{
+                            top: dragTop,
+                            index: dragIndex,
+                            initialIndex: dragInitialIndex,
+                            initialTop: dragInitialTop,
+                            isAutoScrolling: isAutoScrolling,
+                            topMax: dragTopMax,
+                            handleDragEnd,
+                            handleDragStart
+                        }}
                         saveTextfieldAndCreateNew={handleSaveTextfieldAndCreateNew}
-                        listLength={currentList.length}
                         {...rest}
                         items={currentList}
                     />
