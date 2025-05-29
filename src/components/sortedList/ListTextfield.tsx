@@ -49,15 +49,17 @@ const ListTextfield = <T extends IListItem>({
 
     // ---------- Focus Handler ----------
 
-    // Focus the textfield when clicked and evaluate its position
+    // Focus the textfield when clicked
     useEffect(() => {
         if (currentTextfield?.id === item.id && !hideKeyboard) {
             setTimeout(() => {
                 inputRef.current?.focus();
                 hasSaved.current = false;
 
-                // Trigger the previous textfield to become static
-                setCurrentTextfield(currentTextfield);
+                // Trigger the previous textfield to become static once this field focuses
+                setTimeout(() => {
+                    setCurrentTextfield(currentTextfield);
+                }, 50);
             }, 50);
         }
     }, [currentTextfield?.id, hideKeyboard]);

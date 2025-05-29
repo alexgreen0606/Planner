@@ -44,7 +44,6 @@ export interface DraggableListProps<
     hideKeyboard?: boolean;
     isLoading?: boolean;
     fillSpace?: boolean;
-    staticList?: boolean;
 }
 
 const SortableList = <
@@ -58,7 +57,6 @@ const SortableList = <
     saveTextfieldAndCreateNew,
     emptyLabelConfig,
     fillSpace,
-    staticList,
     getToolbar,
     hideKeyboard,
     ...rest
@@ -132,11 +130,10 @@ const SortableList = <
      * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
      */
     async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-        if (staticList) return;
 
-        // if (currentTextfield.status !== EItemStatus.TRANSFER) {
-        //         pendingItem.current = { ...currentTextfield };
-        //     }
+        if (currentTextfield && currentTextfield.status !== EItemStatus.TRANSFER) {
+            pendingItem.current = { ...currentTextfield };
+        }
 
         saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }

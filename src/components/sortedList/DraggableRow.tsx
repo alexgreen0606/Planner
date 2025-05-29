@@ -17,7 +17,6 @@ import Animated, {
     DerivedValue,
     runOnJS,
     SharedValue,
-    useAnimatedReaction,
     useAnimatedStyle,
     useSharedValue,
     withSpring
@@ -209,7 +208,6 @@ const DraggableRow = <T extends IListItem>({
         handleDragEnd();
     }
 
-
     // ------------- Gestures -------------
 
     const pressGesture = Gesture.Tap()
@@ -240,6 +238,8 @@ const DraggableRow = <T extends IListItem>({
             );
         })
         .onFinalize(() => {
+            if (!isRowDragging.value) return;
+
             runOnJS(handleEndDragAndSave)();
         })
         .simultaneousWithExternalGesture(longPressGesture);
@@ -250,7 +250,7 @@ const DraggableRow = <T extends IListItem>({
 
     // Position the row and style it when dragging
     const animatedRowStyle = useAnimatedStyle(() => {
-        
+
         let rowOffset = 0;
         if (isListDragging.value && !isRowDragging.value) {
             if (itemIndex > initialIndex.value && itemIndex <= index.value) {

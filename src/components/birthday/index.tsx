@@ -57,7 +57,6 @@ const BirthdayCard = ({ birthdays }: BirthdayChecklistProps) => {
                 {/* Birthday List */}
                 <SortableList<IBirthday, never, never>
                     listId={BIRTHDAY_STORAGE_ID}
-                    staticList
                     saveTextfieldAndCreateNew={BirthdayList.saveTextfieldAndCreateNew}
                     isLoading={collapsed}
                     items={BirthdayList.items}
