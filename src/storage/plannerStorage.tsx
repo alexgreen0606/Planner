@@ -65,8 +65,9 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | u
         delete newEvent.timeConfig;
     }
 
-    // Phase 2: Sync calendar event. If the event is now all day, remove it from the planner.
+    // Phase 2: Handle calendar events.
     if (newCalendarId) {
+        // Update the device calendar with the new data.
         await getCalendarAccess();
         const calendarEventId = await RNCalendarEvents.saveEvent(
             newEvent.value,
@@ -88,15 +89,14 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | u
             savePlannerToStorage(newEvent.listId, newPlanner);
             return;
         }
-    }
-
-    // Phase 3: Delete unscheduled event from the calendar. 
-    if (oldCalendarId && !newCalendarId) {
+    } else if (oldCalendarId) {
+        // Delete unscheduled event from the calendar. 
         await getCalendarAccess();
         await RNCalendarEvents.removeEvent(oldCalendarId);
     }
 
     newPlanner.events = sanitizePlanner(newPlanner.events, newEvent, oldId);
+    console.log(newPlanner.events, 'events')
     savePlannerToStorage(newEvent.listId, newPlanner);
     return newEvent;
 }
@@ -167,7 +167,7 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
                 storage.delete(timestamp);
             }
         });
-        return yesterdayPlanner
+        return yesterdayPlanner.events
             // Remove hidden items
             .filter((event: IPlannerEvent) => {
                 event.status !== EItemStatus.HIDDEN && !event.recurringId

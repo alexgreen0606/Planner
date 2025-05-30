@@ -17,7 +17,7 @@ const ModalTextfield = ({
 }: ModalTextfieldProps) => {
     const inputRef = useRef<TextInput>(null);
 
-    // Manually focus and blur the text input
+    // Manually focus the text input
     useEffect(() => {
         if (focusTrigger) {
             setTimeout(() => {
@@ -33,10 +33,11 @@ const ModalTextfield = ({
             placeholder={placeholder}
             onChangeText={onChange}
             selectionColor={PlatformColor('systemBlue')}
-            className='w-full text-lg bg-transparent'
+            className='w-full text-[16px] bg-transparent'
+            textAlignVertical='center'
             style={{
-                height: LIST_CONTENT_HEIGHT,
-                color: PlatformColor('label')
+                color: PlatformColor('label'),
+                height: LIST_CONTENT_HEIGHT
             }}
         />
     );

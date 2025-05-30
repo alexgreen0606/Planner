@@ -92,11 +92,11 @@ export function daysBetweenToday(isoTimestamp: string): number {
  * 
  * @param time1 - The first time string.
  * @param time2 - The second time string.
- * @returns True if time1 is earlier than time2, false otherwise.
+ * @returns True if time1 is earlier or during time2, false otherwise.
  */
 export function isTimeEarlierOrEqual(time1?: string, time2?: string): boolean {
     if (!time1 || !time2) return true;
-    return time1.localeCompare(time2) < 0;
+    return time1.localeCompare(time2) <= 0;
 }
 
 /**

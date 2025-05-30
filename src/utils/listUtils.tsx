@@ -23,7 +23,7 @@ export function generateSortId(
     if (referenceSortId === -1) {
         if (isChildId) {
             const largestId = sortedList.length > 0 ? sortedList[sortedList.length - 1].sortId : 1;
-            return largestId + 1;
+            return largestId * 2;
         } else {
             const smallestId = sortedList.length > 0 ? sortedList[0].sortId : 2;
             return smallestId / 2;
@@ -42,7 +42,7 @@ export function generateSortId(
             } else {
                 // Insert below the parent
                 if (i === sortedList.length - 1) {
-                    return referenceSortId + 1;
+                    return referenceSortId * 2;
                 }
                 const nextId = sortedList[i + 1].sortId;
                 return referenceSortId + (nextId - referenceSortId) / 2;

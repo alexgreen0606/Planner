@@ -190,10 +190,6 @@ const DraggableRow = <T extends IListItem>({
             return;
         }
 
-        // Snap item into its new position.
-        basePosition.value = index.value * LIST_ITEM_HEIGHT;
-        isRowDragging.value = false;
-
         // Build the new list after drag.
         const withoutDragged = items.filter(i => i.id !== item.id);
         withoutDragged.splice(index.value, 0, item);
@@ -205,6 +201,7 @@ const DraggableRow = <T extends IListItem>({
         const updatedItem = { ...item, sortId: newSort };
         await onDragEnd(updatedItem);
 
+        isRowDragging.value = false;
         handleDragEnd();
     }
 

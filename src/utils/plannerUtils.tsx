@@ -138,9 +138,10 @@ export function generateSortIdByTime(
     const laterEvent = timedPlanner[currentIndex + 1];
     const earlierTime = getEventTime(earlierEvent);
     const laterTime = getEventTime(laterEvent);
+
     if (
-        isTimeEarlierOrEqual(earlierTime!, eventTime) &&
-        isTimeEarlierOrEqual(eventTime, laterTime!)
+        isTimeEarlierOrEqual(earlierTime, eventTime) &&
+        isTimeEarlierOrEqual(eventTime, laterTime)
     ) return persistEventPosition();
 
     // Scenario 1: Place the event before the first event that starts after or during it.
@@ -167,7 +168,7 @@ export function generateSortIdByTime(
         return generateSortId(newParentSortId, plannerWithoutEvent);
     }
 
-    throw new Error('generateSortIdByTime: An error occurred during timed sort ID generation.');
+    throw new Error(`generateSortIdByTime: An error occurred during timed sort ID generation for event ID: ${event.id}`);
 };
 
 // ------------- Planner Generation -------------
@@ -256,8 +257,8 @@ export function syncPlannerWithCalendar(
             const updatedEvent = {
                 ...planEvent,
                 timeConfig: calEvent.timeConfig,
-                value: calEvent.value,
-            }
+                value: calEvent.value
+            };
 
             const updatedPlanner = [...accumulator, updatedEvent];
             updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);

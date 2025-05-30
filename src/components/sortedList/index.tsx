@@ -13,6 +13,7 @@ import Animated, { cancelAnimation, useAnimatedReaction, useAnimatedStyle, useDe
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
+import { sanitizeList } from '@/utils/listUtils';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -67,7 +68,7 @@ const SortableList = <
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { floatingBannerHeight, scrollOffset } = useScrollContainer();
 
-    const pendingItem = useRef<T | null>(null);
+    // const pendingItem = useRef<T | null>(null);
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
@@ -76,24 +77,27 @@ const SortableList = <
 
     // Builds the list out of the existing items and the textfield.
     const currentList = useMemo(() => {
-        const fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
+        let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
         if (currentTextfield?.listId === listId) {
-            if (currentTextfield?.status === EItemStatus.NEW) {
-                fullList.push(currentTextfield);
-            } else {
-                const textfieldIndex = fullList.findIndex(item => item.id === currentTextfield.id);
-                if (textfieldIndex !== -1) {
-                    fullList[textfieldIndex] = currentTextfield;
-                }
-            }
+
+            // if (currentTextfield?.status === EItemStatus.NEW) {
+            //     fullList.push(currentTextfield);
+            // } else {
+            //     const textfieldIndex = fullList.findIndex(item => item.id === currentTextfield.id);
+            //     if (textfieldIndex !== -1) {
+            //         fullList[textfieldIndex] = currentTextfield;
+            //     }
+            // }
+            fullList = sanitizeList(fullList, currentTextfield);
         }
-        if (pendingItem.current) {
-            if (!fullList.find(i => i.id === pendingItem.current?.id)) {
-                fullList.push(pendingItem.current);
-            } else {
-                pendingItem.current = null;
-            }
-        }
+
+        // if (pendingItem.current) {
+        //     if (!fullList.find(i => i.id === pendingItem.current?.id)) {
+        //         fullList.push(pendingItem.current);
+        //     } else {
+        //         pendingItem.current = null;
+        //     }
+        // }
 
         if (isListDragging.value) {
             isListDragging.value = false;
@@ -130,10 +134,9 @@ const SortableList = <
      * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
      */
     async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-
-        if (currentTextfield && currentTextfield.status !== EItemStatus.TRANSFER) {
-            pendingItem.current = { ...currentTextfield };
-        }
+        // if (currentTextfield && currentTextfield.status !== EItemStatus.TRANSFER) {
+        //     pendingItem.current = { ...currentTextfield };
+        // }
 
         saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }

@@ -34,15 +34,18 @@ const ListTextfield = <T extends IListItem>({
      * to remain open.
      * Once the new textfield is focused, the previous one will become un-editable.
      */
-    const editable = useMemo(() => {
-        return [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard;
-    }, [pendingItem, currentTextfield?.id, item.id, hideKeyboard]);
+    const editable = useMemo(() =>
+        [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard,
+        [pendingItem, currentTextfield?.id, item.id, hideKeyboard]
+    );
 
     // ------------- Utility Function -------------
 
     function handleSave(fromBlur: boolean) {
         if (hasSaved.current || hideKeyboard) return;
         hasSaved.current = true;
+
+        console.log('saving', item.value)
 
         onSubmit(fromBlur);
     }
