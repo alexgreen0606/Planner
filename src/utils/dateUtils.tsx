@@ -53,7 +53,7 @@ export function timeValueToIso(baseDate: string, timeValue: string): string {
         throw new Error('Invalid date or time input');
     }
 
-    return dateTime.toISO();
+    return dateTime.toUTC().toISO();
 }
 
 /**
@@ -219,7 +219,7 @@ export function getEventTime(item: IPlannerEvent | IRecurringEvent | undefined):
  * @param text - user input
  * @returns - the text with the time value removed, and a time object representing the time value
  */
-export function extractTimeValue(text: string, timestamp?: string): { timeConfig: TTimeConfig | undefined, updatedText: string } {
+export function extractTimeValue(text: string, datestamp?: string): { timeConfig: TTimeConfig | undefined, updatedText: string } {
     let timeConfig = undefined;
     let updatedText = text;
 
@@ -244,8 +244,8 @@ export function extractTimeValue(text: string, timestamp?: string): { timeConfig
 
         // Build the object representing this time
         timeConfig = {
-            startTime: timestamp ? timeValueToIso(timestamp, formattedTime) : formattedTime,
-            endTime: timestamp ? timeValueToIso(timestamp, "23:55") : "23:55",
+            startTime: datestamp ? timeValueToIso(datestamp, formattedTime) : formattedTime,
+            endTime: datestamp ? timeValueToIso(datestamp, "23:55") : "23:55",
             allDay: false,
         };
     }

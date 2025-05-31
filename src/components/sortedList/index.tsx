@@ -6,7 +6,7 @@ import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { Portal } from 'react-native-paper';
 import Animated, { cancelAnimation, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
@@ -79,15 +79,6 @@ const SortableList = <
     const currentList = useMemo(() => {
         let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
         if (currentTextfield?.listId === listId) {
-
-            // if (currentTextfield?.status === EItemStatus.NEW) {
-            //     fullList.push(currentTextfield);
-            // } else {
-            //     const textfieldIndex = fullList.findIndex(item => item.id === currentTextfield.id);
-            //     if (textfieldIndex !== -1) {
-            //         fullList[textfieldIndex] = currentTextfield;
-            //     }
-            // }
             fullList = sanitizeList(fullList, currentTextfield);
         }
 

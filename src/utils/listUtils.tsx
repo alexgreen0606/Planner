@@ -18,7 +18,7 @@ export function generateSortId(
     isChildId: boolean = false
 ): number {
     'worklet';
-    const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
+    const sortedList = sanitizeList(listItems);
 
     if (referenceSortId === -1) {
         if (isChildId) {

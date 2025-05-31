@@ -33,16 +33,11 @@ const RecurringPlanners = () => {
         >
 
             {/* Recurring Planner Selection */}
-            <View className='py-8 px-16 flex-row justify-between items-center w-full' >
+            <View className='p-4' >
                 <PopoverList<RecurringOption>
                     getLabelFromObject={(set) => set.label}
                     options={recurringPlannerOptions}
                     onChange={(newSet) => setSelectedRecurring(newSet.value)}
-                />
-                <GenericIcon
-                    type='add'
-                    platformColor='systemBlue'
-                    onClick={toggleRecurringModalOpen}
                 />
             </View>
 

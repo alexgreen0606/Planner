@@ -16,17 +16,13 @@ import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
 
 const TodayPlanner = () => {
+    const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
+    const { registerReloadFunction } = useReloadScheduler();
     const datestamp = getTodayDatestamp();
+    const pathname = usePathname();
+    const router = useRouter();
 
     const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
-
-    const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
-
-    const { registerReloadFunction } = useReloadScheduler();
-
-    const pathname = usePathname();
-
-    const router = useRouter();
 
     const isTimeModalOpen = pathname.includes('timeModal');
 

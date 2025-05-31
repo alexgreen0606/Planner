@@ -17,15 +17,16 @@ const storage = new MMKV({ id: PLANNER_STORAGE_ID });
  */
 export function getPlannerFromStorage(datestamp: string): TPlanner {
     const eventsString = storage.getString(datestamp);
-    if (eventsString)
+    if (eventsString) {
         return JSON.parse(eventsString);
+    }
     return generatePlanner(datestamp);
 };
 
 /**
  * Saves a planner to storage.
  */
-export function savePlannerToStorage(datestamp: string, newPlanner: TPlanner) {
+export function savePlannerToStorage(datestamp: string, newPlanner: TPlanner, callerId: string) {
     storage.set(datestamp, JSON.stringify(newPlanner));
 };
 
@@ -86,7 +87,7 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | u
         if (event.timeConfig?.allDay) {
             // Remove this event from the planner.
             newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
-            savePlannerToStorage(newEvent.listId, newPlanner);
+            savePlannerToStorage(newEvent.listId, newPlanner, 'saveEvent: allDay');
             return;
         }
     } else if (oldCalendarId) {
@@ -96,8 +97,7 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | u
     }
 
     newPlanner.events = sanitizePlanner(newPlanner.events, newEvent, oldId);
-    console.log(newPlanner.events, 'events')
-    savePlannerToStorage(newEvent.listId, newPlanner);
+    savePlannerToStorage(newEvent.listId, newPlanner, 'saveEvent');
     return newEvent;
 }
 
@@ -145,7 +145,7 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
             .map(event => (recurringOrTodayCalendarIds.has(event.id) ? { ...event, status: EItemStatus.HIDDEN } : event))
             .filter(event => !regularDeleteIds.has(event.id));
 
-        savePlannerToStorage(listId, newPlanner);
+        savePlannerToStorage(listId, newPlanner, 'deleteEvents');
     });
 }
 

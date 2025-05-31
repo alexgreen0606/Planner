@@ -4,10 +4,11 @@ import { NULL } from "@/constants/generic";
 import { EFormFieldType } from "@/enums/EFormFieldType";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { useTextfieldData } from "@/hooks/useTextfieldData";
-import { getPlannerFromStorage } from "@/storage/plannerStorage";
+import { getPlannerFromStorage, saveEvent } from "@/storage/plannerStorage";
 import { IFormField } from "@/types/form/IFormField";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
+import { loadCalendarData } from "@/utils/calendarUtils";
 import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { saveEventReloadData } from "@/utils/plannerUtils";
@@ -127,6 +128,26 @@ const TimeModal = () => {
 
     // ------------- Utility Functions -------------
 
+    function handleSavedEvent(event?: IPlannerEvent) {
+        const savedPlanner = getPlannerFromStorage(datestamp);
+
+        // Place the new textfield directly below the new item. If the item was removed from the planner, 
+        // place the new textfield directly where the item was.
+        const newTextfieldSortId = event ?
+            generateSortId(event.sortId, savedPlanner.events) : planEvent.sortId!;
+
+        const newTextfield: IListItem = {
+            id: uuid.v4(),
+            sortId: newTextfieldSortId,
+            status: EItemStatus.NEW,
+            listId: datestamp,
+            value: ''
+        };
+
+        setCurrentTextfield(newTextfield);
+        router.back();
+    }
+
     async function handleSave(data: FormData) {
         if (!planEvent) return;
 
@@ -134,12 +155,15 @@ const TimeModal = () => {
 
         if (!timeRange.startTime || !timeRange.endTime) return;
 
+        const startTimeUtc = DateTime.fromISO(timeRange.startTime).toUTC().toISO();
+    let endTimeUtc = DateTime.fromISO(timeRange.endTime).toUTC().toISO();
+
         const updatedItem = {
             ...planEvent,
             timeConfig: {
                 allDay,
-                startTime: timeRange.startTime,
-                endTime: timeRange.endTime
+                startTime: startTimeUtc,
+                endTime: endTimeUtc
             },
             value: title
         } as IPlannerEvent;
@@ -156,24 +180,7 @@ const TimeModal = () => {
             updatedItem.timeConfig!.endTime = startOfNextDay!;
         }
 
-        const savedEvent = await saveEventReloadData(updatedItem);
-        const savedPlanner = getPlannerFromStorage(datestamp);
-
-        // Place the new textfield directly below the new item. If the item was removed from the planner, 
-        // place the new textfield directly where the item was.
-        const newTextfieldSortId = savedEvent ? generateSortId(savedEvent.sortId, savedPlanner.events)
-            : updatedItem.sortId;
-
-        const newTextfield: IListItem = {
-            id: uuid.v4(),
-            sortId: newTextfieldSortId,
-            status: EItemStatus.NEW,
-            listId: datestamp,
-            value: ''
-        };
-
-        setCurrentTextfield(newTextfield);
-        router.back();
+        await saveEventReloadData(updatedItem, handleSavedEvent);
     }
 
     function handleDelete() {

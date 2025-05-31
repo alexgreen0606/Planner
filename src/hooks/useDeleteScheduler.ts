@@ -9,7 +9,7 @@ export function useDeleteScheduler <T extends IListItem>() {
     const [deleteFunctionsMap, setDeleteFunctionsMap] = useAtom(deleteFunctionsMapAtom);
     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const getDeletingItems = useCallback((): Required<IListItem>[] => {
+    const getDeletingItems = useCallback((): T[] => {
         return Object.values(pendingDeleteMap).flat();
     }, [pendingDeleteMap]);
 

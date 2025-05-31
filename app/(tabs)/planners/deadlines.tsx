@@ -95,8 +95,8 @@ const Deadlines = () => {
             <SortableList<IDeadline, ToolbarProps<IDeadline>, never>
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
-                disableDrag
                 items={DeadlineItems.items}
+                onDragEnd={() => {}} // TODO: refresh list?
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}

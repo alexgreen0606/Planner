@@ -113,7 +113,7 @@ const Planners = () => {
         >
 
             {/* Planner Set Selection */}
-            <View className='py-2 px-4 flex-row justify-between items-center w-full' >
+            <View className='p-4 flex-row justify-between items-center w-full' >
                 <PopoverList<string>
                     getLabelFromObject={(set) => set} // TODO remove this prop
                     options={[defaultPlannerSet, ...allPlannerSetTitles]}

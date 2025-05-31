@@ -1,14 +1,13 @@
-import React from 'react';
-import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { isValidPlatformColor } from '../utils/colorUtils';
-import GenericIcon, { GenericIconProps } from './GenericIcon';
-import CustomText from './text/CustomText';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
-import { saveEvent } from '@/storage/plannerStorage';
-import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 import { openTimeModal } from '@/utils/plannerUtils';
 import { useRouter } from 'expo-router';
+import React, { useMemo } from 'react';
+import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
+import GenericIcon, { GenericIconProps } from './GenericIcon';
+import CustomText from './text/CustomText';
+import { isValidPlatformColor } from '@/utils/colorUtils';
 
 export interface EventChipProps {
     planEvent?: IPlannerEvent;
@@ -27,22 +26,22 @@ const EventChip = ({
     color,
     onClick
 }: EventChipProps) => {
-
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-
     const router = useRouter();
 
     function handleOpen() {
         if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
     }
 
-    const isPendingDelete = planEvent &&
+    const isPendingDelete = useMemo(() => planEvent &&
         getDeletingItems().some(deleteItem =>
-            // The planner event is deleting
+            // This deleting item is the chip's event
             deleteItem.id === planEvent.id &&
-            // The deleting event is the end event
-            (deleteItem as IPlannerEvent).timeConfig?.multiDayEnd
-        );
+            // This deleting item is not from today
+            deleteItem.listId !== getTodayDatestamp()
+        ),
+        [getDeletingItems]
+    );
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
 
     const ChipContent = () => (

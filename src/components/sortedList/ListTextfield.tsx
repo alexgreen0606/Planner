@@ -45,8 +45,6 @@ const ListTextfield = <T extends IListItem>({
         if (hasSaved.current || hideKeyboard) return;
         hasSaved.current = true;
 
-        console.log('saving', item.value)
-
         onSubmit(fromBlur);
     }
 

@@ -70,10 +70,16 @@ export function sanitizePlanner(planner: IPlannerEvent[], event: IPlannerEvent, 
  * @returns - The updated event in storage if it still exists, else undefined.
  */
 export async function saveEventReloadData(
-    updatedPlanEvent: IPlannerEvent
+    updatedPlanEvent: IPlannerEvent,
+    newEventHandler?: (event?: IPlannerEvent) => void
 ): Promise<IPlannerEvent | undefined> {
     const oldPlanner = getPlannerFromStorage(updatedPlanEvent.listId);
     const savedEvent = await saveEvent(updatedPlanEvent);
+
+    // Handle side effects of the saved event.
+    if (newEventHandler) {
+        newEventHandler(savedEvent);
+    }
 
     if (
         !savedEvent || // The event will now be a chip
@@ -221,7 +227,7 @@ export async function buildPlannerEvents(
         storagePlanner.events.some(existingEvent =>
             !planner.events.some(planEvent => planEvent.id === existingEvent.id)
         )
-    ) savePlannerToStorage(datestamp, planner);
+    ) savePlannerToStorage(datestamp, planner, 'buildPlannerEvents');
 
     return planner.events;
 }
@@ -402,9 +408,9 @@ export function handleEventInput(
         if (timeConfig) {
             const newEvent = { ...item, value: updatedText };
             if (datestamp) {
-                (newEvent as IRecurringEvent).startTime = timeConfig.startTime;
-            } else {
                 (newEvent as IPlannerEvent).timeConfig = timeConfig;
+            } else {
+                (newEvent as IRecurringEvent).startTime = timeConfig.startTime;
             }
             newEvent.sortId = generateSortIdByTime(newEvent, currentList);
             return newEvent;
