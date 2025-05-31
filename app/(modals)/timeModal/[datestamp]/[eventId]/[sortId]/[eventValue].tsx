@@ -58,7 +58,7 @@ const TimeModal = () => {
         const event = planner.events.find(e => e.id === eventId);
         if (!event) router.back();
 
-        return { ...event, value: newValue };
+        return { ...event, value: newValue, status: EItemStatus.EDIT };
     }, [eventId]);
 
     const isEditMode = planEvent.status === EItemStatus.EDIT;
@@ -243,7 +243,8 @@ const TimeModal = () => {
             }}
             deleteButtonConfig={{
                 label: 'Unschedule',
-                onClick: handleDelete
+                onClick: handleDelete,
+                hidden: !isEditMode
             }}
             onClose={() => router.back()}
         >

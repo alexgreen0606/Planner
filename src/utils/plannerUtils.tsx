@@ -8,7 +8,7 @@ import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { uuid } from 'expo-modules-core';
-import { datestampToDayOfWeek, extractTimeValue, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToDayOfWeek, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { loadCalendarData } from './calendarUtils';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
@@ -32,16 +32,24 @@ export function setEventsInPlanner(
 
 // ------------- Modal Utilities -------------
 
+/**
+ * ✅ Opens the time modal and passes the given event details in the path.
+ * If the item is new, a null item ID will be passed.
+ * 
+ * @param datestamp - the datestamp the event exists in
+ * @param event - the event to update within the modal
+ * @param router - the router to navigate to the modal
+ */
 export function openTimeModal(
     datestamp: string,
-    item: IPlannerEvent,
+    event: IPlannerEvent,
     router: Router
 ) {
     router.push(`${TIME_MODAL_PATHNAME
         }${datestamp
-        }/${item.status === EItemStatus.NEW ? NULL : item.id
-        }/${item.sortId
-        }/${item.value.length > 0 ? item.value : NULL
+        }/${event.status === EItemStatus.NEW ? NULL : event.id
+        }/${event.sortId
+        }/${event.value.length > 0 ? event.value : NULL
         }`
     );
 }
@@ -175,7 +183,49 @@ export function generateSortIdByTime(
     }
 
     throw new Error(`generateSortIdByTime: An error occurred during timed sort ID generation for event ID: ${event.id}`);
-};
+}
+
+/**
+ * ✅ Parses the given text to find any time values (HH:MM (PM or AM)) case insensitive. 
+ * If one exists, it will be removed from the string and a time object will be generated 
+ * representing this time of day. The sanitized string and time object will be returned.
+ * 
+ * @param text - user input
+ * @returns - the text with the time value removed, and a time object representing the time value
+ */
+function extractTimeValue(text: string, datestamp?: string): { timeConfig: TTimeConfig | undefined, updatedText: string } {
+    let timeConfig = undefined;
+    let updatedText = text;
+
+    // Use regex to find a time value typed in (HH:MM (PM or AM))
+    const timeRegex = /\b(1[0-2]|[1-9])(?::(0[0-5]|[1-5][0-9]))?\s?(AM|PM|am|pm|Am|aM|pM|Pm)\b/;
+    const match = text.match(timeRegex);
+
+    if (match) {
+        // Extract the matched time and remove it from the text
+        const timeValue = match[0];
+        updatedText = text.replace(timeValue, "").trim();
+
+        // Convert timeValue to 24-hour format (HH:MM)
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+        const period = match[3].toUpperCase();
+        if (period === "PM" && hours !== 12) {
+            hours += 12;
+        } else if (period === "AM" && hours === 12) {
+            hours = 0;
+        }
+        const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
+        timeConfig = {
+            startTime: datestamp ? timeValueToIso(datestamp, formattedTime) : formattedTime,
+            endTime: datestamp ? timeValueToIso(datestamp, "23:55") : "23:55",
+            allDay: false,
+        };
+    }
+
+    return { timeConfig, updatedText };
+}
 
 // ------------- Planner Generation -------------
 
