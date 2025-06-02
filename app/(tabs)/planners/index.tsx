@@ -13,6 +13,8 @@ import { loadCalendarData } from '@/utils/calendarUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import ScrollAnchor from '@/components/ScrollAnchor';
 import { useScrollContainer } from '@/services/ScrollContainer';
+import { useAtom } from 'jotai';
+import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -22,8 +24,9 @@ const Planners = () => {
     const router = useRouter();
     const allPlannerSetTitles = getPlannerSetTitles();
     const { setUpperContentHeight } = useScrollContainer();
-    const [plannerSetKey, setPlannerSetKey] = useState(defaultPlannerSet);
     const pathname = usePathname();
+
+    const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
 
     const plannerDatestamps = useMemo(() => {
         if (plannerSetKey === 'Next 7 Days') return getNextEightDayDatestamps().slice(1, 8);
@@ -124,6 +127,8 @@ const Planners = () => {
                 }}
             >
                 <PopoverList<string>
+                    value={plannerSetKey}
+                    setValue={setPlannerSetKey}
                     getLabelFromObject={(set) => set} // TODO remove this prop
                     options={[defaultPlannerSet, ...allPlannerSetTitles]}
                     onChange={(newSet) => setPlannerSetKey(newSet)}

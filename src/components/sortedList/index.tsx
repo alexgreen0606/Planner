@@ -7,7 +7,7 @@ import { useScrollContainer } from '@/services/ScrollContainer';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { sanitizeList } from '@/utils/listUtils';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { Portal } from 'react-native-paper';
 import Animated, { cancelAnimation, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';

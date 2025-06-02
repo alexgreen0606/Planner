@@ -13,6 +13,8 @@ const BackdropContainer = Animated.createAnimatedComponent(View);
 const POPOVER_WIDTH = 200;
 
 interface PopoverProps<T> {
+    value: T;
+    setValue: (val: T) => void;
     options: T[];
     onChange: (newValue: T) => void;
     getLabelFromObject: (object: T) => string;
@@ -20,11 +22,12 @@ interface PopoverProps<T> {
 
 const PopoverList = <T,>({
     options,
+    value,
+    setValue,
     onChange,
     getLabelFromObject
 }: PopoverProps<T>) => {
     const selectedValueRef = useRef<View>(null);
-    const [value, setValue] = useState(options[0]);
     const [isOpen, setIsOpen] = useState(false);
     const popoverVisibility = useSharedValue(0); // animated between 0 and 1
     const selectedValueMeasurements = useSharedValue({ x: 0, y: 0, width: 0, height: 0 });

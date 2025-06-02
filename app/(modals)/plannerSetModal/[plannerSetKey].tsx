@@ -10,6 +10,8 @@ import { IFormField } from '@/types/form/IFormField';
 import { TPlannerSet } from '@/types/planner/TPlannerSet';
 import { EFormFieldType } from '@/enums/EFormFieldType';
 import { NULL } from '@/constants/generic';
+import { useSetAtom } from 'jotai';
+import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
@@ -34,6 +36,8 @@ const PlannerSetModal = () => {
     const existingPlannerTitles = getPlannerSetTitles();
 
     const router = useRouter();
+
+    const setPlannerSetKey = useSetAtom(plannerSetKeyAtom);
 
     const storage = useMMKV({ id: PLANNER_SETS_STORAGE_ID });
     const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
@@ -99,6 +103,7 @@ const PlannerSetModal = () => {
             startDate: data.dates.startTime,
             endDate: data.dates.endTime
         });
+        setPlannerSetKey(data.title);
         router.back();
     }
 

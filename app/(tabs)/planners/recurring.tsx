@@ -45,6 +45,11 @@ const RecurringPlanners = () => {
                 <PopoverList<RecurringOption>
                     getLabelFromObject={(set) => set.label}
                     options={recurringPlannerOptions}
+                    value={{
+                        label: '',
+                        value: ERecurringPlannerKeys.WEEKDAYS
+                    }}
+                    setValue={() => null}
                     onChange={(newSet) => setSelectedRecurring(newSet.value)}
                 />
             </View>
