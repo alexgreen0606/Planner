@@ -6,14 +6,15 @@ import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import React, { useEffect, useMemo, useRef } from 'react';
+import { sanitizeList } from '@/utils/listUtils';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { Portal } from 'react-native-paper';
-import Animated, { cancelAnimation, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import Animated, { cancelAnimation, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ScrollAnchor from '../ScrollAnchor';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
-import { sanitizeList } from '@/utils/listUtils';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -66,9 +67,8 @@ const SortableList = <
     const { keyboardAbsoluteTop } = useKeyboardTracker();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    const { floatingBannerHeight, scrollOffset } = useScrollContainer();
+    const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
 
-    // const pendingItem = useRef<T | null>(null);
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
@@ -76,19 +76,12 @@ const SortableList = <
     const isAutoScrolling = useSharedValue(false);
 
     // Builds the list out of the existing items and the textfield.
-    const currentList = useMemo(() => {
+    const list = useMemo(() => {
         let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
+
         if (currentTextfield?.listId === listId) {
             fullList = sanitizeList(fullList, currentTextfield);
         }
-
-        // if (pendingItem.current) {
-        //     if (!fullList.find(i => i.id === pendingItem.current?.id)) {
-        //         fullList.push(pendingItem.current);
-        //     } else {
-        //         pendingItem.current = null;
-        //     }
-        // }
 
         if (isListDragging.value) {
             isListDragging.value = false;
@@ -96,6 +89,10 @@ const SortableList = <
 
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [currentTextfield?.id, currentTextfield?.sortId, items]);
+
+    useEffect(() => {
+        runOnUI(measureContentHeight)();
+    }, [list.length]);
 
     const dragInitialScrollOffset = useSharedValue(0);
     const dragInitialTop = useSharedValue(0);
@@ -106,8 +103,8 @@ const SortableList = <
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
     const dragTopMax = useMemo(() =>
-        Math.max(0, LIST_ITEM_HEIGHT * (currentList.length - 1)),
-        [currentList.length]
+        Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1)),
+        [list.length]
     );
 
     const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
@@ -119,16 +116,7 @@ const SortableList = <
         handleSaveTextfieldAndCreateNew(-1, true);
     }
 
-    /**
-     * Saves the existing textfield to storage and generates a new one at the requested position.
-     * @param referenceSortId The sort ID of an item to place the new textfield near
-     * @param isChildId Signifies if the reference ID should be below the new textfield, else above.
-     */
     async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-        // if (currentTextfield && currentTextfield.status !== EItemStatus.TRANSFER) {
-        //     pendingItem.current = { ...currentTextfield };
-        // }
-
         saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }
 
@@ -165,8 +153,6 @@ const SortableList = <
 
     // Animate the toolbar above the textfield
     const toolbarStyle = useAnimatedStyle(() => ({
-        left: 0,
-        position: 'absolute',
         top: keyboardAbsoluteTop.value
     }));
 
@@ -179,10 +165,10 @@ const SortableList = <
             <View
                 className='w-full'
                 style={{
-                    height: currentList.length * LIST_ITEM_HEIGHT
+                    height: list.length * LIST_ITEM_HEIGHT
                 }}
             >
-                {currentList.map((item, i) =>
+                {list.map((item, i) =>
                     <DraggableRow<T>
                         key={`${item.id}-row`}
                         item={item}
@@ -203,19 +189,24 @@ const SortableList = <
                         }}
                         saveTextfieldAndCreateNew={handleSaveTextfieldAndCreateNew}
                         {...rest}
-                        items={currentList}
+                        items={list}
                     />
                 )}
             </View>
 
-            {currentList.length > 0 && (
+            {list.length > 0 && (
                 <Pressable onPress={handleEmptySpaceClick}>
                     <ThinLine />
                 </Pressable>
             )}
 
+            {/* Track Position of List End */}
+            {fillSpace && (
+                <ScrollAnchor />
+            )}
+
             {/* Empty Label or Click Area */}
-            {emptyLabelConfig && currentList.length === 0 ? (
+            {emptyLabelConfig && list.length === 0 ? (
                 <EmptyLabel
                     {...emptyLabelConfig}
                     onPress={handleEmptySpaceClick}
@@ -230,7 +221,7 @@ const SortableList = <
             {/* Toolbar */}
             {Toolbar && toolbarConfig && !hideKeyboard && currentTextfield?.listId === listId &&
                 <Portal>
-                    <ToolbarContainer style={toolbarStyle}>
+                    <ToolbarContainer className='absolute left-0' style={toolbarStyle}>
                         <Toolbar {...toolbarConfig.props} />
                     </ToolbarContainer>
                 </Portal>

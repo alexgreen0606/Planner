@@ -11,6 +11,7 @@ import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { getPlannerSetTitles, getPlannerSet } from '@/storage/plannerSetsStorage';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
+import ScrollAnchor from '@/components/ScrollAnchor';
 
 
 const defaultPlannerSet = 'Next 7 Days';
@@ -135,6 +136,7 @@ const Planners = () => {
                         forecast={forecasts?.[datestamp]}
                     />
                 )}
+                <ScrollAnchor />
             </View>
 
         </View>

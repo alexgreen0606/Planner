@@ -20,7 +20,6 @@ import Animated, {
     useAnimatedRef,
     useAnimatedScrollHandler,
     useAnimatedStyle,
-    useDerivedValue,
     useSharedValue,
     withRepeat,
     withTiming
@@ -32,7 +31,6 @@ const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
 const BottomBlurBar = Animated.createAnimatedComponent(View);
-const BottomOfContainer = Animated.createAnimatedComponent(View); // TODO: make this after the content, not the end of the scroll view
 
 export enum LoadingStatus {
     STATIC = 'STATIC', // no overscroll visible
@@ -53,6 +51,7 @@ interface ScrollContainerContextValue {
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
+    bottomScrollRef: React.RefObject<Animated.View>;
 }
 
 const ScrollContainerContext = createContext<ScrollContainerContextValue | null>(null);
@@ -67,6 +66,10 @@ export const ScrollContainerProvider = ({
     header,
     floatingBanner
 }: ScrollContainerProps) => {
+
+    const bottomAnchorAbsolutePosition = useSharedValue(0);
+    const bottomScrollRef = useAnimatedRef<Animated.View>();
+
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { reloadPage, canReloadPath } = useReloadScheduler();
@@ -74,8 +77,8 @@ export const ScrollContainerProvider = ({
     // ----- Page Layout Variables -----
 
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
-    const contentHeight = useSharedValue(0);
 
+    const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
     const VISIBLE_HEIGHT = SCREEN_HEIGHT - LOWER_CONTAINER_PADDING;
 
@@ -94,11 +97,6 @@ export const ScrollContainerProvider = ({
     const scrollOffset = useSharedValue(0);
     const disableNativeScroll = useSharedValue(false);
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
-    const bottomScrollRef = useAnimatedRef<Animated.View>();
-
-    const scrollOffsetMax = useDerivedValue(() =>
-        Math.max(0, contentHeight.value - VISIBLE_HEIGHT)
-    );
 
     // ------------- Utility Functions -------------
 
@@ -110,15 +108,21 @@ export const ScrollContainerProvider = ({
     }
 
     // Measures the height of all content within the scroll container.
-    function measureContentHeight() {
+    const measureContentHeight = () => {
         'worklet';
         try {
             const measured = measure(bottomScrollRef);
             if (measured) {
-                contentHeight.value = measured.pageY - LOWER_CONTAINER_PADDING;
+                bottomAnchorAbsolutePosition.value = UPPER_CONTAINER_PADDING + measured.y - scrollOffset.value; // TODO why does the measure values only change when the scroll direction reverses?
+                console.log(bottomAnchorAbsolutePosition.value, 'abs position')
             }
         } catch (e) { }
-    }
+    };
+
+    useAnimatedReaction(
+        () => scrollOffset.value,
+        measureContentHeight
+    );
 
     // ------------- Reload Logic -------------
 
@@ -246,7 +250,7 @@ export const ScrollContainerProvider = ({
     /**
      * Creates a gradient blur effect that intensifies toward the top of the screen.
      */
-    const renderTopFadeOut = () => {
+    function renderTopFadeOut() {
         const fadeViews = [];
         const blurViews = [];
         const INTENSITY = 5;
@@ -305,9 +309,9 @@ export const ScrollContainerProvider = ({
 
     const bottomBlurBarStyle = useAnimatedStyle(() => ({
         opacity: interpolate(
-            scrollOffset.value,
-            [scrollOffsetMax.value - NAVBAR_OVERFLOW_FADE_THRESHOLD, scrollOffsetMax.value],
-            [1, 0],
+            bottomAnchorAbsolutePosition.value,
+            [VISIBLE_HEIGHT - NAVBAR_OVERFLOW_FADE_THRESHOLD, VISIBLE_HEIGHT],
+            [0, 1],
             Extrapolation.CLAMP
         )
     }));
@@ -317,7 +321,8 @@ export const ScrollContainerProvider = ({
             scrollOffset,
             autoScroll,
             measureContentHeight,
-            floatingBannerHeight
+            floatingBannerHeight,
+            bottomScrollRef
         }}>
 
             {/* Floating Banner */}
@@ -347,9 +352,6 @@ export const ScrollContainerProvider = ({
                         paddingTop: TOP_SPACER,
                         paddingBottom: LOWER_CONTAINER_PADDING,
                         flexGrow: 1,
-                    }}
-                    onContentSizeChange={(_, height) => {
-                        contentHeight.value = height - LOWER_CONTAINER_PADDING;
                     }}
                 >
 
@@ -390,8 +392,6 @@ export const ScrollContainerProvider = ({
                     )}
 
                     {children}
-
-                    <BottomOfContainer ref={bottomScrollRef} />
 
                 </ScrollContainer>
             </KeyboardAvoidingView>

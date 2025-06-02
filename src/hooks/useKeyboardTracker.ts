@@ -18,14 +18,19 @@ export const useKeyboardTracker = () => {
         return SCREEN_HEIGHT - keyboardHeight.value;
     });
 
+    const isKeyboardVisible = useDerivedValue(() => {
+        return [1, 2, 3].includes(keyboard.state.value)
+    });
+
     const isKeyboardOpen = useDerivedValue(() => {
-        return keyboard.state.value === 2;
+        return 2 === keyboard.state.value
     });
 
     return {
         keyboard,
         keyboardHeight,
         keyboardAbsoluteTop,
+        isKeyboardVisible,
         isKeyboardOpen
     };
 };
