@@ -7,7 +7,7 @@ import { useScrollContainer } from '@/services/ScrollContainer';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { sanitizeList } from '@/utils/listUtils';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { Portal } from 'react-native-paper';
 import Animated, { cancelAnimation, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
@@ -69,6 +69,8 @@ const SortableList = <
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
 
+    // const pendingItem = useRef<T | null>(null);
+
     const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
@@ -82,6 +84,14 @@ const SortableList = <
         if (currentTextfield?.listId === listId) {
             fullList = sanitizeList(fullList, currentTextfield);
         }
+
+        // if (pendingItem.current) {
+        //     if (!fullList.find(i => i.id === pendingItem.current?.id)) {
+        //         fullList.push(pendingItem.current);
+        //     } else {
+        //         pendingItem.current = null;
+        //     }
+        // }
 
         if (isListDragging.value) {
             isListDragging.value = false;
@@ -117,6 +127,9 @@ const SortableList = <
     }
 
     async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
+        //  if (currentTextfield && currentTextfield.status !== EItemStatus.TRANSFER) {
+        //     // pendingItem.current = { ...currentTextfield };
+        // }
         saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
     }
 

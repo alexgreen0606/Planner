@@ -5,25 +5,31 @@ import DateValue from '@/components/text/DateValue';
 import { DEADLINE_LIST_KEY } from '@/constants/storageIds';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useScrollContainer } from '@/services/ScrollContainer';
 import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { IDeadline } from '@/types/listItems/IDeadline';
+import { loadCalendarData } from '@/utils/calendarUtils';
 import { datestampToMidnightDate, daysBetweenToday, getTodayDatestamp } from '@/utils/dateUtils';
 import { deleteDeadlines, getDeadlines, saveDeadline } from '@/utils/deadlineUtils';
 import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
 const Deadlines = () => {
-
-    const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
+    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IDeadline>();
+    const { setUpperContentHeight } = useScrollContainer();
 
     const [dateSelectOpen, setDateSelectOpen] = useState(false);
 
-    const {currentTextfield, setCurrentTextfield} = useTextfieldData<IDeadline>();
+    const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
+
+    useEffect(() => {
+        setUpperContentHeight(0);
+    }, [])
 
     // ------------- Utility Functions -------------
 
@@ -71,6 +77,7 @@ const Deadlines = () => {
             create: async (deadline) => {
                 const newId = await saveDeadline(deadline, true);
                 await DeadlineItems.refetchItems();
+                await loadCalendarData();
 
                 // Return the newly generated ID. Prevents duplicates of the same deadline in the list.
                 return newId;
@@ -78,10 +85,12 @@ const Deadlines = () => {
             update: async (deadline) => {
                 await saveDeadline(deadline, false);
                 await DeadlineItems.refetchItems();
+                await loadCalendarData();
             },
             delete: async (deadlines) => {
                 await deleteDeadlines(deadlines);
                 await DeadlineItems.refetchItems();
+                await loadCalendarData();
             }
         },
         initializeListItem: initializeDeadline,
@@ -96,7 +105,7 @@ const Deadlines = () => {
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
                 items={DeadlineItems.items}
-                onDragEnd={() => {}} // TODO: refresh list?
+                onDragEnd={() => { }} // TODO: refresh list?
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}

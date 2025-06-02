@@ -51,6 +51,7 @@ interface ScrollContainerContextValue {
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
+    setUpperContentHeight: (height: number) => void;
     bottomScrollRef: React.RefObject<Animated.View>;
 }
 
@@ -78,7 +79,10 @@ export const ScrollContainerProvider = ({
 
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
 
-    const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight;
+    // Tracks the height of any content above the list container
+    const [upperContentHeight, setUpperContentHeight] = useState(0);
+
+    const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
     const VISIBLE_HEIGHT = SCREEN_HEIGHT - LOWER_CONTAINER_PADDING;
 
@@ -113,8 +117,7 @@ export const ScrollContainerProvider = ({
         try {
             const measured = measure(bottomScrollRef);
             if (measured) {
-                bottomAnchorAbsolutePosition.value = UPPER_CONTAINER_PADDING + measured.y - scrollOffset.value; // TODO why does the measure values only change when the scroll direction reverses?
-                console.log(bottomAnchorAbsolutePosition.value, 'abs position')
+                bottomAnchorAbsolutePosition.value = UPPER_CONTAINER_PADDING + measured.y - scrollOffset.value;
             }
         } catch (e) { }
     };
@@ -322,7 +325,8 @@ export const ScrollContainerProvider = ({
             autoScroll,
             measureContentHeight,
             floatingBannerHeight,
-            bottomScrollRef
+            bottomScrollRef,
+            setUpperContentHeight
         }}>
 
             {/* Floating Banner */}

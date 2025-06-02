@@ -1,11 +1,12 @@
 import GenericIcon from '@/components/GenericIcon';
 import PopoverList from '@/components/PopoverList';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
 import RecurringWeekdayPlanner from '@/components/recurringPlanner/RecurringWeekdayPlanner';
+import { useScrollContainer } from '@/services/ScrollContainer';
 
 type RecurringOption = {
     label: string;
@@ -13,11 +14,18 @@ type RecurringOption = {
 }
 
 const RecurringPlanners = () => {
+    const { setUpperContentHeight } = useScrollContainer();
+
+
     const recurringPlannerOptions = useMemo(() => {
         return Object.entries(ERecurringPlannerKeys).map(([value, label]) => {
             return { label, value: value as ERecurringPlannerKeys }
         })
     }, []);
+
+    useEffect(() => {
+        setUpperContentHeight(0);
+    }, [])
 
     const [recurringModalOpen, setRecurringModalOpen] = useState(false);
     const [selectedRecurring, setSelectedRecurring] = useState(ERecurringPlannerKeys.WEEKDAYS);

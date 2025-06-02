@@ -81,7 +81,11 @@ const PlannerSetModal = () => {
     useEffect(() => {
         reset({
             ...emptyFormData,
-            ...plannerSet
+            ...plannerSet,
+            dates: {
+                startTime: plannerSet?.startDate ?? null,
+                endTime: plannerSet?.endDate ?? null
+            }
         });
     }, [plannerSet, reset]);
 

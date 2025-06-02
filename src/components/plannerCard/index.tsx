@@ -135,7 +135,7 @@ const PlannerCard = ({
             delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
-        reloadOnNavigate: true
+        // reloadOnNavigate: true
     });
 
     const badgesConfig = useMemo(() => {

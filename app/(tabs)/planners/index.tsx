@@ -4,7 +4,7 @@ import PopoverList from '@/components/PopoverList';
 import { NULL } from '@/constants/generic';
 import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
 import { usePathname, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
@@ -12,15 +12,18 @@ import { getPlannerSetTitles, getPlannerSet } from '@/storage/plannerSetsStorage
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import ScrollAnchor from '@/components/ScrollAnchor';
-
+import { useScrollContainer } from '@/services/ScrollContainer';
 
 const defaultPlannerSet = 'Next 7 Days';
 
 const Planners = () => {
+    const upperContentRef = useRef<View>(null);
 
     const router = useRouter();
     const allPlannerSetTitles = getPlannerSetTitles();
+    const { setUpperContentHeight } = useScrollContainer();
     const [plannerSetKey, setPlannerSetKey] = useState(defaultPlannerSet);
+    const pathname = usePathname();
 
     const plannerDatestamps = useMemo(() => {
         if (plannerSetKey === 'Next 7 Days') return getNextEightDayDatestamps().slice(1, 8);
@@ -29,7 +32,7 @@ const Planners = () => {
         if (!plannerSet) return [];
 
         return generateDatestampRange(plannerSet.startDate, plannerSet.endDate)
-    }, [plannerSetKey]);
+    }, [plannerSetKey, pathname]);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-05-17": {
@@ -99,8 +102,6 @@ const Planners = () => {
 
     const { registerReloadFunction } = useReloadScheduler();
 
-    const pathname = usePathname();
-
     // Load in the initial planners
     useEffect(() => {
         loadCalendarData();
@@ -114,17 +115,33 @@ const Planners = () => {
         >
 
             {/* Planner Set Selection */}
-            <View className='p-4 flex-row justify-between items-center w-full' >
+            <View
+                ref={upperContentRef}
+                className='p-4 flex-row justify-between items-center w-full'
+                onLayout={(event) => {
+                    const { height } = event.nativeEvent.layout;
+                    setUpperContentHeight(height);
+                }}
+            >
                 <PopoverList<string>
                     getLabelFromObject={(set) => set} // TODO remove this prop
                     options={[defaultPlannerSet, ...allPlannerSetTitles]}
                     onChange={(newSet) => setPlannerSetKey(newSet)}
                 />
-                <GenericIcon
-                    type='add'
-                    platformColor='systemBlue'
-                    onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${NULL}`)}
-                />
+                <View className='gap-2 flex-row'>
+                    {plannerSetKey !== 'Next 7 Days' && (
+                        <GenericIcon
+                            type='edit'
+                            platformColor='systemBlue'
+                            onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${plannerSetKey}`)}
+                        />
+                    )}
+                    <GenericIcon
+                        type='add'
+                        platformColor='systemBlue'
+                        onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${NULL}`)}
+                    />
+                </View>
             </View>
 
             {/* Planner Set Display */}

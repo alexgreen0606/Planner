@@ -22,6 +22,7 @@ const iconMap = {
     lists: 'list.bullet.clipboard',
     coffee: 'cup.and.saucer.fill',
     add: 'plus',
+    edit: 'pencil',
     chevronLeft: 'chevron.left',
     chevronDown: 'chevron.down',
     chevronUp: 'chevron.up',
