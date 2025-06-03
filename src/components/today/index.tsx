@@ -47,9 +47,9 @@ const TodayPlanner = () => {
         storageKey: datestamp,
         getItemsFromStorageObject,
         storageConfig: {
-            create: saveEventReloadData,
-            update: saveEventReloadData,
-            delete: handleDeleteEvents
+            createItem: saveEventReloadData,
+            updateItem: saveEventReloadData,
+            deleteItems: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
         // reloadOnNavigate: true,

@@ -38,7 +38,7 @@ export interface DraggableListProps<
     getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
-    saveTextfieldAndCreateNew: (item: T | null, referenceId?: number, isChildId?: boolean) => void;
+    saveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
     getToolbar?: (item: T) => ModifyItemConfig<T, P>;
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
@@ -117,7 +117,7 @@ const SortableList = <
     }
 
     async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-        saveTextfieldAndCreateNew(textfieldItem, referenceSortId, isChildId);
+        saveTextfieldAndCreateNew(referenceSortId, isChildId);
     }
 
     function handleDragStart(initialTop: number, initialIndex: number) {

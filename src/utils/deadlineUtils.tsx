@@ -49,8 +49,8 @@ export async function getDeadlines(): Promise<IDeadline[]> {
     }));
 };
 
-export async function saveDeadline(deadline: IDeadline, createNew: boolean = false): Promise<string> {
-    return await ReactNativeCalendarEvents.saveEvent(
+export async function saveDeadline(deadline: IDeadline, createNew: boolean = false): Promise<void> {
+    await ReactNativeCalendarEvents.saveEvent(
         deadline.value,
         {
             id: createNew ? undefined : deadline.id,

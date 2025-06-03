@@ -1,7 +1,7 @@
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
-import { EItemStatus } from '@/enums/EItemStatus';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
@@ -11,7 +11,6 @@ import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 
 const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
 
@@ -62,15 +61,15 @@ const RecurringWeekdayPlanner = () => {
         storageKey: RECURRING_WEEKDAY_PLANNER_KEY,
         getItemsFromStorageObject: generateRecurringWeekdayPlanner,
         storageConfig: {
-            create: (event) => {
+            createItem: (event) => {
                 saveRecurringWeekdayEvent(event);
                 SortedEvents.refetchItems();
             },
-            update: (event) => {
+            updateItem: (event) => {
                 saveRecurringWeekdayEvent(event);
                 SortedEvents.refetchItems();
             },
-            delete: (events) => {
+            deleteItems: (events) => {
                 deleteRecurringWeekdayEvent(events);
 
                 // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
@@ -91,11 +90,7 @@ const RecurringWeekdayPlanner = () => {
                 listId={RECURRING_WEEKDAY_PLANNER_KEY}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
-                saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedEvents.saveTextfieldAndCreateNew(
-                    item ? { ...item, status: EItemStatus.STATIC } : null,
-                    refId,
-                    isChildId
-                )}
+                saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}

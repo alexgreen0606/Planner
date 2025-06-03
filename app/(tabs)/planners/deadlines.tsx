@@ -12,16 +12,18 @@ import { IDeadline } from '@/types/listItems/IDeadline';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { datestampToMidnightDate, daysBetweenToday, getTodayDatestamp } from '@/utils/dateUtils';
 import { deleteDeadlines, getDeadlines, saveDeadline } from '@/utils/deadlineUtils';
-import { generateSortId, isItemTextfield } from '@/utils/listUtils';
+import { isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
 const Deadlines = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IDeadline>();
     const { setUpperContentHeight } = useScrollContainer();
+
+    const closeTextfieldOnDateSelectorClose = useRef(false);
 
     const [dateSelectOpen, setDateSelectOpen] = useState(false);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -45,6 +47,10 @@ const Deadlines = () => {
 
     function toggleDateSelector() {
         setDateSelectOpen(curr => !curr);
+        if (closeTextfieldOnDateSelectorClose.current) {
+            setTextfieldItem(null);
+            closeTextfieldOnDateSelectorClose.current = false;
+        }
     };
 
     function generateToolbar(
@@ -74,9 +80,8 @@ const Deadlines = () => {
                                         text: 'Delete',
                                         style: 'destructive',
                                         onPress: async () => {
-                                            setTextfieldItem(undefined);
                                             await DeadlineItems.deleteSingleItemFromStorage(deadline);
-                                            await DeadlineItems.refetchItems();
+                                            setTextfieldItem(null);
                                             setIsDeleteAlertOpen(false);
                                         }
                                     }
@@ -98,22 +103,13 @@ const Deadlines = () => {
         storageKey: DEADLINE_LIST_KEY,
         getItemsFromStorageObject: getDeadlines,
         storageConfig: {
-            create: async (deadline) => {
-                // Return the newly generated ID. Keeps the texfield from flickering shut.
-                return await saveDeadline(deadline, true);
+            createItem: async (deadline) => {
+                await saveDeadline(deadline, true);
             },
-            update: async (deadline) => {
-                await saveDeadline(deadline);
-            },
-            delete: async (deadlines) => {
-                await deleteDeadlines(deadlines);
-                await DeadlineItems.refetchItems();
-
-                // Lazy load calendar data for planners.
-                loadCalendarData();
-            }
+            updateItem: saveDeadline,
+            deleteItems: deleteDeadlines
         },
-        handleTextfieldSave: async () => {
+        handleListChange: async () => {
             await DeadlineItems.refetchItems();
 
             // Lazy load calendar data for planners.
@@ -131,7 +127,7 @@ const Deadlines = () => {
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
                 items={DeadlineItems.items}
-                hideKeyboard={isDeleteAlertOpen}
+                hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
                 onDragEnd={() => { }} // TODO: refresh list?
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
@@ -143,7 +139,11 @@ const Deadlines = () => {
                     className: 'flex-1'
                 }}
                 getLeftIconConfig={(item) => ({
-                    onClick: DeadlineItems.toggleItemEdit,
+                    onClick: async () => {
+                        closeTextfieldOnDateSelectorClose.current = true;
+                        await DeadlineItems.toggleItemEdit(item);
+                        setDateSelectOpen(true);
+                    },
                     customIcon: <DateValue concise isoTimestamp={item.startTime} />
                 })}
                 getRightIconConfig={(deadline) => ({

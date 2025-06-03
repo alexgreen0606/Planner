@@ -1,10 +1,11 @@
 import { ScrollContainerProvider } from '@/services/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
-import { LayoutChangeEvent, PlatformColor, StyleSheet, View } from 'react-native';
+import React from 'react';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import ButtonText from './text/ButtonText';
+import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 
 const TabHighlight = Animated.createAnimatedComponent(View);
 
@@ -16,53 +17,34 @@ interface TopNavbarProps {
     children: React.ReactNode;
 }
 
-const TopNavbar = ({ children }: TopNavbarProps) => {
+const PlannersNavbar = ({ children }: TopNavbarProps) => {
 
     const tabs = [
-        { label: 'Planners', pathname: '/planners', index: 0 },
-        { label: 'Deadlines', pathname: '/planners/deadlines', index: 1 },
-        { label: 'Recurring', pathname: '/planners/recurring', index: 2 }
+        { label: 'Planners', pathname: '/planners', index: 0, width: 60 },
+        { label: 'Deadlines', pathname: '/planners/deadlines', index: 1, width: 61 },
+        { label: 'Recurring', pathname: '/planners/recurring', index: 2, width: 70 }
     ];
 
     const pathname = usePathname();
     const router = useRouter();
-    const barRef = useRef<View>(null);
-    const tabWidths = useRef<Record<string, number>>({});
-    const [barWidth, setBarWidth] = useState(0);
-    const indicatorWidth = useSharedValue(0);
-    const indicatorLeft = useSharedValue(0);
 
     const activeTab = tabs.find(tab => pathname === tab.pathname) ?? tabs[0];
 
-    // Trigger the highlight animation on tab change
-    useEffect(() => {
-        handleTabChange();
-    }, [pathname]);
+    const indicatorWidth = useSharedValue(activeTab?.width);
+    const indicatorLeft = useSharedValue(((TAB_SPACING / 2) + INDICATOR_GAP) / 4);
 
     // ------------- Utility Functions -------------
 
-    function handleTabLayout(event: LayoutChangeEvent, pathname: string) {
-        const { width } = event.nativeEvent.layout;
-        tabWidths.current[pathname] = width;
-        if (pathname === activeTab.pathname) {
-            handleTabChange();
-        }
-    }
+    function handleTabChange(tab: any) {
+        const targetLeft = tabs
+            .slice(0, tab.index)
+            .reduce((acc, { width }) => acc + width + TAB_SPACING, 0) + INDICATOR_GAP;
+        const targetWidth = tab.width;
 
-    function handleTabChange() {
-        const targetLeft = Object.values(tabWidths.current)
-            .slice(0, activeTab.index)
-            .reduce((acc, width) => acc + width + TAB_SPACING, 0) + INDICATOR_GAP;
-        const targetWidth = tabWidths.current[activeTab.pathname] || 0;
+        indicatorLeft.value = withTiming(targetLeft, LINEAR_ANIMATION_CONFIG);
+        indicatorWidth.value = withTiming(targetWidth, LINEAR_ANIMATION_CONFIG);
 
-        indicatorLeft.value = withTiming(targetLeft, { duration: 300 });
-        indicatorWidth.value = withTiming(targetWidth, { duration: 300 });
-
-        if (barWidth === 0 && tabWidths.current.length === tabs.length) {
-            barRef.current?.measure((_, __, width) => {
-                setBarWidth(Math.ceil(width));
-            })
-        }
+        router.push(tab.pathname)
     }
 
     // ------------- Highlight Animation -------------
@@ -80,7 +62,7 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
             <ScrollContainerProvider
                 floatingBanner={
                     <View className='w-full flex items-center'>
-                        <View style={styles.bar} ref={barRef}>
+                        <View style={styles.bar}>
 
                             {/* Blurred Background */}
                             <BlurView
@@ -97,9 +79,8 @@ const TopNavbar = ({ children }: TopNavbarProps) => {
                                 <ButtonText
                                     key={`${tab.label}-floating-tab`}
                                     textType='label'
-                                    onClick={() => router.push(tab.pathname)}
+                                    onClick={() => handleTabChange(tab)}
                                     platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
-                                    onLayout={(e) => handleTabLayout(e, tab.pathname)}
                                 >
                                     {tab.label}
                                 </ButtonText>
@@ -140,4 +121,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default TopNavbar;
+export default PlannersNavbar;

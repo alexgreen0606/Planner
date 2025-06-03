@@ -40,11 +40,7 @@ const Checklist = () => {
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, isItemDeleting(item))}
-            saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedItems.saveTextfieldAndCreateNew(
-                item ? { ...item, status: isItemTextfield(item) ? EItemStatus.STATIC : item.status } : null,
-                refId,
-                isChildId
-            )}
+            saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",
                 className: 'flex-1'

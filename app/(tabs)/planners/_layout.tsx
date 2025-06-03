@@ -1,10 +1,10 @@
-import TopNavbar from '@/components/TopNavbar';
+import PlannersNavbar from '@/components/PlannersNavbar';
 import { Slot } from 'expo-router';
 
 export default function PlannersLayout() {
     return (
-        <TopNavbar>
+        <PlannersNavbar>
             <Slot />
-        </TopNavbar>
+        </PlannersNavbar>
     )
 }

@@ -204,14 +204,14 @@ const SortedFolder = ({
         storageKey: folderId,
         getItemsFromStorageObject: getFolderItems,
         storageConfig: {
-            create: createFolderItem,
-            update: (newItem) => {
+            createItem: createFolderItem,
+            updateItem: (newItem) => {
                 updateFolderItem(newItem);
 
                 // Rebuild the list to sync the updated item
                 SortedItems.refetchItems();
             },
-            delete: (items) => {
+            deleteItems: (items) => {
                 deleteFolderItem(items[0].id, items[0].type);
                 setTextfieldItem(null);
             }

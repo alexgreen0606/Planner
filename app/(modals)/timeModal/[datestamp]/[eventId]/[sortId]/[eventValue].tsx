@@ -55,12 +55,12 @@ const TimeModal = () => {
 
         const planner = getPlannerFromStorage(datestamp);
         const event = planner.events.find(e => e.id === eventId);
-        if (!event) router.back();
+        if (!event) return null;
 
         return { ...event, value: newValue, status: EItemStatus.EDIT };
     }, [eventId]);
 
-    const isEditMode = planEvent.status === EItemStatus.EDIT;
+    const isEditMode = planEvent?.status === EItemStatus.EDIT;
 
     const {
         control,
@@ -133,7 +133,7 @@ const TimeModal = () => {
         // Place the new textfield directly below the new item. If the item was removed from the planner, 
         // place the new textfield directly where the item was.
         const newTextfieldSortId = event ?
-            generateSortId(event.sortId, savedPlanner.events) : planEvent.sortId!;
+            generateSortId(event.sortId, savedPlanner.events) : planEvent?.sortId!;
 
         const newTextfield: IListItem = {
             id: uuid.v4(),
