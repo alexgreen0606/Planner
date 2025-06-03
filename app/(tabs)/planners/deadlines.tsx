@@ -32,6 +32,8 @@ const Deadlines = () => {
 
     useEffect(() => {
         setUpperContentHeight(0);
+
+        return () => setTextfieldItem(null); // TODO: save the item instead
     }, [])
 
     // ------------- Utility Functions -------------

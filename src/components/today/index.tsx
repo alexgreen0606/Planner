@@ -52,7 +52,6 @@ const TodayPlanner = () => {
             deleteItems: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
-        // reloadOnNavigate: true,
         initializedStorageObject: generatePlanner(datestamp)
     });
 

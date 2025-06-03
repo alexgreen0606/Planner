@@ -242,8 +242,9 @@ const TimeModal = () => {
             }}
             deleteButtonConfig={{
                 label: 'Unschedule',
-                onClick: handleDelete,
-                hidden: !isEditMode
+                hidden: !isEditMode,
+                optionLabels: ['Delete Event', 'Unschedule Event'],
+                optionHandlers: [() => null, handleDelete] // TODO: how to handle unscheduling
             }}
             onClose={() => router.back()}
         >

@@ -15,6 +15,8 @@ import ScrollAnchor from '@/components/ScrollAnchor';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { useAtom } from 'jotai';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -24,6 +26,7 @@ const Planners = () => {
     const router = useRouter();
     const allPlannerSetTitles = getPlannerSetTitles();
     const { setUpperContentHeight } = useScrollContainer();
+    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const pathname = usePathname();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
@@ -109,6 +112,8 @@ const Planners = () => {
     useEffect(() => {
         loadCalendarData();
         registerReloadFunction('planners-reload-trigger', loadCalendarData, pathname);
+
+        return () => setTextfieldItem(null); // TODO: save the item instead
     }, []);
 
     return (

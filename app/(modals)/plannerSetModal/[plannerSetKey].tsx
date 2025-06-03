@@ -108,7 +108,10 @@ const PlannerSetModal = () => {
     }
 
     function handleDelete() {
-        if (plannerSet) deletePlannerSet(plannerSet);
+        if (plannerSet) {
+            deletePlannerSet(plannerSet);
+            setPlannerSetKey('Next 7 Days');
+        }
         router.back();
     }
 
@@ -122,8 +125,10 @@ const PlannerSetModal = () => {
             }}
             deleteButtonConfig={{
                 label: 'Delete Planner',
-                onClick: handleDelete,
-                hidden: !isEditMode
+                hidden: !isEditMode,
+                optionLabels: ['Delete Planner'],
+                optionHandlers: [handleDelete],
+                message: 'Events in the planner will not be deleted.'
             }}
             onClose={() => router.back()}
         >

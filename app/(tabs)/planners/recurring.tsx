@@ -1,12 +1,13 @@
-import GenericIcon from '@/components/GenericIcon';
 import PopoverList from '@/components/PopoverList';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 
-import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
 import RecurringWeekdayPlanner from '@/components/recurringPlanner/RecurringWeekdayPlanner';
+import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
+import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 
 type RecurringOption = {
     label: string;
@@ -15,6 +16,7 @@ type RecurringOption = {
 
 const RecurringPlanners = () => {
     const { setUpperContentHeight } = useScrollContainer();
+    const [_, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
 
 
     const recurringPlannerOptions = useMemo(() => {
@@ -25,6 +27,8 @@ const RecurringPlanners = () => {
 
     useEffect(() => {
         setUpperContentHeight(0);
+
+        return () => setTextfieldItem(null); // TODO: save the item instead
     }, [])
 
     const [recurringModalOpen, setRecurringModalOpen] = useState(false);

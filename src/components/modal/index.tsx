@@ -1,7 +1,7 @@
 import { spacing } from "@/constants/layout";
 import { BlurView } from "expo-blur";
 import React, { ReactNode } from 'react';
-import { PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
+import { ActionSheetIOS, PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ButtonText from '../text/ButtonText';
@@ -22,8 +22,10 @@ interface ModalProps {
     };
     deleteButtonConfig?: {
         label: string;
-        onClick: () => void;
-        hidden?: boolean
+        optionLabels: string[];
+        optionHandlers: (() => void)[];
+        message?: string;
+        hidden?: boolean;
     };
     onClose: () => void;
     customStyle?: ViewStyle;
@@ -44,7 +46,7 @@ const Modal = ({
     const scrollOffset = useSharedValue(0);
 
     // Keep track of modal scroll position
-    const handler = useAnimatedScrollHandler({
+    const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
             scrollOffset.value = event.contentOffset.y;
         }
@@ -60,6 +62,29 @@ const Modal = ({
         return { opacity };
     });
 
+    function handleDeleteButtonClick() {
+        if (!deleteButtonConfig) return;
+
+        const { optionLabels, optionHandlers, message } = deleteButtonConfig;
+        const handlers = [
+            () => null,
+            ...optionHandlers
+        ];
+        ActionSheetIOS.showActionSheetWithOptions(
+            {
+                options: ['Cancel', ...optionLabels],
+                destructiveButtonIndex: 1,
+                cancelButtonIndex: 0,
+                message
+            },
+            buttonIndex => {
+                if (buttonIndex === 0) return;
+
+                handlers[buttonIndex]?.();
+            }
+        );
+    }
+
     return (
         <View
             className='flex-1'
@@ -70,12 +95,12 @@ const Modal = ({
         >
             <ScrollContainer
                 ref={scrollRef}
-                onScroll={handler}
+                onScroll={scrollHandler}
                 contentContainerStyle={{
                     paddingTop: TOP_BLUR_BAR_HEIGHT,
                     paddingBottom: BOTTOM_SPACER,
                     paddingHorizontal: spacing.large,
-                    flex: 1
+                    flexGrow: 1
                 }}
             >
 
@@ -93,9 +118,15 @@ const Modal = ({
 
                 {/* Delete Button */}
                 {!deleteButtonConfig?.hidden && (
-                    <View className="w-full items-center">
+                    <View
+                        className="w-full items-center"
+                        style={{
+                            paddingTop: BOTTOM_SPACER,
+                            paddingBottom: BOTTOM_SPACER / 2
+                        }}
+                    >
                         <ButtonText
-                            onClick={deleteButtonConfig?.onClick!}
+                            onClick={handleDeleteButtonClick}
                             platformColor='systemRed'
                         >
                             {deleteButtonConfig?.label}

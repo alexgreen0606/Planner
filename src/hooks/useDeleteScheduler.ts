@@ -2,19 +2,19 @@ import { useAtom } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
 import { DELETE_ITEMS_DELAY_MS } from '@/constants/listConstants';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import { deleteFunctionsMapAtom, pendingDeleteMapAtom } from '@/atoms/pendingDeletes';
+import { deleteFunctionsMapAtom, pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
 
-export function useDeleteScheduler <T extends IListItem>() {
-    const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteMapAtom);
+export function useDeleteScheduler<T extends IListItem>() {
+    const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);
     const [deleteFunctionsMap, setDeleteFunctionsMap] = useAtom(deleteFunctionsMapAtom);
     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const getDeletingItems = useCallback((): T[] => {
-        return Object.values(pendingDeleteMap).flat();
+        return Object.values(pendingDeleteMap);
     }, [pendingDeleteMap]);
 
     const isItemDeleting = (item: T) => {
-        return (pendingDeleteMap[item.listId] || []).some(i => i.id === item.id);
+        return !!pendingDeleteMap[item.id];
     };
 
     const registerDeleteFunction = (
@@ -28,26 +28,16 @@ export function useDeleteScheduler <T extends IListItem>() {
     };
 
     const scheduleItemDeletion = (item: T) => {
-        setPendingDeleteMap(prev => {
-            const updatedList = [...(prev[item.listId] || []), item];
-            return {
-                ...prev,
-                [item.listId]: updatedList,
-            };
-        });
+        setPendingDeleteMap(prev => ({
+            ...prev,
+            [item.id]: item,
+        }));
     };
 
     const cancelItemDeletion = (item: T) => {
         setPendingDeleteMap(prev => {
-            const currentList = prev[item.listId] || [];
-            const filteredList = currentList.filter(i => i.id !== item.id);
-
             const newMap = { ...prev };
-            if (filteredList.length > 0) {
-                newMap[item.listId] = filteredList;
-            } else {
-                delete newMap[item.listId];
-            }
+            delete newMap[item.id];
 
             return newMap;
         });
@@ -59,23 +49,28 @@ export function useDeleteScheduler <T extends IListItem>() {
             deleteTimeoutRef.current = null;
         }
 
-        const hasPendingItems = getDeletingItems().length > 0;
+        const deletingItems = getDeletingItems();
+        const hasPendingItems = deletingItems.length > 0;
 
         if (hasPendingItems) {
+
+            // Group items by listId
+            const listDeletions: Record<string, T[]> = {};
+            deletingItems.forEach((item) => {
+                const listId = item.listId;
+                if (!listDeletions[listId]) {
+                    listDeletions[listId] = [];
+                }
+                listDeletions[listId].push(item);
+            });
+
             deleteTimeoutRef.current = setTimeout(() => {
-                Object.entries(pendingDeleteMap).forEach(([listId, items]) => {
+                Object.entries(listDeletions).forEach(([listId, items]) => {
                     const deleteFn = deleteFunctionsMap[listId];
                     if (deleteFn) {
                         deleteFn(items);
                     }
                 });
-
-                setTimeout(() => {
-                    // Allow time for chips to be reloaded.
-                    // Prevents flicker of deleted multi-day chips.
-                    setPendingDeleteMap({});
-                }, 1500);
-                setDeleteFunctionsMap({});
                 deleteTimeoutRef.current = null;
             }, DELETE_ITEMS_DELAY_MS);
         }

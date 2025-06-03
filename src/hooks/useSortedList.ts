@@ -221,6 +221,7 @@ const useSortedList = <T extends IListItem, S>({
      * Adds or removes the item from the pendingDeleteItems array.
      */
     async function toggleItemDelete(item: T) {
+        console.log('toggling')
         // Handle textfield delete
         if (item.id === textfieldItem?.id) {
             setTextfieldItem(null);

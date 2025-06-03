@@ -87,6 +87,8 @@ const SortableList = <
             isListDragging.value = false;
         }
 
+        console.log(fullList)
+
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [textfieldItem?.id, textfieldItem?.sortId, items]);
 
