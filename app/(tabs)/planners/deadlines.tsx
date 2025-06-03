@@ -4,7 +4,7 @@ import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import { DEADLINE_LIST_KEY } from '@/constants/storageIds';
 import useSortedList from '@/hooks/useSortedList';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
@@ -16,14 +16,15 @@ import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
 const Deadlines = () => {
-    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IDeadline>();
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IDeadline>();
     const { setUpperContentHeight } = useScrollContainer();
 
     const [dateSelectOpen, setDateSelectOpen] = useState(false);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
     const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
 
@@ -34,10 +35,10 @@ const Deadlines = () => {
     // ------------- Utility Functions -------------
 
     function initializeDeadline(item: IListItem) {
-        const newSortId = generateSortId(-1, DeadlineItems.items);
         return {
             ...item,
-            sortId: newSortId,
+            // Place textfield above the first deadline
+            sortId: 0.5,
             startTime: DateTime.fromJSDate(todayMidnight).toISO()!
         }
     };
@@ -57,7 +58,30 @@ const Deadlines = () => {
                     [{
                         type: 'trash',
                         onClick: () => {
-                            DeadlineItems.toggleItemDelete(deadline);
+                            setIsDeleteAlertOpen(true);
+                            Alert.alert(
+                                `Delete "${deadline.value}"?`,
+                                'The event in your calendar will also be deleted.',
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel',
+                                        onPress: () => {
+                                            setIsDeleteAlertOpen(false);
+                                        }
+                                    },
+                                    {
+                                        text: 'Delete',
+                                        style: 'destructive',
+                                        onPress: async () => {
+                                            setTextfieldItem(undefined);
+                                            await DeadlineItems.deleteSingleItemFromStorage(deadline);
+                                            await DeadlineItems.refetchItems();
+                                            setIsDeleteAlertOpen(false);
+                                        }
+                                    }
+                                ]
+                            );
                         }
                     }],
                     [{
@@ -75,23 +99,25 @@ const Deadlines = () => {
         getItemsFromStorageObject: getDeadlines,
         storageConfig: {
             create: async (deadline) => {
-                const newId = await saveDeadline(deadline, true);
-                await DeadlineItems.refetchItems();
-                await loadCalendarData();
-
-                // Return the newly generated ID. Prevents duplicates of the same deadline in the list.
-                return newId;
+                // Return the newly generated ID. Keeps the texfield from flickering shut.
+                return await saveDeadline(deadline, true);
             },
             update: async (deadline) => {
-                await saveDeadline(deadline, false);
-                await DeadlineItems.refetchItems();
-                await loadCalendarData();
+                await saveDeadline(deadline);
             },
             delete: async (deadlines) => {
                 await deleteDeadlines(deadlines);
                 await DeadlineItems.refetchItems();
-                await loadCalendarData();
+
+                // Lazy load calendar data for planners.
+                loadCalendarData();
             }
+        },
+        handleTextfieldSave: async () => {
+            await DeadlineItems.refetchItems();
+
+            // Lazy load calendar data for planners.
+            loadCalendarData();
         },
         initializeListItem: initializeDeadline,
         reloadOnOverscroll: true
@@ -105,6 +131,7 @@ const Deadlines = () => {
                 listId={DEADLINE_LIST_KEY}
                 fillSpace
                 items={DeadlineItems.items}
+                hideKeyboard={isDeleteAlertOpen}
                 onDragEnd={() => { }} // TODO: refresh list?
                 onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
                 onContentClick={DeadlineItems.toggleItemEdit}
@@ -133,25 +160,25 @@ const Deadlines = () => {
             <DatePicker
                 modal
                 mode='date'
-                title={currentTextfield?.value}
+                title={textfieldItem?.value}
                 theme='dark'
                 minimumDate={datestampToMidnightDate(getTodayDatestamp())}
-                open={dateSelectOpen && Boolean(currentTextfield)}
+                open={dateSelectOpen && Boolean(textfieldItem)}
                 date={
-                    currentTextfield?.startTime
-                        ? DateTime.fromISO(currentTextfield.startTime).toJSDate()
+                    textfieldItem?.startTime
+                        ? DateTime.fromISO(textfieldItem.startTime).toJSDate()
                         : todayMidnight
                 }
                 onConfirm={(date) => {
-                    if (!currentTextfield) return;
+                    if (!textfieldItem) return;
 
                     const selected = DateTime.fromJSDate(date);
                     const updatedDeadline = {
-                        ...currentTextfield,
+                        ...textfieldItem,
                         startTime: selected.toISO(),
                     };
                     updatedDeadline.sortId = generateSortIdByTime(updatedDeadline, DeadlineItems.items);
-                    setCurrentTextfield({
+                    setTextfieldItem({
                         ...updatedDeadline,
                         startTime: selected.toISO()!
                     });

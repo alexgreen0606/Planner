@@ -34,11 +34,6 @@ const TodayPlanner = () => {
         openTimeModal(datestamp, item, router);
     }
 
-    async function handleSaveEvent(event: IPlannerEvent) {
-        const savedEvent = await saveEventReloadData(event);
-        return savedEvent?.calendarId;
-    }
-
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
         await deleteEventsReloadData(planEvents);
     }
@@ -52,8 +47,8 @@ const TodayPlanner = () => {
         storageKey: datestamp,
         getItemsFromStorageObject,
         storageConfig: {
-            create: handleSaveEvent,
-            update: (updatedEvent) => { saveEventReloadData(updatedEvent) },
+            create: saveEventReloadData,
+            update: saveEventReloadData,
             delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],

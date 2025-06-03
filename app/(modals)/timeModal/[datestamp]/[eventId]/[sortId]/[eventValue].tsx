@@ -3,7 +3,7 @@ import Modal from "@/components/modal";
 import { NULL } from "@/constants/generic";
 import { EFormFieldType } from "@/enums/EFormFieldType";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { useTextfieldData } from "@/hooks/useTextfieldData";
+import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { getPlannerFromStorage } from "@/storage/plannerStorage";
 import { IFormField } from "@/types/form/IFormField";
 import { IListItem } from "@/types/listItems/core/TListItem";
@@ -39,7 +39,7 @@ const TimeModal = () => {
 
     const router = useRouter();
 
-    const { setCurrentTextfield } = useTextfieldData<IListItem>();
+    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
 
     const planEvent = useMemo(() => {
         const newValue = eventValue === NULL ? '' : eventValue;
@@ -143,7 +143,7 @@ const TimeModal = () => {
             value: ''
         };
 
-        setCurrentTextfield(newTextfield);
+        setTextfieldItem(newTextfield);
         router.back();
     }
 
@@ -155,7 +155,7 @@ const TimeModal = () => {
         if (!timeRange.startTime || !timeRange.endTime) return;
 
         const startTimeUtc = DateTime.fromISO(timeRange.startTime).toUTC().toISO();
-    let endTimeUtc = DateTime.fromISO(timeRange.endTime).toUTC().toISO();
+        let endTimeUtc = DateTime.fromISO(timeRange.endTime).toUTC().toISO();
 
         const updatedItem = {
             ...planEvent,

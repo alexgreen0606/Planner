@@ -41,7 +41,7 @@ const Checklist = () => {
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, isItemDeleting(item))}
             saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedItems.saveTextfieldAndCreateNew(
-                item ? { ...item, status: isItemTextfield(item) ? EItemStatus.STATIC : item.status } : undefined,
+                item ? { ...item, status: isItemTextfield(item) ? EItemStatus.STATIC : item.status } : null,
                 refId,
                 isChildId
             )}

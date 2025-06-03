@@ -130,7 +130,7 @@ export function buildItemPositions<T extends IListItem>(currentList: T[]): Recor
  * @param replaceId The ID of the item to replace in the list. If not provided, syncItem's ID will be used.
  * @returns A clean list sorted by sort ID
  */
-export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T, replaceId?: string) {
+export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T | null, replaceId?: string) {
     const updatedList = [...list];
 
     if (syncItem) {

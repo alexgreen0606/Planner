@@ -3,7 +3,6 @@ import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
@@ -22,6 +21,7 @@ import { GenericIconProps } from '../GenericIcon';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import DayBanner from './DayBanner';
+import { textfieldItemAtom } from '@/atoms/textfieldData';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -72,7 +72,7 @@ const PlannerCard = ({
     const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
     const [calendarChips] = useAtom(calendarChipsByDate(datestamp));
 
-    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IPlannerEvent>();
+    const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
 
     const pathname = usePathname();
 
@@ -97,10 +97,10 @@ const PlannerCard = ({
     }, [getDeletingItems]);
 
     async function toggleCollapsed() {
-        if (currentTextfield) {
-            if (currentTextfield.value.trim() !== '')
-                await SortedEvents.persistItemToStorage(currentTextfield);
-            setCurrentTextfield(undefined);
+        if (textfieldItem) {
+            if (textfieldItem.value.trim() !== '')
+                await SortedEvents.persistItemToStorage(textfieldItem);
+            setTextfieldItem(null);
         }
         setCollapsed(curr => !curr);
     };
@@ -109,11 +109,6 @@ const PlannerCard = ({
 
     function handleOpenTimeModal(item: IPlannerEvent) {
         openTimeModal(datestamp, item, router);
-    }
-
-    async function handleSaveEvent(event: IPlannerEvent) {
-        const savedEvent = await saveEventReloadData(event);
-        return savedEvent?.calendarId;
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
@@ -130,12 +125,11 @@ const PlannerCard = ({
         getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
         storageConfig: {
-            create: handleSaveEvent,
-            update: (updatedEvent) => { saveEventReloadData(updatedEvent) },
+            create: saveEventReloadData,
+            update: saveEventReloadData,
             delete: handleDeleteEvents
         },
         reloadTriggers: [calendarEvents],
-        // reloadOnNavigate: true
     });
 
     const badgesConfig = useMemo(() => {

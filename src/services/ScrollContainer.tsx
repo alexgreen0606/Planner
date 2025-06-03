@@ -3,8 +3,8 @@ import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOO
 import { NAVBAR_OVERFLOW_FADE_THRESHOLD, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/constants/listConstants';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { BlurView } from 'expo-blur';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, PlatformColor, ScrollView, useWindowDimensions, View } from 'react-native';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { Portal } from 'react-native-paper';
 import Animated, {
@@ -53,6 +53,9 @@ interface ScrollContainerContextValue {
     measureContentHeight: () => void;
     setUpperContentHeight: (height: number) => void;
     bottomScrollRef: React.RefObject<Animated.View>;
+    // Placeholder Textfield (prevents keyboard flicker)
+    focusPlaceholder: () => void;
+    blurPlaceholder: () => void;
 }
 
 const ScrollContainerContext = createContext<ScrollContainerContextValue | null>(null);
@@ -70,6 +73,9 @@ export const ScrollContainerProvider = ({
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
     const bottomScrollRef = useAnimatedRef<Animated.View>();
+
+    const placeholderInputRef = useRef<TextInput>(null);
+
 
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
@@ -126,6 +132,14 @@ export const ScrollContainerProvider = ({
         () => scrollOffset.value,
         measureContentHeight
     );
+
+    const focusPlaceholder = () => {
+        placeholderInputRef.current?.focus();
+    };
+
+    const blurPlaceholder = () => {
+        placeholderInputRef.current?.blur();
+    };
 
     // ------------- Reload Logic -------------
 
@@ -326,7 +340,9 @@ export const ScrollContainerProvider = ({
             measureContentHeight,
             floatingBannerHeight,
             bottomScrollRef,
-            setUpperContentHeight
+            setUpperContentHeight,
+            focusPlaceholder,
+            blurPlaceholder
         }}>
 
             {/* Floating Banner */}
@@ -347,6 +363,12 @@ export const ScrollContainerProvider = ({
                 behavior='padding'
                 className='flex-1'
             >
+                {/* Hidden placeholder input to maintain keyboard */}
+                <TextInput
+                    ref={placeholderInputRef}
+                    style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
+                    autoCorrect={false}
+                />
                 <ScrollContainer
                     ref={scrollRef}
                     scrollEventThrottle={SCROLL_THROTTLE}

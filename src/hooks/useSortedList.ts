@@ -5,19 +5,21 @@ import { useFocusEffect, usePathname } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
-import { useTextfieldData } from './useTextfieldData';
 import { useReloadScheduler } from './useReloadScheduler';
 import { useDeleteScheduler } from './useDeleteScheduler';
+import { useScrollContainer } from '@/services/ScrollContainer';
+import { useTextfieldItemAs } from './useTextfieldItemAs';
 
 type StorageHandlers<T extends IListItem> = {
-    update: (item: T) => Promise<void> | void;
-    create: (item: T) => Promise<void> | void | Promise<string | undefined>;
-    delete: (items: T[]) => Promise<void> | void;
+    update: (item: T) => Promise<any> | void;
+    create: (item: T) => Promise<any> | void;
+    delete: (items: T[]) => Promise<any> | void;
 };
 
 interface SortedListConfig<T extends IListItem, S> {
     storageId: string;
     storageKey: string;
+    handleTextfieldSave?: () => Promise<void>;
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
     setItemsInStorageObject?: (items: T[], currentObject: S) => S;
     initializeListItem?: (item: IListItem) => T;
@@ -38,10 +40,11 @@ const useSortedList = <T extends IListItem, S>({
     initializedStorageObject,
     reloadOnNavigate = false,
     reloadOnOverscroll = false,
-    reloadTriggers
+    reloadTriggers,
+    handleTextfieldSave
 }: SortedListConfig<T, S>) => {
     const pathname = usePathname();
-    const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { registerReloadFunction } = useReloadScheduler();
     const {
         isItemDeleting,
@@ -49,6 +52,7 @@ const useSortedList = <T extends IListItem, S>({
         scheduleItemDeletion,
         registerDeleteFunction
     } = useDeleteScheduler<T>();
+    const {focusPlaceholder} = useScrollContainer();
 
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
@@ -95,18 +99,23 @@ const useSortedList = <T extends IListItem, S>({
      * @param referenceSortId - The sort ID of an item to place the new textfield near
      * @param isChildId - Signifies if the reference ID should be below the new textfield, else above.
      */
-    async function saveTextfieldAndCreateNew(item?: T, referenceSortId?: number, isChildId: boolean = false) {
+    async function saveTextfieldAndCreateNew(item: T | null, referenceSortId?: number, isChildId: boolean = false) {
 
         // Phase 1: Save the item if it exists
         if (item) await persistItemToStorage(item);
+        
 
         // Phase 2: Clear the textfield and exit if no reference ID was given
         if (!referenceSortId) {
-            setCurrentTextfield(undefined);
+            setTextfieldItem(undefined);
             return;
         }
 
-        // Phase 3: Create a new list item
+        // Phase 3: Focus the hidden placeholder field.
+        // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
+        focusPlaceholder();
+
+        // Phase 4: Create a new list item
         const updatedList = sanitizeList(items, item);
         const genericListItem: IListItem = {
             id: uuid.v4(),
@@ -117,10 +126,8 @@ const useSortedList = <T extends IListItem, S>({
         };
         const newItem: T = initializeListItem?.(genericListItem) ?? genericListItem as T;
 
-        setCurrentTextfield(
-            newItem, // Set the new item as the focused textfield
-            item // Set the old item as the previous textfield (keeps the keyboard open until the new textfield is focused)
-        );
+        setTextfieldItem(newItem);
+        await handleTextfieldSave?.();
     }
 
     // ------------- EDIT Logic -------------
@@ -131,7 +138,7 @@ const useSortedList = <T extends IListItem, S>({
      */
     async function persistItemToStorage(item: T) {
         if (storageConfig) {
-
+            
             // Handle the storage update directly
             if (item.status === EItemStatus.NEW) {
                 return await storageConfig.create(item);
@@ -162,14 +169,14 @@ const useSortedList = <T extends IListItem, S>({
      */
     async function toggleItemEdit(item: T) {
         if (isItemDeleting(item)) return;
-        const togglingItem = currentTextfield?.id === item.id;
-        if (currentTextfield && currentTextfield.value.trim() !== '') {
-            await persistItemToStorage({ ...currentTextfield, status: EItemStatus.STATIC });
+        const togglingItem = textfieldItem?.id === item.id;
+        if (textfieldItem && textfieldItem.value.trim() !== '') {
+            await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
         }
         if (!togglingItem) {
-            setCurrentTextfield({ ...item, status: EItemStatus.EDIT });
+            setTextfieldItem({ ...item, status: EItemStatus.EDIT });
         } else {
-            setCurrentTextfield(undefined);
+            setTextfieldItem(null);
         }
 
     };
@@ -207,8 +214,8 @@ const useSortedList = <T extends IListItem, S>({
      */
     async function toggleItemDelete(item: T) {
         // Handle textfield delete
-        if (item.id === currentTextfield?.id) {
-            setCurrentTextfield(undefined);
+        if (item.id === textfieldItem?.id) {
+            setTextfieldItem(null);
             if (item.value.trim() === '') {
                 deleteSingleItemFromStorage(item);
                 return;

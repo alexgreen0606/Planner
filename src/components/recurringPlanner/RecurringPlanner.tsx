@@ -3,7 +3,7 @@ import { EItemStatus } from '@/enums/EItemStatus';
 import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
@@ -21,7 +21,7 @@ interface SortedRecurringPlannerProps {
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const genericDate = datestampToMidnightDate('2000-01-01');
 
-    const { currentTextfield, setCurrentTextfield } = useTextfieldData<IRecurringEvent>();
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
 
     const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
 
@@ -34,23 +34,23 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     };
 
     const textfieldDateObject: Date = useMemo(() => {
-        if (currentTextfield?.startTime) {
+        if (textfieldItem?.startTime) {
             const timedDate = new Date(genericDate);
-            const [hour, minute] = currentTextfield.startTime.split(':').map(Number);
+            const [hour, minute] = textfieldItem.startTime.split(':').map(Number);
             timedDate.setHours(hour, minute);
             return timedDate;
         } else {
             return genericDate;
         }
-    }, [currentTextfield]);
+    }, [textfieldItem]);
 
     function onSaveEventTime(date: Date) {
-        if (!currentTextfield) return;
+        if (!textfieldItem) return;
         const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-        currentTextfield.startTime = formattedTime;
-        currentTextfield.sortId = generateSortIdByTime(currentTextfield, SortedEvents.items);
-        setCurrentTextfield({ ...currentTextfield, startTime: formattedTime });
-        toggleTimeModal(currentTextfield);
+        textfieldItem.startTime = formattedTime;
+        textfieldItem.sortId = generateSortIdByTime(textfieldItem, SortedEvents.items);
+        setTextfieldItem({ ...textfieldItem, startTime: formattedTime });
+        toggleTimeModal(textfieldItem);
     };
 
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
@@ -69,7 +69,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedEvents.saveTextfieldAndCreateNew(
-                    item ? { ...item, status: EItemStatus.STATIC } : undefined,
+                    item ? { ...item, status: EItemStatus.STATIC } : null,
                     refId,
                     isChildId
                 )}
@@ -87,13 +87,13 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
             <DatePicker
                 modal
                 mode='time'
-                title={`"${currentTextfield?.value}" Time`}
+                title={`"${textfieldItem?.value}" Time`}
                 minuteInterval={5}
                 theme='dark'
-                open={timeModalOpen && Boolean(currentTextfield)}
+                open={timeModalOpen && Boolean(textfieldItem)}
                 date={textfieldDateObject}
                 onConfirm={onSaveEventTime}
-                onCancel={() => toggleTimeModal(currentTextfield!)}
+                onCancel={() => toggleTimeModal(textfieldItem!)}
             />
         </View>
     );

@@ -1,7 +1,7 @@
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/layout';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { useScrollContainer } from '@/services/ScrollContainer';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import { usePathname } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
 
@@ -20,23 +20,17 @@ const ListTextfield = <T extends IListItem>({
     hideKeyboard,
     customStyle
 }: ListTextfieldProps<T>) => {
-
-    const { currentTextfield, pendingItem, setCurrentTextfield } = useTextfieldData<T>();
+    const [textfieldItem] = useTextfieldItemAs<T>();
+    const { blurPlaceholder } = useScrollContainer();
 
     const inputRef = useRef<TextInput>(null);
 
     // Ensures textfield will only save once, whether blurred or entered
     const hasSaved = useRef(false);
 
-    /**
-     * Determine if the textfield can be edited.
-     * During transition between two textfields, both will be editable. This allows the device keyboard
-     * to remain open.
-     * Once the new textfield is focused, the previous one will become un-editable.
-     */
     const editable = useMemo(() =>
-        [pendingItem?.id, currentTextfield?.id].includes(item.id) && !hideKeyboard,
-        [pendingItem, currentTextfield?.id, item.id, hideKeyboard]
+        textfieldItem?.id === item.id && !hideKeyboard,
+        [textfieldItem?.id, item.id, hideKeyboard]
     );
 
     // ------------- Utility Function -------------
@@ -52,18 +46,15 @@ const ListTextfield = <T extends IListItem>({
 
     // Focus the textfield when clicked
     useEffect(() => {
-        if (currentTextfield?.id === item.id && !hideKeyboard) {
+        if (editable && !hideKeyboard) {
             setTimeout(() => {
                 inputRef.current?.focus();
                 hasSaved.current = false;
 
-                // Trigger the previous textfield to become static once this field focuses
-                setTimeout(() => {
-                    setCurrentTextfield(currentTextfield);
-                }, 50);
+                blurPlaceholder();
             }, 50);
         }
-    }, [currentTextfield?.id, hideKeyboard]);
+    }, [hideKeyboard, editable]);
 
     return (
         <TextInput

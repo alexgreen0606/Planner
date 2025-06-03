@@ -2,7 +2,6 @@ import ThinLine from '@/components/ThinLine';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { useKeyboardTracker } from '@/hooks/useKeyboardTracker';
-import { useTextfieldData } from '@/hooks/useTextfieldData';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
@@ -15,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScrollAnchor from '../ScrollAnchor';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -38,7 +38,7 @@ export interface DraggableListProps<
     getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
-    saveTextfieldAndCreateNew: (item?: T, referenceId?: number, isChildId?: boolean) => void;
+    saveTextfieldAndCreateNew: (item: T | null, referenceId?: number, isChildId?: boolean) => void;
     getToolbar?: (item: T) => ModifyItemConfig<T, P>;
     getModal?: (item: T) => ModifyItemConfig<T, M>;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
@@ -63,15 +63,13 @@ const SortableList = <
     hideKeyboard,
     ...rest
 }: DraggableListProps<T, P, M>) => {
-    const { currentTextfield } = useTextfieldData<T>();
+    const [textfieldItem] = useTextfieldItemAs<T>();
     const { keyboardAbsoluteTop } = useKeyboardTracker();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
 
-    // const pendingItem = useRef<T | null>(null);
-
-    const toolbarConfig = useMemo(() => currentTextfield ? getToolbar?.(currentTextfield) : null, [currentTextfield, getToolbar]);
+    const toolbarConfig = useMemo(() => textfieldItem ? getToolbar?.(textfieldItem) : null, [textfieldItem, getToolbar]);
     const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
 
     const isListDragging = useSharedValue<boolean>(false);
@@ -81,24 +79,16 @@ const SortableList = <
     const list = useMemo(() => {
         let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
 
-        if (currentTextfield?.listId === listId) {
-            fullList = sanitizeList(fullList, currentTextfield);
+        if (textfieldItem?.listId === listId) {
+            fullList = sanitizeList(fullList, textfieldItem);
         }
-
-        // if (pendingItem.current) {
-        //     if (!fullList.find(i => i.id === pendingItem.current?.id)) {
-        //         fullList.push(pendingItem.current);
-        //     } else {
-        //         pendingItem.current = null;
-        //     }
-        // }
 
         if (isListDragging.value) {
             isListDragging.value = false;
         }
 
         return fullList.sort((a, b) => a.sortId - b.sortId);
-    }, [currentTextfield?.id, currentTextfield?.sortId, items]);
+    }, [textfieldItem?.id, textfieldItem?.sortId, items]);
 
     useEffect(() => {
         runOnUI(measureContentHeight)();
@@ -127,10 +117,7 @@ const SortableList = <
     }
 
     async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-        //  if (currentTextfield && currentTextfield.status !== EItemStatus.TRANSFER) {
-        //     // pendingItem.current = { ...currentTextfield };
-        // }
-        saveTextfieldAndCreateNew(currentTextfield, referenceSortId, isChildId);
+        saveTextfieldAndCreateNew(textfieldItem, referenceSortId, isChildId);
     }
 
     function handleDragStart(initialTop: number, initialIndex: number) {
@@ -232,7 +219,7 @@ const SortableList = <
             )}
 
             {/* Toolbar */}
-            {Toolbar && toolbarConfig && !hideKeyboard && currentTextfield?.listId === listId &&
+            {Toolbar && toolbarConfig && !hideKeyboard && textfieldItem?.listId === listId &&
                 <Portal>
                     <ToolbarContainer className='absolute left-0' style={toolbarStyle}>
                         <Toolbar {...toolbarConfig.props} />

@@ -4,7 +4,6 @@ import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/cons
 import { LIST_SPRING_CONFIG } from "@/constants/listConstants";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
-import { useTextfieldData } from "@/hooks/useTextfieldData";
 import { useScrollContainer } from "@/services/ScrollContainer";
 import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
 import { IListItem } from "@/types/listItems/core/TListItem";
@@ -22,6 +21,7 @@ import Animated, {
     withSpring
 } from "react-native-reanimated";
 import ListTextfield from "./ListTextfield";
+import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -89,7 +89,7 @@ const DraggableRow = <T extends IListItem>({
     hideKeyboard,
     customIsItemDeleting
 }: RowProps<T>) => {
-    const { currentTextfield, setCurrentTextfield } = useTextfieldData<T>();
+    const [currentTextfield, setCurrentTextfield] = useTextfieldItemAs<T>();
     const { isItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
@@ -137,7 +137,7 @@ const DraggableRow = <T extends IListItem>({
             saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
         } else {
             if (item.status === EItemStatus.NEW) {
-                setCurrentTextfield(undefined);
+                setCurrentTextfield(null);
             } else {
                 onDeleteItem(item);
             }
