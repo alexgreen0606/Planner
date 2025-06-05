@@ -1,4 +1,4 @@
-import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
+import { CHECKLISTS_STORAGE_ID } from '@/constants/storage';
 import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';

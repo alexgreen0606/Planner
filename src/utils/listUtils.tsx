@@ -1,6 +1,7 @@
 import { IconType } from "@/components/GenericIcon";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { IListItem } from "@/types/listItems/core/TListItem";
+import { uuid } from "expo-modules-core";
 import { SharedValue } from "react-native-reanimated";
 
 // ------------- Sort ID Management -------------
@@ -169,4 +170,24 @@ export function generateCheckboxIconConfig<T extends IListItem>(
         },
         onClick: toggleItemDelete
     };
+}
+
+// ------------- Other Utilities -------------
+
+/**
+ * ✅ Clones a given item.
+ * The item will get a new ID, and any desired keys will be removed.
+ * 
+ * @param item - the item to clone
+ * @param keysToDelete - the keys within the item to delete
+ * @returns - a sanitized clone of the item
+ */
+export function cloneItem<T extends IListItem>(item: T, keysToDelete?: (keyof T)[]) {
+    const clone = { ...item, id: uuid.v4() };
+
+    keysToDelete?.forEach(key => {
+        delete clone[key];
+    })
+
+    return clone;
 }

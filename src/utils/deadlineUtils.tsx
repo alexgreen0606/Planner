@@ -4,7 +4,7 @@ import { getCalendarAccess } from "./calendarUtils";
 import { IDeadline } from "@/types/listItems/IDeadline";
 import { TCalendarDetails } from "@/types/calendar/TCalendarDetails";
 import { EItemStatus } from "@/enums/EItemStatus";
-import { DEADLINE_LIST_KEY } from "@/constants/storageIds";
+import { StorageKey } from "@/constants/storage";
 
 async function getDeadlineCalendarDetails(): Promise<TCalendarDetails> {
     await getCalendarAccess();
@@ -43,7 +43,7 @@ export async function getDeadlines(): Promise<IDeadline[]> {
         id: deadlineEvent.id,
         value: deadlineEvent.title,
         sortId: i + 1,
-        listId: DEADLINE_LIST_KEY,
+        listId: StorageKey.DEADLINE_LIST_KEY,
         status: EItemStatus.STATIC,
         startTime: deadlineEvent.startDate
     }));

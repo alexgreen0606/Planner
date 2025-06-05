@@ -1,31 +1,29 @@
-import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
-import { EItemStatus } from '@/enums/EItemStatus';
-import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
+import { RECURRING_EVENT_STORAGE_ID } from '@/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { generateSortIdByTime, generateTimeIconConfig, handleEventInput } from '@/utils/plannerUtils';
+import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput } from '@/utils/plannerUtils';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
-
+import { EItemStatus } from '@/enums/EItemStatus';
+import { deleteRecurringEvents, saveRecurringEvent } from '@/storage/recurringPlannerStorage';
 
 interface SortedRecurringPlannerProps {
-    plannerKey: ERecurringPlannerKeys;
+    weekday: string;
 }
 
-const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
-    const genericDate = datestampToMidnightDate('2000-01-01');
-
+const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
-
     const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
+
+    const genericDate = datestampToMidnightDate('2000-01-01');
 
     async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
@@ -53,9 +51,18 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         toggleTimeModal(textfieldItem);
     };
 
+    function handleDeleteItem(item: IRecurringEvent) {
+        SortedEvents.persistItemToStorage({ ...item, status: EItemStatus.HIDDEN });
+    }
+
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
-        storageId: PLANNER_STORAGE_ID,
-        storageKey: plannerKey
+        storageId: RECURRING_EVENT_STORAGE_ID,
+        storageKey: weekday,
+        storageConfig: {
+            createItem: saveRecurringEvent,
+            updateItem: saveRecurringEvent,
+            deleteItems: deleteRecurringEvents
+        }
     });
 
     return (
@@ -65,22 +72,18 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         >
             <SortableList<IRecurringEvent, never, never>
                 items={SortedEvents.items}
-                listId={plannerKey}
+                listId={weekday}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
-                saveTextfieldAndCreateNew={(item, refId, isChildId) => SortedEvents.saveTextfieldAndCreateNew(
-                    item ? { ...item, status: EItemStatus.STATIC } : null,
-                    refId,
-                    isChildId
-                )}
-                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
+                saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
+                onDeleteItem={handleDeleteItem}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
-                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as IRecurringEvent}
+                handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
-                    label: `No recurring ${plannerKey} plans`,
+                    label: `No recurring ${weekday} plans`,
                     className: 'flex-1'
                 }}
             />

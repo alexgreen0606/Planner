@@ -4,14 +4,14 @@ import { PlatformColor, View } from 'react-native';
 
 import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
 import RecurringWeekdayPlanner from '@/components/recurringPlanner/RecurringWeekdayPlanner';
-import { ERecurringPlannerKeys } from '@/enums/ERecurringPlannerKeys';
+import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 
 type RecurringOption = {
     label: string;
-    value: ERecurringPlannerKeys;
+    value: ERecurringPlannerKey;
 }
 
 const RecurringPlanners = () => {
@@ -20,8 +20,8 @@ const RecurringPlanners = () => {
 
 
     const recurringPlannerOptions = useMemo(() => {
-        return Object.entries(ERecurringPlannerKeys).map(([value, label]) => {
-            return { label, value: value as ERecurringPlannerKeys }
+        return Object.entries(ERecurringPlannerKey).map(([key]) => {
+            return { label: key, value: key }
         })
     }, []);
 
@@ -32,7 +32,7 @@ const RecurringPlanners = () => {
     }, [])
 
     const [recurringModalOpen, setRecurringModalOpen] = useState(false);
-    const [selectedRecurring, setSelectedRecurring] = useState(ERecurringPlannerKeys.WEEKDAYS);
+    const [selectedRecurring, setSelectedRecurring] = useState<string>(ERecurringPlannerKey.WEEKDAYS);
 
     function toggleRecurringModalOpen() {
         setRecurringModalOpen(curr => !curr);
@@ -46,22 +46,18 @@ const RecurringPlanners = () => {
 
             {/* Recurring Planner Selection */}
             <View className='p-4' >
-                <PopoverList<RecurringOption>
-                    getLabelFromObject={(set) => set.label}
-                    options={recurringPlannerOptions}
-                    value={{
-                        label: '',
-                        value: ERecurringPlannerKeys.WEEKDAYS
-                    }}
+                <PopoverList
+                    options={Object.values(ERecurringPlannerKey)}
+                    value={selectedRecurring}
                     setValue={() => null}
-                    onChange={(newSet) => setSelectedRecurring(newSet.value)}
+                    onChange={(newSet) => setSelectedRecurring(newSet)}
                 />
             </View>
 
             {/* Recurring Planner Events */}
-            {selectedRecurring === ERecurringPlannerKeys.WEEKDAYS ?
+            {selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
                 <RecurringWeekdayPlanner key='weekday-recurring-planner' /> :
-                <RecurringPlanner plannerKey={selectedRecurring} />
+                <RecurringPlanner weekday={selectedRecurring} />
             }
 
         </View>

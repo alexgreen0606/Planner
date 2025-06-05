@@ -88,6 +88,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                         </View>
                     </View>
                 }
+                floatingBannerHeight={34}
             >
                 {children}
             </ScrollContainerProvider>

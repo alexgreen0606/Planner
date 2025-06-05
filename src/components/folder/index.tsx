@@ -1,7 +1,7 @@
 import { GenericIconProps } from '@/components/GenericIcon';
 import CustomText from '@/components/text/CustomText';
 import { selectableColors } from '@/constants/selectableColors';
-import { CHECKLISTS_STORAGE_ID } from '@/constants/storageIds';
+import { CHECKLISTS_STORAGE_ID } from '@/constants/storage';
 import { EFolderItemType } from '@/enums/EFolderItemType';
 import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';

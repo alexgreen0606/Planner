@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
-import { PLANNER_SETS_STORAGE_ID } from '@/constants/storageIds';
+import { PLANNER_SETS_STORAGE_ID } from '@/constants/storage';
 import Modal from '@/components/modal';
 import Form from '@/components/form';
 import { IFormField } from '@/types/form/IFormField';

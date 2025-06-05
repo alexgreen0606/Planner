@@ -1,6 +1,6 @@
 import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
-import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { PLANNER_STORAGE_ID } from '@/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -15,13 +15,14 @@ import BadgeNumber from '../../components/BadgeNumber';
 import Card from '../../components/Card';
 import EventChip, { EventChipProps } from '../../components/EventChip';
 import { generatePlanner } from '../../utils/calendarUtils';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
 import BadgeIcon from '../BadgeIcon';
 import { GenericIconProps } from '../GenericIcon';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import DayBanner from './DayBanner';
 import { textfieldItemAtom } from '@/atoms/textfieldData';
+import { EItemStatus } from '@/enums/EItemStatus';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -137,6 +138,8 @@ const PlannerCard = ({
         return eventColorCounts;
     }, [calendarChips, SortedEvents.items.length]);
 
+    const visibleListItemCount = SortedEvents.items.filter(i => i.status !== EItemStatus.HIDDEN).length;
+
     return (
         <Card
             header={
@@ -164,8 +167,8 @@ const PlannerCard = ({
                             {...config}
                         />
                     ))}
-                    {SortedEvents.items.length > 0 && (
-                        <BadgeNumber count={SortedEvents.items.length} />
+                    {visibleListItemCount > 0 && (
+                        <BadgeNumber count={visibleListItemCount} />
                     )}
                 </View>
             }
@@ -185,7 +188,7 @@ const PlannerCard = ({
                 onContentClick={SortedEvents.toggleItemEdit}
                 hideKeyboard={isTimeModalOpen}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
-                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
+                handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
                 getToolbar={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}

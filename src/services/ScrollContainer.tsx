@@ -42,6 +42,7 @@ interface ScrollContainerProps {
     children: React.ReactNode;
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
+    floatingBannerHeight?: number;
 }
 
 interface ScrollContainerContextValue {
@@ -68,7 +69,8 @@ const ScrollContainerContext = createContext<ScrollContainerContextValue | null>
 export const ScrollContainerProvider = ({
     children,
     header,
-    floatingBanner
+    floatingBanner,
+    floatingBannerHeight: fixedFloatingBannerHeight
 }: ScrollContainerProps) => {
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
@@ -76,14 +78,13 @@ export const ScrollContainerProvider = ({
 
     const placeholderInputRef = useRef<TextInput>(null);
 
-
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { reloadPage, canReloadPath } = useReloadScheduler();
 
     // ----- Page Layout Variables -----
 
-    const [floatingBannerHeight, setFloatingBannerHeight] = useState(0);
+    const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight ?? 0);
 
     // Tracks the height of any content above the list container
     const [upperContentHeight, setUpperContentHeight] = useState(0);
@@ -350,6 +351,8 @@ export const ScrollContainerProvider = ({
                 className="absolute z-[3] flex justify-center w-full"
                 style={floatingBannerStyle}
                 onLayout={(event) => {
+                    if (fixedFloatingBannerHeight) return;
+                    
                     const { height } = event.nativeEvent.layout;
                     setFloatingBannerHeight(height);
                 }}

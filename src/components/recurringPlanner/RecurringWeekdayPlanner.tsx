@@ -1,34 +1,25 @@
-import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { PLANNER_STORAGE_ID, RECURRING_EVENT_STORAGE_ID } from '@/constants/storage';
+import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { deleteRecurringWeekdayEvent, generateRecurringWeekdayPlanner, saveRecurringWeekdayEvent } from '@/storage/recurringEventStorage';
+import { deleteRecurringWeekdayEvents, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { generateSortIdByTime, generateTimeIconConfig, handleEventInput } from '@/utils/plannerUtils';
-import React, { useMemo, useState } from 'react';
+import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput } from '@/utils/plannerUtils';
+import React, { useCallback, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
 
-const RECURRING_WEEKDAY_PLANNER_KEY = 'RECURRING_WEEKDAY_PLANNER_KEY';
-
 const RecurringWeekdayPlanner = () => {
-    const genericDate = datestampToMidnightDate('2000-01-01');
-
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
-
-    const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
+    const { isItemDeleting, getDeletingItems } = useDeleteScheduler<IRecurringEvent>();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
-    function initializeEvent(event: IRecurringEvent): IRecurringEvent {
-        return {
-            ...event,
-            isWeekdayEvent: true
-        }
-    };
+    const genericDate = datestampToMidnightDate('2000-01-01');
 
     async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
@@ -57,26 +48,13 @@ const RecurringWeekdayPlanner = () => {
     };
 
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
-        storageId: PLANNER_STORAGE_ID,
-        storageKey: RECURRING_WEEKDAY_PLANNER_KEY,
-        getItemsFromStorageObject: generateRecurringWeekdayPlanner,
+        storageId: RECURRING_EVENT_STORAGE_ID,
+        storageKey: ERecurringPlannerKey.WEEKDAYS,
         storageConfig: {
-            createItem: (event) => {
-                saveRecurringWeekdayEvent(event);
-                SortedEvents.refetchItems();
-            },
-            updateItem: (event) => {
-                saveRecurringWeekdayEvent(event);
-                SortedEvents.refetchItems();
-            },
-            deleteItems: (events) => {
-                deleteRecurringWeekdayEvent(events);
-
-                // Manually trigger reload - TODO: is this needed? Wont changing Monday refresh automatically?
-                SortedEvents.refetchItems();
-            },
-        },
-        initializeListItem: initializeEvent
+            createItem: saveRecurringWeekdayEvent,
+            updateItem: saveRecurringWeekdayEvent,
+            deleteItems: deleteRecurringWeekdayEvents
+        }
     });
 
     return (
@@ -87,14 +65,14 @@ const RecurringWeekdayPlanner = () => {
 
             <SortableList<IRecurringEvent, never, never>
                 items={SortedEvents.items}
-                listId={RECURRING_WEEKDAY_PLANNER_KEY}
+                listId={ERecurringPlannerKey.WEEKDAYS}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
-                handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items) as IRecurringEvent}
+                handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{

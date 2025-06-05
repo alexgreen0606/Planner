@@ -2,7 +2,7 @@ import { calendarChipsByDate } from '@/atoms/calendarEvents';
 import EventChip, { EventChipProps } from '@/components/EventChip';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
-import { BIRTHDAY_STORAGE_ID } from '@/constants/storageIds';
+import { BIRTHDAY_STORAGE_ID } from '@/constants/storage';
 import { ScrollContainerProvider } from '@/services/ScrollContainer';
 import { IBirthday } from '@/types/listItems/IBirthday';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -23,42 +23,8 @@ const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
 
 const Today = () => {
   const todayDatestamp = getTodayDatestamp();
-  // const [pageData, setPageData] = useState<TodayData>({
-  //   planner: [],
-  //   chips: [],
-  //   uncontactedBirthdays: []
-  // });
 
   const [calendarChips] = useAtom(calendarChipsByDate(todayDatestamp));
-
-  // ------------ Manual Birthday Storage Handling -------------
-
-  // async function loadCalendarData() {
-
-  //   const {
-  //     chipsMap,
-  //     plannersMap
-  //   } = await loadCalendarEventData([todayDatestamp]); // TODO: don't load this in every time -> too wasteful -> store the data in a memo, and recall this function when they change. Then add the full reload function to useReload
-
-  //   const contactedBirthdayPersons = getContactedBirthdaysByDatestamp(todayDatestamp);
-
-  //   const uncontactedBirthdays: IBirthday[] = [];
-  //   chipsMap[todayDatestamp].forEach((chip) => {
-  //     if (
-  //       // The chip is a birthday chip
-  //       chip.iconConfig.type === 'birthday' &&
-  //       // The birthday person has not been contacted today
-  //       !contactedBirthdayPersons.includes(extractNameFromBirthdayText(chip.label))) {
-  //       uncontactedBirthdays.push(eventChipToBirthday(chip, todayDatestamp));
-  //     }
-  //   });
-  //   uncontactedBirthdays.sort((a, b) => a.age - b.age).map((bday, i) => ({ ...bday, sortId: i }));
-  //   setPageData({
-  //     planner: plannersMap[todayDatestamp],
-  //     chips: chipsMap[todayDatestamp],
-  //     uncontactedBirthdays
-  //   });
-  // }
 
   // Initial load of data
   useEffect(() => {
@@ -94,9 +60,6 @@ const Today = () => {
           </View>
         )
         }>
-
-        {/* Birthday Checklist Card */}
-        {/* <BirthdayCard birthdays={pageData.uncontactedBirthdays} /> */}
 
         {/* Planner */}
         <TodayPlanner />

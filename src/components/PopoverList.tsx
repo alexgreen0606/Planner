@@ -12,21 +12,19 @@ const BackdropContainer = Animated.createAnimatedComponent(View);
 
 const POPOVER_WIDTH = 200;
 
-interface PopoverProps<T> {
-    value: T;
-    setValue: (val: T) => void;
-    options: T[];
-    onChange: (newValue: T) => void;
-    getLabelFromObject: (object: T) => string;
+interface PopoverProps {
+    value: string;
+    setValue: (val: string) => void;
+    options: string[];
+    onChange: (newValue: string) => void;
 }
 
 const PopoverList = <T,>({
     options,
     value,
     setValue,
-    onChange,
-    getLabelFromObject
-}: PopoverProps<T>) => {
+    onChange
+}: PopoverProps) => {
     const selectedValueRef = useRef<View>(null);
     const [isOpen, setIsOpen] = useState(false);
     const popoverVisibility = useSharedValue(0); // animated between 0 and 1
@@ -49,7 +47,7 @@ const PopoverList = <T,>({
         setIsOpen(true);
     }
 
-    function handleSelectOption(option: T) {
+    function handleSelectOption(option: string) {
         setValue(option);
         onChange(option);
         setIsOpen(false);
@@ -83,7 +81,7 @@ const PopoverList = <T,>({
             {/* Selected Value / Popover Trigger */}
             <View ref={selectedValueRef}>
                 <ButtonText onClick={handleOpenPopover}>
-                    {getLabelFromObject(value)}
+                    {value}
                 </ButtonText>
             </View>
 
@@ -126,7 +124,7 @@ const PopoverList = <T,>({
                             ]}
                         >
                             <CustomText type='standard'>
-                                {getLabelFromObject(option)}
+                                {option}
                             </CustomText>
                         </TouchableOpacity>
                     )}

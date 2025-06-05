@@ -5,7 +5,7 @@ import { IChecklist } from "@/types/checklists/IChecklist";
 import { EFolderItemType } from "@/enums/EFolderItemType";
 import { IFolderItem } from "@/types/listItems/IFolderItem";
 import { NULL } from "@/constants/generic";
-import { CHECKLISTS_STORAGE_ID, ROOT_CHECKLIST_FOLDER_KEY } from "@/constants/storageIds";
+import { CHECKLISTS_STORAGE_ID, StorageKey } from "@/constants/storage";
 
 const storage = new MMKV({ id: CHECKLISTS_STORAGE_ID });
 
@@ -21,11 +21,11 @@ export const getFolderFromStorage = (folderId: string) => {
     if (folderString) {
         const foundFolder: IFolder = JSON.parse(folderString);
         return foundFolder;
-    } else if (folderId === ROOT_CHECKLIST_FOLDER_KEY) {
+    } else if (folderId === StorageKey.ROOT_CHECKLIST_FOLDER_KEY) {
 
         // @ts-ignore - color must be overridden to blue for the root folder
         const initialRootFolder = {
-            id: ROOT_CHECKLIST_FOLDER_KEY,
+            id: StorageKey.ROOT_CHECKLIST_FOLDER_KEY,
             listId: NULL,
             folderIds: [],
             listIds: [],

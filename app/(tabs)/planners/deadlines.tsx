@@ -2,7 +2,7 @@ import SortableList from '@/components/sortedList';
 import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
-import { DEADLINE_LIST_KEY } from '@/constants/storageIds';
+import { StorageKey } from '@/constants/storage';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
@@ -101,8 +101,8 @@ const Deadlines = () => {
     }
 
     const DeadlineItems = useSortedList<IDeadline, IDeadline[]>({
-        storageId: DEADLINE_LIST_KEY,
-        storageKey: DEADLINE_LIST_KEY,
+        storageId: StorageKey.DEADLINE_LIST_KEY,
+        storageKey: StorageKey.DEADLINE_LIST_KEY,
         getItemsFromStorageObject: getDeadlines,
         storageConfig: {
             createItem: async (deadline) => {
@@ -126,7 +126,7 @@ const Deadlines = () => {
 
             {/* Deadline List */}
             <SortableList<IDeadline, ToolbarProps<IDeadline>, never>
-                listId={DEADLINE_LIST_KEY}
+                listId={StorageKey.DEADLINE_LIST_KEY}
                 fillSpace
                 items={DeadlineItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}

@@ -1,5 +1,5 @@
 import { calendarPlannerByDate } from '@/atoms/calendarEvents';
-import { PLANNER_STORAGE_ID } from '@/constants/storageIds';
+import { PLANNER_STORAGE_ID } from '@/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import useSortedList from '@/hooks/useSortedList';
@@ -8,7 +8,7 @@ import { TPlanner } from '@/types/planner/TPlanner';
 import { generatePlanner, loadCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
@@ -66,7 +66,7 @@ const TodayPlanner = () => {
             onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
             onContentClick={SortedEvents.toggleItemEdit}
             getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
-            handleValueChange={(text, item) => handleEventInput(text, item, SortedEvents.items, datestamp)}
+            handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
             getToolbar={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}

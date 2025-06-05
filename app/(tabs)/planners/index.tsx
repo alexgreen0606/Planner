@@ -131,10 +131,9 @@ const Planners = () => {
                     setUpperContentHeight(height);
                 }}
             >
-                <PopoverList<string>
+                <PopoverList
                     value={plannerSetKey}
                     setValue={setPlannerSetKey}
-                    getLabelFromObject={(set) => set} // TODO remove this prop
                     options={[defaultPlannerSet, ...allPlannerSetTitles]}
                     onChange={(newSet) => setPlannerSetKey(newSet)}
                 />

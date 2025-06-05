@@ -1,4 +1,4 @@
-import { PLANNER_SETS_STORAGE_ID } from "@/constants/storageIds";
+import { PLANNER_SETS_STORAGE_ID } from "@/constants/storage";
 import { TPlannerSet } from "@/types/planner/TPlannerSet";
 import { MMKV } from "react-native-mmkv";
 
