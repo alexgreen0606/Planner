@@ -1,5 +1,5 @@
 import { IListItem } from "./core/TListItem";
 
-export interface IDeadline extends IListItem {
+export interface ICountdown extends IListItem {
     startTime: string;
 }

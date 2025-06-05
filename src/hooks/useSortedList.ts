@@ -101,26 +101,21 @@ const useSortedList = <T extends IListItem, S>({
     async function saveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
         const item = textfieldItem ? { ...textfieldItem } : null;
 
-        // Phase 1: Set the textfield item back to static state unless hidden
-        if (item && item.status !== EItemStatus.HIDDEN) {
-            item.status = EItemStatus.STATIC;
-        }
-
-        // Phase 2: Save the item
+        // Phase 1: Save the item
         if (item) await persistItemToStorage(item);
 
 
-        // Phase 3: Clear the textfield and exit if no reference ID was given
+        // Phase 2: Clear the textfield and exit if no reference ID was given
         if (!referenceSortId) {
             setTextfieldItem(undefined);
             return;
         }
 
-        // Phase 4: Focus the hidden placeholder field.
+        // Phase 3: Focus the hidden placeholder field.
         // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
         focusPlaceholder();
 
-        // Phase 5: Create a new list item
+        // Phase 4: Create a new list item
         const updatedList = sanitizeList(items, item);
         const genericListItem: IListItem = {
             id: uuid.v4(),
@@ -146,9 +141,9 @@ const useSortedList = <T extends IListItem, S>({
 
             // Handle the storage update directly
             if (item.status === EItemStatus.NEW) {
-                return await storageConfig.createItem(item);
+                return await storageConfig.createItem({ ...item, status: EItemStatus.STATIC });
             } else {
-                await storageConfig.updateItem(item);
+                await storageConfig.updateItem({ ...item, status: EItemStatus.STATIC });
             }
         } else {
 
@@ -174,7 +169,7 @@ const useSortedList = <T extends IListItem, S>({
      */
     async function toggleItemEdit(item: T) {
         if (isItemDeleting(item)) return;
-        
+
         if (textfieldItem && textfieldItem.value.trim() !== '') {
             await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
         }

@@ -3,15 +3,16 @@ import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import { StorageKey } from '@/constants/storage';
+import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
 import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
-import { IDeadline } from '@/types/listItems/IDeadline';
+import { ICountdown } from '@/types/listItems/ICountdown';
 import { loadCalendarData } from '@/utils/calendarUtils';
+import { getCountdowns, saveCountdown, deleteCountdowns } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getTodayDatestamp } from '@/utils/dateUtils';
-import { deleteDeadlines, getDeadlines, saveDeadline } from '@/utils/deadlineUtils';
 import { isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
@@ -19,8 +20,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
-const Deadlines = () => {
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IDeadline>();
+const Countdowns = () => {
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
     const { setUpperContentHeight } = useScrollContainer();
 
     const closeTextfieldOnDateSelectorClose = useRef(false);
@@ -32,10 +33,10 @@ const Deadlines = () => {
 
     // ------------- Utility Functions -------------
 
-    function initializeDeadline(item: IListItem) {
+    function initializeCountdown(item: IListItem) {
         return {
             ...item,
-            // Place textfield above the first deadline
+            // Place textfield above the first countdown
             sortId: 0.5,
             startTime: DateTime.fromJSDate(todayMidnight).toISO()!
         }
@@ -50,19 +51,19 @@ const Deadlines = () => {
     }
 
     function generateToolbar(
-        deadline: IDeadline,
-    ): ModifyItemConfig<IDeadline, ToolbarProps<IDeadline>> {
+        countdown: ICountdown,
+    ): ModifyItemConfig<ICountdown, ToolbarProps<ICountdown>> {
         return {
             component: Toolbar,
             props: {
-                open: !dateSelectOpen && isItemTextfield(deadline),
+                open: !dateSelectOpen && isItemTextfield(countdown),
                 iconSets: [
                     [{
                         type: 'trash',
                         onClick: () => {
                             setIsDeleteAlertOpen(true);
                             Alert.alert(
-                                `Delete "${deadline.value}"?`,
+                                `Delete "${countdown.value}"?`,
                                 'The event in your calendar will also be deleted.',
                                 [
                                     {
@@ -76,7 +77,7 @@ const Deadlines = () => {
                                         text: 'Delete',
                                         style: 'destructive',
                                         onPress: async () => {
-                                            await DeadlineItems.deleteSingleItemFromStorage(deadline);
+                                            await CountdownItems.deleteSingleItemFromStorage(countdown);
                                             setTextfieldItem(null);
                                             setIsDeleteAlertOpen(false);
                                         }
@@ -89,29 +90,29 @@ const Deadlines = () => {
                         type: 'planners',
                         onClick: toggleDateSelector
                     }]],
-                item: deadline
+                item: countdown
             },
         }
     }
 
-    const DeadlineItems = useSortedList<IDeadline, IDeadline[]>({
-        storageId: StorageKey.DEADLINE_LIST_KEY,
-        storageKey: StorageKey.DEADLINE_LIST_KEY,
-        getItemsFromStorageObject: getDeadlines,
+    const CountdownItems = useSortedList<ICountdown, ICountdown[]>({
+        storageId: StorageKey.COUNTDOWN_LIST_KEY,
+        storageKey: StorageKey.COUNTDOWN_LIST_KEY,
+        getItemsFromStorageObject: getCountdowns,
         storageConfig: {
-            createItem: async (deadline) => {
-                await saveDeadline(deadline, true);
+            createItem: async (countdown) => {
+                await saveCountdown(countdown, true);
             },
-            updateItem: saveDeadline,
-            deleteItems: deleteDeadlines
+            updateItem: saveCountdown,
+            deleteItems: deleteCountdowns
         },
         handleListChange: async () => {
-            await DeadlineItems.refetchItems();
+            await CountdownItems.refetchItems();
 
             // Lazy load calendar data for planners.
             loadCalendarData();
         },
-        initializeListItem: initializeDeadline,
+        initializeListItem: initializeCountdown,
         reloadOnOverscroll: true
     });
 
@@ -123,35 +124,35 @@ const Deadlines = () => {
     return (
         <View className='flex-1'>
 
-            {/* Deadline List */}
-            <SortableList<IDeadline, ToolbarProps<IDeadline>, never>
-                listId={StorageKey.DEADLINE_LIST_KEY}
+            {/* Countdown List */}
+            <SortableList<ICountdown, ToolbarProps<ICountdown>, never>
+                listId={StorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
-                items={DeadlineItems.items}
+                items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
                 onDragEnd={() => { }} // TODO: refresh list?
-                onDeleteItem={DeadlineItems.deleteSingleItemFromStorage}
-                onContentClick={DeadlineItems.toggleItemEdit}
+                onDeleteItem={CountdownItems.deleteSingleItemFromStorage}
+                onContentClick={CountdownItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
-                saveTextfieldAndCreateNew={DeadlineItems.saveTextfieldAndCreateNew}
+                saveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
                 getToolbar={generateToolbar}
                 emptyLabelConfig={{
-                    label: 'No deadlines',
+                    label: 'No countdowns',
                     className: 'flex-1'
                 }}
                 getLeftIconConfig={(item) => ({
                     onClick: async () => {
                         closeTextfieldOnDateSelectorClose.current = true;
-                        await DeadlineItems.toggleItemEdit(item);
+                        await CountdownItems.toggleItemEdit(item);
                         setDateSelectOpen(true);
                     },
                     customIcon: <DateValue concise isoTimestamp={item.startTime} />
                 })}
-                getRightIconConfig={(deadline) => ({
+                getRightIconConfig={(countdown) => ({
                     customIcon:
                         <View className="[width:55px] items-end">
                             <CustomText adjustsFontSizeToFit numberOfLines={1} type='soft'>
-                                {daysBetweenToday(deadline.startTime)} days
+                                {daysBetweenToday(countdown.startTime)} days
                             </CustomText>
                         </View>
                 })}
@@ -174,13 +175,13 @@ const Deadlines = () => {
                     if (!textfieldItem) return;
 
                     const selected = DateTime.fromJSDate(date);
-                    const updatedDeadline = {
+                    const updatedCountdown = {
                         ...textfieldItem,
                         startTime: selected.toISO(),
                     };
-                    updatedDeadline.sortId = generateSortIdByTime(updatedDeadline, DeadlineItems.items);
+                    updatedCountdown.sortId = generateSortIdByTime(updatedCountdown, CountdownItems.items);
                     setTextfieldItem({
-                        ...updatedDeadline,
+                        ...updatedCountdown,
                         startTime: selected.toISO()!
                     });
 
@@ -193,4 +194,4 @@ const Deadlines = () => {
     );
 };
 
-export default Deadlines;
+export default Countdowns;

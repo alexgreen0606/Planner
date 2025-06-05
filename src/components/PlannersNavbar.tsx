@@ -1,57 +1,46 @@
+import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 import { ScrollContainerProvider } from '@/services/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import React from 'react';
-import { PlatformColor, StyleSheet, View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import ButtonText from './text/ButtonText';
-import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 
 const TabHighlight = Animated.createAnimatedComponent(View);
 
 const BAR_HEIGHT = 34;
-const TAB_SPACING = 32;
-const INDICATOR_GAP = 6;
+const BAR_WIDTH = 320;
+
+const HIGHLIGHT_GAP = 6;
+
+const HIGHLIGHT_HEIGHT = BAR_HEIGHT - (HIGHLIGHT_GAP * 2);
+const HIGHLIGHT_WIDTH = (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3;
+
+const tabs = [
+    { label: 'Countdowns', pathname: '/planners/countdowns', left: HIGHLIGHT_GAP },
+    { label: 'Planner', pathname: '/planners', left: HIGHLIGHT_GAP + HIGHLIGHT_WIDTH },
+    { label: 'Recurring', pathname: '/planners/recurring', left: HIGHLIGHT_GAP + (HIGHLIGHT_WIDTH * 2) }
+];
 
 interface TopNavbarProps {
     children: React.ReactNode;
 }
 
 const PlannersNavbar = ({ children }: TopNavbarProps) => {
-
-    const tabs = [
-        { label: 'Planners', pathname: '/planners', index: 0, width: 60 },
-        { label: 'Deadlines', pathname: '/planners/deadlines', index: 1, width: 61 },
-        { label: 'Recurring', pathname: '/planners/recurring', index: 2, width: 70 }
-    ];
-
     const pathname = usePathname();
     const router = useRouter();
 
-    const activeTab = tabs.find(tab => pathname === tab.pathname) ?? tabs[0];
-
-    const indicatorWidth = useSharedValue(activeTab?.width);
-    const indicatorLeft = useSharedValue(((TAB_SPACING / 2) + INDICATOR_GAP) / 4);
-
-    // ------------- Utility Functions -------------
+    const indicatorLeft = useSharedValue(HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
 
     function handleTabChange(tab: any) {
-        const targetLeft = tabs
-            .slice(0, tab.index)
-            .reduce((acc, { width }) => acc + width + TAB_SPACING, 0) + INDICATOR_GAP;
-        const targetWidth = tab.width;
-
-        indicatorLeft.value = withTiming(targetLeft, LINEAR_ANIMATION_CONFIG);
-        indicatorWidth.value = withTiming(targetWidth, LINEAR_ANIMATION_CONFIG);
-
+        indicatorLeft.value = withTiming(tab.left, LINEAR_ANIMATION_CONFIG);
         router.push(tab.pathname)
     }
 
-    // ------------- Highlight Animation -------------
-
     const tabHighlightStyle = useAnimatedStyle(() => ({
         left: indicatorLeft.value,
-        width: indicatorWidth.value + TAB_SPACING
+        width: HIGHLIGHT_WIDTH
     }));
 
     return (
@@ -60,66 +49,68 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
             style={{ backgroundColor: PlatformColor('systemBackground') }}
         >
             <ScrollContainerProvider
+                floatingBannerHeight={BAR_HEIGHT}
                 floatingBanner={
                     <View className='w-full flex items-center'>
-                        <View style={styles.bar}>
+                        <View
+                            className='relative flex-row items-center overflow-hidden'
+                            style={{
+                                height: BAR_HEIGHT,
+                                width: BAR_WIDTH,
+                                paddingHorizontal: HIGHLIGHT_GAP,
+                                borderRadius: BAR_HEIGHT / 2
+                            }}
+                        >
 
                             {/* Blurred Background */}
                             <BlurView
                                 tint='default'
                                 intensity={100}
-                                style={styles.blur}
+                                className='absolute overflow-hidden'
+                                style={{
+                                    width: BAR_WIDTH,
+                                    height: BAR_HEIGHT
+                                }}
                             />
 
                             {/* Current Tab Highlight */}
-                            <TabHighlight style={[tabHighlightStyle, styles.tabHighlight]} />
+                            <TabHighlight
+                                className='absolute'
+                                style={[
+                                    tabHighlightStyle,
+                                    {
+                                        height: HIGHLIGHT_HEIGHT,
+                                        borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                        backgroundColor: PlatformColor('systemGray4')
+                                    }
+                                ]}
+                            />
 
                             {/* Tab Options */}
                             {tabs.map((tab) => (
-                                <ButtonText
+                                <View
                                     key={`${tab.label}-floating-tab`}
-                                    textType='label'
-                                    onClick={() => handleTabChange(tab)}
-                                    platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
+                                    className='flex items-center'
+                                    style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
                                 >
-                                    {tab.label}
-                                </ButtonText>
+                                    <ButtonText
+                                        textType='label'
+                                        onClick={() => handleTabChange(tab)}
+                                        platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
+
+                                    >
+                                        {tab.label}
+                                    </ButtonText>
+                                </View>
                             ))}
                         </View>
                     </View>
                 }
-                floatingBannerHeight={34}
             >
                 {children}
             </ScrollContainerProvider>
         </View>
     )
 }
-
-const styles = StyleSheet.create({
-    bar: {
-        position: 'relative',
-        height: BAR_HEIGHT,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: TAB_SPACING,
-        borderRadius: BAR_HEIGHT / 2,
-        overflow: 'hidden',
-        paddingHorizontal: (TAB_SPACING / 2) + INDICATOR_GAP
-    },
-    blur: {
-        position: 'absolute',
-        width: '100%',
-        height: BAR_HEIGHT,
-        borderRadius: BAR_HEIGHT / 2,
-        overflow: 'hidden'
-    },
-    tabHighlight: {
-        position: 'absolute',
-        height: BAR_HEIGHT - (INDICATOR_GAP * 2),
-        borderRadius: (BAR_HEIGHT - (INDICATOR_GAP * 2)) / 2,
-        backgroundColor: PlatformColor('systemGray4')
-    }
-});
 
 export default PlannersNavbar;

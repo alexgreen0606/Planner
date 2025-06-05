@@ -1,6 +1,6 @@
 import { Easing } from "react-native-reanimated";
 
 export const LINEAR_ANIMATION_CONFIG = {
-    duration: 500,
+    duration: 300,
     easing: Easing.linear
 }
