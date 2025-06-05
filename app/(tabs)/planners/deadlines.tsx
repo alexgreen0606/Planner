@@ -30,12 +30,6 @@ const Deadlines = () => {
 
     const todayMidnight = datestampToMidnightDate(getTodayDatestamp());
 
-    useEffect(() => {
-        setUpperContentHeight(0);
-
-        return () => setTextfieldItem(null); // TODO: save the item instead
-    }, [])
-
     // ------------- Utility Functions -------------
 
     function initializeDeadline(item: IListItem) {
@@ -45,7 +39,7 @@ const Deadlines = () => {
             sortId: 0.5,
             startTime: DateTime.fromJSDate(todayMidnight).toISO()!
         }
-    };
+    }
 
     function toggleDateSelector() {
         setDateSelectOpen(curr => !curr);
@@ -53,7 +47,7 @@ const Deadlines = () => {
             setTextfieldItem(null);
             closeTextfieldOnDateSelectorClose.current = false;
         }
-    };
+    }
 
     function generateToolbar(
         deadline: IDeadline,
@@ -120,6 +114,11 @@ const Deadlines = () => {
         initializeListItem: initializeDeadline,
         reloadOnOverscroll: true
     });
+
+    useEffect(() => {
+        setUpperContentHeight(0);
+        return () => setTextfieldItem(null); // TODO: save the item instead
+    }, []);
 
     return (
         <View className='flex-1'>

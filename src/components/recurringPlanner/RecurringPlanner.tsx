@@ -2,6 +2,7 @@ import { RECURRING_EVENT_STORAGE_ID } from '@/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { deleteRecurringEvents, saveRecurringEvent } from '@/storage/recurringPlannerStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
@@ -10,8 +11,6 @@ import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import SortableList from '../sortedList';
-import { EItemStatus } from '@/enums/EItemStatus';
-import { deleteRecurringEvents, saveRecurringEvent } from '@/storage/recurringPlannerStorage';
 
 interface SortedRecurringPlannerProps {
     weekday: string;
@@ -23,15 +22,8 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
 
-    const genericDate = datestampToMidnightDate('2000-01-01');
-
-    async function toggleTimeModal(item: IRecurringEvent) {
-        if (!isItemTextfield(item))
-            await SortedEvents.toggleItemEdit(item);
-        setTimeModalOpen(curr => !curr);
-    };
-
     const textfieldDateObject: Date = useMemo(() => {
+        const genericDate = datestampToMidnightDate('2000-01-01');
         if (textfieldItem?.startTime) {
             const timedDate = new Date(genericDate);
             const [hour, minute] = textfieldItem.startTime.split(':').map(Number);
@@ -42,6 +34,12 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
         }
     }, [textfieldItem]);
 
+    async function toggleTimeModal(item: IRecurringEvent) {
+        if (!isItemTextfield(item))
+            await SortedEvents.toggleItemEdit(item);
+        setTimeModalOpen(curr => !curr);
+    }
+
     function onSaveEventTime(date: Date) {
         if (!textfieldItem) return;
         const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -49,10 +47,6 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
         textfieldItem.sortId = generateSortIdByTime(textfieldItem, SortedEvents.items);
         setTextfieldItem({ ...textfieldItem, startTime: formattedTime });
         toggleTimeModal(textfieldItem);
-    };
-
-    function handleDeleteItem(item: IRecurringEvent) {
-        SortedEvents.persistItemToStorage({ ...item, status: EItemStatus.HIDDEN });
     }
 
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
@@ -76,7 +70,7 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-                onDeleteItem={handleDeleteItem}
+                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}

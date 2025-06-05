@@ -1,6 +1,8 @@
 import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
+import { textfieldItemAtom } from '@/atoms/textfieldData';
 import { LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { PLANNER_STORAGE_ID } from '@/constants/storage';
+import { EItemStatus } from '@/enums/EItemStatus';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
@@ -21,8 +23,6 @@ import { GenericIconProps } from '../GenericIcon';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import DayBanner from './DayBanner';
-import { textfieldItemAtom } from '@/atoms/textfieldData';
-import { EItemStatus } from '@/enums/EItemStatus';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -69,21 +69,20 @@ const PlannerCard = ({
     datestamp,
     forecast
 }: PlannerCardProps) => {
+    const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const pathname = usePathname();
+    const router = useRouter();
 
     const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
     const [calendarChips] = useAtom(calendarChipsByDate(datestamp));
-
     const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
 
-    const pathname = usePathname();
-
-    const isTimeModalOpen = pathname.includes('timeModal');
-
-    const router = useRouter();
-
-    const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-
     const [collapsed, setCollapsed] = useState(true);
+
+    const isTimeModalOpen = useMemo(() =>
+        pathname.includes('timeModal'),
+        [pathname]
+    );
 
     // ------------- Utility Functions -------------
 
@@ -104,21 +103,21 @@ const PlannerCard = ({
             setTextfieldItem(null);
         }
         setCollapsed(curr => !curr);
-    };
-
-    // ------------- List Management Utils -------------
+    }
 
     function handleOpenTimeModal(item: IPlannerEvent) {
         openTimeModal(datestamp, item, router);
     }
 
+    // ------------- List Management Utils -------------
+
+    function getItemsFromStorageObject(planner: TPlanner) {
+        return buildPlannerEvents(datestamp, planner, calendarEvents);
+    }
+
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
         await deleteEventsReloadData(planEvents);
     }
-
-    const getItemsFromStorageObject = (planner: TPlanner) => {
-        return buildPlannerEvents(datestamp, planner, calendarEvents);
-    };
 
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: PLANNER_STORAGE_ID,
@@ -130,7 +129,7 @@ const PlannerCard = ({
             updateItem: saveEventReloadData,
             deleteItems: handleDeleteEvents
         },
-        reloadTriggers: [calendarEvents],
+        reloadTriggers: [calendarEvents]
     });
 
     const badgesConfig = useMemo(() => {
@@ -138,7 +137,10 @@ const PlannerCard = ({
         return eventColorCounts;
     }, [calendarChips, SortedEvents.items.length]);
 
-    const visibleListItemCount = SortedEvents.items.filter(i => i.status !== EItemStatus.HIDDEN).length;
+    const visibleListItemCount = useMemo(() =>
+        SortedEvents.items.filter(i => i.status !== EItemStatus.HIDDEN).length,
+        [SortedEvents.items.length]
+    );
 
     return (
         <Card
