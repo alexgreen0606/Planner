@@ -31,7 +31,7 @@ export interface DraggableListProps<
     listId: string;
     items: T[];
     onDeleteItem: (item: T) => Promise<void> | void;
-    onDragEnd: (updatedItem: T) => Promise<void | string> | void;
+    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
@@ -46,6 +46,7 @@ export interface DraggableListProps<
     hideKeyboard?: boolean;
     isLoading?: boolean;
     fillSpace?: boolean;
+    disableDrag?: boolean;
 }
 
 const SortableList = <
@@ -60,6 +61,7 @@ const SortableList = <
     emptyLabelConfig,
     fillSpace,
     getToolbar,
+    disableDrag = false,
     hideKeyboard,
     ...rest
 }: DraggableListProps<T, P, M>) => {
@@ -86,8 +88,6 @@ const SortableList = <
         if (isListDragging.value) {
             isListDragging.value = false;
         }
-
-        console.log(fullList)
 
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [textfieldItem?.id, textfieldItem?.sortId, items]);
@@ -175,6 +175,7 @@ const SortableList = <
                         key={`${item.id}-row`}
                         item={item}
                         itemIndex={i}
+                        disableDrag={disableDrag}
                         upperAutoScrollBound={upperAutoScrollBound}
                         lowerAutoScrollBound={lowerAutoScrollBound}
                         hideKeyboard={Boolean(hideKeyboard)}

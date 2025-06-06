@@ -65,7 +65,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                             {/* Blurred Background */}
                             <BlurView
                                 tint='default'
-                                intensity={100}
+                                intensity={90}
                                 className='absolute overflow-hidden'
                                 style={{
                                     width: BAR_WIDTH,

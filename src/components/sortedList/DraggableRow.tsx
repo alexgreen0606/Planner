@@ -43,6 +43,7 @@ export interface RowProps<T extends IListItem> {
     upperAutoScrollBound: number;
     lowerAutoScrollBound: number;
     isListDragging: SharedValue<boolean>;
+    disableDrag: boolean;
     dragControls: {
         handleDragStart: (initialTop: number, initialIndex: number) => void;
         initialIndex: SharedValue<number>;
@@ -55,7 +56,7 @@ export interface RowProps<T extends IListItem> {
     },
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDeleteItem: (item: T) => Promise<void> | void;
-    onDragEnd: (updatedItem: T) => Promise<void | string> | void;
+    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
@@ -74,6 +75,7 @@ const DraggableRow = <T extends IListItem>({
     item: staticItem,
     items,
     dragControls,
+    disableDrag,
     getLeftIconConfig,
     getRightIconConfig,
     handleValueChange,
@@ -199,7 +201,7 @@ const DraggableRow = <T extends IListItem>({
         const newSort = generateSortId(parentSortId, withoutDragged);
 
         const updatedItem = { ...item, sortId: newSort };
-        await onDragEnd(updatedItem);
+        await onDragEnd?.(updatedItem);
 
         isRowDragging.value = false;
         handleDragEnd();
@@ -214,6 +216,11 @@ const DraggableRow = <T extends IListItem>({
 
     const longPressGesture = Gesture.LongPress()
         .minDuration(500)
+        .onTouchesDown((_e, state) => {
+            if (disableDrag) {
+                state.fail(); // prevent recognition
+            }
+        })
         .onStart(() => {
             handleDragStart(basePosition.value, itemIndex);
             isRowDragging.value = true;

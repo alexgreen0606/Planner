@@ -128,9 +128,9 @@ const Countdowns = () => {
             <SortableList<ICountdown, ToolbarProps<ICountdown>, never>
                 listId={StorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
+                disableDrag
                 items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
-                onDragEnd={() => { }} // TODO: refresh list?
                 onDeleteItem={CountdownItems.deleteSingleItemFromStorage}
                 onContentClick={CountdownItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}

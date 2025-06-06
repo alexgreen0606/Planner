@@ -1,44 +1,37 @@
+import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/GenericIcon';
 import PlannerCard from '@/components/plannerCard';
-import PopoverList from '@/components/PopoverList';
+import ScrollAnchor from '@/components/ScrollAnchor';
+import ButtonText from '@/components/text/ButtonText';
 import { NULL } from '@/constants/generic';
+import { useReloadScheduler } from '@/hooks/useReloadScheduler';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { useScrollContainer } from '@/services/ScrollContainer';
+import { getPlannerSet, getPlannerSetTitles } from '@/storage/plannerSetsStorage';
+import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { loadCalendarData } from '@/utils/calendarUtils';
 import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
+import { WeatherForecast } from '@/utils/weatherUtils';
+import { MenuView } from '@react-native-menu/menu';
 import { usePathname, useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
-import { useReloadScheduler } from '@/hooks/useReloadScheduler';
-import { getPlannerSetTitles, getPlannerSet } from '@/storage/plannerSetsStorage';
-import { loadCalendarData } from '@/utils/calendarUtils';
-import { WeatherForecast } from '@/utils/weatherUtils';
-import ScrollAnchor from '@/components/ScrollAnchor';
-import { useScrollContainer } from '@/services/ScrollContainer';
-import { useAtom } from 'jotai';
-import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 
 const defaultPlannerSet = 'Next 7 Days';
 
 const Planners = () => {
+    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+    const { registerReloadFunction } = useReloadScheduler();
+    const { setUpperContentHeight } = useScrollContainer();
+    const allPlannerSetTitles = getPlannerSetTitles();
+    const pathname = usePathname();
+    const router = useRouter();
+
     const upperContentRef = useRef<View>(null);
 
-    const router = useRouter();
-    const allPlannerSetTitles = getPlannerSetTitles();
-    const { setUpperContentHeight } = useScrollContainer();
-    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
-    const pathname = usePathname();
-
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
-
-    const plannerDatestamps = useMemo(() => {
-        if (plannerSetKey === 'Next 7 Days') return getNextEightDayDatestamps().slice(1, 8);
-
-        const plannerSet = getPlannerSet(plannerSetKey);
-        if (!plannerSet) return [];
-
-        return generateDatestampRange(plannerSet.startDate, plannerSet.endDate)
-    }, [plannerSetKey, pathname]);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-05-17": {
@@ -106,7 +99,24 @@ const Planners = () => {
         }
     });
 
-    const { registerReloadFunction } = useReloadScheduler();
+    const plannerDatestamps = useMemo(() => {
+        if (plannerSetKey === 'Next 7 Days') return getNextEightDayDatestamps().slice(1, 8);
+
+        const plannerSet = getPlannerSet(plannerSetKey);
+        if (!plannerSet) return [];
+
+        return generateDatestampRange(plannerSet.startDate, plannerSet.endDate)
+    }, [plannerSetKey, pathname]);
+
+    const plannerSetOptions = useMemo(() =>
+        [defaultPlannerSet, ...allPlannerSetTitles].map((title) => ({
+            id: title,
+            title,
+            titleColor: 'blue',
+            state: plannerSetKey === title ? 'on' : 'off',
+        })),
+        [allPlannerSetTitles]
+    );
 
     // Load in the initial planners
     useEffect(() => {
@@ -131,12 +141,17 @@ const Planners = () => {
                     setUpperContentHeight(height);
                 }}
             >
-                <PopoverList
-                    value={plannerSetKey}
-                    setValue={setPlannerSetKey}
-                    options={[defaultPlannerSet, ...allPlannerSetTitles]}
-                    onChange={(newSet) => setPlannerSetKey(newSet)}
-                />
+                <MenuView
+                    onPressAction={({ nativeEvent }) => {
+                        setPlannerSetKey(nativeEvent.event)
+                    }}
+                    actions={plannerSetOptions}
+                    shouldOpenOnLongPress={false}
+                >
+                    <ButtonText onClick={() => null}>
+                        {plannerSetKey}
+                    </ButtonText>
+                </MenuView>
                 <View className='gap-2 flex-row'>
                     {plannerSetKey !== 'Next 7 Days' && (
                         <GenericIcon
