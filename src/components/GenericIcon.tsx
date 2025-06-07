@@ -47,7 +47,7 @@ export interface GenericIconProps<T = void> {
     type: IconType;
     size?: 'xs' | 's' | 'm' | 'l' | 'xl';
     platformColor?: string;
-    onClick?: (item?: T) => T | void;
+    onClick?: (item?: T) => T | void | Promise<void>;
     style?: ViewStyle;
     className?: string;
     hideRipple?: boolean;

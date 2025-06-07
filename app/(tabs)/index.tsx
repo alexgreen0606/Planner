@@ -1,23 +1,15 @@
 import { calendarChipsByDate } from '@/atoms/calendarEvents';
-import EventChip, { EventChipProps } from '@/components/EventChip';
+import EventChip from '@/components/EventChip';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
 import { BIRTHDAY_STORAGE_ID } from '@/constants/storage';
 import { ScrollContainerProvider } from '@/services/ScrollContainer';
-import { IBirthday } from '@/types/listItems/IBirthday';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
-
-interface TodayData {
-  planner: IPlannerEvent[];
-  chips: EventChipProps[];
-  uncontactedBirthdays: IBirthday[];
-}
 
 const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
 

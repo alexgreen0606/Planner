@@ -12,9 +12,8 @@ import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, gener
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
-import SortableList from '../sortedList';
-import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import SortableList from '../sortedList';
 
 const TodayPlanner = () => {
     const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
@@ -64,7 +63,7 @@ const TodayPlanner = () => {
         }, recurringStorage);
 
     return (
-        <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
+        <SortableList<IPlannerEvent>
             listId={datestamp}
             items={SortedEvents.items}
             fillSpace
@@ -77,7 +76,7 @@ const TodayPlanner = () => {
             handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
-            getToolbar={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
+            getToolbarProps={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{
                 label: 'All Plans Complete',

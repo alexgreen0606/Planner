@@ -5,18 +5,18 @@ import { CHECKLISTS_STORAGE_ID } from '@/constants/storage';
 import { EFolderItemType } from '@/enums/EFolderItemType';
 import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
 import { IFolder } from '@/types/checklists/IFolder';
-import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
+import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
-import Toolbar, { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { ToolbarProps } from '../sortedList/ListItemToolbar';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -120,76 +120,73 @@ const SortedFolder = ({
         }));
     };
 
-    const getItemToolbarConfig = (item: IFolderItem): ModifyItemConfig<IFolderItem, ToolbarProps<IFolderItem>> => {
+    const getItemToolbarConfig = (item: IFolderItem): ToolbarProps<IFolderItem> => {
         const isNew = item.status === EItemStatus.NEW;
         const isOpen = isItemTextfield(item);
 
         return {
-            component: Toolbar<IFolderItem>,
-            props: {
-                open: isOpen,
-                iconSets: isNew
-                    ? [
-                        [
-                            {
-                                type: 'folder',
-                                onClick: () => setTextfieldItem({ ...item, type: EFolderItemType.FOLDER }),
-                                platformColor: item.type === EFolderItemType.FOLDER ? item.platformColor : 'secondaryLabel'
-                            },
-                            {
-                                type: 'list',
-                                onClick: () => setTextfieldItem({ ...item, type: EFolderItemType.LIST }),
-                                platformColor: item.type === EFolderItemType.LIST ? item.platformColor : 'secondaryLabel'
-                            }
-                        ],
-                        createColorSelectionIconSet(item)
-                    ]
-                    : [
-                        [{
-                            type: 'transfer',
-                            onClick: () => beginItemTransfer(item),
-                        }],
-                        [{
-                            onClick: () => {
-                                const title = `Delete ${item.type}?`;
-
-                                let message = '';
-                                if (!!item.childrenCount) {
-                                    message += `This ${item.type} has ${item.childrenCount} items. Deleting is irreversible and will lose all inner contents.`;
-                                } else {
-                                    message += `Would you like to delete this ${item.type}?`;
-                                }
-
-                                setIsDeleteAlertOpen(true);
-                                Alert.alert(
-                                    title,
-                                    message,
-                                    [
-                                        {
-                                            text: 'Cancel',
-                                            style: 'cancel',
-                                            onPress: () => {
-                                                setIsDeleteAlertOpen(false);
-                                            }
-                                        },
-                                        {
-                                            text: !!item.childrenCount ? 'Force Delete' : 'Delete',
-                                            style: 'destructive',
-                                            onPress: () => {
-                                                SortedItems.deleteSingleItemFromStorage(item);
-                                                setIsDeleteAlertOpen(false);
-                                            }
-                                        }
-                                    ]
-                                );
-                            },
-                            type: 'trash',
-                        }],
-                        createColorSelectionIconSet(item),
+            open: isOpen,
+            iconSets: isNew
+                ? [
+                    [
+                        {
+                            type: 'folder',
+                            onClick: () => setTextfieldItem({ ...item, type: EFolderItemType.FOLDER }),
+                            platformColor: item.type === EFolderItemType.FOLDER ? item.platformColor : 'secondaryLabel'
+                        },
+                        {
+                            type: 'list',
+                            onClick: () => setTextfieldItem({ ...item, type: EFolderItemType.LIST }),
+                            platformColor: item.type === EFolderItemType.LIST ? item.platformColor : 'secondaryLabel'
+                        }
                     ],
-                item,
-            },
-        };
+                    createColorSelectionIconSet(item)
+                ]
+                : [
+                    [{
+                        type: 'transfer',
+                        onClick: () => beginItemTransfer(item),
+                    }],
+                    [{
+                        onClick: () => {
+                            const title = `Delete ${item.type}?`;
+
+                            let message = '';
+                            if (!!item.childrenCount) {
+                                message += `This ${item.type} has ${item.childrenCount} items. Deleting is irreversible and will lose all inner contents.`;
+                            } else {
+                                message += `Would you like to delete this ${item.type}?`;
+                            }
+
+                            setIsDeleteAlertOpen(true);
+                            Alert.alert(
+                                title,
+                                message,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel',
+                                        onPress: () => {
+                                            setIsDeleteAlertOpen(false);
+                                        }
+                                    },
+                                    {
+                                        text: !!item.childrenCount ? 'Force Delete' : 'Delete',
+                                        style: 'destructive',
+                                        onPress: () => {
+                                            SortedItems.deleteSingleItemFromStorage(item);
+                                            setIsDeleteAlertOpen(false);
+                                        }
+                                    }
+                                ]
+                            );
+                        },
+                        type: 'trash',
+                    }],
+                    createColorSelectionIconSet(item),
+                ],
+            item,
+        }
     };
 
     const isItemTransfering = (item: IFolderItem) => item.status === EItemStatus.TRANSFER;
@@ -205,30 +202,32 @@ const SortedFolder = ({
         getItemsFromStorageObject: getFolderItems,
         storageConfig: {
             createItem: createFolderItem,
-            updateItem: (newItem) => {
-                updateFolderItem(newItem);
-
-                // Rebuild the list to sync the updated item
-                SortedItems.refetchItems();
-            },
+            updateItem: updateFolderItem,
             deleteItems: (items) => {
                 deleteFolderItem(items[0].id, items[0].type);
                 setTextfieldItem(null);
             }
         },
-        initializeListItem: initializeEmptyFolder,
-        reloadOnNavigate: true
+        initializeListItem: initializeEmptyFolder
     });
 
+    // Rebuild the list when one of the folder's items changes
+    const storage = useMMKV({ id: CHECKLISTS_STORAGE_ID });
+    useMMKVListener((key) => {
+        if (folderData?.listIds.includes(key) || folderData?.folderIds.includes(key)) {
+            SortedItems.refetchItems();
+        }
+    }, storage);
+
     return (
-        <SortableList<IFolderItem, ToolbarProps<IFolderItem>, never>
+        <SortableList<IFolderItem>
             listId={folderId}
             items={SortedItems.items}
             fillSpace
             onDragEnd={SortedItems.persistItemToStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}
-            getToolbar={item => getItemToolbarConfig(item)}
+            getToolbarProps={getItemToolbarConfig}
             onContentClick={handleItemClick}
             saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             hideKeyboard={isDeleteAlertOpen || isTransferMode}

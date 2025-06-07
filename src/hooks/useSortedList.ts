@@ -25,7 +25,6 @@ interface SortedListConfig<T extends IListItem, S> {
     initializeListItem?: (item: IListItem) => T;
     storageConfig?: StorageHandlers<T>;
     initializedStorageObject?: S;
-    reloadOnNavigate?: boolean;
     reloadOnOverscroll?: boolean;
     reloadTriggers?: any[];
 }
@@ -38,7 +37,6 @@ const useSortedList = <T extends IListItem, S>({
     initializeListItem,
     storageConfig,
     initializedStorageObject,
-    reloadOnNavigate = false,
     reloadOnOverscroll = false,
     reloadTriggers,
     handleListChange
@@ -81,11 +79,6 @@ const useSortedList = <T extends IListItem, S>({
     useEffect(() => {
         if (reloadTriggers) buildList();
     }, reloadTriggers);
-
-    // Navigation Focus Reload Triggering
-    useFocusEffect(useCallback(() => {
-        if (reloadOnNavigate) buildList();
-    }, [storageObject]));
 
     // Overscroll Reload Registering
     useEffect(() => {

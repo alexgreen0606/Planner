@@ -181,7 +181,7 @@ const PlannerCard = ({
                 LIST_ITEM_HEIGHT
             }
         >
-            <SortableList<IPlannerEvent, ToolbarProps<IPlannerEvent>, never>
+            <SortableList<IPlannerEvent>
                 listId={datestamp}
                 items={SortedEvents.items}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
@@ -193,7 +193,7 @@ const PlannerCard = ({
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
-                getToolbar={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
+                getToolbarProps={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
                 customIsItemDeleting={isEventDeleting}
                 emptyLabelConfig={{
                     label: 'No Plans',

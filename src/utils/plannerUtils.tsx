@@ -1,10 +1,9 @@
-import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
+import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/constants/generic';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { deleteEvents, getCarryoverEventsAndCleanStorage, getPlannerFromStorage, saveEvent, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringPlannerStorage';
-import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/types/planner/TPlanner';
@@ -569,16 +568,13 @@ export function generateEventToolbar(
     event: IPlannerEvent | IRecurringEvent,
     openTimeModal: (event: IPlannerEvent) => void,
     timeModalOpen: boolean
-): ModifyItemConfig<IPlannerEvent | IRecurringEvent, ToolbarProps<IPlannerEvent | IRecurringEvent>> {
+): ToolbarProps<IPlannerEvent | IRecurringEvent> {
     return {
-        component: Toolbar,
-        props: {
-            item: event,
-            open: !timeModalOpen && isItemTextfield(event),
-            iconSets: [[{
-                type: 'clock',
-                onClick: () => openTimeModal(event),
-            }]]
-        }
+        item: event,
+        open: !timeModalOpen && isItemTextfield(event),
+        iconSets: [[{
+            type: 'clock',
+            onClick: () => openTimeModal(event)
+        }]]
     }
 }

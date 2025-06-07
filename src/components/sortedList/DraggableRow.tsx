@@ -5,7 +5,7 @@ import { LIST_SPRING_CONFIG } from "@/constants/listConstants";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
 import { useScrollContainer } from "@/services/ScrollContainer";
-import { ListItemIconConfig } from "@/types/listItems/core/rowConfigTypes";
+import { TListItemIconConfig } from "@/types/listItems/core/TListItemIconConfig";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { generateSortId } from "@/utils/listUtils";
 import { useEffect, useMemo } from "react";
@@ -60,8 +60,8 @@ export interface RowProps<T extends IListItem> {
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
-    getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
-    getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
+    getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
+    getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
     customIsItemDeleting?: (item: T) => boolean;
 }
@@ -277,7 +277,7 @@ const DraggableRow = <T extends IListItem>({
 
     // ------------- Render Helper Functions -------------
 
-    const renderIcon = (config: ListItemIconConfig<T>, type: IconPosition) => {
+    const renderIcon = (config: TListItemIconConfig<T>, type: IconPosition) => {
         if (config.hideIcon) return null;
 
         const size = type === IconPosition.LEFT ? 'm' : 's';

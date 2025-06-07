@@ -2,8 +2,9 @@ import ThinLine from '@/components/ThinLine';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/constants/layout';
 import { EItemStatus } from '@/enums/EItemStatus';
 import { useKeyboardTracker } from '@/hooks/useKeyboardTracker';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
-import { ListItemIconConfig, ListItemUpdateComponentProps, ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
+import { TListItemIconConfig } from '@/types/listItems/core/TListItemIconConfig';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { sanitizeList } from '@/utils/listUtils';
 import React, { useEffect, useMemo } from 'react';
@@ -14,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScrollAnchor from '../ScrollAnchor';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import Toolbar, { ToolbarProps } from './ListItemToolbar';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -23,11 +24,7 @@ export enum BoundType {
     MAX = 'MAX'
 }
 
-export interface DraggableListProps<
-    T extends IListItem,
-    P extends ListItemUpdateComponentProps<T> = never,
-    M extends ListItemUpdateComponentProps<T> = never,
-> {
+export interface DraggableListProps<T extends IListItem> {
     listId: string;
     items: T[];
     onDeleteItem: (item: T) => Promise<void> | void;
@@ -35,12 +32,11 @@ export interface DraggableListProps<
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
-    getLeftIconConfig?: (item: T) => ListItemIconConfig<T>;
-    getRightIconConfig?: (item: T) => ListItemIconConfig<T>;
+    getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
+    getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
     saveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
-    getToolbar?: (item: T) => ModifyItemConfig<T, P>;
-    getModal?: (item: T) => ModifyItemConfig<T, M>;
+    getToolbarProps?: (item: T) => ToolbarProps<T>;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     customIsItemDeleting?: (item: T) => boolean;
     hideKeyboard?: boolean;
@@ -49,30 +45,25 @@ export interface DraggableListProps<
     disableDrag?: boolean;
 }
 
-const SortableList = <
-    T extends IListItem,
-    P extends ListItemUpdateComponentProps<T>,
-    M extends ListItemUpdateComponentProps<T>
->({
+const SortableList = <T extends IListItem>({
     listId,
     items,
     isLoading,
     saveTextfieldAndCreateNew,
     emptyLabelConfig,
     fillSpace,
-    getToolbar,
+    getToolbarProps,
     disableDrag = false,
     hideKeyboard,
     ...rest
-}: DraggableListProps<T, P, M>) => {
+}: DraggableListProps<T>) => {
     const [textfieldItem] = useTextfieldItemAs<T>();
     const { keyboardAbsoluteTop } = useKeyboardTracker();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
 
-    const toolbarConfig = useMemo(() => textfieldItem ? getToolbar?.(textfieldItem) : null, [textfieldItem, getToolbar]);
-    const Toolbar = useMemo(() => toolbarConfig?.component, [toolbarConfig]);
+    const toolbarProps = useMemo(() => textfieldItem ? getToolbarProps?.(textfieldItem) : null, [textfieldItem, getToolbarProps]);
 
     const isListDragging = useSharedValue<boolean>(false);
     const isAutoScrolling = useSharedValue(false);
@@ -222,10 +213,10 @@ const SortableList = <
             )}
 
             {/* Toolbar */}
-            {Toolbar && toolbarConfig && !hideKeyboard && textfieldItem?.listId === listId &&
+            {toolbarProps && !hideKeyboard && textfieldItem?.listId === listId &&
                 <Portal>
                     <ToolbarContainer className='absolute left-0' style={toolbarStyle}>
-                        <Toolbar {...toolbarConfig.props} />
+                        <Toolbar {...toolbarProps} />
                     </ToolbarContainer>
                 </Portal>
             }

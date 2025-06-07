@@ -11,6 +11,7 @@ import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
+import { IconType } from '../GenericIcon';
 import SortableList from '../sortedList';
 
 const RecurringWeekdayPlanner = () => {
@@ -46,6 +47,17 @@ const RecurringWeekdayPlanner = () => {
         toggleTimeModal(textfieldItem);
     }
 
+    function generateToolbar(event: IRecurringEvent) {
+        return {
+            item: event,
+            open: !timeModalOpen && isItemTextfield(event),
+            iconSets: [[{
+                type: 'clock' as IconType,
+                onClick: () => toggleTimeModal(event)
+            }]]
+        }
+    }
+
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: RECURRING_EVENT_STORAGE_ID,
         storageKey: ERecurringPlannerKey.WEEKDAYS,
@@ -61,13 +73,14 @@ const RecurringWeekdayPlanner = () => {
             className='flex-1'
             style={{ backgroundColor: PlatformColor('systemBackground') }}
         >
-            <SortableList<IRecurringEvent, never, never>
+            <SortableList<IRecurringEvent>
                 items={SortedEvents.items}
                 listId={ERecurringPlannerKey.WEEKDAYS}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
+                getToolbarProps={generateToolbar}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}

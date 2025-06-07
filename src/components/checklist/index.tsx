@@ -1,13 +1,12 @@
 import { CHECKLISTS_STORAGE_ID } from '@/constants/storage';
-import { EItemStatus } from '@/enums/EItemStatus';
+import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
-import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { IChecklist } from '@/types/checklists/IChecklist';
 import { IListItem } from '@/types/listItems/core/TListItem';
+import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import SortableList from '../sortedList';
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 
 const Checklist = () => {
 
@@ -31,7 +30,7 @@ const Checklist = () => {
     });
 
     return (
-        <SortableList<IListItem, never, never>
+        <SortableList<IListItem>
             listId={checklistId}
             fillSpace
             items={SortedItems.items}

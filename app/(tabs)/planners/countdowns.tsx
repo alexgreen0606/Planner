@@ -1,11 +1,10 @@
 import SortableList from '@/components/sortedList';
-import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
+import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import { StorageKey } from '@/constants/storage';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { ICountdown } from '@/types/listItems/ICountdown';
 import { loadCalendarData } from '@/utils/calendarUtils';
@@ -47,48 +46,43 @@ const Countdowns = () => {
         }
     }
 
-    function generateToolbar(
-        countdown: ICountdown,
-    ): ModifyItemConfig<ICountdown, ToolbarProps<ICountdown>> {
+    function generateToolbar(countdown: ICountdown): ToolbarProps<ICountdown> {
         return {
-            component: Toolbar,
-            props: {
-                open: !dateSelectOpen && isItemTextfield(countdown),
-                iconSets: [
-                    [{
-                        type: 'trash',
-                        onClick: () => {
-                            setIsDeleteAlertOpen(true);
-                            Alert.alert(
-                                `Delete "${countdown.value}"?`,
-                                'The event in your calendar will also be deleted.',
-                                [
-                                    {
-                                        text: 'Cancel',
-                                        style: 'cancel',
-                                        onPress: () => {
-                                            setIsDeleteAlertOpen(false);
-                                        }
-                                    },
-                                    {
-                                        text: 'Delete',
-                                        style: 'destructive',
-                                        onPress: async () => {
-                                            await CountdownItems.deleteSingleItemFromStorage(countdown);
-                                            setTextfieldItem(null);
-                                            setIsDeleteAlertOpen(false);
-                                        }
+            open: !dateSelectOpen && isItemTextfield(countdown),
+            iconSets: [
+                [{
+                    type: 'trash',
+                    onClick: () => {
+                        setIsDeleteAlertOpen(true);
+                        Alert.alert(
+                            `Delete "${countdown.value}"?`,
+                            'The event in your calendar will also be deleted.',
+                            [
+                                {
+                                    text: 'Cancel',
+                                    style: 'cancel',
+                                    onPress: () => {
+                                        setIsDeleteAlertOpen(false);
                                     }
-                                ]
-                            );
-                        }
-                    }],
-                    [{
-                        type: 'planners',
-                        onClick: toggleDateSelector
-                    }]],
-                item: countdown
-            },
+                                },
+                                {
+                                    text: 'Delete',
+                                    style: 'destructive',
+                                    onPress: async () => {
+                                        await CountdownItems.deleteSingleItemFromStorage(countdown);
+                                        setTextfieldItem(null);
+                                        setIsDeleteAlertOpen(false);
+                                    }
+                                }
+                            ]
+                        );
+                    }
+                }],
+                [{
+                    type: 'planners',
+                    onClick: toggleDateSelector
+                }]],
+            item: countdown
         }
     }
 
@@ -121,7 +115,7 @@ const Countdowns = () => {
         <View className='flex-1'>
 
             {/* Countdown List */}
-            <SortableList<ICountdown, ToolbarProps<ICountdown>, never>
+            <SortableList<ICountdown>
                 listId={StorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
                 disableDrag
@@ -131,7 +125,7 @@ const Countdowns = () => {
                 onContentClick={CountdownItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 saveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
-                getToolbar={generateToolbar}
+                getToolbarProps={generateToolbar}
                 emptyLabelConfig={{
                     label: 'No countdowns',
                     className: 'flex-1'
