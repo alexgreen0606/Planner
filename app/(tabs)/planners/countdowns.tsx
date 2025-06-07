@@ -3,15 +3,13 @@ import Toolbar, { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import { StorageKey } from '@/constants/storage';
-import { EItemStatus } from '@/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { ModifyItemConfig } from '@/types/listItems/core/rowConfigTypes';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { ICountdown } from '@/types/listItems/ICountdown';
 import { loadCalendarData } from '@/utils/calendarUtils';
-import { getCountdowns, saveCountdown, deleteCountdowns } from '@/utils/countdownUtils';
+import { deleteCountdowns, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getTodayDatestamp } from '@/utils/dateUtils';
 import { isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
@@ -22,7 +20,6 @@ import DatePicker from 'react-native-date-picker';
 
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
-    const { setUpperContentHeight } = useScrollContainer();
 
     const closeTextfieldOnDateSelectorClose = useRef(false);
 
@@ -117,7 +114,6 @@ const Countdowns = () => {
     });
 
     useEffect(() => {
-        setUpperContentHeight(0);
         return () => setTextfieldItem(null); // TODO: save the item instead
     }, []);
 

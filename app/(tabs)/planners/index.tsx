@@ -6,16 +6,15 @@ import ButtonText from '@/components/text/ButtonText';
 import { NULL } from '@/constants/generic';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { getPlannerSet, getPlannerSetTitles } from '@/storage/plannerSetsStorage';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
-import { MenuView } from '@react-native-menu/menu';
+import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 
@@ -24,12 +23,9 @@ const defaultPlannerSet = 'Next 7 Days';
 const Planners = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { registerReloadFunction } = useReloadScheduler();
-    const { setUpperContentHeight } = useScrollContainer();
     const allPlannerSetTitles = getPlannerSetTitles();
     const pathname = usePathname();
     const router = useRouter();
-
-    const upperContentRef = useRef<View>(null);
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
 
@@ -133,19 +129,12 @@ const Planners = () => {
         >
 
             {/* Planner Set Selection */}
-            <View
-                ref={upperContentRef}
-                className='p-4 flex-row justify-between items-center w-full'
-                onLayout={(event) => {
-                    const { height } = event.nativeEvent.layout;
-                    setUpperContentHeight(height);
-                }}
-            >
+            <View className='p-4 flex-row justify-between items-center w-full'>
                 <MenuView
                     onPressAction={({ nativeEvent }) => {
                         setPlannerSetKey(nativeEvent.event)
                     }}
-                    actions={plannerSetOptions}
+                    actions={plannerSetOptions as MenuAction[]}
                     shouldOpenOnLongPress={false}
                 >
                     <ButtonText onClick={() => null}>

@@ -43,6 +43,9 @@ interface ScrollContainerProps {
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
     floatingBannerHeight?: number;
+
+    // Tracks the height of any content above the list container
+    upperContentHeight?: number;
 }
 
 interface ScrollContainerContextValue {
@@ -52,7 +55,6 @@ interface ScrollContainerContextValue {
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
-    setUpperContentHeight: (height: number) => void;
     bottomScrollRef: React.RefObject<Animated.View>;
     // Placeholder Textfield (prevents keyboard flicker)
     focusPlaceholder: () => void;
@@ -70,7 +72,8 @@ export const ScrollContainerProvider = ({
     children,
     header,
     floatingBanner,
-    floatingBannerHeight: fixedFloatingBannerHeight
+    upperContentHeight = 0,
+    floatingBannerHeight: fixedFloatingBannerHeight = 0
 }: ScrollContainerProps) => {
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
@@ -84,10 +87,7 @@ export const ScrollContainerProvider = ({
 
     // ----- Page Layout Variables -----
 
-    const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight ?? 0);
-
-    // Tracks the height of any content above the list container
-    const [upperContentHeight, setUpperContentHeight] = useState(0);
+    const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight);
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
@@ -326,12 +326,7 @@ export const ScrollContainerProvider = ({
     }));
 
     const bottomBlurBarStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            bottomAnchorAbsolutePosition.value,
-            [VISIBLE_HEIGHT - NAVBAR_OVERFLOW_FADE_THRESHOLD, VISIBLE_HEIGHT],
-            [0, 1],
-            Extrapolation.CLAMP
-        )
+        opacity: bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT ? 1 : 0
     }));
 
     return (
@@ -341,7 +336,6 @@ export const ScrollContainerProvider = ({
             measureContentHeight,
             floatingBannerHeight,
             bottomScrollRef,
-            setUpperContentHeight,
             focusPlaceholder,
             blurPlaceholder
         }}>
@@ -352,7 +346,7 @@ export const ScrollContainerProvider = ({
                 style={floatingBannerStyle}
                 onLayout={(event) => {
                     if (fixedFloatingBannerHeight) return;
-                    
+
                     const { height } = event.nativeEvent.layout;
                     setFloatingBannerHeight(height);
                 }}

@@ -3,15 +3,13 @@ import RecurringWeekdayPlanner from '@/components/recurringPlanner/RecurringWeek
 import ButtonText from '@/components/text/ButtonText';
 import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/services/ScrollContainer';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
-import { MenuView } from '@react-native-menu/menu';
+import { MenuAction, MenuView } from '@react-native-menu/menu';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 
 const RecurringPlanners = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
-    const { setUpperContentHeight } = useScrollContainer();
 
     const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerKey>(ERecurringPlannerKey.WEEKDAYS);
 
@@ -25,8 +23,6 @@ const RecurringPlanners = () => {
     );
 
     useEffect(() => {
-        setUpperContentHeight(0);
-
         return () => setTextfieldItem(null); // TODO: save the item instead
     }, [])
 
@@ -37,12 +33,12 @@ const RecurringPlanners = () => {
         >
 
             {/* Recurring Planner Selection */}
-            <View className='p-4' >
+            <View className='p-4 flex-row' >
                 <MenuView
                     onPressAction={({ nativeEvent }) => {
                         setSelectedRecurring(nativeEvent.event as ERecurringPlannerKey)
                     }}
-                    actions={recurringPlannerOptions}
+                    actions={recurringPlannerOptions as MenuAction[]}
                     shouldOpenOnLongPress={false}
                 >
                     <ButtonText onClick={() => null}>

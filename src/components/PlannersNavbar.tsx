@@ -33,6 +33,8 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
 
     const indicatorLeft = useSharedValue(HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
 
+    const isCountdowns = pathname.includes('countdowns');
+
     function handleTabChange(tab: any) {
         indicatorLeft.value = withTiming(tab.left, LINEAR_ANIMATION_CONFIG);
         router.push(tab.pathname)
@@ -49,6 +51,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
             style={{ backgroundColor: PlatformColor('systemBackground') }}
         >
             <ScrollContainerProvider
+                upperContentHeight={isCountdowns ? 0 : 48}
                 floatingBannerHeight={BAR_HEIGHT}
                 floatingBanner={
                     <View className='w-full flex items-center'>
