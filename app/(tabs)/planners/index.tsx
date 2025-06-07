@@ -137,7 +137,7 @@ const Planners = () => {
                     actions={plannerSetOptions as MenuAction[]}
                     shouldOpenOnLongPress={false}
                 >
-                    <ButtonText onClick={() => null}>
+                    <ButtonText>
                         {plannerSetKey}
                     </ButtonText>
                 </MenuView>

@@ -3,7 +3,7 @@ import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/services/ScrollContainer';
-import { deleteRecurringEvents, saveRecurringEvent } from '@/storage/recurringPlannerStorage';
+import { deleteRecurringEvents, deleteRecurringWeekdayEvents, saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
@@ -13,12 +13,13 @@ import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { IconType } from '../GenericIcon';
 import SortableList from '../sortedList';
+import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
 
 interface SortedRecurringPlannerProps {
-    weekday: string;
+    plannerKey: string;
 }
 
-const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
+const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
     const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
     const { focusPlaceholder } = useScrollContainer();
@@ -37,22 +38,27 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
         }
     }, [textfieldItem]);
 
+    const isWeekdayEvent = plannerKey === ERecurringPlannerKey.WEEKDAYS;
+
     async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
             await SortedEvents.toggleItemEdit(item);
         setTimeModalOpen(curr => !curr);
     }
 
-    function onSaveEventTime(date: Date) {
+    function handleSaveEventTime(date: Date) {
         if (!textfieldItem) return;
 
         focusPlaceholder();
 
+        const newItem = { ...textfieldItem };
         const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-        textfieldItem.startTime = formattedTime;
-        textfieldItem.sortId = generateSortIdByTime(textfieldItem, SortedEvents.items);
-        setTextfieldItem({ ...textfieldItem, startTime: formattedTime });
-        toggleTimeModal(textfieldItem);
+
+        newItem.startTime = formattedTime;
+        newItem.sortId = generateSortIdByTime(newItem, SortedEvents.items);
+
+        setTextfieldItem(newItem);
+        setTimeModalOpen(false);
     }
 
     function generateToolbar(event: IRecurringEvent) {
@@ -68,11 +74,11 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
 
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: RECURRING_EVENT_STORAGE_ID,
-        storageKey: weekday,
+        storageKey: plannerKey,
         storageConfig: {
-            createItem: saveRecurringEvent,
-            updateItem: saveRecurringEvent,
-            deleteItems: deleteRecurringEvents
+            createItem: isWeekdayEvent ? saveRecurringWeekdayEvent : saveRecurringEvent,
+            updateItem: isWeekdayEvent ? saveRecurringWeekdayEvent : saveRecurringEvent,
+            deleteItems: isWeekdayEvent ? deleteRecurringWeekdayEvents : deleteRecurringEvents
         }
     });
 
@@ -83,7 +89,7 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
         >
             <SortableList<IRecurringEvent>
                 items={SortedEvents.items}
-                listId={weekday}
+                listId={plannerKey}
                 fillSpace
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
@@ -96,7 +102,7 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
                 emptyLabelConfig={{
-                    label: `No recurring ${weekday} plans`,
+                    label: `No recurring ${isWeekdayEvent ? 'weekday' : plannerKey} plans`,
                     className: 'flex-1'
                 }}
             />
@@ -108,7 +114,7 @@ const RecurringPlanner = ({ weekday }: SortedRecurringPlannerProps) => {
                 theme='dark'
                 open={timeModalOpen && Boolean(textfieldItem)}
                 date={textfieldDateObject}
-                onConfirm={onSaveEventTime}
+                onConfirm={handleSaveEventTime}
                 onCancel={() => toggleTimeModal(textfieldItem!)}
             />
         </View>

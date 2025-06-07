@@ -133,6 +133,7 @@ const Countdowns = () => {
                 getLeftIconConfig={(item) => ({
                     onClick: async () => {
                         closeTextfieldOnDateSelectorClose.current = true;
+                        // TODO: need to save the item directly on close, not just set the textfield
                         await CountdownItems.toggleItemEdit(item);
                         setDateSelectOpen(true);
                     },

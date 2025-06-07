@@ -1,5 +1,4 @@
 import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
-import RecurringWeekdayPlanner from '@/components/recurringPlanner/RecurringWeekdayPlanner';
 import ButtonText from '@/components/text/ButtonText';
 import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
@@ -19,12 +18,13 @@ const RecurringPlanners = () => {
             title,
             titleColor: 'blue',
             state: selectedRecurring === title ? 'on' : 'off',
-        })), []
+        })), 
+        [selectedRecurring]
     );
 
     useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
-    }, [])
+    }, []);
 
     return (
         <View
@@ -41,17 +41,14 @@ const RecurringPlanners = () => {
                     actions={recurringPlannerOptions as MenuAction[]}
                     shouldOpenOnLongPress={false}
                 >
-                    <ButtonText onClick={() => null}>
+                    <ButtonText>
                         {selectedRecurring}
                     </ButtonText>
                 </MenuView>
             </View>
 
             {/* Recurring Planner Events */}
-            {selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
-                <RecurringWeekdayPlanner key='weekday-recurring-planner' /> :
-                <RecurringPlanner weekday={selectedRecurring} />
-            }
+            <RecurringPlanner plannerKey={selectedRecurring} />
 
         </View>
     );

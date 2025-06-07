@@ -13,6 +13,8 @@ import { Router } from 'expo-router';
 import { loadCalendarData } from './calendarUtils';
 import { datestampToDayOfWeek, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
+import { jotaiStore } from 'app/_layout';
+import { textfieldItemAtom } from '@/atoms/textfieldData';
 
 // ------------- Utilities -------------
 

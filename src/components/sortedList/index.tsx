@@ -24,7 +24,7 @@ export enum BoundType {
     MAX = 'MAX'
 }
 
-export interface DraggableListProps<T extends IListItem> {
+interface DraggableListProps<T extends IListItem> {
     listId: string;
     items: T[];
     onDeleteItem: (item: T) => Promise<void> | void;
@@ -81,7 +81,11 @@ const SortableList = <T extends IListItem>({
         }
 
         return fullList.sort((a, b) => a.sortId - b.sortId);
-    }, [textfieldItem?.id, textfieldItem?.sortId, items]);
+    }, [
+        textfieldItem?.id, 
+        textfieldItem?.sortId, 
+        items
+    ]);
 
     useEffect(() => {
         runOnUI(measureContentHeight)();

@@ -9,7 +9,7 @@ const AnimatedText = Animated.createAnimatedComponent(View);
 
 interface ButtonTextProps extends React.ComponentProps<typeof Text> {
     platformColor?: string;
-    onClick: () => void;
+    onClick?: () => void;
     children: React.ReactNode;
     containerStyle?: ViewStyle;
     iconConfig?: GenericIconProps;
@@ -38,7 +38,7 @@ const ButtonText = ({
         opacity.value = withTiming(1, {
             duration: 50
         });
-        onClick();
+        onClick?.();
     }
 
     const textStyle = useAnimatedStyle(() => ({
