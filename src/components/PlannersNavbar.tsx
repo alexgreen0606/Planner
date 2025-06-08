@@ -53,6 +53,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
             <ScrollContainerProvider
                 upperContentHeight={isCountdowns ? 0 : 48}
                 floatingBannerHeight={BAR_HEIGHT}
+                fixFloatingBannerOnOverscroll
                 floatingBanner={
                     <View className='w-full flex items-center'>
                         <View

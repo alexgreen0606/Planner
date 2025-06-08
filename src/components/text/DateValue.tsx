@@ -23,12 +23,12 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
     const showYear = date > elevenMonthsLater;
 
     return concise ?
-        <View style={styles.time}>
-            <CustomText type='conciseTime' style={{ flexDirection: 'row', color: PlatformColor(platformColor) }}>
+        <View className='relative flex-row w-fit'>
+            <CustomText type='conciseTime' style={{ color: PlatformColor(platformColor) }}>
                 {monthDay.toUpperCase()}
             </CustomText>
             {showYear && (
-                <View style={styles.conciseYear}>
+                <View className='absolute top-[80%] left-0'>
                     <CustomText type='conciseIndicator'>
                         {year}
                     </CustomText>
@@ -36,8 +36,14 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
             )}
         </View>
         :
-        <View style={styles.time}>
-            <CustomText type='time' style={{ marginRight: showYear ? 2 : 0, color: PlatformColor(platformColor) }}>
+        <View className='relative flex-row'>
+            <CustomText
+                type='time'
+                style={{
+                    marginRight: showYear ? 2 : 0,
+                    color: PlatformColor(platformColor)
+                }}
+            >
                 {monthDay}
             </CustomText>
             {showYear && (
@@ -47,17 +53,5 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
             )}
         </View>
 };
-
-const styles = StyleSheet.create({
-    time: {
-        position: 'relative',
-        flexDirection: 'row'
-    },
-    conciseYear: {
-        position: 'absolute',
-        top: '80%',
-        right: 0
-    }
-});
 
 export default DateValue;

@@ -120,7 +120,6 @@ const useSortedList = <T extends IListItem, S>({
         const newItem: T = initializeListItem?.(genericListItem) ?? genericListItem as T;
 
         setTextfieldItem(newItem);
-        await handleListChange?.();
     }
 
     // ------------- EDIT Logic -------------
@@ -153,6 +152,8 @@ const useSortedList = <T extends IListItem, S>({
             const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, { ...storageObject }) : updatedList;
             setStorageObject(objectToSave as S);
         }
+        
+        await handleListChange?.();
     };
 
 

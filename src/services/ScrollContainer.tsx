@@ -43,6 +43,7 @@ interface ScrollContainerProps {
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
     floatingBannerHeight?: number;
+    fixFloatingBannerOnOverscroll?: boolean;
 
     // Tracks the height of any content above the list container
     upperContentHeight?: number;
@@ -73,7 +74,8 @@ export const ScrollContainerProvider = ({
     header,
     floatingBanner,
     upperContentHeight = 0,
-    floatingBannerHeight: fixedFloatingBannerHeight = 0
+    floatingBannerHeight: fixedFloatingBannerHeight = 0,
+    fixFloatingBannerOnOverscroll = false
 }: ScrollContainerProps) => {
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
@@ -198,7 +200,7 @@ export const ScrollContainerProvider = ({
         transform: [
             { rotate: `${loadingRotation.value}deg` },
         ],
-        top: TOP_SPACER + OVERSCROLL_RELOAD_THRESHOLD / 3
+        top: (fixFloatingBannerOnOverscroll ? floatingBannerHeight : 0) + TOP_SPACER + OVERSCROLL_RELOAD_THRESHOLD / 3
     }));
 
     // ------------- Scrolling Logic -------------
@@ -257,10 +259,14 @@ export const ScrollContainerProvider = ({
     // ------------- Floating Banner Logic -------------
 
     const floatingBannerStyle = useAnimatedStyle(() => ({
-        top: Math.max(
+        top: scrollOffset.value > 0 ? Math.max(
             TOP_SPACER,
             (header ? HEADER_HEIGHT : 0) + TOP_SPACER - scrollOffset.value
-        ),
+        ) : fixFloatingBannerOnOverscroll ? (header ? HEADER_HEIGHT : 0) + TOP_SPACER :
+            Math.max(
+                TOP_SPACER,
+                (header ? HEADER_HEIGHT : 0) + TOP_SPACER - scrollOffset.value
+            )
     }));
 
     // ------------- Blur Bar Logic -------------

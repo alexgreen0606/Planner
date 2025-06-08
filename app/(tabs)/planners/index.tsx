@@ -30,7 +30,7 @@ const Planners = () => {
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
-        "2025-05-17": {
+        "2025-06-09": {
             "date": "2025-04-23",
             "weatherCode": 61,
             "weatherDescription": "Slight rain",
@@ -39,7 +39,7 @@ const Planners = () => {
             "precipitationSum": 0.06,
             "precipitationProbabilityMax": 24
         },
-        "2025-05-16": {
+        "2025-06-10": {
             "date": "2025-03-28",
             "weatherCode": 65,
             "weatherDescription": "Heavy rain",
@@ -48,7 +48,7 @@ const Planners = () => {
             "precipitationSum": 1.19,
             "precipitationProbabilityMax": 32
         },
-        "2025-05-18": {
+        "2025-06-11": {
             "date": "2025-03-29",
             "weatherCode": 3,
             "weatherDescription": "Overcast",
@@ -57,7 +57,7 @@ const Planners = () => {
             "precipitationSum": 0,
             "precipitationProbabilityMax": 3
         },
-        "2025-05-19": {
+        "2025-06-12": {
             "date": "2025-03-30",
             "weatherCode": 63,
             "weatherDescription": "Moderate rain",
@@ -66,7 +66,7 @@ const Planners = () => {
             "precipitationSum": 0.46,
             "precipitationProbabilityMax": 66
         },
-        "2025-05-20": {
+        "2025-06-13": {
             "date": "2025-03-31",
             "weatherCode": 51,
             "weatherDescription": "Light drizzle",
@@ -75,7 +75,7 @@ const Planners = () => {
             "precipitationSum": 0.02,
             "precipitationProbabilityMax": 34
         },
-        "2025-05-21": {
+        "2025-06-14": {
             "date": "2025-04-01",
             "weatherCode": 53,
             "weatherDescription": "Moderate drizzle",
@@ -84,7 +84,7 @@ const Planners = () => {
             "precipitationSum": 0.09,
             "precipitationProbabilityMax": 34
         },
-        "2025-05-22": {
+        "2025-06-15": {
             "date": "2025-04-02",
             "weatherCode": 53,
             "weatherDescription": "Moderate drizzle",
@@ -129,7 +129,7 @@ const Planners = () => {
         >
 
             {/* Planner Set Selection */}
-            <View className='p-4 flex-row justify-between items-center w-full'>
+            <View className='p-2 flex-row justify-between items-center w-full'>
                 <MenuView
                     onPressAction={({ nativeEvent }) => {
                         setPlannerSetKey(nativeEvent.event)

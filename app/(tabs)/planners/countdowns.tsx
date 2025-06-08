@@ -9,7 +9,7 @@ import { IListItem } from '@/types/listItems/core/TListItem';
 import { ICountdown } from '@/types/listItems/ICountdown';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { deleteCountdowns, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
-import { datestampToMidnightDate, daysBetweenToday, getTodayDatestamp } from '@/utils/dateUtils';
+import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
 import { isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
@@ -20,7 +20,7 @@ import DatePicker from 'react-native-date-picker';
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
 
-    const closeTextfieldOnDateSelectorClose = useRef(false);
+    const saveEventOnDateSelectorClose = useRef(false);
 
     const [dateSelectOpen, setDateSelectOpen] = useState(false);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -40,9 +40,10 @@ const Countdowns = () => {
 
     function toggleDateSelector() {
         setDateSelectOpen(curr => !curr);
-        if (closeTextfieldOnDateSelectorClose.current) {
+
+        if (saveEventOnDateSelectorClose.current) {
             setTextfieldItem(null);
-            closeTextfieldOnDateSelectorClose.current = false;
+            saveEventOnDateSelectorClose.current = false;
         }
     }
 
@@ -132,12 +133,17 @@ const Countdowns = () => {
                 }}
                 getLeftIconConfig={(item) => ({
                     onClick: async () => {
-                        closeTextfieldOnDateSelectorClose.current = true;
-                        // TODO: need to save the item directly on close, not just set the textfield
-                        await CountdownItems.toggleItemEdit(item);
+                        if (!textfieldItem) {
+                            saveEventOnDateSelectorClose.current = true;
+                            await CountdownItems.toggleItemEdit(item);
+                        }
                         setDateSelectOpen(true);
                     },
-                    customIcon: <DateValue concise isoTimestamp={item.startTime} />
+                    customIcon: (
+                        <View className='w-16'>
+                            <DateValue concise isoTimestamp={item.startTime} />
+                        </View>
+                    )
                 })}
                 getRightIconConfig={(countdown) => ({
                     customIcon:
@@ -156,6 +162,7 @@ const Countdowns = () => {
                 title={textfieldItem?.value}
                 theme='dark'
                 minimumDate={datestampToMidnightDate(getTodayDatestamp())}
+                maximumDate={datestampToMidnightDate(getDatestampThreeYearsFromToday())}
                 open={dateSelectOpen && Boolean(textfieldItem)}
                 date={
                     textfieldItem?.startTime
@@ -166,15 +173,19 @@ const Countdowns = () => {
                     if (!textfieldItem) return;
 
                     const selected = DateTime.fromJSDate(date);
-                    const updatedCountdown = {
+                    const updatedCountdown: ICountdown = {
                         ...textfieldItem,
-                        startTime: selected.toISO(),
+                        startTime: selected.toISO()!
                     };
                     updatedCountdown.sortId = generateSortIdByTime(updatedCountdown, CountdownItems.items);
-                    setTextfieldItem({
-                        ...updatedCountdown,
-                        startTime: selected.toISO()!
-                    });
+
+                    if (saveEventOnDateSelectorClose.current) {
+                        CountdownItems.persistItemToStorage(updatedCountdown);
+                        setTextfieldItem(null);
+                        saveEventOnDateSelectorClose.current = false;
+                    } else {
+                        setTextfieldItem(updatedCountdown);
+                    }
 
                     toggleDateSelector();
                 }}

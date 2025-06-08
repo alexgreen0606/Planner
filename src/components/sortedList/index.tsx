@@ -19,11 +19,6 @@ import Toolbar, { ToolbarProps } from './ListItemToolbar';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
-export enum BoundType {
-    MIN = 'MIN',
-    MAX = 'MAX'
-}
-
 interface DraggableListProps<T extends IListItem> {
     listId: string;
     items: T[];

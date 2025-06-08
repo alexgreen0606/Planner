@@ -50,7 +50,6 @@ export async function getCountdowns(): Promise<ICountdown[]> {
 };
 
 export async function saveCountdown(countdown: ICountdown, createNew: boolean = false): Promise<void> {
-    console.log(countdown, createNew, await getCountdownCalendarDetails())
     await getCalendarAccess();
     try {
     await ReactNativeCalendarEvents.saveEvent(
