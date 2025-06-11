@@ -62,12 +62,15 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
 function generateEventChip(event: CalendarEventReadable): EventChipProps {
     const calendar = event.calendar!;
 
+    console.log(event)
+
     const chipProps: EventChipProps = {
         label: event.title,
         iconConfig: {
             type: getCalendarIcon(calendar.title),
         },
-        color: calendar.color
+        color: calendar.color,
+        collapsed: true
     };
 
     if (calendar.title === 'Birthdays') {
@@ -99,9 +102,9 @@ function generateEventChip(event: CalendarEventReadable): EventChipProps {
 export function generatePlanner(datestamp: string): TPlanner {
     return {
         datestamp,
-        title: datestampToDayOfWeek(datestamp),
+        title: '',
         events: [],
-        excludeRecurring: false
+        hideRecurring: false
     };
 }
 

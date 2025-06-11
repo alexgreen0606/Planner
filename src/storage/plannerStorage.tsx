@@ -36,6 +36,40 @@ export function savePlannerToStorage(datestamp: string, newPlanner: TPlanner) {
 }
 
 /**
+ * ✅ Deletes all planners older than today's, and returns a subset of events
+ * from yesterday's planner to carry over to today.
+ * Recurring items and hidden items will be ignored.
+ * Timed items will be stripped down to generic events.
+ * 
+ * @returns - a list of events to merge into today's planner
+ */
+export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
+    const yesterdayTimestamp = getYesterdayDatestamp();
+    const todayTimestamp = getTodayDatestamp();
+    const yesterdayPlanner = getPlannerFromStorage(yesterdayTimestamp);
+
+    // Delete all previous calendars
+    const allStorageKeys = storage.getAllKeys();
+    allStorageKeys.forEach(datestamp => {
+        if (datestamp.localeCompare(todayTimestamp) < 0) {
+            storage.delete(datestamp);
+        }
+    });
+
+    return yesterdayPlanner.events
+        // Remove hidden items and recurring items
+        .filter((event: IPlannerEvent) => {
+            event.status !== EItemStatus.HIDDEN && !event.recurringId
+        })
+        // Convert timed events to generic
+        .map((event: IPlannerEvent) => {
+            delete event.calendarId;
+            delete event.timeConfig;
+            return event;
+        });
+}
+
+/**
  * ✅ Creates or updates a planner event.
  * Calendar events will be synced. 
  * Modified recurring events will be hidden and cloned.
@@ -75,8 +109,12 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | u
         });
 
         // Continue on to save the cloned event
-        newEvent = cloneItem<IPlannerEvent>(newEvent, ['recurringId']);
-        replaceId = newEvent.id
+        newEvent = cloneItem<IPlannerEvent>(
+            newEvent,
+            ['recurringId'],
+            { recurringCloneId: newEvent.recurringId }
+        );
+        replaceId = newEvent.id;
     }
 
     // Phase 2: Handle calendar events.
@@ -178,35 +216,66 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
 }
 
 /**
- * ✅ Deletes all planners older than today's, and returns a subset of events
- * from yesterday's planner to carry over to today.
- * Recurring items and hidden items will be ignored.
- * Timed items will be stripped down to generic events.
+ * ✅ Hide the recurring events in the planner. 
+ * The flag will be set so the recurring events can be hidden elsewhere.
  * 
- * @returns - a list of events to merge into today's planner
+ * @param datestamp - the date of the planner to edit
  */
-export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
-    const yesterdayTimestamp = getYesterdayDatestamp();
-    const todayTimestamp = getTodayDatestamp();
-    const yesterdayPlanner = getPlannerFromStorage(yesterdayTimestamp);
+export function toggleHideAllRecurringEvents(datestamp: string) {
+    const planner = getPlannerFromStorage(datestamp);
+    savePlannerToStorage(datestamp, {
+        ...planner,
+        hideRecurring: !Boolean(planner.hideRecurring)
+    });
+}
 
-    // Delete all previous calendars
-    const allStorageKeys = storage.getAllKeys();
-    allStorageKeys.forEach(datestamp => {
-        if (datestamp.localeCompare(todayTimestamp) < 0) {
-            storage.delete(datestamp);
+/**
+ * ✅ Deletes all recurring events in the planner with the given datestamp.
+ * Events will all be marked "hidden".
+ * 
+ * @param datestamp - the date of the planner to edit
+ */
+export function deleteAllRecurringEvents(datestamp: string) {
+    const planner = getPlannerFromStorage(datestamp);
+
+    const hiddenRecurringPlanner = planner.events.map(event => {
+        if (event.recurringId || event.recurringCloneId) {
+            return { ...event, status: EItemStatus.HIDDEN };
+        } else {
+            return event;
         }
     });
 
-    return yesterdayPlanner.events
-        // Remove hidden items and recurring items
-        .filter((event: IPlannerEvent) => {
-            event.status !== EItemStatus.HIDDEN && !event.recurringId
-        })
-        // Convert timed events to generic
-        .map((event: IPlannerEvent) => {
-            delete event.calendarId;
-            delete event.timeConfig;
-            return event;
+    savePlannerToStorage(datestamp, {
+        ...planner,
+        events: hiddenRecurringPlanner
+    });
+}
+
+/**
+ * ✅ Resets all recurring events within the planner for the given date.
+ * All hidden recurring events will be un-hidden. 
+ * Cloned recurring events will be reset.
+ * The recurring events will be marked visible within the planner.
+ * 
+ * @param datestamp - the date of the planner to reset
+ */
+export function resetRecurringEvents(datestamp: string) {
+    const planner = getPlannerFromStorage(datestamp);
+
+    const newEvents = planner.events
+        .filter(event => !event.recurringCloneId)
+        .map(event => {
+            if (event.recurringCloneId || event.recurringId) {
+                return { ...event, status: EItemStatus.STATIC };
+            } else {
+                return event;
+            }
         });
+
+    savePlannerToStorage(datestamp, {
+        ...planner,
+        events: newEvents,
+        hideRecurring: false
+    });
 }

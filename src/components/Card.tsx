@@ -7,7 +7,6 @@ const ContentContainer = Animated.createAnimatedComponent(View);
 
 interface CardProps {
     header?: ReactNode;
-    badges?: ReactNode;
     footer?: ReactNode;
     style?: ViewStyle;
     contentHeight: number;
@@ -17,14 +16,12 @@ interface CardProps {
 
 const Card = ({
     header,
-    badges,
     footer,
     style,
     collapsed = false,
     contentHeight,
     children,
 }: CardProps) => {
-
     const { measureContentHeight } = useScrollContainer();
 
     const contentContainerHeight = useSharedValue(0);
@@ -72,11 +69,6 @@ const Card = ({
                     </View>
                 )}
             </ContentContainer>
-            {badges && (
-                <View className='absolute bottom-full right-0 translate-y-[10px]'>
-                    {badges}
-                </View>
-            )}
         </View>
     )
 }

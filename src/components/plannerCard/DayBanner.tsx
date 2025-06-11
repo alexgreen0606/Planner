@@ -1,52 +1,132 @@
 import CustomText from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
-import { WeatherForecast } from '@/utils/weatherUtils';
+import { savePlannerToStorage } from '@/storage/plannerStorage';
 import { TPlanner } from '@/types/planner/TPlanner';
-import { datestampToMonthDate, getTomorrowDatestamp } from '@/utils/dateUtils';
-import React from 'react';
-import { PlatformColor, TouchableOpacity, View } from 'react-native';
+import { datestampToDayOfWeek, datestampToMonthDate, getNextEightDayDatestamps, getTomorrowDatestamp } from '@/utils/dateUtils';
+import { WeatherForecast } from '@/utils/weatherUtils';
+import React, { useEffect, useState } from 'react';
+import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { EventChipSet } from '.';
+import EventChipSets from '../EventChipSet';
 
 interface DayBannerProps {
     planner: TPlanner;
     toggleCollapsed: () => void;
     forecast?: WeatherForecast;
+    isEditingTitle: boolean;
+    collapsed: boolean;
+    endEditTitle: () => void;
+    eventChipSets: EventChipSet[];
 }
 
 const DayBanner = ({
     planner,
     toggleCollapsed,
-    forecast
-}: DayBannerProps) => planner &&
-    <TouchableOpacity
-        className='flex-row justify-between items-center w-full'
-        onPress={toggleCollapsed}
-    >
+    forecast,
+    isEditingTitle,
+    endEditTitle,
+    collapsed,
+    eventChipSets
+}: DayBannerProps) => {
+    const [newPlannerTitle, setNewPlannerTitle] = useState(planner.title);
 
-        {/* Date */}
-        <View>
-            <View className='flex-row'>
-                {getTomorrowDatestamp() === planner.datestamp && (
-                    <CustomText type='subHeader' style={{ color: PlatformColor('label') }}>
-                        {planner.title}{' '}
+    const nextEightDays = getNextEightDayDatestamps();
+    const isWithinEightDays = nextEightDays.includes(planner.datestamp);
+    const dayOfWeek = datestampToDayOfWeek(planner.datestamp);
+    const monthDate = datestampToMonthDate(planner.datestamp);
+    const isTomorrow = planner.datestamp === getTomorrowDatestamp();
+
+    function handlePlannerTitleSave() {
+        savePlannerToStorage(planner.datestamp, {
+            ...planner,
+            title: newPlannerTitle.trim()
+        });
+        endEditTitle();
+    }
+
+    useEffect(() => {
+        setNewPlannerTitle(planner.title);
+    }, [planner.title])
+
+    return (
+        <TouchableOpacity onPress={toggleCollapsed}>
+            <View className='flex-row justify-between items-center w-full'>
+
+                {/* Date */}
+                <View className='flex-1'>
+                    <View className='flex-row flex-1'>
+                        <CustomText
+                            type='subHeader'
+                            style={{ color: PlatformColor('label') }}
+                        >
+                            {isWithinEightDays ? monthDate : dayOfWeek}
+                        </CustomText>
+                        {(planner.title || isEditingTitle || isTomorrow) && (
+                            <View
+                                className='h-full mx-2'
+                                style={{
+                                    width: StyleSheet.hairlineWidth,
+                                    backgroundColor: PlatformColor('systemGray')
+                                }}
+                            />
+                        )}
+                        {isTomorrow && !isEditingTitle && !planner.title && (
+                            <CustomText type='subHeader'>
+                                Tomorrow
+                            </CustomText>
+                        )}
+                        {isEditingTitle ? (
+                            <TextInput
+                                autoFocus
+                                value={newPlannerTitle}
+                                editable={isEditingTitle}
+                                onChangeText={setNewPlannerTitle}
+                                onSubmitEditing={handlePlannerTitleSave}
+                                style={{
+                                    color: PlatformColor('secondaryLabel'),
+                                    fontSize: 12,
+                                    paddingRight: 12,
+                                    flex: 1
+                                }}
+                            />
+                        ) : (
+                            <CustomText
+                                type='subHeader'
+                                style={{
+                                    color: PlatformColor('secondaryLabel'),
+                                    fontSize: 12,
+                                    paddingRight: 12,
+                                    flex: 1
+                                }}
+                                ellipsizeMode='tail'
+                                numberOfLines={1}
+                            >
+                                {planner.title}
+                            </CustomText>
+                        )}
+                    </View>
+                    <CustomText type='header'>
+                        {isWithinEightDays ? dayOfWeek : monthDate}
                     </CustomText>
-                )}
-                <CustomText type='subHeader'>
-                    {datestampToMonthDate(planner.datestamp)}
-                </CustomText>
-            </View>
-            <CustomText type='header'>
-                {getTomorrowDatestamp() === planner.datestamp ? 'Tomorrow' : planner.title}
-            </CustomText>
-        </View>
+                </View>
 
-        {/* Weather */}
-        {forecast && (
-            <WeatherDisplay
-                high={forecast.temperatureMax}
-                low={forecast.temperatureMin}
-                weatherCode={forecast.weatherCode}
+                {/* Weather */}
+                {forecast && (
+                    <WeatherDisplay
+                        high={forecast.temperatureMax}
+                        low={forecast.temperatureMin}
+                        weatherCode={forecast.weatherCode}
+                    />
+                )}
+
+            </View>
+            <EventChipSets
+                sets={eventChipSets}
+                datestamp={planner.datestamp}
+                collapsed={collapsed}
             />
-        )}
-    </TouchableOpacity>
+        </TouchableOpacity>
+    );
+}
 
 export default DayBanner;

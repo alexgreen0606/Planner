@@ -190,18 +190,22 @@ export const ScrollContainerProvider = ({
         }
     );
 
-    const loadingSpinnerStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            Math.min(0, scrollOffset.value),
-            [-OVERSCROLL_RELOAD_THRESHOLD / 2, -OVERSCROLL_RELOAD_THRESHOLD],
-            [0, 1],
-            Extrapolation.CLAMP
-        ),
-        transform: [
-            { rotate: `${loadingRotation.value}deg` },
-        ],
-        top: (fixFloatingBannerOnOverscroll ? floatingBannerHeight : 0) + TOP_SPACER + OVERSCROLL_RELOAD_THRESHOLD / 3
-    }));
+    const loadingSpinnerStyle = useAnimatedStyle(() => {
+        const baseTop = (fixFloatingBannerOnOverscroll ? floatingBannerHeight : 0)
+            + TOP_SPACER
+            + OVERSCROLL_RELOAD_THRESHOLD / 3;
+
+        return {
+            opacity: interpolate(
+                scrollOffset.value,
+                [-OVERSCROLL_RELOAD_THRESHOLD, -OVERSCROLL_RELOAD_THRESHOLD / 2],
+                [1, 0],
+                Extrapolation.CLAMP
+            ),
+            transform: [{ rotate: `${loadingRotation.value}deg` }],
+            top: baseTop,
+        };
+    });
 
     // ------------- Scrolling Logic -------------
 
@@ -258,16 +262,14 @@ export const ScrollContainerProvider = ({
 
     // ------------- Floating Banner Logic -------------
 
-    const floatingBannerStyle = useAnimatedStyle(() => ({
-        top: scrollOffset.value > 0 ? Math.max(
-            TOP_SPACER,
-            (header ? HEADER_HEIGHT : 0) + TOP_SPACER - scrollOffset.value
-        ) : fixFloatingBannerOnOverscroll ? (header ? HEADER_HEIGHT : 0) + TOP_SPACER :
-            Math.max(
-                TOP_SPACER,
-                (header ? HEADER_HEIGHT : 0) + TOP_SPACER - scrollOffset.value
-            )
-    }));
+    const floatingBannerStyle = useAnimatedStyle(() => {
+        const baseOffset = (header ? HEADER_HEIGHT : 0) + TOP_SPACER;
+        const shouldFixPositionToTop = scrollOffset.value <= 0 && fixFloatingBannerOnOverscroll;
+        const calculatedTop = baseOffset - scrollOffset.value;
+        return {
+            top: shouldFixPositionToTop ? baseOffset : Math.max(TOP_SPACER, calculatedTop),
+        };
+    });
 
     // ------------- Blur Bar Logic -------------
 

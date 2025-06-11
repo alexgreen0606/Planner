@@ -30,6 +30,7 @@ const iconMap = {
     circleFilled: 'inset.filled.circle',
     circle: 'circle',
     trash: 'trash',
+    more: 'ellipsis.circle',
     megaphone: 'megaphone',
     globe: 'globe.americas.fill',
     birthday: 'birthday.cake.fill',

@@ -1,37 +1,50 @@
+import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
+import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { openTimeModal } from '@/utils/plannerUtils';
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
-import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { PlatformColor, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
-import { isValidPlatformColor } from '@/utils/colorUtils';
+
+const ChipLabel = Animated.createAnimatedComponent(View);
+
+const chipWidthAnimationConfig = {
+    mass: 5,
+    damping: 30,
+    stiffness: 50
+}
 
 export interface EventChipProps {
-    planEvent?: IPlannerEvent;
-    iconConfig: GenericIconProps;
-    backgroundPlatformColor?: string;
-    color: string;
     label: string;
+    iconConfig: GenericIconProps;
+    color: string;
+    backgroundPlatformColor?: string;
+    collapsed: boolean;
+    planEvent?: IPlannerEvent;
     onClick?: () => void;
-};
+}
 
 const EventChip = ({
-    planEvent,
     label,
     iconConfig,
-    backgroundPlatformColor = 'systemGray6',
     color,
+    backgroundPlatformColor = 'systemGray6',
+    collapsed,
+    planEvent,
     onClick
 }: EventChipProps) => {
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const {width: SCREEN_WIDTH} = useWindowDimensions();
     const router = useRouter();
 
-    function handleOpen() {
-        if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
-    }
+    const [hideLabel, setHideLabel] = useState(true);
+
+    const labelWidth = useSharedValue(0);
 
     const isPendingDelete = useMemo(() => planEvent &&
         getDeletingItems().some(deleteItem =>
@@ -42,15 +55,49 @@ const EventChip = ({
         ),
         [getDeletingItems]
     );
+
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
+    const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
+
+    const maxLabelWidth = SCREEN_WIDTH - 64;
+
+    function handleOpenTimeModal() {
+        if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
+    }
+
+    // ------------- Animations -------------
+
+    useEffect(() => {
+        if (collapsed) {
+            labelWidth.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
+        } else {
+            labelWidth.value = withSpring(maxLabelWidth, chipWidthAnimationConfig);
+        }
+    }, [collapsed]);
+
+    useAnimatedReaction(
+        () => labelWidth.value,
+        (curr) => {
+            if (curr !== 0 && hideLabel) {
+                runOnJS(setHideLabel)(false);
+            } else if (curr === 0 && !hideLabel) {
+                runOnJS(setHideLabel)(true);
+            }
+        });
+
+    const chipStyle = useAnimatedStyle(() => ({
+        maxWidth: labelWidth.value
+    }));
+
+    // ------------- Render Helper Function -------------
 
     const ChipContent = () => (
         <View
-            className='flex-row gap-2 h-5 max-w-full px-[10px] items-center rounded-[16px]'
+            className='flex-row gap-1 h-6 min-w-6 items-center justify-center rounded-xl mt-2 border'
             style={{
-                borderWidth: StyleSheet.hairlineWidth,
-                borderColor: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor,
-                backgroundColor: PlatformColor(backgroundPlatformColor)
+                borderColor: chipCssColor,
+                backgroundColor: PlatformColor(backgroundPlatformColor),
+                paddingHorizontal: hideLabel ? 0 : 8
             }}
         >
             <GenericIcon
@@ -58,28 +105,30 @@ const EventChip = ({
                 platformColor={chipColor}
                 size='xs'
             />
-            <CustomText
-                type='soft'
-                adjustsFontSizeToFit
-                numberOfLines={1}
-                style={{
-                    color: isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor,
-                    textDecorationLine: isPendingDelete ? 'line-through' : undefined
-                }}
-            >
-                {label}
-            </CustomText>
+            {!hideLabel && (
+                <ChipLabel style={chipStyle}>
+                    <CustomText
+                        type='soft'
+                        ellipsizeMode='tail'
+                        numberOfLines={1}
+                        style={{
+                            color: chipCssColor,
+                            textDecorationLine: isPendingDelete ? 'line-through' : undefined
+                        }}
+                    >
+                        {label}
+                    </CustomText>
+                </ChipLabel>
+            )}
         </View>
-    );
+    )
 
     return (
-        <>
+        <View>
             {planEvent ? (
-                <>
-                    <TouchableOpacity onPress={handleOpen}>
-                        <ChipContent />
-                    </TouchableOpacity>
-                </>
+                <TouchableOpacity onPress={handleOpenTimeModal}>
+                    <ChipContent />
+                </TouchableOpacity>
             ) : onClick ? (
                 <TouchableOpacity onPress={onClick}>
                     <ChipContent />
@@ -87,7 +136,7 @@ const EventChip = ({
             ) : (
                 <ChipContent />
             )}
-        </>
+        </View>
     );
 };
 

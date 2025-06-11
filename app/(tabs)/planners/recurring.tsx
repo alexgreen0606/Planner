@@ -33,7 +33,7 @@ const RecurringPlanners = () => {
         >
 
             {/* Recurring Planner Selection */}
-            <View className='p-2 flex-row' >
+            <View className='p-2 flex-row'>
                 <MenuView
                     onPressAction={({ nativeEvent }) => {
                         setSelectedRecurring(nativeEvent.event as ERecurringPlannerKey)

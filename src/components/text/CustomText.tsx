@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     },
     subHeader: {
         color: PlatformColor('secondaryLabel'),
-        fontSize: 12,
+        fontSize: 12
     },
     standard: {
         color: PlatformColor('label'),
@@ -69,11 +69,6 @@ const styles = StyleSheet.create({
     button: {
         fontSize: 16,
         fontWeight: 500,
-    },
-    badge: {
-        fontSize: 10,
-        color: PlatformColor('label'),
-        fontWeight: 600
     },
     conciseTime: {
         fontFamily: 'Coiny-Regular',

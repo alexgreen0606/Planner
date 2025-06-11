@@ -152,7 +152,7 @@ const useSortedList = <T extends IListItem, S>({
             const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, { ...storageObject }) : updatedList;
             setStorageObject(objectToSave as S);
         }
-        
+
         await handleListChange?.();
     };
 
