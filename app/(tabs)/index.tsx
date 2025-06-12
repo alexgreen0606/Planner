@@ -1,5 +1,4 @@
 import { calendarChipsByDate } from '@/atoms/calendarEvents';
-import EventChip from '@/components/EventChip';
 import EventChipSets from '@/components/EventChipSet';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
@@ -42,7 +41,7 @@ const Today = () => {
         floatingBanner={calendarChips.length > 0 && (
           <EventChipSets
             datestamp={todayDatestamp}
-            sets={[calendarChips]}
+            sets={calendarChips}
             backgroundPlatformColor='systemBackground'
           />
         )}

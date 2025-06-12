@@ -16,7 +16,6 @@ import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
-import { EventChipProps } from '../../components/EventChip';
 import { generatePlanner } from '../../utils/calendarUtils';
 import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
 import GenericIcon from '../GenericIcon';
@@ -28,23 +27,6 @@ enum EditAction {
     TOGGLE_HIDE_RECURRING = 'TOGGLE_HIDE_RECURRING',
     RESET_RECURRING = 'RESET_RECURRING',
     DELETE_RECURRING = 'DELETE_RECURRING'
-}
-
-function separateEventChipsByColor(chips: EventChipProps[]): EventChipProps[][] {
-    const chipMap: Record<string, EventChipProps[]> = {};
-
-    for (const chip of chips) {
-        const { color } = chip;
-        if (!chipMap[color]) {
-            chipMap[color] = [chip];
-        } else {
-            chipMap[color].push(chip);
-        }
-    }
-
-    return Object.entries(chipMap)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([, chips]) => chips);
 }
 
 interface PlannerCardProps {
@@ -71,10 +53,6 @@ const PlannerCard = ({
         pathname.includes('timeModal'),
         [pathname]
     );
-
-    const eventChipSets = useMemo(() => {
-        return separateEventChipsByColor(calendarChips);
-    }, [calendarChips]);
 
     // ------------- Utility Functions -------------
 
@@ -163,12 +141,12 @@ const PlannerCard = ({
             header={
                 <DayBanner
                     planner={planner}
-                    toggleCollapsed={toggleCollapsed}
-                    collapsed={collapsed}
                     forecast={forecast}
+                    eventChipSets={calendarChips}
+                    collapsed={collapsed}
+                    toggleCollapsed={toggleCollapsed}
                     isEditingTitle={isEditingTitle}
                     endEditTitle={() => setIsEditingTitle(false)}
-                    eventChipSets={eventChipSets}
                 />
             }
             footer={

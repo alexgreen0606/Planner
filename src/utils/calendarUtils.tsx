@@ -179,17 +179,18 @@ export async function getCalendarAccess() {
     }
 }
 
-export function generateEmptyCalendarDataMaps(datestamps: string[]) {
-    const chipsMap: Record<string, EventChipProps[]> = Object.fromEntries(
-        datestamps.map((date) => [date, []])
-    );
+function generateEmptyCalendarDataMaps(datestamps: string[]) {
+    const chipsMap: Record<string, EventChipProps[][]> = {};
+    const plannersMap: Record<string, IPlannerEvent[]> = {};
 
-    const plannersMap: Record<string, IPlannerEvent[]> = Object.fromEntries(
-        datestamps.map((date) => [date, []])
-    );
+    datestamps.forEach(datestamp => {
+        chipsMap[datestamp] = [];
+        plannersMap[datestamp] = [];
+    });
 
     return { chipsMap, plannersMap };
 }
+
 
 export async function getCalendarEventById(eventId: string, datestamp: string): Promise<IPlannerEvent | null> {
     await getCalendarAccess();
@@ -202,6 +203,43 @@ export async function getCalendarEventById(eventId: string, datestamp: string): 
 
 // ------------- Jotai Store Utilities -------------
 
+// export async function loadCalendarData(range?: string[]) {
+//     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
+//     const datestamps = range ?? getNextEightDayDatestamps();
+
+//     await getCalendarAccess();
+
+//     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
+
+//     // Find the overall date range
+//     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
+//     const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
+
+//     // Fetch all events in the date range and format
+//     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
+//     datestamps.forEach((datestamp) => {
+//         calendarEvents.forEach((calEvent) => {
+//             if (validateEventChip(calEvent, datestamp)) {
+//                 newCalendarData.chipsMap[datestamp].push(generateEventChip(calEvent));
+//             }
+//             if (validateCalendarEvent(calEvent, datestamp)) {
+//                 newCalendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
+//             }
+//         })
+//     });
+
+//     jotaiStore.set(calendarEventDataAtom, {
+//         chipsMap: {
+//             ...currentCalendarData.chipsMap,
+//             ...newCalendarData.chipsMap
+//         },
+//         plannersMap: {
+//             ...currentCalendarData.plannersMap,
+//             ...newCalendarData.plannersMap
+//         }
+//     });
+// };
+
 export async function loadCalendarData(range?: string[]) {
     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
     const datestamps = range ?? getNextEightDayDatestamps();
@@ -210,21 +248,31 @@ export async function loadCalendarData(range?: string[]) {
 
     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
 
-    // Find the overall date range
     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
     const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
 
-    // Fetch all events in the date range and format
     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
+
     datestamps.forEach((datestamp) => {
+        // Use a temporary map to group chips by calendar for this datestamp
+        const calendarChipGroups: Record<string, EventChipProps[]> = {};
+
         calendarEvents.forEach((calEvent) => {
             if (validateEventChip(calEvent, datestamp)) {
-                newCalendarData.chipsMap[datestamp].push(generateEventChip(calEvent));
+                const calendarId = calEvent.calendar?.id || 'unknown';
+                if (!calendarChipGroups[calendarId]) {
+                    calendarChipGroups[calendarId] = [];
+                }
+                calendarChipGroups[calendarId].push(generateEventChip(calEvent));
             }
+
             if (validateCalendarEvent(calEvent, datestamp)) {
                 newCalendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
             }
-        })
+        });
+
+        // Push grouped calendar chips into a 2D array
+        newCalendarData.chipsMap[datestamp] = Object.values(calendarChipGroups);
     });
 
     jotaiStore.set(calendarEventDataAtom, {
@@ -237,4 +285,5 @@ export async function loadCalendarData(range?: string[]) {
             ...newCalendarData.plannersMap
         }
     });
-};
+}
+
