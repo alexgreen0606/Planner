@@ -3,8 +3,8 @@ import React from 'react';
 import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
-import { DeleteSchedulerProvider } from './src/services/DeleteScheduler';
-import { ReloadProvider } from './src/services/ReloadScheduler';
+import { DeleteSchedulerProvider } from './src/providers/DeleteScheduler';
+import { ReloadProvider } from './src/providers/ReloadScheduler';
 
 const App = () => {
   return (

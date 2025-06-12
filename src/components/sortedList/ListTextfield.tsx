@@ -1,6 +1,6 @@
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/constants/layout';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/lib/constants/layout';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useScrollContainer } from '@/providers/ScrollContainer';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';

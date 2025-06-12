@@ -1,4 +1,4 @@
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useScrollContainer } from '@/providers/ScrollContainer';
 import React from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';

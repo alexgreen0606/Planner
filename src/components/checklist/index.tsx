@@ -1,12 +1,12 @@
-import { CHECKLISTS_STORAGE_ID } from '@/constants/storage';
+import { CHECKLISTS_STORAGE_ID } from '@/lib/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
-import { IChecklist } from '@/types/checklists/IChecklist';
-import { IListItem } from '@/types/listItems/core/TListItem';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import SortableList from '../sortedList';
+import { IChecklist } from '@/lib/types/checklists/IChecklist';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
 
 const Checklist = () => {
 

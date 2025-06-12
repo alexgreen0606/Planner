@@ -2,11 +2,11 @@ import SortableList from '@/components/sortedList';
 import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
-import { StorageKey } from '@/constants/storage';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { IListItem } from '@/types/listItems/core/TListItem';
-import { ICountdown } from '@/types/listItems/ICountdown';
+import { StorageKey } from '@/lib/constants/storage';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { deleteCountdowns, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
@@ -80,7 +80,7 @@ const Countdowns = () => {
                     }
                 }],
                 [{
-                    type: 'planners',
+                    type: 'calendar',
                     onClick: toggleDateSelector
                 }]],
             item: countdown

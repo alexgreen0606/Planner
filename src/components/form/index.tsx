@@ -1,8 +1,7 @@
-import ThinLine from "@/components/ThinLine";
 import { Control, Controller } from "react-hook-form";
 import { PlatformColor, StyleSheet, View } from "react-native";
 import FormField from "./FormField";
-import { IFormField } from "@/types/form/IFormField";
+import { IFormField } from "@/lib/types/form/IFormField";
 
 interface FormProps {
     fields: IFormField[][];

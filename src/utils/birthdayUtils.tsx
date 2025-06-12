@@ -1,10 +1,10 @@
+import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { IBirthday } from '@/lib/types/listItems/IBirthday';
+import { TEventChip } from '@/lib/types/planner/TEventChip';
 import * as Contacts from 'expo-contacts';
 import * as Linking from 'expo-linking';
-import { EventChipProps } from '../components/EventChip';
-import { IBirthday } from '@/types/listItems/IBirthday';
-import { EItemStatus } from '@/enums/EItemStatus';
 
-export function eventChipToBirthday(chip: EventChipProps, datestamp: string): IBirthday {
+export function eventChipToBirthday(chip: TEventChip, datestamp: string): IBirthday {
     const age = chip.label.match(/\d+/);
     return {
         id: `${chip.label}-list_item-${age}`,

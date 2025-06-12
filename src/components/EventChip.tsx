@@ -1,6 +1,5 @@
-import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
+import { LINEAR_ANIMATION_CONFIG } from '@/lib/constants/animations';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { openTimeModal } from '@/utils/plannerUtils';
@@ -10,6 +9,7 @@ import { PlatformColor, TouchableOpacity, useWindowDimensions, View } from 'reac
 import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 
 const Chip = Animated.createAnimatedComponent(View);
 const ChipLabel = Animated.createAnimatedComponent(View);
@@ -19,7 +19,7 @@ const EXPANDED_CHIP_RIGHT_MARGIN = 6;
 
 const CHIP_SET_GAP = 24;
 
-export interface EventChipProps {
+interface EventChipProps {
     label: string;
     iconConfig: GenericIconProps;
     color: string;

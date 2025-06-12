@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import GenericIcon from '@/components/GenericIcon';
-import { BOTTOM_NAVIGATION_HEIGHT, spacing } from '@/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT, spacing } from '@/lib/constants/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
@@ -51,7 +51,7 @@ export default function TabLayout() {
                 options={{
                     tabBarIcon: ({ color }) => (
                         <GenericIcon
-                            type="planners"
+                            type="calendar"
                             size="xl"
                             hideRipple
                             platformColor={color}

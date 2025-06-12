@@ -1,13 +1,13 @@
 import CustomText from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
 import { savePlannerToStorage } from '@/storage/plannerStorage';
-import { TPlanner } from '@/types/planner/TPlanner';
 import { datestampToDayOfWeek, datestampToMonthDate, getNextEightDayDatestamps, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import EventChipSets from '../EventChipSet';
-import { EventChipProps } from '../EventChip';
+import { TEventChip } from '@/lib/types/planner/TEventChip';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
 
 interface DayBannerProps {
     planner: TPlanner;
@@ -16,7 +16,7 @@ interface DayBannerProps {
     isEditingTitle: boolean;
     collapsed: boolean;
     endEditTitle: () => void;
-    eventChipSets: EventChipProps[][];
+    eventChipSets: TEventChip[][];
 }
 
 const DayBanner = ({
@@ -120,12 +120,14 @@ const DayBanner = ({
                 )}
 
             </View>
+
             <EventChipSets
                 datestamp={planner.datestamp}
                 sets={eventChipSets}
                 collapsed={collapsed}
                 toggleCollapsed={toggleCollapsed}
             />
+            
         </TouchableOpacity>
     );
 }

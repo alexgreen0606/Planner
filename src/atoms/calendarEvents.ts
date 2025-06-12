@@ -1,6 +1,6 @@
+import { TCalendarData } from '@/lib/types/calendar/TCalendarData';
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
-import { TCalendarData } from '@/types/calendar/TCalendarData';
 
 export const calendarEventDataAtom = atom<TCalendarData>({
     chipsMap: {},

@@ -1,16 +1,11 @@
-import { EItemStatus } from '@/enums/EItemStatus';
-import { generateSortId, getParentSortId, sanitizeList } from '@/utils/listUtils';
-import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
-import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { DateTime } from 'luxon';
-import { EDay } from '@/enums/EDay';
-import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
 
 /**
- * Generates an array of datestamps encompassing the given start date, end date, and all days in between.
- * @param start - Start of range YYYY-MM-DD
- * @param end - End of range YYYY-MM-DD
- * @returns - Array of datestamps from start to end.
+ * ✅ Generates an array of datestamps encompassing the given start date, end date, and all days in between.
+ * 
+ * @param start - start of range YYYY-MM-DD
+ * @param end - end of range YYYY-MM-DD
+ * @returns - array of datestamps from start to end.
  */
 export function generateDatestampRange(start: string, end: string): string[] {
     const startDate = DateTime.fromISO(start);
@@ -32,14 +27,15 @@ export function generateDatestampRange(start: string, end: string): string[] {
 }
 
 /**
- * Determines if the given string is a valid timestamp.
- * @param timestamp - YYYY-MM-DD
+ * ✅ Determines if the given string is a valid datestamp.
+ * 
+ * @param datestamp - YYYY-MM-DD
  * @returns - true if valid, else false
  */
-export function isTimestampValid(timestamp: string): boolean {
-    const date = new Date(timestamp);
+export function isDatestampValid(datestamp: string): boolean {
+    const date = new Date(datestamp);
     return !isNaN(date.getTime());
-};
+}
 
 /**
  * Combines a generic hour/minute combo with a given generic timestamp and returns a valid ISO timestamp.
@@ -96,7 +92,7 @@ export function daysBetweenToday(isoTimestamp: string): number {
  * @param time2 - The second time string.
  * @returns True if time1 is earlier or during time2, false otherwise.
  */
-export function isTimeEarlierOrEqual(time1?: string, time2?: string): boolean {
+export function isTimeEarlierOrEqual(time1: string | null, time2?: string | null): boolean {
     if (!time1 || !time2) return true;
     return time1.localeCompare(time2) <= 0;
 }
@@ -203,14 +199,3 @@ export function getNextEightDayDatestamps(): string[] {
 
     return generateDatestampRange(tomorrow, sixDaysAfterTomorrow);
 }
-
-export function getEventTime(item: IPlannerEvent | IRecurringEvent | undefined): string | undefined {
-    if (!item) return undefined;
-    if ("timeConfig" in item) {
-        return item.timeConfig?.multiDayEnd ? item.timeConfig.endTime : item.timeConfig?.startTime;
-    } else if ("startTime" in item) {
-        return item.startTime;
-    } else {
-        return undefined;
-    }
-};

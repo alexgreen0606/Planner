@@ -1,4 +1,4 @@
-import { LIST_CONTENT_HEIGHT } from '@/constants/layout';
+import { LIST_CONTENT_HEIGHT } from '@/lib/constants/layout';
 import React, { useEffect, useRef } from 'react';
 import { PlatformColor, TextInput } from 'react-native';
 

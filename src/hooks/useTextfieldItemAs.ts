@@ -1,6 +1,6 @@
 import { textfieldItemAtom } from "@/atoms/textfieldData";
-import { IListItem } from "@/types/listItems/core/TListItem";
-import { SetStateAction, useAtom } from "jotai";
+import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { useAtom } from "jotai";
 
 export function useTextfieldItemAs<T extends IListItem>() {
     const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);

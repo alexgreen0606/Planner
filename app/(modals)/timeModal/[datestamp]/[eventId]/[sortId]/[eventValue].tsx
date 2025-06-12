@@ -1,21 +1,21 @@
 import Form from "@/components/form";
 import Modal from "@/components/modal";
-import { NULL } from "@/constants/generic";
-import { EFormFieldType } from "@/enums/EFormFieldType";
-import { EItemStatus } from "@/enums/EItemStatus";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
-import { deleteEvents, getPlannerFromStorage, saveEvent } from "@/storage/plannerStorage";
-import { IFormField } from "@/types/form/IFormField";
-import { IListItem } from "@/types/listItems/core/TListItem";
-import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
+import { NULL } from "@/lib/constants/generic";
+import { EFormFieldType } from "@/lib/enums/EFormFieldType";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { IFormField } from "@/lib/types/form/IFormField";
+import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
+import { getPlannerFromStorage } from "@/storage/plannerStorage";
 import { getCalendarEventById } from "@/utils/calendarUtils";
-import { getNowISORoundDown5Minutes, isoToDatestamp } from "@/utils/dateUtils";
+import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { deleteEventsReloadData, saveEventReloadData } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { DateTime } from 'luxon';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
@@ -144,7 +144,7 @@ const TimeModal = () => {
 
     // ------------- Utility Functions -------------
 
-    function handleSavedEvent(event?: IPlannerEvent) {
+    function handleSavedEvent(event: IPlannerEvent | null) {
         const savedPlanner = getPlannerFromStorage(datestamp);
 
         // Place the new textfield directly below the new item. If the item was removed from the planner, 
@@ -202,7 +202,7 @@ const TimeModal = () => {
     async function handleUnschedule() {
         if (!planEvent) return;
 
-        const updatedItem = { ...planEvent };
+        const updatedItem = { ...planEvent, listId: datestamp };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
         await saveEventReloadData(updatedItem);

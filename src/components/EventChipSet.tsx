@@ -1,10 +1,11 @@
 import React from 'react';
 import { View } from 'react-native';
-import EventChip, { EventChipProps } from './EventChip';
+import EventChip from './EventChip';
+import { TEventChip } from '@/types/planner/TEventChip';
 
 export interface EventChipSetsProps {
     datestamp: string;
-    sets: EventChipProps[][];
+    sets: TEventChip[][];
     collapsed?: boolean;
     toggleCollapsed?: () => void;
     backgroundPlatformColor?: string;

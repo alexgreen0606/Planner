@@ -1,15 +1,12 @@
 import { GenericIconProps } from '@/components/GenericIcon';
 import CustomText from '@/components/text/CustomText';
-import { selectableColors } from '@/constants/selectableColors';
-import { CHECKLISTS_STORAGE_ID } from '@/constants/storage';
-import { EFolderItemType } from '@/enums/EFolderItemType';
-import { EItemStatus } from '@/enums/EItemStatus';
+import { selectableColors } from '@/lib/constants/selectableColors';
+import { CHECKLISTS_STORAGE_ID } from '@/lib/constants/storage';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EItemStatus } from '@/lib/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
-import { IFolder } from '@/types/checklists/IFolder';
-import { IListItem } from '@/types/listItems/core/TListItem';
-import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -17,6 +14,9 @@ import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
+import { IFolder } from '@/lib/types/checklists/IFolder';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;

@@ -1,4 +1,4 @@
-import { EFormFieldType } from "@/enums/EFormFieldType";
+import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { RegisterOptions } from "react-hook-form";
 
 export interface IFormField {

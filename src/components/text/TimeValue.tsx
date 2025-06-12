@@ -4,8 +4,8 @@ import CustomText from './CustomText';
 import { DateTime } from 'luxon';
 
 interface TimeProps {
-    timeValue?: string; // HH:MM
-    isoTimestamp?: string;
+    timeValue?: string | null; // HH:MM
+    isoTimestamp?: string | null;
     allDay?: boolean;
     endEvent?: boolean;
     startEvent?: boolean;

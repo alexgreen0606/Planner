@@ -1,4 +1,4 @@
-import { TOOLBAR_HEIGHT } from '@/constants/layout';
+import { TOOLBAR_HEIGHT } from '@/lib/constants/layout';
 import { useWindowDimensions } from 'react-native';
 import {
     useAnimatedKeyboard,

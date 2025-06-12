@@ -1,10 +1,10 @@
 import { getDatestampThreeYearsFromToday, getTodayDatestamp } from "@/utils/dateUtils";
 import ReactNativeCalendarEvents from "react-native-calendar-events";
 import { getCalendarAccess } from "./calendarUtils";
-import { TCalendarDetails } from "@/types/calendar/TCalendarDetails";
-import { EItemStatus } from "@/enums/EItemStatus";
-import { StorageKey } from "@/constants/storage";
-import { ICountdown } from "@/types/listItems/ICountdown";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { StorageKey } from "@/lib/constants/storage";
+import { TCalendarDetails } from "@/lib/types/calendar/TCalendarDetails";
+import { ICountdown } from "@/lib/types/listItems/ICountdown";
 
 async function getCountdownCalendarDetails(): Promise<TCalendarDetails> {
     await getCalendarAccess();

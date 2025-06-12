@@ -1,4 +1,4 @@
-import { EFolderItemType } from "@/enums/EFolderItemType";
+import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { IColoredListItem } from "./core/IColoredListItem";
 
 export interface IFolderItem extends IColoredListItem {

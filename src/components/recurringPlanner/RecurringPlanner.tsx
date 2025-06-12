@@ -1,10 +1,9 @@
-import { RECURRING_EVENT_STORAGE_ID } from '@/constants/storage';
+import { RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useScrollContainer } from '@/providers/ScrollContainer';
 import { deleteRecurringEvents, deleteRecurringWeekdayEvents, saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
-import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput } from '@/utils/plannerUtils';
@@ -13,7 +12,8 @@ import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import { IconType } from '../GenericIcon';
 import SortableList from '../sortedList';
-import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
+import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 
 interface SortedRecurringPlannerProps {
     plannerKey: string;

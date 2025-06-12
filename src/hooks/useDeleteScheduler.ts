@@ -1,8 +1,8 @@
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useRef } from 'react';
-import { DELETE_ITEMS_DELAY_MS } from '@/constants/listConstants';
-import { IListItem } from '@/types/listItems/core/TListItem';
+import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
 import { deleteFunctionsMapAtom, pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
 
 export function useDeleteScheduler<T extends IListItem>() {
     const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);

@@ -1,4 +1,4 @@
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useScrollContainer } from '@/providers/ScrollContainer';
 import React, { ReactNode, useEffect } from 'react';
 import { PlatformColor, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';

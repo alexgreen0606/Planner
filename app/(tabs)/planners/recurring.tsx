@@ -1,11 +1,11 @@
 import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
 import ButtonText from '@/components/text/ButtonText';
-import { ERecurringPlannerKey } from '@/enums/ERecurringPlannerKey';
+import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 
 const RecurringPlanners = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();

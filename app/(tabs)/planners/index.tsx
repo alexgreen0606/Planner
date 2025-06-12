@@ -3,11 +3,10 @@ import GenericIcon from '@/components/GenericIcon';
 import PlannerCard from '@/components/plannerCard';
 import ScrollAnchor from '@/components/ScrollAnchor';
 import ButtonText from '@/components/text/ButtonText';
-import { NULL } from '@/constants/generic';
+import { NULL } from '@/lib/constants/generic';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { getPlannerSet, getPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -17,6 +16,7 @@ import { useAtom } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 
 const defaultPlannerSet = 'Next 7 Days';
 

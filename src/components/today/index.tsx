@@ -1,19 +1,19 @@
 import { calendarPlannerByDate } from '@/atoms/calendarEvents';
-import { PLANNER_STORAGE_ID, RECURRING_EVENT_STORAGE_ID } from '@/constants/storage';
+import { PLANNER_STORAGE_ID, RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import useSortedList from '@/hooks/useSortedList';
-import { IPlannerEvent } from '@/types/listItems/IPlannerEvent';
-import { TPlanner } from '@/types/planner/TPlanner';
-import { generatePlanner, loadCalendarData } from '@/utils/calendarUtils';
+import { loadCalendarData } from '@/utils/calendarUtils';
 import { datestampToDayOfWeek, getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
 
 const TodayPlanner = () => {
     const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();

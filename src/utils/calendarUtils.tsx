@@ -1,45 +1,64 @@
 import { calendarEventDataAtom } from "@/atoms/calendarEvents";
-import { EItemStatus } from "@/enums/EItemStatus";
-import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
-import { TPlanner } from "@/types/planner/TPlanner";
+import { calendarIconMap } from "@/lib/constants/calendarIcons";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { jotaiStore } from "app/_layout";
 import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
-import { EventChipProps } from "../components/EventChip";
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
-import { datestampToDayOfWeek, datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
+import { datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
+import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
+import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
+import { TEventChip } from "@/lib/types/planner/TEventChip";
 
-// ---------- Data Model Generation ----------
+// ---------- Utilities ----------
 
-function getCalendarIcon(calendarName: string) {
-    switch (calendarName) {
-        case 'US Holidays':
-            return 'globe';
-        case 'Birthdays':
-            return 'birthday';
-        case 'Countdowns':
-            return 'alert';
-        default:
-            return 'megaphone';
-    }
+/**
+ * ✅ Generates empty calendar data for the given range of dates.
+ * 
+ * @param datestamps - the range of datestamps
+ * @returns - empty calendar data
+ */
+function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
+    const chipsMap: Record<string, TEventChip[][]> = {};
+    const plannersMap: Record<string, IPlannerEvent[]> = {};
+
+    datestamps.forEach(datestamp => {
+        chipsMap[datestamp] = [];
+        plannersMap[datestamp] = [];
+    });
+
+    return { chipsMap, plannersMap };
 }
 
 /**
- * TODO comment
- * @param event 
- * @param datestamp 
- * @returns 
+ * ✅ Generates a planner event out of a calendar event.
+ * 
+ * @param event - the calendar event to parse
+ * @param datestamp - the datestamp the planner event will reside
+ * @returns - a new planner event
  */
 function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): IPlannerEvent {
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
+
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate!);
-    const multiDayEnd = eventStart < dateStart && eventEnd < dateEnd; // Starts before date and ends on date
-    const multiDayStart = eventStart >= dateStart && eventStart < dateEnd && eventEnd >= dateEnd; // Starts on date and ends after date
+
+    const multiDayEnd =
+        // Starts before date
+        eventStart < dateStart &&
+        // Ends on date
+        eventEnd < dateEnd;
+
+    const multiDayStart =
+        // Starts on date
+        eventStart >= dateStart && eventStart < dateEnd &&
+        // Ends after date
+        eventEnd >= dateEnd;
+
     return {
         id: event.id,
         value: event.title,
-        sortId: 1, // temporary sort id -> will be overwritten
+        sortId: 1, // temporary sort id (will be overwritten)
         listId: datestamp,
         timeConfig: {
             startTime: event.startDate,
@@ -53,24 +72,20 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
 }
 
 /**
- * TODO: comment
- * @param event 
- * @param datestamp 
- * @param calendarDetails 
- * @returns 
+ * ✅ Generates an event chip from a calendar event.
+ * 
+ * @param event - the calendar event to parse
+ * @returns - an event chip representing the calendar event
  */
-function generateEventChip(event: CalendarEventReadable): EventChipProps {
+function generateEventChip(event: CalendarEventReadable): TEventChip {
     const calendar = event.calendar!;
 
-    const chipProps: EventChipProps = {
+    const chipProps: TEventChip = {
         label: event.title,
         iconConfig: {
-            type: getCalendarIcon(calendar.title),
+            type: calendarIconMap[calendar.title] ?? 'calendar',
         },
-        color: calendar.color,
-        collapsed: false,
-        chipSetIndex: 0,
-        shiftChipRight: false
+        color: calendar.color
     };
 
     if (calendar.title === 'Birthdays') {
@@ -99,20 +114,12 @@ function generateEventChip(event: CalendarEventReadable): EventChipProps {
     return chipProps;
 }
 
-export function generatePlanner(datestamp: string): TPlanner {
-    return {
-        datestamp,
-        title: '',
-        events: [],
-        hideRecurring: false
-    };
-}
-
 /**
- * TODO comment
- * @param event 
- * @param datestamp 
- * @returns 
+ * ✅ Determines if a calendar event should be displayed in the planner of the given datestamp.
+ * 
+ * @param event - the calendar event to analyze
+ * @param datestamp - the date to consider
+ * @returns - true if the event should be an event chip, else false
  */
 function validateCalendarEvent(event: CalendarEventReadable, datestamp: string): boolean {
     if (event.allDay || !event.endDate) return false;
@@ -128,23 +135,22 @@ function validateCalendarEvent(event: CalendarEventReadable, datestamp: string):
 }
 
 /**
- * Determines if an event should be displayed as a chip on a given date in a calendar.
+ * ✅ Determines if a calendar event should be displayed as an event chip for the given datestamp.
  * 
- * An event will be kept if:
- * 1. It is an all-day event for the given date
- * 2. It is an all-day event that spans across the given date (starts before and ends after)
- * 3. It is a non-all-day event that starts on the given date and ends after the given date
- * 4. It is a non-all-day event that spans across the given date (starts before and ends after)
+ * An event will be a chip if:
+ * 1. It is an all-day event for the given date.
+ * 3. It is a multi-day event that starts on, ends on, or spans the given date.
  * 
- * @param event The calendar event to validate
- * @param datestamp The date in string format to check against
- * @returns Returns true if the event should be displayed on the given date as a chip, false otherwise
+ * @param event - the calendar event to analyze
+ * @param datestamp -  the date to consider
+ * @returns - true if the event should be displayed on the given date as a chip, else false
  */
 function validateEventChip(event: CalendarEventReadable, datestamp: string): boolean {
     if (!event.endDate || !event.startDate) return false;
 
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
+
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
 
@@ -157,9 +163,13 @@ function validateEventChip(event: CalendarEventReadable, datestamp: string): boo
         return eventStartDate <= checkDate && eventEndDate >= checkDate;
     } else {
         return (
-            eventStart >= dateStart && eventStart < dateEnd && eventEnd > dateEnd // Starts on this date and ends after it OR
+            // Starts on this date
+            eventStart >= dateStart && eventStart < dateEnd &&
+            // Ends after it
+            eventEnd > dateEnd
         ) || (
-                eventStart < dateStart && eventEnd > dateStart // Spans across this date
+                // Spans across this date
+                eventStart < dateStart && eventEnd > dateStart
             );
     }
 }
@@ -167,31 +177,30 @@ function validateEventChip(event: CalendarEventReadable, datestamp: string): boo
 // ---------- Calendar Interaction Utilities ----------
 
 /**
- * Grants access to the device calendar.
+ * ✅ Checks if the app has been granted access to the device calender.
+ * If access is not granted, ask the user for permission.
+ * 
+ * @returns - true if access was granted, else false
  */
-export async function getCalendarAccess() {
+export async function getCalendarAccess(): Promise<boolean> { // TODO: handle no access granted
     const permissions = await RNCalendarEvents.checkPermissions();
     if (permissions !== 'authorized') {
         const status = await RNCalendarEvents.requestPermissions();
         if (status !== 'authorized') {
-            throw new Error('Access denied to calendars.'); // TODO: just skip calendars if denied?
+            return false;
         }
+        return true;
     }
+    return true;
 }
 
-function generateEmptyCalendarDataMaps(datestamps: string[]) {
-    const chipsMap: Record<string, EventChipProps[][]> = {};
-    const plannersMap: Record<string, IPlannerEvent[]> = {};
-
-    datestamps.forEach(datestamp => {
-        chipsMap[datestamp] = [];
-        plannersMap[datestamp] = [];
-    });
-
-    return { chipsMap, plannersMap };
-}
-
-
+/**
+ * ✅ Fetches an event from the device calendar, and converts it into a planner event.
+ * 
+ * @param eventId - the ID of the event within the calendar
+ * @param datestamp - the date the event is expected to exist in
+ * @returns - a planner event representing the calendar event
+ */
 export async function getCalendarEventById(eventId: string, datestamp: string): Promise<IPlannerEvent | null> {
     await getCalendarAccess();
 
@@ -203,43 +212,12 @@ export async function getCalendarEventById(eventId: string, datestamp: string): 
 
 // ------------- Jotai Store Utilities -------------
 
-// export async function loadCalendarData(range?: string[]) {
-//     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
-//     const datestamps = range ?? getNextEightDayDatestamps();
-
-//     await getCalendarAccess();
-
-//     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
-
-//     // Find the overall date range
-//     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
-//     const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
-
-//     // Fetch all events in the date range and format
-//     const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
-//     datestamps.forEach((datestamp) => {
-//         calendarEvents.forEach((calEvent) => {
-//             if (validateEventChip(calEvent, datestamp)) {
-//                 newCalendarData.chipsMap[datestamp].push(generateEventChip(calEvent));
-//             }
-//             if (validateCalendarEvent(calEvent, datestamp)) {
-//                 newCalendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
-//             }
-//         })
-//     });
-
-//     jotaiStore.set(calendarEventDataAtom, {
-//         chipsMap: {
-//             ...currentCalendarData.chipsMap,
-//             ...newCalendarData.chipsMap
-//         },
-//         plannersMap: {
-//             ...currentCalendarData.plannersMap,
-//             ...newCalendarData.plannersMap
-//         }
-//     });
-// };
-
+/**
+ * ✅ Loads in all calendar data for the given range of dates.
+ * The data will be stored directly into the Jotai store.
+ * 
+ * @param range - range of dates to parse the calendar with
+ */
 export async function loadCalendarData(range?: string[]) {
     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
     const datestamps = range ?? getNextEightDayDatestamps();
@@ -255,7 +233,7 @@ export async function loadCalendarData(range?: string[]) {
 
     datestamps.forEach((datestamp) => {
         // Use a temporary map to group chips by calendar for this datestamp
-        const calendarChipGroups: Record<string, EventChipProps[]> = {};
+        const calendarChipGroups: Record<string, TEventChip[]> = {};
 
         calendarEvents.forEach((calEvent) => {
             if (validateEventChip(calEvent, datestamp)) {
@@ -286,4 +264,3 @@ export async function loadCalendarData(range?: string[]) {
         }
     });
 }
-

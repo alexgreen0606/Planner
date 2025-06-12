@@ -1,6 +1,6 @@
-import { EFolderItemType } from '@/enums/EFolderItemType';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import Checklist from '@/components/checklist';
-import { ScrollContainerProvider } from '@/services/ScrollContainer';
+import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';

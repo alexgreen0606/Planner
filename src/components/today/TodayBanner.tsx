@@ -1,4 +1,4 @@
-import { HEADER_HEIGHT } from '@/constants/layout';
+import { HEADER_HEIGHT } from '@/lib/constants/layout';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';

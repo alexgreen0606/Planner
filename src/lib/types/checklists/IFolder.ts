@@ -1,4 +1,4 @@
-import { SelectableColor } from "@/constants/selectableColors";
+import { SelectableColor } from "@/lib/constants/selectableColors";
 import { IListItem } from "../listItems/core/TListItem";
 
 export interface IFolder extends IListItem {

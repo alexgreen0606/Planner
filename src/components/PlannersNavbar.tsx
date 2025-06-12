@@ -1,5 +1,5 @@
-import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
-import { ScrollContainerProvider } from '@/services/ScrollContainer';
+import { LINEAR_ANIMATION_CONFIG } from '@/lib/constants/animations';
+import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import React from 'react';

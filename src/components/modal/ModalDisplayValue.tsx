@@ -1,5 +1,5 @@
 import CustomText from '@/components/text/CustomText';
-import { MODAL_INPUT_HEIGHT } from '@/constants/layout';
+import { MODAL_INPUT_HEIGHT } from '@/lib/constants/layout';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
 

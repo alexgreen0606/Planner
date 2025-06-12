@@ -1,10 +1,10 @@
 import ButtonText from '@/components/text/ButtonText';
 import CustomText from '@/components/text/CustomText';
-import { HEADER_HEIGHT } from '@/constants/layout';
-import { EFolderItemType } from '@/enums/EFolderItemType';
-import { EItemStatus } from '@/enums/EItemStatus';
+import { HEADER_HEIGHT } from '@/lib/constants/layout';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItem, updateFolderItem } from '@/storage/checklistsStorage';
-import { IFolderItem } from '@/types/listItems/IFolderItem';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, View } from 'react-native';

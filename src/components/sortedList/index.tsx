@@ -1,11 +1,9 @@
 import ThinLine from '@/components/ThinLine';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/constants/layout';
-import { EItemStatus } from '@/enums/EItemStatus';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
+import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { useKeyboardTracker } from '@/hooks/useKeyboardTracker';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/services/ScrollContainer';
-import { TListItemIconConfig } from '@/types/listItems/core/TListItemIconConfig';
-import { IListItem } from '@/types/listItems/core/TListItem';
+import { useScrollContainer } from '@/providers/ScrollContainer';
 import { sanitizeList } from '@/utils/listUtils';
 import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
@@ -16,6 +14,8 @@ import ScrollAnchor from '../ScrollAnchor';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import Toolbar, { ToolbarProps } from './ListItemToolbar';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 

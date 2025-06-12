@@ -1,13 +1,13 @@
-import { EItemStatus } from '@/enums/EItemStatus';
-import { IListItem } from '@/types/listItems/core/TListItem';
+import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
-import { useFocusEffect, usePathname } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { usePathname } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
-import { useReloadScheduler } from './useReloadScheduler';
 import { useDeleteScheduler } from './useDeleteScheduler';
-import { useScrollContainer } from '@/services/ScrollContainer';
+import { useReloadScheduler } from './useReloadScheduler';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
 
 type StorageHandlers<T extends IListItem> = {

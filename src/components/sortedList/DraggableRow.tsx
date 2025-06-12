@@ -1,12 +1,10 @@
 import GenericIcon from "@/components/GenericIcon";
 import ThinLine from "@/components/ThinLine";
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/constants/layout";
-import { LIST_SPRING_CONFIG } from "@/constants/listConstants";
-import { EItemStatus } from "@/enums/EItemStatus";
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/layout";
+import { LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
-import { useScrollContainer } from "@/services/ScrollContainer";
-import { TListItemIconConfig } from "@/types/listItems/core/TListItemIconConfig";
-import { IListItem } from "@/types/listItems/core/TListItem";
+import { useScrollContainer } from "@/providers/ScrollContainer";
 import { generateSortId } from "@/utils/listUtils";
 import { useEffect, useMemo } from "react";
 import { PlatformColor, TouchableOpacity, View } from "react-native";
@@ -22,6 +20,8 @@ import Animated, {
 } from "react-native-reanimated";
 import ListTextfield from "./ListTextfield";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
+import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 
 const Row = Animated.createAnimatedComponent(View);
 

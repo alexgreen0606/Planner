@@ -1,4 +1,4 @@
-import { EItemStatus } from "@/enums/EItemStatus";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
 
 export interface IListItem {
     id: string;

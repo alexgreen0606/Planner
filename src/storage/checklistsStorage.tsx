@@ -1,11 +1,11 @@
+import { NULL } from "@/lib/constants/generic";
+import { CHECKLISTS_STORAGE_ID, StorageKey } from "@/lib/constants/storage";
+import { EFolderItemType } from "@/lib/enums/EFolderItemType";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { IChecklist } from "@/lib/types/checklists/IChecklist";
+import { IFolder } from "@/lib/types/checklists/IFolder";
+import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
 import { MMKV } from "react-native-mmkv";
-import { IFolder } from "@/types/checklists/IFolder";
-import { EItemStatus } from "@/enums/EItemStatus";
-import { IChecklist } from "@/types/checklists/IChecklist";
-import { EFolderItemType } from "@/enums/EFolderItemType";
-import { IFolderItem } from "@/types/listItems/IFolderItem";
-import { NULL } from "@/constants/generic";
-import { CHECKLISTS_STORAGE_ID, StorageKey } from "@/constants/storage";
 
 const storage = new MMKV({ id: CHECKLISTS_STORAGE_ID });
 

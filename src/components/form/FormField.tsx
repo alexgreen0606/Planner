@@ -2,10 +2,9 @@ import DateRangeSelector from "./fields/DateRangeSelector";
 import ModalCheckbox from "./fields/Checkbox";
 import TimeRangeSelector from "./fields/TimeRangeSelector";
 import ModalTextfield from "./fields/Textfield";
-import { DateTime } from 'luxon';
-import { IFormField } from "@/types/form/IFormField";
-import { EFormFieldType } from "@/enums/EFormFieldType";
+import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
+import { IFormField } from "@/lib/types/form/IFormField";
 
 interface FormFieldProps extends Omit<IFormField, 'name'> {
     type: EFormFieldType;

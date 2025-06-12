@@ -1,4 +1,4 @@
-import { BIRTHDAY_STORAGE_ID } from "@/constants/storage";
+import { BIRTHDAY_STORAGE_ID } from "@/lib/constants/storage";
 import { IBirthday } from "@/types/listItems/IBirthday";
 import { MMKV } from "react-native-mmkv";
 

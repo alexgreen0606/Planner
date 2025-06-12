@@ -1,7 +1,7 @@
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
-import { LINEAR_ANIMATION_CONFIG } from '@/constants/animations';
+import { LINEAR_ANIMATION_CONFIG } from '@/lib/constants/animations';
 import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
 import { DateTime } from 'luxon';
 import React, { useEffect, useRef, useState } from 'react';

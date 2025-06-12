@@ -1,4 +1,4 @@
-import { StorageKey } from '@/constants/storage';
+import { StorageKey } from '@/lib/constants/storage';
 import { Redirect } from 'expo-router';
 
 export default function IndexPage() {

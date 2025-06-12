@@ -1,4 +1,4 @@
-import { spacing } from "@/constants/layout";
+import { spacing } from "@/lib/constants/layout";
 import { BlurView } from "expo-blur";
 import React, { ReactNode } from 'react';
 import { ActionSheetIOS, PlatformColor, ScrollView, View, ViewStyle } from 'react-native';

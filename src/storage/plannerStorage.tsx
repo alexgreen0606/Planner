@@ -1,11 +1,11 @@
-import { PLANNER_STORAGE_ID } from "@/constants/storage";
-import { EItemStatus } from "@/enums/EItemStatus";
-import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
-import { TPlanner } from "@/types/planner/TPlanner";
-import { generatePlanner, getCalendarAccess } from "@/utils/calendarUtils";
+import { PLANNER_STORAGE_ID } from "@/lib/constants/storage";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
+import { TPlanner } from "@/lib/types/planner/TPlanner";
+import { getCalendarAccess } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp } from "@/utils/dateUtils";
 import { cloneItem, isItemTextfield } from "@/utils/listUtils";
-import { sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
+import { generatePlanner, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import RNCalendarEvents from "react-native-calendar-events";
 import { MMKV } from 'react-native-mmkv';
 
@@ -79,7 +79,7 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
  * @param event - the event to update
  * @returns - The updated event in storage. If the item was removed from the planner, it will return undefined.
  */
-export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | undefined> {
+export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | null> {
     const newPlanner = getPlannerFromStorage(event.listId);
     let newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
     const oldEvent = newPlanner.events.find(existingEvent => existingEvent.id === event.id);
@@ -139,7 +139,7 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | u
             // Remove this event from the planner.
             newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
             savePlannerToStorage(newEvent.listId, newPlanner);
-            return;
+            return null;
         }
     } else if (oldCalendarId) {
         // Delete unscheduled event from the calendar. 

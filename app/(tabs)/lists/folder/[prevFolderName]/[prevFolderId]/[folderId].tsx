@@ -1,12 +1,12 @@
-import { EFolderItemType } from '@/enums/EFolderItemType';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
-import { ScrollContainerProvider } from '../../../../../../src/services/ScrollContainer';
+import { ScrollContainerProvider } from '../../../../../../src/providers/ScrollContainer';
 import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 import FolderItemBanner from '@/components/checklist/FolderItemBanner';
 import SortedFolder from '@/components/folder';
-import { NULL } from '@/constants/generic';
+import { NULL } from '@/lib/constants/generic';
 
 const Lists = () => {
   const router = useRouter();

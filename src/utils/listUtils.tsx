@@ -1,6 +1,6 @@
 import { IconType } from "@/components/GenericIcon";
-import { EItemStatus } from "@/enums/EItemStatus";
-import { IListItem } from "@/types/listItems/core/TListItem";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { uuid } from "expo-modules-core";
 import { SharedValue } from "react-native-reanimated";
 

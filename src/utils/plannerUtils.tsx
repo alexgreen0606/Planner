@@ -1,20 +1,18 @@
 import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import TimeValue from '@/components/text/TimeValue';
-import { NULL } from '@/constants/generic';
-import { EItemStatus } from '@/enums/EItemStatus';
+import { NULL } from '@/lib/constants/generic';
+import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { deleteEvents, getCarryoverEventsAndCleanStorage, getPlannerFromStorage, saveEvent, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringPlannerStorage';
-import { IPlannerEvent, TTimeConfig } from '@/types/listItems/IPlannerEvent';
-import { IRecurringEvent } from '@/types/listItems/IRecurringEvent';
-import { TPlanner } from '@/types/planner/TPlanner';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { loadCalendarData } from './calendarUtils';
-import { datestampToDayOfWeek, getEventTime, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToDayOfWeek, generateDatestampRange, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
-import { jotaiStore } from 'app/_layout';
-import { textfieldItemAtom } from '@/atoms/textfieldData';
+import { TTimeConfig, IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
 
 // ------------- Utilities -------------
 
@@ -67,6 +65,40 @@ function extractTimeValueFromString(text: string, datestamp?: string): Extracted
     }
 
     return { timeConfig, updatedText };
+}
+
+/**
+ * ✅ Parses the given event and returns the start time of the event, or null if none exists.
+ * Works for both planner and recurring events (iso or time values [HH:MM]).
+ * 
+ * @param event - the event to parse 
+ * @returns - the item's time value if one exists, else null
+ */
+function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): string | null {
+    if (!event) return null;
+
+    if ("timeConfig" in event) {
+        return event.timeConfig?.multiDayEnd ? event.timeConfig.endTime : event.timeConfig?.startTime ?? null;
+    } else if ("startTime" in event) {
+        return event.startTime ?? null;
+    } else {
+        return null;
+    }
+}
+
+/**
+ * ✅ Generates an empty planner object for the given datestamp.
+ * 
+ * @param datestamp - the date the planner will represent
+ * @returns - a new planner object
+ */
+export function generatePlanner(datestamp: string): TPlanner {
+    return {
+        datestamp,
+        title: '',
+        events: [],
+        hideRecurring: false
+    };
 }
 
 // ------------- Storage Getters and Setters -------------
@@ -166,7 +198,8 @@ export function sanitizePlanner(
 
 /**
  * ✅ Handles all overhead saving a planner event.
- * If the update affects the calendar, the global calendar data will be reloaded.
+ * If the update affects the calendar, the global calendar data will be reloaded
+ * for the affected dates.
  * 
  * @param updatedPlanEvent - the planner event to save
  * @param newEventHandler = handler to run side effects with the saved planner event
@@ -174,8 +207,11 @@ export function sanitizePlanner(
  */
 export async function saveEventReloadData(
     updatedPlanEvent: IPlannerEvent,
-    newEventHandler?: (event?: IPlannerEvent) => void
-): Promise<IPlannerEvent | undefined> {
+    newEventHandler?: (event: IPlannerEvent | null) => void
+): Promise<IPlannerEvent | null> {
+    const oldPlanner = getPlannerFromStorage(updatedPlanEvent.listId);
+    const oldEvent = oldPlanner.events.find(i => i.id === updatedPlanEvent.id);
+    const oldEventWasCalendarEvent = oldEvent?.calendarId
 
     // Phase 1: Save the event to storage.
     const savedEvent = await saveEvent(updatedPlanEvent);
@@ -184,16 +220,33 @@ export async function saveEventReloadData(
     newEventHandler?.(savedEvent);
 
     // Phase 3: Reload calendar data if the event directly affects the calendar.
-    const oldPlanner = getPlannerFromStorage(updatedPlanEvent.listId);
+    oldPlanner.events.find(i => i.id === updatedPlanEvent.id)?.calendarId
     if (
         // The event is now a chip
         !savedEvent ||
         // The event is now a calendar event
         savedEvent?.calendarId ||
         // The event used to be a calendar event
-        oldPlanner.events.find(i => i.id === updatedPlanEvent.id)?.calendarId
+        oldEventWasCalendarEvent
     ) {
-        await loadCalendarData();
+        const oldEventStart = oldEvent?.timeConfig?.startTime;
+        const newEventStart = savedEvent?.timeConfig?.startTime;
+
+        const oldEventEnd = oldEvent?.timeConfig?.endTime;
+        const newEventEnd = savedEvent?.timeConfig?.endTime;
+
+        const earlierStart = [oldEventStart, newEventStart]
+            .filter(Boolean)
+            .sort()[0] ?? null;
+
+        const laterEnd = [oldEventEnd, newEventEnd]
+            .filter(Boolean)
+            .sort()
+            .at(-1) ?? null;
+
+        const affectedDatesRange = generateDatestampRange(earlierStart!, laterEnd!);
+
+        await loadCalendarData(affectedDatesRange); // TODO: test this loads the right dates
     }
 
     return savedEvent;
@@ -214,7 +267,7 @@ export async function deleteEventsReloadData(planEvents: IPlannerEvent[]) {
  * ✅ Generate a new sort ID for an event that maintains time logic within the planner.
  * 
  * @param event - the event to place
- * @param planner - the planner
+ * @param planner - the planner the event belongs to
  * @returns - the new sort ID for the event
  */
 export function generateSortIdByTime(
@@ -224,7 +277,7 @@ export function generateSortIdByTime(
     // console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
     const planner = sanitizeList(events, event);
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
-    const eventTime = getEventTime(event);
+    const eventTime = extractEventTime(event);
 
     // Handler for situations where the item can remain in its position.
     function persistEventPosition() {
@@ -244,13 +297,13 @@ export function generateSortIdByTime(
     if (!eventTime || event.status === EItemStatus.HIDDEN) return persistEventPosition();
 
     // Pre-Check 2: Check if the event conflicts at its current position.
-    const timedPlanner = [...planner].filter(existingEvent => getEventTime(existingEvent));
+    const timedPlanner = [...planner].filter(existingEvent => extractEventTime(existingEvent));
     const currentIndex = timedPlanner.findIndex(e => e.id === event.id);
 
     const earlierEvent = timedPlanner[currentIndex - 1];
     const laterEvent = timedPlanner[currentIndex + 1];
-    const earlierTime = getEventTime(earlierEvent);
-    const laterTime = getEventTime(laterEvent);
+    const earlierTime = extractEventTime(earlierEvent);
+    const laterTime = extractEventTime(laterEvent);
 
     if (
         isTimeEarlierOrEqual(earlierTime, eventTime) &&
@@ -259,7 +312,7 @@ export function generateSortIdByTime(
 
     // Scenario 1: Place the event before the first event that starts after or during it.
     const laterEventIndex = planner.findIndex(existingEvent => {
-        const existingTime = getEventTime(existingEvent);
+        const existingTime = extractEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
 
         return isTimeEarlierOrEqual(eventTime, existingTime);
@@ -271,7 +324,7 @@ export function generateSortIdByTime(
 
     // Scenario 2: Place the event after the last event that starts before or during it.
     const earlierEventIndex = planner.findLastIndex(existingEvent => {
-        const existingTime = getEventTime(existingEvent);
+        const existingTime = extractEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
 
         return isTimeEarlierOrEqual(existingTime, eventTime);
@@ -521,7 +574,7 @@ export function handleEventValueUserInput(
     currentList: (IPlannerEvent | IRecurringEvent)[],
     datestamp?: string,
 ): IPlannerEvent | IRecurringEvent {
-    const itemTime = getEventTime(item);
+    const itemTime = extractEventTime(item);
     if (!itemTime) {
         const { timeConfig, updatedText } = extractTimeValueFromString(text, datestamp);
         if (timeConfig) {
@@ -545,7 +598,7 @@ export function generateTimeIconConfig(
     event: IPlannerEvent | IRecurringEvent,
     openTimeModal: (item: IPlannerEvent | IRecurringEvent) => void
 ) {
-    const itemTime = getEventTime(event);
+    const itemTime = extractEventTime(event);
     return {
         hideIcon: !itemTime,
         onClick: () => openTimeModal(event),
