@@ -222,6 +222,7 @@ const TimeRangeSelector = ({
         if (allDay) {
             resetTimesToMidnight();
             setMode(SelectorMode.DATES);
+            setIsInputFieldOpen(false);
         }
     }, [allDay]);
 

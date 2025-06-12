@@ -44,7 +44,7 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
         timeConfig: {
             startTime: event.startDate,
             endTime: event.endDate!,
-            allDay: false,
+            allDay: Boolean(event.allDay),
             multiDayEnd,
             multiDayStart
         },
@@ -62,15 +62,15 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
 function generateEventChip(event: CalendarEventReadable): EventChipProps {
     const calendar = event.calendar!;
 
-    console.log(event)
-
     const chipProps: EventChipProps = {
         label: event.title,
         iconConfig: {
             type: getCalendarIcon(calendar.title),
         },
         color: calendar.color,
-        collapsed: true
+        collapsed: false,
+        chipSetIndex: 0,
+        shiftChipRight: false
     };
 
     if (calendar.title === 'Birthdays') {
@@ -189,6 +189,15 @@ export function generateEmptyCalendarDataMaps(datestamps: string[]) {
     );
 
     return { chipsMap, plannersMap };
+}
+
+export async function getCalendarEventById(eventId: string, datestamp: string): Promise<IPlannerEvent | null> {
+    await getCalendarAccess();
+
+    const calendarEvent = await RNCalendarEvents.findEventById(eventId);
+    if (!calendarEvent) return null;
+
+    return generatePlannerEvent(calendarEvent, datestamp);
 }
 
 // ------------- Jotai Store Utilities -------------

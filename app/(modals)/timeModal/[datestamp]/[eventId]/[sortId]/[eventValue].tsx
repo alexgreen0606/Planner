@@ -4,17 +4,18 @@ import { NULL } from "@/constants/generic";
 import { EFormFieldType } from "@/enums/EFormFieldType";
 import { EItemStatus } from "@/enums/EItemStatus";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
-import { getPlannerFromStorage } from "@/storage/plannerStorage";
+import { deleteEvents, getPlannerFromStorage, saveEvent } from "@/storage/plannerStorage";
 import { IFormField } from "@/types/form/IFormField";
 import { IListItem } from "@/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/types/listItems/IPlannerEvent";
-import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
+import { getCalendarEventById } from "@/utils/calendarUtils";
+import { getNowISORoundDown5Minutes, isoToDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
-import { saveEventReloadData } from "@/utils/plannerUtils";
+import { deleteEventsReloadData, saveEventReloadData } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { DateTime } from 'luxon';
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
@@ -30,34 +31,50 @@ type FormData = {
 }
 
 const TimeModal = () => {
+    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<{
         eventId: string, // NULL if this is a new event
         eventValue: string, // More up-to-date than from storage
         datestamp: string,
         sortId: string
     }>();
-
     const router = useRouter();
 
-    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+    const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
 
-    const planEvent = useMemo(() => {
+    useEffect(() => {
+
+        // Used when the event is not found in its planner
+        const loadCalendarEventFallback = async () => {
+            const calEvent = await getCalendarEventById(eventId, datestamp);
+            if (!calEvent) return;
+
+            setPlanEvent({
+                ...calEvent, 
+                calendarId: calEvent.id,
+                status: EItemStatus.EDIT
+            });
+        }
+
         const newValue = eventValue === NULL ? '' : eventValue;
         if (eventId === NULL) {
-            return {
+            setPlanEvent({
                 id: uuid.v4(),
                 sortId: Number(sortId),
                 status: EItemStatus.NEW,
                 listId: datestamp,
                 value: newValue
-            }
+            })
         }
 
         const planner = getPlannerFromStorage(datestamp);
         const event = planner.events.find(e => e.id === eventId);
-        if (!event) return null;
+        if (!event) {
+            loadCalendarEventFallback();
+            return;
+        }
 
-        return { ...event, value: newValue, status: EItemStatus.EDIT };
+        setPlanEvent({ ...event, value: newValue, status: EItemStatus.EDIT });
     }, [eventId]);
 
     const isEditMode = planEvent?.status === EItemStatus.EDIT;
@@ -182,13 +199,23 @@ const TimeModal = () => {
         await saveEventReloadData(updatedItem, handleSavedEvent);
     }
 
-    function handleDelete() {
+    async function handleUnschedule() {
         if (!planEvent) return;
+
         const updatedItem = { ...planEvent };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
+        await saveEventReloadData(updatedItem);
+        // TODO: leaves behind duplicate
 
-        // TODO: save the updated item
+        router.back();
+    }
+
+    async function handleDelete() {
+        if (!planEvent) return;
+
+        await deleteEventsReloadData([planEvent]);
+        setTextfieldItem(null);
 
         router.back();
     }
@@ -244,7 +271,7 @@ const TimeModal = () => {
                 label: 'Unschedule',
                 hidden: !isEditMode,
                 optionLabels: ['Delete Event', 'Unschedule Event'],
-                optionHandlers: [() => null, handleDelete] // TODO: how to handle unscheduling
+                optionHandlers: [handleDelete, handleUnschedule]
             }}
             onClose={() => router.back()}
         >

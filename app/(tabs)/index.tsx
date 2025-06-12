@@ -1,5 +1,6 @@
 import { calendarChipsByDate } from '@/atoms/calendarEvents';
 import EventChip from '@/components/EventChip';
+import EventChipSets from '@/components/EventChipSet';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
 import { BIRTHDAY_STORAGE_ID } from '@/constants/storage';
@@ -39,19 +40,13 @@ const Today = () => {
       <ScrollContainerProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
         floatingBanner={calendarChips.length > 0 && (
-          <View
-            className="pb-1 pt-2 px-2 w-full flex flex-wrap flex-row gap-2 items-center"
-          >
-            {calendarChips.map((chipConfig, i) => (
-              <EventChip
-                key={`event-chip-${i}`}
-                backgroundPlatformColor='systemBackground'
-                {...chipConfig}
-              />
-            ))}
-          </View>
-        )
-        }>
+          <EventChipSets
+            datestamp={todayDatestamp}
+            sets={[calendarChips]}
+            backgroundPlatformColor='systemBackground'
+          />
+        )}
+      >
 
         {/* Planner */}
         <TodayPlanner />

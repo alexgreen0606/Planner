@@ -7,26 +7,29 @@ import { openTimeModal } from '@/utils/plannerUtils';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
 
+const Chip = Animated.createAnimatedComponent(View);
 const ChipLabel = Animated.createAnimatedComponent(View);
 
-const chipWidthAnimationConfig = {
-    mass: 5,
-    damping: 30,
-    stiffness: 50
-}
+const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
+const EXPANDED_CHIP_RIGHT_MARGIN = 6;
+
+const CHIP_SET_GAP = 24;
 
 export interface EventChipProps {
     label: string;
     iconConfig: GenericIconProps;
     color: string;
     backgroundPlatformColor?: string;
-    collapsed: boolean;
+    collapsed?: boolean;
+    chipSetIndex: number;
+    shiftChipRight: boolean;
     planEvent?: IPlannerEvent;
     onClick?: () => void;
+    toggleCollapsed?: () => void;
 }
 
 const EventChip = ({
@@ -34,17 +37,18 @@ const EventChip = ({
     iconConfig,
     color,
     backgroundPlatformColor = 'systemGray6',
-    collapsed,
+    collapsed = false,
+    chipSetIndex,
+    shiftChipRight,
     planEvent,
-    onClick
+    onClick,
+    toggleCollapsed
 }: EventChipProps) => {
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-    const {width: SCREEN_WIDTH} = useWindowDimensions();
+    const { width: SCREEN_WIDTH } = useWindowDimensions();
     const router = useRouter();
 
     const [hideLabel, setHideLabel] = useState(true);
-
-    const labelWidth = useSharedValue(0);
 
     const isPendingDelete = useMemo(() => planEvent &&
         getDeletingItems().some(deleteItem =>
@@ -61,6 +65,9 @@ const EventChip = ({
 
     const maxLabelWidth = SCREEN_WIDTH - 64;
 
+    const labelWidth = useSharedValue(collapsed ? 0 : maxLabelWidth);
+    const chipMarginRight = useSharedValue(collapsed ? COLLAPSED_CHIP_RIGHT_MARGIN : EXPANDED_CHIP_RIGHT_MARGIN);
+
     function handleOpenTimeModal() {
         if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
     }
@@ -70,8 +77,10 @@ const EventChip = ({
     useEffect(() => {
         if (collapsed) {
             labelWidth.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
+            chipMarginRight.value = withTiming(COLLAPSED_CHIP_RIGHT_MARGIN, LINEAR_ANIMATION_CONFIG);
         } else {
-            labelWidth.value = withSpring(maxLabelWidth, chipWidthAnimationConfig);
+            labelWidth.value = withTiming(maxLabelWidth, LINEAR_ANIMATION_CONFIG);
+            chipMarginRight.value = withTiming(EXPANDED_CHIP_RIGHT_MARGIN, LINEAR_ANIMATION_CONFIG);
         }
     }, [collapsed]);
 
@@ -85,7 +94,16 @@ const EventChip = ({
             }
         });
 
-    const chipStyle = useAnimatedStyle(() => ({
+    const chipStyle = useAnimatedStyle(() => {
+        return {
+            // Chips stack with the firstly rendered on top
+            zIndex: 9000 + (40 / (chipSetIndex + 1)),
+            marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
+            marginRight: chipMarginRight.value
+        }
+    });
+
+    const chipLabelStyle = useAnimatedStyle(() => ({
         maxWidth: labelWidth.value
     }));
 
@@ -106,7 +124,7 @@ const EventChip = ({
                 size='xs'
             />
             {!hideLabel && (
-                <ChipLabel style={chipStyle}>
+                <ChipLabel style={chipLabelStyle}>
                     <CustomText
                         type='soft'
                         ellipsizeMode='tail'
@@ -124,19 +142,19 @@ const EventChip = ({
     )
 
     return (
-        <View>
+        <Chip style={chipStyle}>
             {planEvent ? (
-                <TouchableOpacity onPress={handleOpenTimeModal}>
+                <TouchableOpacity onPress={collapsed ? toggleCollapsed : handleOpenTimeModal}>
                     <ChipContent />
                 </TouchableOpacity>
             ) : onClick ? (
-                <TouchableOpacity onPress={onClick}>
+                <TouchableOpacity onPress={collapsed ? toggleCollapsed : onClick}>
                     <ChipContent />
                 </TouchableOpacity>
             ) : (
                 <ChipContent />
             )}
-        </View>
+        </Chip>
     );
 };
 

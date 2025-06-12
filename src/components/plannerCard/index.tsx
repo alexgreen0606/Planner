@@ -16,13 +16,12 @@ import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
-import EventChip, { EventChipProps } from '../../components/EventChip';
+import { EventChipProps } from '../../components/EventChip';
 import { generatePlanner } from '../../utils/calendarUtils';
 import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
-import GenericIcon, { GenericIconProps } from '../GenericIcon';
+import GenericIcon from '../GenericIcon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
-import EventChipSets from '../EventChipSet';
 
 enum EditAction {
     EDIT_TITLE = 'EDIT_TITLE',
@@ -31,11 +30,8 @@ enum EditAction {
     DELETE_RECURRING = 'DELETE_RECURRING'
 }
 
-export type EventChipSet = EventChipProps[];
-
-// TODO: move to utils file and use EventChipProps[][] instead of Set type
-export function getChipSets(chips: EventChipProps[]): EventChipSet[] {
-    const chipMap: Record<string, EventChipSet> = {};
+function separateEventChipsByColor(chips: EventChipProps[]): EventChipProps[][] {
+    const chipMap: Record<string, EventChipProps[]> = {};
 
     for (const chip of chips) {
         const { color } = chip;
@@ -77,7 +73,7 @@ const PlannerCard = ({
     );
 
     const eventChipSets = useMemo(() => {
-        return getChipSets(calendarChips);
+        return separateEventChipsByColor(calendarChips);
     }, [calendarChips]);
 
     // ------------- Utility Functions -------------

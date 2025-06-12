@@ -114,11 +114,13 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    // Load in the initial planners
     useEffect(() => {
-        loadCalendarData();
-        registerReloadFunction('planners-reload-trigger', loadCalendarData, pathname);
+        const reloadPageData = () => loadCalendarData(plannerDatestamps);
+        registerReloadFunction('planners-reload-trigger', reloadPageData, pathname);
+        reloadPageData();
+    }, [plannerDatestamps]);
 
+    useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
     }, []);
 
