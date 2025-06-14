@@ -3,7 +3,7 @@ import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
 import { usePathname } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useDeleteScheduler } from './useDeleteScheduler';
@@ -38,7 +38,7 @@ const useSortedList = <T extends IListItem, S>({
     storageConfig,
     initializedStorageObject,
     reloadOnOverscroll = false,
-    reloadTriggers,
+    reloadTriggers = [],
     handleListChange
 }: SortedListConfig<T, S>) => {
     const pathname = usePathname();
@@ -69,21 +69,19 @@ const useSortedList = <T extends IListItem, S>({
         }
     };
 
-    useEffect(() => {
-        buildList();
-    }, [storageObject]);
-
     // ------------- RELOAD Logic -------------
 
-    // Custom Reload Triggering
+    // Standard list rebuild
     useEffect(() => {
-        if (reloadTriggers) buildList();
-    }, reloadTriggers);
+        buildList();
+    }, [storageObject, ...reloadTriggers]);
 
     // Overscroll Reload Registering
     useEffect(() => {
         if (reloadOnOverscroll) registerReloadFunction(`${storageKey}-${storageId}`, buildList, pathname);
     }, []);
+
+    // ------------- EDIT Logic -------------
 
     /**
      * ✅ Saves an item to the current list and creates a new textfield item.
@@ -121,8 +119,6 @@ const useSortedList = <T extends IListItem, S>({
 
         setTextfieldItem(newItem);
     }
-
-    // ------------- EDIT Logic -------------
 
     /**
      * Updates or creates an item in storage.

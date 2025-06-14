@@ -397,10 +397,9 @@ export const ScrollContainerProvider = ({
                     )}
 
                     {/* Floating Banner Spacer */}
-                    <View
-                        className='w-full'
-                        style={{ height: floatingBannerHeight }}
-                    />
+                    <View className='opacity-0'>
+                        {floatingBanner}
+                    </View>
 
                     {/* Loading Spinner */}
                     {canReloadPath && (

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View } from 'react-native';
 import EventChip from './EventChip';
-import { TEventChip } from '@/types/planner/TEventChip';
+import { TEventChip } from '@/lib/types/planner/TEventChip';
 
 export interface EventChipSetsProps {
     datestamp: string;

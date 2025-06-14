@@ -53,6 +53,9 @@ const PlannerCard = ({
         [pathname]
     );
 
+    // Need to memoize empty calendar events to prevent unnecessary re-builds of planner
+    const placeholderEmptyCalendarEvents = useMemo(() => [], []);
+
     // ------------- Utility Functions -------------
 
     const isEventDeleting = useCallback((planEvent: IPlannerEvent) => {
@@ -116,7 +119,7 @@ const PlannerCard = ({
             updateItem: saveEventReloadData,
             deleteItems: handleDeleteEvents
         },
-        reloadTriggers: [calendarEvents]
+        reloadTriggers: calendarEvents.length > 0 ? [calendarEvents] : placeholderEmptyCalendarEvents
     });
 
     const planner = SortedEvents.storageObject;

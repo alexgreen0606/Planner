@@ -12,11 +12,13 @@ import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateU
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { usePathname, useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { calendarEventDataAtom } from '@/atoms/calendarEvents';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -28,6 +30,9 @@ const Planners = () => {
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
+    const calendarEventData = useAtomValue(calendarEventDataAtom);
+
+    const [isLoading, setIsLoading] = useState(true);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-06-09": {
@@ -121,10 +126,21 @@ const Planners = () => {
     }, [plannerDatestamps]);
 
     useEffect(() => {
+        if (isLoading) {
+            const missingCalendarData = plannerDatestamps.some(datestamp =>
+                calendarEventData.plannersMap[datestamp] === null
+            )
+            setIsLoading(missingCalendarData);
+        }
+    }, [calendarEventData]);
+
+    useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
     }, []);
 
-    return (
+    return isLoading ? (
+        <LoadingSpinner />
+    ) : (
         <View
             className='flex-1'
             style={{ backgroundColor: PlatformColor('systemBackground') }}

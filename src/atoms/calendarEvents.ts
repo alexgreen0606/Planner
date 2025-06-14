@@ -8,9 +8,9 @@ export const calendarEventDataAtom = atom<TCalendarData>({
 });
 
 export const calendarChipsByDate = atomFamily((date: string) =>
-    atom((get) => get(calendarEventDataAtom).chipsMap[date] ?? [])
+    atom((get) => get(calendarEventDataAtom).chipsMap[date] ?? null)
 );
 
 export const calendarPlannerByDate = atomFamily((date: string) =>
-    atom((get) => get(calendarEventDataAtom).plannersMap[date] ?? [])
+    atom((get) => get(calendarEventDataAtom).plannersMap[date] ?? null)
 );
