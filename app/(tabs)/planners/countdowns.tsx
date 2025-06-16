@@ -13,7 +13,7 @@ import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromTo
 import { isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
@@ -87,10 +87,12 @@ const Countdowns = () => {
         }
     }
 
+    const getCountownsMemoized = useCallback(getCountdowns, []);
+
     const CountdownItems = useSortedList<ICountdown, ICountdown[]>({
         storageId: StorageKey.COUNTDOWN_LIST_KEY,
         storageKey: StorageKey.COUNTDOWN_LIST_KEY,
-        getItemsFromStorageObject: getCountdowns,
+        getItemsFromStorageObject: getCountownsMemoized,
         storageConfig: {
             createItem: async (countdown) => {
                 await saveCountdown(countdown, true);
@@ -120,6 +122,7 @@ const Countdowns = () => {
                 listId={StorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
                 disableDrag
+                isLoading={CountdownItems.isLoading}
                 items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
                 onDeleteItem={CountdownItems.deleteSingleItemFromStorage}

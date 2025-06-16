@@ -1,36 +1,28 @@
-import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
 import EventChipSets from '@/components/EventChipSet';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
+import { useCalendarData } from '@/hooks/useCalendarData';
+import { useLoadCalendarData } from '@/hooks/useLoadCalendarData';
 import { BIRTHDAY_STORAGE_ID } from '@/lib/constants/storage';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { useAtom } from 'jotai';
-import React, { useEffect, useState } from 'react';
+import { usePathname } from 'expo-router';
+import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
 
 const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
 
 const Today = () => {
-  const todayDatestamp = getTodayDatestamp();
+  const todayDatestamp = useMemo(() => getTodayDatestamp(), []);
+  const todayDatestampRange = useMemo(() => [getTodayDatestamp()], [todayDatestamp]);
 
-  const [calendarChips] = useAtom(calendarChipsByDate(todayDatestamp));
+  const pathname = usePathname();
 
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Initial load of data
-  useEffect(() => {
-    loadCalendarData();
-  }, []);
-
-  useEffect(() => {
-    if (calendarChips !== null) {
-      setIsLoading(false);
-    }
-  }, [calendarChips]);
+  const { isLoading } = useLoadCalendarData(todayDatestampRange, pathname);
+  const { calendarChips } = useCalendarData(todayDatestamp);
 
   // Load of data each time a birthday is contacted
   useMMKVListener((key) => {
@@ -48,13 +40,13 @@ const Today = () => {
     >
       <ScrollContainerProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
-        floatingBanner={calendarChips.length > 0 && (
+        floatingBanner={calendarChips.length > 0 &&
           <EventChipSets
             datestamp={todayDatestamp}
             sets={calendarChips}
             backgroundPlatformColor='systemBackground'
           />
-        )}
+        }
       >
 
         {/* Planner */}

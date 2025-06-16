@@ -6,10 +6,10 @@ import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
+import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItem, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
 import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
@@ -189,6 +189,8 @@ const SortedFolder = ({
         }
     };
 
+    const getFolderItemsMemoized = useCallback(getFolderItems, []);
+
     const isItemTransfering = (item: IFolderItem) => item.status === EItemStatus.TRANSFER;
     const isTransferMode = textfieldItem?.status === EItemStatus.TRANSFER;
     const getIconType = (item: IFolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
@@ -199,7 +201,7 @@ const SortedFolder = ({
     const SortedItems = useSortedList<IFolderItem, IFolder>({
         storageId: CHECKLISTS_STORAGE_ID,
         storageKey: folderId,
-        getItemsFromStorageObject: getFolderItems,
+        getItemsFromStorageObject: getFolderItemsMemoized,
         storageConfig: {
             createItem: createFolderItem,
             updateItem: updateFolderItem,
@@ -224,6 +226,7 @@ const SortedFolder = ({
             listId={folderId}
             items={SortedItems.items}
             fillSpace
+            isLoading={SortedItems.isLoading}
             onDragEnd={SortedItems.persistItemToStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
             onDeleteItem={SortedItems.deleteSingleItemFromStorage}

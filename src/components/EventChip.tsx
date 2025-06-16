@@ -1,18 +1,14 @@
-import { LINEAR_ANIMATION_CONFIG } from '@/lib/constants/animations';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { openTimeModal } from '@/utils/plannerUtils';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
-import { PlatformColor, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { MotiView } from 'moti';
+import React, { useMemo } from 'react';
+import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon, { GenericIconProps } from './GenericIcon';
 import CustomText from './text/CustomText';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-
-const Chip = Animated.createAnimatedComponent(View);
-const ChipLabel = Animated.createAnimatedComponent(View);
 
 const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
 const EXPANDED_CHIP_RIGHT_MARGIN = 6;
@@ -45,10 +41,7 @@ const EventChip = ({
     toggleCollapsed
 }: EventChipProps) => {
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-    const { width: SCREEN_WIDTH } = useWindowDimensions();
     const router = useRouter();
-
-    const [hideLabel, setHideLabel] = useState(true);
 
     const isPendingDelete = useMemo(() => planEvent &&
         getDeletingItems().some(deleteItem =>
@@ -63,49 +56,9 @@ const EventChip = ({
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
 
-    const maxLabelWidth = SCREEN_WIDTH - 64;
-
-    const labelWidth = useSharedValue(collapsed ? 0 : maxLabelWidth);
-    const chipMarginRight = useSharedValue(collapsed ? COLLAPSED_CHIP_RIGHT_MARGIN : EXPANDED_CHIP_RIGHT_MARGIN);
-
     function handleOpenTimeModal() {
         if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
     }
-
-    // ------------- Animations -------------
-
-    useEffect(() => {
-        if (collapsed) {
-            labelWidth.value = withTiming(0, LINEAR_ANIMATION_CONFIG);
-            chipMarginRight.value = withTiming(COLLAPSED_CHIP_RIGHT_MARGIN, LINEAR_ANIMATION_CONFIG);
-        } else {
-            labelWidth.value = withTiming(maxLabelWidth, LINEAR_ANIMATION_CONFIG);
-            chipMarginRight.value = withTiming(EXPANDED_CHIP_RIGHT_MARGIN, LINEAR_ANIMATION_CONFIG);
-        }
-    }, [collapsed]);
-
-    useAnimatedReaction(
-        () => labelWidth.value,
-        (curr) => {
-            if (curr !== 0 && hideLabel) {
-                runOnJS(setHideLabel)(false);
-            } else if (curr === 0 && !hideLabel) {
-                runOnJS(setHideLabel)(true);
-            }
-        });
-
-    const chipStyle = useAnimatedStyle(() => {
-        return {
-            // Chips stack with the firstly rendered on top
-            zIndex: 9000 + (40 / (chipSetIndex + 1)),
-            marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
-            marginRight: chipMarginRight.value
-        }
-    });
-
-    const chipLabelStyle = useAnimatedStyle(() => ({
-        maxWidth: labelWidth.value
-    }));
 
     // ------------- Render Helper Function -------------
 
@@ -115,7 +68,7 @@ const EventChip = ({
             style={{
                 borderColor: chipCssColor,
                 backgroundColor: PlatformColor(backgroundPlatformColor),
-                paddingHorizontal: hideLabel ? 0 : 8
+                paddingHorizontal: collapsed ? 0 : 8
             }}
         >
             <GenericIcon
@@ -123,26 +76,33 @@ const EventChip = ({
                 platformColor={chipColor}
                 size='xs'
             />
-            {!hideLabel && (
-                <ChipLabel style={chipLabelStyle}>
-                    <CustomText
-                        type='soft'
-                        ellipsizeMode='tail'
-                        numberOfLines={1}
-                        style={{
-                            color: chipCssColor,
-                            textDecorationLine: isPendingDelete ? 'line-through' : undefined
-                        }}
-                    >
-                        {label}
-                    </CustomText>
-                </ChipLabel>
+            {!collapsed && (
+                <CustomText
+                    type='soft'
+                    ellipsizeMode='tail'
+                    numberOfLines={1}
+                    style={{
+                        color: chipCssColor,
+                        textDecorationLine: isPendingDelete ? 'line-through' : undefined
+                    }}
+                >
+                    {label}
+                </CustomText>
             )}
         </View>
     )
 
     return (
-        <Chip style={chipStyle}>
+        <MotiView
+            animate={{
+                marginRight: collapsed ? COLLAPSED_CHIP_RIGHT_MARGIN : EXPANDED_CHIP_RIGHT_MARGIN
+            }}
+            style={{
+                // Chips stack with the firstly rendered on top
+                zIndex: 9000 + (40 / (chipSetIndex + 1)),
+                marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
+            }}
+        >
             {planEvent ? (
                 <TouchableOpacity onPress={collapsed ? toggleCollapsed : handleOpenTimeModal}>
                     <ChipContent />
@@ -154,7 +114,7 @@ const EventChip = ({
             ) : (
                 <ChipContent />
             )}
-        </Chip>
+        </MotiView>
     );
 };
 

@@ -3,7 +3,7 @@ import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
 import { usePathname } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useDeleteScheduler } from './useDeleteScheduler';
@@ -20,13 +20,13 @@ interface SortedListConfig<T extends IListItem, S> {
     storageId: string;
     storageKey: string;
     handleListChange?: () => Promise<void>;
+    // Ensure a callback is used here to prevent infinite rerenders
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
     setItemsInStorageObject?: (items: T[], currentObject: S) => S;
     initializeListItem?: (item: IListItem) => T;
     storageConfig?: StorageHandlers<T>;
     initializedStorageObject?: S;
     reloadOnOverscroll?: boolean;
-    reloadTriggers?: any[];
 }
 
 const useSortedList = <T extends IListItem, S>({
@@ -38,7 +38,6 @@ const useSortedList = <T extends IListItem, S>({
     storageConfig,
     initializedStorageObject,
     reloadOnOverscroll = false,
-    reloadTriggers = [],
     handleListChange
 }: SortedListConfig<T, S>) => {
     const pathname = usePathname();
@@ -59,7 +58,8 @@ const useSortedList = <T extends IListItem, S>({
 
     // ------------- BUILD Logic -------------
 
-    async function buildList() {
+    const buildList = useCallback(async () => {
+        console.log('BUILDING')
         try {
             const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
             setItems(fetchedItems ?? storageObject as T[] ?? []);
@@ -67,14 +67,14 @@ const useSortedList = <T extends IListItem, S>({
         } catch (error) {
             console.error(error);
         }
-    };
+    }, [storageObject, getItemsFromStorageObject]);
 
     // ------------- RELOAD Logic -------------
 
     // Standard list rebuild
     useEffect(() => {
         buildList();
-    }, [storageObject, ...reloadTriggers]);
+    }, [buildList]);
 
     // Overscroll Reload Registering
     useEffect(() => {

@@ -3,7 +3,7 @@ import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useCallback } from 'react';
 import SortableList from '../sortedList';
 import { IChecklist } from '@/lib/types/checklists/IChecklist';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
@@ -14,9 +14,10 @@ const Checklist = () => {
 
     const { isItemDeleting } = useDeleteScheduler<IListItem>();
 
-    function getItemsFromStorageObject(storageObject: IChecklist) {
-        return storageObject.items;
-    }
+    const getItemsFromStorageObject = useCallback(
+        (storageObject: IChecklist) => storageObject.items,
+        []
+    );
 
     function setItemsInStorageObject(newItems: IListItem[], currentObject: IChecklist) {
         return { ...currentObject, items: newItems };

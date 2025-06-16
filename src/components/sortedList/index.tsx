@@ -16,6 +16,7 @@ import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import Toolbar, { ToolbarProps } from './ListItemToolbar';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
+import { MotiView } from 'moti'
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -149,9 +150,8 @@ const SortableList = <T extends IListItem>({
     }));
 
     return (
+        <MotiView animate={{ opacity: isLoading ? 0 : 1 }}>
         <View style={{ flex: fillSpace ? 1 : 0 }}>
-
-            {/* TODO: Loading SVG */}
 
             {/* List */}
             <View
@@ -220,6 +220,7 @@ const SortableList = <T extends IListItem>({
                 </Portal>
             }
         </View>
+        </MotiView>
     );
 };
 

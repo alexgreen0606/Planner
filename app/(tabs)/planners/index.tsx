@@ -1,38 +1,33 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/GenericIcon';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import PlannerCard from '@/components/plannerCard';
 import ScrollAnchor from '@/components/ScrollAnchor';
 import ButtonText from '@/components/text/ButtonText';
-import { NULL } from '@/lib/constants/generic';
-import { useReloadScheduler } from '@/hooks/useReloadScheduler';
+import { useLoadCalendarData } from '@/hooks/useLoadCalendarData';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { NULL } from '@/lib/constants/generic';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { getPlannerSet, getPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { loadCalendarData } from '@/utils/calendarUtils';
 import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { usePathname, useRouter } from 'expo-router';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { calendarEventDataAtom } from '@/atoms/calendarEvents';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { MotiView } from 'moti';
 
 const defaultPlannerSet = 'Next 7 Days';
 
 const Planners = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
-    const { registerReloadFunction } = useReloadScheduler();
     const allPlannerSetTitles = getPlannerSetTitles();
     const pathname = usePathname();
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
-    const calendarEventData = useAtomValue(calendarEventDataAtom);
-
-    const [isLoading, setIsLoading] = useState(true);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-06-09": {
@@ -119,20 +114,7 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    useEffect(() => {
-        const reloadPageData = () => loadCalendarData(plannerDatestamps);
-        registerReloadFunction('planners-reload-trigger', reloadPageData, pathname);
-        reloadPageData();
-    }, [plannerDatestamps]);
-
-    useEffect(() => {
-        if (isLoading) {
-            const missingCalendarData = plannerDatestamps.some(datestamp =>
-                calendarEventData.plannersMap[datestamp] === null
-            )
-            setIsLoading(missingCalendarData);
-        }
-    }, [calendarEventData]);
+    const { isLoading } = useLoadCalendarData(plannerDatestamps, pathname);
 
     useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
@@ -176,7 +158,15 @@ const Planners = () => {
             </View>
 
             {/* Planner Set Display */}
-            <View className='p-2 gap-4'>
+            <MotiView
+                className='p-2 gap-4'
+                from={{ opacity: 0, transform: [{ translateY: 10 }] }}
+                animate={{ opacity: 1, transform: [{ translateY: 0 }] }}
+                transition={{
+                    type: 'timing',
+                    duration: 600,
+                }}
+            >
                 {plannerDatestamps.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
@@ -185,7 +175,7 @@ const Planners = () => {
                     />
                 )}
                 <ScrollAnchor />
-            </View>
+            </MotiView>
 
         </View>
     );

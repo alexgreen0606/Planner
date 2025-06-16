@@ -1,9 +1,11 @@
-import { calendarChipsByDate, calendarPlannerByDate } from '@/atoms/calendarEvents';
 import { textfieldItemAtom } from '@/atoms/textfieldData';
-import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
-import { PLANNER_STORAGE_ID } from '@/lib/constants/storage';
+import { useCalendarData } from '@/hooks/useCalendarData';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
+import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
+import { PLANNER_STORAGE_ID } from '@/lib/constants/storage';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { deleteAllRecurringEvents, resetRecurringEvents, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
@@ -18,8 +20,7 @@ import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, gener
 import GenericIcon from '../GenericIcon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { MotiView } from 'moti';
 
 enum EditAction {
     EDIT_TITLE = 'EDIT_TITLE',
@@ -41,8 +42,8 @@ const PlannerCard = ({
     const pathname = usePathname();
     const router = useRouter();
 
-    const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
-    const [calendarChips] = useAtom(calendarChipsByDate(datestamp));
+    const { calendarEvents, calendarChips } = useCalendarData(datestamp);
+
     const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
 
     const [collapsed, setCollapsed] = useState(true);
@@ -52,9 +53,6 @@ const PlannerCard = ({
         pathname.includes('timeModal'),
         [pathname]
     );
-
-    // Need to memoize empty calendar events to prevent unnecessary re-builds of planner
-    const placeholderEmptyCalendarEvents = useMemo(() => [], []);
 
     // ------------- Utility Functions -------------
 
@@ -101,9 +99,9 @@ const PlannerCard = ({
         }
     }
 
-    function getItemsFromStorageObject(planner: TPlanner) {
+    const getItemsFromStorageObject = useCallback((planner: TPlanner) => {
         return buildPlannerEvents(datestamp, planner, calendarEvents);
-    }
+    }, [calendarEvents]);
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
         await deleteEventsReloadData(planEvents);
@@ -118,8 +116,7 @@ const PlannerCard = ({
             createItem: saveEventReloadData,
             updateItem: saveEventReloadData,
             deleteItems: handleDeleteEvents
-        },
-        reloadTriggers: calendarEvents.length > 0 ? [calendarEvents] : placeholderEmptyCalendarEvents
+        }
     });
 
     const planner = SortedEvents.storageObject;
@@ -144,7 +141,7 @@ const PlannerCard = ({
                 <DayBanner
                     planner={planner}
                     forecast={forecast}
-                    eventChipSets={calendarChips}
+                    eventChipSets={calendarChips ?? []}
                     collapsed={collapsed}
                     toggleCollapsed={toggleCollapsed}
                     isEditingTitle={isEditingTitle}
@@ -220,7 +217,7 @@ const PlannerCard = ({
             collapsed={collapsed}
             contentHeight={
                 ((SortedEvents.items.length + 1) * LIST_ITEM_HEIGHT) +
-                (calendarChips.length * LIST_ITEM_HEIGHT) +
+                (calendarChips?.length * LIST_ITEM_HEIGHT) +
                 LIST_ITEM_HEIGHT
             }
         >

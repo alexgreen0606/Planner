@@ -91,6 +91,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace
+                isLoading={SortedEvents.isLoading}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}

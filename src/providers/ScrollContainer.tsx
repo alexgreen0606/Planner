@@ -1,7 +1,7 @@
 import GenericIcon from '@/components/GenericIcon';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/lib/constants/layout';
-import { NAVBAR_OVERFLOW_FADE_THRESHOLD, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/lib/constants/layout';
+import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BlurView } from 'expo-blur';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';

@@ -1,4 +1,4 @@
-import RecurringPlanner from '@/components/recurringPlanner/RecurringPlanner';
+import RecurringPlanner from '@/components/recurringPlanner';
 import ButtonText from '@/components/text/ButtonText';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
