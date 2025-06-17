@@ -210,7 +210,8 @@ export async function getCalendarAccess(): Promise<boolean> { // TODO: handle no
  * @returns - a planner event representing the calendar event
  */
 export async function getCalendarEventById(eventId: string, datestamp: string): Promise<IPlannerEvent | null> {
-    await getCalendarAccess();
+    const hasAccess = await getCalendarAccess();
+    if (!hasAccess) return null;
 
     const calendarEvent = await RNCalendarEvents.findEventById(eventId);
     if (!calendarEvent) return null;
@@ -221,24 +222,41 @@ export async function getCalendarEventById(eventId: string, datestamp: string): 
 // ------------- Jotai Store Utilities -------------
 
 /**
+ * ✅ Merges new calendar data with current calendar data and sets it in the Jotai store.
+ * New date data will take precedence and older date data that is not in the new
+ * data will persist.
+ * 
+ * @param newCalendarData - the new calendar data to save
+ */
+async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
+    const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
+    jotaiStore.set(calendarEventDataAtom, {
+        chipsMap: {
+            ...currentCalendarData.chipsMap,
+            ...newCalendarData.chipsMap
+        },
+        plannersMap: {
+            ...currentCalendarData.plannersMap,
+            ...newCalendarData.plannersMap
+        }
+    });
+}
+
+/**
  * ✅ Loads in all calendar data for the given range of dates.
  * The data will be stored directly into the Jotai store.
  * 
  * @param range - range of dates to parse the calendar with
  */
 export async function loadCalendarData(datestamps: string[]) {
-    console.log(datestamps, 'checking for range')
-    const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
 
     const hasCalendarAccess = await getCalendarAccess();
 
     if (!hasCalendarAccess) {
-        jotaiStore.set(calendarEventDataAtom, newCalendarData);
+        mergeCalendarDataAndSave(newCalendarData);
         return;
     }
-
-    console.log(hasCalendarAccess, 'has access')
 
     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
     const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
@@ -267,14 +285,5 @@ export async function loadCalendarData(datestamps: string[]) {
         newCalendarData.chipsMap[datestamp] = Object.values(calendarChipGroups);
     });
 
-    jotaiStore.set(calendarEventDataAtom, {
-        chipsMap: {
-            ...currentCalendarData.chipsMap,
-            ...newCalendarData.chipsMap
-        },
-        plannersMap: {
-            ...currentCalendarData.plannersMap,
-            ...newCalendarData.plannersMap
-        }
-    });
+    mergeCalendarDataAndSave(newCalendarData);
 }

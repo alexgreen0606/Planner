@@ -13,6 +13,8 @@ import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { TTimeConfig, IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { jotaiStore } from 'app/_layout';
+import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 
 // ------------- Utilities -------------
 
@@ -202,11 +204,13 @@ export function sanitizePlanner(
  * for the affected dates.
  * 
  * @param updatedPlanEvent - the planner event to save
- * @param newEventHandler = handler to run side effects with the saved planner event
+ * @param newEventHandler - handler to run side effects with the saved planner event
+ * @param isToday - signifies if the user called this function from the "Today Planner"
  * @returns - the updated event in storage if it still exists, else undefined.
  */
 export async function saveEventReloadData(
     updatedPlanEvent: IPlannerEvent,
+    isToday: boolean = false,
     newEventHandler?: (event: IPlannerEvent | null) => void
 ): Promise<IPlannerEvent | null> {
     const oldPlanner = getPlannerFromStorage(updatedPlanEvent.listId);
@@ -229,24 +233,36 @@ export async function saveEventReloadData(
         // The event used to be a calendar event
         oldEventWasCalendarEvent
     ) {
-        const oldEventStart = oldEvent?.timeConfig?.startTime;
-        const newEventStart = savedEvent?.timeConfig?.startTime;
+        const plannerDatestamps = jotaiStore.get(visibleDatestampsAtom);
+        const visibleDatestamps = isToday ? [getTodayDatestamp()] : plannerDatestamps;
 
-        const oldEventEnd = oldEvent?.timeConfig?.endTime;
-        const newEventEnd = savedEvent?.timeConfig?.endTime;
+        // TODO: is it more worth it to check affected dates, or just reload the current visible planners?
 
-        const earlierStart = [oldEventStart, newEventStart]
-            .filter(Boolean)
-            .sort()[0] ?? null;
+        // const oldEventStart = oldEvent?.timeConfig?.startTime;
+        // const newEventStart = savedEvent?.timeConfig?.startTime;
 
-        const laterEnd = [oldEventEnd, newEventEnd]
-            .filter(Boolean)
-            .sort()
-            .at(-1) ?? null;
+        // const oldEventEnd = oldEvent?.timeConfig?.endTime;
+        // const newEventEnd = savedEvent?.timeConfig?.endTime;
 
-        const affectedDatesRange = generateDatestampRange(earlierStart!, laterEnd!);
+        // const earlierStart = [oldEventStart, newEventStart]
+        //     .filter(Boolean)
+        //     .sort()[0] ?? null;
 
-        await loadCalendarData(affectedDatesRange); // TODO: test this loads the right dates
+        // const laterEnd = [oldEventEnd, newEventEnd]
+        //     .filter(Boolean)
+        //     .sort()
+        //     .at(-1) ?? null;
+
+        // if (
+        //     earlierStart &&
+        //     laterEnd &&
+        //     visibleDatestamps.some(
+        //         (date) => date >= earlierStart && date <= laterEnd
+        //     )
+        // ) {
+        // The modified event affected a visible planner. Reload the calendar data.
+        await loadCalendarData(visibleDatestamps);
+        // }
     }
 
     return savedEvent;
@@ -257,10 +273,18 @@ export async function saveEventReloadData(
  * the calendar data will be reloaded.
  * 
  * @param planEvents - the planner events to delete
+ * @param isToday - signifies if the user called this function from the "Today Planner"
  */
-export async function deleteEventsReloadData(planEvents: IPlannerEvent[]) {
+export async function deleteEventsReloadData(
+    planEvents: IPlannerEvent[],
+    isToday: boolean = false
+) {
     await deleteEvents(planEvents);
-    if (planEvents.some(item => item.calendarId)) await loadCalendarData();
+    if (planEvents.some(item => item.calendarId)) {
+        const plannerDatestamps = jotaiStore.get(visibleDatestampsAtom);
+        const visibleDatestamps = isToday ? [getTodayDatestamp()] : plannerDatestamps;
+        await loadCalendarData(visibleDatestamps);
+    }
 }
 
 /**

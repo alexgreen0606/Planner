@@ -70,7 +70,7 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
 }
 
 /**
- * ✅ Creates or updates a planner event.
+ * Creates or updates a planner event.
  * Calendar events will be synced. 
  * Modified recurring events will be hidden and cloned.
  * Unscheduled events will be removed from the calendar.
@@ -83,6 +83,7 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
     const newPlanner = getPlannerFromStorage(event.listId);
     let newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
     const oldEvent = newPlanner.events.find(existingEvent => existingEvent.id === event.id);
+    let hasCalendarAccess = false;
 
     const newCalendarId = newEvent.calendarId;
     const oldCalendarId = oldEvent?.calendarId;
@@ -117,35 +118,51 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
         replaceId = newEvent.id;
     }
 
-    // Phase 2: Handle calendar events.
-    if (newCalendarId) {
-        // Update the device calendar with the new data.
-        await getCalendarAccess();
-        const calendarEventId = await RNCalendarEvents.saveEvent(
-            newEvent.value,
-            {
-                startDate: newEvent.timeConfig!.startTime,
-                endDate: newEvent.timeConfig!.endTime,
-                allDay: newEvent.timeConfig!.allDay,
-                id: newEvent.calendarId === 'NEW' ? undefined : newEvent.calendarId
-            }
-        );
-
-        // Sync the planner event ID with the calendar event ID.
-        newEvent.calendarId = calendarEventId;
-        newEvent.id = calendarEventId;
-
-        if (event.timeConfig?.allDay) {
-            // Remove this event from the planner.
-            newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
-            savePlannerToStorage(newEvent.listId, newPlanner);
-            return null;
-        }
-    } else if (oldCalendarId) {
-        // Delete unscheduled event from the calendar. 
-        await getCalendarAccess();
-        await RNCalendarEvents.removeEvent(oldCalendarId);
+    if (newCalendarId || oldCalendarId) {
+        hasCalendarAccess = await getCalendarAccess();
     }
+
+    // Phase 2: Handle calendar events.
+    if (hasCalendarAccess) {
+        if (newCalendarId) {
+            // Update the device calendar with the new data.
+
+            if (hasCalendarAccess) {
+                const calendarEventId = await RNCalendarEvents.saveEvent(
+                    newEvent.value,
+                    {
+                        startDate: newEvent.timeConfig!.startTime,
+                        endDate: newEvent.timeConfig!.endTime,
+                        allDay: newEvent.timeConfig!.allDay,
+                        id: newEvent.calendarId === 'NEW' ? undefined : newEvent.calendarId
+                    }
+                );
+
+                // Sync the planner event ID with the calendar event ID.
+                newEvent.calendarId = calendarEventId;
+                newEvent.id = calendarEventId;
+
+                if (event.timeConfig?.allDay) {
+                    // Remove this event from the planner.
+                    newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
+                    savePlannerToStorage(newEvent.listId, newPlanner);
+                    return null;
+                }
+            }
+
+        } else if (oldCalendarId) {
+            // Delete unscheduled event from the calendar.
+            await RNCalendarEvents.removeEvent(oldCalendarId);
+        }
+    } else {
+        // Ensure the event is not marked as a calendar event if the user does
+        // not have access to the device calendar.
+        delete newEvent.calendarId;
+
+
+        // TODO: clean up and test this stuff
+    }
+
 
     newPlanner.events = sanitizePlanner(newPlanner.events, newEvent, replaceId);
     savePlannerToStorage(newEvent.listId, newPlanner);
@@ -153,7 +170,7 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
 }
 
 /**
- * ✅ Deletes a list of planner events.
+ * Deletes a list of planner events.
  * All affected planners will be updated.
  * If an event is a recurring event or a calendar event from today, it will be hidden.
  * Otherwise the events will be permanently deleted.
@@ -163,6 +180,7 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
 export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
     const eventsByList: Record<string, IPlannerEvent[]> = {};
     const todayDatestamp = getTodayDatestamp();
+    let hasCalendarAccess = false;
 
     // Phase 1: Group events by date and handle calendar removals
     for (const eventToDelete of eventsToDelete) {
@@ -176,8 +194,13 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
             eventToDelete.calendarId &&
             eventToDelete.listId !== todayDatestamp
         ) {
-            await getCalendarAccess();
-            await RNCalendarEvents.removeEvent(eventToDelete.calendarId);
+            if (!hasCalendarAccess) {
+                hasCalendarAccess = await getCalendarAccess();
+            }
+            if (hasCalendarAccess) {
+                // TODO: clean this up
+                await RNCalendarEvents.removeEvent(eventToDelete.calendarId);
+            }
         }
     }
 

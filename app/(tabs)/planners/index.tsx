@@ -13,11 +13,12 @@ import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateU
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { usePathname, useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { MotiView } from 'moti';
+import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -28,6 +29,7 @@ const Planners = () => {
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
+    const visibleDatestamps = useAtomValue(visibleDatestampsAtom);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-06-09": {
@@ -95,15 +97,6 @@ const Planners = () => {
         }
     });
 
-    const plannerDatestamps = useMemo(() => {
-        if (plannerSetKey === 'Next 7 Days') return getNextEightDayDatestamps().slice(1, 8);
-
-        const plannerSet = getPlannerSet(plannerSetKey);
-        if (!plannerSet) return [];
-
-        return generateDatestampRange(plannerSet.startDate, plannerSet.endDate)
-    }, [plannerSetKey, pathname]);
-
     const plannerSetOptions = useMemo(() =>
         [defaultPlannerSet, ...allPlannerSetTitles].map((title) => ({
             id: title,
@@ -114,7 +107,7 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    const { isLoading } = useLoadCalendarData(plannerDatestamps, pathname);
+    const isLoading = useLoadCalendarData(pathname);
 
     useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
@@ -169,7 +162,7 @@ const Planners = () => {
                     duration: 600,
                 }}
             >
-                {plannerDatestamps.map((datestamp) =>
+                {visibleDatestamps.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
                         datestamp={datestamp}

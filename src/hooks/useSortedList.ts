@@ -59,7 +59,6 @@ const useSortedList = <T extends IListItem, S>({
     // ------------- BUILD Logic -------------
 
     const buildList = useCallback(async () => {
-        console.log('BUILDING')
         try {
             const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
             setItems(fetchedItems ?? storageObject as T[] ?? []);

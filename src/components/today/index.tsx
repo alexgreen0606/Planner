@@ -11,19 +11,20 @@ import { usePathname, useRouter } from 'expo-router';
 import React, { useCallback, useMemo } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
+import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
 
 const TodayPlanner = () => {
     const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
-    const datestamp = useMemo(() => getTodayDatestamp(), []);
+    const todayDatestamp = useTodayDatestamp();
     const pathname = usePathname();
     const router = useRouter();
 
-    const { calendarEvents } = useCalendarData(datestamp);
+    const { calendarEvents } = useCalendarData(todayDatestamp);
 
     const isTimeModalOpen = pathname.includes('timeModal');
 
     function handleOpenTimeModal(item: IPlannerEvent) {
-        openTimeModal(datestamp, item, router);
+        openTimeModal(todayDatestamp, item, router);
     }
 
     async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
@@ -31,31 +32,31 @@ const TodayPlanner = () => {
     }
 
     const getItemsFromStorageObject = useCallback(async (planner: TPlanner) => {
-        return buildPlannerEvents(datestamp, planner, calendarEvents);
+        return buildPlannerEvents(todayDatestamp, planner, calendarEvents);
     }, [calendarEvents]);
 
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: PLANNER_STORAGE_ID,
-        storageKey: datestamp,
+        storageKey: todayDatestamp,
         getItemsFromStorageObject,
         storageConfig: {
-            createItem: saveEventReloadData,
-            updateItem: saveEventReloadData,
+            createItem: (event) => saveEventReloadData(event, true),
+            updateItem: (event) => saveEventReloadData(event, true),
             deleteItems: handleDeleteEvents
         },
-        initializedStorageObject: generatePlanner(datestamp)
+        initializedStorageObject: generatePlanner(todayDatestamp)
     });
 
     const recurringStorage = useMMKV({ id: RECURRING_EVENT_STORAGE_ID });
     useMMKVListener((key) => {
-        if (key === datestampToDayOfWeek(datestamp)) {
+        if (key === datestampToDayOfWeek(todayDatestamp)) {
             SortedEvents.refetchItems();
         }
     }, recurringStorage);
 
     return (
         <SortableList<IPlannerEvent>
-            listId={datestamp}
+            listId={todayDatestamp}
             items={SortedEvents.items}
             fillSpace
             hideKeyboard={isTimeModalOpen}
@@ -64,7 +65,7 @@ const TodayPlanner = () => {
             onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
             onContentClick={SortedEvents.toggleItemEdit}
             getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
-            handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
+            handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, todayDatestamp)}
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
             getToolbarProps={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}

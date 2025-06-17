@@ -8,9 +8,11 @@ import { ICountdown } from "@/lib/types/listItems/ICountdown";
 
 async function getCountdownCalendarDetails(): Promise<TCalendarDetails> {
     await getCalendarAccess();
+
+    // TODO: handle no calendar access (display message to user)
     const calendars = await ReactNativeCalendarEvents.findCalendars();
     const countdownCalendar = calendars.find(calendar => calendar.title === 'Countdowns');
-    let countdownCalendarId = countdownCalendar?.id;;
+    let countdownCalendarId = countdownCalendar?.id;
     if (!countdownCalendarId) {
         const defaultSource = calendars.find(cal => cal.isPrimary)?.source
             || calendars.find(cal => cal.title.includes('iCloud'))?.source

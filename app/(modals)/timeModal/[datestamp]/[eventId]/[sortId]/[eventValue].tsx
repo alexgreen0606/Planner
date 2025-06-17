@@ -9,7 +9,7 @@ import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { getPlannerFromStorage } from "@/storage/plannerStorage";
 import { getCalendarEventById } from "@/utils/calendarUtils";
-import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
+import { getNowISORoundDown5Minutes, getTodayDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { deleteEventsReloadData, saveEventReloadData } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
@@ -19,6 +19,13 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
+
+type ModalParams = {
+    eventId: string, // NULL if this is a new event
+    eventValue: string, // More up-to-date than from storage
+    datestamp: string, // planner key where the modal open occured
+    sortId: string,
+};
 
 type FormData = {
     title: string;
@@ -32,12 +39,7 @@ type FormData = {
 
 const TimeModal = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
-    const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<{
-        eventId: string, // NULL if this is a new event
-        eventValue: string, // More up-to-date than from storage
-        datestamp: string,
-        sortId: string
-    }>();
+    const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<ModalParams>();
     const router = useRouter();
 
     const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
@@ -50,7 +52,7 @@ const TimeModal = () => {
             if (!calEvent) return;
 
             setPlanEvent({
-                ...calEvent, 
+                ...calEvent,
                 calendarId: calEvent.id,
                 status: EItemStatus.EDIT
             });
@@ -196,7 +198,7 @@ const TimeModal = () => {
             updatedItem.timeConfig!.endTime = startOfNextDay!;
         }
 
-        await saveEventReloadData(updatedItem, handleSavedEvent);
+        await saveEventReloadData(updatedItem, datestamp === getTodayDatestamp(), handleSavedEvent);
     }
 
     async function handleUnschedule() {
@@ -205,7 +207,7 @@ const TimeModal = () => {
         const updatedItem = { ...planEvent, listId: datestamp };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
-        await saveEventReloadData(updatedItem);
+        await saveEventReloadData(updatedItem, datestamp === getTodayDatestamp());
         // TODO: leaves behind duplicate
 
         router.back();
