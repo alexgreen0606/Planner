@@ -1,4 +1,4 @@
-import { GenericIconProps } from "@/components/GenericIcon";
+import { GenericIconProps } from "@/components/icon";
 import { IPlannerEvent } from "../listItems/IPlannerEvent";
 
 export type TEventChip = {

@@ -10,7 +10,7 @@ import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
-import { IconType } from '../GenericIcon';
+import { IconType } from '../icon';
 import SortableList from '../sortedList';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';

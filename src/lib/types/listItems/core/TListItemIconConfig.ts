@@ -1,4 +1,4 @@
-import { GenericIconProps } from "@/components/GenericIcon";
+import { GenericIconProps } from "@/components/icon";
 import { IListItem } from "@/types/listItems/core/TListItem";
 
 export type TListItemIconConfig<T extends IListItem> = {

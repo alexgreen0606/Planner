@@ -6,7 +6,7 @@ const LoadingSpinner = () => {
         className='w-full h-full justify-center items-center'
         style={{backgroundColor: PlatformColor('systemBackground')}}
         >
-            <Text>
+            <Text style={{color: PlatformColor('label')}}>
                 Loading
             </Text>
         </View>

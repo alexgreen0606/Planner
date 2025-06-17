@@ -1,7 +1,5 @@
 Info.plist
 
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>Use to gather weather info.</string>
 <key>NSContactsUsageDescription</key>
 <string>This app requires access to contacts to send birthday messages</string>
 <key>NSLocationWhenInUseUsageDescription</key>

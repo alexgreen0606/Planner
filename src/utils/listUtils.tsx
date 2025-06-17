@@ -1,4 +1,4 @@
-import { IconType } from "@/components/GenericIcon";
+import { IconType } from "@/components/icon";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { uuid } from "expo-modules-core";

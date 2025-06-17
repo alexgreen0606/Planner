@@ -3,7 +3,7 @@ import { PlatformColor, StyleSheet, TouchableWithoutFeedback, View, ViewStyle } 
 import { Text } from 'react-native-paper';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import CustomText, { TextType } from './CustomText';
-import GenericIcon, { GenericIconProps } from '../GenericIcon';
+import GenericIcon, { GenericIconProps } from '../icon';
 
 const AnimatedText = Animated.createAnimatedComponent(View);
 

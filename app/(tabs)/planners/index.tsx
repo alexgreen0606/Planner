@@ -1,8 +1,8 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
-import GenericIcon from '@/components/GenericIcon';
+import GenericIcon from '@/components/icon';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import PlannerCard from '@/components/plannerCard';
-import ScrollAnchor from '@/components/ScrollAnchor';
+import ScrollAnchor from '@/components/sortedList/ScrollAnchor';
 import ButtonText from '@/components/text/ButtonText';
 import { useLoadCalendarData } from '@/hooks/useLoadCalendarData';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
@@ -145,12 +145,14 @@ const Planners = () => {
                     {plannerSetKey !== 'Next 7 Days' && (
                         <GenericIcon
                             type='edit'
+                            size='l'
                             platformColor='systemBlue'
                             onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${plannerSetKey}`)}
                         />
                     )}
                     <GenericIcon
                         type='add'
+                        size='l'
                         platformColor='systemBlue'
                         onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${NULL}`)}
                     />

@@ -1,4 +1,4 @@
-import GenericIcon, { GenericIconProps } from '@/components/GenericIcon';
+import GenericIcon, { GenericIconProps } from '@/components/icon';
 import React from 'react';
 import { Pressable, View, ViewStyle } from 'react-native';
 import { PressableProps } from 'react-native-gesture-handler';

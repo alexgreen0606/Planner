@@ -5,7 +5,7 @@ import { datestampToDayOfWeek, datestampToMonthDate, getNextEightDayDatestamps, 
 import { WeatherForecast } from '@/utils/weatherUtils';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import EventChipSets from '../EventChipSet';
+import EventChipSets from '../eventChip/EventChipSet';
 import { TEventChip } from '@/lib/types/planner/TEventChip';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 

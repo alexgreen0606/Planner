@@ -1,23 +1,27 @@
 import { Tabs } from 'expo-router';
-import GenericIcon from '@/components/GenericIcon';
+import GenericIcon from '@/components/icon';
+import TodayIcon from '@/components/icon/TodayIcon';
 import { BOTTOM_NAVIGATION_HEIGHT, spacing } from '@/lib/constants/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-    const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
+    const {bottom: BOTTOM_SPACER} = useSafeAreaInsets();
     return (
         <Tabs
             screenOptions={{
                 tabBarStyle: {
-                    height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER - spacing.medium,
                     backgroundColor: 'transparent',
                     borderTopWidth: 0,
                     position: 'absolute',
+                    height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER - 10
                 },
                 headerShown: false,
                 tabBarActiveTintColor: 'systemBlue',
                 tabBarInactiveTintColor: 'secondaryLabel',
                 tabBarLabel: () => null
+            }}
+            safeAreaInsets={{
+                bottom: 0
             }}
         >
             <Tabs.Screen
@@ -37,12 +41,7 @@ export default function TabLayout() {
                 name="index"
                 options={{
                     tabBarIcon: ({ color }) => (
-                        <GenericIcon
-                            type="coffee"
-                            size="xl"
-                            hideRipple
-                            platformColor={color}
-                        />
+                        <TodayIcon platformColor={color} />
                     ),
                 }}
             />

@@ -16,7 +16,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.Assistant",
-      "userInterfaceStyle": "automatic"
+      "userInterfaceStyle": "automatic",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app requires location access",
+        "NSContactsUsageDescription": "This app requires access to contacts to send birthday messages",
+        "LSApplicationQueriesSchemes": ["sms"]
+      }
     },
     "android": {
       "adaptiveIcon": {

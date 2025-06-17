@@ -1,4 +1,4 @@
-import GenericIcon, { GenericIconProps } from '@/components/GenericIcon';
+import GenericIcon, { GenericIconProps } from '@/components/icon';
 import { TOOLBAR_HEIGHT } from '@/lib/constants/layout';
 import { IListItem } from '@/types/listItems/core/TListItem';
 import { Dimensions, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';

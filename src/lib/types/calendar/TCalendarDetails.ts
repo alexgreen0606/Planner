@@ -1,4 +1,4 @@
-import { IconType } from "@/components/GenericIcon";
+import { IconType } from "@/components/icon";
 
 export type TCalendarDetails = {
     id: string;

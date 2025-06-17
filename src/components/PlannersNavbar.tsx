@@ -1,13 +1,10 @@
-import { LINEAR_ANIMATION_CONFIG } from '@/lib/constants/animations';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
-import React from 'react';
+import { MotiView } from 'moti';
+import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import ButtonText from './text/ButtonText';
-
-const TabHighlight = Animated.createAnimatedComponent(View);
 
 const BAR_HEIGHT = 34;
 const BAR_WIDTH = 320;
@@ -31,19 +28,17 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const indicatorLeft = useSharedValue(HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
-
     const isCountdowns = pathname.includes('countdowns');
 
-    function handleTabChange(tab: any) {
-        indicatorLeft.value = withTiming(tab.left, LINEAR_ANIMATION_CONFIG);
-        router.push(tab.pathname)
-    }
+    // Determine the current tab's left position based on pathname
+    const currentTabLeft = useMemo(() => {
+        const currentTab = tabs.find(tab => tab.pathname === pathname);
+        return currentTab?.left ?? (HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
+    }, [pathname]);
 
-    const tabHighlightStyle = useAnimatedStyle(() => ({
-        left: indicatorLeft.value,
-        width: HIGHLIGHT_WIDTH
-    }));
+    function handleTabChange(tab: any) {
+        router.push(tab.pathname);
+    }
 
     return (
         <View
@@ -78,16 +73,21 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                             />
 
                             {/* Current Tab Highlight */}
-                            <TabHighlight
+                            <MotiView
                                 className='absolute'
-                                style={[
-                                    tabHighlightStyle,
-                                    {
-                                        height: HIGHLIGHT_HEIGHT,
-                                        borderRadius: HIGHLIGHT_HEIGHT / 2,
-                                        backgroundColor: PlatformColor('systemGray4')
-                                    }
-                                ]}
+                                animate={{
+                                    left: currentTabLeft,
+                                }}
+                                transition={{
+                                    type: 'timing',
+                                    duration: 300
+                                }}
+                                style={{
+                                    width: HIGHLIGHT_WIDTH,
+                                    height: HIGHLIGHT_HEIGHT,
+                                    borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                    backgroundColor: PlatformColor('systemGray4')
+                                }}
                             />
 
                             {/* Tab Options */}
@@ -101,7 +101,6 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                                         textType='label'
                                         onClick={() => handleTabChange(tab)}
                                         platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
-
                                     >
                                         {tab.label}
                                     </ButtonText>

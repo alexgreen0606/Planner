@@ -10,7 +10,7 @@ import { Pressable, useWindowDimensions, View } from 'react-native';
 import { Portal } from 'react-native-paper';
 import Animated, { cancelAnimation, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ScrollAnchor from '../ScrollAnchor';
+import ScrollAnchor from './ScrollAnchor';
 import DraggableRow from './DraggableRow';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import Toolbar, { ToolbarProps } from './ListItemToolbar';
@@ -78,8 +78,8 @@ const SortableList = <T extends IListItem>({
 
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [
-        textfieldItem?.id, 
-        textfieldItem?.sortId, 
+        textfieldItem?.id,
+        textfieldItem?.sortId,
         items
     ]);
 
@@ -150,76 +150,79 @@ const SortableList = <T extends IListItem>({
     }));
 
     return (
-        <MotiView animate={{ opacity: isLoading ? 0 : 1 }}>
-        <View style={{ flex: fillSpace ? 1 : 0 }}>
+        <MotiView
+            animate={{ opacity: isLoading ? 0 : 1 }}
+            style={{ flex: fillSpace ? 1 : 0 }}
+        >
+            <View style={{ flex: fillSpace ? 1 : 0 }}>
 
-            {/* List */}
-            <View
-                className='w-full'
-                style={{
-                    height: list.length * LIST_ITEM_HEIGHT
-                }}
-            >
-                {list.map((item, i) =>
-                    <DraggableRow<T>
-                        key={`${item.id}-row`}
-                        item={item}
-                        itemIndex={i}
-                        disableDrag={disableDrag}
-                        upperAutoScrollBound={upperAutoScrollBound}
-                        lowerAutoScrollBound={lowerAutoScrollBound}
-                        hideKeyboard={Boolean(hideKeyboard)}
-                        isListDragging={isListDragging}
-                        dragControls={{
-                            top: dragTop,
-                            index: dragIndex,
-                            initialIndex: dragInitialIndex,
-                            initialTop: dragInitialTop,
-                            isAutoScrolling: isAutoScrolling,
-                            topMax: dragTopMax,
-                            handleDragEnd,
-                            handleDragStart
-                        }}
-                        saveTextfieldAndCreateNew={handleSaveTextfieldAndCreateNew}
-                        {...rest}
-                        items={list}
+                {/* List */}
+                <View
+                    className='w-full'
+                    style={{
+                        height: list.length * LIST_ITEM_HEIGHT
+                    }}
+                >
+                    {list.map((item, i) =>
+                        <DraggableRow<T>
+                            key={`${item.id}-row`}
+                            item={item}
+                            itemIndex={i}
+                            disableDrag={disableDrag}
+                            upperAutoScrollBound={upperAutoScrollBound}
+                            lowerAutoScrollBound={lowerAutoScrollBound}
+                            hideKeyboard={Boolean(hideKeyboard)}
+                            isListDragging={isListDragging}
+                            dragControls={{
+                                top: dragTop,
+                                index: dragIndex,
+                                initialIndex: dragInitialIndex,
+                                initialTop: dragInitialTop,
+                                isAutoScrolling: isAutoScrolling,
+                                topMax: dragTopMax,
+                                handleDragEnd,
+                                handleDragStart
+                            }}
+                            saveTextfieldAndCreateNew={handleSaveTextfieldAndCreateNew}
+                            {...rest}
+                            items={list}
+                        />
+                    )}
+                </View>
+
+                {list.length > 0 && (
+                    <Pressable onPress={handleEmptySpaceClick}>
+                        <ThinLine />
+                    </Pressable>
+                )}
+
+                {/* Track Position of List End */}
+                {fillSpace && (
+                    <ScrollAnchor />
+                )}
+
+                {/* Empty Label or Click Area */}
+                {emptyLabelConfig && list.length === 0 ? (
+                    <EmptyLabel
+                        {...emptyLabelConfig}
+                        onPress={handleEmptySpaceClick}
+                    />
+                ) : !isLoading && (
+                    <Pressable
+                        style={{ flex: 1 }}
+                        onPress={handleEmptySpaceClick}
                     />
                 )}
+
+                {/* Toolbar */}
+                {toolbarProps && !hideKeyboard && textfieldItem?.listId === listId &&
+                    <Portal>
+                        <ToolbarContainer className='absolute left-0' style={toolbarStyle}>
+                            <Toolbar {...toolbarProps} />
+                        </ToolbarContainer>
+                    </Portal>
+                }
             </View>
-
-            {list.length > 0 && (
-                <Pressable onPress={handleEmptySpaceClick}>
-                    <ThinLine />
-                </Pressable>
-            )}
-
-            {/* Track Position of List End */}
-            {fillSpace && (
-                <ScrollAnchor />
-            )}
-
-            {/* Empty Label or Click Area */}
-            {emptyLabelConfig && list.length === 0 ? (
-                <EmptyLabel
-                    {...emptyLabelConfig}
-                    onPress={handleEmptySpaceClick}
-                />
-            ) : !isLoading && (
-                <Pressable
-                    style={{ flex: 1 }}
-                    onPress={handleEmptySpaceClick}
-                />
-            )}
-
-            {/* Toolbar */}
-            {toolbarProps && !hideKeyboard && textfieldItem?.listId === listId &&
-                <Portal>
-                    <ToolbarContainer className='absolute left-0' style={toolbarStyle}>
-                        <Toolbar {...toolbarProps} />
-                    </ToolbarContainer>
-                </Portal>
-            }
-        </View>
         </MotiView>
     );
 };

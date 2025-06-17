@@ -1,4 +1,4 @@
-import GenericIcon from "@/components/GenericIcon";
+import GenericIcon from "@/components/icon";
 import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/layout";
 import { LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";

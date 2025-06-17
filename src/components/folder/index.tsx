@@ -1,4 +1,4 @@
-import { GenericIconProps } from '@/components/GenericIcon';
+import { GenericIconProps } from '@/components/icon';
 import CustomText from '@/components/text/CustomText';
 import { selectableColors } from '@/lib/constants/selectableColors';
 import { CHECKLISTS_STORAGE_ID } from '@/lib/constants/storage';

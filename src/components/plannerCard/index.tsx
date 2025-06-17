@@ -17,10 +17,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
 import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
-import GenericIcon from '../GenericIcon';
+import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
-import { MotiView } from 'moti';
 
 enum EditAction {
     EDIT_TITLE = 'EDIT_TITLE',
@@ -135,11 +134,11 @@ const PlannerCard = ({
         }
     }, [textfieldItem?.listId, isRecurringHidden]);
 
-    return planner &&
+    return (
         <Card
             header={
                 <DayBanner
-                    planner={planner}
+                    planner={planner ?? generatePlanner(datestamp)}
                     forecast={forecast}
                     eventChipSets={calendarChips ?? []}
                     collapsed={collapsed}
@@ -151,7 +150,7 @@ const PlannerCard = ({
             footer={
                 <View className='flex-row justify-end'>
                     <MenuView
-                        title={datestampToDayOfWeek(datestamp) + ' ' + datestampToMonthDate(datestamp)}
+                        title={datestampToDayOfWeek(datestamp) + ', ' + datestampToMonthDate(datestamp)}
                         onPressAction={({ nativeEvent }) => {
                             handleAction(nativeEvent.event as EditAction);
                         }}
@@ -215,11 +214,7 @@ const PlannerCard = ({
                 </View>
             }
             collapsed={collapsed}
-            contentHeight={
-                ((SortedEvents.items.length + 1) * LIST_ITEM_HEIGHT) +
-                (calendarChips?.length * LIST_ITEM_HEIGHT) +
-                LIST_ITEM_HEIGHT
-            }
+            contentHeight={(SortedEvents.items.length + 2) * LIST_ITEM_HEIGHT + 60}
         >
             <SortableList<IPlannerEvent>
                 listId={datestamp}
@@ -241,6 +236,7 @@ const PlannerCard = ({
                 }}
             />
         </Card>
-};
+    )
+}
 
 export default PlannerCard;

@@ -183,15 +183,23 @@ function validateEventChip(event: CalendarEventReadable, datestamp: string): boo
  * @returns - true if access was granted, else false
  */
 export async function getCalendarAccess(): Promise<boolean> { // TODO: handle no access granted
-    const permissions = await RNCalendarEvents.checkPermissions();
-    if (permissions !== 'authorized') {
-        const status = await RNCalendarEvents.requestPermissions();
-        if (status !== 'authorized') {
-            return false;
+    try {
+        await RNCalendarEvents.requestPermissions()
+        const permissions = await RNCalendarEvents.checkPermissions();
+        console.log(permissions, 'current permissions')
+        if (permissions !== 'authorized') {
+            const status = await RNCalendarEvents.requestPermissions();
+            console.log(status, 'status')
+            if (status !== 'authorized') {
+                return false;
+            }
+            return true;
         }
         return true;
+    } catch (error) {
+        console.error(error);
+        return false;
     }
-    return true;
 }
 
 /**
@@ -218,13 +226,19 @@ export async function getCalendarEventById(eventId: string, datestamp: string): 
  * 
  * @param range - range of dates to parse the calendar with
  */
-export async function loadCalendarData(range?: string[]) {
+export async function loadCalendarData(datestamps: string[]) {
+    console.log(datestamps, 'checking for range')
     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
-    const datestamps = range ?? getNextEightDayDatestamps();
-
-    await getCalendarAccess();
-
     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
+
+    const hasCalendarAccess = await getCalendarAccess();
+
+    if (!hasCalendarAccess) {
+        jotaiStore.set(calendarEventDataAtom, newCalendarData);
+        return;
+    }
+
+    console.log(hasCalendarAccess, 'has access')
 
     const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
     const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();

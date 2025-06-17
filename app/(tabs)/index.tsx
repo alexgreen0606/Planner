@@ -1,4 +1,4 @@
-import EventChipSets from '@/components/EventChipSet';
+import EventChipSets from '@/components/eventChip/EventChipSet';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
@@ -27,7 +27,7 @@ const Today = () => {
   // Load of data each time a birthday is contacted
   useMMKVListener((key) => {
     if (key === todayDatestamp) {
-      loadCalendarData();
+      loadCalendarData([todayDatestamp]);
     }
   }, birthdayStorage);
 
