@@ -6,7 +6,7 @@ import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { PLANNER_STORAGE_ID } from '@/lib/constants/storage';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deleteAllRecurringEvents, resetRecurringEvents, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
+import { deleteAllRecurringEvents, resetRecurringEvents, saveEvent, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -16,7 +16,7 @@ import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '../../utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
 import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
@@ -99,6 +99,7 @@ const PlannerCard = ({
     }
 
     const getItemsFromStorageObject = useCallback((planner: TPlanner) => {
+        console.log(calendarEvents, 'calEvents')
         return buildPlannerEvents(datestamp, planner, calendarEvents);
     }, [calendarEvents]);
 
@@ -112,8 +113,8 @@ const PlannerCard = ({
         getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
         storageConfig: {
-            createItem: saveEventReloadData,
-            updateItem: saveEventReloadData,
+            createItem: saveEvent,
+            updateItem: saveEvent,
             deleteItems: handleDeleteEvents
         }
     });

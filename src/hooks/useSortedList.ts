@@ -62,7 +62,7 @@ const useSortedList = <T extends IListItem, S>({
         try {
             const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
             setItems(fetchedItems ?? storageObject as T[] ?? []);
-            setIsLoading(false);
+            if (isLoading) setIsLoading(false);
         } catch (error) {
             console.error(error);
         }

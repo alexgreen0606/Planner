@@ -1,12 +1,14 @@
+import { visibleDatestampsAtom } from "@/atoms/visibleDatestamps";
 import { PLANNER_STORAGE_ID } from "@/lib/constants/storage";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { getCalendarAccess } from "@/utils/calendarUtils";
+import { getPrimaryCalendarId, hasCalendarAccess, loadCalendarData } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp } from "@/utils/dateUtils";
 import { cloneItem, isItemTextfield } from "@/utils/listUtils";
 import { generatePlanner, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
-import RNCalendarEvents from "react-native-calendar-events";
+import { jotaiStore } from "app/_layout";
+import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
 
 const storage = new MMKV({ id: PLANNER_STORAGE_ID });
@@ -83,7 +85,6 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
     const newPlanner = getPlannerFromStorage(event.listId);
     let newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
     const oldEvent = newPlanner.events.find(existingEvent => existingEvent.id === event.id);
-    let hasCalendarAccess = false;
 
     const newCalendarId = newEvent.calendarId;
     const oldCalendarId = oldEvent?.calendarId;
@@ -118,51 +119,54 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
         replaceId = newEvent.id;
     }
 
-    if (newCalendarId || oldCalendarId) {
-        hasCalendarAccess = await getCalendarAccess();
-    }
-
     // Phase 2: Handle calendar events.
-    if (hasCalendarAccess) {
+    if (hasCalendarAccess()) {
         if (newCalendarId) {
-            // Update the device calendar with the new data.
 
-            if (hasCalendarAccess) {
-                const calendarEventId = await RNCalendarEvents.saveEvent(
-                    newEvent.value,
+            // Update the device calendar with the new data.
+            if (newEvent.calendarId === 'NEW') {
+                const primaryCalendarId = await getPrimaryCalendarId();
+                const calendarEventId = await Calendar.createEventAsync(
+                    primaryCalendarId,
                     {
+                        title: newEvent.value,
                         startDate: newEvent.timeConfig!.startTime,
                         endDate: newEvent.timeConfig!.endTime,
-                        allDay: newEvent.timeConfig!.allDay,
-                        id: newEvent.calendarId === 'NEW' ? undefined : newEvent.calendarId
+                        allDay: newEvent.timeConfig!.allDay
                     }
                 );
 
                 // Sync the planner event ID with the calendar event ID.
                 newEvent.calendarId = calendarEventId;
                 newEvent.id = calendarEventId;
-
-                if (event.timeConfig?.allDay) {
-                    // Remove this event from the planner.
-                    newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== event.id);
-                    savePlannerToStorage(newEvent.listId, newPlanner);
-                    return null;
-                }
+            } else {
+                await Calendar.updateEventAsync(
+                    newCalendarId,
+                    {
+                        title: newEvent.value,
+                        startDate: newEvent.timeConfig!.startTime,
+                        endDate: newEvent.timeConfig!.endTime,
+                        allDay: newEvent.timeConfig!.allDay
+                    }
+                );
             }
+
+            // Reload the calendar data and allow the list rebuild to handle this event.
+            const visibleDatestamps = event.listId === getTodayDatestamp() ? [getTodayDatestamp()] : jotaiStore.get(visibleDatestampsAtom);
+            await loadCalendarData(visibleDatestamps);
+            return newEvent;
 
         } else if (oldCalendarId) {
             // Delete unscheduled event from the calendar.
-            await RNCalendarEvents.removeEvent(oldCalendarId);
+            await Calendar.deleteEventAsync(oldCalendarId);
         }
     } else {
-        // Ensure the event is not marked as a calendar event if the user does
-        // not have access to the device calendar.
-        delete newEvent.calendarId;
+        // Event calendar status must be revoked.
+        // User does not have access to the calendar
+        // delete newEvent.calendarId;
 
-
-        // TODO: clean up and test this stuff
+        // TODO: can I leave this commented out? Can events be marked as cal events still?
     }
-
 
     newPlanner.events = sanitizePlanner(newPlanner.events, newEvent, replaceId);
     savePlannerToStorage(newEvent.listId, newPlanner);
@@ -180,7 +184,6 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
 export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
     const eventsByList: Record<string, IPlannerEvent[]> = {};
     const todayDatestamp = getTodayDatestamp();
-    let hasCalendarAccess = false;
 
     // Phase 1: Group events by date and handle calendar removals
     for (const eventToDelete of eventsToDelete) {
@@ -192,15 +195,10 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
         // Remove calendar events from the device if they are not from today
         if (
             eventToDelete.calendarId &&
-            eventToDelete.listId !== todayDatestamp
+            eventToDelete.listId !== todayDatestamp &&
+            hasCalendarAccess()
         ) {
-            if (!hasCalendarAccess) {
-                hasCalendarAccess = await getCalendarAccess();
-            }
-            if (hasCalendarAccess) {
-                // TODO: clean this up
-                await RNCalendarEvents.removeEvent(eventToDelete.calendarId);
-            }
+            await Calendar.deleteEventAsync(eventToDelete.calendarId);
         }
     }
 

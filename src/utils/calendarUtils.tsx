@@ -1,8 +1,8 @@
-import { calendarEventDataAtom } from "@/atoms/calendarEvents";
+import { calendarEventDataAtom, hasCalendarAccessAtom } from "@/atoms/calendarEvents";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { jotaiStore } from "app/_layout";
-import RNCalendarEvents, { CalendarEventReadable } from "react-native-calendar-events";
+import * as Calendar from 'expo-calendar';
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
@@ -36,12 +36,12 @@ function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
  * @param datestamp - the datestamp the planner event will reside
  * @returns - a new planner event
  */
-function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): IPlannerEvent {
+function generatePlannerEvent(event: Calendar.Event, datestamp: string): IPlannerEvent {
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
 
     const eventStart = new Date(event.startDate);
-    const eventEnd = new Date(event.endDate!);
+    const eventEnd = new Date(event.endDate);
 
     const multiDayEnd =
         // Starts before date
@@ -51,9 +51,9 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
 
     const multiDayStart =
         // Starts on date
-        eventStart >= dateStart && eventStart < dateEnd &&
+        event.startDate >= dateStart && event.startDate < dateEnd &&
         // Ends after date
-        eventEnd >= dateEnd;
+        event.endDate >= dateEnd;
 
     return {
         id: event.id,
@@ -61,8 +61,8 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
         sortId: 1, // temporary sort id (will be overwritten)
         listId: datestamp,
         timeConfig: {
-            startTime: event.startDate,
-            endTime: event.endDate!,
+            startTime: eventStart.toISOString(),
+            endTime: eventEnd.toISOString(),
             allDay: Boolean(event.allDay),
             multiDayEnd,
             multiDayStart
@@ -77,8 +77,7 @@ function generatePlannerEvent(event: CalendarEventReadable, datestamp: string): 
  * @param event - the calendar event to parse
  * @returns - an event chip representing the calendar event
  */
-function generateEventChip(event: CalendarEventReadable): TEventChip {
-    const calendar = event.calendar!;
+function generateEventChip(event: Calendar.Event, calendar: Calendar.Calendar): TEventChip {
 
     const chipProps: TEventChip = {
         label: event.title,
@@ -99,15 +98,15 @@ function generateEventChip(event: CalendarEventReadable): TEventChip {
             calendarId: event.id,
             value: event.title,
             timeConfig: {
-                startTime: event.startDate,
-                endTime: event.endDate!,
-                allDay: !!event.allDay
+                startTime: event.startDate as string,
+                endTime: event.endDate as string,
+                allDay: event.allDay
             },
             color: calendar.color!,
             // Link all chips for the same calendar event together
             id: event.id,
             // Link all chips for the same calendar event to the same planner
-            listId: isoToDatestamp(event.startDate),
+            listId: isoToDatestamp(event.startDate as string),
         };
     }
 
@@ -121,12 +120,14 @@ function generateEventChip(event: CalendarEventReadable): TEventChip {
  * @param datestamp - the date to consider
  * @returns - true if the event should be an event chip, else false
  */
-function validateCalendarEvent(event: CalendarEventReadable, datestamp: string): boolean {
+function validateCalendarEvent(event: Calendar.Event, datestamp: string): boolean {
     if (event.allDay || !event.endDate) return false;
+
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
+
     return (
         eventStart >= dateStart && eventStart < dateEnd // Starts on this date OR
     ) || (
@@ -145,7 +146,7 @@ function validateCalendarEvent(event: CalendarEventReadable, datestamp: string):
  * @param datestamp -  the date to consider
  * @returns - true if the event should be displayed on the given date as a chip, else false
  */
-function validateEventChip(event: CalendarEventReadable, datestamp: string): boolean {
+function validateEventChip(event: Calendar.Event, datestamp: string): boolean {
     if (!event.endDate || !event.startDate) return false;
 
     const dateStart = datestampToMidnightDate(datestamp);
@@ -176,30 +177,13 @@ function validateEventChip(event: CalendarEventReadable, datestamp: string): boo
 
 // ---------- Calendar Interaction Utilities ----------
 
-/**
- * ✅ Checks if the app has been granted access to the device calender.
- * If access is not granted, ask the user for permission.
- * 
- * @returns - true if access was granted, else false
- */
-export async function getCalendarAccess(): Promise<boolean> { // TODO: handle no access granted
-    try {
-        await RNCalendarEvents.requestPermissions()
-        const permissions = await RNCalendarEvents.checkPermissions();
-        console.log(permissions, 'current permissions')
-        if (permissions !== 'authorized') {
-            const status = await RNCalendarEvents.requestPermissions();
-            console.log(status, 'status')
-            if (status !== 'authorized') {
-                return false;
-            }
-            return true;
-        }
-        return true;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
+async function getAllCalendarsMap(): Promise<Record<string, Calendar.Calendar>> {
+    const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const calendarMap = allCalendars.reduce((acc, cal) => {
+        acc[cal.id] = cal;
+        return acc;
+    }, {} as Record<string, Calendar.Calendar>);
+    return calendarMap;
 }
 
 /**
@@ -210,16 +194,25 @@ export async function getCalendarAccess(): Promise<boolean> { // TODO: handle no
  * @returns - a planner event representing the calendar event
  */
 export async function getCalendarEventById(eventId: string, datestamp: string): Promise<IPlannerEvent | null> {
-    const hasAccess = await getCalendarAccess();
-    if (!hasAccess) return null;
+    if (!hasCalendarAccess()) return null;
 
-    const calendarEvent = await RNCalendarEvents.findEventById(eventId);
+    const calendarEvent = await Calendar.getEventAsync(eventId);
     if (!calendarEvent) return null;
 
     return generatePlannerEvent(calendarEvent, datestamp);
 }
 
 // ------------- Jotai Store Utilities -------------
+
+export function hasCalendarAccess(): boolean {
+    const hasAccess = jotaiStore.get(hasCalendarAccessAtom);
+    return Boolean(hasAccess);
+}
+
+export async function getPrimaryCalendarId(): Promise<string> {
+    const primaryCalendar = await Calendar.getDefaultCalendarAsync();
+    return primaryCalendar.id;
+}
 
 /**
  * ✅ Merges new calendar data with current calendar data and sets it in the Jotai store.
@@ -249,19 +242,20 @@ async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
  * @param range - range of dates to parse the calendar with
  */
 export async function loadCalendarData(datestamps: string[]) {
+    console.log(datestamps, 'LOADING')
     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
 
-    const hasCalendarAccess = await getCalendarAccess();
-
-    if (!hasCalendarAccess) {
+    if (!hasCalendarAccess()) {
         mergeCalendarDataAndSave(newCalendarData);
         return;
     }
 
-    const startDate = new Date(`${datestamps[0]}T00:00:00`).toISOString();
-    const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`).toISOString();
+    const allCalendarsMap = await getAllCalendarsMap();
 
-    const calendarEvents = await RNCalendarEvents.fetchAllEvents(startDate, endDate);
+    const allCalendarIds = Object.keys(allCalendarsMap);
+    const startDate = new Date(`${datestamps[0]}T00:00:00`);
+    const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`);
+    const calendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate);
 
     datestamps.forEach((datestamp) => {
         // Use a temporary map to group chips by calendar for this datestamp
@@ -269,11 +263,11 @@ export async function loadCalendarData(datestamps: string[]) {
 
         calendarEvents.forEach((calEvent) => {
             if (validateEventChip(calEvent, datestamp)) {
-                const calendarId = calEvent.calendar?.id || 'unknown';
+                const calendarId = calEvent.calendarId;
                 if (!calendarChipGroups[calendarId]) {
                     calendarChipGroups[calendarId] = [];
                 }
-                calendarChipGroups[calendarId].push(generateEventChip(calEvent));
+                calendarChipGroups[calendarId].push(generateEventChip(calEvent, allCalendarsMap[calendarId]));
             }
 
             if (validateCalendarEvent(calEvent, datestamp)) {

@@ -1,15 +1,15 @@
 import { calendarChipsByDate, calendarPlannerByDate } from "@/atoms/calendarEvents";
 import { useAtom } from "jotai";
-import { useRef } from "react";
+import { useMemo } from "react";
 
 export const useCalendarData = (datestamp: string) => {
     const [calendarChips] = useAtom(calendarChipsByDate(datestamp));
     const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
 
-    const emptyDataRef = useRef([]);
+    const emptyData = useMemo(() => [], []);
 
-    const memoizedCalendarChips = calendarChips || emptyDataRef.current;
-    const memoizedCalendarEvents = calendarEvents || emptyDataRef.current;
+    const memoizedCalendarChips = calendarChips || emptyData;
+    const memoizedCalendarEvents = calendarEvents || emptyData;
 
     return {
         calendarChips: memoizedCalendarChips,

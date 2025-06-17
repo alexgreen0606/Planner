@@ -21,13 +21,19 @@ export const useLoadCalendarData = (pathname: string) => {
 
     const datestamps = pathname === "/" ? todayDatestamps : plannerDatestamps;
 
+    const isLoading = useMemo(
+        () => datestamps.some(datestamp =>
+            plannersMap[datestamp] === undefined
+        ),
+        [plannersMap, datestamps]
+    );
+
     // Track the page linked to this hook. This ensures the calendar data is not
     // reloaded when the page is not focused.
     const anchoredPathname = useRef(pathname);
 
     // Executes the loading of calendar data into the global state for this set of datestamps.
     const handleLoadCalendarData = useCallback(async () => {
-        console.log(datestamps, 'LOADING')
         await loadCalendarData(datestamps);
     }, [datestamps]);
 
@@ -35,16 +41,10 @@ export const useLoadCalendarData = (pathname: string) => {
     useEffect(() => {
         if (currPathname === anchoredPathname.current) {
             registerReloadFunction('calendar-reload-trigger', handleLoadCalendarData, anchoredPathname.current);
+            
             handleLoadCalendarData();
         }
     }, [handleLoadCalendarData]);
-
-    const isLoading = useMemo(
-        () => datestamps.some(datestamp =>
-            plannersMap[datestamp] === undefined
-        ),
-        [plannersMap, datestamps]
-    );
 
     return isLoading;
 };

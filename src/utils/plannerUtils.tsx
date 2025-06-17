@@ -1,20 +1,20 @@
+import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { deleteEvents, getCarryoverEventsAndCleanStorage, getPlannerFromStorage, saveEvent, savePlannerToStorage } from '@/storage/plannerStorage';
+import { IPlannerEvent, TTimeConfig } from '@/lib/types/listItems/IPlannerEvent';
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { deleteEvents, getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringPlannerStorage';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
+import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { loadCalendarData } from './calendarUtils';
-import { datestampToDayOfWeek, generateDatestampRange, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToDayOfWeek, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
-import { TTimeConfig, IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { jotaiStore } from 'app/_layout';
-import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 
 // ------------- Utilities -------------
 
@@ -87,6 +87,8 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
         return null;
     }
 }
+
+// ------------- Planner Builder -------------
 
 /**
  * ✅ Generates an empty planner object for the given datestamp.
@@ -196,76 +198,6 @@ export function sanitizePlanner(
     const updatedList = sanitizeList(planner, event, replaceId);
     event.sortId = generateSortIdByTime(event, updatedList);
     return updatedList.sort((a, b) => a.sortId - b.sortId);
-}
-
-/**
- * ✅ Handles all overhead saving a planner event.
- * If the update affects the calendar, the global calendar data will be reloaded
- * for the affected dates.
- * 
- * @param updatedPlanEvent - the planner event to save
- * @param newEventHandler - handler to run side effects with the saved planner event
- * @param isToday - signifies if the user called this function from the "Today Planner"
- * @returns - the updated event in storage if it still exists, else undefined.
- */
-export async function saveEventReloadData(
-    updatedPlanEvent: IPlannerEvent,
-    isToday: boolean = false,
-    newEventHandler?: (event: IPlannerEvent | null) => void
-): Promise<IPlannerEvent | null> {
-    const oldPlanner = getPlannerFromStorage(updatedPlanEvent.listId);
-    const oldEvent = oldPlanner.events.find(i => i.id === updatedPlanEvent.id);
-    const oldEventWasCalendarEvent = oldEvent?.calendarId
-
-    // Phase 1: Save the event to storage.
-    const savedEvent = await saveEvent(updatedPlanEvent);
-
-    // Phase 2: Handle side effects of the saved event.
-    newEventHandler?.(savedEvent);
-
-    // Phase 3: Reload calendar data if the event directly affects the calendar.
-    oldPlanner.events.find(i => i.id === updatedPlanEvent.id)?.calendarId
-    if (
-        // The event is now a chip
-        !savedEvent ||
-        // The event is now a calendar event
-        savedEvent?.calendarId ||
-        // The event used to be a calendar event
-        oldEventWasCalendarEvent
-    ) {
-        const plannerDatestamps = jotaiStore.get(visibleDatestampsAtom);
-        const visibleDatestamps = isToday ? [getTodayDatestamp()] : plannerDatestamps;
-
-        // TODO: is it more worth it to check affected dates, or just reload the current visible planners?
-
-        // const oldEventStart = oldEvent?.timeConfig?.startTime;
-        // const newEventStart = savedEvent?.timeConfig?.startTime;
-
-        // const oldEventEnd = oldEvent?.timeConfig?.endTime;
-        // const newEventEnd = savedEvent?.timeConfig?.endTime;
-
-        // const earlierStart = [oldEventStart, newEventStart]
-        //     .filter(Boolean)
-        //     .sort()[0] ?? null;
-
-        // const laterEnd = [oldEventEnd, newEventEnd]
-        //     .filter(Boolean)
-        //     .sort()
-        //     .at(-1) ?? null;
-
-        // if (
-        //     earlierStart &&
-        //     laterEnd &&
-        //     visibleDatestamps.some(
-        //         (date) => date >= earlierStart && date <= laterEnd
-        //     )
-        // ) {
-        // The modified event affected a visible planner. Reload the calendar data.
-        await loadCalendarData(visibleDatestamps);
-        // }
-    }
-
-    return savedEvent;
 }
 
 /**

@@ -25,7 +25,7 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
     }, [todayDatestamp]);
 
     return (
-        <View className='relative scale-110'>
+        <View className='relative scale-[1.12]'>
             <GenericIcon
                 type='note'
                 size='xl'

@@ -1,13 +1,11 @@
 import { getDatestampThreeYearsFromToday, getTodayDatestamp } from "@/utils/dateUtils";
-import ReactNativeCalendarEvents from "react-native-calendar-events";
-import { getCalendarAccess } from "./calendarUtils";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { StorageKey } from "@/lib/constants/storage";
 import { TCalendarDetails } from "@/lib/types/calendar/TCalendarDetails";
 import { ICountdown } from "@/lib/types/listItems/ICountdown";
 
 async function getCountdownCalendarDetails(): Promise<TCalendarDetails> {
-    await getCalendarAccess();
+    
 
     // TODO: handle no calendar access (display message to user)
     const calendars = await ReactNativeCalendarEvents.findCalendars();

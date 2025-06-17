@@ -20,7 +20,9 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app requires location access",
         "NSContactsUsageDescription": "This app requires access to contacts to send birthday messages",
-        "LSApplicationQueriesSchemes": ["sms"]
+        "LSApplicationQueriesSchemes": [
+          "sms"
+        ]
       }
     },
     "android": {
@@ -56,7 +58,13 @@
           "contactsPermission": "Allow planner to access your contacts."
         }
       ],
-      "expo-router"
+      "expo-router",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "The app needs to access your calendar."
+        }
+      ]
     ]
   }
 }

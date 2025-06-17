@@ -9,6 +9,7 @@ import { BIRTHDAY_STORAGE_ID } from '@/lib/constants/storage';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { usePathname } from 'expo-router';
+import { MotiView } from 'moti';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
@@ -39,11 +40,20 @@ const Today = () => {
       <ScrollContainerProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
         floatingBanner={calendarChips.length > 0 &&
-          <EventChipSets
-            datestamp={todayDatestamp}
-            sets={calendarChips}
-            backgroundPlatformColor='systemBackground'
-          />
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{
+              type: 'spring',
+              duration: 2000
+            }}
+          >
+            <EventChipSets
+              datestamp={todayDatestamp}
+              sets={calendarChips}
+              backgroundPlatformColor='systemBackground'
+            />
+          </MotiView>
         }
       >
 

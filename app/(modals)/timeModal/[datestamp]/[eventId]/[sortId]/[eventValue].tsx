@@ -7,11 +7,11 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { getPlannerFromStorage } from "@/storage/plannerStorage";
+import { getPlannerFromStorage, saveEvent } from "@/storage/plannerStorage";
 import { getCalendarEventById } from "@/utils/calendarUtils";
-import { getNowISORoundDown5Minutes, getTodayDatestamp } from "@/utils/dateUtils";
-import { generateSortId } from "@/utils/listUtils";
-import { deleteEventsReloadData, saveEventReloadData } from "@/utils/plannerUtils";
+import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
+import { generateSortId, sanitizeList } from "@/utils/listUtils";
+import { deleteEventsReloadData } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { DateTime } from 'luxon';
@@ -146,26 +146,6 @@ const TimeModal = () => {
 
     // ------------- Utility Functions -------------
 
-    function handleSavedEvent(event: IPlannerEvent | null) {
-        const savedPlanner = getPlannerFromStorage(datestamp);
-
-        // Place the new textfield directly below the new item. If the item was removed from the planner, 
-        // place the new textfield directly where the item was.
-        const newTextfieldSortId = event ?
-            generateSortId(event.sortId, savedPlanner.events) : planEvent?.sortId!;
-
-        const newTextfield: IListItem = {
-            id: uuid.v4(),
-            sortId: newTextfieldSortId,
-            status: EItemStatus.NEW,
-            listId: datestamp,
-            value: ''
-        };
-
-        setTextfieldItem(newTextfield);
-        router.back();
-    }
-
     async function handleSave(data: FormData) {
         if (!planEvent) return;
 
@@ -174,7 +154,7 @@ const TimeModal = () => {
         if (!timeRange.startTime || !timeRange.endTime) return;
 
         const startTimeUtc = DateTime.fromISO(timeRange.startTime).toUTC().toISO();
-        let endTimeUtc = DateTime.fromISO(timeRange.endTime).toUTC().toISO();
+        const endTimeUtc = DateTime.fromISO(timeRange.endTime).toUTC().toISO();
 
         const updatedItem = {
             ...planEvent,
@@ -198,7 +178,25 @@ const TimeModal = () => {
             updatedItem.timeConfig!.endTime = startOfNextDay!;
         }
 
-        await saveEventReloadData(updatedItem, datestamp === getTodayDatestamp(), handleSavedEvent);
+        const savedEvent = await saveEvent(updatedItem);
+        const currentPlanner = getPlannerFromStorage(datestamp);
+
+        // Place the new textfield below the new item. 
+        // If the item was removed from the planner, place the new textfield directly
+        // where the item was.
+        const newTextfieldSortId = savedEvent ?
+            generateSortId(savedEvent.sortId, sanitizeList(currentPlanner.events, savedEvent)) : planEvent!.sortId;
+
+        const newTextfield: IListItem = {
+            id: uuid.v4(),
+            sortId: newTextfieldSortId,
+            status: EItemStatus.NEW,
+            listId: datestamp,
+            value: ''
+        };
+
+        setTextfieldItem(newTextfield);
+        router.back();
     }
 
     async function handleUnschedule() {
@@ -207,9 +205,9 @@ const TimeModal = () => {
         const updatedItem = { ...planEvent, listId: datestamp };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
-        await saveEventReloadData(updatedItem, datestamp === getTodayDatestamp());
-        // TODO: leaves behind duplicate
+        await saveEvent(updatedItem);
 
+        setTextfieldItem(updatedItem);
         router.back();
     }
 
@@ -217,8 +215,8 @@ const TimeModal = () => {
         if (!planEvent) return;
 
         await deleteEventsReloadData([planEvent]);
-        setTextfieldItem(null);
 
+        setTextfieldItem(null);
         router.back();
     }
 

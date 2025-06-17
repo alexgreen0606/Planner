@@ -1,17 +1,18 @@
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
+import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
 import { PLANNER_STORAGE_ID, RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { datestampToDayOfWeek, getTodayDatestamp } from '@/utils/dateUtils';
+import { saveEvent } from '@/storage/plannerStorage';
+import { datestampToDayOfWeek } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal, saveEventReloadData } from '@/utils/plannerUtils';
+import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '@/utils/plannerUtils';
 import { usePathname, useRouter } from 'expo-router';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
-import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
 
 const TodayPlanner = () => {
     const { isItemDeleting } = useDeleteScheduler<IPlannerEvent>();
@@ -40,8 +41,8 @@ const TodayPlanner = () => {
         storageKey: todayDatestamp,
         getItemsFromStorageObject,
         storageConfig: {
-            createItem: (event) => saveEventReloadData(event, true),
-            updateItem: (event) => saveEventReloadData(event, true),
+            createItem: (event) => saveEvent(event),
+            updateItem: (event) => saveEvent(event),
             deleteItems: handleDeleteEvents
         },
         initializedStorageObject: generatePlanner(todayDatestamp)
