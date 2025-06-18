@@ -141,7 +141,7 @@ export function getYesterdayDatestamp(): string {
  * @returns - today's timestamp YYYY-MM-DD
  */
 export function getTodayDatestamp(): string {
-    return DateTime.utc().toISODate();
+    return DateTime.local().toISODate();
 }
 
 /**
@@ -149,7 +149,7 @@ export function getTodayDatestamp(): string {
  * @returns - tomorrow's timestamp YYYY-MM-DD
  */
 export function getTomorrowDatestamp(): string {
-    return DateTime.utc().plus({ days: 1 }).toISODate();
+    return DateTime.local().plus({ days: 1 }).toISODate();
 }
 
 /**

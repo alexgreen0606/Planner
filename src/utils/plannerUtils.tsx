@@ -13,8 +13,9 @@ import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { loadCalendarData } from './calendarUtils';
-import { datestampToDayOfWeek, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToDayOfWeek, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
+import { DateTime } from 'luxon';
 
 // ------------- Utilities -------------
 
@@ -87,6 +88,44 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
         return null;
     }
 }
+
+/**
+ * ✅ Finds which of the visible planners are linked to one or more of the events. A list of unique datestamps will be returned.
+ * 
+ * @param events - The events that may be linked to the visible planners.
+ * @returns - A unique list of datestamps that are linked to one or more of the given events.
+ */
+export function getAffectedVisibleDatestamps(events: IPlannerEvent[]) {
+  const allVisibleDatestamps = [
+    getTodayDatestamp(),
+    ...jotaiStore.get(visibleDatestampsAtom),
+  ];
+
+  const affectedDatestamps = new Set<string>();
+
+    for (const visible of allVisibleDatestamps) {
+        console.log(visible, 'evaluating')
+    const localStart = DateTime.fromISO(visible, { zone: 'local' }).startOf('day');
+    const localEnd = localStart.endOf('day');
+
+    const visibleStart = localStart.toUTC().toISO()!;
+    const visibleEnd = localEnd.toUTC().toISO()!;
+
+    const hasEvent = events.some((event) => {
+      const { startTime, endTime } = event.timeConfig ?? {};
+      if (!startTime || !endTime || !event.calendarId) return false;
+
+      return startTime <= visibleEnd && endTime >= visibleStart;
+    });
+
+    if (hasEvent) {
+      affectedDatestamps.add(visible);
+    }
+  }
+
+  return Array.from(affectedDatestamps);
+}
+
 
 // ------------- Planner Builder -------------
 

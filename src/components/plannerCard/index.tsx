@@ -99,7 +99,6 @@ const PlannerCard = ({
     }
 
     const getItemsFromStorageObject = useCallback((planner: TPlanner) => {
-        console.log(calendarEvents, 'calEvents')
         return buildPlannerEvents(datestamp, planner, calendarEvents);
     }, [calendarEvents]);
 

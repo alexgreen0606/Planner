@@ -1,13 +1,13 @@
 import { calendarEventDataAtom, hasCalendarAccessAtom } from "@/atoms/calendarEvents";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { jotaiStore } from "app/_layout";
-import * as Calendar from 'expo-calendar';
-import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
-import { datestampToMidnightDate, getNextEightDayDatestamps, isoToDatestamp } from "./dateUtils";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TEventChip } from "@/lib/types/planner/TEventChip";
+import { jotaiStore } from "app/_layout";
+import * as Calendar from 'expo-calendar';
+import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
+import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
 
 // ---------- Utilities ----------
 
@@ -177,7 +177,7 @@ function validateEventChip(event: Calendar.Event, datestamp: string): boolean {
 
 // ---------- Calendar Interaction Utilities ----------
 
-async function getAllCalendarsMap(): Promise<Record<string, Calendar.Calendar>> {
+export async function getCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
     const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
     const calendarMap = allCalendars.reduce((acc, cal) => {
         acc[cal.id] = cal;
@@ -222,6 +222,7 @@ export async function getPrimaryCalendarId(): Promise<string> {
  * @param newCalendarData - the new calendar data to save
  */
 async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
+    console.log(newCalendarData)
     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
     jotaiStore.set(calendarEventDataAtom, {
         chipsMap: {
@@ -242,6 +243,7 @@ async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
  * @param range - range of dates to parse the calendar with
  */
 export async function loadCalendarData(datestamps: string[]) {
+    if (datestamps.length === 0) return;
     console.log(datestamps, 'LOADING')
     const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
 
@@ -250,7 +252,7 @@ export async function loadCalendarData(datestamps: string[]) {
         return;
     }
 
-    const allCalendarsMap = await getAllCalendarsMap();
+    const allCalendarsMap = await getCalendarMap();
 
     const allCalendarIds = Object.keys(allCalendarsMap);
     const startDate = new Date(`${datestamps[0]}T00:00:00`);

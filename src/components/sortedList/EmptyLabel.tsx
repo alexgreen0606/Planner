@@ -28,18 +28,19 @@ const EmptyLabel = ({
         style={style}
         className={`flex items-center justify-center ${className}`}
     >
-        <View className='flex-row gap-2 items-center'>
+        <View className='flex-column gap-2 items-center'>
+            {iconConfig && (
+                <GenericIcon
+                    {...iconConfig}
+                    size='l'
+                />
+            )}
             <CustomText
                 type='label'
                 style={{ fontSize }}
             >
                 {label}
             </CustomText>
-            {iconConfig && (
-                <GenericIcon
-                    {...iconConfig}
-                />
-            )}
         </View>
     </Pressable>
 

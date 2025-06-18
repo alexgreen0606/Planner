@@ -44,7 +44,7 @@ const Today = () => {
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{
-              type: 'spring',
+              type: 'timing',
               duration: 2000
             }}
           >

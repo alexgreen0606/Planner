@@ -37,6 +37,8 @@ type FormData = {
     allDay: boolean;
 }
 
+// TODO: every time the start date changes, change the listId?
+
 const TimeModal = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<ModalParams>();

@@ -1,16 +1,16 @@
-import { datestampToMonthDate, getTodayDatestamp } from "@/utils/dateUtils";
-import { PlatformColor, Text, View } from "react-native";
+import { DateTime } from "luxon";
+import { useMemo } from "react";
+import { PlatformColor, View } from "react-native";
 import GenericIcon from ".";
 import CustomText from "../text/CustomText";
-import { useMemo } from "react";
-import { DateTime } from "luxon";
+import { useTodayDatestamp } from "@/hooks/useTodayDatestamp";
 
 interface TodayIconProps {
     platformColor: string;
 }
 
 const TodayIcon = ({ platformColor }: TodayIconProps) => {
-    const todayDatestamp = useMemo(() => getTodayDatestamp(), []);
+    const todayDatestamp = useTodayDatestamp();
 
     const month = useMemo(() => {
         const monthFormat = 'MMM';
@@ -32,16 +32,16 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
                 hideRipple
                 platformColor={platformColor}
             />
-            <View className='absolute top-[13%] left-0 w-full h-full items-center justify-center'>
+            <View className='absolute w-full h-full items-center pt-[2.5px] gap-1'>
                 <CustomText
                     type='time'
-                    style={{ fontSize: 7, color: PlatformColor(platformColor) }}
+                    style={{ fontSize: 7, color: PlatformColor('systemBackground') }}
                 >
                     {month}
                 </CustomText>
                 <CustomText
                     type='time'
-                    style={{ fontSize: 12, color: PlatformColor(platformColor) }}
+                    style={{ fontSize: 14, color: PlatformColor(platformColor), paddingLeft: 1 }}
                 >
                     {day}
                 </CustomText>

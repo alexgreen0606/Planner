@@ -124,11 +124,12 @@ const useSortedList = <T extends IListItem, S>({
      * @returns - true if the item still exists in the list, else false
      */
     async function persistItemToStorage(item: T) {
+        let newId = undefined;
         if (storageConfig) {
 
             // Handle the storage update directly
             if (item.status === EItemStatus.NEW) {
-                return await storageConfig.createItem({ ...item, status: EItemStatus.STATIC });
+                newId = await storageConfig.createItem({ ...item, status: EItemStatus.STATIC });
             } else {
                 await storageConfig.updateItem({ ...item, status: EItemStatus.STATIC });
             }
@@ -149,6 +150,8 @@ const useSortedList = <T extends IListItem, S>({
         }
 
         await handleListChange?.();
+
+        return newId;
     };
 
 

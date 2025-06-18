@@ -6,7 +6,7 @@ import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { getPrimaryCalendarId, hasCalendarAccess, loadCalendarData } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp } from "@/utils/dateUtils";
 import { cloneItem, isItemTextfield } from "@/utils/listUtils";
-import { generatePlanner, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
+import { generatePlanner, getAffectedVisibleDatestamps, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
@@ -152,13 +152,17 @@ export async function saveEvent(event: IPlannerEvent): Promise<IPlannerEvent | n
             }
 
             // Reload the calendar data and allow the list rebuild to handle this event.
-            const visibleDatestamps = event.listId === getTodayDatestamp() ? [getTodayDatestamp()] : jotaiStore.get(visibleDatestampsAtom);
-            await loadCalendarData(visibleDatestamps);
+            const datestampsToReload = getAffectedVisibleDatestamps([event]);
+            await loadCalendarData(datestampsToReload);
             return newEvent;
 
         } else if (oldCalendarId) {
             // Delete unscheduled event from the calendar.
             await Calendar.deleteEventAsync(oldCalendarId);
+
+            // Reload the calendar for the planners the event was linked to.
+            const datestampsToReload = getAffectedVisibleDatestamps([oldEvent]);
+            await loadCalendarData(datestampsToReload); // TODO: test
         }
     } else {
         // Event calendar status must be revoked.
@@ -185,7 +189,9 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
     const eventsByList: Record<string, IPlannerEvent[]> = {};
     const todayDatestamp = getTodayDatestamp();
 
-    // Phase 1: Group events by date and handle calendar removals
+    let fullyDeletedEvents = [];
+
+    // Phase 1: Group events by date and handle calendar removals.
     for (const eventToDelete of eventsToDelete) {
         if (!eventsByList[eventToDelete.listId]) {
             eventsByList[eventToDelete.listId] = [];
@@ -199,10 +205,11 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
             hasCalendarAccess()
         ) {
             await Calendar.deleteEventAsync(eventToDelete.calendarId);
+            fullyDeletedEvents.push(eventToDelete);
         }
     }
 
-    // Phase 2: Process each list deletion in parallel
+    // Phase 2: Process each list deletion in parallel.
     Object.entries(eventsByList).map(async ([listId, listEvents]) => {
         const newPlanner = getPlannerFromStorage(listId);
 
@@ -234,6 +241,10 @@ export async function deleteEvents(eventsToDelete: IPlannerEvent[]) {
 
         savePlannerToStorage(listId, newPlanner);
     });
+
+    // Phase 3: Reload calendar data anywhere affected by the deletions.
+    const datestampsToReload = getAffectedVisibleDatestamps(fullyDeletedEvents);
+    await loadCalendarData(datestampsToReload); // TODO: test
 }
 
 /**
