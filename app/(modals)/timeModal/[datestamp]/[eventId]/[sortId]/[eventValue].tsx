@@ -7,11 +7,10 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { getPlannerFromStorage, saveEvent } from "@/storage/plannerStorage";
+import { deletePlannerEvents, getPlannerFromStorage, savePlannerEvent } from "@/storage/plannerStorage";
 import { getCalendarEventById } from "@/utils/calendarUtils";
 import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 import { generateSortId, sanitizeList } from "@/utils/listUtils";
-import { deleteEventsReloadData } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { DateTime } from 'luxon';
@@ -180,7 +179,7 @@ const TimeModal = () => {
             updatedItem.timeConfig!.endTime = startOfNextDay!;
         }
 
-        const savedEvent = await saveEvent(updatedItem);
+        const savedEvent = await savePlannerEvent(updatedItem);
         const currentPlanner = getPlannerFromStorage(datestamp);
 
         // Place the new textfield below the new item. 
@@ -207,7 +206,7 @@ const TimeModal = () => {
         const updatedItem = { ...planEvent, listId: datestamp };
         delete updatedItem.calendarId;
         delete updatedItem.timeConfig;
-        await saveEvent(updatedItem);
+        await savePlannerEvent(updatedItem);
 
         setTextfieldItem(updatedItem);
         router.back();
@@ -216,7 +215,7 @@ const TimeModal = () => {
     async function handleDelete() {
         if (!planEvent) return;
 
-        await deleteEventsReloadData([planEvent]);
+        await deletePlannerEvents([planEvent]);
 
         setTextfieldItem(null);
         router.back();

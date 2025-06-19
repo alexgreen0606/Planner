@@ -2,7 +2,6 @@ import { IconType } from "@/components/icon";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { uuid } from "expo-modules-core";
-import { SharedValue } from "react-native-reanimated";
 
 // ------------- Sort ID Management -------------
 
@@ -54,49 +53,6 @@ export function generateSortId(
     throw new Error(`No item exists in the list with sort ID ${referenceSortId}.`);
 }
 
-/**
-* Gets the sort ID of the parent item (the one directly above this item)
-* @param item The current list item
-* @param positions Shared value containing positions of all items
-* @param items The full array of items in the list
-* @returns The sortId of the parent item, or -1 if this is the first item
-*/
-export function getParentSortIdFromPositions<T extends IListItem>(
-    item: T,
-    positions: SharedValue<Record<string, number>>,
-    items: T[]
-) {
-    'worklet';
-    const itemIndex = positions.value[item.id];
-
-    if (itemIndex === 0) return -1;
-
-    for (const id in positions.value) {
-        if (positions.value[id] === itemIndex - 1) {
-            return items.find(item => item.id === id)?.sortId ?? -1;
-        }
-    }
-
-    throw new Error('Error getting new item sort ID.');
-}
-
-/**
-* Fetches the sort ID of the item above the given item in the list.
-* @param item The item to search above
-* @param listItems The current list (MUST contain the item)
-* @returns The sort ID of the parent item
-*/
-export function getParentSortId(item: IListItem, listItems: IListItem[]): number {
-    const sortedList = [...listItems].sort((a, b) => a.sortId - b.sortId);
-    const itemIndex = sortedList.findIndex(existingItem => existingItem.id === item.id);
-
-    if (itemIndex !== -1) {
-        return itemIndex === 0 ? -1 : listItems[itemIndex - 1].sortId;
-    }
-
-    throw new Error('Item does not exist in the given list.');
-}
-
 // ------------- Item Status Checks -------------
 
 /**
@@ -110,18 +66,6 @@ export function isItemTextfield(item: IListItem): boolean {
 
 // ------------- Position Management -------------
 
-/**
-* Builds a map linking each item to its index in the list.
-* @param currentList The current list of items
-* @returns Record mapping item IDs to their positions
-*/
-export function buildItemPositions<T extends IListItem>(currentList: T[]): Record<string, number> {
-    'worklet';
-    return [...currentList].reduce<Record<string, number>>((acc, item, index) => {
-        acc[item.id] = index;
-        return acc;
-    }, {});
-}
 
 /**
  * ✅ Sorts a list and updates the given item within the list.

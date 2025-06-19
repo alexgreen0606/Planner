@@ -17,6 +17,7 @@ import Toolbar, { ToolbarProps } from './ListItemToolbar';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { MotiView } from 'moti'
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 const ToolbarContainer = Animated.createAnimatedComponent(View);
 
@@ -34,7 +35,8 @@ interface DraggableListProps<T extends IListItem> {
     saveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
     getToolbarProps?: (item: T) => ToolbarProps<T>;
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
-    customIsItemDeleting?: (item: T) => boolean;
+    customGetIsDeleting?: (item: T) => boolean;
+    deleteFunctionKey: EDeleteFunctionKey;
     hideKeyboard?: boolean;
     isLoading?: boolean;
     fillSpace?: boolean;

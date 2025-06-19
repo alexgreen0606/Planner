@@ -8,15 +8,15 @@ export function useReloadScheduler() {
     const currentPath = usePathname();
 
     const canReloadPath = useMemo(
-        () => !!reloadMap[currentPath],
+        () => Boolean(reloadMap[currentPath]),
         [currentPath, reloadMap]
     );
 
-    const registerReloadFunction = (
+    function registerReloadFunction(
         functionId: string,
         reloadFunc: () => Promise<void>,
         path: string
-    ) => {
+    ) {
         setReloadMap(prev => ({
             ...prev,
             [path]: {
@@ -24,11 +24,10 @@ export function useReloadScheduler() {
                 [functionId]: reloadFunc
             },
         }));
-    };
+    }
 
-    const reloadPage = async (pathname?: string) => {
-        const path = pathname ?? currentPath;
-        const reloadFunctionsMap = reloadMap[path];
+    async function reloadPage() {
+        const reloadFunctionsMap = reloadMap[currentPath];
         if (!reloadFunctionsMap) return;
 
         try {

@@ -1,10 +1,13 @@
+import { textfieldItemAtom } from "@/atoms/textfieldData";
 import { NULL } from "@/lib/constants/generic";
 import { CHECKLISTS_STORAGE_ID, StorageKey } from "@/lib/constants/storage";
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IChecklist } from "@/lib/types/checklists/IChecklist";
 import { IFolder } from "@/lib/types/checklists/IFolder";
+import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
+import { jotaiStore } from "app/_layout";
 import { MMKV } from "react-native-mmkv";
 
 const storage = new MMKV({ id: CHECKLISTS_STORAGE_ID });
@@ -110,7 +113,7 @@ export const createFolderItem = (newItem: IFolderItem) => {
     const { childrenCount, ...sharedData } = {
         ...newItem,
         status: EItemStatus.STATIC,
-      };
+    };
     if (newItem.type === EFolderItemType.FOLDER) {
         // Save the new folder
         saveToStorage({
@@ -203,4 +206,35 @@ export const deleteFolderItem = (itemId: string, type: EFolderItemType) => {
 
     // Delete the item
     storage.delete(itemId);
-};
+
+    // Clear the textfield item to ensure final deletion
+    jotaiStore.set(textfieldItemAtom, null);
+}
+
+// TODO: comment
+export function deleteChecklistItems(items: IListItem[]) {
+    // Group items by listId
+    const itemsByListId = items.reduce((acc, item) => {
+        if (!acc[item.listId]) {
+            acc[item.listId] = [];
+        }
+        acc[item.listId].push(item);
+        return acc;
+    }, {} as Record<string, IListItem[]>);
+
+    // Process each list separately
+    Object.entries(itemsByListId).forEach(([listId, itemsToDelete]) => {
+        const listString = storage.getString(listId);
+        const itemIdsToDelete = itemsToDelete.map(item => item.id);
+
+        if (listString) {
+            const currentList: IChecklist = JSON.parse(listString);
+            const updatedList = {
+                ...currentList,
+                items: currentList.items.filter(item => !itemIdsToDelete.includes(item.id))
+            };
+
+            storage.set(listId, JSON.stringify(updatedList));
+        }
+    });
+}

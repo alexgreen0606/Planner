@@ -8,6 +8,7 @@ import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDi
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import { Portal } from 'react-native-paper';
 import Animated, {
+    AnimatedRef,
     cancelAnimation,
     Easing,
     Extrapolation,
@@ -56,7 +57,7 @@ interface ScrollContainerContextValue {
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     measureContentHeight: () => void;
-    bottomScrollRef: React.RefObject<Animated.View>;
+    bottomScrollRef: AnimatedRef<Animated.View>;
     // Placeholder Textfield (prevents keyboard flicker)
     focusPlaceholder: () => void;
     blurPlaceholder: () => void;

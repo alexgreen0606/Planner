@@ -133,7 +133,7 @@ export function datestampToMonthDate(timestamp: string): string {
  * @returns - yesterday's timestamp YYYY-MM-DD
  */
 export function getYesterdayDatestamp(): string {
-    return DateTime.utc().minus({ days: 1 }).toISODate();
+    return DateTime.local().minus({ days: 1 }).toISODate();
 }
 
 /**
@@ -194,8 +194,8 @@ export function getDatestampThreeYearsFromToday(): string {
  * @returns - list of timestamps YYYY-MM-DD
  */
 export function getNextEightDayDatestamps(): string[] {
-    const tomorrow = DateTime.utc().toISODate();
-    const sixDaysAfterTomorrow = DateTime.utc().plus({ days: 8 }).toISODate();
+    const tomorrow = getTomorrowDatestamp();
+    const eightDaysAfterTomorrow = DateTime.local().plus({ days: 8 }).toISODate();
 
-    return generateDatestampRange(tomorrow, sixDaysAfterTomorrow);
+    return generateDatestampRange(tomorrow, eightDaysAfterTomorrow);
 }

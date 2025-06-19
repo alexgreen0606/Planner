@@ -6,9 +6,10 @@ import { usePathname } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
-import { useDeleteScheduler } from './useDeleteScheduler';
 import { useReloadScheduler } from './useReloadScheduler';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 type StorageHandlers<T extends IListItem> = {
     updateItem: (item: T) => Promise<any> | void;
@@ -27,6 +28,7 @@ interface SortedListConfig<T extends IListItem, S> {
     storageConfig?: StorageHandlers<T>;
     initializedStorageObject?: S;
     reloadOnOverscroll?: boolean;
+    deleteFunctionKey: EDeleteFunctionKey;
 }
 
 const useSortedList = <T extends IListItem, S>({
@@ -38,16 +40,16 @@ const useSortedList = <T extends IListItem, S>({
     storageConfig,
     initializedStorageObject,
     reloadOnOverscroll = false,
-    handleListChange
+    handleListChange,
+    deleteFunctionKey
 }: SortedListConfig<T, S>) => {
     const pathname = usePathname();
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { registerReloadFunction } = useReloadScheduler();
     const {
-        isItemDeleting,
+        getIsItemDeleting: isItemDeleting,
         cancelItemDeletion,
-        scheduleItemDeletion,
-        registerDeleteFunction
+        scheduleItemDeletion
     } = useDeleteScheduler<T>();
     const { focusPlaceholder } = useScrollContainer();
 
@@ -160,7 +162,7 @@ const useSortedList = <T extends IListItem, S>({
      * If another textfield exists, it will be saved first.
      */
     async function toggleItemEdit(item: T) {
-        if (isItemDeleting(item)) return;
+        if (isItemDeleting(item, deleteFunctionKey)) return;
 
         if (textfieldItem && textfieldItem.value.trim() !== '') {
             await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
@@ -177,10 +179,6 @@ const useSortedList = <T extends IListItem, S>({
 
     // ------------- DELETE Logic -------------
 
-    useEffect(() => {
-        registerDeleteFunction(storageKey, deleteItemsFromStorage);
-    }, [items]);
-
     /**
      * Deletes a batch of items from storage.
      * For custom storage config, it calls delete on each item individually.
@@ -189,7 +187,6 @@ const useSortedList = <T extends IListItem, S>({
     async function deleteItemsFromStorage(itemsToDelete: T[]) {
         if (storageConfig) {
             await storageConfig.deleteItems(itemsToDelete);
-            await handleListChange?.();
         } else {
             const updatedList = items.filter(({ id }) =>
                 !itemsToDelete.some(item => item.id === id)
@@ -201,6 +198,7 @@ const useSortedList = <T extends IListItem, S>({
                     : (updatedList as S)
             );
         }
+        await handleListChange?.();
     }
 
     /**
@@ -208,7 +206,6 @@ const useSortedList = <T extends IListItem, S>({
      * Adds or removes the item from the pendingDeleteItems array.
      */
     async function toggleItemDelete(item: T) {
-        console.log('toggling')
         // Handle textfield delete
         if (item.id === textfieldItem?.id) {
             setTextfieldItem(null);
@@ -218,10 +215,10 @@ const useSortedList = <T extends IListItem, S>({
             }
         }
 
-        if (isItemDeleting(item)) {
-            cancelItemDeletion(item);
+        if (isItemDeleting(item, deleteFunctionKey)) {
+            cancelItemDeletion(item, deleteFunctionKey);
         } else {
-            scheduleItemDeletion(item);
+            scheduleItemDeletion(item, deleteFunctionKey);
         }
     }
 

@@ -3,7 +3,6 @@ import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/layout";
 import { LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { useDeleteScheduler } from "@/hooks/useDeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
 import { generateSortId } from "@/utils/listUtils";
 import { useEffect, useMemo } from "react";
@@ -22,6 +21,8 @@ import ListTextfield from "./ListTextfield";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
+import { useDeleteScheduler } from "@/providers/DeleteScheduler";
+import { EDeleteFunctionKey } from "@/lib/enums/EDeleteFunctionKeys";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -54,6 +55,7 @@ export interface RowProps<T extends IListItem> {
         index: DerivedValue<number>;
         handleDragEnd: () => void;
     },
+    deleteFunctionKey: EDeleteFunctionKey;
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
@@ -63,7 +65,7 @@ export interface RowProps<T extends IListItem> {
     getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
-    customIsItemDeleting?: (item: T) => boolean;
+    customGetIsDeleting?: (item: T) => boolean;
 }
 
 /**
@@ -88,11 +90,12 @@ const DraggableRow = <T extends IListItem>({
     onDeleteItem,
     saveTextfieldAndCreateNew,
     onDragEnd,
+    deleteFunctionKey,
     hideKeyboard,
-    customIsItemDeleting
+    customGetIsDeleting
 }: RowProps<T>) => {
     const [currentTextfield, setCurrentTextfield] = useTextfieldItemAs<T>();
-    const { isItemDeleting } = useDeleteScheduler<T>();
+    const { getIsItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
         autoScroll
@@ -108,11 +111,15 @@ const DraggableRow = <T extends IListItem>({
         index,
     } = dragControls;
 
-    const isItemDeletingCustom = customIsItemDeleting ?? isItemDeleting;
-
     const item = useMemo(() =>
         currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
         [currentTextfield, staticItem]
+    );
+
+    const isItemDeleting = customGetIsDeleting ?? getIsItemDeleting;
+    const pendingDelete = useMemo(
+        () => isItemDeleting(item, deleteFunctionKey),
+        [getIsItemDeleting]
     );
 
     const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
@@ -342,11 +349,8 @@ const DraggableRow = <T extends IListItem>({
                         onSubmit={handleTextfieldSave}
                         hideKeyboard={hideKeyboard}
                         customStyle={{
-                            color: PlatformColor(customTextPlatformColor ??
-                                (isItemDeletingCustom(item) ? 'tertiaryLabel' : 'label')
-                            ),
-                            textDecorationLine: isItemDeletingCustom(item) ?
-                                'line-through' : undefined
+                            color: PlatformColor(customTextPlatformColor ?? (pendingDelete ? 'tertiaryLabel' : 'label')),
+                            textDecorationLine: pendingDelete ? 'line-through' : undefined
                         }}
                     />
                 </GestureDetector>

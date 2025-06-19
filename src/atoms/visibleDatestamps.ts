@@ -8,7 +8,7 @@ export const visibleDatestampsAtom = atom((get) => {
 
     // Handle the special "Next 7 Days" case
     if (plannerSetKey === 'Next 7 Days') {
-        return getNextEightDayDatestamps().slice(1, 8);
+        return getNextEightDayDatestamps().slice(0, 7);
     }
 
     // Handle custom planner sets

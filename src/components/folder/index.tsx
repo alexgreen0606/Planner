@@ -1,12 +1,15 @@
 import { GenericIconProps } from '@/components/icon';
 import CustomText from '@/components/text/CustomText';
+import useSortedList from '@/hooks/useSortedList';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { selectableColors } from '@/lib/constants/selectableColors';
 import { CHECKLISTS_STORAGE_ID } from '@/lib/constants/storage';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import useSortedList from '@/hooks/useSortedList';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItem, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
+import { IFolder } from '@/lib/types/checklists/IFolder';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
 import { generateSortId, isItemTextfield } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -14,9 +17,7 @@ import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { IFolder } from '@/lib/types/checklists/IFolder';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
-import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -36,6 +37,8 @@ const SortedFolder = ({
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
+
+    const deleteFunctionKey = EDeleteFunctionKey.FOLDER;
 
     /**
      * If the focused item is being transferred, transfer it to the parent folder.
@@ -210,7 +213,8 @@ const SortedFolder = ({
                 setTextfieldItem(null);
             }
         },
-        initializeListItem: initializeEmptyFolder
+        initializeListItem: initializeEmptyFolder,
+        deleteFunctionKey
     });
 
     // Rebuild the list when one of the folder's items changes
@@ -226,6 +230,7 @@ const SortedFolder = ({
             listId={folderId}
             items={SortedItems.items}
             fillSpace
+            deleteFunctionKey={deleteFunctionKey}
             isLoading={SortedItems.isLoading}
             onDragEnd={SortedItems.persistItemToStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}

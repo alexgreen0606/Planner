@@ -6,7 +6,7 @@ import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { IPlannerEvent, TTimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deleteEvents, getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
+import { deletePlannerEvents, getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringPlannerStorage';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { jotaiStore } from 'app/_layout';
@@ -18,6 +18,19 @@ import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { DateTime } from 'luxon';
 
 // ------------- Utilities -------------
+
+/**
+ * ✅ Gets all the datestamps for the Planners that are currently rendered
+ * and loaded in from the calendar.
+ * 
+ * @returns - A list of all planner datestamps currently mounted.
+ */
+export function getAllVisibleDatestamps(): string[] {
+    return [
+        getTodayDatestamp(),
+        ...jotaiStore.get(visibleDatestampsAtom),
+    ];
+}
 
 type ExtractedTime = {
     timeConfig: TTimeConfig | undefined;
@@ -90,40 +103,36 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
 }
 
 /**
- * ✅ Finds which of the visible planners are linked to one or more of the events. A list of unique datestamps will be returned.
+ * ✅ Builds a list of currently-mounted planner datestamps that are linked to one or more of the given events. 
  * 
  * @param events - The events that may be linked to the visible planners.
  * @returns - A unique list of datestamps that are linked to one or more of the given events.
  */
 export function getAffectedVisibleDatestamps(events: IPlannerEvent[]) {
-  const allVisibleDatestamps = [
-    getTodayDatestamp(),
-    ...jotaiStore.get(visibleDatestampsAtom),
-  ];
+    const allVisibleDatestamps = getAllVisibleDatestamps();
 
-  const affectedDatestamps = new Set<string>();
-
+    const affectedDatestamps = [];
     for (const visible of allVisibleDatestamps) {
-        console.log(visible, 'evaluating')
-    const localStart = DateTime.fromISO(visible, { zone: 'local' }).startOf('day');
-    const localEnd = localStart.endOf('day');
+        const localStart = DateTime.fromISO(visible, { zone: 'local' }).startOf('day');
+        const localEnd = localStart.endOf('day');
 
-    const visibleStart = localStart.toUTC().toISO()!;
-    const visibleEnd = localEnd.toUTC().toISO()!;
+        const visibleStart = localStart.toUTC().toISO()!;
+        const visibleEnd = localEnd.toUTC().toISO()!;
 
-    const hasEvent = events.some((event) => {
-      const { startTime, endTime } = event.timeConfig ?? {};
-      if (!startTime || !endTime || !event.calendarId) return false;
+        if (events.some((event) => {
+            const { startTime, endTime } = event.timeConfig ?? {};
+            if (!startTime || !endTime || !event.calendarId) return false;
 
-      return startTime <= visibleEnd && endTime >= visibleStart;
-    });
-
-    if (hasEvent) {
-      affectedDatestamps.add(visible);
+            return (
+                isTimeEarlierOrEqual(startTime, visibleEnd) &&
+                isTimeEarlierOrEqual(visibleStart, endTime)
+            );
+        })) {
+            affectedDatestamps.push(visible);
+        }
     }
-  }
 
-  return Array.from(affectedDatestamps);
+    return affectedDatestamps;
 }
 
 
@@ -237,25 +246,6 @@ export function sanitizePlanner(
     const updatedList = sanitizeList(planner, event, replaceId);
     event.sortId = generateSortIdByTime(event, updatedList);
     return updatedList.sort((a, b) => a.sortId - b.sortId);
-}
-
-/**
- * ✅ Handles deleting a planner event. If any items were a calendar event, 
- * the calendar data will be reloaded.
- * 
- * @param planEvents - the planner events to delete
- * @param isToday - signifies if the user called this function from the "Today Planner"
- */
-export async function deleteEventsReloadData(
-    planEvents: IPlannerEvent[],
-    isToday: boolean = false
-) {
-    await deleteEvents(planEvents);
-    if (planEvents.some(item => item.calendarId)) {
-        const plannerDatestamps = jotaiStore.get(visibleDatestampsAtom);
-        const visibleDatestamps = isToday ? [getTodayDatestamp()] : plannerDatestamps;
-        await loadCalendarData(visibleDatestamps);
-    }
 }
 
 /**

@@ -1,4 +1,3 @@
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
@@ -9,6 +8,8 @@ import React, { useMemo } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../icon';
 import CustomText from '../text/CustomText';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
 const EXPANDED_CHIP_RIGHT_MARGIN = 6;
@@ -44,7 +45,7 @@ const EventChip = ({
     const router = useRouter();
 
     const isPendingDelete = useMemo(() => planEvent &&
-        getDeletingItems().some(deleteItem =>
+        getDeletingItems(EDeleteFunctionKey.PLANNER_EVENT).some(deleteItem =>
             // This deleting item is the chip's event
             deleteItem.id === planEvent.id &&
             // This deleting item is not from today

@@ -6,6 +6,7 @@ import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
 import { StorageKey } from '@/lib/constants/storage';
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { deleteCountdowns, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
@@ -32,6 +33,8 @@ const Countdowns = () => {
     );
 
     const getCountownsMemoized = useCallback(getCountdowns, []);
+
+    const deleteFunctionKey = EDeleteFunctionKey.COUNTDOWN;
 
     // ------------- Utility Functions -------------
 
@@ -108,7 +111,8 @@ const Countdowns = () => {
             await CountdownItems.refetchItems();
         },
         initializeListItem: initializeCountdown,
-        reloadOnOverscroll: true
+        reloadOnOverscroll: true,
+        deleteFunctionKey
     });
 
     useEffect(() => {
@@ -123,6 +127,7 @@ const Countdowns = () => {
                 listId={StorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
                 disableDrag
+                deleteFunctionKey={deleteFunctionKey}
                 isLoading={CountdownItems.isLoading}
                 items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}

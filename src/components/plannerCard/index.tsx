@@ -1,12 +1,11 @@
 import { textfieldItemAtom } from '@/atoms/textfieldData';
 import { useCalendarData } from '@/hooks/useCalendarData';
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { PLANNER_STORAGE_ID } from '@/lib/constants/storage';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deleteAllRecurringEvents, resetRecurringEvents, saveEvent, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
+import { deleteAllRecurringEvents, deletePlannerEvents, resetRecurringEvents, savePlannerEvent, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -16,10 +15,12 @@ import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
-import { buildPlannerEvents, deleteEventsReloadData, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
+import { buildPlannerEvents, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
 import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 enum EditAction {
     EDIT_TITLE = 'EDIT_TITLE',
@@ -55,15 +56,15 @@ const PlannerCard = ({
 
     // ------------- Utility Functions -------------
 
-    const isEventDeleting = useCallback((planEvent: IPlannerEvent) => {
-        const deletingItems = getDeletingItems();
-        return deletingItems.some(deleteItem =>
+    const isEventDeleting = useCallback((planEvent: IPlannerEvent) =>
+        getDeletingItems(EDeleteFunctionKey.PLANNER_EVENT).some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // and is rooted in this planner (deleting multi-day start events should not mark the end event as deleting)
             deleteItem.listId === datestamp
-        );
-    }, [getDeletingItems]);
+        ),
+        [getDeletingItems]
+    );
 
     async function toggleCollapsed() {
         if (textfieldItem) {
@@ -102,20 +103,17 @@ const PlannerCard = ({
         return buildPlannerEvents(datestamp, planner, calendarEvents);
     }, [calendarEvents]);
 
-    async function handleDeleteEvents(planEvents: IPlannerEvent[]) {
-        await deleteEventsReloadData(planEvents);
-    }
-
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: PLANNER_STORAGE_ID,
         storageKey: datestamp,
         getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
         storageConfig: {
-            createItem: saveEvent,
-            updateItem: saveEvent,
-            deleteItems: handleDeleteEvents
-        }
+            createItem: savePlannerEvent,
+            updateItem: savePlannerEvent,
+            deleteItems: deletePlannerEvents
+        },
+        deleteFunctionKey: EDeleteFunctionKey.PLANNER_EVENT
     });
 
     const planner = SortedEvents.storageObject;
@@ -219,6 +217,7 @@ const PlannerCard = ({
             <SortableList<IPlannerEvent>
                 listId={datestamp}
                 items={visibleEvents}
+                deleteFunctionKey={EDeleteFunctionKey.PLANNER_EVENT}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
@@ -229,7 +228,7 @@ const PlannerCard = ({
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
                 getToolbarProps={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
-                customIsItemDeleting={isEventDeleting}
+                customGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{
                     label: 'No Plans',
                     className: 'h-20 flex justify-center items-center'

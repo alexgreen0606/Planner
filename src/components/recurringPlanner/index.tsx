@@ -1,5 +1,4 @@
 import { RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
-import { useDeleteScheduler } from '@/hooks/useDeleteScheduler';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/providers/ScrollContainer';
@@ -14,6 +13,8 @@ import { IconType } from '../icon';
 import SortableList from '../sortedList';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 interface SortedRecurringPlannerProps {
     plannerKey: string;
@@ -21,7 +22,7 @@ interface SortedRecurringPlannerProps {
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
-    const { isItemDeleting } = useDeleteScheduler<IRecurringEvent>();
+    const { getIsItemDeleting } = useDeleteScheduler<IRecurringEvent>();
     const { focusPlaceholder } = useScrollContainer();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -38,7 +39,9 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         }
     }, [textfieldItem]);
 
-    const isWeekdayEvent = plannerKey === ERecurringPlannerKey.WEEKDAYS;
+    const isWeekdayPlanner = plannerKey === ERecurringPlannerKey.WEEKDAYS;
+
+    const deleteFunctionKey = isWeekdayPlanner ? EDeleteFunctionKey.RECURRING_WEEKDAY : EDeleteFunctionKey.RECURRING;
 
     async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
@@ -76,10 +79,11 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         storageId: RECURRING_EVENT_STORAGE_ID,
         storageKey: plannerKey,
         storageConfig: {
-            createItem: isWeekdayEvent ? saveRecurringWeekdayEvent : saveRecurringEvent,
-            updateItem: isWeekdayEvent ? saveRecurringWeekdayEvent : saveRecurringEvent,
-            deleteItems: isWeekdayEvent ? deleteRecurringWeekdayEvents : deleteRecurringEvents
-        }
+            createItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
+            updateItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
+            deleteItems: isWeekdayPlanner ? deleteRecurringWeekdayEvents : deleteRecurringEvents
+        },
+        deleteFunctionKey
     });
 
     return (
@@ -91,6 +95,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace
+                deleteFunctionKey={deleteFunctionKey}
                 isLoading={SortedEvents.isLoading}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
@@ -101,9 +106,9 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 hideKeyboard={timeModalOpen}
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isItemDeleting(item))}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, getIsItemDeleting(item, deleteFunctionKey))}
                 emptyLabelConfig={{
-                    label: `No recurring ${isWeekdayEvent ? 'weekday' : plannerKey} plans`,
+                    label: `No recurring ${isWeekdayPlanner ? 'weekday' : plannerKey} plans`,
                     className: 'flex-1'
                 }}
             />

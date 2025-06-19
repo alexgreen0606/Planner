@@ -4,5 +4,5 @@ export type TPlanner = {
     datestamp: string;
     title: string;
     events: IPlannerEvent[];
-    hideRecurring?: boolean;
+    hideRecurring: boolean;
 }

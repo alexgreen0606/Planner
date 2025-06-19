@@ -1,86 +1,88 @@
-import { useAtom } from 'jotai';
-import { useCallback, useEffect, useRef } from 'react';
-import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
-import { deleteFunctionsMapAtom, pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+// import { useAtom } from 'jotai';
+// import { useCallback, useEffect, useMemo, useRef } from 'react';
+// import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
+// import { deleteFunctionsMapAtom, pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
+// import { IListItem } from '@/lib/types/listItems/core/TListItem';
 
-export function useDeleteScheduler<T extends IListItem>() {
-    const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);
-    const [deleteFunctionsMap, setDeleteFunctionsMap] = useAtom(deleteFunctionsMapAtom);
-    const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+// export function useDeleteScheduler<T extends IListItem>() {
+//     const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);
+//     const [deleteFunctionsMap, setDeleteFunctionsMap] = useAtom(deleteFunctionsMapAtom);
+//     const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const getDeletingItems = useCallback((): T[] => {
-        return Object.values(pendingDeleteMap);
-    }, [pendingDeleteMap]);
+//     // TODO: need to use the same delete functions for different listIds. Let's use a deleteId instead of a listId.
 
-    const isItemDeleting = (item: T) => {
-        return !!pendingDeleteMap[item.id];
-    };
+//     const deletingItems = useMemo(
+//         () => Object.values(pendingDeleteMap),
+//         [pendingDeleteMap]
+//     );
 
-    const registerDeleteFunction = (
-        listId: string,
-        deleteFunction: (items: T[]) => void
-    ) => {
-        setDeleteFunctionsMap(prev => ({
-            ...prev,
-            [listId]: deleteFunction
-        }));
-    };
+//     const getIsItemDeleting = useCallback((item: T) => {
+//         return Boolean(pendingDeleteMap[item.id]);
+//     }, [pendingDeleteMap]);
 
-    const scheduleItemDeletion = (item: T) => {
-        setPendingDeleteMap(prev => ({
-            ...prev,
-            [item.id]: item,
-        }));
-    };
+//     function registerDeleteFunction(
+//         listId: string,
+//         deleteFunction: (items: T[]) => void
+//     ) {
+//         setDeleteFunctionsMap(prev => ({
+//             ...prev,
+//             [listId]: deleteFunction
+//         }));
+//     }
 
-    const cancelItemDeletion = (item: T) => {
-        setPendingDeleteMap(prev => {
-            const newMap = { ...prev };
-            delete newMap[item.id];
+//     function scheduleItemDeletion(item: T) {
+//         setPendingDeleteMap(prev => ({
+//             ...prev,
+//             [item.id]: item
+//         }));
+//     }
 
-            return newMap;
-        });
-    };
+//     function cancelItemDeletion(item: T) {
+//         setPendingDeleteMap(prev => {
+//             const newMap = { ...prev };
+//             delete newMap[item.id];
 
-    useEffect(() => {
-        if (deleteTimeoutRef.current) {
-            clearTimeout(deleteTimeoutRef.current);
-            deleteTimeoutRef.current = null;
-        }
+//             return newMap;
+//         });
+//     }
 
-        const deletingItems = getDeletingItems();
-        const hasPendingItems = deletingItems.length > 0;
+//     useEffect(() => {
+//         if (deleteTimeoutRef.current) {
+//             clearTimeout(deleteTimeoutRef.current);
+//             deleteTimeoutRef.current = null;
+//         }
 
-        if (hasPendingItems) {
+//         if (deletingItems.length > 0) {
 
-            // Group items by listId
-            const listDeletions: Record<string, T[]> = {};
-            deletingItems.forEach((item) => {
-                const listId = item.listId;
-                if (!listDeletions[listId]) {
-                    listDeletions[listId] = [];
-                }
-                listDeletions[listId].push(item);
-            });
+//             // Group items by listId
+//             const listDeletions: Record<string, T[]> = {};
+//             deletingItems.forEach((item) => {
+//                 const listId = item.listId;
+//                 if (!listDeletions[listId]) {
+//                     listDeletions[listId] = [];
+//                 }
+//                 listDeletions[listId].push(item);
+//             });
 
-            deleteTimeoutRef.current = setTimeout(() => {
-                Object.entries(listDeletions).forEach(([listId, items]) => {
-                    const deleteFn = deleteFunctionsMap[listId];
-                    if (deleteFn) {
-                        deleteFn(items);
-                    }
-                });
-                deleteTimeoutRef.current = null;
-            }, DELETE_ITEMS_DELAY_MS);
-        }
-    }, [pendingDeleteMap]);
+//             console.log('here scheduling')
 
-    return {
-        getDeletingItems,
-        isItemDeleting,
-        scheduleItemDeletion,
-        cancelItemDeletion,
-        registerDeleteFunction
-    };
-}
+//             deleteTimeoutRef.current = setTimeout(() => {
+//                 Object.entries(listDeletions).forEach(([listId, items]) => {
+//                     const deleteFn = deleteFunctionsMap[listId];
+//                     if (deleteFn) {
+//                         deleteFn(items);
+//                     }
+//                 });
+//                 deleteTimeoutRef.current = null;
+//             }, DELETE_ITEMS_DELAY_MS);
+//         }
+//     }, [pendingDeleteMap]);
+
+//     return {
+//         deletingItems,
+//         getIsItemDeleting,
+//         scheduleItemDeletion,
+//         cancelItemDeletion,
+//         registerDeleteFunction
+//     };
+// }

@@ -222,7 +222,6 @@ export async function getPrimaryCalendarId(): Promise<string> {
  * @param newCalendarData - the new calendar data to save
  */
 async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
-    console.log(newCalendarData)
     const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
     jotaiStore.set(calendarEventDataAtom, {
         chipsMap: {
