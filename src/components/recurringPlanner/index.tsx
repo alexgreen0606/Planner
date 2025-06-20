@@ -8,8 +8,8 @@ import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput } from '@/utils/plannerUtils';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
-import DatePicker from 'react-native-date-picker';
 import { IconType } from '../icon';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import SortableList from '../sortedList';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
@@ -112,16 +112,14 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                     className: 'flex-1'
                 }}
             />
-            <DatePicker
-                modal
+            <DateTimePicker
                 mode='time'
                 title={`"${textfieldItem?.value}" Time`}
                 minuteInterval={5}
-                theme='dark'
-                open={timeModalOpen && Boolean(textfieldItem)}
-                date={textfieldDateObject}
-                onConfirm={handleSaveEventTime}
-                onCancel={() => toggleTimeModal(textfieldItem!)}
+                // open={timeModalOpen && Boolean(textfieldItem)}
+                value={textfieldDateObject}
+                // onConfirm={handleSaveEventTime}
+                // onCancel={() => toggleTimeModal(textfieldItem!)}
             />
         </View>
     );

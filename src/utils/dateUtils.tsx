@@ -55,18 +55,13 @@ export function timeValueToIso(baseDate: string, timeValue: string): string {
 }
 
 /**
- * Converts an ISO timestamp to YYYY-MM-DD format.
- * @param isoTimestamp - The ISO timestamp string (e.g., "2025-02-03T12:34:56Z").
- * @returns Formatted date in YYYY-MM-DD.
+ * ✅ Converts an ISO timestamp to a datestamp. (YYYY-MM-DD)
+ * 
+ * @param isoTimestamp - The ISO timestamp to convert.
+ * @returns - Formatted datestamp. (YYYY-MM-DD)
  */
 export function isoToDatestamp(isoTimestamp: string): string {
-    const date = DateTime.fromISO(isoTimestamp, { zone: 'utc' });
-
-    if (!date.isValid) {
-        throw new Error('Invalid ISO timestamp');
-    }
-
-    return date.toISODate();
+    return DateTime.fromISO(isoTimestamp).toISODate()!;
 }
 
 /**
@@ -84,32 +79,33 @@ export function daysBetweenToday(isoTimestamp: string): number {
 }
 
 /**
- * ✅ Returns true if time1 is earlier than time2.
+ * Returns true if time1 is earlier than time2.
  * Assumes both time strings are in the same format (ISO or HH:MM).
  * If either of the times doesn't exist, default to true (consider time1 as earlier).
  * 
  * @param time1 - The first time string.
  * @param time2 - The second time string.
+ * @param equalMeansEarlier - Signifies if equal times means time1 can be considered earlier. Default is true.
  * @returns True if time1 is earlier or during time2, false otherwise.
  */
-export function isTimeEarlierOrEqual(time1: string | null, time2?: string | null): boolean {
+export function isTimeEarlier(
+    time1: string | null,
+    time2?: string | null,
+    equalMeansEarlier = true
+): boolean {
     if (!time1 || !time2) return true;
-    return time1.localeCompare(time2) <= 0;
+    const comp = time1.localeCompare(time2);
+    return equalMeansEarlier ? comp <= 0 : comp < 0;
 }
 
 /**
- * Converts a timestamp to the day of the week for that date.
- * @param timestamp - YYYY-MM-DD
- * @returns - the day of the week as a string
+ * ✅ Converts a datestamp to the day of the week for that local date.
+ * 
+ * @param datestamp - The timestamp (YYYY-MM-DD) to assess. 
+ * @returns - The day of the week as a string. (e.g., 'Monday')
  */
-export function datestampToDayOfWeek(timestamp: string): string {
-    const date = DateTime.fromISO(timestamp, { zone: 'utc' });
-
-    if (!date.isValid) {
-        throw new Error('Invalid timestamp format');
-    }
-
-    return date.toFormat('cccc');
+export function datestampToDayOfWeek(datestamp: string): string {
+    return DateTime.fromISO(datestamp).toFormat('cccc');
 }
 
 /**
@@ -153,19 +149,30 @@ export function getTomorrowDatestamp(): string {
 }
 
 /**
- * ✅ Generates an iso timestamp representing the current time, rounded down to the
- * nearest 5 minutes.
- * 
- * @returns ISO timestamp rounded down to nearest 5 minutes
+ * ✅ Generates an ISO timestamp in UTC format, using the current local time
+ * (rounded down to the nearest 5 minutes) and an optional datestamp.
+ *
+ * @param datestamp - Optional datestamp (YYYY-MM-DD) to use for the date.
+ * @returns ISO timestamp in UTC format rounded down to the nearest 5 minutes.
  */
-export function getNowISORoundDown5Minutes(): string {
-    const now = DateTime.now();
+export function getIsoRoundedDown5Minutes(datestamp?: string): string {
+    const now = DateTime.local();
+    const baseDate = datestamp ? DateTime.fromISO(datestamp) : now;
 
-    return now.set({
+    const roundedTime = now.set({
         minute: Math.floor(now.minute / 5) * 5,
         second: 0,
         millisecond: 0,
-    }).toISO();
+    });
+
+    const combined = baseDate.set({
+        hour: roundedTime.hour,
+        minute: roundedTime.minute,
+        second: 0,
+        millisecond: 0,
+    });
+
+    return combined.toUTC().toISO()!;
 }
 
 /**

@@ -3,9 +3,9 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { getPrimaryCalendarId, hasCalendarAccess, loadCalendarData } from "@/utils/calendarUtils";
-import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
+import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier } from "@/utils/dateUtils";
 import { cloneItem, isItemTextfield } from "@/utils/listUtils";
-import { generatePlanner, getAffectedVisibleDatestamps, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
+import { generatePlanner, getMountedLinkedDatestamps, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
 
@@ -54,7 +54,7 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
     // Delete all previous calendars.
     const allStorageKeys = storage.getAllKeys();
     allStorageKeys.forEach(datestamp => {
-        if (isTimeEarlierOrEqual(datestamp, yesterdayDatestamp)) {
+        if (isTimeEarlier(datestamp, yesterdayDatestamp)) {
             storage.delete(datestamp);
         }
     });
@@ -86,11 +86,10 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
  * @param event - the event to update
  * @returns - The updated event in storage. If the item was removed from the planner, it will return undefined.
  */
-export async function savePlannerEvent(event: IPlannerEvent): Promise<IPlannerEvent | null> {
+export async function savePlannerEvent(event: IPlannerEvent, unscheduleCalendarId?: string): Promise<IPlannerEvent> {
     const newPlanner = getPlannerFromStorage(event.listId);
 
     const oldEvent = newPlanner.events.find(existingEvent => existingEvent.id === event.id);
-    const oldId = oldEvent?.id;
     const oldCalendarId = oldEvent?.calendarId;
 
     let newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
@@ -120,8 +119,6 @@ export async function savePlannerEvent(event: IPlannerEvent): Promise<IPlannerEv
             ['recurringId'],
             { recurringCloneId: newEvent.recurringId }
         );
-
-        // TODO: changing the recurring to have a time is keeping the original recurring event
     }
 
     // Phase 2: Handle calendar events.
@@ -131,7 +128,7 @@ export async function savePlannerEvent(event: IPlannerEvent): Promise<IPlannerEv
             // Update the device calendar.
             if (newEvent.calendarId === 'NEW') {
                 const primaryCalendarId = await getPrimaryCalendarId();
-                const calendarEventId = await Calendar.createEventAsync(
+                await Calendar.createEventAsync(
                     primaryCalendarId,
                     {
                         title: newEvent.value,
@@ -140,12 +137,6 @@ export async function savePlannerEvent(event: IPlannerEvent): Promise<IPlannerEv
                         allDay: newEvent.timeConfig!.allDay
                     }
                 );
-
-                // Sync the planner event ID with the calendar event ID. 
-
-                // TODO: is this needed? Wait until time modal is refactored.
-                newEvent.calendarId = calendarEventId;
-                newEvent.id = calendarEventId;
             } else {
                 await Calendar.updateEventAsync(
                     newCalendarId,
@@ -158,32 +149,38 @@ export async function savePlannerEvent(event: IPlannerEvent): Promise<IPlannerEv
                 );
             }
 
-            // Track the planner events that have been affected by these new changes.
+            // Track the planner events that have been affected by this function call.
             const affectedEvents = [event];
             if (oldEvent) {
                 affectedEvents.push(oldEvent);
                 if (!oldCalendarId) {
-                    // This event exists in the calendar and is not yet a calendar event.
+                    // The updating event exists in the calendar already and is not a calendar event.
                     // Remove it from the planner so the calendar event can take its place.
-                    newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== oldId);
+                    newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== newEvent.id);
                     savePlannerToStorage(newEvent.listId, newPlanner);
                 }
             }
 
             // Reload the calendar data and allow the planner rebuild to handle the event.
-            const datestampsToReload = getAffectedVisibleDatestamps(affectedEvents);
+            const datestampsToReload = getMountedLinkedDatestamps(affectedEvents);
             await loadCalendarData(datestampsToReload);
 
-            // TODO: does the newEvent have a correct sortId? Should I calculate one?
             return newEvent;
 
-        } else if (oldCalendarId) {
-            // Delete unscheduled event from the calendar.
-            await Calendar.deleteEventAsync(oldCalendarId);
+        } else if (unscheduleCalendarId) {
 
-            // Reload the calendar for the planners the event was linked to.
-            const datestampsToReload = getAffectedVisibleDatestamps([oldEvent]);
-            await loadCalendarData(datestampsToReload); // TODO: test
+
+            // HERE"S THE LOGIC TO MOVE TO A NEW FUNCTION.
+
+            // ALONG WITH TH UNSCHEDULECALENDARID variable
+
+
+            // Delete unscheduled event from the calendar.
+            await Calendar.deleteEventAsync(unscheduleCalendarId);
+
+            // Reload the calendar for the mounted planners the event was linked to.
+            const datestampsToReload = getMountedLinkedDatestamps([newEvent]);
+            await loadCalendarData(datestampsToReload);
         }
     } else {
         // Event calendar status must be revoked.
@@ -256,7 +253,7 @@ export async function deletePlannerEvents(events: IPlannerEvent[]) {
     });
 
     // Phase 3: Reload the calendar data if any of the deleted calendar events affect the mounted planners.
-    const datestampsToReload = getAffectedVisibleDatestamps(deletedCalendarEvents);
+    const datestampsToReload = getMountedLinkedDatestamps(deletedCalendarEvents);
     await loadCalendarData(datestampsToReload);
 }
 

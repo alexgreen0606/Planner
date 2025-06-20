@@ -13,7 +13,7 @@ import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { loadCalendarData } from './calendarUtils';
-import { datestampToDayOfWeek, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToDayOfWeek, getTodayDatestamp, isoToDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { DateTime } from 'luxon';
 
@@ -108,24 +108,26 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
  * @param events - The events that may be linked to the visible planners.
  * @returns - A unique list of datestamps that are linked to one or more of the given events.
  */
-export function getAffectedVisibleDatestamps(events: IPlannerEvent[]) {
+export function getMountedLinkedDatestamps(events: IPlannerEvent[]) {
     const allVisibleDatestamps = getAllVisibleDatestamps();
 
     const affectedDatestamps = [];
     for (const visible of allVisibleDatestamps) {
-        const localStart = DateTime.fromISO(visible, { zone: 'local' }).startOf('day');
+        console.log(visible, 'ANALYZING')
+        const localStart = DateTime.fromISO(visible).startOf('day');
         const localEnd = localStart.endOf('day');
 
         const visibleStart = localStart.toUTC().toISO()!;
         const visibleEnd = localEnd.toUTC().toISO()!;
 
         if (events.some((event) => {
+            console.log('ANALYZING THE EVENT NOW', event)
             const { startTime, endTime } = event.timeConfig ?? {};
             if (!startTime || !endTime || !event.calendarId) return false;
 
             return (
-                isTimeEarlierOrEqual(startTime, visibleEnd) &&
-                isTimeEarlierOrEqual(visibleStart, endTime)
+                isTimeEarlier(startTime, visibleEnd) &&
+                isTimeEarlier(visibleStart, endTime)
             );
         })) {
             affectedDatestamps.push(visible);
@@ -291,8 +293,8 @@ export function generateSortIdByTime(
     const laterTime = extractEventTime(laterEvent);
 
     if (
-        isTimeEarlierOrEqual(earlierTime, eventTime) &&
-        isTimeEarlierOrEqual(eventTime, laterTime)
+        isTimeEarlier(earlierTime, eventTime) &&
+        isTimeEarlier(eventTime, laterTime)
     ) return persistEventPosition();
 
     // Scenario 1: Place the event before the first event that starts after or during it.
@@ -300,7 +302,7 @@ export function generateSortIdByTime(
         const existingTime = extractEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
 
-        return isTimeEarlierOrEqual(eventTime, existingTime);
+        return isTimeEarlier(eventTime, existingTime);
     });
     if (laterEventIndex !== -1) {
         const newChildSortId = planner[laterEventIndex].sortId;
@@ -312,7 +314,7 @@ export function generateSortIdByTime(
         const existingTime = extractEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
 
-        return isTimeEarlierOrEqual(existingTime, eventTime);
+        return isTimeEarlier(existingTime, eventTime);
     });
     if (earlierEventIndex !== -1) {
         const newParentSortId = planner[earlierEventIndex].sortId;

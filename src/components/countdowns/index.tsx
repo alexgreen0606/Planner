@@ -16,7 +16,7 @@ import { generateSortIdByTime } from '@/utils/plannerUtils';
 import { DateTime } from 'luxon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
-import DatePicker from 'react-native-date-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
@@ -165,40 +165,38 @@ const Countdowns = () => {
             />
 
             {/* Date Picker Modal */}
-            <DatePicker
-                modal
+            <DateTimePicker
                 mode='date'
                 title={textfieldItem?.value}
-                theme='dark'
                 minimumDate={datestampToMidnightDate(getTodayDatestamp())}
                 maximumDate={datestampToMidnightDate(getDatestampThreeYearsFromToday())}
-                open={dateSelectOpen && Boolean(textfieldItem)}
-                date={
+                // open={dateSelectOpen && Boolean(textfieldItem)}
+                value={
                     textfieldItem?.startTime
                         ? DateTime.fromISO(textfieldItem.startTime).toJSDate()
                         : todayMidnight
                 }
-                onConfirm={(date) => {
-                    if (!textfieldItem) return;
+                // onConfirm={(date) => {
+                //     if (!textfieldItem) return;
 
-                    const selected = DateTime.fromJSDate(date);
-                    const updatedCountdown: ICountdown = {
-                        ...textfieldItem,
-                        startTime: selected.toISO()!
-                    };
-                    updatedCountdown.sortId = generateSortIdByTime(updatedCountdown, CountdownItems.items);
+                //     const selected = DateTime.fromJSDate(date);
+                //     const updatedCountdown: ICountdown = {
+                //         ...textfieldItem,
+                //         startTime: selected.toISO()!
+                //     };
+                //     updatedCountdown.sortId = generateSortIdByTime(updatedCountdown, CountdownItems.items);
 
-                    if (saveEventOnDateSelectorClose.current) {
-                        CountdownItems.persistItemToStorage(updatedCountdown);
-                        setTextfieldItem(null);
-                        saveEventOnDateSelectorClose.current = false;
-                    } else {
-                        setTextfieldItem(updatedCountdown);
-                    }
+                //     if (saveEventOnDateSelectorClose.current) {
+                //         CountdownItems.persistItemToStorage(updatedCountdown);
+                //         setTextfieldItem(null);
+                //         saveEventOnDateSelectorClose.current = false;
+                //     } else {
+                //         setTextfieldItem(updatedCountdown);
+                //     }
 
-                    toggleDateSelector();
-                }}
-                onCancel={toggleDateSelector}
+                //     toggleDateSelector();
+                // }}
+                // onCancel={toggleDateSelector}
             />
 
         </View>

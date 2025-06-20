@@ -1,80 +1,35 @@
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
-import { LINEAR_ANIMATION_CONFIG } from '@/lib/constants/animations';
-import { datestampToMidnightDate, getTodayDatestamp } from '@/utils/dateUtils';
+import { datestampToDayOfWeek, isoToDatestamp } from '@/utils/dateUtils';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { DateTime } from 'luxon';
-import React, { useEffect, useRef, useState } from 'react';
+import { MotiView } from 'moti';
+import React, { useEffect, useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import DatePicker from 'react-native-date-picker';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import DateRangeSelector from './DateRangeSelector';
-
-const InputContainer = Animated.createAnimatedComponent(View);
-const StartTimeContainer = Animated.createAnimatedComponent(View);
-const EndTimeContainer = Animated.createAnimatedComponent(View);
-const StartDateContainer = Animated.createAnimatedComponent(View);
-const EndDateContainer = Animated.createAnimatedComponent(View);
-
-enum SelectorMode {
-    DATES = 'dates',
-    START_TIME = 'start_time',
-    END_TIME = 'end_time'
-}
-
-const SELECTOR_MAX_HEIGHTS = {
-    OPEN: 400,
-    CLOSED: 0
-} as const;
-
-const FOCUSED_VALUE_SCALES = {
-    NORMAL: 1,
-    HIGHLIGHTED: 1.1
-} as const;
-
-const DEFAULT_ANIMATION_CONFIG = {
-    inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.CLOSED,
-    startTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
-    endTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
-    datesScale: FOCUSED_VALUE_SCALES.NORMAL
-} as const;
-
-const MODE_ANIMATIONS = {
-    [SelectorMode.START_TIME]: {
-        inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
-        startTimeScale: FOCUSED_VALUE_SCALES.HIGHLIGHTED,
-        endTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
-        datesScale: FOCUSED_VALUE_SCALES.NORMAL
-    },
-    [SelectorMode.END_TIME]: {
-        inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
-        startTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
-        endTimeScale: FOCUSED_VALUE_SCALES.HIGHLIGHTED,
-        datesScale: FOCUSED_VALUE_SCALES.NORMAL
-    },
-    [SelectorMode.DATES]: {
-        inputContainerMaxHeight: SELECTOR_MAX_HEIGHTS.OPEN,
-        startTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
-        endTimeScale: FOCUSED_VALUE_SCALES.NORMAL,
-        datesScale: FOCUSED_VALUE_SCALES.HIGHLIGHTED
-    }
-} as const;
-
-type StoredTimeInfo = {
-    hour: number;
-    minute: number;
-}
 
 export interface TimeRangeSelectorProps {
-    startIso: string | null;
-    endIso: string | null;
+    startIso: string;
+    endIso: string;
     onChange: (
-        start: string | null,
-        end: string | null
+        start: string,
+        end: string
     ) => void;
     allDay?: boolean;
     multiDay?: boolean;
-    openInputTrigger?: boolean;
+    triggerOpenStartTimeSelector?: boolean;
+}
+
+enum SelectorMode {
+    START_TIME = 'START_TIME',
+    END_TIME = 'END_TIME',
+    START_DATE = 'START_DATE',
+    END_DATE = 'END_DATE'
+}
+
+type TimeData = {
+    date: Date;
+    dayOfWeek: string;
 }
 
 const TimeRangeSelector = ({
@@ -83,267 +38,260 @@ const TimeRangeSelector = ({
     onChange,
     allDay,
     multiDay,
-    openInputTrigger
+    triggerOpenStartTimeSelector = false
 }: TimeRangeSelectorProps) => {
-    const [isInputFieldOpen, setIsInputFieldOpen] = useState(false);
-    const [mode, setMode] = useState<SelectorMode>(SelectorMode.START_TIME);
-    const inputContainerMaxHeight = useSharedValue(0);
-    const startTimeScale = useSharedValue(1);
-    const endTimeScale = useSharedValue(1);
-    const datesScale = useSharedValue(1);
+    const [isInputOpen, setIsInputOpen] = useState(triggerOpenStartTimeSelector);
+    const [selectorMode, setSelectorMode] = useState<SelectorMode>(SelectorMode.START_TIME);
 
-    // Store the last known times
-    const storedStartTime = useRef<StoredTimeInfo | null>(null);
-    const storedEndTime = useRef<StoredTimeInfo | null>(null);
+    const startData: TimeData = useMemo(() => {
+        const date = DateTime.fromISO(startIso).toJSDate();
+        const datestamp = isoToDatestamp(startIso);
+        const dayOfWeek = datestampToDayOfWeek(datestamp);
+        return { date, dayOfWeek };
+    }, [startIso]);
 
+    const endData: TimeData = useMemo(() => {
+        const date = DateTime.fromISO(endIso).toJSDate();
+        const datestamp = isoToDatestamp(endIso);
+        const dayOfWeek = datestampToDayOfWeek(datestamp);
+        return { date, dayOfWeek };
+    }, [endIso]);
 
-    const isoInEdit = mode === SelectorMode.START_TIME ?
-        startIso : endIso;
-    const setIsoInEdit = mode === SelectorMode.START_TIME ?
-        (start: string | null) => onChange(start, endIso) :
-        (end: string | null) => onChange(startIso, end);
+    const dateInEdit = [SelectorMode.START_DATE, SelectorMode.START_TIME].includes(selectorMode) ?
+        startData.date : endData.date;
+
+    const showEndTime = endIso && multiDay;
 
     // ---------- Utility Functions ----------
 
     function getValueColor(type: SelectorMode) {
-        return isInputFieldOpen && type === mode ? 'systemTeal' : 'label';
+        return isInputOpen && type === selectorMode ? 'systemTeal' : 'label';
     }
 
-    function toggleMode(newMode: SelectorMode) {
-        if (mode === SelectorMode.DATES && !startIso) return;
-
-        if (newMode === mode && isInputFieldOpen) {
-            setIsInputFieldOpen(false);
+    function toggleSelectorMode(newMode: SelectorMode) {
+        if (newMode === selectorMode && isInputOpen) {
+            setIsInputOpen(false);
         } else {
-            setMode(newMode);
-            setIsInputFieldOpen(true);
+            setIsInputOpen(true);
+            setSelectorMode(newMode);
         }
-    }
-
-    function updateDateTime(
-        iso: string | null,
-        newTime: DateTime
-    ): string {
-        const dateTime = DateTime.fromISO(iso ?? DateTime.now().toISO());
-        return dateTime.set({
-            hour: newTime.hour,
-            minute: newTime.minute,
-            second: newTime.second,
-            millisecond: newTime.millisecond
-        }).toISO()!;
     }
 
     function resetTimesToMidnight() {
-        const midnightDate = datestampToMidnightDate(getTodayDatestamp());
-        const newTime = DateTime.fromJSDate(midnightDate);
-        const newStart = updateDateTime(startIso, newTime);
-        const newEnd = updateDateTime(endIso, newTime);
+        const newStartDate = DateTime.fromISO(startIso)
+            .set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0
+            });
+        const newEndDate = DateTime.fromISO(endIso)
+            .set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0
+            });
 
-        onChange(newStart, newEnd);
+        const newStartIso = newStartDate.toUTC().toISO()!;
+        const newEndIso = newEndDate.toUTC().toISO()!;
+        onChange(newStartIso, newEndIso);
     }
 
-    function handleDatesChange(
-        startDatestamp: string | null,
-        endDatestamp: string | null
-    ) {
-        if (!startDatestamp || !endDatestamp) {
+    function handleChange(event: DateTimePickerEvent) {
+        const { timestamp } = event.nativeEvent;
 
-            // Store the current times before clearing
-            if (startIso) {
-                const startDateTime = DateTime.fromISO(startIso);
-                storedStartTime.current = {
-                    hour: startDateTime.hour,
-                    minute: startDateTime.minute
-                };
-            }
-            if (endIso) {
-                const endDateTime = DateTime.fromISO(endIso);
-                storedEndTime.current = {
-                    hour: endDateTime.hour,
-                    minute: endDateTime.minute
-                };
-            }
+        const inputDate = DateTime.fromMillis(timestamp);
+        const currentStartDate = DateTime.fromISO(startIso);
+        const currentEndDate = DateTime.fromISO(endIso);
 
-            onChange(null, null);
-            return;
+        let newStartDate = currentStartDate;
+        let newEndDate = currentEndDate;
+
+        const enforceEndLaterThanStart = () => {
+            // If end date is earlier than start date, shift the end date to be on the same day as the start.
+            if (newEndDate.startOf('day') < newStartDate.startOf('day')) {
+                newEndDate = newStartDate.set({
+                    hour: currentEndDate.hour,
+                    minute: currentEndDate.minute,
+                    second: 0,
+                    millisecond: 0
+                });
+            }
+            // If the end date is still earlier than the start, set the times equal.
+            if (newEndDate < newStartDate) {
+                newEndDate = newStartDate;
+            }
+        };
+
+        switch (selectorMode) {
+            case SelectorMode.START_DATE:
+                newStartDate = inputDate.set({
+                    hour: currentStartDate.hour,
+                    minute: currentStartDate.minute,
+                    second: 0,
+                    millisecond: 0
+                });
+                enforceEndLaterThanStart();
+                break;
+
+            case SelectorMode.END_DATE:
+                newEndDate = inputDate.set({
+                    hour: currentEndDate.hour,
+                    minute: currentEndDate.minute,
+                    second: 0,
+                    millisecond: 0
+                });
+                enforceEndLaterThanStart();
+                break;
+
+            case SelectorMode.START_TIME:
+                newStartDate = currentStartDate.set({
+                    hour: inputDate.hour,
+                    minute: inputDate.minute,
+                    second: 0,
+                    millisecond: 0
+                });
+                enforceEndLaterThanStart();
+                break;
+
+            case SelectorMode.END_TIME:
+                newEndDate = currentEndDate.set({
+                    hour: inputDate.hour,
+                    minute: inputDate.minute,
+                    second: 0,
+                    millisecond: 0
+                });
+                break;
+
+            default:
+                break;
         }
 
-        // Use stored times if available, otherwise use current times or defaults
-        const startTimeToUse = storedStartTime.current || 
-            (startIso ? DateTime.fromISO(startIso) : DateTime.now());
-        const endTimeToUse = storedEndTime.current || 
-            (endIso ? DateTime.fromISO(endIso) : DateTime.now());
-
-        const newStartDateTime = DateTime.fromISO(startDatestamp).set({
-            hour: storedStartTime.current?.hour ?? startTimeToUse.hour ?? 0,
-            minute: storedStartTime.current?.minute ?? startTimeToUse.minute ?? 0,
-            second: 0,
-            millisecond: 0
-        });
-        const newEndDateTime = DateTime.fromISO(endDatestamp).set({
-            hour: storedEndTime.current?.hour ?? endTimeToUse.hour ?? 0,
-            minute: storedEndTime.current?.minute ?? endTimeToUse.minute ?? 0,
-            second: 0,
-            millisecond: 0
-        });
-
-        onChange(newStartDateTime.toISO(), newEndDateTime.toISO());
+        const newStartIso = newStartDate.toUTC().toISO()!;
+        const newEndIso = newEndDate.toUTC().toISO()!;
+        onChange(newStartIso, newEndIso);
     }
-
-    function handleTimeChange(date: Date, iso: string) {
-        const newTime = DateTime.fromJSDate(date);
-        const updatedIso = updateDateTime(iso, newTime);
-
-        setIsoInEdit(updatedIso);
-    }
-
-    function applyAnimationConfig(config: typeof DEFAULT_ANIMATION_CONFIG) {
-        Object.entries(config).forEach(([key, value]) => {
-            switch (key) {
-                case 'inputContainerMaxHeight':
-                    inputContainerMaxHeight.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
-                    break;
-                case 'startTimeScale':
-                    startTimeScale.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
-                    break;
-                case 'endTimeScale':
-                    endTimeScale.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
-                    break;
-                case 'datesScale':
-                    datesScale.value = withTiming(value, LINEAR_ANIMATION_CONFIG);
-                    break;
-            }
-        });
-    };
 
     // ---------- Reactions ----------
 
     useEffect(() => {
         if (allDay) {
             resetTimesToMidnight();
-            setMode(SelectorMode.DATES);
-            setIsInputFieldOpen(false);
+            setIsInputOpen(false);
         }
     }, [allDay]);
 
     useEffect(() => {
-        if (openInputTrigger) setIsInputFieldOpen(true);
-    }, [openInputTrigger]);
-
-    useEffect(() => {
-        const animationConfig: any = MODE_ANIMATIONS[mode];
-        applyAnimationConfig(isInputFieldOpen ? animationConfig : DEFAULT_ANIMATION_CONFIG);
-    }, [mode, isInputFieldOpen]);
-
-    // ------------- Animations -------------
-
-    const inputContainerStyle = useAnimatedStyle(() => ({
-        maxHeight: inputContainerMaxHeight.value
-    }));
-
-    const datesContainerStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: datesScale.value }]
-    }));
-
-    const startTimeContainerStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: startTimeScale.value }]
-    }));
-
-    const endTimeContainerStyle = useAnimatedStyle(() => ({
-        transform: [{ scale: endTimeScale.value }]
-    }));
+        if (triggerOpenStartTimeSelector) {
+            setSelectorMode(SelectorMode.START_TIME);
+            setIsInputOpen(true);
+        }
+    }, [triggerOpenStartTimeSelector]);
 
     return (
         <View>
-            <View className='flex-row items-center'>
+            <View className='flex-row'>
                 {startIso && (
-                    <View className='flex-1 items-center gap-1'>
-                        <StartDateContainer style={datesContainerStyle}>
+                    <View className='flex-1 items-start gap-1'>
+                        <CustomText type='soft'>
+                            {startData.dayOfWeek}
+                        </CustomText>
+                        <MotiView animate={{
+                            transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }]
+                        }}>
                             <TouchableOpacity
-                                onPress={() => toggleMode(SelectorMode.DATES)}
+                                onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
                             >
                                 <DateValue
                                     isoTimestamp={startIso}
-                                    platformColor={getValueColor(SelectorMode.DATES)}
+                                    platformColor={getValueColor(SelectorMode.START_DATE)}
                                 />
                             </TouchableOpacity>
-                        </StartDateContainer>
+                        </MotiView>
                         {!allDay && (
-                            <StartTimeContainer style={startTimeContainerStyle}>
+                            <MotiView animate={{
+                                transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
+                            }}>
                                 <TouchableOpacity
-                                    onPress={() => toggleMode(SelectorMode.START_TIME)}
+                                    onPress={() => toggleSelectorMode(SelectorMode.START_TIME)}
                                 >
                                     <TimeValue
                                         isoTimestamp={startIso}
                                         platformColor={getValueColor(SelectorMode.START_TIME)}
                                     />
                                 </TouchableOpacity>
-                            </StartTimeContainer>
+                            </MotiView>
                         )}
                     </View>
                 )}
-                {endIso && multiDay && (
+                {showEndTime && (
                     <CustomText type='indicator'>
                         TO
                     </CustomText>
                 )}
-                {endIso && multiDay && (
-                    <View className='flex-1 items-center gap-1'>
-                        <EndDateContainer style={datesContainerStyle}>
+                {showEndTime && (
+                    <View className='flex-1 items-end gap-1'>
+                        <CustomText type='soft'>
+                            {endData.dayOfWeek}
+                        </CustomText>
+                        <MotiView animate={{
+                            transform: [{ scale: getValueColor(SelectorMode.END_DATE) === 'systemTeal' ? 1.1 : 1 }]
+                        }}>
                             <TouchableOpacity
-                                onPress={() => toggleMode(SelectorMode.DATES)}
+                                onPress={() => toggleSelectorMode(SelectorMode.END_DATE)}
                             >
                                 <DateValue
                                     isoTimestamp={endIso}
-                                    platformColor={getValueColor(SelectorMode.DATES)}
+                                    platformColor={getValueColor(SelectorMode.END_DATE)}
                                 />
                             </TouchableOpacity>
-                        </EndDateContainer>
+                        </MotiView>
                         {!allDay && (
-                            <EndTimeContainer style={endTimeContainerStyle}>
+                            <MotiView animate={{
+                                transform:
+                                    [{ scale: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 1.2 : 1 }]
+                            }}>
                                 <TouchableOpacity
-                                    onPress={() => toggleMode(SelectorMode.END_TIME)}
+                                    onPress={() => toggleSelectorMode(SelectorMode.END_TIME)}
                                 >
                                     <TimeValue
                                         isoTimestamp={endIso}
                                         platformColor={getValueColor(SelectorMode.END_TIME)}
                                     />
                                 </TouchableOpacity>
-                            </EndTimeContainer>
+                            </MotiView>
                         )}
                     </View>
                 )}
             </View>
-            <InputContainer
+            <MotiView
+                animate={{ maxHeight: isInputOpen ? 400 : 0 }}
+                transition={{
+                    type: 'timing',
+                    duration: 300
+                }}
                 className='overflow-hidden items-center'
-                style={inputContainerStyle}
             >
-                {mode === SelectorMode.DATES ? (
-                    <DateRangeSelector
-                        startDatestamp={startIso ?
-                            DateTime.fromISO(startIso).toFormat('yyyy-MM-dd') : null
-                        }
-                        endDatestamp={endIso ?
-                            DateTime.fromISO(endIso).toFormat('yyyy-MM-dd') : null
-                        }
-                        onChange={handleDatesChange}
-                        multiDay={multiDay}
+                {[SelectorMode.START_DATE, SelectorMode.END_DATE].includes(selectorMode) ? (
+                    <DateTimePicker
+                        value={dateInEdit}
+                        onChange={handleChange}
+                        mode='date'
+                        display='inline'
+                        minimumDate={selectorMode === SelectorMode.END_DATE ? startData.date : DateTime.local().toJSDate()}
                     />
-                ) : isoInEdit && (
-                    <DatePicker
+                ) : (
+                    <DateTimePicker
+                        value={dateInEdit}
+                        onChange={handleChange}
                         mode='time'
-                        theme='dark'
-                        date={DateTime.fromISO(isoInEdit).toJSDate()}
-                        onDateChange={(date) => handleTimeChange(date, isoInEdit)}
+                        display='spinner'
                         minuteInterval={5}
-                        minimumDate={
-                            mode === SelectorMode.END_TIME && startIso
-                                ? DateTime.fromISO(startIso).plus({ minutes: 5 }).toJSDate()
-                                : undefined
-                        }
+                        minimumDate={selectorMode === SelectorMode.END_TIME ? startData.date : undefined}
                     />
                 )}
-            </InputContainer>
+            </MotiView>
         </View>
     )
 };

@@ -3,8 +3,8 @@ import ModalCheckbox from "./fields/Checkbox";
 import TimeRangeSelector from "./fields/TimeRangeSelector";
 import ModalTextfield from "./fields/Textfield";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
-import { getNowISORoundDown5Minutes } from "@/utils/dateUtils";
 import { IFormField } from "@/lib/types/form/IFormField";
+import { getIsoRoundedDown5Minutes } from "@/utils/dateUtils";
 
 interface FormFieldProps extends Omit<IFormField, 'name'> {
     type: EFormFieldType;
@@ -52,23 +52,23 @@ const FormField = ({
                 />
             );
         case EFormFieldType.TIME_RANGE:
-            const nowIso = getNowISORoundDown5Minutes();
-            const currentValue = value || { startTime: nowIso, endTime: nowIso };
-            const { startTime = nowIso, endTime = nowIso } = currentValue;
+            const nowIso = getIsoRoundedDown5Minutes();
+            const currentValue = value || { startIso: nowIso, endIso: nowIso };
+            const { startIso = nowIso, endIso = nowIso } = currentValue;
 
             return (
                 <TimeRangeSelector
-                    startIso={startTime}
-                    endIso={endTime}
+                    startIso={startIso}
+                    endIso={endIso}
                     onChange={(start, end) => {
                         onChange({
-                            startTime: start,
-                            endTime: end
+                            startIso: start,
+                            endIso: end
                         });
                     }}
                     allDay={allDay}
                     multiDay={multiDay}
-                    openInputTrigger={trigger}
+                    triggerOpenStartTimeSelector={trigger}
                 />
             );
         case EFormFieldType.CHECKBOX:
