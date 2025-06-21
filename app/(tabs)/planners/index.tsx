@@ -1,4 +1,5 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
+import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 import GenericIcon from '@/components/icon';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import PlannerCard from '@/components/plannerCard';
@@ -8,17 +9,15 @@ import { useLoadCalendarData } from '@/hooks/useLoadCalendarData';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { NULL } from '@/lib/constants/generic';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { getPlannerSet, getPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { generateDatestampRange, getNextEightDayDatestamps } from '@/utils/dateUtils';
+import { getPlannerSetTitles } from '@/storage/plannerSetsStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
-import { usePathname, useRouter } from 'expo-router';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
+import { MotiView } from 'moti';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
-import { MotiView } from 'moti';
-import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -155,11 +154,11 @@ const Planners = () => {
             {/* Planner Set Display */}
             <MotiView
                 className='p-2 gap-4'
-                from={{ opacity: 0, transform: [{ translateY: 10 }] }}
-                animate={{ opacity: 1, transform: [{ translateY: 0 }] }}
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{
                     type: 'timing',
-                    duration: 600,
+                    duration: 800,
                 }}
             >
                 {visibleDatestamps.map((datestamp) =>

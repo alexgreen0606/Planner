@@ -1,13 +1,15 @@
+import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import CustomText from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
+import { TEventChip } from '@/lib/types/planner/TEventChip';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { savePlannerToStorage } from '@/storage/plannerStorage';
-import { datestampToDayOfWeek, datestampToMonthDate, getNextEightDayDatestamps, getTomorrowDatestamp } from '@/utils/dateUtils';
+import { datestampToDayOfWeek, datestampToMonthDate, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
+import { useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import EventChipSets from '../eventChip/EventChipSet';
-import { TEventChip } from '@/lib/types/planner/TEventChip';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
 
 interface DayBannerProps {
     planner: TPlanner;
@@ -28,10 +30,11 @@ const DayBanner = ({
     collapsed,
     eventChipSets
 }: DayBannerProps) => {
+    const plannerSetKey = useAtomValue(plannerSetKeyAtom);
+
     const [newPlannerTitle, setNewPlannerTitle] = useState(planner.title);
 
-    const nextEightDays = getNextEightDayDatestamps();
-    const isWithinEightDays = nextEightDays.includes(planner.datestamp);
+    const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
     const dayOfWeek = datestampToDayOfWeek(planner.datestamp);
     const monthDate = datestampToMonthDate(planner.datestamp);
     const isTomorrow = planner.datestamp === getTomorrowDatestamp();
@@ -59,7 +62,7 @@ const DayBanner = ({
                             type='subHeader'
                             style={{ color: PlatformColor('label') }}
                         >
-                            {isWithinEightDays ? monthDate : dayOfWeek}
+                            {prioritizeDayOfWeek ? monthDate : dayOfWeek}
                         </CustomText>
                         {(planner.title || isEditingTitle || isTomorrow) && (
                             <View
@@ -106,7 +109,7 @@ const DayBanner = ({
                         )}
                     </View>
                     <CustomText type='header'>
-                        {isWithinEightDays ? dayOfWeek : monthDate}
+                        {prioritizeDayOfWeek ? dayOfWeek : monthDate}
                     </CustomText>
                 </View>
 
@@ -127,7 +130,7 @@ const DayBanner = ({
                 collapsed={collapsed}
                 toggleCollapsed={toggleCollapsed}
             />
-            
+
         </TouchableOpacity>
     );
 }

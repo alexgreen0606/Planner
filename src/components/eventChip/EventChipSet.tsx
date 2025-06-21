@@ -45,6 +45,7 @@ const EventChipSets = ({
                         <EventChip
                             key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
                             {...chip}
+                            parentPlannerDatestamp={datestamp}
                             chipSetIndex={chipIndex}
                             shiftChipRight={chipIndex === 0 && setIndex !== 0 && collapsed}
                             collapsed={collapsed}

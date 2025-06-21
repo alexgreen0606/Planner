@@ -2,9 +2,11 @@ import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
 import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
 import { PLANNER_STORAGE_ID, RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
+import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deletePlannerEvents, savePlannerEvent } from '@/storage/plannerStorage';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { savePlannerEvent } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { buildPlannerEvents, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '@/utils/plannerUtils';
@@ -12,14 +14,14 @@ import { usePathname, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
 
 const TodayPlanner = () => {
-    const { getIsItemDeleting } = useDeleteScheduler<IPlannerEvent>();
+    const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
     const todayDatestamp = useTodayDatestamp();
     const pathname = usePathname();
     const router = useRouter();
+
+    const listType = EListType.PLANNER;
 
     const { calendarEvents } = useCalendarData(todayDatestamp);
 
@@ -27,6 +29,10 @@ const TodayPlanner = () => {
 
     function handleOpenTimeModal(item: IPlannerEvent) {
         openTimeModal(todayDatestamp, item, router);
+    }
+
+    function toggleScheduleEventDelete(event: IPlannerEvent) {
+        toggleScheduleItemDelete(event, listType);
     }
 
     const getItemsFromStorageObject = useCallback(async (planner: TPlanner) => {
@@ -39,11 +45,10 @@ const TodayPlanner = () => {
         getItemsFromStorageObject,
         storageConfig: {
             createItem: savePlannerEvent,
-            updateItem: savePlannerEvent,
-            deleteItems: deletePlannerEvents
+            updateItem: savePlannerEvent
         },
         initializedStorageObject: generatePlanner(todayDatestamp),
-        deleteFunctionKey: EDeleteFunctionKey.PLANNER_EVENT
+        listType
     });
 
     const recurringStorage = useMMKV({ id: RECURRING_EVENT_STORAGE_ID });
@@ -58,16 +63,15 @@ const TodayPlanner = () => {
             listId={todayDatestamp}
             items={SortedEvents.items}
             fillSpace
-            deleteFunctionKey={EDeleteFunctionKey.PLANNER_EVENT}
+            listType={listType}
             hideKeyboard={isTimeModalOpen}
             saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
             onDragEnd={SortedEvents.persistItemToStorage}
-            onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
             onContentClick={SortedEvents.toggleItemEdit}
-            getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
+            getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startIso}-${isTimeModalOpen}`}
             handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, todayDatestamp)}
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, getIsItemDeleting(item, EDeleteFunctionKey.PLANNER_EVENT))}
+            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
             getToolbarProps={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{

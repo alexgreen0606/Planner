@@ -14,7 +14,7 @@ import SortableList from '../sortedList';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+import { EListType } from '@/lib/enums/EListType';
 
 interface SortedRecurringPlannerProps {
     plannerKey: string;
@@ -22,7 +22,7 @@ interface SortedRecurringPlannerProps {
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
-    const { getIsItemDeleting } = useDeleteScheduler<IRecurringEvent>();
+    const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IRecurringEvent>();
     const { focusPlaceholder } = useScrollContainer();
 
     const [timeModalOpen, setTimeModalOpen] = useState(false);
@@ -41,12 +41,16 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
 
     const isWeekdayPlanner = plannerKey === ERecurringPlannerKey.WEEKDAYS;
 
-    const deleteFunctionKey = isWeekdayPlanner ? EDeleteFunctionKey.RECURRING_WEEKDAY : EDeleteFunctionKey.RECURRING;
+    const listType = isWeekdayPlanner ? EListType.RECURRING_WEEKDAY : EListType.RECURRING;
 
     async function toggleTimeModal(item: IRecurringEvent) {
         if (!isItemTextfield(item))
             await SortedEvents.toggleItemEdit(item);
         setTimeModalOpen(curr => !curr);
+    }
+
+    function toggleScheduleEventDelete(event: IRecurringEvent) {
+        toggleScheduleItemDelete(event, listType);
     }
 
     function handleSaveEventTime(date: Date) {
@@ -80,10 +84,9 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         storageKey: plannerKey,
         storageConfig: {
             createItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
-            updateItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
-            deleteItems: isWeekdayPlanner ? deleteRecurringWeekdayEvents : deleteRecurringEvents
+            updateItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent
         },
-        deleteFunctionKey
+        listType
     });
 
     return (
@@ -95,18 +98,17 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace
-                deleteFunctionKey={deleteFunctionKey}
+                listType={listType}
                 isLoading={SortedEvents.isLoading}
                 getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 getToolbarProps={generateToolbar}
                 hideKeyboard={timeModalOpen}
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, getIsItemDeleting(item, deleteFunctionKey))}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
                 emptyLabelConfig={{
                     label: `No recurring ${isWeekdayPlanner ? 'weekday' : plannerKey} plans`,
                     className: 'flex-1'
@@ -118,8 +120,8 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 minuteInterval={5}
                 // open={timeModalOpen && Boolean(textfieldItem)}
                 value={textfieldDateObject}
-                // onConfirm={handleSaveEventTime}
-                // onCancel={() => toggleTimeModal(textfieldItem!)}
+            // onConfirm={handleSaveEventTime}
+            // onCancel={() => toggleTimeModal(textfieldItem!)}
             />
         </View>
     );

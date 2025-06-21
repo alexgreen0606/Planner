@@ -97,19 +97,12 @@ const Modal = ({
                 ref={scrollRef}
                 onScroll={scrollHandler}
                 contentContainerStyle={{
-                    paddingTop: TOP_BLUR_BAR_HEIGHT,
+                    paddingTop: TOP_BLUR_BAR_HEIGHT * 1.5,
                     paddingBottom: BOTTOM_SPACER,
                     paddingHorizontal: spacing.large,
                     flexGrow: 1
                 }}
             >
-
-                {/* Title */}
-                <View className='items-center mb-5'>
-                    <CustomText type='header'>
-                        {title}
-                    </CustomText>
-                </View>
 
                 {/* Content */}
                 {children}
@@ -144,7 +137,7 @@ const Modal = ({
                     { height: TOP_BLUR_BAR_HEIGHT }
                 ]}>
                 <BlurView
-                    intensity={50}
+                    intensity={100}
                     tint='systemUltraThinMaterial'
                     className="overflow-hidden flex-1"
                 />
@@ -158,6 +151,13 @@ const Modal = ({
                 >
                     Cancel
                 </ButtonText>
+            </View>
+
+            {/* Title */}
+            <View className="absolute left-[50%] top-4 -translate-x-1/2">
+                <CustomText type='header'>
+                    {title}
+                </CustomText>
             </View>
 
             {/* Primary Button */}

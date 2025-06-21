@@ -1,5 +1,5 @@
 import { PLANNER_SETS_STORAGE_ID } from "@/lib/constants/storage";
-import { TPlannerSet } from "@/types/planner/TPlannerSet";
+import { TPlannerSet } from "@/lib/types/planner/TPlannerSet";
 import { MMKV } from "react-native-mmkv";
 
 const storage = new MMKV({ id: PLANNER_SETS_STORAGE_ID });

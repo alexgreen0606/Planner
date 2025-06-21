@@ -8,6 +8,7 @@ import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
+import { EListType } from "@/lib/enums/EListType";
 
 // ---------- Utilities ----------
 
@@ -60,9 +61,10 @@ function generatePlannerEvent(event: Calendar.Event, datestamp: string): IPlanne
         value: event.title,
         sortId: 1, // temporary sort id (will be overwritten)
         listId: datestamp,
+        listType: EListType.PLANNER,
         timeConfig: {
-            startTime: eventStart.toISOString(),
-            endTime: eventEnd.toISOString(),
+            startIso: eventStart.toISOString(),
+            endIso: eventEnd.toISOString(),
             allDay: Boolean(event.allDay),
             multiDayEnd,
             multiDayStart
@@ -97,9 +99,10 @@ function generateEventChip(event: Calendar.Event, calendar: Calendar.Calendar): 
             sortId: 1,
             calendarId: event.id,
             value: event.title,
+            listType: EListType.PLANNER,
             timeConfig: {
-                startTime: event.startDate as string,
-                endTime: event.endDate as string,
+                startIso: event.startDate as string,
+                endIso: event.endDate as string,
                 allDay: event.allDay
             },
             color: calendar.color!,
@@ -136,7 +139,7 @@ function validateCalendarEvent(event: Calendar.Event, datestamp: string): boolea
 }
 
 /**
- * ✅ Determines if a calendar event should be displayed as an event chip for the given datestamp.
+ * Determines if a calendar event should be displayed as an event chip for the given datestamp.
  * 
  * An event will be a chip if:
  * 1. It is an all-day event for the given date.
@@ -154,6 +157,8 @@ function validateEventChip(event: Calendar.Event, datestamp: string): boolean {
 
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
+
+    // TODO: USE LUXON
 
     if (event.allDay) {
         // For all-day events, compare dates without time
@@ -236,7 +241,7 @@ async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
 }
 
 /**
- * ✅ Loads in all calendar data for the given range of dates.
+ * Loads in all calendar data for the given range of dates.
  * The data will be stored directly into the Jotai store.
  * 
  * @param range - range of dates to parse the calendar with
@@ -250,6 +255,8 @@ export async function loadCalendarData(datestamps: string[]) {
         mergeCalendarDataAndSave(newCalendarData);
         return;
     }
+
+    // TODO: use LUXON
 
     const allCalendarsMap = await getCalendarMap();
 

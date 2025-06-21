@@ -3,6 +3,7 @@ import { NULL } from "@/lib/constants/generic";
 import { CHECKLISTS_STORAGE_ID, StorageKey } from "@/lib/constants/storage";
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EListType } from "@/lib/enums/EListType";
 import { IChecklist } from "@/lib/types/checklists/IChecklist";
 import { IFolder } from "@/lib/types/checklists/IFolder";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
@@ -73,6 +74,7 @@ export const getFolderItem = (itemId: string, type: EFolderItemType): IFolderIte
         platformColor: data.platformColor,
         status: data.status,
         type,
+        listType: EListType.FOLDER,
         childrenCount:
             type === EFolderItemType.FOLDER
                 ? (data as IFolder).folderIds.length + (data as IFolder).listIds.length

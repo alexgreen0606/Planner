@@ -6,17 +6,16 @@ import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
 import { StorageKey } from '@/lib/constants/storage';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+import { EListType } from '@/lib/enums/EListType';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
-import { deleteCountdowns, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
+import { deleteCountdown, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
 import { isItemTextfield } from '@/utils/listUtils';
-import { generateSortIdByTime } from '@/utils/plannerUtils';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { DateTime } from 'luxon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
@@ -32,18 +31,18 @@ const Countdowns = () => {
         [todayDatestamp]
     );
 
-    const getCountownsMemoized = useCallback(getCountdowns, []);
+    const listType = EListType.COUNTDOWN;
 
-    const deleteFunctionKey = EDeleteFunctionKey.COUNTDOWN;
+    const getCountownsMemoized = useCallback(getCountdowns, []);
 
     // ------------- Utility Functions -------------
 
-    function initializeCountdown(item: IListItem) {
+    function initializeCountdown(item: IListItem): ICountdown {
         return {
             ...item,
             // Place textfield above the first countdown
             sortId: 0.5,
-            startTime: DateTime.fromJSDate(todayMidnight).toISO()!
+            startIso: DateTime.fromJSDate(todayMidnight).toISO()!
         }
     }
 
@@ -79,7 +78,7 @@ const Countdowns = () => {
                                     text: 'Delete',
                                     style: 'destructive',
                                     onPress: async () => {
-                                        await CountdownItems.deleteSingleItemFromStorage(countdown);
+                                        await deleteCountdown(countdown);
                                         setTextfieldItem(null);
                                         setIsDeleteAlertOpen(false);
                                     }
@@ -104,15 +103,14 @@ const Countdowns = () => {
             createItem: async (countdown) => {
                 await saveCountdown(countdown, true);
             },
-            updateItem: saveCountdown,
-            deleteItems: deleteCountdowns
+            updateItem: saveCountdown
         },
         handleListChange: async () => {
             await CountdownItems.refetchItems();
         },
         initializeListItem: initializeCountdown,
         reloadOnOverscroll: true,
-        deleteFunctionKey
+        listType
     });
 
     useEffect(() => {
@@ -127,11 +125,10 @@ const Countdowns = () => {
                 listId={StorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
                 disableDrag
-                deleteFunctionKey={deleteFunctionKey}
+                listType={listType}
                 isLoading={CountdownItems.isLoading}
                 items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
-                onDeleteItem={CountdownItems.deleteSingleItemFromStorage}
                 onContentClick={CountdownItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 saveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
@@ -150,7 +147,7 @@ const Countdowns = () => {
                     },
                     customIcon: (
                         <View className='w-16'>
-                            <DateValue concise isoTimestamp={item.startTime} />
+                            <DateValue concise isoTimestamp={item.startIso} />
                         </View>
                     )
                 })}
@@ -158,7 +155,7 @@ const Countdowns = () => {
                     customIcon:
                         <View className="[width:55px] items-end">
                             <CustomText adjustsFontSizeToFit numberOfLines={1} type='soft'>
-                                {daysBetweenToday(countdown.startTime)} days
+                                {daysBetweenToday(countdown.startIso)} days
                             </CustomText>
                         </View>
                 })}
@@ -172,31 +169,31 @@ const Countdowns = () => {
                 maximumDate={datestampToMidnightDate(getDatestampThreeYearsFromToday())}
                 // open={dateSelectOpen && Boolean(textfieldItem)}
                 value={
-                    textfieldItem?.startTime
-                        ? DateTime.fromISO(textfieldItem.startTime).toJSDate()
+                    textfieldItem?.startIso
+                        ? DateTime.fromISO(textfieldItem.startIso).toJSDate()
                         : todayMidnight
                 }
-                // onConfirm={(date) => {
-                //     if (!textfieldItem) return;
+            // onConfirm={(date) => {
+            //     if (!textfieldItem) return;
 
-                //     const selected = DateTime.fromJSDate(date);
-                //     const updatedCountdown: ICountdown = {
-                //         ...textfieldItem,
-                //         startTime: selected.toISO()!
-                //     };
-                //     updatedCountdown.sortId = generateSortIdByTime(updatedCountdown, CountdownItems.items);
+            //     const selected = DateTime.fromJSDate(date);
+            //     const updatedCountdown: ICountdown = {
+            //         ...textfieldItem,
+            //         startTime: selected.toISO()!
+            //     };
+            //     updatedCountdown.sortId = generateSortIdByTime(updatedCountdown, CountdownItems.items);
 
-                //     if (saveEventOnDateSelectorClose.current) {
-                //         CountdownItems.persistItemToStorage(updatedCountdown);
-                //         setTextfieldItem(null);
-                //         saveEventOnDateSelectorClose.current = false;
-                //     } else {
-                //         setTextfieldItem(updatedCountdown);
-                //     }
+            //     if (saveEventOnDateSelectorClose.current) {
+            //         CountdownItems.persistItemToStorage(updatedCountdown);
+            //         setTextfieldItem(null);
+            //         saveEventOnDateSelectorClose.current = false;
+            //     } else {
+            //         setTextfieldItem(updatedCountdown);
+            //     }
 
-                //     toggleDateSelector();
-                // }}
-                // onCancel={toggleDateSelector}
+            //     toggleDateSelector();
+            // }}
+            // onCancel={toggleDateSelector}
             />
 
         </View>

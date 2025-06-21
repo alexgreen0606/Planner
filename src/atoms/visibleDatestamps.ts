@@ -17,5 +17,5 @@ export const visibleDatestampsAtom = atom((get) => {
         return [];
     }
 
-    return generateDatestampRange(plannerSet.startDate, plannerSet.endDate);
+    return generateDatestampRange(plannerSet.startDatestamp, plannerSet.endDatestamp);
 });

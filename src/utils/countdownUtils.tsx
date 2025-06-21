@@ -7,6 +7,7 @@ import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { getCalendarMap, loadCalendarData } from "./calendarUtils";
 import { getAllVisibleDatestamps } from "./plannerUtils";
+import { EListType } from "@/lib/enums/EListType";
 
 /**
  * ✅ Converts a calendar event to a Countdown.
@@ -22,7 +23,8 @@ function calendarEventToCountdown(calEvent: Calendar.Event, sortId?: number): IC
         sortId: sortId ?? 1,
         listId: StorageKey.COUNTDOWN_LIST_KEY,
         status: EItemStatus.STATIC,
-        startTime: calEvent.startDate as string
+        startIso: calEvent.startDate as string,
+        listType: EListType.COUNTDOWN
     }
 }
 
@@ -82,7 +84,7 @@ export async function getCountdowns(): Promise<ICountdown[]> {
  */
 export async function saveCountdown(countdown: ICountdown, createNew: boolean = false) {
     const allVisibleDatestamps = getAllVisibleDatestamps();
-    const countdownDatestamp = isoToDatestamp(countdown.startTime);
+    const countdownDatestamp = isoToDatestamp(countdown.startIso);
 
     // Tracks the Planner datestamps that will be affected by this update.
     const affectedDatestamps = new Set([countdownDatestamp]);
@@ -91,8 +93,8 @@ export async function saveCountdown(countdown: ICountdown, createNew: boolean = 
 
     const eventDetails = {
         title: countdown.value,
-        startDate: countdown.startTime,
-        endDate: countdown.startTime,
+        startDate: countdown.startIso,
+        endDate: countdown.startIso,
         allDay: true
     };
 
@@ -117,22 +119,20 @@ export async function saveCountdown(countdown: ICountdown, createNew: boolean = 
 }
 
 /**
- * ✅ Deletes a list of Countdowns from the device calendar.
+ * ✅ Deletes a Countdown from the device calendar.
  * 
- * @param countdowns - The list of Countdowns to delete.
+ * @param countdowns - The Countdown to delete.
  */
-export async function deleteCountdowns(countdowns: ICountdown[]) {
+export async function deleteCountdown(countdown: ICountdown) {
     const allVisibleDatestamps = getAllVisibleDatestamps();
 
-    // Phase 1: Delete all the events from the calendar.
-    await Promise.all(
-        countdowns.map(countdown => Calendar.deleteEventAsync(countdown.id))
-    );
+    // Phase 1: Delete the event from the calendar.
+    await Calendar.deleteEventAsync(countdown.id);
 
-    // Phase 2: Reload the calendar data if any of the events affect the current planners.
+    // Phase 2: Reload the calendar data if the event affects the current planners.
     const affectedDatestamps = [];
     for (const datestamp of allVisibleDatestamps) {
-        if (countdowns.some(event => event.listId === datestamp)) {
+        if (countdown.listId === datestamp) {
             affectedDatestamps.push(datestamp);
         }
     }

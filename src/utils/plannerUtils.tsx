@@ -12,10 +12,11 @@ import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId
 import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
-import { loadCalendarData } from './calendarUtils';
+import { hasCalendarAccess, loadCalendarData } from './calendarUtils';
 import { datestampToDayOfWeek, getTodayDatestamp, isoToDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { DateTime } from 'luxon';
+import { EListType } from '@/lib/enums/EListType';
 
 // ------------- Utilities -------------
 
@@ -74,8 +75,8 @@ function extractTimeValueFromString(text: string, datestamp?: string): Extracted
         const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
         timeConfig = {
-            startTime: datestamp ? timeValueToIso(datestamp, formattedTime) : formattedTime,
-            endTime: datestamp ? timeValueToIso(datestamp, "23:55") : "23:55",
+            startIso: datestamp ? timeValueToIso(datestamp, formattedTime) : formattedTime,
+            endIso: datestamp ? timeValueToIso(datestamp, "23:55") : "23:55",
             allDay: false,
         };
     }
@@ -94,7 +95,7 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
     if (!event) return null;
 
     if ("timeConfig" in event) {
-        return event.timeConfig?.multiDayEnd ? event.timeConfig.endTime : event.timeConfig?.startTime ?? null;
+        return event.timeConfig?.multiDayEnd ? event.timeConfig.endIso : event.timeConfig?.startIso ?? null;
     } else if ("startTime" in event) {
         return event.startTime ?? null;
     } else {
@@ -113,7 +114,6 @@ export function getMountedLinkedDatestamps(events: IPlannerEvent[]) {
 
     const affectedDatestamps = [];
     for (const visible of allVisibleDatestamps) {
-        console.log(visible, 'ANALYZING')
         const localStart = DateTime.fromISO(visible).startOf('day');
         const localEnd = localStart.endOf('day');
 
@@ -121,13 +121,12 @@ export function getMountedLinkedDatestamps(events: IPlannerEvent[]) {
         const visibleEnd = localEnd.toUTC().toISO()!;
 
         if (events.some((event) => {
-            console.log('ANALYZING THE EVENT NOW', event)
-            const { startTime, endTime } = event.timeConfig ?? {};
-            if (!startTime || !endTime || !event.calendarId) return false;
+            const { startIso, endIso } = event.timeConfig ?? {};
+            if (!startIso || !endIso || !event.calendarId) return false;
 
             return (
-                isTimeEarlier(startTime, visibleEnd) &&
-                isTimeEarlier(visibleStart, endTime)
+                isTimeEarlier(startIso, visibleEnd) &&
+                isTimeEarlier(visibleStart, endIso)
             );
         })) {
             affectedDatestamps.push(visible);
@@ -186,10 +185,10 @@ export function setEventsInPlanner(
 // ------------- Modal Utilities -------------
 
 /**
- * ✅ Opens the time modal and passes the given event details in the path.
+ * Opens the time modal and passes the given event details in the path.
  * If the item is new, a null item ID will be passed.
  * 
- * @param datestamp - the datestamp the event exists in
+ * @param datestamp - The key of the planner where the modal open event occured.
  * @param event - the event to update within the modal
  * @param router - the router to navigate to the modal
  */
@@ -225,8 +224,8 @@ export function timeConfigsAreEqual(
 
     return (
         a.allDay === b.allDay &&
-        a.startTime === b.startTime &&
-        a.endTime === b.endTime &&
+        a.startIso === b.startIso &&
+        a.endIso === b.endIso &&
         (a.multiDayEnd ?? false) === (b.multiDayEnd ?? false) &&
         (a.multiDayStart ?? false) === (b.multiDayStart ?? false)
     );
@@ -347,7 +346,19 @@ export async function buildPlannerEvents(
     planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
 
     // Phase 2: Merge in any events from the calendar.
-    planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
+    if (hasCalendarAccess()) {
+        planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
+    } else {
+
+
+
+
+    // TODO: remove any multiDay starts and ends and allDay when the calendar access if false
+
+
+
+
+    }
 
     // Phase 3: Merge in carryover events from yesterday. Only applicable for today's planner.
     if (datestamp === getTodayDatestamp()) {
@@ -457,8 +468,8 @@ export function syncPlannerWithRecurring(
 
     function getRecurringEventTimeConfig(recEvent: IRecurringEvent): TTimeConfig {
         return {
-            startTime: timeValueToIso(datsetamp, recEvent.startTime!),
-            endTime: timeValueToIso(datsetamp, '23:55'),
+            startIso: timeValueToIso(datsetamp, recEvent.startTime!),
+            endIso: timeValueToIso(datsetamp, '23:55'),
             allDay: false,
         }
     };
@@ -479,7 +490,8 @@ export function syncPlannerWithRecurring(
             value: recEvent.value,
             listId: datsetamp,
             recurringId: recEvent.id,
-            status: EItemStatus.STATIC
+            status: EItemStatus.STATIC,
+            listType: EListType.PLANNER
         };
 
         // Add timeConfig
@@ -569,7 +581,7 @@ export function handleEventValueUserInput(
             if (datestamp) {
                 (newEvent as IPlannerEvent).timeConfig = timeConfig;
             } else {
-                (newEvent as IRecurringEvent).startTime = timeConfig.startTime;
+                (newEvent as IRecurringEvent).startTime = timeConfig.startIso;
             }
             newEvent.sortId = generateSortIdByTime(newEvent, currentList);
             return newEvent;

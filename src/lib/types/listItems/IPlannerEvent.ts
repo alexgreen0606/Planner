@@ -2,8 +2,8 @@ import { IListItem } from "./core/TListItem";
 
 export type TTimeConfig = {
     allDay: boolean;
-    startTime: string; // ISO timestamp
-    endTime: string; // ISO timestamp
+    startIso: string;
+    endIso: string;
     multiDayEnd?: boolean;
     multiDayStart?: boolean;
 }

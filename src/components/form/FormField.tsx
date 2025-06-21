@@ -1,10 +1,9 @@
-import DateRangeSelector from "./fields/DateRangeSelector";
-import ModalCheckbox from "./fields/Checkbox";
-import TimeRangeSelector from "./fields/TimeRangeSelector";
-import ModalTextfield from "./fields/Textfield";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { IFormField } from "@/lib/types/form/IFormField";
-import { getIsoRoundedDown5Minutes } from "@/utils/dateUtils";
+import { isoToDatestamp } from "@/utils/dateUtils";
+import ModalCheckbox from "./fields/Checkbox";
+import ModalTextfield from "./fields/Textfield";
+import TimeRangeSelector from "./fields/TimeRangeSelector";
 
 interface FormFieldProps extends Omit<IFormField, 'name'> {
     type: EFormFieldType;
@@ -36,25 +35,27 @@ const FormField = ({
                 />
             );
         case EFormFieldType.DATE_RANGE:
-            const { startTime: start, endTime: end } = value || {};
+            const { startDatestamp, endDatestamp } = value;
+            if (!startDatestamp || !endDatestamp) return null;
 
             return (
-                <DateRangeSelector
-                    startDatestamp={start}
-                    endDatestamp={end}
-                    onChange={(start, end) => {
+                <TimeRangeSelector
+                    startIso={startDatestamp}
+                    endIso={endDatestamp}
+                    onChange={(startIso, endIso) => {
                         onChange({
-                            startTime: start,
-                            endTime: end
+                            startDatestamp: isoToDatestamp(startIso),
+                            endDatestamp: isoToDatestamp(endIso)
                         });
                     }}
-                    multiDay
+                    allDay={true}
+                    multiDay={true}
+                    triggerOpenField={trigger}
                 />
             );
         case EFormFieldType.TIME_RANGE:
-            const nowIso = getIsoRoundedDown5Minutes();
-            const currentValue = value || { startIso: nowIso, endIso: nowIso };
-            const { startIso = nowIso, endIso = nowIso } = currentValue;
+            const { startIso, endIso } = value;
+            if (!startIso || !endIso) return null;
 
             return (
                 <TimeRangeSelector
@@ -68,7 +69,7 @@ const FormField = ({
                     }}
                     allDay={allDay}
                     multiDay={multiDay}
-                    triggerOpenStartTimeSelector={trigger}
+                    triggerOpenField={trigger}
                 />
             );
         case EFormFieldType.CHECKBOX:

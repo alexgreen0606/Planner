@@ -17,7 +17,7 @@ import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+import { EListType } from '@/lib/enums/EListType';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -38,7 +38,7 @@ const SortedFolder = ({
 
     const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
 
-    const deleteFunctionKey = EDeleteFunctionKey.FOLDER;
+    const listType = EListType.FOLDER;
 
     /**
      * If the focused item is being transferred, transfer it to the parent folder.
@@ -176,19 +176,20 @@ const SortedFolder = ({
                                     {
                                         text: !!item.childrenCount ? 'Force Delete' : 'Delete',
                                         style: 'destructive',
-                                        onPress: () => {
-                                            SortedItems.deleteSingleItemFromStorage(item);
+                                        onPress: async () => {
+                                            deleteFolderItem(item.id, item.type);
+                                            setTextfieldItem(null);
                                             setIsDeleteAlertOpen(false);
                                         }
                                     }
                                 ]
                             );
                         },
-                        type: 'trash',
+                        type: 'trash'
                     }],
-                    createColorSelectionIconSet(item),
+                    createColorSelectionIconSet(item)
                 ],
-            item,
+            item
         }
     };
 
@@ -207,14 +208,10 @@ const SortedFolder = ({
         getItemsFromStorageObject: getFolderItemsMemoized,
         storageConfig: {
             createItem: createFolderItem,
-            updateItem: updateFolderItem,
-            deleteItems: (items) => {
-                deleteFolderItem(items[0].id, items[0].type);
-                setTextfieldItem(null);
-            }
+            updateItem: updateFolderItem
         },
         initializeListItem: initializeEmptyFolder,
-        deleteFunctionKey
+        listType
     });
 
     // Rebuild the list when one of the folder's items changes
@@ -230,11 +227,10 @@ const SortedFolder = ({
             listId={folderId}
             items={SortedItems.items}
             fillSpace
-            deleteFunctionKey={deleteFunctionKey}
+            listType={listType}
             isLoading={SortedItems.isLoading}
             onDragEnd={SortedItems.persistItemToStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
-            onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getToolbarProps={getItemToolbarConfig}
             onContentClick={handleItemClick}
             saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}

@@ -3,9 +3,11 @@ import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { PLANNER_STORAGE_ID } from '@/lib/constants/storage';
+import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deleteAllRecurringEvents, deletePlannerEvents, resetRecurringEvents, savePlannerEvent, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { deleteAllRecurringEvents, resetRecurringEvents, savePlannerEvent, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -19,8 +21,11 @@ import { buildPlannerEvents, generateEventToolbar, generatePlanner, generateTime
 import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+
+interface PlannerCardProps {
+    datestamp: string;
+    forecast?: WeatherForecast;
+}
 
 enum EditAction {
     EDIT_TITLE = 'EDIT_TITLE',
@@ -29,16 +34,11 @@ enum EditAction {
     DELETE_RECURRING = 'DELETE_RECURRING'
 }
 
-interface PlannerCardProps {
-    datestamp: string;
-    forecast?: WeatherForecast;
-}
-
 const PlannerCard = ({
     datestamp,
     forecast
 }: PlannerCardProps) => {
-    const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const { getDeletingItems, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
     const pathname = usePathname();
     const router = useRouter();
 
@@ -54,10 +54,12 @@ const PlannerCard = ({
         [pathname]
     );
 
+    const listType = EListType.PLANNER;
+
     // ------------- Utility Functions -------------
 
     const isEventDeleting = useCallback((planEvent: IPlannerEvent) =>
-        getDeletingItems(EDeleteFunctionKey.PLANNER_EVENT).some(deleteItem =>
+        getDeletingItems(listType).some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // and is rooted in this planner (deleting multi-day start events should not mark the end event as deleting)
@@ -99,6 +101,10 @@ const PlannerCard = ({
         }
     }
 
+    function toggleScheduleEventDelete(event: IPlannerEvent) {
+        toggleScheduleItemDelete(event, listType);
+    }
+
     const getItemsFromStorageObject = useCallback((planner: TPlanner) => {
         return buildPlannerEvents(datestamp, planner, calendarEvents);
     }, [calendarEvents]);
@@ -110,10 +116,9 @@ const PlannerCard = ({
         initializedStorageObject: generatePlanner(datestamp),
         storageConfig: {
             createItem: savePlannerEvent,
-            updateItem: savePlannerEvent,
-            deleteItems: deletePlannerEvents
+            updateItem: savePlannerEvent
         },
-        deleteFunctionKey: EDeleteFunctionKey.PLANNER_EVENT
+        listType
     });
 
     const planner = SortedEvents.storageObject;
@@ -131,6 +136,12 @@ const PlannerCard = ({
             toggleHideAllRecurringEvents(datestamp);
         }
     }, [textfieldItem?.listId, isRecurringHidden]);
+
+    useEffect(() => {
+        if (textfieldItem?.listId === datestamp && collapsed) {
+            setCollapsed(false);
+        }
+    }, [textfieldItem]);
 
     return (
         <Card
@@ -217,16 +228,15 @@ const PlannerCard = ({
             <SortableList<IPlannerEvent>
                 listId={datestamp}
                 items={visibleEvents}
-                deleteFunctionKey={EDeleteFunctionKey.PLANNER_EVENT}
+                listType={listType}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={SortedEvents.persistItemToStorage}
-                onDeleteItem={SortedEvents.deleteSingleItemFromStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 hideKeyboard={isTimeModalOpen}
-                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startTime}-${isTimeModalOpen}`}
+                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startIso}-${isTimeModalOpen}`}
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedEvents.toggleItemDelete, isEventDeleting(item))}
+                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, isEventDeleting(item))}
                 getToolbarProps={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
                 customGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{

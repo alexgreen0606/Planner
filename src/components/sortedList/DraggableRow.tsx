@@ -22,7 +22,7 @@ import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
-import { EDeleteFunctionKey } from "@/lib/enums/EDeleteFunctionKeys";
+import { EListType } from "@/lib/enums/EListType";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -55,9 +55,8 @@ export interface RowProps<T extends IListItem> {
         index: DerivedValue<number>;
         handleDragEnd: () => void;
     },
-    deleteFunctionKey: EDeleteFunctionKey;
+    listType: EListType;
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
-    onDeleteItem: (item: T) => Promise<void> | void;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
@@ -87,10 +86,9 @@ const DraggableRow = <T extends IListItem>({
     isListDragging,
     upperAutoScrollBound,
     lowerAutoScrollBound,
-    onDeleteItem,
     saveTextfieldAndCreateNew,
     onDragEnd,
-    deleteFunctionKey,
+    listType,
     hideKeyboard,
     customGetIsDeleting
 }: RowProps<T>) => {
@@ -118,7 +116,7 @@ const DraggableRow = <T extends IListItem>({
 
     const isItemDeleting = customGetIsDeleting ?? getIsItemDeleting;
     const pendingDelete = useMemo(
-        () => isItemDeleting(item, deleteFunctionKey),
+        () => isItemDeleting(item, listType),
         [getIsItemDeleting]
     );
 
@@ -142,15 +140,7 @@ const DraggableRow = <T extends IListItem>({
     }
 
     function handleTextfieldSave(createNew: boolean = true) {
-        if (item.value.trim() !== '') {
-            saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
-        } else {
-            if (item.status === EItemStatus.NEW) {
-                setCurrentTextfield(null);
-            } else {
-                onDeleteItem(item);
-            }
-        }
+        saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
     }
 
     function handleDrag(

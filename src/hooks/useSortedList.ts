@@ -9,12 +9,11 @@ import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useReloadScheduler } from './useReloadScheduler';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+import { EListType } from '@/lib/enums/EListType';
 
 type StorageHandlers<T extends IListItem> = {
     updateItem: (item: T) => Promise<any> | void;
     createItem: (item: T) => Promise<any> | void;
-    deleteItems: (items: T[]) => Promise<any> | void;
 };
 
 interface SortedListConfig<T extends IListItem, S> {
@@ -28,7 +27,7 @@ interface SortedListConfig<T extends IListItem, S> {
     storageConfig?: StorageHandlers<T>;
     initializedStorageObject?: S;
     reloadOnOverscroll?: boolean;
-    deleteFunctionKey: EDeleteFunctionKey;
+    listType: EListType;
 }
 
 const useSortedList = <T extends IListItem, S>({
@@ -41,15 +40,13 @@ const useSortedList = <T extends IListItem, S>({
     initializedStorageObject,
     reloadOnOverscroll = false,
     handleListChange,
-    deleteFunctionKey
+    listType
 }: SortedListConfig<T, S>) => {
     const pathname = usePathname();
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { registerReloadFunction } = useReloadScheduler();
     const {
-        getIsItemDeleting: isItemDeleting,
-        cancelItemDeletion,
-        scheduleItemDeletion
+        getIsItemDeleting: isItemDeleting
     } = useDeleteScheduler<T>();
     const { focusPlaceholder } = useScrollContainer();
 
@@ -114,7 +111,8 @@ const useSortedList = <T extends IListItem, S>({
             sortId: generateSortId(referenceSortId!, updatedList, isChildId),
             status: EItemStatus.NEW,
             listId: storageKey,
-            value: ''
+            value: '',
+            listType
         };
         const newItem: T = initializeListItem?.(genericListItem) ?? genericListItem as T;
 
@@ -162,7 +160,7 @@ const useSortedList = <T extends IListItem, S>({
      * If another textfield exists, it will be saved first.
      */
     async function toggleItemEdit(item: T) {
-        if (isItemDeleting(item, deleteFunctionKey)) return;
+        if (isItemDeleting(item, listType)) return;
 
         if (textfieldItem && textfieldItem.value.trim() !== '') {
             await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
@@ -177,66 +175,11 @@ const useSortedList = <T extends IListItem, S>({
 
     };
 
-    // ------------- DELETE Logic -------------
-
-    /**
-     * Deletes a batch of items from storage.
-     * For custom storage config, it calls delete on each item individually.
-     * For standard storage, it filters out all items in a single operation.
-     */
-    async function deleteItemsFromStorage(itemsToDelete: T[]) {
-        if (storageConfig) {
-            await storageConfig.deleteItems(itemsToDelete);
-        } else {
-            const updatedList = items.filter(({ id }) =>
-                !itemsToDelete.some(item => item.id === id)
-            );
-
-            setStorageObject(
-                setItemsInStorageObject && storageObject
-                    ? setItemsInStorageObject(updatedList, storageObject)
-                    : (updatedList as S)
-            );
-        }
-        await handleListChange?.();
-    }
-
-    /**
-     * Toggles an item in and out of deleting state.
-     * Adds or removes the item from the pendingDeleteItems array.
-     */
-    async function toggleItemDelete(item: T) {
-        // Handle textfield delete
-        if (item.id === textfieldItem?.id) {
-            setTextfieldItem(null);
-            if (item.value.trim() === '') {
-                deleteSingleItemFromStorage(item);
-                return;
-            }
-        }
-
-        if (isItemDeleting(item, deleteFunctionKey)) {
-            cancelItemDeletion(item, deleteFunctionKey);
-        } else {
-            scheduleItemDeletion(item, deleteFunctionKey);
-        }
-    }
-
-    /**
-     * Deletes a single item from storage.
-     * Uses the batch function with a single item.
-     */
-    async function deleteSingleItemFromStorage(item: T) {
-        await deleteItemsFromStorage([item]);
-    }
-
     return {
         items,
         refetchItems: buildList,
         persistItemToStorage,
-        toggleItemDelete,
         toggleItemEdit,
-        deleteSingleItemFromStorage,
         saveTextfieldAndCreateNew,
         storageObject: storageObject ?? initializedStorageObject,
         isLoading: isLoading === true

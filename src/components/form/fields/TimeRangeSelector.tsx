@@ -17,10 +17,10 @@ export interface TimeRangeSelectorProps {
     ) => void;
     allDay?: boolean;
     multiDay?: boolean;
-    triggerOpenStartTimeSelector?: boolean;
+    triggerOpenField?: SelectorMode;
 }
 
-enum SelectorMode {
+export enum SelectorMode {
     START_TIME = 'START_TIME',
     END_TIME = 'END_TIME',
     START_DATE = 'START_DATE',
@@ -30,6 +30,7 @@ enum SelectorMode {
 type TimeData = {
     date: Date;
     dayOfWeek: string;
+    datestamp: string; // YYYY-MM-DD
 }
 
 const TimeRangeSelector = ({
@@ -38,23 +39,23 @@ const TimeRangeSelector = ({
     onChange,
     allDay,
     multiDay,
-    triggerOpenStartTimeSelector = false
+    triggerOpenField
 }: TimeRangeSelectorProps) => {
-    const [isInputOpen, setIsInputOpen] = useState(triggerOpenStartTimeSelector);
+    const [isInputOpen, setIsInputOpen] = useState(Boolean(triggerOpenField));
     const [selectorMode, setSelectorMode] = useState<SelectorMode>(SelectorMode.START_TIME);
 
     const startData: TimeData = useMemo(() => {
         const date = DateTime.fromISO(startIso).toJSDate();
         const datestamp = isoToDatestamp(startIso);
         const dayOfWeek = datestampToDayOfWeek(datestamp);
-        return { date, dayOfWeek };
+        return { date, dayOfWeek, datestamp };
     }, [startIso]);
 
     const endData: TimeData = useMemo(() => {
         const date = DateTime.fromISO(endIso).toJSDate();
         const datestamp = isoToDatestamp(endIso);
         const dayOfWeek = datestampToDayOfWeek(datestamp);
-        return { date, dayOfWeek };
+        return { date, dayOfWeek, datestamp };
     }, [endIso]);
 
     const dateInEdit = [SelectorMode.START_DATE, SelectorMode.START_TIME].includes(selectorMode) ?
@@ -183,11 +184,11 @@ const TimeRangeSelector = ({
     }, [allDay]);
 
     useEffect(() => {
-        if (triggerOpenStartTimeSelector) {
-            setSelectorMode(SelectorMode.START_TIME);
+        if (triggerOpenField) {
+            setSelectorMode(triggerOpenField);
             setIsInputOpen(true);
         }
-    }, [triggerOpenStartTimeSelector]);
+    }, [triggerOpenField]);
 
     return (
         <View>

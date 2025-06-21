@@ -12,22 +12,24 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
+import { getTodayDatestamp } from '@/utils/dateUtils';
+import { SelectorMode } from '@/components/form/fields/TimeRangeSelector';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
 type PendingPlannerSet = {
     title: string;
     dates: {
-        startTime: string | null,
-        endTime: string | null
+        startDatestamp: string,
+        endDatestamp: string
     }
 }
 
 const emptyFormData: PendingPlannerSet = {
     title: '',
     dates: {
-        startTime: null,
-        endTime: null
+        startDatestamp: getTodayDatestamp(),
+        endDatestamp: getTodayDatestamp()
     }
 };
 
@@ -74,21 +76,19 @@ const PlannerSetModal = () => {
         [{
             name: 'dates',
             type: EFormFieldType.DATE_RANGE,
-            rules: {
-                required: 'Date range is required',
-                validate: (val) => Boolean(val.startTime) && Boolean(val.endTime)
-            }
+            trigger: SelectorMode.START_DATE
         }]
     ];
 
     // Populate the form in edit mode
     useEffect(() => {
+        const defaultDatestamp = getTodayDatestamp();
         reset({
             ...emptyFormData,
             ...plannerSet,
             dates: {
-                startTime: plannerSet?.startDate ?? null,
-                endTime: plannerSet?.endDate ?? null
+                startDatestamp: plannerSet?.startDatestamp ?? defaultDatestamp,
+                endDatestamp: plannerSet?.endDatestamp ?? defaultDatestamp
             }
         });
     }, [plannerSet, reset]);
@@ -96,12 +96,12 @@ const PlannerSetModal = () => {
     // ------------- Utility Functions -------------
 
     function onSubmit(data: PendingPlannerSet) {
+        const { startDatestamp, endDatestamp } = data.dates;
         data.title = data.title.trim();
-        if (!data.dates.startTime || !data.dates.endTime) return;
         savePlannerSet({
             title: data.title,
-            startDate: data.dates.startTime,
-            endDate: data.dates.endTime
+            startDatestamp,
+            endDatestamp
         });
         setPlannerSetKey(data.title);
         router.back();

@@ -1,5 +1,5 @@
 export type TPlannerSet = {
     title: string; // PK
-    startDate: string;
-    endDate: string;
+    startDatestamp: string;
+    endDatestamp: string;
 };

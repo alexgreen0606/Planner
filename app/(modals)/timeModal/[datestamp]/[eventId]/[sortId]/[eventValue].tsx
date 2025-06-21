@@ -1,24 +1,25 @@
+import { visibleDatestampsAtom } from "@/atoms/visibleDatestamps";
 import Form from "@/components/form";
+import { SelectorMode } from "@/components/form/fields/TimeRangeSelector";
 import Modal from "@/components/modal";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { NULL } from "@/lib/constants/generic";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EListType } from "@/lib/enums/EListType";
 import { IFormField } from "@/lib/types/form/IFormField";
-import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { deletePlannerEvents, getPlannerFromStorage, savePlannerEvent } from "@/storage/plannerStorage";
-import { getCalendarEventById } from "@/utils/calendarUtils";
-import { getIsoRoundedDown5Minutes } from "@/utils/dateUtils";
-import { generateSortId, sanitizeList } from "@/utils/listUtils";
-import { generateSortIdByTime, generateTimeIconConfig, sanitizePlanner } from "@/utils/plannerUtils";
+import { deletePlannerEvents, getPlannerFromStorage, savePlannerEvent, unschedulePlannerEvent } from "@/storage/plannerStorage";
+import { getCalendarEventById, hasCalendarAccess } from "@/utils/calendarUtils";
+import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
+import { generateSortId } from "@/utils/listUtils";
+import { sanitizePlanner } from "@/utils/plannerUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAtomValue } from "jotai";
 import { DateTime } from 'luxon';
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
-export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
 
 type ModalParams = {
     eventId: string; // NULL for new events
@@ -37,12 +38,16 @@ type FormData = {
     allDay: boolean;
 }
 
+export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
+
 const TimeModal = () => {
     const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<ModalParams>();
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+    const visibleDatestamps = useAtomValue(visibleDatestampsAtom);
     const router = useRouter();
 
     const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
+    const [isChipModal, setIsChipModal] = useState(false);
 
     const {
         control,
@@ -57,17 +62,20 @@ const TimeModal = () => {
 
     const isEditMode = eventId !== NULL;
 
-    // Load in the event from storage or the calendar.
+    // Load in the event from storage. Fallback to a calendar search if storage search fails.
     useEffect(() => {
-        const loadCalendarEventFallback = async () => {
+        const loadCalendarEventFallback = async (currentList: IPlannerEvent[]) => {
             const calEvent = await getCalendarEventById(eventId, datestamp);
             if (!calEvent) return;
 
+            const upperSortId = generateSortId(-1, currentList);
             setPlanEvent({
                 ...calEvent,
                 calendarId: calEvent.id,
-                status: EItemStatus.EDIT
+                status: EItemStatus.EDIT,
+                sortId: upperSortId
             });
+            setIsChipModal(true);
         }
 
         const newValue = eventValue === NULL ? '' : eventValue;
@@ -79,7 +87,8 @@ const TimeModal = () => {
                 sortId: Number(sortId),
                 status: EItemStatus.NEW,
                 listId: datestamp,
-                value: newValue
+                value: newValue,
+                listType: EListType.PLANNER
             });
             return;
         }
@@ -87,31 +96,28 @@ const TimeModal = () => {
         const planner = getPlannerFromStorage(datestamp);
         const event = planner.events.find(e => e.id === eventId);
 
-        // If the event ID was not found in the planner, fallback to a device calendar search.
+        // If the event was not found in storage. Fallback to a calendar search.
         if (!event) {
-            loadCalendarEventFallback();
+            loadCalendarEventFallback(planner.events);
             return;
         }
 
         setPlanEvent({ ...event, value: newValue, status: EItemStatus.EDIT });
-    }, [eventId]);
+    }, []);
 
     // Sync the form data every time the planEvent changes.
     useEffect(() => {
         if (!planEvent) return;
 
-        const nowTimeOfDayWithPlannerDate = getIsoRoundedDown5Minutes(planEvent.listId);
+        const nowTimePlannerDateIso = getIsoRoundedDown5Minutes(planEvent.listId);
+        const timeRange = {
+            startIso: planEvent.timeConfig?.startIso ?? nowTimePlannerDateIso,
+            endIso: planEvent.timeConfig?.endIso ?? nowTimePlannerDateIso,
+        };
+
         reset({
             title: planEvent.value,
-            timeRange: planEvent.timeConfig
-                ? {
-                    startIso: planEvent.timeConfig.startTime,
-                    endIso: planEvent.timeConfig.endTime
-                }
-                : {
-                    startIso: nowTimeOfDayWithPlannerDate,
-                    endIso: nowTimeOfDayWithPlannerDate
-                },
+            timeRange,
             allDay: Boolean(planEvent.timeConfig?.allDay),
             isCalendarEvent: Boolean(planEvent.calendarId)
         });
@@ -121,74 +127,75 @@ const TimeModal = () => {
     // ------------- Utility Functions -------------
 
     async function handleSave(data: FormData) {
-        if (!planEvent) return;
-
         const { title, timeRange, isCalendarEvent, allDay } = data;
         const { startIso, endIso } = timeRange;
-        if (!startIso || !endIso) return;
+        if (!planEvent || !startIso || !endIso) return;
 
-        // TODO: update listId accordingly
+        const targetDatestamp = isoToDatestamp(startIso);
+        const isTargetDatestampMounted = [...visibleDatestamps, getTodayDatestamp()].includes(targetDatestamp);
 
-        const updatedEvent = {
+        const updatedEvent: IPlannerEvent = {
             ...planEvent,
+            listId: targetDatestamp,
+            value: title,
             timeConfig: {
                 allDay,
-                startTime: startIso,
-                endTime: endIso
-            },
-            value: title
-        } as IPlannerEvent;
+                startIso: startIso,
+                endIso: endIso
+            }
+        };
 
+        // Phase 1: Mark new calendar events for creation.
         if (isCalendarEvent && !planEvent.calendarId) {
-            // Triggers creation of a new calendar event
             updatedEvent.calendarId = 'NEW';
         }
 
+        // Phase 2: (Special Case) During all-day creation, the end date must shift to the start of the next day.
         if (allDay && !planEvent.timeConfig?.allDay) {
-            // Special Case: During all-day creation, the end date must shift to the start of the next day.
             const endDate = DateTime.fromISO(endIso);
             const startOfNextDay = endDate
                 .plus({ days: 1 })
                 .startOf('day')
                 .toUTC()
                 .toISO();
-            updatedEvent.timeConfig!.endTime = startOfNextDay!;
+            updatedEvent.timeConfig!.endIso = startOfNextDay!;
         }
 
-        const savedEvent = await savePlannerEvent(updatedEvent);
-        const currentPlanner = getPlannerFromStorage(datestamp);
+        // Phase 3: Save the event in both storage and the calendar (if needed).
+        await savePlannerEvent(updatedEvent, planEvent);
 
-        // Replace ID is not needed here. Any matching event with a different ID was already removed
-        // in the savePlannerEvent function.
-        const plannerWithEvent = sanitizePlanner(currentPlanner.events, savedEvent);
+        // Phase 4: Create a new textfield if possible.
+        if (!isChipModal && isTargetDatestampMounted) {
+            const targetPlanner = getPlannerFromStorage(targetDatestamp);
 
-        // Place a new textfield below the saved event.
-        const newTextfieldSortId = generateSortId(savedEvent.sortId, plannerWithEvent);
-        const newTextfield: IListItem = {
-            id: uuid.v4(),
-            sortId: newTextfieldSortId,
-            status: EItemStatus.NEW,
-            listId: datestamp,
-            value: ''
-        };
+            // Replace ID is not needed here. Any matching event with a different ID was already removed
+            // in the savePlannerEvent function.
+            const plannerWithEvent = sanitizePlanner(targetPlanner.events, updatedEvent);
 
-        setTextfieldItem(newTextfield);
+            // Place a new textfield below the saved event.
+            const newTextfieldSortId = generateSortId(updatedEvent.sortId, plannerWithEvent);
+            setTextfieldItem({
+                id: uuid.v4(),
+                listId: targetDatestamp,
+                sortId: newTextfieldSortId,
+                status: EItemStatus.NEW,
+                value: ''
+            });
+
+            router.replace(targetDatestamp === getTodayDatestamp() ? '/' : '/planners');
+            return;
+        }
+
+        setTextfieldItem(null);
         router.back();
     }
 
     async function handleUnschedule() {
         if (!planEvent) return;
 
-        const updatedItem = { ...planEvent, listId: datestamp };
-        delete updatedItem.calendarId;
-        delete updatedItem.timeConfig;
+        await unschedulePlannerEvent(planEvent);
 
-        // TODO: need a new function for this. It's too complex and different. Need to pass the timeConfig and everything
-        // to be analyzed before deleting it.
-        
-        await savePlannerEvent(updatedItem, planEvent.calendarId);
-
-        setTextfieldItem(updatedItem);
+        setTextfieldItem(null);
         router.back();
     }
 
@@ -218,13 +225,14 @@ const TimeModal = () => {
             },
             multiDay: isCalendarEvent,
             allDay: isAllDay,
-            trigger: !isEditMode
+            trigger: !isEditMode ? SelectorMode.START_TIME : undefined
         }],
         [{
             name: 'isCalendarEvent',
             type: EFormFieldType.CHECKBOX,
             label: 'Add to Calendar',
-            defaultValue: false
+            defaultValue: false,
+            hide: !hasCalendarAccess()
         },
         {
             name: 'allDay',
@@ -245,9 +253,9 @@ const TimeModal = () => {
             }}
             deleteButtonConfig={{
                 label: 'Unschedule',
-                hidden: !isEditMode,
                 optionLabels: ['Delete Event', 'Unschedule Event'],
-                optionHandlers: [handleDelete, handleUnschedule]
+                optionHandlers: [handleDelete, handleUnschedule],
+                hidden: !isEditMode
             }}
             onClose={() => router.back()}
         >

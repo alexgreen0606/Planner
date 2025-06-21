@@ -9,7 +9,7 @@ import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon, { GenericIconProps } from '../icon';
 import CustomText from '../text/CustomText';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+import { EListType } from '@/lib/enums/EListType';
 
 const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
 const EXPANDED_CHIP_RIGHT_MARGIN = 6;
@@ -25,6 +25,7 @@ interface EventChipProps {
     chipSetIndex: number;
     shiftChipRight: boolean;
     planEvent?: IPlannerEvent;
+    parentPlannerDatestamp: string;
     onClick?: () => void;
     toggleCollapsed?: () => void;
 }
@@ -38,6 +39,7 @@ const EventChip = ({
     chipSetIndex,
     shiftChipRight,
     planEvent,
+    parentPlannerDatestamp,
     onClick,
     toggleCollapsed
 }: EventChipProps) => {
@@ -45,7 +47,7 @@ const EventChip = ({
     const router = useRouter();
 
     const isPendingDelete = useMemo(() => planEvent &&
-        getDeletingItems(EDeleteFunctionKey.PLANNER_EVENT).some(deleteItem =>
+        getDeletingItems(EListType.PLANNER).some(deleteItem =>
             // This deleting item is the chip's event
             deleteItem.id === planEvent.id &&
             // This deleting item is not from today
@@ -58,7 +60,7 @@ const EventChip = ({
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
 
     function handleOpenTimeModal() {
-        if (planEvent) openTimeModal(planEvent.listId, planEvent, router);
+        if (planEvent) openTimeModal(parentPlannerDatestamp, planEvent, router);
     }
 
     // ------------- Render Helper Function -------------

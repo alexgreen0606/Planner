@@ -1,4 +1,5 @@
 import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EListType } from "@/lib/enums/EListType";
 
 export interface IListItem {
     id: string;
@@ -6,4 +7,5 @@ export interface IListItem {
     sortId: number;
     status: EItemStatus;
     listId: string;
+    listType: EListType;
 };

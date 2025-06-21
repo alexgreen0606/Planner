@@ -11,7 +11,7 @@ export function generateDatestampRange(start: string, end: string): string[] {
     const startDate = DateTime.fromISO(start);
     const endDate = DateTime.fromISO(end);
 
-    if (!startDate.isValid || !endDate.isValid || endDate < startDate) {
+    if (endDate < startDate) {
         throw new Error('Invalid date range');
     }
 
@@ -19,7 +19,7 @@ export function generateDatestampRange(start: string, end: string): string[] {
     let currentDate = startDate;
 
     while (currentDate <= endDate) {
-        dates.push(currentDate.toISODate());
+        dates.push(currentDate.toISODate()!);
         currentDate = currentDate.plus({ days: 1 });
     }
 

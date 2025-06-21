@@ -7,13 +7,13 @@ import SortableList from '../sortedList';
 import { IChecklist } from '@/lib/types/checklists/IChecklist';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EDeleteFunctionKey } from '@/lib/enums/EDeleteFunctionKeys';
+import { EListType } from '@/lib/enums/EListType';
 
 const Checklist = () => {
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
     const { getIsItemDeleting } = useDeleteScheduler<IListItem>();
 
-    const deleteFunctionKey = EDeleteFunctionKey.CHECKLIST;
+    const deleteFunctionKey = EListType.CHECKLIST;
 
     const getItemsFromStorageObject = useCallback(
         (storageObject: IChecklist) => storageObject.items,
@@ -29,7 +29,7 @@ const Checklist = () => {
         storageKey: checklistId,
         getItemsFromStorageObject,
         setItemsInStorageObject,
-        deleteFunctionKey
+        toggleDeleteFunctionKey: deleteFunctionKey
     });
 
     return (

@@ -12,6 +12,6 @@ export interface IFormField {
     hide?: boolean;
     multiDay?: boolean;
     allDay?: boolean;
-    trigger?: boolean;
+    trigger?: any;
     setTrigger?: React.Dispatch<boolean>
 }
