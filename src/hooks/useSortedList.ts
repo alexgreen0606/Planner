@@ -1,5 +1,7 @@
 import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { EListType } from '@/lib/enums/EListType';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
 import { usePathname } from 'expo-router';
@@ -8,8 +10,6 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useReloadScheduler } from './useReloadScheduler';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EListType } from '@/lib/enums/EListType';
 
 type StorageHandlers<T extends IListItem> = {
     updateItem: (item: T) => Promise<any> | void;
@@ -42,16 +42,15 @@ const useSortedList = <T extends IListItem, S>({
     handleListChange,
     listType
 }: SortedListConfig<T, S>) => {
-    const pathname = usePathname();
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { registerReloadFunction } = useReloadScheduler();
-    const {
-        getIsItemDeleting: isItemDeleting
-    } = useDeleteScheduler<T>();
+    const { getIsItemDeleting } = useDeleteScheduler<T>();
     const { focusPlaceholder } = useScrollContainer();
+    const pathname = usePathname();
 
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
+
     const [items, setItems] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -88,6 +87,7 @@ const useSortedList = <T extends IListItem, S>({
      * @param isChildId - Signifies if the reference ID should be below the new textfield, else above.
      */
     async function saveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
+        console.log('saveTextfieldAndCreateNew')
         const item = textfieldItem ? { ...textfieldItem } : null;
 
         // Phase 1: Clear the textfield and exit if the input is empty.
@@ -166,7 +166,8 @@ const useSortedList = <T extends IListItem, S>({
      * If another textfield exists, it will be saved first.
      */
     async function toggleItemEdit(item: T) {
-        if (isItemDeleting(item, listType)) return;
+        console.log('toggleItemEdit'); // TODO: this gets overridden by save function when other focused gets blurred
+        if (getIsItemDeleting(item, listType)) return;
 
         if (textfieldItem && textfieldItem.value.trim() !== '') {
             await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });

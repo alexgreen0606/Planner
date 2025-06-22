@@ -60,6 +60,8 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         handleUpdateMountedDatestamps();
     }, [plannerSetKey]);
 
+    console.log(plannersMap)
+
     // Calendar load.
     useEffect(() => {
         handleLoadCalendarData();

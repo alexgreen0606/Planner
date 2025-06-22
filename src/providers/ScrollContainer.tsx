@@ -1,6 +1,6 @@
 import GenericIcon from '@/components/icon';
 import { useReloadScheduler } from '@/hooks/useReloadScheduler';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT, spacing, TOOLBAR_HEIGHT } from '@/lib/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BlurView } from 'expo-blur';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
@@ -365,7 +365,6 @@ export const ScrollContainerProvider = ({
 
             {/* Scroll Container */}
             <KeyboardAvoidingView
-                keyboardVerticalOffset={TOOLBAR_HEIGHT + spacing.medium}
                 behavior='padding'
                 className='flex-1'
             >

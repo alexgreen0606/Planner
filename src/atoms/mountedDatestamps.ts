@@ -1,4 +1,4 @@
-import { getNextEightDayDatestamps } from '@/utils/dateUtils';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 import { atom } from 'jotai';
 
 type MountedDatestamps = {
@@ -7,10 +7,10 @@ type MountedDatestamps = {
     all: string[];
 }
 
-const nextEightDatestamps = getNextEightDayDatestamps();
+const todayDatestamp = getTodayDatestamp();
 
 export const mountedDatestampsAtom = atom<MountedDatestamps>({
-    today: nextEightDatestamps[0],
-    planner: nextEightDatestamps.slice(1),
-    all: nextEightDatestamps
+    today: todayDatestamp,
+    planner: [],
+    all: [todayDatestamp]
 });

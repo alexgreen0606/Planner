@@ -30,7 +30,7 @@ const Planners = () => {
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
-        "2025-06-09": {
+        "2025-06-22": {
             "date": "2025-04-23",
             "weatherCode": 61,
             "weatherDescription": "Slight rain",
@@ -39,7 +39,7 @@ const Planners = () => {
             "precipitationSum": 0.06,
             "precipitationProbabilityMax": 24
         },
-        "2025-06-10": {
+        "2025-06-23": {
             "date": "2025-03-28",
             "weatherCode": 65,
             "weatherDescription": "Heavy rain",
@@ -48,7 +48,7 @@ const Planners = () => {
             "precipitationSum": 1.19,
             "precipitationProbabilityMax": 32
         },
-        "2025-06-11": {
+        "2025-06-24": {
             "date": "2025-03-29",
             "weatherCode": 3,
             "weatherDescription": "Overcast",
@@ -57,7 +57,7 @@ const Planners = () => {
             "precipitationSum": 0,
             "precipitationProbabilityMax": 3
         },
-        "2025-06-12": {
+        "2025-06-25": {
             "date": "2025-03-30",
             "weatherCode": 63,
             "weatherDescription": "Moderate rain",
@@ -66,7 +66,7 @@ const Planners = () => {
             "precipitationSum": 0.46,
             "precipitationProbabilityMax": 66
         },
-        "2025-06-13": {
+        "2025-06-26": {
             "date": "2025-03-31",
             "weatherCode": 51,
             "weatherDescription": "Light drizzle",
@@ -75,7 +75,7 @@ const Planners = () => {
             "precipitationSum": 0.02,
             "precipitationProbabilityMax": 34
         },
-        "2025-06-14": {
+        "2025-06-27": {
             "date": "2025-04-01",
             "weatherCode": 53,
             "weatherDescription": "Moderate drizzle",
@@ -84,7 +84,16 @@ const Planners = () => {
             "precipitationSum": 0.09,
             "precipitationProbabilityMax": 34
         },
-        "2025-06-15": {
+        "2025-06-28": {
+            "date": "2025-04-02",
+            "weatherCode": 53,
+            "weatherDescription": "Moderate drizzle",
+            "temperatureMax": 57,
+            "temperatureMin": 53,
+            "precipitationSum": 0.37,
+            "precipitationProbabilityMax": 41
+        },
+        "2025-06-29": {
             "date": "2025-04-02",
             "weatherCode": 53,
             "weatherDescription": "Moderate drizzle",

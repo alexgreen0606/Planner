@@ -169,6 +169,7 @@ const SortableList = <T extends IListItem>({
                             key={`${item.id}-row`}
                             item={item}
                             itemIndex={i}
+                            hasToolbar={Boolean(getToolbarProps)}
                             disableDrag={disableDrag}
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}

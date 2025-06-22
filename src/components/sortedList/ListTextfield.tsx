@@ -1,9 +1,9 @@
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/lib/constants/layout';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/constants/layout';
+import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainer } from '@/providers/ScrollContainer';
-import { IListItem } from '@/types/listItems/core/TListItem';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { PlatformColor, StyleSheet, TextInput, TextStyle } from 'react-native';
+import { PlatformColor, TextInput, TextStyle } from 'react-native';
 
 interface ListTextfieldProps<T extends IListItem> {
     item: T;
@@ -11,6 +11,7 @@ interface ListTextfieldProps<T extends IListItem> {
     onSubmit: (blurred: boolean) => void;
     hideKeyboard: boolean;
     customStyle: TextStyle;
+    hasToolbar: boolean;
 }
 
 const ListTextfield = <T extends IListItem>({
@@ -18,10 +19,11 @@ const ListTextfield = <T extends IListItem>({
     onChange,
     onSubmit,
     hideKeyboard,
-    customStyle
+    customStyle,
+    hasToolbar
 }: ListTextfieldProps<T>) => {
-    const [textfieldItem] = useTextfieldItemAs<T>();
     const { blurPlaceholder } = useScrollContainer();
+    const [textfieldItem] = useTextfieldItemAs<T>();
 
     const inputRef = useRef<TextInput>(null);
 
@@ -66,20 +68,19 @@ const ListTextfield = <T extends IListItem>({
             onBlur={() => handleSave(false)}
             submitBehavior='submit'
             selectionColor={PlatformColor('systemBlue')}
-            style={[styles.textInput, customStyle]}
+            className='flex-1 bg-transparent text-[16px]'
+            style={[
+                {
+                    height: editable ? (
+                        (LIST_ITEM_HEIGHT * 2) + (hasToolbar ? TOOLBAR_HEIGHT * 2 : 0)
+                    ) : LIST_CONTENT_HEIGHT,
+                    marginRight: LIST_ICON_SPACING / 2,
+                    color: PlatformColor('label')
+                },
+                customStyle
+            ]}
         />
     )
 }
-
-const styles = StyleSheet.create({
-    textInput: {
-        flex: 1,
-        height: LIST_CONTENT_HEIGHT,
-        marginRight: LIST_ICON_SPACING / 2,
-        fontSize: 16,
-        color: PlatformColor('label'),
-        backgroundColor: 'transparent',
-    },
-});
 
 export default ListTextfield;

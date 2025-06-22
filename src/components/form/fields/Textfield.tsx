@@ -7,13 +7,15 @@ export interface ModalTextfieldProps {
     value: string;
     onChange: (newVal: string) => void;
     focusTrigger: boolean;
+    autoCapitalizeWords: boolean;
 };
 
 const ModalTextfield = ({
     placeholder,
     value,
     onChange,
-    focusTrigger
+    focusTrigger,
+    autoCapitalizeWords
 }: ModalTextfieldProps) => {
     const inputRef = useRef<TextInput>(null);
 
@@ -35,6 +37,7 @@ const ModalTextfield = ({
             selectionColor={PlatformColor('systemBlue')}
             className='w-full text-[16px] bg-transparent'
             textAlignVertical='center'
+            autoCapitalize={autoCapitalizeWords ? 'words' : undefined}
             style={{
                 color: PlatformColor('label'),
                 height: LIST_CONTENT_HEIGHT

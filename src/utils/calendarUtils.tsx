@@ -9,6 +9,7 @@ import * as Calendar from 'expo-calendar';
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
 import { EListType } from "@/lib/enums/EListType";
+import { DateTime } from "luxon";
 
 // ---------- Utilities ----------
 
@@ -256,13 +257,12 @@ export async function loadCalendarData(datestamps: string[]) {
         return;
     }
 
-    // TODO: use LUXON
-
     const allCalendarsMap = await getCalendarMap();
 
     const allCalendarIds = Object.keys(allCalendarsMap);
-    const startDate = new Date(`${datestamps[0]}T00:00:00`);
-    const endDate = new Date(`${datestamps[datestamps.length - 1]}T23:59:59`);
+    const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
+    const endDate = DateTime.fromISO(datestamps[datestamps.length - 1]).endOf('day').toJSDate();
+
     const calendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate);
 
     datestamps.forEach((datestamp) => {

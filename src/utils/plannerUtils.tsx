@@ -247,7 +247,7 @@ export function sanitizePlanner(
 }
 
 /**
- * ✅ Generate a new sort ID for an event that maintains time logic within the planner.
+ * Generate a new sort ID for an event that maintains time logic within the planner.
  * 
  * @param event - the event to place
  * @param planner - the planner the event belongs to
@@ -323,7 +323,7 @@ export function generateSortIdByTime(
 // ------------- Planner Generation -------------
 
 /**
- * ✅ Build a planner out of existing data, the calendar, recurring events, 
+ * Build a planner out of existing data, the calendar, recurring events, 
  * and carryover events from past planners.
  * 
  * @param datestamp - the date the planner represents
@@ -350,7 +350,7 @@ export async function buildPlannerEvents(
 
 
 
-    // TODO: remove any multiDay starts and ends and allDay when the calendar access if false
+        // TODO: remove any multiDay starts and ends and allDay when the calendar access if false
 
 
 
@@ -361,14 +361,11 @@ export async function buildPlannerEvents(
     if (datestamp === getTodayDatestamp()) {
         const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
         remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
-            const newEvent = {
+            planner.events.push({
                 ...yesterdayEvent,
                 listId: datestamp,
-                sortId: -1
-            };
-
-            planner.events.push(newEvent);
-            newEvent.sortId = generateSortId(-1, planner.events);
+                sortId: generateSortId(-1, planner.events)
+            });
         });
     }
 

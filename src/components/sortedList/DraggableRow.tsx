@@ -56,6 +56,7 @@ export interface RowProps<T extends IListItem> {
         handleDragEnd: () => void;
     },
     listType: EListType;
+    hasToolbar: boolean;
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
@@ -83,6 +84,7 @@ const DraggableRow = <T extends IListItem>({
     getRowTextPlatformColor,
     onContentClick,
     itemIndex,
+    hasToolbar,
     isListDragging,
     upperAutoScrollBound,
     lowerAutoScrollBound,
@@ -92,7 +94,7 @@ const DraggableRow = <T extends IListItem>({
     hideKeyboard,
     customGetIsDeleting
 }: RowProps<T>) => {
-    const [currentTextfield, setCurrentTextfield] = useTextfieldItemAs<T>();
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { getIsItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
@@ -110,8 +112,8 @@ const DraggableRow = <T extends IListItem>({
     } = dragControls;
 
     const item = useMemo(() =>
-        currentTextfield?.id === staticItem.id ? currentTextfield : staticItem,
-        [currentTextfield, staticItem]
+        textfieldItem?.id === staticItem.id ? textfieldItem : staticItem,
+        [textfieldItem, staticItem]
     );
 
     const isItemDeleting = customGetIsDeleting ?? getIsItemDeleting;
@@ -135,8 +137,8 @@ const DraggableRow = <T extends IListItem>({
     // ------------- Utility Functions -------------
 
     function handleTextfieldChange(text: string) {
-        if (!currentTextfield) return;
-        setCurrentTextfield(handleValueChange?.(text, currentTextfield) ?? { ...currentTextfield, value: text });
+        if (!textfieldItem) return;
+        setTextfieldItem(handleValueChange?.(text, textfieldItem) ?? { ...textfieldItem, value: text });
     }
 
     function handleTextfieldSave(createNew: boolean = true) {
@@ -215,7 +217,7 @@ const DraggableRow = <T extends IListItem>({
         .minDuration(500)
         .onTouchesDown((_e, state) => {
             if (disableDrag) {
-                state.fail(); // prevent recognition
+                state.fail();
             }
         })
         .onStart(() => {
@@ -335,6 +337,7 @@ const DraggableRow = <T extends IListItem>({
                     <ListTextfield<T>
                         key={getTextfieldKey(item)}
                         item={item}
+                        hasToolbar={hasToolbar}
                         onChange={handleTextfieldChange}
                         onSubmit={handleTextfieldSave}
                         hideKeyboard={hideKeyboard}

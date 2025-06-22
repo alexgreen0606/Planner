@@ -19,6 +19,7 @@ const FormField = ({
     hide,
     placeholder,
     disabled,
+    autoCapitalizeWords,
     allDay,
     multiDay,
     trigger = false,
@@ -32,6 +33,8 @@ const FormField = ({
                     value={value ?? ''}
                     onChange={onChange}
                     focusTrigger={trigger}
+                    autoCapitalizeWords={Boolean(autoCapitalizeWords)}
+
                 />
             );
         case EFormFieldType.DATE_RANGE:

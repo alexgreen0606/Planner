@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Linking, PlatformColor } from 'reac
 import CustomText from '../text/CustomText';
 import { weatherCodeToFontistoIcon } from '../../utils/weatherUtils';
 import { SFSymbol } from 'react-native-sfsymbols';
+import { MotiView } from 'moti';
 
 interface WeatherDisplayProps {
     weatherCode: number;
@@ -46,21 +47,30 @@ const WeatherDisplay = ({
     // High/low temperature layout
     if (high !== undefined && low !== undefined) {
         return (
-            <TouchableOpacity activeOpacity={1} onPress={openWeatherApp}>
-                <View className='flex-row gap-1 items-center'>
-                    <CustomText type='highTemp'>{Math.round(high)}°</CustomText>
-                    <View style={defaultStyles.divider} />
-                    <CustomText type='lowTemp'>{Math.round(low)}°</CustomText>
-                    <View style={defaultStyles.icon}>
-                        <SFSymbol
-                            name={weatherCodeToFontistoIcon(weatherCode)}
-                            size={20}
-                            multicolor
-                            resizeMode='center'
-                        />
+            <MotiView
+                from={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{
+                    type: 'timing',
+                    duration: 2000
+                }}
+            >
+                <TouchableOpacity activeOpacity={1} onPress={openWeatherApp}>
+                    <View className='flex-row gap-1 items-center'>
+                        <CustomText type='highTemp'>{Math.round(high)}°</CustomText>
+                        <View style={defaultStyles.divider} />
+                        <CustomText type='lowTemp'>{Math.round(low)}°</CustomText>
+                        <View style={defaultStyles.icon}>
+                            <SFSymbol
+                                name={weatherCodeToFontistoIcon(weatherCode)}
+                                size={20}
+                                multicolor
+                                resizeMode='center'
+                            />
+                        </View>
                     </View>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
+            </MotiView>
         );
     }
 

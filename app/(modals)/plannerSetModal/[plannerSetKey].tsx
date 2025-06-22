@@ -70,6 +70,7 @@ const PlannerSetModal = () => {
             type: EFormFieldType.TEXT,
             placeholder: 'Title',
             trigger: !isEditMode,
+            autoCapitalizeWords: true,
             rules: {
                 required: 'Title is required.',
                 validate: (value: string) => value.trim() !== ''

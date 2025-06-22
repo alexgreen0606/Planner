@@ -13,5 +13,6 @@ export interface IFormField {
     multiDay?: boolean;
     allDay?: boolean;
     trigger?: any;
+    autoCapitalizeWords?: boolean;
     setTrigger?: React.Dispatch<boolean>
 }
