@@ -1,4 +1,3 @@
-import { RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { useScrollContainer } from '@/providers/ScrollContainer';
@@ -15,6 +14,7 @@ import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { EListType } from '@/lib/enums/EListType';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 interface SortedRecurringPlannerProps {
     plannerKey: string;
@@ -80,7 +80,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     }
 
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
-        storageId: RECURRING_EVENT_STORAGE_ID,
+        storageId: EStorageId.RECURRING_EVENT,
         storageKey: plannerKey,
         storageConfig: {
             createItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,

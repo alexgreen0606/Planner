@@ -1,22 +1,22 @@
-import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent, TTimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deletePlannerEvents, getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
+import { getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringPlannerStorage';
 import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
-import { hasCalendarAccess, loadCalendarData } from './calendarUtils';
-import { datestampToDayOfWeek, getTodayDatestamp, isoToDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
-import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { DateTime } from 'luxon';
-import { EListType } from '@/lib/enums/EListType';
+import { hasCalendarAccess } from './calendarUtils';
+import { datestampToDayOfWeek, getTodayDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
+import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
+import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 
 // ------------- Utilities -------------
 
@@ -26,11 +26,8 @@ import { EListType } from '@/lib/enums/EListType';
  * 
  * @returns - A list of all planner datestamps currently mounted.
  */
-export function getAllVisibleDatestamps(): string[] {
-    return [
-        getTodayDatestamp(),
-        ...jotaiStore.get(visibleDatestampsAtom),
-    ];
+export function getAllMountedDatestamps(): string[] {
+    return jotaiStore.get(mountedDatestampsAtom).all;
 }
 
 type ExtractedTime = {
@@ -110,7 +107,7 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
  * @returns - A unique list of datestamps that are linked to one or more of the given events.
  */
 export function getMountedLinkedDatestamps(events: IPlannerEvent[]) {
-    const allVisibleDatestamps = getAllVisibleDatestamps();
+    const allVisibleDatestamps = getAllMountedDatestamps();
 
     const affectedDatestamps = [];
     for (const visible of allVisibleDatestamps) {

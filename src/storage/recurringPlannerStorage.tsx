@@ -1,13 +1,13 @@
-import { RECURRING_EVENT_STORAGE_ID } from "@/lib/constants/storage";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { ERecurringPlannerKey } from "@/lib/enums/ERecurringPlannerKey";
+import { EStorageId } from "@/lib/enums/EStorageId";
 import { EWeekday } from "@/lib/enums/EWeekday";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { cloneItem } from "@/utils/listUtils";
 import { sanitizePlanner, syncRecurringPlannerWithWeekdayEvent } from "@/utils/plannerUtils";
 import { MMKV } from "react-native-mmkv";
 
-const storage = new MMKV({ id: RECURRING_EVENT_STORAGE_ID });
+const storage = new MMKV({ id: EStorageId.RECURRING_EVENT });
 
 /**
  * ✅ Fetches the recurring planner with the given key from storage.

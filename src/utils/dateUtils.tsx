@@ -8,17 +8,16 @@ import { DateTime } from 'luxon';
  * @returns - array of datestamps from start to end.
  */
 export function generateDatestampRange(start: string, end: string): string[] {
+    console.log(start, end)
     const startDate = DateTime.fromISO(start);
     const endDate = DateTime.fromISO(end);
 
-    if (endDate < startDate) {
-        throw new Error('Invalid date range');
-    }
-
     const dates: string[] = [];
     let currentDate = startDate;
+    console.log(currentDate.toISODate(), endDate.toISODate(), currentDate <= endDate)
 
     while (currentDate <= endDate) {
+        console.log(currentDate.toISODate())
         dates.push(currentDate.toISODate()!);
         currentDate = currentDate.plus({ days: 1 });
     }
@@ -201,8 +200,8 @@ export function getDatestampThreeYearsFromToday(): string {
  * @returns - list of timestamps YYYY-MM-DD
  */
 export function getNextEightDayDatestamps(): string[] {
-    const tomorrow = getTomorrowDatestamp();
-    const eightDaysAfterTomorrow = DateTime.local().plus({ days: 8 }).toISODate();
+    const today = getTodayDatestamp();
+    const eightDaysAfterTomorrow = DateTime.local().plus({ days: 7 }).toISODate();
 
-    return generateDatestampRange(tomorrow, eightDaysAfterTomorrow);
+    return generateDatestampRange(today, eightDaysAfterTomorrow);
 }

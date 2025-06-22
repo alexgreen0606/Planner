@@ -1,13 +1,11 @@
-import { visibleDatestampsAtom } from "@/atoms/visibleDatestamps";
-import { StorageKey } from "@/lib/constants/storage";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { ICountdown } from "@/lib/types/listItems/ICountdown";
 import { getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
-import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { getCalendarMap, loadCalendarData } from "./calendarUtils";
-import { getAllVisibleDatestamps } from "./plannerUtils";
+import { getAllMountedDatestamps } from "./plannerUtils";
 import { EListType } from "@/lib/enums/EListType";
+import { EStorageKey } from "@/lib/enums/EStorageKey";
 
 /**
  * ✅ Converts a calendar event to a Countdown.
@@ -21,7 +19,7 @@ function calendarEventToCountdown(calEvent: Calendar.Event, sortId?: number): IC
         id: calEvent.id,
         value: calEvent.title,
         sortId: sortId ?? 1,
-        listId: StorageKey.COUNTDOWN_LIST_KEY,
+        listId: EStorageKey.COUNTDOWN_LIST_KEY,
         status: EItemStatus.STATIC,
         startIso: calEvent.startDate as string,
         listType: EListType.COUNTDOWN
@@ -83,7 +81,7 @@ export async function getCountdowns(): Promise<ICountdown[]> {
  * @param createNew - Signifies if the event exists or should be created anew. Default is false.
  */
 export async function saveCountdown(countdown: ICountdown, createNew: boolean = false) {
-    const allVisibleDatestamps = getAllVisibleDatestamps();
+    const allVisibleDatestamps = getAllMountedDatestamps();
     const countdownDatestamp = isoToDatestamp(countdown.startIso);
 
     // Tracks the Planner datestamps that will be affected by this update.
@@ -124,7 +122,7 @@ export async function saveCountdown(countdown: ICountdown, createNew: boolean = 
  * @param countdowns - The Countdown to delete.
  */
 export async function deleteCountdown(countdown: ICountdown) {
-    const allVisibleDatestamps = getAllVisibleDatestamps();
+    const allVisibleDatestamps = getAllMountedDatestamps();
 
     // Phase 1: Delete the event from the calendar.
     await Calendar.deleteEventAsync(countdown.id);

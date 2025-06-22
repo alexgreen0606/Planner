@@ -1,7 +1,7 @@
-import { StorageKey } from '@/lib/constants/storage';
+import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { Redirect } from 'expo-router';
 
 export default function IndexPage() {
 
-    return <Redirect href={`/lists/folder/NULL/NULL/${StorageKey.ROOT_CHECKLIST_FOLDER_KEY}`} />;
+    return <Redirect href={`/lists/folder/NULL/NULL/${EStorageKey.ROOT_CHECKLIST_FOLDER_KEY}`} />;
 }

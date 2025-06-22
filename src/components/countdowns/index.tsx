@@ -1,25 +1,26 @@
+import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import SortableList from '@/components/sortedList';
 import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
-import { StorageKey } from '@/lib/constants/storage';
 import { EListType } from '@/lib/enums/EListType';
+import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { deleteCountdown, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
 import { isItemTextfield } from '@/utils/listUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
-    const todayDatestamp = useTodayDatestamp();
+    const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
 
     const saveEventOnDateSelectorClose = useRef(false);
 
@@ -96,8 +97,8 @@ const Countdowns = () => {
     }
 
     const CountdownItems = useSortedList<ICountdown, ICountdown[]>({
-        storageId: StorageKey.COUNTDOWN_LIST_KEY,
-        storageKey: StorageKey.COUNTDOWN_LIST_KEY,
+        storageId: EStorageKey.COUNTDOWN_LIST_KEY,
+        storageKey: EStorageKey.COUNTDOWN_LIST_KEY,
         getItemsFromStorageObject: getCountownsMemoized,
         storageConfig: {
             createItem: async (countdown) => {
@@ -122,7 +123,7 @@ const Countdowns = () => {
 
             {/* Countdown List */}
             <SortableList<ICountdown>
-                listId={StorageKey.COUNTDOWN_LIST_KEY}
+                listId={EStorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
                 disableDrag
                 listType={listType}

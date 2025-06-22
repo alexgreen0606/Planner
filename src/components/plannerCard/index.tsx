@@ -2,7 +2,6 @@ import { textfieldItemAtom } from '@/atoms/textfieldData';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
-import { PLANNER_STORAGE_ID } from '@/lib/constants/storage';
 import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
@@ -21,6 +20,7 @@ import { buildPlannerEvents, generateEventToolbar, generatePlanner, generateTime
 import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -110,7 +110,7 @@ const PlannerCard = ({
     }, [calendarEvents]);
 
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
-        storageId: PLANNER_STORAGE_ID,
+        storageId: EStorageId.PLANNER,
         storageKey: datestamp,
         getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),

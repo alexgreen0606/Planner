@@ -1,4 +1,3 @@
-import { CHECKLISTS_STORAGE_ID } from '@/lib/constants/storage';
 import useSortedList from '@/hooks/useSortedList';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
@@ -8,12 +7,13 @@ import { IChecklist } from '@/lib/types/checklists/IChecklist';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { EListType } from '@/lib/enums/EListType';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 const Checklist = () => {
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
-    const { getIsItemDeleting } = useDeleteScheduler<IListItem>();
+    const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IListItem>();
 
-    const deleteFunctionKey = EListType.CHECKLIST;
+    const listType = EListType.CHECKLIST;
 
     const getItemsFromStorageObject = useCallback(
         (storageObject: IChecklist) => storageObject.items,
@@ -24,25 +24,28 @@ const Checklist = () => {
         return { ...currentObject, items: newItems };
     }
 
+    function toggleScheduleChecklistItemDelete(item: IListItem) {
+        toggleScheduleItemDelete(item, listType);
+    }
+
     const SortedItems = useSortedList<IListItem, IChecklist>({
-        storageId: CHECKLISTS_STORAGE_ID,
+        storageId: EStorageId.CHECKLISTS,
         storageKey: checklistId,
         getItemsFromStorageObject,
         setItemsInStorageObject,
-        toggleDeleteFunctionKey: deleteFunctionKey
+        listType
     });
 
     return (
         <SortableList<IListItem>
             listId={checklistId}
             fillSpace
-            deleteFunctionKey={deleteFunctionKey}
+            listType={listType}
             items={SortedItems.items}
             onDragEnd={SortedItems.persistItemToStorage}
             onContentClick={SortedItems.toggleItemEdit}
-            onDeleteItem={SortedItems.deleteSingleItemFromStorage}
             getTextfieldKey={item => `${item.id}-${item.sortId}`}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, SortedItems.toggleItemDelete, getIsItemDeleting(item, deleteFunctionKey))}
+            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleChecklistItemDelete, getIsItemDeleting(item, listType))}
             saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",

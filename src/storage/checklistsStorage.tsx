@@ -1,9 +1,10 @@
 import { textfieldItemAtom } from "@/atoms/textfieldData";
 import { NULL } from "@/lib/constants/generic";
-import { CHECKLISTS_STORAGE_ID, StorageKey } from "@/lib/constants/storage";
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { EListType } from "@/lib/enums/EListType";
+import { EStorageId } from "@/lib/enums/EStorageId";
+import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IChecklist } from "@/lib/types/checklists/IChecklist";
 import { IFolder } from "@/lib/types/checklists/IFolder";
 import { IListItem } from "@/lib/types/listItems/core/TListItem";
@@ -11,7 +12,7 @@ import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
 import { jotaiStore } from "app/_layout";
 import { MMKV } from "react-native-mmkv";
 
-const storage = new MMKV({ id: CHECKLISTS_STORAGE_ID });
+const storage = new MMKV({ id: EStorageId.CHECKLISTS });
 
 /**
  * Fetches a folder from storage with the given ID.
@@ -25,11 +26,11 @@ export const getFolderFromStorage = (folderId: string) => {
     if (folderString) {
         const foundFolder: IFolder = JSON.parse(folderString);
         return foundFolder;
-    } else if (folderId === StorageKey.ROOT_CHECKLIST_FOLDER_KEY) {
+    } else if (folderId === EStorageKey.ROOT_CHECKLIST_FOLDER_KEY) {
 
         // @ts-ignore - color must be overridden to blue for the root folder
         const initialRootFolder = {
-            id: StorageKey.ROOT_CHECKLIST_FOLDER_KEY,
+            id: EStorageKey.ROOT_CHECKLIST_FOLDER_KEY,
             listId: NULL,
             folderIds: [],
             listIds: [],

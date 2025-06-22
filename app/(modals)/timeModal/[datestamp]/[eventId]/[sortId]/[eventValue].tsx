@@ -1,4 +1,4 @@
-import { visibleDatestampsAtom } from "@/atoms/visibleDatestamps";
+import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import Form from "@/components/form";
 import { SelectorMode } from "@/components/form/fields/TimeRangeSelector";
 import Modal from "@/components/modal";
@@ -43,7 +43,7 @@ export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
 const TimeModal = () => {
     const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<ModalParams>();
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
-    const visibleDatestamps = useAtomValue(visibleDatestampsAtom);
+    const mountedDatestamps = useAtomValue(mountedDatestampsAtom);
     const router = useRouter();
 
     const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
@@ -132,7 +132,7 @@ const TimeModal = () => {
         if (!planEvent || !startIso || !endIso) return;
 
         const targetDatestamp = isoToDatestamp(startIso);
-        const isTargetDatestampMounted = [...visibleDatestamps, getTodayDatestamp()].includes(targetDatestamp);
+        const isTargetDatestampMounted = mountedDatestamps.all.includes(targetDatestamp);
 
         const updatedEvent: IPlannerEvent = {
             ...planEvent,

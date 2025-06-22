@@ -1,26 +1,25 @@
+import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import EventChipSets from '@/components/eventChip/EventChipSet';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
 import { useCalendarData } from '@/hooks/useCalendarData';
-import { useLoadCalendarData } from '@/hooks/useLoadCalendarData';
-import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
-import { BIRTHDAY_STORAGE_ID } from '@/lib/constants/storage';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { useCalendarLoad } from '@/providers/CalendarProvider';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { loadCalendarData } from '@/utils/calendarUtils';
-import { usePathname } from 'expo-router';
+import { useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
 import { MMKV, useMMKVListener } from 'react-native-mmkv';
 
-const birthdayStorage = new MMKV({ id: BIRTHDAY_STORAGE_ID });
+const birthdayStorage = new MMKV({ id: EStorageId.BIRTHDAY });
 
 const Today = () => {
-  const todayDatestamp = useTodayDatestamp();
-  const pathname = usePathname();
+  const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
 
-  const isLoading = useLoadCalendarData(pathname);
+  const { isLoading } = useCalendarLoad();
   const { calendarChips } = useCalendarData(todayDatestamp);
 
   // Load of data each time a birthday is contacted

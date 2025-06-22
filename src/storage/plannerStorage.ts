@@ -1,5 +1,5 @@
-import { PLANNER_STORAGE_ID } from "@/lib/constants/storage";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { getPrimaryCalendarId, hasCalendarAccess, loadCalendarData } from "@/utils/calendarUtils";
@@ -9,7 +9,7 @@ import { generatePlanner, getMountedLinkedDatestamps, sanitizePlanner, timeConfi
 import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
 
-const storage = new MMKV({ id: PLANNER_STORAGE_ID });
+const storage = new MMKV({ id: EStorageId.PLANNER });
 
 
 

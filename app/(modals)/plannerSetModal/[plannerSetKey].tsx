@@ -2,7 +2,6 @@ import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import Form from '@/components/form';
 import Modal from '@/components/modal';
 import { NULL } from '@/lib/constants/generic';
-import { PLANNER_SETS_STORAGE_ID } from '@/lib/constants/storage';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
 import { IFormField } from '@/lib/types/form/IFormField';
 import { TPlannerSet } from '@/lib/types/planner/TPlannerSet';
@@ -14,6 +13,7 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { SelectorMode } from '@/components/form/fields/TimeRangeSelector';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
 
@@ -41,7 +41,7 @@ const PlannerSetModal = () => {
 
     const setPlannerSetKey = useSetAtom(plannerSetKeyAtom);
 
-    const storage = useMMKV({ id: PLANNER_SETS_STORAGE_ID });
+    const storage = useMMKV({ id: EStorageId.PLANNER_SETS });
     const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
 
     const isEditMode = plannerSetKey !== NULL;
@@ -54,7 +54,11 @@ const PlannerSetModal = () => {
     } = useForm<PendingPlannerSet>({
         defaultValues: {
             ...emptyFormData,
-            ...plannerSet
+            ...plannerSet,
+            dates: {
+                startDatestamp: plannerSet?.startDatestamp ?? getTodayDatestamp(),
+                endDatestamp: plannerSet?.endDatestamp ?? getTodayDatestamp()
+            }
         },
         mode: 'onChange'
     });

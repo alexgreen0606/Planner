@@ -1,18 +1,18 @@
+import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
-import { visibleDatestampsAtom } from '@/atoms/visibleDatestamps';
 import GenericIcon from '@/components/icon';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import PlannerCard from '@/components/plannerCard';
 import ScrollAnchor from '@/components/sortedList/ScrollAnchor';
 import ButtonText from '@/components/text/ButtonText';
-import { useLoadCalendarData } from '@/hooks/useLoadCalendarData';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { NULL } from '@/lib/constants/generic';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { useCalendarLoad } from '@/providers/CalendarProvider';
 import { getPlannerSetTitles } from '@/storage/plannerSetsStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -24,11 +24,10 @@ const defaultPlannerSet = 'Next 7 Days';
 const Planners = () => {
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const allPlannerSetTitles = getPlannerSetTitles();
-    const pathname = usePathname();
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
-    const visibleDatestamps = useAtomValue(visibleDatestampsAtom);
+    const { planner } = useAtomValue(mountedDatestampsAtom);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-06-09": {
@@ -106,7 +105,7 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    const isLoading = useLoadCalendarData(pathname);
+    const { isLoading } = useCalendarLoad();
 
     useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
@@ -161,7 +160,7 @@ const Planners = () => {
                     duration: 800,
                 }}
             >
-                {visibleDatestamps.map((datestamp) =>
+                {planner.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
                         datestamp={datestamp}

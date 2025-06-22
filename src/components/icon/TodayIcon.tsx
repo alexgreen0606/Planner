@@ -3,14 +3,15 @@ import { useMemo } from "react";
 import { PlatformColor, View } from "react-native";
 import GenericIcon from ".";
 import CustomText from "../text/CustomText";
-import { useTodayDatestamp } from "@/hooks/useTodayDatestamp";
+import { useAtomValue } from "jotai";
+import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 
 interface TodayIconProps {
     platformColor: string;
 }
 
 const TodayIcon = ({ platformColor }: TodayIconProps) => {
-    const todayDatestamp = useTodayDatestamp();
+    const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
 
     const month = useMemo(() => {
         const monthFormat = 'MMM';

@@ -1,7 +1,5 @@
 import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
-import { useTodayDatestamp } from '@/hooks/useTodayDatestamp';
-import { PLANNER_STORAGE_ID, RECURRING_EVENT_STORAGE_ID } from '@/lib/constants/storage';
 import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
@@ -14,10 +12,13 @@ import { usePathname, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
+import { useAtomValue } from 'jotai';
+import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 const TodayPlanner = () => {
     const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
-    const todayDatestamp = useTodayDatestamp();
+    const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -40,7 +41,7 @@ const TodayPlanner = () => {
     }, [calendarEvents]);
 
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
-        storageId: PLANNER_STORAGE_ID,
+        storageId: EStorageId.PLANNER,
         storageKey: todayDatestamp,
         getItemsFromStorageObject,
         storageConfig: {
@@ -51,7 +52,7 @@ const TodayPlanner = () => {
         listType
     });
 
-    const recurringStorage = useMMKV({ id: RECURRING_EVENT_STORAGE_ID });
+    const recurringStorage = useMMKV({ id: EStorageId.RECURRING_EVENT });
     useMMKVListener((key) => {
         if (key === datestampToDayOfWeek(todayDatestamp)) {
             SortedEvents.refetchItems();

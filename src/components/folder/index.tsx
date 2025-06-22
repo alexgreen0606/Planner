@@ -3,7 +3,6 @@ import CustomText from '@/components/text/CustomText';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { selectableColors } from '@/lib/constants/selectableColors';
-import { CHECKLISTS_STORAGE_ID } from '@/lib/constants/storage';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { IFolder } from '@/lib/types/checklists/IFolder';
@@ -18,6 +17,7 @@ import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from '../sortedList';
 import { ToolbarProps } from '../sortedList/ListItemToolbar';
 import { EListType } from '@/lib/enums/EListType';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -203,7 +203,7 @@ const SortedFolder = ({
             'tertiaryLabel' : item.platformColor;
 
     const SortedItems = useSortedList<IFolderItem, IFolder>({
-        storageId: CHECKLISTS_STORAGE_ID,
+        storageId: EStorageId.CHECKLISTS,
         storageKey: folderId,
         getItemsFromStorageObject: getFolderItemsMemoized,
         storageConfig: {
@@ -215,7 +215,7 @@ const SortedFolder = ({
     });
 
     // Rebuild the list when one of the folder's items changes
-    const storage = useMMKV({ id: CHECKLISTS_STORAGE_ID });
+    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
     useMMKVListener((key) => {
         if (folderData?.listIds.includes(key) || folderData?.folderIds.includes(key)) {
             SortedItems.refetchItems();

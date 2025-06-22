@@ -1,8 +1,8 @@
-import { PLANNER_SETS_STORAGE_ID } from "@/lib/constants/storage";
+import { EStorageId } from "@/lib/enums/EStorageId";
 import { TPlannerSet } from "@/lib/types/planner/TPlannerSet";
 import { MMKV } from "react-native-mmkv";
 
-const storage = new MMKV({ id: PLANNER_SETS_STORAGE_ID });
+const storage = new MMKV({ id: EStorageId.PLANNER_SETS });
 
 export function getPlannerSet(key: string): TPlannerSet | null {
     const eventsString = storage.getString(key);
