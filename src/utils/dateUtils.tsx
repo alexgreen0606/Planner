@@ -8,16 +8,13 @@ import { DateTime } from 'luxon';
  * @returns - array of datestamps from start to end.
  */
 export function generateDatestampRange(start: string, end: string): string[] {
-    console.log(start, end)
     const startDate = DateTime.fromISO(start);
     const endDate = DateTime.fromISO(end);
 
     const dates: string[] = [];
     let currentDate = startDate;
-    console.log(currentDate.toISODate(), endDate.toISODate(), currentDate <= endDate)
 
     while (currentDate <= endDate) {
-        console.log(currentDate.toISODate())
         dates.push(currentDate.toISODate()!);
         currentDate = currentDate.plus({ days: 1 });
     }

@@ -62,6 +62,7 @@ const TimeRangeSelector = ({
         startData.date : endData.date;
 
     const showEndTime = endIso && multiDay;
+    const showTimes = !allDay;
 
     // ---------- Utility Functions ----------
 
@@ -134,16 +135,11 @@ const TimeRangeSelector = ({
                     millisecond: 0
                 });
                 enforceEndLaterThanStart();
-                break;
-
-            case SelectorMode.END_DATE:
-                newEndDate = inputDate.set({
-                    hour: currentEndDate.hour,
-                    minute: currentEndDate.minute,
-                    second: 0,
-                    millisecond: 0
-                });
-                enforceEndLaterThanStart();
+                if (showTimes) {
+                    setSelectorMode(SelectorMode.START_TIME);
+                } else if (showEndTime) {
+                    setSelectorMode(SelectorMode.END_DATE);
+                }
                 break;
 
             case SelectorMode.START_TIME:
@@ -154,6 +150,22 @@ const TimeRangeSelector = ({
                     millisecond: 0
                 });
                 enforceEndLaterThanStart();
+                if (showEndTime) {
+                    setSelectorMode(SelectorMode.END_DATE);
+                }
+                break;
+
+            case SelectorMode.END_DATE:
+                newEndDate = inputDate.set({
+                    hour: currentEndDate.hour,
+                    minute: currentEndDate.minute,
+                    second: 0,
+                    millisecond: 0
+                });
+                enforceEndLaterThanStart();
+                if (showTimes) {
+                    setSelectorMode(SelectorMode.END_TIME);
+                }
                 break;
 
             case SelectorMode.END_TIME:
@@ -210,7 +222,7 @@ const TimeRangeSelector = ({
                                 />
                             </TouchableOpacity>
                         </MotiView>
-                        {!allDay && (
+                        {showTimes && (
                             <MotiView animate={{
                                 transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
                             }}>
@@ -248,7 +260,7 @@ const TimeRangeSelector = ({
                                 />
                             </TouchableOpacity>
                         </MotiView>
-                        {!allDay && (
+                        {showTimes && (
                             <MotiView animate={{
                                 transform:
                                     [{ scale: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 1.2 : 1 }]

@@ -72,9 +72,7 @@ const PlannerSetModal = () => {
             trigger: !isEditMode,
             rules: {
                 required: 'Title is required.',
-                validate: (value: string) =>
-                    existingPlannerTitles.indexOf(value.trim()) === -1 ||
-                    plannerSet?.title === value.trim()
+                validate: (value: string) => value.trim() !== ''
             }
         }],
         [{

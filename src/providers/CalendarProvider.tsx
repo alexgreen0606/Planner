@@ -5,9 +5,8 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { getPlannerSet } from '@/storage/plannerSetsStorage';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { generateDatestampRange, getNextEightDayDatestamps, getTodayDatestamp } from '@/utils/dateUtils';
-import { usePathname } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
-import { createContext, useContext, useEffect, useMemo, useRef } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 
 const CalendarContext = createContext({ isLoading: true });
@@ -38,9 +37,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         } else {
             const plannerSet = getPlannerSet(plannerSetKey);
             if (plannerSet) {
-                console.log(plannerSet)
                 planner = generateDatestampRange(plannerSet.startDatestamp, plannerSet.endDatestamp);
-                console.log(planner)
             }
         }
 
@@ -52,7 +49,8 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function handleLoadCalendarData() {
-        await loadCalendarData(mountedDatestamps.all);
+        const todayIsLoading = !plannersMap[mountedDatestamps.today];
+        await loadCalendarData(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
     }
 
     // TODO: reload calendar data handle directly in the scroll provider

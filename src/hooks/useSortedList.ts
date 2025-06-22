@@ -90,21 +90,27 @@ const useSortedList = <T extends IListItem, S>({
     async function saveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
         const item = textfieldItem ? { ...textfieldItem } : null;
 
-        // Phase 1: Save the item
+        // Phase 1: Clear the textfield and exit if the input is empty.
+        if (item?.value.trim() === '') {
+            setTextfieldItem(null);
+            return;
+        }
+
+        // Phase 2: Save the item
         if (item) await persistItemToStorage(item);
 
 
-        // Phase 2: Clear the textfield and exit if no reference ID was given
+        // Phase 3: Clear the textfield and exit if no reference ID was given
         if (!referenceSortId) {
             setTextfieldItem(undefined);
             return;
         }
 
-        // Phase 3: Focus the hidden placeholder field.
+        // Phase 4: Focus the hidden placeholder field.
         // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
         focusPlaceholder();
 
-        // Phase 4: Create a new list item
+        // Phase 5: Create a new list item.
         const updatedList = sanitizeList(items, item);
         const genericListItem: IListItem = {
             id: uuid.v4(),
