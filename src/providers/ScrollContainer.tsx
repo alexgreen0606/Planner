@@ -3,8 +3,9 @@ import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib
 import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
+import { MotiView } from 'moti';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Modal, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import Animated, {
     AnimatedRef,
@@ -31,7 +32,6 @@ const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
-const BottomBlurBar = Animated.createAnimatedComponent(View);
 
 export enum LoadingStatus {
     STATIC = 'STATIC', // no overscroll visible
@@ -94,6 +94,9 @@ export const ScrollContainerProvider = ({
 
     // ----- Page Layout Variables -----
 
+    const [blurBottomNav, setBlurBottomNav] = useState(false);
+
+
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight);
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
@@ -135,11 +138,6 @@ export const ScrollContainerProvider = ({
             }
         } catch (e) { }
     };
-
-    useAnimatedReaction(
-        () => scrollOffset.value,
-        measureContentHeight
-    );
 
     const focusPlaceholder = () => {
         placeholderInputRef.current?.focus();
@@ -214,12 +212,26 @@ export const ScrollContainerProvider = ({
 
     // ------------- Scrolling Logic -------------
 
+    const [isDragging, setIsDragging] = useState(false);
+
+
     // Native Scroll Handler
     const scrollHandler = useAnimatedScrollHandler({
+        onBeginDrag: () => {
+            runOnJS(setIsDragging)(true);
+        },
         onScroll: (event) => {
             if (!disableNativeScroll.value) {
                 scrollOffset.value = event.contentOffset.y;
             }
+        },
+        onEndDrag: () => {
+            runOnJS(setIsDragging)(false);
+            measureContentHeight();
+        },
+        onMomentumEnd: () => {
+            runOnJS(setIsDragging)(false);
+            measureContentHeight();
         }
     });
 
@@ -338,9 +350,12 @@ export const ScrollContainerProvider = ({
         height: UPPER_FADE_HEIGHT
     }));
 
-    const bottomBlurBarStyle = useAnimatedStyle(() => ({
-        opacity: bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT ? 1 : 0
-    }));
+    useAnimatedReaction(
+        () => bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT,
+        (shouldBlur) => {
+            runOnJS(setBlurBottomNav)(shouldBlur);
+        }
+    );
 
     return (
         <ScrollContainerContext.Provider value={{
@@ -407,26 +422,6 @@ export const ScrollContainerProvider = ({
                         {floatingBanner}
                     </View>
 
-                    {/* Loading Spinner */}
-                    {canReloadPath && (
-                        <Modal visible transparent>
-                            <LoadingSpinner
-                                className='absolute z-[1] self-center'
-                                style={loadingSpinnerStyle}
-                            >
-                                <GenericIcon
-                                    size='l'
-                                    platformColor={loadingStatus === LoadingStatus.COMPLETE ?
-                                        'systemBlue' : 'secondaryLabel'
-                                    }
-                                    type={loadingStatus === LoadingStatus.COMPLETE ?
-                                        'refreshComplete' : 'refresh'
-                                    }
-                                />
-                            </LoadingSpinner>
-                        </Modal>
-                    )}
-
                     {children}
 
                 </ScrollContainer>
@@ -441,9 +436,15 @@ export const ScrollContainerProvider = ({
             </TopBlurBar>
 
             {/* Bottom Blur Bar */}
-            <BottomBlurBar
-                className="absolute bottom-0 left-0 w-screen"
-                style={bottomBlurBarStyle}
+            <MotiView
+                className="absolute bottom-0 w-screen"
+                animate={{
+                    opacity: (blurBottomNav && !isDragging) ? 1 : 0
+                }}
+                transition={{
+                    type: 'timing',
+                    duration: 600
+                }}
             >
                 <BlurView
                     tint="systemUltraThinMaterial"
@@ -451,7 +452,26 @@ export const ScrollContainerProvider = ({
                     className='w-screen'
                     style={{ height: LOWER_CONTAINER_PADDING }}
                 />
-            </BottomBlurBar>
+            </MotiView>
+
+
+            {/* Loading Spinner */}
+            {canReloadPath && (
+                <LoadingSpinner
+                    className='absolute z-[1] self-center'
+                    style={loadingSpinnerStyle}
+                >
+                    <GenericIcon
+                        size='l'
+                        platformColor={loadingStatus === LoadingStatus.COMPLETE ?
+                            'systemBlue' : 'secondaryLabel'
+                        }
+                        type={loadingStatus === LoadingStatus.COMPLETE ?
+                            'refreshComplete' : 'refresh'
+                        }
+                    />
+                </LoadingSpinner>
+            )}
 
         </ScrollContainerContext.Provider>
     );

@@ -2,6 +2,7 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { getPlannerSet } from '@/storage/plannerSetsStorage';
@@ -10,9 +11,12 @@ import { generateDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, g
 import { cloneItem } from '@/utils/listUtils';
 import { uuid } from 'expo-modules-core';
 import { usePathname, useRouter } from 'expo-router';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import * as Contacts from 'expo-contacts';
+import * as Calendar from 'expo-calendar';
+import { userAccessAtom } from '@/atoms/userAccess';
 
 export const reloadablePaths = [
     '/',
@@ -20,27 +24,37 @@ export const reloadablePaths = [
     '/countdowns'
 ];
 
-const CalendarContext = createContext({ isLoading: true, reloadPage: async () => { } });
+const CalendarContext = createContext({ reloadPage: async () => { } });
 
 export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const [mountedDatestamps, setMountedDatestamps] = useAtom(mountedDatestampsAtom);
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { plannersMap } = useAtomValue(calendarEventDataAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
+    const setUserAccess = useSetAtom(userAccessAtom);
     const pathname = usePathname();
     const router = useRouter();
 
     const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
 
-    // True if any mounted planners are missing calendar data.
-    const isLoading = useMemo(
-        () => mountedDatestamps.all.some(datestamp =>
-            plannersMap[datestamp] === undefined
-        ),
-        [plannersMap, mountedDatestamps.all]
-    );
-
     // ------------- Utility Functions -------------
+
+    async function checkAndUpdatePermissions() {
+        try {
+            const calendarStatus = await Calendar.getCalendarPermissionsAsync();
+            const contactsStatus = await Contacts.getPermissionsAsync();
+            setUserAccess(new Map([
+                [EAccess.CALENDAR, calendarStatus.status === 'granted'],
+                [EAccess.CONTACTS, contactsStatus.status === 'granted']
+            ]));
+        } catch (error) {
+            console.error('Error checking permissions:', error);
+            setUserAccess(new Map([
+                [EAccess.CALENDAR, false],
+                [EAccess.CONTACTS, false]
+            ]));
+        }
+    }
 
     // The reloadPage function that handles different paths
     async function reloadPage() {
@@ -48,17 +62,26 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             switch (pathname) {
                 case '/':
                     // For home page, reload today's calendar data
+                    await checkAndUpdatePermissions();
                     await loadCalendarData([mountedDatestamps.today]);
                     break;
 
                 case '/planners':
                     // For planners page, reload planner calendar data
+
+
+                    // TODO: need to wait until atom updates?
+
+
+
+                    await checkAndUpdatePermissions();
                     await loadCalendarData(mountedDatestamps.planner);
                     break;
 
                 case '/countdowns':
                     // TODO: Add countdown reload logic here
                     // await reloadCountdowns();
+                    await checkAndUpdatePermissions();
                     break;
 
                 default:
@@ -68,7 +91,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error('Error during reload:', error);
         }
-    };
+    }
 
     function handleUpdateMountedDatestamps() {
         const today = getTodayDatestamp();
@@ -155,7 +178,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     }, plannerSetStorage);
 
     return (
-        <CalendarContext.Provider value={{ isLoading, reloadPage }}>
+        <CalendarContext.Provider value={{ reloadPage }}>
             {children}
         </CalendarContext.Provider>
     );

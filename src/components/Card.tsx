@@ -1,9 +1,8 @@
 import { useScrollContainer } from '@/providers/ScrollContainer';
-import React, { ReactNode, useEffect } from 'react';
+import { MotiView } from 'moti';
+import React, { ReactNode } from 'react';
 import { PlatformColor, View, ViewStyle } from 'react-native';
-import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-
-const ContentContainer = Animated.createAnimatedComponent(View);
+import { runOnUI } from 'react-native-reanimated';
 
 interface CardProps {
     header?: ReactNode;
@@ -23,28 +22,6 @@ const Card = ({
     children,
 }: CardProps) => {
     const { measureContentHeight } = useScrollContainer();
-
-    const contentContainerHeight = useSharedValue(0);
-
-    useEffect(() => {
-        if (contentHeight) {
-            const newHeight = collapsed ? 0 : contentHeight;
-            contentContainerHeight.value = withTiming(
-                newHeight,
-                { duration: 300 }
-            );
-        }
-    }, [collapsed, contentHeight]);
-
-    useAnimatedReaction(
-        () => contentContainerHeight.value,
-        measureContentHeight
-    );
-
-    const plannerContainerStyle = useAnimatedStyle(() => ({
-        maxHeight: contentContainerHeight.value
-    }));
-
     return (
         <View
             className='relative rounded-xl'
@@ -58,9 +35,16 @@ const Card = ({
                     {header}
                 </View>
             )}
-            <ContentContainer
+            <MotiView
                 className='overflow-hidden'
-                style={contentHeight ? plannerContainerStyle : undefined}
+                animate={{
+                    maxHeight: contentHeight ? (collapsed ? 0 : contentHeight) : undefined
+                }}
+                transition={{
+                    type: 'timing',
+                    duration: 300
+                }}
+                onDidAnimate={runOnUI(measureContentHeight)}
             >
                 {children}
                 {footer && (
@@ -68,7 +52,7 @@ const Card = ({
                         {footer}
                     </View>
                 )}
-            </ContentContainer>
+            </MotiView>
         </View>
     )
 }

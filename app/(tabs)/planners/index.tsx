@@ -18,6 +18,7 @@ import { MotiView } from 'moti';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
+import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -27,6 +28,7 @@ const Planners = () => {
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
+    const calendarEventData = useAtomValue(calendarEventDataAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
@@ -114,13 +116,22 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    const { isLoading } = useCalendarLoad();
+    const isEntirePlannerLoading = useMemo(() =>
+        planner.reduce((acc, datestamp) => {
+            if (calendarEventData.plannersMap[datestamp] === undefined) {
+                acc += 1;
+                return acc;
+            }
+            return acc;
+        }, 0),
+        [planner, calendarEventData]
+    );
 
     useEffect(() => {
         return () => setTextfieldItem(null); // TODO: save the item instead
     }, []);
 
-    return isLoading ? (
+    return isEntirePlannerLoading ? (
         <LoadingSpinner />
     ) : (
         <View

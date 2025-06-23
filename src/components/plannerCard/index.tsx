@@ -12,7 +12,7 @@ import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuView } from '@react-native-menu/menu';
 import { usePathname, useRouter } from 'expo-router';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
@@ -21,6 +21,7 @@ import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -48,6 +49,13 @@ const PlannerCard = ({
 
     const [collapsed, setCollapsed] = useState(true);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+    const calendarEventData = useAtomValue(calendarEventDataAtom);
+
+    const isCalendarLoading = useMemo(
+        () => calendarEventData.plannersMap[datestamp] === undefined,
+        [calendarEventData]
+    );
 
     const isTimeModalOpen = useMemo(() =>
         pathname.includes('timeModal'),
@@ -143,7 +151,7 @@ const PlannerCard = ({
         }
     }, [textfieldItem]);
 
-    return (
+    return !isCalendarLoading && (
         <Card
             header={
                 <DayBanner
