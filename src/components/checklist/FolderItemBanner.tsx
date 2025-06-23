@@ -1,5 +1,5 @@
 import ButtonText from '@/components/text/ButtonText';
-import CustomText from '@/components/text/CustomText';
+import CustomText, { textStyles } from '@/components/text/CustomText';
 import { HEADER_HEIGHT } from '@/lib/constants/layout';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
@@ -48,13 +48,17 @@ const FolderItemBanner = ({
                     autoFocus
                     value={item.value}
                     onChangeText={updateItem}
-                    style={styles.inputField}
                     cursorColor={PlatformColor('systemBlue')}
                     onSubmitEditing={saveItem}
+                    className='w-full bg-transparent'
+                    style={[
+                        textStyles.pageLabel,
+                        { height: HEADER_HEIGHT }
+                    ]}
                 />
             ) : (
                 <CustomText
-                    type='pageLabel'
+                    variant='pageLabel'
                     onPress={beginEditItem}
                     ellipsizeMode='tail'
                     numberOfLines={1}
@@ -65,9 +69,8 @@ const FolderItemBanner = ({
 
             {/* Back Button */}
             {!backButtonConfig.hide && (
-                <View style={styles.backButton}>
+                <View className='absolute bottom-full translate-y-1'>
                     <ButtonText
-                        platformColor='systemBlue'
                         onClick={() => backButtonConfig.onClick ? backButtonConfig.onClick() : router.back()}
                         iconConfig={{
                             type: 'chevronLeft',
@@ -75,30 +78,12 @@ const FolderItemBanner = ({
                         }}
                         className='w-screen pr-8'
                     >
-                        {backButtonConfig.label}
+                        {backButtonConfig.label} long ass name that goes past the center eye thing
                     </ButtonText>
                 </View>
             )}
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    inputField: {
-        height: HEADER_HEIGHT,
-        width: '100%',
-        fontSize: 25,
-        backgroundColor: 'transparent',
-        color: PlatformColor('label'),
-    },
-    backButton: {
-        gap: 0,
-        position: 'absolute',
-        left: 0,
-        bottom: 50,
-        transform: 'translateY(10px)'
-    }
-});
-
 
 export default FolderItemBanner;

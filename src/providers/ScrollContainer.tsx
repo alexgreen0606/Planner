@@ -1,12 +1,11 @@
 import GenericIcon from '@/components/icon';
-import { useReloadScheduler } from '@/hooks/useReloadScheduler';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BlurView } from 'expo-blur';
+import { usePathname } from 'expo-router';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-import { Portal } from 'react-native-paper';
 import Animated, {
     AnimatedRef,
     cancelAnimation,
@@ -26,6 +25,7 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { reloadablePaths, useCalendarLoad } from './CalendarProvider';
 
 const TopBlurBar = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
@@ -78,6 +78,7 @@ export const ScrollContainerProvider = ({
     floatingBannerHeight: fixedFloatingBannerHeight = 0,
     fixFloatingBannerOnOverscroll = false
 }: ScrollContainerProps) => {
+    const pathname = usePathname();
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
     const bottomScrollRef = useAnimatedRef<Animated.View>();
@@ -86,7 +87,10 @@ export const ScrollContainerProvider = ({
 
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    const { reloadPage, canReloadPath } = useReloadScheduler();
+
+    const { reloadPage } = useCalendarLoad();
+
+    const canReloadPath = reloadablePaths.includes(pathname);
 
     // ----- Page Layout Variables -----
 
@@ -351,7 +355,7 @@ export const ScrollContainerProvider = ({
 
             {/* Floating Banner */}
             <FloatingBanner
-                className="absolute z-[3] flex justify-center w-full"
+                className="absolute z-[3] flex justify-center w-full px-2"
                 style={floatingBannerStyle}
                 onLayout={(event) => {
                     if (fixedFloatingBannerHeight) return;
@@ -371,6 +375,7 @@ export const ScrollContainerProvider = ({
                 {/* Hidden placeholder input to maintain keyboard */}
                 <TextInput
                     ref={placeholderInputRef}
+                    inputAccessoryViewID='PLACEHOLDER'
                     style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
                     autoCorrect={false}
                 />
@@ -379,6 +384,7 @@ export const ScrollContainerProvider = ({
                     scrollEventThrottle={SCROLL_THROTTLE}
                     scrollToOverflowEnabled={true}
                     onScroll={scrollHandler}
+                    keyboardShouldPersistTaps='always'
                     contentContainerStyle={{
                         paddingTop: TOP_SPACER,
                         paddingBottom: LOWER_CONTAINER_PADDING,
@@ -389,7 +395,7 @@ export const ScrollContainerProvider = ({
                     {/* Header */}
                     {header && (
                         <View
-                            className='py-2 px-4'
+                            className='py-2 px-2'
                             style={{ height: HEADER_HEIGHT }}
                         >
                             {header}
@@ -403,7 +409,7 @@ export const ScrollContainerProvider = ({
 
                     {/* Loading Spinner */}
                     {canReloadPath && (
-                        <Portal>
+                        <Modal visible transparent>
                             <LoadingSpinner
                                 className='absolute z-[1] self-center'
                                 style={loadingSpinnerStyle}
@@ -418,7 +424,7 @@ export const ScrollContainerProvider = ({
                                     }
                                 />
                             </LoadingSpinner>
-                        </Portal>
+                        </Modal>
                     )}
 
                     {children}

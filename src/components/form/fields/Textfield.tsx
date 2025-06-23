@@ -40,7 +40,8 @@ const ModalTextfield = ({
             autoCapitalize={autoCapitalizeWords ? 'words' : undefined}
             style={{
                 color: PlatformColor('label'),
-                height: LIST_CONTENT_HEIGHT
+                height: LIST_CONTENT_HEIGHT,
+                fontFamily: 'Text'
             }}
         />
     );

@@ -1,6 +1,6 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import SortableList from '@/components/sortedList';
-import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
+import { ToolbarProps } from '@/components/sortedList/Toolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import useSortedList from '@/hooks/useSortedList';
@@ -17,6 +17,7 @@ import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
+import { IconType } from '../icon';
 
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
@@ -56,45 +57,40 @@ const Countdowns = () => {
         }
     }
 
-    function generateToolbar(countdown: ICountdown): ToolbarProps<ICountdown> {
-        return {
-            open: !dateSelectOpen && isItemTextfield(countdown),
-            iconSets: [
-                [{
-                    type: 'trash',
-                    onClick: () => {
-                        setIsDeleteAlertOpen(true);
-                        Alert.alert(
-                            `Delete "${countdown.value}"?`,
-                            'The event in your calendar will also be deleted.',
-                            [
-                                {
-                                    text: 'Cancel',
-                                    style: 'cancel',
-                                    onPress: () => {
-                                        setIsDeleteAlertOpen(false);
-                                    }
-                                },
-                                {
-                                    text: 'Delete',
-                                    style: 'destructive',
-                                    onPress: async () => {
-                                        await deleteCountdown(countdown);
-                                        setTextfieldItem(null);
-                                        setIsDeleteAlertOpen(false);
-                                    }
-                                }
-                            ]
-                        );
-                    }
-                }],
-                [{
-                    type: 'calendar',
-                    onClick: toggleDateSelector
-                }]],
-            item: countdown
-        }
-    }
+    const toolbarIcons = [
+        [{
+            type: 'trash' as IconType,
+            onClick: () => {
+                setIsDeleteAlertOpen(true);
+                Alert.alert(
+                    `Delete "${textfieldItem?.value}"?`,
+                    'The event in your calendar will also be deleted.',
+                    [
+                        {
+                            text: 'Cancel',
+                            style: 'cancel',
+                            onPress: () => {
+                                setIsDeleteAlertOpen(false);
+                            }
+                        },
+                        {
+                            text: 'Delete',
+                            style: 'destructive',
+                            onPress: async () => {
+                                if (!textfieldItem) return;
+                                await deleteCountdown(textfieldItem);
+                                setTextfieldItem(null);
+                                setIsDeleteAlertOpen(false);
+                            }
+                        }
+                    ]
+                );
+            }
+        }],
+        [{
+            type: 'calendar' as IconType,
+            onClick: toggleDateSelector
+        }]];
 
     const CountdownItems = useSortedList<ICountdown, ICountdown[]>({
         storageId: EStorageKey.COUNTDOWN_LIST_KEY,
@@ -110,7 +106,6 @@ const Countdowns = () => {
             await CountdownItems.refetchItems();
         },
         initializeListItem: initializeCountdown,
-        reloadOnOverscroll: true,
         listType
     });
 
@@ -133,7 +128,7 @@ const Countdowns = () => {
                 onContentClick={CountdownItems.toggleItemEdit}
                 getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 saveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
-                getToolbarProps={generateToolbar}
+                toolbarIconSet={toolbarIcons}
                 emptyLabelConfig={{
                     label: 'No countdowns',
                     className: 'flex-1'
@@ -155,7 +150,7 @@ const Countdowns = () => {
                 getRightIconConfig={(countdown) => ({
                     customIcon:
                         <View className="[width:55px] items-end">
-                            <CustomText adjustsFontSizeToFit numberOfLines={1} type='soft'>
+                            <CustomText adjustsFontSizeToFit numberOfLines={1} variant='microDetail'>
                                 {daysBetweenToday(countdown.startIso)} days
                             </CustomText>
                         </View>

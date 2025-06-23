@@ -155,13 +155,13 @@ const Modal = ({
 
             {/* Title */}
             <View className="absolute left-[50%] top-4 -translate-x-1/2">
-                <CustomText type='header'>
+                <CustomText variant='modalTitle'>
                     {title}
                 </CustomText>
             </View>
 
             {/* Primary Button */}
-            <View className="absolute right-4 top-5">
+            <View className="absolute right-4 top-4">
                 <ButtonText
                     onClick={primaryButtonConfig.onClick}
                     platformColor={

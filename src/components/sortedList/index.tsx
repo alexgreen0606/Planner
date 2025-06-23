@@ -1,25 +1,21 @@
 import ThinLine from '@/components/ThinLine';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { useKeyboardTracker } from '@/hooks/useKeyboardTracker';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { useScrollContainer } from '@/providers/ScrollContainer';
-import { sanitizeList } from '@/utils/listUtils';
-import React, { useEffect, useMemo } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
-import { Portal } from 'react-native-paper';
-import Animated, { cancelAnimation, runOnUI, useAnimatedReaction, useAnimatedStyle, useDerivedValue, useSharedValue } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ScrollAnchor from './ScrollAnchor';
-import DraggableRow from './DraggableRow';
-import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
-import Toolbar, { ToolbarProps } from './ListItemToolbar';
+import { EListType } from '@/lib/enums/EListType';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
-import { MotiView } from 'moti'
-import { EListType } from '@/lib/enums/EListType';
-
-const ToolbarContainer = Animated.createAnimatedComponent(View);
+import { useScrollContainer } from '@/providers/ScrollContainer';
+import { sanitizeList } from '@/utils/listUtils';
+import { MotiView } from 'moti';
+import React, { useEffect, useMemo } from 'react';
+import { Pressable, useWindowDimensions, View } from 'react-native';
+import { cancelAnimation, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DraggableRow from './DraggableRow';
+import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
+import ScrollAnchor from './ScrollAnchor';
+import Toolbar, { ToolbarIcon } from './Toolbar';
 
 interface DraggableListProps<T extends IListItem> {
     listId: string;
@@ -32,7 +28,7 @@ interface DraggableListProps<T extends IListItem> {
     getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
     saveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
-    getToolbarProps?: (item: T) => ToolbarProps<T>;
+    toolbarIconSet?: ToolbarIcon<T>[][];
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     customGetIsDeleting?: (item: T) => boolean;
     listType: EListType;
@@ -49,18 +45,15 @@ const SortableList = <T extends IListItem>({
     saveTextfieldAndCreateNew,
     emptyLabelConfig,
     fillSpace,
-    getToolbarProps,
+    toolbarIconSet,
     disableDrag = false,
     hideKeyboard,
     ...rest
 }: DraggableListProps<T>) => {
     const [textfieldItem] = useTextfieldItemAs<T>();
-    const { keyboardAbsoluteTop } = useKeyboardTracker();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
-
-    const toolbarProps = useMemo(() => textfieldItem ? getToolbarProps?.(textfieldItem) : null, [textfieldItem, getToolbarProps]);
 
     const isListDragging = useSharedValue<boolean>(false);
     const isAutoScrolling = useSharedValue(false);
@@ -145,11 +138,6 @@ const SortableList = <T extends IListItem>({
         }
     );
 
-    // Animate the toolbar above the textfield
-    const toolbarStyle = useAnimatedStyle(() => ({
-        top: keyboardAbsoluteTop.value
-    }));
-
     return (
         <MotiView
             animate={{ opacity: isLoading ? 0 : 1 }}
@@ -169,7 +157,7 @@ const SortableList = <T extends IListItem>({
                             key={`${item.id}-row`}
                             item={item}
                             itemIndex={i}
-                            hasToolbar={Boolean(getToolbarProps)}
+                            toolbarIconSet={toolbarIconSet}
                             disableDrag={disableDrag}
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
@@ -216,14 +204,10 @@ const SortableList = <T extends IListItem>({
                     />
                 )}
 
-                {/* Toolbar */}
-                {toolbarProps && !hideKeyboard && textfieldItem?.listId === listId &&
-                    <Portal>
-                        <ToolbarContainer className='absolute left-0' style={toolbarStyle}>
-                            <Toolbar {...toolbarProps} />
-                        </ToolbarContainer>
-                    </Portal>
-                }
+                {/* Placeholder Toolbar (prevent flickering between textfields) */}
+                {/* {toolbarIconSet && (
+                    <Toolbar iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
+                )} */}
             </View>
         </MotiView>
     );

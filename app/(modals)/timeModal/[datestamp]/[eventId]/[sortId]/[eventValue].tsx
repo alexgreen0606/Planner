@@ -1,16 +1,19 @@
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
+import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
 import { SelectorMode } from "@/components/form/fields/TimeRangeSelector";
 import Modal from "@/components/modal";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { NULL } from "@/lib/constants/generic";
+import { EAccess } from "@/lib/enums/EAccess";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { EListType } from "@/lib/enums/EListType";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { deletePlannerEvents, getPlannerFromStorage, savePlannerEvent, unschedulePlannerEvent } from "@/storage/plannerStorage";
-import { getCalendarEventById, hasCalendarAccess } from "@/utils/calendarUtils";
+import { hasCalendarAccess } from "@/utils/accessUtils";
+import { getCalendarEventById } from "@/utils/calendarUtils";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { sanitizePlanner } from "@/utils/plannerUtils";
@@ -44,6 +47,7 @@ const TimeModal = () => {
     const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<ModalParams>();
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const mountedDatestamps = useAtomValue(mountedDatestampsAtom);
+    const userAccess = useAtomValue(userAccessAtom);
     const router = useRouter();
 
     const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
@@ -232,7 +236,7 @@ const TimeModal = () => {
             type: EFormFieldType.CHECKBOX,
             label: 'Add to Calendar',
             defaultValue: false,
-            hide: !hasCalendarAccess()
+            hide: !userAccess.get(EAccess.CALENDAR)
         },
         {
             name: 'allDay',

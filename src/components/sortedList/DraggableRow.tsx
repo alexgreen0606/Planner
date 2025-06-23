@@ -23,6 +23,7 @@ import { IListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { EListType } from "@/lib/enums/EListType";
+import { ToolbarIcon } from "./Toolbar";
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -56,7 +57,7 @@ export interface RowProps<T extends IListItem> {
         handleDragEnd: () => void;
     },
     listType: EListType;
-    hasToolbar: boolean;
+        toolbarIconSet?: ToolbarIcon<T>[][];
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
     onContentClick: (item: T) => void;
@@ -84,7 +85,7 @@ const DraggableRow = <T extends IListItem>({
     getRowTextPlatformColor,
     onContentClick,
     itemIndex,
-    hasToolbar,
+    toolbarIconSet,
     isListDragging,
     upperAutoScrollBound,
     lowerAutoScrollBound,
@@ -322,7 +323,7 @@ const DraggableRow = <T extends IListItem>({
             </Pressable>
 
             <View
-                className="items-center justify-center flex-row"
+                className="flex-row  justify-center items-center"
                 style={{
                     height: LIST_CONTENT_HEIGHT,
                     marginLeft: LIST_ICON_SPACING
@@ -334,18 +335,25 @@ const DraggableRow = <T extends IListItem>({
 
                 {/* Content */}
                 <GestureDetector gesture={contentGesture}>
-                    <ListTextfield<T>
-                        key={getTextfieldKey(item)}
-                        item={item}
-                        hasToolbar={hasToolbar}
-                        onChange={handleTextfieldChange}
-                        onSubmit={handleTextfieldSave}
-                        hideKeyboard={hideKeyboard}
-                        customStyle={{
-                            color: PlatformColor(customTextPlatformColor ?? (pendingDelete ? 'tertiaryLabel' : 'label')),
-                            textDecorationLine: pendingDelete ? 'line-through' : undefined
+                    <View
+                        className="flex-1"
+                        style={{
+                            height: LIST_CONTENT_HEIGHT
                         }}
-                    />
+                    >
+                        <ListTextfield<T>
+                            key={getTextfieldKey(item)}
+                            item={item}
+                            toolbarIconSet={toolbarIconSet}
+                            onChange={handleTextfieldChange}
+                            onSubmit={handleTextfieldSave}
+                            hideKeyboard={hideKeyboard}
+                            customStyle={{
+                                color: PlatformColor(customTextPlatformColor ?? (pendingDelete ? 'tertiaryLabel' : 'label')),
+                                textDecorationLine: pendingDelete ? 'line-through' : undefined
+                            }}
+                        />
+                    </View>
                 </GestureDetector>
 
                 {/* Right Icon */}

@@ -2,11 +2,13 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { getPrimaryCalendarId, hasCalendarAccess, loadCalendarData } from "@/utils/calendarUtils";
+import { hasCalendarAccess } from "@/utils/accessUtils";
+import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier } from "@/utils/dateUtils";
 import { cloneItem, isItemTextfield, sanitizeList } from "@/utils/listUtils";
 import { generatePlanner, getMountedLinkedDatestamps, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
+import { uuid } from "expo-modules-core";
 import { MMKV } from 'react-native-mmkv';
 
 const storage = new MMKV({ id: EStorageId.PLANNER });
@@ -62,11 +64,12 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
     return yesterdayPlanner.events
         // Remove hidden and recurring events.
         .filter((event: IPlannerEvent) =>
-            event.status !== EItemStatus.HIDDEN && !event.recurringId && !event.recurringCloneId
+            event.status !== EItemStatus.HIDDEN &&
+            !event.recurringId &&
+            !event.calendarId
         )
         // Convert timed events to generic.
         .map((event: IPlannerEvent) => {
-            delete event.calendarId;
             delete event.timeConfig;
             return event;
         });

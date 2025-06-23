@@ -68,16 +68,10 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
         setTimeModalOpen(false);
     }
 
-    function generateToolbar(event: IRecurringEvent) {
-        return {
-            item: event,
-            open: !timeModalOpen && isItemTextfield(event),
-            iconSets: [[{
-                type: 'clock' as IconType,
-                onClick: () => toggleTimeModal(event)
-            }]]
-        }
-    }
+    const toolbarIcons = [[{
+        type: 'clock' as IconType,
+        onClick: () => { textfieldItem && toggleTimeModal(textfieldItem) }
+    }]];
 
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: EStorageId.RECURRING_EVENT,
@@ -104,7 +98,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
-                getToolbarProps={generateToolbar}
+                toolbarIconSet={toolbarIcons}
                 hideKeyboard={timeModalOpen}
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}

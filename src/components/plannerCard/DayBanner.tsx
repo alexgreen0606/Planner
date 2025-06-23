@@ -1,5 +1,5 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
-import CustomText from '@/components/text/CustomText';
+import CustomText, { textStyles } from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
 import { TEventChip } from '@/lib/types/planner/TEventChip';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
@@ -57,11 +57,8 @@ const DayBanner = ({
 
                 {/* Date */}
                 <View className='flex-1'>
-                    <View className='flex-row flex-1'>
-                        <CustomText
-                            type='subHeader'
-                            style={{ color: PlatformColor('label') }}
-                        >
+                    <View className='flex-row flex-1 items-center'>
+                        <CustomText variant='plannerCardDetail'>
                             {prioritizeDayOfWeek ? monthDate : dayOfWeek}
                         </CustomText>
                         {(planner.title || isEditingTitle || isTomorrow) && (
@@ -74,7 +71,7 @@ const DayBanner = ({
                             />
                         )}
                         {isTomorrow && !isEditingTitle && !planner.title && (
-                            <CustomText type='subHeader'>
+                            <CustomText variant='plannerCardSoftDetail'>
                                 Tomorrow
                             </CustomText>
                         )}
@@ -85,22 +82,11 @@ const DayBanner = ({
                                 editable={isEditingTitle}
                                 onChangeText={setNewPlannerTitle}
                                 onSubmitEditing={handlePlannerTitleSave}
-                                style={{
-                                    color: PlatformColor('secondaryLabel'),
-                                    fontSize: 12,
-                                    paddingRight: 12,
-                                    flex: 1
-                                }}
+                                style={textStyles.plannerCardSoftDetail}
                             />
                         ) : (
                             <CustomText
-                                type='subHeader'
-                                style={{
-                                    color: PlatformColor('secondaryLabel'),
-                                    fontSize: 12,
-                                    paddingRight: 12,
-                                    flex: 1
-                                }}
+                                variant='plannerCardSoftDetail'
                                 ellipsizeMode='tail'
                                 numberOfLines={1}
                             >
@@ -108,7 +94,7 @@ const DayBanner = ({
                             </CustomText>
                         )}
                     </View>
-                    <CustomText type='header'>
+                    <CustomText className='-mt-0.25' variant='plannerCardHeader'>
                         {prioritizeDayOfWeek ? dayOfWeek : monthDate}
                     </CustomText>
                 </View>

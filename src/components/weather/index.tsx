@@ -30,7 +30,7 @@ const WeatherDisplay = ({
         return (
             <TouchableOpacity activeOpacity={1} onPress={openWeatherApp}>
                 <View className='flex-row gap-2 justify-between items-center'>
-                    <CustomText type='header'>{Math.round(currentTemp)}°</CustomText>
+                    <CustomText variant='standard'>{Math.round(currentTemp)}°</CustomText>
                     <View style={currentStyles.icon}>
                         <SFSymbol
                             name={weatherCodeToFontistoIcon(weatherCode)}
@@ -57,9 +57,9 @@ const WeatherDisplay = ({
             >
                 <TouchableOpacity activeOpacity={1} onPress={openWeatherApp}>
                     <View className='flex-row gap-1 items-center'>
-                        <CustomText type='highTemp'>{Math.round(high)}°</CustomText>
+                        <CustomText variant='highTemp'>{Math.round(high)}°</CustomText>
                         <View style={defaultStyles.divider} />
-                        <CustomText type='lowTemp'>{Math.round(low)}°</CustomText>
+                        <CustomText variant='lowTemp'>{Math.round(low)}°</CustomText>
                         <View style={defaultStyles.icon}>
                             <SFSymbol
                                 name={weatherCodeToFontistoIcon(weatherCode)}

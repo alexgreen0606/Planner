@@ -11,10 +11,10 @@ const AgeValue = ({ age, contacted }: AgeValueProps) => {
 
     return (
         <View style={styles.container}>
-            <CustomText type='age' style={{...styles.hour, color: PlatformColor(contacted ? 'secondaryLabel' : 'systemGreen')}}>{age}</CustomText>
+            <CustomText variant='age' customStyle={{...styles.hour, color: PlatformColor(contacted ? 'secondaryLabel' : 'systemGreen')}}>{age}</CustomText>
             <View style={styles.details}>
-                <CustomText type='year' style={{...styles.minute, color: PlatformColor(contacted ? 'secondaryLabel' : 'systemGreen')}}>YEAR{age > 1 ? 'S' : ''}</CustomText>
-                <CustomText type='year' style={{...styles.indicator, color: PlatformColor(contacted ? 'secondaryLabel' : 'systemGreen')}}>OLD</CustomText>
+                <CustomText variant='year' customStyle={{...styles.minute, color: PlatformColor(contacted ? 'secondaryLabel' : 'systemGreen')}}>YEAR{age > 1 ? 'S' : ''}</CustomText>
+                <CustomText variant='year' customStyle={{...styles.indicator, color: PlatformColor(contacted ? 'secondaryLabel' : 'systemGreen')}}>OLD</CustomText>
             </View>
         </View>
     )

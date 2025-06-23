@@ -98,7 +98,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                                     style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
                                 >
                                     <ButtonText
-                                        textType='label'
+                                        textType='plannerTabLabel'
                                         onClick={() => handleTabChange(tab)}
                                         platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
                                     >

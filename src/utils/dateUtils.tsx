@@ -178,7 +178,7 @@ export function getIsoRoundedDown5Minutes(datestamp?: string): string {
  * @returns - Date object representing the midnight time of the computed date
  */
 export function datestampToMidnightDate(timestamp: string, dayOffset: number = 0): Date {
-    const date = DateTime.fromISO(timestamp, { zone: 'local' }).plus({ days: dayOffset });
+    const date = DateTime.fromISO(timestamp).plus({ days: dayOffset });
 
     // Convert Luxon DateTime back to a native JavaScript Date at midnight
     return date.startOf('day').toJSDate();

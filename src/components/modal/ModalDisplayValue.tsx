@@ -17,8 +17,8 @@ const ModalDisplayValue = ({
         style={{ height: MODAL_INPUT_HEIGHT }}
     >
         <CustomText
-            type='standard'
-            style={{ color: PlatformColor('secondaryLabel') }}
+            variant='standard'
+            customStyle={{ color: PlatformColor('secondaryLabel') }}
         >
             {label}
         </CustomText>

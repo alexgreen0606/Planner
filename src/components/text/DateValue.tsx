@@ -24,12 +24,12 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
 
     return concise ?
         <View className='relative flex-row w-fit'>
-            <CustomText type='conciseTime' style={{ color: PlatformColor(platformColor) }}>
+            <CustomText variant='conciseDate' customStyle={{ color: PlatformColor(platformColor) }}>
                 {monthDay.toUpperCase()}
             </CustomText>
             {showYear && (
                 <View className='absolute top-[80%] left-0'>
-                    <CustomText type='conciseIndicator'>
+                    <CustomText variant='standard'>
                         {year}
                     </CustomText>
                 </View>
@@ -38,8 +38,8 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
         :
         <View className='relative flex-row'>
             <CustomText
-                type='time'
-                style={{
+                variant='date'
+                customStyle={{
                     marginRight: showYear ? 2 : 0,
                     color: PlatformColor(platformColor)
                 }}
@@ -47,7 +47,7 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
                 {monthDay}
             </CustomText>
             {showYear && (
-                <CustomText type='indicator'>
+                <CustomText variant='standard'>
                     {year}
                 </CustomText>
             )}

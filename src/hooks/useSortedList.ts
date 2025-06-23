@@ -4,11 +4,9 @@ import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
-import { usePathname } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
-import { useReloadScheduler } from './useReloadScheduler';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
 
 type StorageHandlers<T extends IListItem> = {
@@ -26,7 +24,6 @@ interface SortedListConfig<T extends IListItem, S> {
     initializeListItem?: (item: IListItem) => T;
     storageConfig?: StorageHandlers<T>;
     initializedStorageObject?: S;
-    reloadOnOverscroll?: boolean;
     listType: EListType;
 }
 
@@ -38,18 +35,17 @@ const useSortedList = <T extends IListItem, S>({
     initializeListItem,
     storageConfig,
     initializedStorageObject,
-    reloadOnOverscroll = false,
     handleListChange,
     listType
 }: SortedListConfig<T, S>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
-    const { registerReloadFunction } = useReloadScheduler();
     const { getIsItemDeleting } = useDeleteScheduler<T>();
     const { focusPlaceholder } = useScrollContainer();
-    const pathname = usePathname();
 
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
+
+    const isTogglingTextfields = useRef(false);
 
     const [items, setItems] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -73,12 +69,64 @@ const useSortedList = <T extends IListItem, S>({
         buildList();
     }, [buildList]);
 
-    // Overscroll Reload Registering
-    useEffect(() => {
-        if (reloadOnOverscroll) registerReloadFunction(`${storageKey}-${storageId}`, buildList, pathname);
-    }, []);
+    /**
+     * Updates or creates an item in storage.
+     * @returns - true if the item still exists in the list, else false
+     */
+    async function persistItemToStorage(item: T) {
+        let newId = undefined;
+        if (storageConfig) {
 
-    // ------------- EDIT Logic -------------
+            // Handle the storage update directly
+            if (item.status === EItemStatus.NEW) {
+                newId = await storageConfig.createItem({ ...item, status: EItemStatus.STATIC });
+            } else {
+                await storageConfig.updateItem({ ...item, status: EItemStatus.STATIC });
+            }
+        } else {
+
+            // Update the list with the new item and save
+            const updatedList = [...items];
+            const replaceIndex = updatedList.findIndex((existingItem) =>
+                existingItem.id === item.id
+            );
+            if (replaceIndex !== -1) {
+                updatedList[replaceIndex] = item;
+            } else {
+                updatedList.push(item);
+            }
+            const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, { ...storageObject }) : updatedList;
+            setStorageObject(objectToSave as S);
+        }
+
+        await handleListChange?.();
+
+        return newId;
+    }
+
+    /**
+     * Toggles an item between a textfield and static.
+     * If another textfield exists, it will be saved first.
+     */
+    async function toggleItemEdit(item: T) {
+        if (getIsItemDeleting(item, listType)) return;
+
+        isTogglingTextfields.current = true;
+
+        if (textfieldItem && textfieldItem.value.trim() !== '') {
+            // Focus the hidden placeholder field.
+            // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
+            focusPlaceholder();
+            await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
+        }
+
+        setTextfieldItem({ ...item, status: EItemStatus.EDIT });
+
+        setTimeout(() => {
+            isTogglingTextfields.current = false;
+        }, 200);
+
+    };
 
     /**
      * ✅ Saves an item to the current list and creates a new textfield item.
@@ -87,7 +135,8 @@ const useSortedList = <T extends IListItem, S>({
      * @param isChildId - Signifies if the reference ID should be below the new textfield, else above.
      */
     async function saveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-        console.log('saveTextfieldAndCreateNew')
+        if (isTogglingTextfields.current) return;
+
         const item = textfieldItem ? { ...textfieldItem } : null;
 
         // Phase 1: Clear the textfield and exit if the input is empty.
@@ -124,63 +173,6 @@ const useSortedList = <T extends IListItem, S>({
 
         setTextfieldItem(newItem);
     }
-
-    /**
-     * Updates or creates an item in storage.
-     * @returns - true if the item still exists in the list, else false
-     */
-    async function persistItemToStorage(item: T) {
-        let newId = undefined;
-        if (storageConfig) {
-
-            // Handle the storage update directly
-            if (item.status === EItemStatus.NEW) {
-                newId = await storageConfig.createItem({ ...item, status: EItemStatus.STATIC });
-            } else {
-                await storageConfig.updateItem({ ...item, status: EItemStatus.STATIC });
-            }
-        } else {
-
-            // Update the list with the new item and save
-            const updatedList = [...items];
-            const replaceIndex = updatedList.findIndex((existingItem) =>
-                existingItem.id === item.id
-            );
-            if (replaceIndex !== -1) {
-                updatedList[replaceIndex] = item;
-            } else {
-                updatedList.push(item);
-            }
-            const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, { ...storageObject }) : updatedList;
-            setStorageObject(objectToSave as S);
-        }
-
-        await handleListChange?.();
-
-        return newId;
-    };
-
-
-    /**
-     * Toggles an item between a textfield and static.
-     * If another textfield exists, it will be saved first.
-     */
-    async function toggleItemEdit(item: T) {
-        console.log('toggleItemEdit'); // TODO: this gets overridden by save function when other focused gets blurred
-        if (getIsItemDeleting(item, listType)) return;
-
-        if (textfieldItem && textfieldItem.value.trim() !== '') {
-            await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
-        }
-
-        const togglingItem = textfieldItem?.id === item.id;
-        if (!togglingItem) {
-            setTextfieldItem({ ...item, status: EItemStatus.EDIT });
-        } else {
-            setTextfieldItem(null);
-        }
-
-    };
 
     return {
         items,

@@ -6,7 +6,6 @@ import { DateTime } from 'luxon';
 interface TimeProps {
     timeValue?: string | null; // HH:MM
     isoTimestamp?: string | null;
-    allDay?: boolean;
     endEvent?: boolean;
     startEvent?: boolean;
     concise?: boolean;
@@ -16,7 +15,6 @@ interface TimeProps {
 const TimeValue = ({
     timeValue,
     isoTimestamp,
-    allDay,
     endEvent,
     startEvent,
     concise,
@@ -53,55 +51,33 @@ const TimeValue = ({
         }
     }, [timeValue, isoTimestamp]);
 
-    return allDay ? (
-        <View className='flex items-center'>
-            <CustomText type='conciseTime'>
-                ALL
-            </CustomText>
-            <CustomText type='conciseTime'>
-                DAY
-            </CustomText>
-        </View>
-    ) : concise ? (
+    return concise ? (
         <View className='flex-row relative'>
-            <CustomText type='conciseTime' style={{ color: PlatformColor(platformColor) }}>
+            <CustomText variant='listTime' customStyle={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
             </CustomText>
-            <View className='w-[1px]' />
-            <CustomText type='conciseIndicator'>
+            <CustomText variant='listPmAmIndicator'>
                 {indicator}
             </CustomText>
             {(startEvent || endEvent) && (
-                <View className='absolute top-full left-1/2 -translate-x-1/2 items-center'>
-                    <CustomText type='tinyIndicator'>
-                        {startEvent ? 'START' : 'END'}
-                    </CustomText>
-                </View>
+                <CustomText
+                    variant='listMultiDayIndicator'
+                    className='-translate-x-1/2'
+                >
+                    {startEvent ? 'START' : 'END'}
+                </CustomText>
             )}
         </View>
     ) : (
         <View className='flex-row relative'>
-            <CustomText type='time' style={{ color: PlatformColor(platformColor) }}>
+            <CustomText variant='time' customStyle={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
             </CustomText>
-            <CustomText type='indicator'>
+            <CustomText variant='standard'>
                 {indicator}
             </CustomText>
         </View>
     );
 };
-
-
-const styles = StyleSheet.create({
-    indicator: {
-        position: 'absolute',
-        bottom: 0,
-        opacity: 0.8,
-        left: '100%'
-    },
-    short: {
-        transform: 'translateX(-50%)'
-    },
-});
 
 export default TimeValue;

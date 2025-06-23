@@ -1,100 +1,166 @@
 import React from 'react';
-import { PlatformColor, StyleSheet, TextStyle } from 'react-native';
-import { Text } from 'react-native-paper';
+import { PlatformColor, StyleSheet, TextProps as NativeTextProps, TextStyle, Text } from 'react-native';
 
-export type TextType = keyof typeof styles;
-
-interface TextProps extends React.ComponentProps<typeof Text> {
-    type: TextType;
-    children: React.ReactNode;
-    style?: TextStyle;
-}
-
-const CustomText = ({ type, children, style, ...rest }: TextProps) =>
-    <Text style={[styles[type], style]} {...rest} >
-        {children}
-    </Text>
-
-const styles = StyleSheet.create({
+export const textStyles = {
+    // --- Standard Text ---
     pageLabel: {
-        fontSize: 25,
+        fontSize: 30,
         color: PlatformColor('label'),
-        fontWeight: 600,
-        fontFamily: 'System'
+        fontFamily: 'RoundMedium'
     },
-    subPageLabel: {
+    detail: {
+        color: PlatformColor('label'),
+        fontSize: 14,
+        fontFamily: 'RoundRegular'
+    },
+    softDetail: {
         color: PlatformColor('secondaryLabel'),
         fontSize: 14,
+        fontFamily: 'Text'
     },
-    header: {
-        color: PlatformColor('label'),
-        fontSize: 20,
-        fontWeight: 400
-    },
-    subHeader: {
+    microDetail: {
         color: PlatformColor('secondaryLabel'),
-        fontSize: 12
+        fontSize: 10,
+        fontFamily: 'Text'
     },
     standard: {
         color: PlatformColor('label'),
         fontSize: 16,
+        fontFamily: 'Text'
     },
-    label: {
-        color: PlatformColor('secondaryLabel'),
-        fontSize: 14,
-        fontWeight: 600
+    // --- Modal ---
+    modalTitle: {
+        color: PlatformColor('label'),
+        fontSize: 20,
+        fontWeight: 400,
+        fontFamily: 'RoundRegular',
     },
-    soft: {
+    // --- Planner Card ---
+    plannerCardHeader: {
+        color: PlatformColor('label'),
+        fontSize: 22,
+        fontFamily: 'RoundRegular',
+    },
+    plannerCardDetail: {
+        color: PlatformColor('systemTeal'),
+        fontFamily: 'Text',
+        fontSize: 12
+    },
+    plannerCardSoftDetail: {
         color: PlatformColor('secondaryLabel'),
+        fontFamily: 'Text',
         fontSize: 12,
+        paddingRight: 12,
+        flex: 1
     },
+    // --- Date Range Selector ---
+
+    // --- Event Chip ---
+    eventChipLabel: {
+        fontFamily: 'RoundRegular',
+        fontSize: 12
+    },
+    // --- Empty Label ---
+    emptyLabel: {
+        fontFamily: 'RoundRegular',
+        fontSize: 12,
+        color: PlatformColor('tertiaryLabel')
+    },
+    // --- Planners Navbar ---
+    plannerTabLabel: {
+        fontSize: 14,
+        fontFamily: 'RoundMedium'
+    },
+    // --- Weather ---
     highTemp: {
         fontSize: 16,
         color: PlatformColor('label'),
+        fontFamily: 'Text'
     },
     lowTemp: {
         fontSize: 12,
         color: PlatformColor('secondaryLabel'),
+        fontFamily: 'Text'
     },
+    // --- Button ---
+    button: {
+        fontSize: 16,
+        fontFamily: 'RoundMedium',
+    },
+    // --- Birthday ---
     age: {
         fontSize: 24,
-        fontFamily: 'Coiny-Regular',
+        fontFamily: 'RoundHeavy',
         color: PlatformColor('systemGreen'),
     },
     year: {
         fontSize: 14,
-        fontFamily: 'Coiny-Regular',
+        fontFamily: 'RoundHeavy',
         color: PlatformColor('systemGreen'),
     },
-    button: {
-        fontSize: 16,
-        fontWeight: 500,
+    // --- Concise Time ---
+    listTime: {
+        fontFamily: 'RoundHeavy',
+        fontSize: 15,
+        color: PlatformColor('systemTeal'),
+        marginRight: 1
     },
-    conciseTime: {
-        fontFamily: 'Coiny-Regular',
-        fontSize: 14,
-        color: PlatformColor('systemTeal')
+    listPmAmIndicator: {
+        fontFamily: 'Text',
+        fontSize: 9,
+        color: PlatformColor('secondaryLabel'),
+        marginTop: 2
+    },
+    listMultiDayIndicator: {
+        fontFamily: 'RoundMedium',
+        fontSize: 8,
+        color: PlatformColor('secondaryLabel'),
+        position: 'absolute',
+        left: '50%',
+        top: '100%',
+        marginTop: -2
+    },
+    // --- Date ---
+    yearIndicator: {
+
+    },
+    monthIndicator: {
+
     },
     time: {
-        fontFamily: 'Coiny-Regular',
+        fontFamily: 'RoundHeavy',
         fontSize: 16,
         color: PlatformColor('systemTeal')
     },
-    conciseIndicator: {
-        fontFamily: 'Coiny-Regular',
-        fontSize: 10,
-        color: PlatformColor('secondaryLabel')
+    date: {
+        fontFamily: 'RoundMedium',
+        fontSize: 16,
+        color: PlatformColor('systemTeal')
     },
-    tinyIndicator: {
-        fontFamily: 'Coiny-Regular',
-        fontSize: 8,
-        color: PlatformColor('tertiaryLabel')
+    conciseDate: {
+        fontFamily: 'RoundMedium',
+        fontSize: 16,
+        color: PlatformColor('systemTeal')
     },
-    indicator: {
-        fontFamily: 'Coiny-Regular',
-        fontSize: 10,
-        color: PlatformColor('secondaryLabel')
-    }
-});
+} satisfies Record<string, TextStyle>;
+
+export type TextVariant = keyof typeof textStyles;
+
+interface TextProps extends NativeTextProps {
+    variant: TextVariant;
+    children: React.ReactNode;
+    customStyle?: TextStyle;
+}
+
+const CustomText = ({ variant, children, customStyle, ...rest }: TextProps) =>
+    <Text
+        // @ts-ignore allow custom text styles
+        style={[styles[variant], customStyle]}
+        {...rest}
+    >
+        {children}
+    </Text>
+
+const styles = StyleSheet.create(textStyles);
 
 export default CustomText;

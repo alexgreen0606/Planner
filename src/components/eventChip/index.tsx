@@ -81,10 +81,10 @@ const EventChip = ({
             />
             {!collapsed && (
                 <CustomText
-                    type='soft'
+                    variant='eventChipLabel'
                     ellipsizeMode='tail'
                     numberOfLines={1}
-                    style={{
+                    customStyle={{
                         color: chipCssColor,
                         textDecorationLine: isPendingDelete ? 'line-through' : undefined,
                     }}

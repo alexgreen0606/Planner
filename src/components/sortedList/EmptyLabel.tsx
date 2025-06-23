@@ -36,8 +36,8 @@ const EmptyLabel = ({
                 />
             )}
             <CustomText
-                type='label'
-                style={{ fontSize }}
+                variant='emptyLabel'
+                customStyle={{ fontSize }}
             >
                 {label}
             </CustomText>

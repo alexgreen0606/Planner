@@ -7,7 +7,7 @@ import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { savePlannerEvent } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { buildPlannerEvents, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '@/utils/plannerUtils';
+import { buildPlannerEvents, generatePlanner, generateTimeIconConfig, buildEventToolbarIconSet, handleEventValueUserInput, openTimeModal } from '@/utils/plannerUtils';
 import { usePathname, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
@@ -15,6 +15,7 @@ import SortableList from '../sortedList';
 import { useAtomValue } from 'jotai';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 
 const TodayPlanner = () => {
     const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
@@ -22,14 +23,17 @@ const TodayPlanner = () => {
     const pathname = usePathname();
     const router = useRouter();
 
+    const [textfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+
     const listType = EListType.PLANNER;
 
     const { calendarEvents } = useCalendarData(todayDatestamp);
 
     const isTimeModalOpen = pathname.includes('timeModal');
 
-    function handleOpenTimeModal(item: IPlannerEvent) {
-        openTimeModal(todayDatestamp, item, router);
+    function handleOpenTimeModal(event?: IPlannerEvent) {
+        const eventToOpen = event ?? textfieldItem;
+        openTimeModal(todayDatestamp, eventToOpen!, router);
     }
 
     function toggleScheduleEventDelete(event: IPlannerEvent) {
@@ -73,7 +77,7 @@ const TodayPlanner = () => {
             handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, todayDatestamp)}
             getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
-            getToolbarProps={(item) => generateEventToolbar(item, handleOpenTimeModal, isTimeModalOpen)}
+            toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{
                 label: 'All Plans Complete',

@@ -1,20 +1,34 @@
 import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { getPlannerSet } from '@/storage/plannerSetsStorage';
 import { loadCalendarData } from '@/utils/calendarUtils';
-import { generateDatestampRange, getNextEightDayDatestamps, getTodayDatestamp } from '@/utils/dateUtils';
+import { generateDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
+import { cloneItem } from '@/utils/listUtils';
+import { uuid } from 'expo-modules-core';
+import { usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 
-const CalendarContext = createContext({ isLoading: true });
+export const reloadablePaths = [
+    '/',
+    '/planners',
+    '/countdowns'
+];
+
+const CalendarContext = createContext({ isLoading: true, reloadPage: async () => { } });
 
 export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const [mountedDatestamps, setMountedDatestamps] = useAtom(mountedDatestampsAtom);
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { plannersMap } = useAtomValue(calendarEventDataAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
+    const pathname = usePathname();
+    const router = useRouter();
 
     const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
 
@@ -28,6 +42,34 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
     // ------------- Utility Functions -------------
 
+    // The reloadPage function that handles different paths
+    async function reloadPage() {
+        try {
+            switch (pathname) {
+                case '/':
+                    // For home page, reload today's calendar data
+                    await loadCalendarData([mountedDatestamps.today]);
+                    break;
+
+                case '/planners':
+                    // For planners page, reload planner calendar data
+                    await loadCalendarData(mountedDatestamps.planner);
+                    break;
+
+                case '/countdowns':
+                    // TODO: Add countdown reload logic here
+                    // await reloadCountdowns();
+                    break;
+
+                default:
+                    // No action for other paths
+                    return;
+            }
+        } catch (error) {
+            console.error('Error during reload:', error);
+        }
+    };
+
     function handleUpdateMountedDatestamps() {
         const today = getTodayDatestamp();
         let planner: string[] = [];
@@ -38,6 +80,31 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             const plannerSet = getPlannerSet(plannerSetKey);
             if (plannerSet) {
                 planner = generateDatestampRange(plannerSet.startDatestamp, plannerSet.endDatestamp);
+            }
+        }
+
+        // Ensure the textfield remains visible if one exists during the midnight update.
+        if (textfieldItem) {
+            const yesterdayDatestamp = getYesterdayDatestamp();
+
+            // If textfield item was from yesterday, carry it to today.
+            if (textfieldItem.listId === yesterdayDatestamp) {
+                const genericItem = cloneItem<IPlannerEvent>(
+                    textfieldItem,
+                    ['calendarId', 'timeConfig', 'recurringId', 'recurringCloneId'],
+                    { listId: today, id: uuid.v4() }
+                )
+                setTextfieldItem(genericItem);
+            }
+
+            // If textfield item is now for today and we're on planners page with Next 7 Days view,
+            // navigate to the today planner.
+            else if (
+                textfieldItem.listId === today &&
+                pathname === '/planners' &&
+                plannerSetKey === 'Next 7 Days'
+            ) {
+                router.push('/');
             }
         }
 
@@ -53,14 +120,10 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         await loadCalendarData(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
     }
 
-    // TODO: reload calendar data handle directly in the scroll provider
-
     // Datestamps build.
     useEffect(() => {
         handleUpdateMountedDatestamps();
     }, [plannerSetKey]);
-
-    console.log(plannersMap)
 
     // Calendar load.
     useEffect(() => {
@@ -84,6 +147,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(timeoutId);
     }, [setMountedDatestamps]);
 
+    // Planner Set datestamps update.
     useMMKVListener((key) => {
         if (key === plannerSetKey) {
             handleUpdateMountedDatestamps()
@@ -91,7 +155,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     }, plannerSetStorage);
 
     return (
-        <CalendarContext.Provider value={{ isLoading }}>
+        <CalendarContext.Provider value={{ isLoading, reloadPage }}>
             {children}
         </CalendarContext.Provider>
     );

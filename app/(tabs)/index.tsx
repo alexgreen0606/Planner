@@ -4,30 +4,18 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import TodayPlanner from '@/components/today';
 import TodayBanner from '@/components/today/TodayBanner';
 import { useCalendarData } from '@/hooks/useCalendarData';
-import { EStorageId } from '@/lib/enums/EStorageId';
 import { useCalendarLoad } from '@/providers/CalendarProvider';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
-import { loadCalendarData } from '@/utils/calendarUtils';
 import { useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
 import React from 'react';
-import { PlatformColor, View } from 'react-native';
-import { MMKV, useMMKVListener } from 'react-native-mmkv';
-
-const birthdayStorage = new MMKV({ id: EStorageId.BIRTHDAY });
+import { PlatformColor, Text, TouchableOpacity, View } from 'react-native';
 
 const Today = () => {
   const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
 
   const { isLoading } = useCalendarLoad();
   const { calendarChips } = useCalendarData(todayDatestamp);
-
-  // Load of data each time a birthday is contacted
-  useMMKVListener((key) => {
-    if (key === todayDatestamp) {
-      loadCalendarData([todayDatestamp]);
-    }
-  }, birthdayStorage);
 
   return isLoading ? (
     <LoadingSpinner />

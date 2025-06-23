@@ -206,12 +206,12 @@ const TimeRangeSelector = ({
         <View>
             <View className='flex-row'>
                 {startIso && (
-                    <View className='flex-1 items-start gap-1'>
-                        <CustomText type='soft'>
+                    <View className='flex-1 items-start'>
+                        <CustomText variant='softDetail'>
                             {startData.dayOfWeek}
                         </CustomText>
                         <MotiView animate={{
-                            transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }]
+                            transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }],
                         }}>
                             <TouchableOpacity
                                 onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
@@ -239,13 +239,13 @@ const TimeRangeSelector = ({
                     </View>
                 )}
                 {showEndTime && (
-                    <CustomText type='indicator'>
+                    <CustomText variant='indicator'>
                         TO
                     </CustomText>
                 )}
                 {showEndTime && (
-                    <View className='flex-1 items-end gap-1'>
-                        <CustomText type='soft'>
+                    <View className='flex-1 items-end'>
+                        <CustomText variant='softDetail'>
                             {endData.dayOfWeek}
                         </CustomText>
                         <MotiView animate={{

@@ -1,19 +1,18 @@
 import React from 'react';
-import { PlatformColor, StyleSheet, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
-import { Text } from 'react-native-paper';
+import { PlatformColor, StyleSheet, TextProps, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import CustomText, { TextType } from './CustomText';
+import CustomText, { TextVariant } from './CustomText';
 import GenericIcon, { GenericIconProps } from '../icon';
 
 const AnimatedText = Animated.createAnimatedComponent(View);
 
-interface ButtonTextProps extends React.ComponentProps<typeof Text> {
+interface ButtonTextProps extends TextProps {
     platformColor?: string;
     onClick?: () => void;
     children: React.ReactNode;
     containerStyle?: ViewStyle;
     iconConfig?: GenericIconProps;
-    textType?: TextType;
+    textType?: TextVariant;
 }
 
 const ButtonText = ({
@@ -54,11 +53,11 @@ const ButtonText = ({
                     />
                 )}
                 <CustomText
-                    type={textType}
+                    variant={textType}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                     {...rest}
-                    style={{
+                    customStyle={{
                         color: PlatformColor(platformColor)
                     }}
                 >

@@ -1,4 +1,4 @@
-import { ToolbarProps } from '@/components/sortedList/ListItemToolbar';
+import { ToolbarIcon, ToolbarProps } from '@/components/sortedList/Toolbar';
 import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
@@ -13,10 +13,10 @@ import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { DateTime } from 'luxon';
-import { hasCalendarAccess } from './calendarUtils';
 import { datestampToDayOfWeek, getTodayDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import { hasCalendarAccess } from './accessUtils';
 
 // ------------- Utilities -------------
 
@@ -597,7 +597,6 @@ export function generateTimeIconConfig(
         onClick: () => openTimeModal(event),
         customIcon: (
             <TimeValue
-                allDay={!!(event as IPlannerEvent).timeConfig?.allDay}
                 endEvent={!!(event as IPlannerEvent).timeConfig?.multiDayEnd}
                 startEvent={!!(event as IPlannerEvent).timeConfig?.multiDayStart}
                 timeValue={itemTime}
@@ -612,17 +611,10 @@ export function generateTimeIconConfig(
  * @getToolbar Prop: generates the config for the planner event toolbar.
  * The toolbar allows for opening the time modal.
  */
-export function generateEventToolbar(
-    event: IPlannerEvent | IRecurringEvent,
-    openTimeModal: (event: IPlannerEvent) => void,
-    timeModalOpen: boolean
-): ToolbarProps<IPlannerEvent | IRecurringEvent> {
-    return {
-        item: event,
-        open: !timeModalOpen && isItemTextfield(event),
-        iconSets: [[{
-            type: 'clock',
-            onClick: () => openTimeModal(event)
-        }]]
-    }
+export function buildEventToolbarIconSet
+    (openTimeModal: () => void): ToolbarIcon<IPlannerEvent>[][] {
+    return [[{
+        type: 'clock',
+        onClick: openTimeModal
+    }]]
 }

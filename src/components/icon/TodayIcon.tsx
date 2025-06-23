@@ -33,16 +33,21 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
                 hideRipple
                 platformColor={platformColor}
             />
-            <View className='absolute w-full h-full items-center pt-[2.5px] gap-1'>
+            <View className='absolute w-full h-full items-center pt-[0.5px]'>
                 <CustomText
-                    type='time'
-                    style={{ fontSize: 7, color: PlatformColor('systemBackground') }}
+                    variant='time'
+                    customStyle={{ fontSize: 8, color: PlatformColor('systemBackground') }}
                 >
                     {month}
                 </CustomText>
                 <CustomText
-                    type='time'
-                    style={{ fontSize: 14, color: PlatformColor(platformColor), paddingLeft: 1 }}
+                    variant='time'
+                    customStyle={{
+                        fontSize: 16,
+                        color: PlatformColor(platformColor),
+                        paddingLeft: 1.5,
+                        marginTop: -1
+                    }}
                 >
                     {day}
                 </CustomText>

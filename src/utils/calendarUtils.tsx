@@ -1,4 +1,4 @@
-import { calendarEventDataAtom, hasCalendarAccessAtom } from "@/atoms/calendarEvents";
+import { calendarEventDataAtom } from "@/atoms/calendarEvents";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
@@ -10,6 +10,7 @@ import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
 import { EListType } from "@/lib/enums/EListType";
 import { DateTime } from "luxon";
+import { hasCalendarAccess } from "./accessUtils";
 
 // ---------- Utilities ----------
 
@@ -42,8 +43,10 @@ function generatePlannerEvent(event: Calendar.Event, datestamp: string): IPlanne
     const dateStart = datestampToMidnightDate(datestamp);
     const dateEnd = datestampToMidnightDate(datestamp, 1);
 
-    const eventStart = new Date(event.startDate);
-    const eventEnd = new Date(event.endDate);
+    const eventStart = DateTime.fromISO(event.startDate as string).toLocal().toJSDate();
+    const eventEnd = DateTime.fromISO(event.endDate as string).toLocal().toJSDate();
+
+    // TODO: just compare strings directly?
 
     const multiDayEnd =
         // Starts before date
@@ -53,9 +56,9 @@ function generatePlannerEvent(event: Calendar.Event, datestamp: string): IPlanne
 
     const multiDayStart =
         // Starts on date
-        event.startDate >= dateStart && event.startDate < dateEnd &&
+        eventStart >= dateStart && eventStart < dateEnd &&
         // Ends after date
-        event.endDate >= dateEnd;
+        eventEnd >= dateEnd;
 
     return {
         id: event.id,
@@ -209,11 +212,6 @@ export async function getCalendarEventById(eventId: string, datestamp: string): 
 }
 
 // ------------- Jotai Store Utilities -------------
-
-export function hasCalendarAccess(): boolean {
-    const hasAccess = jotaiStore.get(hasCalendarAccessAtom);
-    return Boolean(hasAccess);
-}
 
 export async function getPrimaryCalendarId(): Promise<string> {
     const primaryCalendar = await Calendar.getDefaultCalendarAsync();

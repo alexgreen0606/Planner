@@ -41,15 +41,11 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/Jersey15-Regular.ttf",
-            "./assets/fonts/Coiny-Regular.ttf"
-          ],
-          "ios": {
-            "fonts": [
-              "./assets/fonts/Jersey15-Regular.ttf",
-              "./assets/fonts/Coiny-Regular.ttf"
-            ]
-          }
+            "./assets/fonts/SF-Compact-Rounded-Heavy.otf",
+            "./assets/fonts/SF-Compact-Rounded-Medium.otf",
+            "./assets/fonts/SF-Pro-Text-Regular.otf",
+            "./assets/fonts/SF-Compact-Rounded-Regular.otf"
+          ]
         }
       ],
       [

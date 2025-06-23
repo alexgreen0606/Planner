@@ -1,7 +1,7 @@
 import { HEADER_HEIGHT } from '@/lib/constants/layout';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import React from 'react';
-import { PlatformColor, StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import CustomText from '../text/CustomText';
 import WeatherDisplay from '../weather';
 
@@ -23,19 +23,15 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
         >
 
             {/* Date */}
-            <View style={styles.pageLabel}>
-                <CustomText type='pageLabel'>Today's Plans</CustomText>
-                <View style={styles.date}>
-                    <CustomText
-                        type='subPageLabel'
-                        style={{ color: PlatformColor('label') }}
-                    >
+            <View className='relative'>
+                <CustomText variant='pageLabel'>
+                    Today's Plans
+                </CustomText>
+                <View className='absolute bottom-full translate-y-3 flex-row'>
+                    <CustomText variant='detail'>
                         {datestampToDayOfWeek(timestamp)}{' '}
                     </CustomText>
-                    <CustomText
-                        type='subPageLabel'
-                        style={{ color: PlatformColor('secondaryLabel') }}
-                    >
+                    <CustomText variant='softDetail'>
                         {datestampToMonthDate(timestamp)}
                     </CustomText>
                 </View>
@@ -51,19 +47,5 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    pageLabel: {
-        position: 'relative',
-    },
-    date: {
-        position: 'absolute',
-        left: 0,
-        bottom: '100%',
-        transform: 'translateY(16px)',
-        display: 'flex',
-        flexDirection: 'row',
-    },
-});
 
 export default TodayBanner;

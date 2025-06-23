@@ -16,7 +16,7 @@ import { useAtom } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
 import Card from '../../components/Card';
-import { buildPlannerEvents, generateEventToolbar, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
+import { buildPlannerEvents, generatePlanner, generateTimeIconConfig, buildEventToolbarIconSet, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
 import GenericIcon from '../icon';
 import SortableList from '../sortedList';
 import DayBanner from './DayBanner';
@@ -77,8 +77,8 @@ const PlannerCard = ({
         setCollapsed(curr => !curr);
     }
 
-    function handleOpenTimeModal(item: IPlannerEvent) {
-        openTimeModal(datestamp, item, router);
+    function handleOpenTimeModal() {
+        openTimeModal(datestamp, textfieldItem, router);
     }
 
     // ------------- List Management Utils -------------
@@ -237,7 +237,7 @@ const PlannerCard = ({
                 handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, isEventDeleting(item))}
-                getToolbarProps={(event) => generateEventToolbar(event, handleOpenTimeModal, isTimeModalOpen)}
+                toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
                 customGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{
                     label: 'No Plans',

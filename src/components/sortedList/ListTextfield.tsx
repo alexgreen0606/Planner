@@ -1,26 +1,27 @@
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/constants/layout';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { PlatformColor, TextInput, TextStyle } from 'react-native';
+import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
+import Toolbar, { ToolbarIcon } from './Toolbar';
 
 interface ListTextfieldProps<T extends IListItem> {
     item: T;
+    toolbarIconSet?: ToolbarIcon<T>[][];
     onChange: (newText: string) => void;
     onSubmit: (blurred: boolean) => void;
     hideKeyboard: boolean;
     customStyle: TextStyle;
-    hasToolbar: boolean;
 }
 
 const ListTextfield = <T extends IListItem>({
     item,
+    toolbarIconSet,
     onChange,
     onSubmit,
     hideKeyboard,
     customStyle,
-    hasToolbar
 }: ListTextfieldProps<T>) => {
     const { blurPlaceholder } = useScrollContainer();
     const [textfieldItem] = useTextfieldItemAs<T>();
@@ -59,27 +60,37 @@ const ListTextfield = <T extends IListItem>({
     }, [hideKeyboard, editable]);
 
     return (
-        <TextInput
-            ref={inputRef}
-            value={item.value}
-            editable={editable}
-            onChangeText={onChange}
-            onSubmitEditing={() => handleSave(true)}
-            onBlur={() => handleSave(false)}
-            submitBehavior='submit'
-            selectionColor={PlatformColor('systemBlue')}
-            className='flex-1 bg-transparent text-[16px]'
-            style={[
-                {
-                    height: editable ? (
-                        (LIST_ITEM_HEIGHT * 2) + (hasToolbar ? TOOLBAR_HEIGHT * 2 : 0)
-                    ) : LIST_CONTENT_HEIGHT,
-                    marginRight: LIST_ICON_SPACING / 2,
-                    color: PlatformColor('label')
-                },
-                customStyle
-            ]}
-        />
+        <View>
+            <TextInput
+                ref={inputRef}
+                value={item.value}
+                editable={editable}
+                inputAccessoryViewID={item.id}
+                onChangeText={onChange}
+                onSubmitEditing={() => handleSave(true)}
+                onBlur={() => handleSave(false)}
+                submitBehavior='submit'
+                selectionColor={PlatformColor('systemBlue')}
+                className='flex-1 bg-transparent text-[16px] w-full absolute'
+                style={[
+                    {
+                        height: editable ? (
+                            LIST_ITEM_HEIGHT
+                        ) : LIST_CONTENT_HEIGHT,
+                        paddingBottom: editable ? (
+                            LIST_CONTENT_HEIGHT / 2 + 2
+                        ) : 0,
+                        marginRight: LIST_ICON_SPACING / 2,
+                        color: PlatformColor('label'),
+                        fontFamily: 'Text'
+                    },
+                    customStyle
+                ]}
+            />
+            {toolbarIconSet && editable &&
+                <Toolbar iconSets={toolbarIconSet} accessoryKey={item.id} />
+            }
+        </View>
     )
 }
 
