@@ -20,7 +20,7 @@ import Toolbar, { ToolbarIcon } from './Toolbar';
 interface DraggableListProps<T extends IListItem> {
     listId: string;
     items: T[];
-    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
+    onDragEnd?: (updatedItem: T) => Promise<void> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
@@ -205,9 +205,9 @@ const SortableList = <T extends IListItem>({
                 )}
 
                 {/* Placeholder Toolbar (prevent flickering between textfields) */}
-                {/* {toolbarIconSet && (
+                {toolbarIconSet && (
                     <Toolbar iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
-                )} */}
+                )}
             </View>
         </MotiView>
     );

@@ -257,7 +257,8 @@ export function generateSortIdByTime(
     event: IPlannerEvent | IRecurringEvent,
     events: (IPlannerEvent | IRecurringEvent)[]
 ): number {
-    // console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
+    if (event.value === 'monkey')
+    console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
     const planner = sanitizeList(events, event);
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
     const eventTime = extractEventTime(event);
@@ -346,20 +347,13 @@ export async function buildPlannerEvents(
     if (hasCalendarAccess()) {
         planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
     } else {
-
-
-
-
-        // TODO: remove any multiDay starts and ends and allDay when the calendar access if false
-
-
-
-
+        planner.events = planner.events.filter(event => !event.calendarId);
     }
 
     // Phase 3: Merge in carryover events from yesterday. Only applicable for today's planner.
     if (datestamp === getTodayDatestamp()) {
         const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
+        console.log(remainingYesterdayEvents, 'carried over')
         remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
             planner.events.push({
                 ...yesterdayEvent,
@@ -381,6 +375,7 @@ export async function buildPlannerEvents(
         )
     ) savePlannerToStorage(datestamp, planner);
 
+    console.log(planner.events)
     return planner.events;
 }
 
@@ -611,8 +606,9 @@ export function generateTimeIconConfig(
  * @getToolbar Prop: generates the config for the planner event toolbar.
  * The toolbar allows for opening the time modal.
  */
-export function buildEventToolbarIconSet
-    (openTimeModal: () => void): ToolbarIcon<IPlannerEvent>[][] {
+export function buildEventToolbarIconSet(
+    openTimeModal: () => void
+): ToolbarIcon<IPlannerEvent>[][] {
     return [[{
         type: 'clock',
         onClick: openTimeModal

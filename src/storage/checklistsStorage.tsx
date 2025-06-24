@@ -18,31 +18,15 @@ const storage = new MMKV({ id: EStorageId.CHECKLISTS });
  * Fetches a folder from storage with the given ID.
  * @param folderId
  */
-export const getFolderFromStorage = (folderId: string) => {
-
-    // Fetch the folder for the given id from MMKV storage
+export const getFolderFromStorage = (folderId: string): IFolder | null => {
     const folderString = storage.getString(folderId);
 
     if (folderString) {
         const foundFolder: IFolder = JSON.parse(folderString);
         return foundFolder;
-    } else if (folderId === EStorageKey.ROOT_CHECKLIST_FOLDER_KEY) {
-
-        // @ts-ignore - color must be overridden to blue for the root folder
-        const initialRootFolder = {
-            id: EStorageKey.ROOT_CHECKLIST_FOLDER_KEY,
-            listId: NULL,
-            folderIds: [],
-            listIds: [],
-            value: 'Lists',
-            sortId: 1,
-            platformColor: 'systemBlue',
-            status: EItemStatus.STATIC
-        } as IFolder;
-        saveToStorage(initialRootFolder)
-        return initialRootFolder;
     }
-    throw new Error(`Folder not found for id: ${folderId}`);
+    console.warn(`Folder not found for key: ${folderId}`);
+    return null;
 };
 
 /**
@@ -56,16 +40,17 @@ export const getListFromStorage = (listId: string) => {
         const foundList: IChecklist = JSON.parse(listString);
         return foundList;
     }
-    throw new Error('List not found!')
+    console.warn(`List not found for key: ${listId}`);
+    return null;
 };
 
-export const getFolderItem = (itemId: string, type: EFolderItemType): IFolderItem => {
+export const getFolderItem = (itemId: string, type: EFolderItemType): IFolderItem | null => {
     const data =
         type === EFolderItemType.FOLDER
             ? getFolderFromStorage(itemId)
             : getListFromStorage(itemId);
 
-    if (!data) throw new Error(`${type} does not exist with id ${itemId}`)
+    if (!data) return null;
 
     const newItem = {
         id: data.id,
@@ -95,7 +80,7 @@ export const getFolderItems = (folder: IFolder): IFolderItem[] => {
     return [
         ...folder.folderIds.map(currFolderId => getFolderItem(currFolderId, EFolderItemType.FOLDER)),
         ...folder.listIds.map(currListId => getFolderItem(currListId, EFolderItemType.LIST))
-    ]
+    ].filter(item => item !== null);
 };
 
 /**
@@ -107,12 +92,27 @@ export const saveToStorage = (item: IFolder | IChecklist) => {
 };
 
 /**
+ * TODO: comment
+ * 
+ * @param item 
+ */
+export function saveTextfieldItem(item: IFolderItem) {
+    if (item.status === EItemStatus.NEW) {
+        createFolderItem(item);
+    } else {
+        updateFolderItem(item);
+    }
+}
+
+/**
  * Creates a new folder item and adds it to its parent folder.
  * @param parentId - ID of the folder containing the item
  * @param newData - data to build the item
  */
 export const createFolderItem = (newItem: IFolderItem) => {
     const parentFolder = getFolderFromStorage(newItem.listId);
+    if (!parentFolder) return;
+
     const { childrenCount, ...sharedData } = {
         ...newItem,
         status: EItemStatus.STATIC,
@@ -149,6 +149,8 @@ export const createFolderItem = (newItem: IFolderItem) => {
  */
 export const updateFolderItem = (newData: IFolderItem) => {
     const existingItem = getFolderFromStorage(newData.id) ?? getListFromStorage(newData.id);
+    if (!existingItem) return;
+
     const newItem = {
         ...existingItem,
         ...newData,
@@ -160,6 +162,8 @@ export const updateFolderItem = (newData: IFolderItem) => {
         const folderListKey = newData.type === EFolderItemType.FOLDER ? "folderIds" : "listIds";
         // Add this item to its new parent
         const parentFolder = getFolderFromStorage(newItem.listId);
+        if (!parentFolder) return;
+
         const parentList = [...parentFolder[folderListKey], newItem.id]
         saveToStorage({
             ...parentFolder,
@@ -167,6 +171,8 @@ export const updateFolderItem = (newData: IFolderItem) => {
         });
         // Remove this item from its old parent
         const oldParentFolder = getFolderFromStorage(existingItem.listId);
+        if (!oldParentFolder) return;
+
         const oldParentList = oldParentFolder[folderListKey].filter(currFolderId => currFolderId !== newItem.id);
         saveToStorage({
             ...oldParentFolder,
@@ -183,28 +189,26 @@ export const updateFolderItem = (newData: IFolderItem) => {
  * @param type 
  */
 export const deleteFolderItem = (itemId: string, type: EFolderItemType) => {
-    let item;
-    try {
-        item = type === EFolderItemType.FOLDER ? getFolderFromStorage(itemId) : getListFromStorage(itemId);
-    } catch (error) {
-        return;
-    }
+    const item = type === EFolderItemType.FOLDER ? getFolderFromStorage(itemId) : getListFromStorage(itemId);
+    if (!item || item.listId === NULL) return;
 
     // Remove the item from its parent
-    if (item.listId !== NULL) {
-        const folderListKey = type === EFolderItemType.FOLDER ? "folderIds" : "listIds";
-        const parentFolder = getFolderFromStorage(item.listId);
-        saveToStorage({
-            ...parentFolder,
-            [folderListKey]: parentFolder[folderListKey].filter(currId => currId !== itemId)
-        });
-    }
+    const folderListKey = type === EFolderItemType.FOLDER ? "folderIds" : "listIds";
+    const parentFolder = getFolderFromStorage(item.listId);
+    if (!parentFolder) return;
+
+    saveToStorage({
+        ...parentFolder,
+        [folderListKey]: parentFolder[folderListKey].filter(currId => currId !== itemId)
+    });
 
     // Delete the item's children (for folders)
     if (type === EFolderItemType.FOLDER) {
         const folder = getFolderFromStorage(itemId);
-        folder.folderIds.map(currFolderId => deleteFolderItem(currFolderId, EFolderItemType.FOLDER));
-        folder.listIds.map(currListId => deleteFolderItem(currListId, EFolderItemType.LIST));
+        if (!folder) return;
+
+        folder.folderIds.forEach(childFolderId => deleteFolderItem(childFolderId, EFolderItemType.FOLDER));
+        folder.listIds.forEach(childListId => deleteFolderItem(childListId, EFolderItemType.LIST));
     }
 
     // Delete the item

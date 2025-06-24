@@ -5,13 +5,13 @@ import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
 
 type StorageHandlers<T extends IListItem> = {
-    updateItem: (item: T) => Promise<any> | void;
     createItem: (item: T) => Promise<any> | void;
+    updateItem: (item: T) => Promise<any> | void;
 };
 
 interface SortedListConfig<T extends IListItem, S> {
@@ -42,10 +42,10 @@ const useSortedList = <T extends IListItem, S>({
     const { getIsItemDeleting } = useDeleteScheduler<T>();
     const { focusPlaceholder } = useScrollContainer();
 
+    const isTogglingTextfields = useRef(false);
+
     const storage = useMMKV({ id: storageId });
     const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
-
-    const isTogglingTextfields = useRef(false);
 
     const [items, setItems] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -62,9 +62,6 @@ const useSortedList = <T extends IListItem, S>({
         }
     }, [storageObject, getItemsFromStorageObject]);
 
-    // ------------- RELOAD Logic -------------
-
-    // Standard list rebuild
     useEffect(() => {
         buildList();
     }, [buildList]);
@@ -100,8 +97,6 @@ const useSortedList = <T extends IListItem, S>({
         }
 
         await handleListChange?.();
-
-        return newId;
     }
 
     /**

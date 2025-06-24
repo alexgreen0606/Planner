@@ -3,5 +3,5 @@ import { Redirect } from 'expo-router';
 
 export default function IndexPage() {
 
-    return <Redirect href={`/lists/folder/NULL/NULL/${EStorageKey.ROOT_CHECKLIST_FOLDER_KEY}`} />;
+    return <Redirect href={`/lists/folder/NULL/NULL/${EStorageKey.ROOT_FOLDER_KEY}`} />;
 }

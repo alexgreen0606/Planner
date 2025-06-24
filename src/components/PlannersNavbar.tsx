@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import ButtonText from './text/ButtonText';
 
-const BAR_HEIGHT = 34;
+const BAR_HEIGHT = 36;
 const BAR_WIDTH = 320;
 
 const HIGHLIGHT_GAP = 6;
@@ -46,7 +46,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
             style={{ backgroundColor: PlatformColor('systemBackground') }}
         >
             <ScrollContainerProvider
-                upperContentHeight={isCountdowns ? 0 : 48}
+                upperContentHeight={isCountdowns ? 0 : BAR_HEIGHT}
                 floatingBannerHeight={BAR_HEIGHT}
                 fixFloatingBannerOnOverscroll
                 floatingBanner={

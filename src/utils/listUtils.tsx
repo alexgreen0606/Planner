@@ -119,13 +119,12 @@ export function generateCheckboxIconConfig<T extends IListItem>(
 // ------------- Other Utilities -------------
 
 /**
- * ✅ Clones a given item.
- * The item will get a new ID, and any desired keys will be removed.
+ * ✅ Clones an item and gives it a new ID.
  * 
- * @param item - the item to clone
- * @param keysToDelete - the keys within the item to delete
- * @param newData - optional partial data to override in the clone
- * @returns - a sanitized clone of the item
+ * @param item - The initial item to clone.
+ * @param keysToDelete - List of keys within the item to delete.
+ * @param newData - Partial data to overwrite in the clone.
+ * @returns - A new object with the original item's data, a new ID, deleted keys, and updated data.
  */
 export function cloneItem<T extends IListItem>(item: T, keysToDelete?: (keyof T)[], newData?: Partial<T>) {
     const clone = {

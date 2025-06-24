@@ -61,11 +61,14 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
         }
     });
 
+    console.log(yesterdayPlanner, 'initial yesterday')
+
     return yesterdayPlanner.events
         // Remove hidden and recurring events.
         .filter((event: IPlannerEvent) =>
             event.status !== EItemStatus.HIDDEN &&
             !event.recurringId &&
+            !event.recurringCloneId &&
             !event.calendarId
         )
         // Convert timed events to generic.

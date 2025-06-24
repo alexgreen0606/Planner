@@ -9,10 +9,70 @@ import { userAccessAtom } from "@/atoms/userAccess";
 import { useFonts } from 'expo-font';
 import { CalendarProvider } from "@/providers/CalendarProvider";
 import { EAccess } from "@/lib/enums/EAccess";
+import { useMMKV, useMMKVObject } from "react-native-mmkv";
+import { EStorageId } from "@/lib/enums/EStorageId";
+import { IFolder } from "@/lib/types/checklists/IFolder";
+import { EStorageKey } from "@/lib/enums/EStorageKey";
+import { NULL } from "@/lib/constants/generic";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { getFolderFromStorage, saveToStorage } from "@/storage/checklistsStorage";
+import { EListType } from "@/lib/enums/EListType";
+
+const initialRootFolder: IFolder = {
+    id: EStorageKey.ROOT_FOLDER_KEY,
+    listId: NULL,
+    folderIds: [],
+    listIds: [],
+    value: 'Lists',
+    sortId: 1,
+    platformColor: 'systemBlue',
+    status: EItemStatus.STATIC,
+    listType: EListType.FOLDER
+};
 
 const AccessGuard = () => {
     const [calendarStatus, requestCalendarPermissions] = Calendar.useCalendarPermissions();
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
+
+    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
+    const [rootFolder, setRootFolder] = useMMKVObject<IFolder>(EStorageKey.ROOT_FOLDER_KEY, storage);
+
+    async function checkContactsPermissions() {
+        if (userAccess.get(EAccess.CONTACTS) !== undefined) return;
+
+        try {
+            const { status } = await Contacts.getPermissionsAsync();
+
+            if (status === 'undetermined') {
+                const { status: newStatus } = await Contacts.requestPermissionsAsync();
+                setUserAccess(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(EAccess.CONTACTS, newStatus === 'granted');
+                    return newMap;
+                });
+            } else {
+                setUserAccess(prev => {
+                    const newMap = new Map(prev);
+                    newMap.set(EAccess.CONTACTS, status === 'granted');
+                    return newMap;
+                });
+            }
+        } catch (error) {
+            console.error('Error requesting contacts permission:', error);
+            setUserAccess(prev => {
+                const newMap = new Map(prev);
+                newMap.set(EAccess.CONTACTS, false);
+                return newMap;
+            });
+        }
+    }
+
+    function checkRootFolderExistence() {
+        console.log(rootFolder, 'root')
+        if (!rootFolder) {
+            setRootFolder(initialRootFolder);
+        }
+    }
 
     // Calendar permissions check.
     useEffect(() => {
@@ -27,39 +87,9 @@ const AccessGuard = () => {
         }
     }, [calendarStatus]);
 
-    // Contacts permissions check.
     useEffect(() => {
-        const requestContactsPermission = async () => {
-            try {
-                const { status } = await Contacts.getPermissionsAsync();
-
-                if (status === 'undetermined') {
-                    const { status: newStatus } = await Contacts.requestPermissionsAsync();
-                    setUserAccess(prev => {
-                        const newMap = new Map(prev);
-                        newMap.set(EAccess.CONTACTS, newStatus === 'granted');
-                        return newMap;
-                    });
-                } else {
-                    setUserAccess(prev => {
-                        const newMap = new Map(prev);
-                        newMap.set(EAccess.CONTACTS, status === 'granted');
-                        return newMap;
-                    });
-                }
-            } catch (error) {
-                console.error('Error requesting contacts permission:', error);
-                setUserAccess(prev => {
-                    const newMap = new Map(prev);
-                    newMap.set(EAccess.CONTACTS, false);
-                    return newMap;
-                });
-            }
-        };
-
-        if (userAccess.get(EAccess.CONTACTS) === undefined) {
-            requestContactsPermission();
-        }
+        checkContactsPermissions();
+        checkRootFolderExistence();
     }, []);
 
     const [fontsLoaded] = useFonts({
@@ -69,11 +99,13 @@ const AccessGuard = () => {
         'Text': require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
     });
 
-    const accessStatusesDetermined =
+    const appReady =
+        fontsLoaded &&
         userAccess.get(EAccess.CALENDAR) !== undefined &&
-        userAccess.get(EAccess.CONTACTS) !== undefined;
+        userAccess.get(EAccess.CONTACTS) !== undefined &&
+        rootFolder
 
-    return fontsLoaded && accessStatusesDetermined && (
+    return appReady && (
         <CalendarProvider>
             <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

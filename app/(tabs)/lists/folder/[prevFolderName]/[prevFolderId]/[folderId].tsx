@@ -1,34 +1,39 @@
-import { EFolderItemType } from '@/lib/enums/EFolderItemType';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { PlatformColor, View } from 'react-native';
-import { ScrollContainerProvider } from '../../../../../../src/providers/ScrollContainer';
-import { getFolderFromStorage } from '../../../../../../src/storage/checklistsStorage';
 import FolderItemBanner from '@/components/checklist/FolderItemBanner';
 import SortedFolder from '@/components/folder';
 import { NULL } from '@/lib/constants/generic';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { IFolder } from '@/lib/types/checklists/IFolder';
+import { ScrollContainerProvider } from '@/providers/ScrollContainer';
+import { getFolderFromStorage } from '@/storage/checklistsStorage';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { PlatformColor, View } from 'react-native';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-const Lists = () => {
+type FolderParams = {
+  folderId: string,
+  prevFolderName: string,
+  prevFolderId: string
+};
+
+const FolderScreen = () => {
+  const { folderId, prevFolderName, prevFolderId } = useLocalSearchParams<FolderParams>();
   const router = useRouter();
+
   const [parentClickTrigger, setParentClickTrigger] = useState(0);
-  const { folderId, prevFolderName, prevFolderId } = useLocalSearchParams<{
-    folderId: string,
-    prevFolderName: string,
-    prevFolderId: string
-  }>();
 
-  const folder = useMemo(() =>
-    getFolderFromStorage(folderId),
-    [folderId]
-  );
+  const storage = useMMKV({ id: EStorageId.CHECKLISTS });
+  const [folder] = useMMKVObject<IFolder>(folderId, storage);
 
-  const onOpenItem = (id: string, type: EFolderItemType) => {
+  function onOpenItem(id: string, type: EFolderItemType) {
+    if (!folder) return;
     if (type === EFolderItemType.FOLDER) {
       router.push(`/lists/folder/${folder.value}/${folder.id}/${id}`);
     } else if (type === EFolderItemType.LIST) {
       router.push(`/lists/checklist/${folder.value}/${folder.id}/${id}`);
     }
-  };
+  }
 
   return (
     <View
@@ -49,7 +54,7 @@ const Lists = () => {
         }
       >
         <SortedFolder
-          parentFolderData={prevFolderId !== NULL ? getFolderFromStorage(prevFolderId) : undefined}
+          parentFolderData={prevFolderId !== NULL ? getFolderFromStorage(prevFolderId)! : undefined}
           handleOpenItem={onOpenItem}
           parentClickTrigger={parentClickTrigger}
         />
@@ -58,4 +63,4 @@ const Lists = () => {
   );
 };
 
-export default Lists;
+export default FolderScreen;

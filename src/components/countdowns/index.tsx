@@ -97,9 +97,7 @@ const Countdowns = () => {
         storageKey: EStorageKey.COUNTDOWN_LIST_KEY,
         getItemsFromStorageObject: getCountownsMemoized,
         storageConfig: {
-            createItem: async (countdown) => {
-                await saveCountdown(countdown, true);
-            },
+            createItem: saveCountdown,
             updateItem: saveCountdown
         },
         handleListChange: async () => {
@@ -108,10 +106,6 @@ const Countdowns = () => {
         initializeListItem: initializeCountdown,
         listType
     });
-
-    useEffect(() => {
-        return () => setTextfieldItem(null); // TODO: save the item instead
-    }, []);
 
     return (
         <View className='flex-1'>

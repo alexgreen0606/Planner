@@ -1,13 +1,11 @@
 import ButtonText from '@/components/text/ButtonText';
 import CustomText, { textStyles } from '@/components/text/CustomText';
+import { useFolderItem } from '@/hooks/useFolderItem';
 import { HEADER_HEIGHT } from '@/lib/constants/layout';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
-import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { getFolderItem, updateFolderItem } from '@/storage/checklistsStorage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { PlatformColor, StyleSheet, TextInput, View } from 'react-native';
+import React from 'react';
+import { PlatformColor, TextInput, View } from 'react-native';
 
 interface FolderItemBannerProps {
     itemId: string;
@@ -25,16 +23,15 @@ const FolderItemBanner = ({
     backButtonConfig
 }: FolderItemBannerProps) => {
     const router = useRouter();
-    const [item, setItem] = useState<IFolderItem>(getFolderItem(itemId, itemType));
+    const {
+        folder,
+        editingValue,
+        onBeginEdit,
+        onTitleChange,
+        onSave
+    } = useFolderItem(itemId, itemType);
 
-    const beginEditItem = () => setItem({ ...item, status: EItemStatus.EDIT });
-    const updateItem = (text: string) => setItem({ ...item, value: text });
-    const saveItem = () => {
-        updateFolderItem({ ...item, status: EItemStatus.STATIC });
-        setItem(getFolderItem(itemId, itemType));
-    };
-
-    const isItemEditing = item.status === EItemStatus.EDIT;
+    const isItemEditing = editingValue !== null;
 
     return (
         <View
@@ -46,10 +43,11 @@ const FolderItemBanner = ({
             {isItemEditing ? (
                 <TextInput
                     autoFocus
-                    value={item.value}
-                    onChangeText={updateItem}
+                    value={editingValue}
+                    onChangeText={onTitleChange}
                     cursorColor={PlatformColor('systemBlue')}
-                    onSubmitEditing={saveItem}
+                    onSubmitEditing={onSave}
+                    onBlur={onSave}
                     className='w-full bg-transparent'
                     style={[
                         textStyles.pageLabel,
@@ -59,11 +57,11 @@ const FolderItemBanner = ({
             ) : (
                 <CustomText
                     variant='pageLabel'
-                    onPress={beginEditItem}
+                    onPress={onBeginEdit}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                 >
-                    {item.value}
+                    {folder?.value}
                 </CustomText>
             )}
 
@@ -78,7 +76,7 @@ const FolderItemBanner = ({
                         }}
                         className='w-screen pr-8'
                     >
-                        {backButtonConfig.label} long ass name that goes past the center eye thing
+                        {backButtonConfig.label}
                     </ButtonText>
                 </View>
             )}

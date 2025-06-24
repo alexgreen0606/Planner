@@ -5,25 +5,25 @@ import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { selectableColors } from '@/lib/constants/selectableColors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { EListType } from '@/lib/enums/EListType';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolder } from '@/lib/types/checklists/IFolder';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, updateFolderItem } from '@/storage/checklistsStorage';
-import { generateSortId, isItemTextfield } from '@/utils/listUtils';
+import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, saveTextfieldItem, updateFolderItem } from '@/storage/checklistsStorage';
+import { generateSortId } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 import SortableList from '../sortedList';
-import { ToolbarIcon, ToolbarProps } from '../sortedList/Toolbar';
-import { EListType } from '@/lib/enums/EListType';
-import { EStorageId } from '@/lib/enums/EStorageId';
+import { ToolbarIcon } from '../sortedList/Toolbar';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
     parentClickTrigger: number;
     parentFolderData?: IFolder;
-};
+}
 
 const SortedFolder = ({
     handleOpenItem,
@@ -34,9 +34,11 @@ const SortedFolder = ({
     const { folderId } = useLocalSearchParams<{ folderId: string }>();
     const router = useRouter();
 
+    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
+
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
-    const folderData = useMemo(() => getFolderFromStorage(folderId), [folderId]);
+    const [folder] = useMMKVObject<IFolder>(folderId, storage);
 
     const listType = EListType.FOLDER;
 
@@ -45,6 +47,7 @@ const SortedFolder = ({
      * Otherwise, open the parent folder.
      */
     useEffect(() => {
+        if (!folder) return;
         if (parentClickTrigger > 0) {
 
             // Handle parent folder click
@@ -52,11 +55,13 @@ const SortedFolder = ({
                 handleItemTransfer();
                 return;
 
-            } else if (folderData.listId) {
+            } else if (folder.listId) {
                 router.back();
             }
         }
     }, [parentClickTrigger]);
+
+    // ------------- Utilities -------------
 
     function initializeEmptyFolder(newItem: IListItem) {
         return {
@@ -82,10 +87,15 @@ const SortedFolder = ({
 
         if (!destinationId) return;
 
+        let destinationFolder = parentFolderData!;
+        if (destination) {
+            const foundFolder = getFolderFromStorage(destination.id);
+            if (!foundFolder) return;
+            destinationFolder = foundFolder;
+        }
+
         // Transfer the item to the destination
-        const destinationItems = getFolderItems(
-            destination ? getFolderFromStorage(destination.id) : parentFolderData!
-        );
+        const destinationItems = getFolderItems(destinationFolder);
         updateFolderItem({
             ...textfieldItem,
             status: EItemStatus.STATIC,
@@ -100,7 +110,7 @@ const SortedFolder = ({
      * Otherwise, the focused item will be saved and the clicked item will be opened.
      * @param item - the item that was clicked
      */
-    const handleItemClick = (item: IFolderItem) => {
+    function handleItemClick(item: IFolderItem) {
         if (textfieldItem && textfieldItem.status === EItemStatus.TRANSFER) {
             if (item.id === textfieldItem.id) {
                 setTextfieldItem({ ...textfieldItem, status: EItemStatus.EDIT });
@@ -112,18 +122,18 @@ const SortedFolder = ({
             SortedItems.persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
         }
         handleOpenItem(item.id, item.type);
-    };
+    }
 
     // Helper function to create the color selection icon set
-    const createColorSelectionIconSet = (item: IFolderItem): GenericIconProps<IFolderItem>[] => {
+    function createColorSelectionIconSet(item: IFolderItem): GenericIconProps<IFolderItem>[] {
         return Object.values(selectableColors).map(color => ({
             type: item.platformColor === color ? 'circleFilled' : 'circle',
             platformColor: color,
             onClick: () => setTextfieldItem({ ...item, platformColor: color }),
         }));
-    };
+    }
 
-    const getToolbarIcons = (): ToolbarIcon<IFolderItem>[][] => {
+    function getToolbarIcons(): ToolbarIcon<IFolderItem>[][] {
         const item: IFolderItem = textfieldItem ?? initializeEmptyFolder({ id: '1', value: '', sortId: 1, status: EItemStatus.STATIC, listId: folderId, listType: EListType.FOLDER })
         const isNew = textfieldItem?.status === EItemStatus.NEW;
 
@@ -172,7 +182,7 @@ const SortedFolder = ({
                             {
                                 text: !!item.childrenCount ? 'Force Delete' : 'Delete',
                                 style: 'destructive',
-                                onPress: async () => {
+                                onPress: () => {
                                     deleteFolderItem(item.id, item.type);
                                     setTextfieldItem(null);
                                     setIsDeleteAlertOpen(false);
@@ -185,7 +195,7 @@ const SortedFolder = ({
             }],
             createColorSelectionIconSet(item)
         ]
-    };
+    }
 
     const getFolderItemsMemoized = useCallback(getFolderItems, []);
 
@@ -201,17 +211,20 @@ const SortedFolder = ({
         storageKey: folderId,
         getItemsFromStorageObject: getFolderItemsMemoized,
         storageConfig: {
-            createItem: createFolderItem,
-            updateItem: updateFolderItem
+            createItem: saveTextfieldItem,
+            updateItem: saveTextfieldItem
         },
         initializeListItem: initializeEmptyFolder,
         listType
     });
 
     // Rebuild the list when one of the folder's items changes
-    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
     useMMKVListener((key) => {
-        if (folderData?.listIds.includes(key) || folderData?.folderIds.includes(key)) {
+        if (!storage.contains(key)) return;
+        if (
+            folder?.listIds.includes(key) ||
+            folder?.folderIds.includes(key)
+        ) {
             SortedItems.refetchItems();
         }
     }, storage);

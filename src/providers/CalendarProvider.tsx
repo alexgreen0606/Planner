@@ -95,6 +95,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
     function handleUpdateMountedDatestamps() {
         const today = getTodayDatestamp();
+        console.log(today, 'TODAY')
         let planner: string[] = [];
 
         if (plannerSetKey === 'Next 7 Days') {
@@ -106,17 +107,21 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
+        console.log(textfieldItem, 'TEXTFIELD')
+
         // Ensure the textfield remains visible if one exists during the midnight update.
         if (textfieldItem) {
             const yesterdayDatestamp = getYesterdayDatestamp();
+            console.log(yesterdayDatestamp, 'YESTERDAY')
 
             // If textfield item was from yesterday, carry it to today.
             if (textfieldItem.listId === yesterdayDatestamp) {
                 const genericItem = cloneItem<IPlannerEvent>(
                     textfieldItem,
                     ['calendarId', 'timeConfig', 'recurringId', 'recurringCloneId'],
-                    { listId: today, id: uuid.v4() }
-                )
+                    { listId: today }
+                );
+                console.log(textfieldItem, 'NEW TEXTFIELD')
                 setTextfieldItem(genericItem);
             }
 

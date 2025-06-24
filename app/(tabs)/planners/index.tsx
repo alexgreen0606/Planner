@@ -15,21 +15,24 @@ import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
 import { calendarEventDataAtom } from '@/atoms/calendarEvents';
+import { savePlannerEvent } from '@/storage/plannerStorage';
+import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 
 const defaultPlannerSet = 'Next 7 Days';
 
 const Planners = () => {
-    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const allPlannerSetTitles = getPlannerSetTitles();
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
     const calendarEventData = useAtomValue(calendarEventDataAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
+
+    useTextfieldFallbackSave(savePlannerEvent);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-06-22": {
@@ -116,22 +119,19 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    const isEntirePlannerLoading = useMemo(() =>
+    // Only 1 planner will be loading at midnight. In this case, don't show loading overlay on page.
+    const isLoadingEntirePlanner = useMemo(() =>
         planner.reduce((acc, datestamp) => {
             if (calendarEventData.plannersMap[datestamp] === undefined) {
-                acc += 1;
+                acc++;
                 return acc;
             }
             return acc;
-        }, 0),
+        }, 0) > 1,
         [planner, calendarEventData]
     );
 
-    useEffect(() => {
-        return () => setTextfieldItem(null); // TODO: save the item instead
-    }, []);
-
-    return isEntirePlannerLoading ? (
+    return isLoadingEntirePlanner ? (
         <LoadingSpinner />
     ) : (
         <View

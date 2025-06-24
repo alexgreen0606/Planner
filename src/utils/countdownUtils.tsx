@@ -78,11 +78,12 @@ export async function getCountdowns(): Promise<ICountdown[]> {
  * ✅ Updates or creates an event in the Countdown Calendar.
  * 
  * @param countdown - The event to update or create.
- * @param createNew - Signifies if the event exists or should be created anew. Default is false.
  */
-export async function saveCountdown(countdown: ICountdown, createNew: boolean = false) {
-    const allVisibleDatestamps = getAllMountedDatestamps();
+export async function saveCountdown(countdown: ICountdown) {
     const countdownDatestamp = isoToDatestamp(countdown.startIso);
+    const allVisibleDatestamps = getAllMountedDatestamps();
+
+    const createNew = countdown.status === EItemStatus.NEW;
 
     // Tracks the Planner datestamps that will be affected by this update.
     const affectedDatestamps = new Set([countdownDatestamp]);

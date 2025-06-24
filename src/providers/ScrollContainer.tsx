@@ -443,7 +443,7 @@ export const ScrollContainerProvider = ({
                 }}
                 transition={{
                     type: 'timing',
-                    duration: 600
+                    duration: 400
                 }}
             >
                 <BlurView

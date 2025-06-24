@@ -59,7 +59,7 @@ export interface RowProps<T extends IListItem> {
     listType: EListType;
         toolbarIconSet?: ToolbarIcon<T>[][];
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
-    onDragEnd?: (updatedItem: T) => Promise<void | string> | void;
+    onDragEnd?: (updatedItem: T) => Promise<void> | void;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;

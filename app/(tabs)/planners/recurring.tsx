@@ -1,16 +1,19 @@
 import RecurringPlanner from '@/components/recurringPlanner';
 import ButtonText from '@/components/text/ButtonText';
+import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
-import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 
 const RecurringPlanners = () => {
-    const [_, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
-
     const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerKey>(ERecurringPlannerKey.WEEKDAYS);
+
+    useTextfieldFallbackSave(
+        selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
+            saveRecurringWeekdayEvent : saveRecurringEvent
+    );
 
     const recurringPlannerOptions = useMemo(() =>
         Object.values(ERecurringPlannerKey).map((title) => ({
@@ -18,13 +21,9 @@ const RecurringPlanners = () => {
             title,
             titleColor: 'blue',
             state: selectedRecurring === title ? 'on' : 'off',
-        })), 
+        })),
         [selectedRecurring]
     );
-
-    useEffect(() => {
-        return () => setTextfieldItem(null); // TODO: save the item instead
-    }, []);
 
     return (
         <View
