@@ -1,15 +1,17 @@
+import { NULL } from '@/lib/constants/generic';
+import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { TCalendarEventChip } from '@/lib/types/planner/TCalendarEventChip';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { openTimeModal } from '@/utils/plannerUtils';
+import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
-import GenericIcon, { GenericIconProps } from '../icon';
+import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EListType } from '@/lib/enums/EListType';
 
 const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
 const EXPANDED_CHIP_RIGHT_MARGIN = 6;
@@ -17,39 +19,34 @@ const EXPANDED_CHIP_RIGHT_MARGIN = 6;
 const CHIP_SET_GAP = 24;
 
 interface EventChipProps {
-    label: string;
-    iconConfig: GenericIconProps;
-    color: string;
+    chip: TCalendarEventChip;
+    onClick?: () => void;
+    toggleCollapsed?: () => void;
     backgroundPlatformColor?: string;
     collapsed?: boolean;
     chipSetIndex: number;
     shiftChipRight: boolean;
-    planEvent?: IPlannerEvent;
     parentPlannerDatestamp: string;
-    onClick?: () => void;
-    toggleCollapsed?: () => void;
 }
 
 const EventChip = ({
-    label,
-    iconConfig,
-    color,
+    chip,
     backgroundPlatformColor = 'systemGray6',
     collapsed = false,
     chipSetIndex,
     shiftChipRight,
-    planEvent,
     parentPlannerDatestamp,
     onClick,
     toggleCollapsed
 }: EventChipProps) => {
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const { event: { title, id }, iconConfig, color } = chip;
     const router = useRouter();
 
-    const isPendingDelete = useMemo(() => planEvent &&
+    const isPendingDelete = useMemo(() =>
         getDeletingItems(EListType.PLANNER).some(deleteItem =>
             // This deleting item is the chip's event
-            deleteItem.id === planEvent.id &&
+            deleteItem.id === id &&
             // This deleting item is not from today
             deleteItem.listId !== getTodayDatestamp()
         ),
@@ -60,7 +57,13 @@ const EventChip = ({
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
 
     function handleOpenTimeModal() {
-        if (planEvent) openTimeModal(parentPlannerDatestamp, planEvent, router);
+        router.push(`${TIME_MODAL_PATHNAME
+            }${parentPlannerDatestamp
+            }/${id
+            }/${NULL
+            }/${title
+            }`
+        );
     }
 
     // ------------- Render Helper Function -------------
@@ -89,7 +92,7 @@ const EventChip = ({
                         textDecorationLine: isPendingDelete ? 'line-through' : undefined,
                     }}
                 >
-                    {label}
+                    {title}
                 </CustomText>
             )}
         </View>
@@ -106,16 +109,14 @@ const EventChip = ({
                 marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
             }}
         >
-            {planEvent ? (
-                <TouchableOpacity onPress={collapsed ? toggleCollapsed : handleOpenTimeModal}>
-                    <ChipContent />
-                </TouchableOpacity>
-            ) : onClick ? (
+            {onClick ? (
                 <TouchableOpacity onPress={collapsed ? toggleCollapsed : onClick}>
                     <ChipContent />
                 </TouchableOpacity>
             ) : (
-                <ChipContent />
+                <TouchableOpacity onPress={collapsed ? toggleCollapsed : handleOpenTimeModal}>
+                    <ChipContent />
+                </TouchableOpacity>
             )}
         </MotiView>
     );

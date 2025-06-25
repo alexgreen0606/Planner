@@ -1,4 +1,4 @@
-import { TEventChip } from '@/lib/types/planner/TEventChip';
+import { TCalendarEventChip } from '@/lib/types/planner/TCalendarEventChip';
 import { MotiView } from 'moti';
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -6,7 +6,7 @@ import EventChip from '.';
 
 export interface EventChipSetsProps {
     datestamp: string;
-    sets: TEventChip[][];
+    sets: TCalendarEventChip[][];
     collapsed?: boolean;
     toggleCollapsed?: () => void;
     backgroundPlatformColor?: string;
@@ -44,7 +44,7 @@ const EventChipSets = ({
                     set.map((chip, chipIndex) => (
                         <EventChip
                             key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
-                            {...chip}
+                            chip={chip}
                             parentPlannerDatestamp={datestamp}
                             chipSetIndex={chipIndex}
                             shiftChipRight={chipIndex === 0 && setIndex !== 0 && collapsed}

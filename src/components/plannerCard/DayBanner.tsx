@@ -1,7 +1,6 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
-import { TEventChip } from '@/lib/types/planner/TEventChip';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { savePlannerToStorage } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate, getTomorrowDatestamp } from '@/utils/dateUtils';
@@ -10,6 +9,7 @@ import { useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import EventChipSets from '../eventChip/EventChipSet';
+import { TCalendarEventChip } from '@/lib/types/planner/TCalendarEventChip';
 
 interface DayBannerProps {
     planner: TPlanner;
@@ -18,7 +18,7 @@ interface DayBannerProps {
     isEditingTitle: boolean;
     collapsed: boolean;
     endEditTitle: () => void;
-    eventChipSets: TEventChip[][];
+    eventChipSets: TCalendarEventChip[][];
 }
 
 const DayBanner = ({

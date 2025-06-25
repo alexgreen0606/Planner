@@ -257,7 +257,6 @@ export function generateSortIdByTime(
     event: IPlannerEvent | IRecurringEvent,
     events: (IPlannerEvent | IRecurringEvent)[]
 ): number {
-    if (event.value === 'monkey')
     console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
     const planner = sanitizeList(events, event);
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
@@ -380,7 +379,7 @@ export async function buildPlannerEvents(
 }
 
 /**
- * ✅ Syncs a planner with a calendar. Calendars have final say on the state of the events.
+ * Syncs a planner with a calendar. Calendars have final say on the state of the events.
  * 
  * @param calendar - the calendar events to sync with
  * @param plannerEvents - the planner being updated

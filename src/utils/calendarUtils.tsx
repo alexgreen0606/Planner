@@ -1,27 +1,27 @@
 import { calendarEventDataAtom } from "@/atoms/calendarEvents";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EListType } from "@/lib/enums/EListType";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { TEventChip } from "@/lib/types/planner/TEventChip";
+import { TCalendarEventChip } from "@/lib/types/planner/TCalendarEventChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
-import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
-import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
-import { EListType } from "@/lib/enums/EListType";
 import { DateTime } from "luxon";
 import { hasCalendarAccess } from "./accessUtils";
+import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
+import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
 
 // ---------- Utilities ----------
 
 /**
- * ✅ Generates empty calendar data for the given range of dates.
+ * ✅ Generates an empty Calendar event map.
  * 
- * @param datestamps - the range of datestamps
- * @returns - empty calendar data
+ * @param datestamps - The list of datestamp keys.
+ * @returns - A Calendar event map with an empty list for each datestamp.
  */
 function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
-    const chipsMap: Record<string, TEventChip[][]> = {};
+    const chipsMap: Record<string, TCalendarEventChip[][]> = {};
     const plannersMap: Record<string, IPlannerEvent[]> = {};
 
     datestamps.forEach(datestamp => {
@@ -35,40 +35,32 @@ function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
 /**
  * ✅ Generates a planner event out of a calendar event.
  * 
- * @param event - the calendar event to parse
- * @param datestamp - the datestamp the planner event will reside
- * @returns - a new planner event
+ * @param event - The calendar event to parse.
+ * @param datestamp - The datestamp where the event will exist.
+ * @returns - A new planner event holding the calendar event's data.
  */
-function generatePlannerEvent(event: Calendar.Event, datestamp: string): IPlannerEvent {
-    const dateStart = datestampToMidnightDate(datestamp);
-    const dateEnd = datestampToMidnightDate(datestamp, 1);
-
-    const eventStart = DateTime.fromISO(event.startDate as string).toLocal().toJSDate();
-    const eventEnd = DateTime.fromISO(event.endDate as string).toLocal().toJSDate();
-
-    // TODO: just compare strings directly?
+export function calendarEventToPlannerEvent(event: Calendar.Event, datestamp: string, sortId: number = 1): IPlannerEvent {
+    const startDatestamp = isoToDatestamp(event.startDate as string);
+    const endDatestamp = isoToDatestamp(event.endDate as string);
 
     const multiDayEnd =
-        // Starts before date
-        eventStart < dateStart &&
-        // Ends on date
-        eventEnd < dateEnd;
+        // Starts before datestamp and ends on datestamp
+        startDatestamp < datestamp && endDatestamp === datestamp;
 
     const multiDayStart =
-        // Starts on date
-        eventStart >= dateStart && eventStart < dateEnd &&
-        // Ends after date
-        eventEnd >= dateEnd;
+        // Starts on datestamp and ends after datestamp
+        startDatestamp === datestamp && endDatestamp > datestamp;
 
     return {
         id: event.id,
+        calendarId: event.id,
         value: event.title,
-        sortId: 1, // temporary sort id (will be overwritten)
+        sortId,
         listId: datestamp,
         listType: EListType.PLANNER,
         timeConfig: {
-            startIso: eventStart.toISOString(),
-            endIso: eventEnd.toISOString(),
+            startIso: event.startDate as string,
+            endIso: event.endDate as string,
             allDay: Boolean(event.allDay),
             multiDayEnd,
             multiDayStart
@@ -78,46 +70,54 @@ function generatePlannerEvent(event: Calendar.Event, datestamp: string): IPlanne
 }
 
 /**
- * ✅ Generates an event chip from a calendar event.
+ * Generates an event chip from a calendar event.
  * 
  * @param event - the calendar event to parse
  * @returns - an event chip representing the calendar event
  */
-function generateEventChip(event: Calendar.Event, calendar: Calendar.Calendar): TEventChip {
-
-    const chipProps: TEventChip = {
-        label: event.title,
+function calendarEventToEventChip(event: Calendar.Event, calendar: Calendar.Calendar): TCalendarEventChip {
+    const { title: calendarTitle, color } = calendar;
+    const calendarEventChip: TCalendarEventChip = {
+        event,
         iconConfig: {
-            type: calendarIconMap[calendar.title] ?? 'calendar',
+            type: calendarIconMap[calendarTitle] ?? 'calendar'
         },
-        color: calendar.color
+        color
     };
 
     if (calendar.title === 'Birthdays') {
-        chipProps.onClick = () => openMessage(extractNameFromBirthdayText(event.title));
+        calendarEventChip.onClick = () => openMessage(extractNameFromBirthdayText(event.title));
     }
 
-    if (calendar.isPrimary || calendar.title === 'Calendar') {
-        chipProps.planEvent = {
-            status: EItemStatus.STATIC,
-            sortId: 1,
-            calendarId: event.id,
-            value: event.title,
-            listType: EListType.PLANNER,
-            timeConfig: {
-                startIso: event.startDate as string,
-                endIso: event.endDate as string,
-                allDay: event.allDay
-            },
-            color: calendar.color!,
-            // Link all chips for the same calendar event together
-            id: event.id,
-            // Link all chips for the same calendar event to the same planner
-            listId: isoToDatestamp(event.startDate as string),
-        };
-    }
+    // const chipProps: TEventChip = {
+    //     label: event.title,
+    //     iconConfig: {
+    //         type: calendarIconMap[calendar.title] ?? 'calendar',
+    //     },
+    //     color: calendar.color
+    // };
 
-    return chipProps;
+    // if (calendar.isPrimary || calendar.title === 'Calendar') {
+    //     chipProps.planEvent = {
+    //         status: EItemStatus.STATIC,
+    //         sortId: 1,
+    //         calendarId: event.id,
+    //         value: event.title,
+    //         listType: EListType.PLANNER,
+    //         timeConfig: {
+    //             startIso: event.startDate as string,
+    //             endIso: event.endDate as string,
+    //             allDay: event.allDay
+    //         },
+    //         color: calendar.color!,
+    //         // Link all chips for the same calendar event together
+    //         id: event.id,
+    //         // Link all chips for the same calendar event to the same planner
+    //         listId: isoToDatestamp(event.startDate as string),
+    //     };
+    // }
+
+    return calendarEventChip;
 }
 
 /**
@@ -195,22 +195,6 @@ export async function getCalendarMap(): Promise<Record<string, Calendar.Calendar
     return calendarMap;
 }
 
-/**
- * ✅ Fetches an event from the device calendar, and converts it into a planner event.
- * 
- * @param eventId - the ID of the event within the calendar
- * @param datestamp - the date the event is expected to exist in
- * @returns - a planner event representing the calendar event
- */
-export async function getCalendarEventById(eventId: string, datestamp: string): Promise<IPlannerEvent | null> {
-    if (!hasCalendarAccess()) return null;
-
-    const calendarEvent = await Calendar.getEventAsync(eventId);
-    if (!calendarEvent) return null;
-
-    return generatePlannerEvent(calendarEvent, datestamp);
-}
-
 // ------------- Jotai Store Utilities -------------
 
 export async function getPrimaryCalendarId(): Promise<string> {
@@ -265,7 +249,7 @@ export async function loadCalendarData(datestamps: string[]) {
 
     datestamps.forEach((datestamp) => {
         // Use a temporary map to group chips by calendar for this datestamp
-        const calendarChipGroups: Record<string, TEventChip[]> = {};
+        const calendarChipGroups: Record<string, TCalendarEventChip[]> = {};
 
         calendarEvents.forEach((calEvent) => {
             if (validateEventChip(calEvent, datestamp)) {
@@ -273,11 +257,11 @@ export async function loadCalendarData(datestamps: string[]) {
                 if (!calendarChipGroups[calendarId]) {
                     calendarChipGroups[calendarId] = [];
                 }
-                calendarChipGroups[calendarId].push(generateEventChip(calEvent, allCalendarsMap[calendarId]));
+                calendarChipGroups[calendarId].push(calendarEventToEventChip(calEvent, allCalendarsMap[calendarId]));
             }
 
             if (validateCalendarEvent(calEvent, datestamp)) {
-                newCalendarData.plannersMap[datestamp].push(generatePlannerEvent(calEvent, datestamp));
+                newCalendarData.plannersMap[datestamp].push(calendarEventToPlannerEvent(calEvent, datestamp));
             }
         });
 

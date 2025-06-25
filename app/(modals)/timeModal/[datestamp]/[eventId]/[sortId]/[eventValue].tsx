@@ -1,3 +1,4 @@
+import { calendarEventDataAtom } from "@/atoms/calendarEvents";
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
@@ -12,8 +13,6 @@ import { EListType } from "@/lib/enums/EListType";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { deletePlannerEvents, getPlannerFromStorage, savePlannerEvent, unschedulePlannerEvent } from "@/storage/plannerStorage";
-import { hasCalendarAccess } from "@/utils/accessUtils";
-import { getCalendarEventById } from "@/utils/calendarUtils";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { sanitizePlanner } from "@/utils/plannerUtils";
@@ -22,7 +21,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { DateTime } from 'luxon';
 import { useEffect, useState } from "react";
+import { Event as CalendarEvent } from 'expo-calendar';
 import { useForm } from "react-hook-form";
+import { calendarEventToPlannerEvent } from "@/utils/calendarUtils";
 
 type ModalParams = {
     eventId: string; // NULL for new events
@@ -47,11 +48,11 @@ const TimeModal = () => {
     const { eventId, eventValue, datestamp, sortId } = useLocalSearchParams<ModalParams>();
     const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const mountedDatestamps = useAtomValue(mountedDatestampsAtom);
+    const calendarData = useAtomValue(calendarEventDataAtom);
     const userAccess = useAtomValue(userAccessAtom);
     const router = useRouter();
 
     const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
-    const [isChipModal, setIsChipModal] = useState(false);
 
     const {
         control,
@@ -65,21 +66,21 @@ const TimeModal = () => {
     const isCalendarEvent = watch('isCalendarEvent');
 
     const isEditMode = eventId !== NULL;
+    const isChipModal = sortId === NULL;
 
     // Load in the event from storage. Fallback to a calendar search if storage search fails.
     useEffect(() => {
-        const loadCalendarEventFallback = async (currentList: IPlannerEvent[]) => {
-            const calEvent = await getCalendarEventById(eventId, datestamp);
+        const formatCalendarEvent = async (currentList: IPlannerEvent[]) => {
+            const calEvent = calendarData.chipsMap[datestamp].flat().find(chip => chip.event.id === eventId)!.event;
             if (!calEvent) return;
 
+            // Convert the calendar event into a planner event to streamline the modal logic.
             const upperSortId = generateSortId(-1, currentList);
+            const newEvent = calendarEventToPlannerEvent(calEvent, datestamp, upperSortId);
             setPlanEvent({
-                ...calEvent,
-                calendarId: calEvent.id,
-                status: EItemStatus.EDIT,
-                sortId: upperSortId
+                ...newEvent,
+                status: EItemStatus.EDIT
             });
-            setIsChipModal(true);
         }
 
         const newValue = eventValue === NULL ? '' : eventValue;
@@ -98,15 +99,15 @@ const TimeModal = () => {
         }
 
         const planner = getPlannerFromStorage(datestamp);
-        const event = planner.events.find(e => e.id === eventId);
 
-        // If the event was not found in storage. Fallback to a calendar search.
-        if (!event) {
-            loadCalendarEventFallback(planner.events);
+        // The event is a chip. Fallback to a calendar search.
+        if (sortId === NULL) {
+            formatCalendarEvent(planner.events);
             return;
         }
 
-        setPlanEvent({ ...event, value: newValue, status: EItemStatus.EDIT });
+        const event = planner.events.find(e => e.id === eventId);
+        setPlanEvent({ ...event!, value: newValue, status: EItemStatus.EDIT });
     }, []);
 
     // Sync the form data every time the planEvent changes.
