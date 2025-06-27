@@ -1,4 +1,4 @@
-import { TCalendarEventChip } from '@/lib/types/planner/TCalendarEventChip';
+import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { MotiView } from 'moti';
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';

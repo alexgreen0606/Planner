@@ -9,7 +9,7 @@ import { useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import EventChipSets from '../eventChip/EventChipSet';
-import { TCalendarEventChip } from '@/lib/types/planner/TCalendarEventChip';
+import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 
 interface DayBannerProps {
     planner: TPlanner;

@@ -6,9 +6,8 @@ import { hasCalendarAccess } from "@/utils/accessUtils";
 import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier } from "@/utils/dateUtils";
 import { cloneItem, isItemTextfield, sanitizeList } from "@/utils/listUtils";
-import { generatePlanner, getMountedLinkedDatestamps, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
+import { generatePlanner, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
-import { uuid } from "expo-modules-core";
 import { MMKV } from 'react-native-mmkv';
 
 const storage = new MMKV({ id: EStorageId.PLANNER });
@@ -83,7 +82,7 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
 // ------------- Advanced CRUD Utilities -------------
 
 /**
- * ✅ Creates or updates a planner event.
+ * Creates or updates a planner event.
  * 
  * Calendar events will be synced to the device.
  * Modified recurring events will be hidden and cloned.
@@ -134,7 +133,7 @@ export async function savePlannerEvent(event: IPlannerEvent, prevState?: IPlanne
         // Update the device calendar.
         if (newEvent.calendarId === 'NEW') {
             const primaryCalendarId = await getPrimaryCalendarId();
-            await Calendar.createEventAsync(
+            newEvent.calendarId = await Calendar.createEventAsync(
                 primaryCalendarId,
                 {
                     title: newEvent.value,
@@ -170,12 +169,71 @@ export async function savePlannerEvent(event: IPlannerEvent, prevState?: IPlanne
         // Reload the calendar data and allow the planner rebuild to handle the event.
         const datestampsToReload = getMountedLinkedDatestamps(affectedEvents);
         await loadCalendarData(datestampsToReload);
-        return;
+        // return;
+
+
+        // TODO: save a placeholder
     }
 
     newPlanner.events = sanitizePlanner(newPlanner.events, newEvent);
     savePlannerToStorage(newEvent.listId, newPlanner);
     return;
+}
+
+/**
+ * ✅ During the save process, if the event is recurring, hides the original event within the planner
+ * and returns a clone of the event without its recurring reference.
+ *
+ * @param event - The event being saved, checked for recurrence.
+ * @param planner - The planner that contains the event.
+ * @param prevEvent - The event's previous state before this update.
+ * @returns The sanitized event.
+ */
+export function sanitizeRecurringEventForSave(
+    event: IPlannerEvent,
+    planner: TPlanner,
+    prevEvent: IPlannerEvent | undefined
+) {
+    // Ensure this event has been modified aside from its sort ID.
+    if (
+        prevEvent && event.recurringId && (
+            // The event is being added to the calendar
+            event.calendarId ||
+            // The event's title is changing
+            prevEvent.value !== event.value ||
+            // The event time has changed
+            !timeConfigsAreEqual(prevEvent.timeConfig, event.timeConfig)
+        )
+    ) {
+        // Hide the recurring event.
+        planner.events = sanitizePlanner(planner.events, {
+            ...prevEvent,
+            status: EItemStatus.HIDDEN
+        });
+
+        // Strip the recurring event into a generic one.
+        return cloneItem<IPlannerEvent>(
+            event,
+            ['recurringId'],
+            { recurringCloneId: event.recurringId }
+        );
+    }
+    return event;
+}
+
+/**
+ * ✅ Saves an event to its planner.
+ * 
+ * @param event - The event to save.
+ * @param planner - The planner that contains the event.
+ * @param staleStorageId - Optional ID of an event in storage to overwrite with the new event.
+ * @returns The sort ID of the saved event.
+ */
+export function saveEventToPlanner(event: IPlannerEvent, planner: TPlanner, staleStorageId?: string) {
+    const prevEventId = staleStorageId ?? event.id;
+    planner.events = sanitizePlanner(planner.events, event, prevEventId);
+    savePlannerToStorage(event.listId, planner);
+    return event.sortId;
 }
 
 /**
@@ -210,8 +268,9 @@ export async function unschedulePlannerEvent(event: IPlannerEvent) {
  * All other events will be permanently deleted.
  * 
  * @param events - The list of planner events to delete.
+ * @param excludeCalendarRefresh - Skips reloading the affected calendar data. Default is false.
  */
-export async function deletePlannerEvents(events: IPlannerEvent[]) {
+export async function deletePlannerEvents(events: IPlannerEvent[], excludeCalendarRefresh: boolean = false) {
     const todayDatestamp = getTodayDatestamp();
 
     // Phase 1: Group events by date and handle calendar removals.
@@ -260,8 +319,10 @@ export async function deletePlannerEvents(events: IPlannerEvent[]) {
     });
 
     // Phase 3: Reload the calendar data if any of the deleted calendar events affect the mounted planners.
-    const datestampsToReload = getMountedLinkedDatestamps(deletedCalendarEvents);
-    await loadCalendarData(datestampsToReload);
+    if (!excludeCalendarRefresh) {
+        const datestampsToReload = getMountedLinkedDatestamps(deletedCalendarEvents);
+        await loadCalendarData(datestampsToReload);
+    }
 }
 
 

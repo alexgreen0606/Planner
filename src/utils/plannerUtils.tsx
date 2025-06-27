@@ -3,7 +3,7 @@ import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
-import { IPlannerEvent, TTimeConfig } from '@/lib/types/listItems/IPlannerEvent';
+import { IDateRange, IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
@@ -13,10 +13,12 @@ import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { DateTime } from 'luxon';
-import { datestampToDayOfWeek, getTodayDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
+import { datestampToDayOfWeek, datestampToMidnightDate, getTodayDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
 import { generateSortId, isItemTextfield, sanitizeList } from './listUtils';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { hasCalendarAccess } from './accessUtils';
+import { Event as CalendarEvent } from 'expo-calendar';
+import { mapCalendarToPlanner } from './map/mapCalenderEventToPlannerEvent';
 
 // ------------- Utilities -------------
 
@@ -31,7 +33,7 @@ export function getAllMountedDatestamps(): string[] {
 }
 
 type ExtractedTime = {
-    timeConfig: TTimeConfig | undefined;
+    timeConfig: ITimeConfig | undefined;
     updatedText: string;
 }
 
@@ -101,37 +103,31 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): s
 }
 
 /**
- * ✅ Builds a list of currently-mounted planner datestamps that are linked to one or more of the given events. 
+ * ✅ Finds all mounted datestamps linked to a list of date ranges.
  * 
- * @param events - The events that may be linked to the visible planners.
- * @returns - A unique list of datestamps that are linked to one or more of the given events.
+ * @param ranges - The list of ranges to weigh against the mounted datestamps.
+ * @returns - A list of mounted datestamps within any of the ranges given.
  */
-export function getMountedLinkedDatestamps(events: IPlannerEvent[]) {
-    const allVisibleDatestamps = getAllMountedDatestamps();
+export function getMountedDatestampsLinkedToDateRanges<T extends IDateRange>(ranges: T[]) {
+    const allMountedDatestamps = getAllMountedDatestamps();
 
     const affectedDatestamps = [];
-    for (const visible of allVisibleDatestamps) {
-        const localStart = DateTime.fromISO(visible).startOf('day');
-        const localEnd = localStart.endOf('day');
-
-        const visibleStart = localStart.toUTC().toISO()!;
-        const visibleEnd = localEnd.toUTC().toISO()!;
-
-        if (events.some((event) => {
-            const { startIso, endIso } = event.timeConfig ?? {};
-            if (!startIso || !endIso || !event.calendarId) return false;
-
+    for (const mountedStart of allMountedDatestamps) {
+        const nextDatestamp = datestampToMidnightDate(mountedStart, 1).toISOString();
+        if (ranges.some((range) => {
+            const { startIso, endIso } = range;
             return (
-                isTimeEarlier(startIso, visibleEnd) &&
-                isTimeEarlier(visibleStart, endIso)
+                isTimeEarlier(startIso, nextDatestamp, false) &&
+                isTimeEarlier(mountedStart, endIso)
             );
         })) {
-            affectedDatestamps.push(visible);
+            affectedDatestamps.push(mountedStart);
         }
     }
 
     return affectedDatestamps;
 }
+
 
 
 // ------------- Planner Builder -------------
@@ -213,8 +209,8 @@ export function openTimeModal(
  * @returns - true if both configs are equal, else false
  */
 export function timeConfigsAreEqual(
-    a?: TTimeConfig,
-    b?: TTimeConfig
+    a?: ITimeConfig,
+    b?: ITimeConfig
 ): boolean {
     if (a === b) return true; // both undefined
     if (!a || !b) return false; // one is undefined, the other isn't
@@ -229,7 +225,7 @@ export function timeConfigsAreEqual(
 }
 
 /**
- * ✅ Updates a planner with a new item and enforces time logic within the list.
+ * Updates a planner with a new item and enforces time logic within the list.
  * 
  * @param planner The planner to update
  * @param event An item to update within the list. Item will be updated by ID. If no item exists, it will be appended.
@@ -257,7 +253,7 @@ export function generateSortIdByTime(
     event: IPlannerEvent | IRecurringEvent,
     events: (IPlannerEvent | IRecurringEvent)[]
 ): number {
-    console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
+    // console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
     const planner = sanitizeList(events, event);
     const plannerWithoutEvent = planner.filter(curr => curr.id !== event.id);
     const eventTime = extractEventTime(event);
@@ -334,7 +330,7 @@ export function generateSortIdByTime(
 export async function buildPlannerEvents(
     datestamp: string,
     storagePlanner: TPlanner,
-    calendarEvents: IPlannerEvent[]
+    calendarEvents: CalendarEvent[]
 ): Promise<IPlannerEvent[]> {
     const planner = { ...storagePlanner };
 
@@ -344,7 +340,7 @@ export async function buildPlannerEvents(
 
     // Phase 2: Merge in any events from the calendar.
     if (hasCalendarAccess()) {
-        planner.events = syncPlannerWithCalendar(calendarEvents, planner.events, datestamp);
+        planner.events = syncPlannerWithCalendar(datestamp, calendarEvents, planner.events);
     } else {
         planner.events = planner.events.filter(event => !event.calendarId);
     }
@@ -352,7 +348,6 @@ export async function buildPlannerEvents(
     // Phase 3: Merge in carryover events from yesterday. Only applicable for today's planner.
     if (datestamp === getTodayDatestamp()) {
         const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
-        console.log(remainingYesterdayEvents, 'carried over')
         remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
             planner.events.push({
                 ...yesterdayEvent,
@@ -374,67 +369,55 @@ export async function buildPlannerEvents(
         )
     ) savePlannerToStorage(datestamp, planner);
 
-    console.log(planner.events)
+    console.log(planner.events, 'current planner')
     return planner.events;
 }
 
 /**
  * Syncs a planner with a calendar. Calendars have final say on the state of the events.
  * 
- * @param calendar - the calendar events to sync with
+ * @param calendarEvents - the calendar events to sync with
  * @param plannerEvents - the planner being updated
  * @param datestamp - the date the planner represents
  * @returns - the new planner synced with the calendar
  */
 export function syncPlannerWithCalendar(
-    calendar: IPlannerEvent[],
-    plannerEvents: IPlannerEvent[],
-    datestamp: string
+    datestamp: string,
+    calendarEvents: CalendarEvent[],
+    plannerEvents: IPlannerEvent[]
 ) {
-    // console.info('syncPlannerWithCalendar: START', { calendar, planner, timestamp });
-
-    // Phase 1: Remove any calendar events that no longer exist from the planner.
-    // All existing calendar events will also be updated to reflect the calendar data.
+    // Phase 1: Sycn storage records with the Calendar.
     const newPlanner = plannerEvents.reduce<IPlannerEvent[]>((accumulator, planEvent) => {
 
-        // This event isn't related to the calendar. Keep it.
+        // Keep non-calendar events.
         if (
             !planEvent.calendarId ||
             planEvent.status === EItemStatus.HIDDEN
-        ) return [...accumulator, planEvent];
-
-        const calEvent = calendar.find(calEvent => calEvent.id === planEvent.calendarId);
-        if (calEvent) {
-            // This event still exists. Sync the data with the calendar.
-            const updatedEvent = {
-                ...planEvent,
-                timeConfig: calEvent.timeConfig,
-                value: calEvent.value
-            };
-
-            const updatedPlanner = [...accumulator, updatedEvent];
-            updatedEvent.sortId = generateSortIdByTime(updatedEvent, updatedPlanner);
-            return updatedPlanner;
-        } else {
-            // This event was deleted. Remove it from the planner.
+        ) {
+            accumulator.push(planEvent);
             return accumulator;
         }
+
+        const calEvent = calendarEvents.find(calEvent => calEvent.id === planEvent.calendarId);
+
+        // Remove calendar records that no longer exist in the Calendar.
+        if (!calEvent) return accumulator;
+
+        // Sync calendar records with the Calendar events.
+        const updatedEvent = mapCalendarToPlanner(calEvent, datestamp, accumulator, planEvent);
+        accumulator.push(updatedEvent);
+        return accumulator;
+
     }, []);
 
-    // Add any new calendar events to the planner.
-    calendar.forEach(calEvent => {
-        if (!newPlanner.find(planEvent => planEvent.calendarId === calEvent.id)) {
-            const newEvent = {
-                ...calEvent,
-                listId: datestamp,
-                calendarId: calEvent.id
-            };
-            newPlanner.push(newEvent);
-            newEvent.sortId = generateSortIdByTime(newEvent, newPlanner);
-        }
+    // Phase 2: Add new calendar events to the planner.
+    calendarEvents.forEach(calEvent => {
+        if (newPlanner.some(planEvent => planEvent.calendarId === calEvent.id)) return;
+        newPlanner.push(
+            mapCalendarToPlanner(calEvent, datestamp, newPlanner)
+        );
     });
 
-    // console.info('syncPlannerWithCalendar: END', newPlanner);
     return newPlanner;
 }
 
@@ -454,7 +437,7 @@ export function syncPlannerWithRecurring(
 ) {
     // console.info('syncPlannerWithRecurring: START', { recurringPlanner, planner, timestamp })
 
-    function getRecurringEventTimeConfig(recEvent: IRecurringEvent): TTimeConfig {
+    function getRecurringEventTimeConfig(recEvent: IRecurringEvent): ITimeConfig {
         return {
             startIso: timeValueToIso(datsetamp, recEvent.startTime!),
             endIso: timeValueToIso(datsetamp, '23:55'),

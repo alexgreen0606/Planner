@@ -4,10 +4,11 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { EListType } from "@/lib/enums/EListType";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { TCalendarEventChip } from "@/lib/types/planner/TCalendarEventChip";
+import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { DateTime } from "luxon";
+import { Event as CalendarEvent } from 'expo-calendar';
 import { hasCalendarAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
 import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
@@ -22,7 +23,7 @@ import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
  */
 function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
     const chipsMap: Record<string, TCalendarEventChip[][]> = {};
-    const plannersMap: Record<string, IPlannerEvent[]> = {};
+    const plannersMap: Record<string, CalendarEvent[]> = {};
 
     datestamps.forEach(datestamp => {
         chipsMap[datestamp] = [];
@@ -30,43 +31,6 @@ function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
     });
 
     return { chipsMap, plannersMap };
-}
-
-/**
- * ✅ Generates a planner event out of a calendar event.
- * 
- * @param event - The calendar event to parse.
- * @param datestamp - The datestamp where the event will exist.
- * @returns - A new planner event holding the calendar event's data.
- */
-export function calendarEventToPlannerEvent(event: Calendar.Event, datestamp: string, sortId: number = 1): IPlannerEvent {
-    const startDatestamp = isoToDatestamp(event.startDate as string);
-    const endDatestamp = isoToDatestamp(event.endDate as string);
-
-    const multiDayEnd =
-        // Starts before datestamp and ends on datestamp
-        startDatestamp < datestamp && endDatestamp === datestamp;
-
-    const multiDayStart =
-        // Starts on datestamp and ends after datestamp
-        startDatestamp === datestamp && endDatestamp > datestamp;
-
-    return {
-        id: event.id,
-        calendarId: event.id,
-        value: event.title,
-        sortId,
-        listId: datestamp,
-        listType: EListType.PLANNER,
-        timeConfig: {
-            startIso: event.startDate as string,
-            endIso: event.endDate as string,
-            allDay: Boolean(event.allDay),
-            multiDayEnd,
-            multiDayStart
-        },
-        status: EItemStatus.STATIC
-    };
 }
 
 /**
@@ -261,7 +225,7 @@ export async function loadCalendarData(datestamps: string[]) {
             }
 
             if (validateCalendarEvent(calEvent, datestamp)) {
-                newCalendarData.plannersMap[datestamp].push(calendarEventToPlannerEvent(calEvent, datestamp));
+                newCalendarData.plannersMap[datestamp].push(calEvent);
             }
         });
 

@@ -9,21 +9,26 @@ import { NULL } from "@/lib/constants/generic";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListType } from "@/lib/enums/EListType";
+import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { deletePlannerEvents, getPlannerFromStorage, savePlannerEvent, unschedulePlannerEvent } from "@/storage/plannerStorage";
+import { deletePlannerEvents, getPlannerFromStorage, saveEventToPlanner, savePlannerEvent, unschedulePlannerEvent } from "@/storage/plannerStorage";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { sanitizePlanner } from "@/utils/plannerUtils";
+import { saveCalendarChip, saveCalendarEventToPlanner, saveTimedEventToPlanner } from "@/utils/timeModalUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { DateTime } from 'luxon';
 import { useEffect, useState } from "react";
-import { Event as CalendarEvent } from 'expo-calendar';
 import { useForm } from "react-hook-form";
-import { calendarEventToPlannerEvent } from "@/utils/calendarUtils";
+
+export enum EventSourceType {
+    CALENDAR_CHIP = 'CALENDAR_CHIP',
+    PLANNER_EVENT = 'PLANNER_EVENT',
+    NEW = 'NEW'
+}
 
 type ModalParams = {
     eventId: string; // NULL for new events
@@ -32,7 +37,7 @@ type ModalParams = {
     sortId: string;
 };
 
-type FormData = {
+export type FormData = {
     title: string;
     timeRange: {
         startIso: string;
@@ -40,7 +45,12 @@ type FormData = {
     };
     isCalendarEvent: boolean;
     allDay: boolean;
-}
+};
+
+export type InitialEventState =
+    | { type: EventSourceType.CALENDAR_CHIP; event: TCalendarEventChip }
+    | { type: EventSourceType.PLANNER_EVENT; event: IPlannerEvent }
+    | { type: EventSourceType.NEW; event?: never, landingSortId: number };
 
 export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
 
@@ -52,7 +62,7 @@ const TimeModal = () => {
     const userAccess = useAtomValue(userAccessAtom);
     const router = useRouter();
 
-    const [planEvent, setPlanEvent] = useState<IPlannerEvent | null>(null);
+    const [initialEventData, setInitialEventData] = useState<InitialEventState | null>(null);
 
     const {
         control,
@@ -68,117 +78,107 @@ const TimeModal = () => {
     const isEditMode = eventId !== NULL;
     const isChipModal = sortId === NULL;
 
-    // Load in the event from storage. Fallback to a calendar search if storage search fails.
+    // Build the initial form data.
     useEffect(() => {
-        const formatCalendarEvent = async (currentList: IPlannerEvent[]) => {
-            const calEvent = calendarData.chipsMap[datestamp].flat().find(chip => chip.event.id === eventId)!.event;
-            if (!calEvent) return;
+        let eventDatestampOrigin = datestamp;
 
-            // Convert the calendar event into a planner event to streamline the modal logic.
-            const upperSortId = generateSortId(-1, currentList);
-            const newEvent = calendarEventToPlannerEvent(calEvent, datestamp, upperSortId);
-            setPlanEvent({
-                ...newEvent,
-                status: EItemStatus.EDIT
-            });
+        // Calendar Chip.
+        if (sortId === NULL) {
+            const chip = calendarData.chipsMap[datestamp].flat().find(chip => chip.event.id === eventId)!;
+            const calEvent = chip.event;
+
+            // If the chip isn't all day (multi-day chips), continue on to load the 
+            if (calEvent.allDay) {
+                setInitialEventData({
+                    type: EventSourceType.CALENDAR_CHIP,
+                    event: chip
+                });
+                reset({
+                    title: calEvent.title,
+                    timeRange: {
+                        startIso: calEvent.startDate as string,
+                        endIso: calEvent.endDate as string
+                    },
+                    isCalendarEvent: true,
+                    allDay: calEvent.allDay
+                })
+                return;
+            } else {
+                eventDatestampOrigin = isoToDatestamp(calEvent.startDate as string);
+            }
         }
 
         const newValue = eventValue === NULL ? '' : eventValue;
+        const nowTimePlannerDateIso = getIsoRoundedDown5Minutes(datestamp);
 
-        // Handle new events.
+        // New Event.
         if (eventId === NULL) {
-            setPlanEvent({
-                id: uuid.v4(),
-                sortId: Number(sortId),
-                status: EItemStatus.NEW,
-                listId: datestamp,
-                value: newValue,
-                listType: EListType.PLANNER
+            setInitialEventData({
+                type: EventSourceType.NEW,
+                landingSortId: Number(sortId)
+            });
+            reset({
+                title: newValue,
+                timeRange: {
+                    startIso: nowTimePlannerDateIso,
+                    endIso: nowTimePlannerDateIso
+                },
+                isCalendarEvent: false,
+                allDay: false
             });
             return;
         }
 
-        const planner = getPlannerFromStorage(datestamp);
+        const planner = getPlannerFromStorage(eventDatestampOrigin);
+        const event = planner.events.find(e => e.id === eventId)!;
 
-        // The event is a chip. Fallback to a calendar search.
-        if (sortId === NULL) {
-            formatCalendarEvent(planner.events);
-            return;
-        }
-
-        const event = planner.events.find(e => e.id === eventId);
-        setPlanEvent({ ...event!, value: newValue, status: EItemStatus.EDIT });
-    }, []);
-
-    // Sync the form data every time the planEvent changes.
-    useEffect(() => {
-        if (!planEvent) return;
-
-        const nowTimePlannerDateIso = getIsoRoundedDown5Minutes(planEvent.listId);
-        const timeRange = {
-            startIso: planEvent.timeConfig?.startIso ?? nowTimePlannerDateIso,
-            endIso: planEvent.timeConfig?.endIso ?? nowTimePlannerDateIso,
-        };
-
+        // Existing event.
+        setInitialEventData({
+            type: EventSourceType.PLANNER_EVENT,
+            event: event
+        });
         reset({
-            title: planEvent.value,
-            timeRange,
-            allDay: Boolean(planEvent.timeConfig?.allDay),
-            isCalendarEvent: Boolean(planEvent.calendarId)
+            title: newValue,
+            timeRange: {
+                startIso: event.timeConfig?.startIso ?? nowTimePlannerDateIso,
+                endIso: event.timeConfig?.endIso ?? nowTimePlannerDateIso
+            },
+            isCalendarEvent: Boolean(event.calendarId),
+            allDay: Boolean(event.timeConfig?.allDay)
         });
 
-    }, [planEvent, reset]);
+    }, []);
 
     // ------------- Utility Functions -------------
 
     async function handleSave(data: FormData) {
-        const { title, timeRange, isCalendarEvent, allDay } = data;
-        const { startIso, endIso } = timeRange;
-        if (!planEvent || !startIso || !endIso) return;
+        if (!initialEventData) return;
+
+        const { timeRange: { startIso }, isCalendarEvent, allDay } = data;
+
+        // Save event chips.
+        if (allDay) {
+            await saveCalendarChip(data, initialEventData);
+            setTextfieldItem(null);
+            router.back();
+            return;
+        }
+
+        let finalSortId;
+
+        if (isCalendarEvent) {
+            finalSortId = await saveCalendarEventToPlanner(data, initialEventData);
+        } else {
+            finalSortId = await saveTimedEventToPlanner(data, initialEventData);
+        }
 
         const targetDatestamp = isoToDatestamp(startIso);
         const isTargetDatestampMounted = mountedDatestamps.all.includes(targetDatestamp);
 
-        const updatedEvent: IPlannerEvent = {
-            ...planEvent,
-            listId: targetDatestamp,
-            value: title,
-            timeConfig: {
-                allDay,
-                startIso: startIso,
-                endIso: endIso
-            }
-        };
-
-        // Phase 1: Mark new calendar events for creation.
-        if (isCalendarEvent && !planEvent.calendarId) {
-            updatedEvent.calendarId = 'NEW';
-        }
-
-        // Phase 2: (Special Case) During all-day creation, the end date must shift to the start of the next day.
-        if (allDay && !planEvent.timeConfig?.allDay) {
-            const endDate = DateTime.fromISO(endIso);
-            const startOfNextDay = endDate
-                .plus({ days: 1 })
-                .startOf('day')
-                .toUTC()
-                .toISO();
-            updatedEvent.timeConfig!.endIso = startOfNextDay!;
-        }
-
-        // Phase 3: Save the event in both storage and the calendar (if needed).
-        await savePlannerEvent(updatedEvent, planEvent);
-
-        // Phase 4: Create a new textfield if possible.
-        if (!isChipModal && isTargetDatestampMounted) {
+        // Phase 4: Create a new textfield below the saved item.
+        if (!isChipModal && isTargetDatestampMounted && finalSortId) {
             const targetPlanner = getPlannerFromStorage(targetDatestamp);
-
-            // Replace ID is not needed here. Any matching event with a different ID was already removed
-            // in the savePlannerEvent function.
-            const plannerWithEvent = sanitizePlanner(targetPlanner.events, updatedEvent);
-
-            // Place a new textfield below the saved event.
-            const newTextfieldSortId = generateSortId(updatedEvent.sortId, plannerWithEvent);
+            const newTextfieldSortId = generateSortId(finalSortId, targetPlanner.events);
             setTextfieldItem({
                 id: uuid.v4(),
                 listId: targetDatestamp,

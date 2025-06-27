@@ -1,7 +1,7 @@
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
 import { IBirthday } from '@/lib/types/listItems/IBirthday';
-import { TEventChip } from '@/lib/types/planner/TCalendarEventChip';
+import { TEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import * as Contacts from 'expo-contacts';
 import * as SMS from 'expo-sms';
 

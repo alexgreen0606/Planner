@@ -84,7 +84,7 @@ export const textStyles = {
     },
     // --- Button ---
     button: {
-        fontSize: 16,
+        fontSize: 18,
         fontFamily: 'RoundMedium',
     },
     // --- Birthday ---

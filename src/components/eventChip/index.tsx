@@ -1,7 +1,7 @@
 import { NULL } from '@/lib/constants/generic';
 import { EListType } from '@/lib/enums/EListType';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { TCalendarEventChip } from '@/lib/types/planner/TCalendarEventChip';
+import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
@@ -40,7 +40,7 @@ const EventChip = ({
     toggleCollapsed
 }: EventChipProps) => {
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-    const { event: { title, id }, iconConfig, color } = chip;
+    const { event: { title, id, allDay }, iconConfig, color } = chip;
     const router = useRouter();
 
     const isPendingDelete = useMemo(() =>
