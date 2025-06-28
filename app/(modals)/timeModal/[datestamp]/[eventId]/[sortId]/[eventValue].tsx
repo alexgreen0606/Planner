@@ -12,15 +12,13 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { deletePlannerEvents, getPlannerFromStorage, saveEventToPlanner, savePlannerEvent, unschedulePlannerEvent } from "@/storage/plannerStorage";
+import { deletePlannerEvents, getPlannerFromStorage, unschedulePlannerEvent } from "@/storage/plannerStorage";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
-import { sanitizePlanner } from "@/utils/plannerUtils";
 import { saveCalendarChip, saveCalendarEventToPlanner, saveTimedEventToPlanner } from "@/utils/timeModalUtils";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
-import { DateTime } from 'luxon';
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -159,25 +157,25 @@ const TimeModal = () => {
         // Save event chips.
         if (allDay) {
             await saveCalendarChip(data, initialEventData);
-            setTextfieldItem(null);
+            if (initialEventData.type !== EventSourceType.CALENDAR_CHIP) setTextfieldItem(null);
             router.back();
             return;
         }
 
         let finalSortId;
+        const targetDatestamp = isoToDatestamp(startIso);
+        const targetPlanner = getPlannerFromStorage(targetDatestamp);
 
         if (isCalendarEvent) {
-            finalSortId = await saveCalendarEventToPlanner(data, initialEventData);
+            finalSortId = await saveCalendarEventToPlanner(data, initialEventData, targetPlanner);
         } else {
-            finalSortId = await saveTimedEventToPlanner(data, initialEventData);
+            finalSortId = await saveTimedEventToPlanner(data, initialEventData, targetPlanner);
         }
 
-        const targetDatestamp = isoToDatestamp(startIso);
         const isTargetDatestampMounted = mountedDatestamps.all.includes(targetDatestamp);
 
         // Phase 4: Create a new textfield below the saved item.
-        if (!isChipModal && isTargetDatestampMounted && finalSortId) {
-            const targetPlanner = getPlannerFromStorage(targetDatestamp);
+        if (!isChipModal && isTargetDatestampMounted) {
             const newTextfieldSortId = generateSortId(finalSortId, targetPlanner.events);
             setTextfieldItem({
                 id: uuid.v4(),
@@ -195,9 +193,8 @@ const TimeModal = () => {
         router.back();
     }
 
+    // TODO: next up, implement this function
     async function handleUnschedule() {
-        if (!planEvent) return;
-
         await unschedulePlannerEvent(planEvent);
 
         setTextfieldItem(null);
@@ -205,8 +202,6 @@ const TimeModal = () => {
     }
 
     async function handleDelete() {
-        if (!planEvent) return;
-
         await deletePlannerEvents([planEvent]);
 
         setTextfieldItem(null);

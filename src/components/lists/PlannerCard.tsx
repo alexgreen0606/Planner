@@ -1,12 +1,14 @@
+import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { textfieldItemAtom } from '@/atoms/textfieldData';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
 import { EListType } from '@/lib/enums/EListType';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { deleteAllRecurringEvents, resetRecurringEvents, savePlannerEvent, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
+import { deleteAllRecurringEvents, resetRecurringEvents, saveEventToPlanner, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -15,13 +17,11 @@ import { usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
-import Card from '../../components/Card';
-import { buildPlannerEvents, generatePlanner, generateTimeIconConfig, buildEventToolbarIconSet, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
+import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
+import DayBanner from '../banners/DayBanner';
+import Card from '../Card';
 import GenericIcon from '../icon';
-import SortableList from '../sortedList';
-import DayBanner from './DayBanner';
-import { EStorageId } from '@/lib/enums/EStorageId';
-import { calendarEventDataAtom } from '@/atoms/calendarEvents';
+import SortableList from './components/SortableList';
 
 interface PlannerCardProps {
     datestamp: string;
@@ -40,17 +40,14 @@ const PlannerCard = ({
     forecast
 }: PlannerCardProps) => {
     const { getDeletingItems, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
+    const { calendarEvents, calendarChips } = useCalendarData(datestamp);
+    const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
+    const calendarEventData = useAtomValue(calendarEventDataAtom);
     const pathname = usePathname();
     const router = useRouter();
 
-    const { calendarEvents, calendarChips } = useCalendarData(datestamp);
-
-    const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
-
     const [collapsed, setCollapsed] = useState(true);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-
-    const calendarEventData = useAtomValue(calendarEventDataAtom);
 
     const isCalendarLoading = useMemo(
         () => calendarEventData.plannersMap[datestamp] === undefined,
@@ -113,19 +110,17 @@ const PlannerCard = ({
         toggleScheduleItemDelete(event, listType);
     }
 
-    const getItemsFromStorageObject = useCallback((planner: TPlanner) => {
-        return buildPlannerEvents(datestamp, planner, calendarEvents);
-    }, [calendarEvents]);
+    const getItemsFromStorageObject = useCallback((planner: TPlanner) =>
+        buildPlannerEvents(datestamp, planner, calendarEvents),
+        [calendarEvents]
+    );
 
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: EStorageId.PLANNER,
         storageKey: datestamp,
         getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
-        storageConfig: {
-            createItem: savePlannerEvent,
-            updateItem: savePlannerEvent
-        },
+        saveItemToStorage: saveEventToPlanner,
         listType
     });
 
@@ -135,7 +130,6 @@ const PlannerCard = ({
 
     const visibleEvents = useMemo(() => {
         if (!isRecurringHidden) return SortedEvents.items;
-
         return SortedEvents.items.filter(event => !event.recurringCloneId && !event.recurringId);
     }, [SortedEvents.items, isRecurringHidden]);
 

@@ -4,6 +4,7 @@ import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { Event } from "expo-calendar";
 import { generateSortIdByTime } from "../plannerUtils";
 import { isoToDatestamp } from "../dateUtils";
+import { generateSortId } from "../listUtils";
 
 /**
  * ✅ Maps a calendar event to a planner event.
@@ -26,7 +27,6 @@ export function mapCalendarToPlanner(event: Event, datestamp: string, planner: I
         // Starts on datestamp and ends after datestamp
         startDatestamp === datestamp && endDatestamp > datestamp;
 
-
     const plannerEvent: IPlannerEvent = {
         ...storRecord,
         sortId: storRecord?.sortId ?? 1,
@@ -44,6 +44,10 @@ export function mapCalendarToPlanner(event: Event, datestamp: string, planner: I
             multiDayEnd
         }
     }
-    plannerEvent.sortId = generateSortIdByTime(plannerEvent, planner);
+
+    if (!storRecord) {
+        plannerEvent.sortId = generateSortIdByTime(plannerEvent, planner);
+    }
+    
     return plannerEvent;
 }

@@ -1,8 +1,8 @@
 import GenericIcon, { GenericIconProps } from '@/components/icon';
+import CustomText from '@/components/text/CustomText';
 import React from 'react';
 import { Pressable, View, ViewStyle } from 'react-native';
 import { PressableProps } from 'react-native-gesture-handler';
-import CustomText from '../text/CustomText';
 
 export interface EmptyLabelProps extends PressableProps {
     label: string;

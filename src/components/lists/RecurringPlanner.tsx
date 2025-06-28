@@ -1,22 +1,20 @@
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { EListType } from '@/lib/enums/EListType';
+import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
+import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { useScrollContainer } from '@/providers/ScrollContainer';
-import { deleteRecurringEvents, deleteRecurringWeekdayEvents, saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
+import { saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput } from '@/utils/plannerUtils';
-import React, { useEffect, useMemo, useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { IconType } from '../icon';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import SortableList from '../sortedList';
-import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
-import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { EListType } from '@/lib/enums/EListType';
-import { EStorageId } from '@/lib/enums/EStorageId';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
-import { EStorageKey } from '@/lib/enums/EStorageKey';
+import SortableList from './components/SortableList';
 
 interface SortedRecurringPlannerProps {
     plannerKey: string;
@@ -78,10 +76,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: EStorageId.RECURRING_EVENT,
         storageKey: plannerKey,
-        storageConfig: {
-            createItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
-            updateItem: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent
-        },
+        saveItemToStorage: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
         listType
     });
 

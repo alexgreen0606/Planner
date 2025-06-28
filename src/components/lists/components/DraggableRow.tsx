@@ -1,8 +1,12 @@
 import GenericIcon from "@/components/icon";
 import ThinLine from "@/components/ThinLine";
+import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/layout";
 import { LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EListType } from "@/lib/enums/EListType";
+import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
+import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
 import { generateSortId } from "@/utils/listUtils";
 import { useEffect, useMemo } from "react";
@@ -18,11 +22,6 @@ import Animated, {
     withSpring
 } from "react-native-reanimated";
 import ListTextfield from "./ListTextfield";
-import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
-import { IListItem } from "@/lib/types/listItems/core/TListItem";
-import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
-import { useDeleteScheduler } from "@/providers/DeleteScheduler";
-import { EListType } from "@/lib/enums/EListType";
 import { ToolbarIcon } from "./Toolbar";
 
 const Row = Animated.createAnimatedComponent(View);
@@ -59,7 +58,7 @@ export interface RowProps<T extends IListItem> {
     listType: EListType;
         toolbarIconSet?: ToolbarIcon<T>[][];
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
-    onDragEnd?: (updatedItem: T) => Promise<void> | void;
+    onDragEnd?: (updatedItem: T) => Promise<any> | any;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;

@@ -218,6 +218,23 @@ export const deleteFolderItem = (itemId: string, type: EFolderItemType) => {
     jotaiStore.set(textfieldItemAtom, null);
 }
 
+export function saveChecklistItem(item: IListItem) {
+    const list = getListFromStorage(item.listId);
+    console.log(list)
+    if (!list) return;
+
+    const replaceIndex = list.items.findIndex((existingItem) =>
+        existingItem.id === item.id
+    );
+    if (replaceIndex !== -1) {
+        list.items[replaceIndex] = item;
+    } else {
+        list.items.push(item);
+    }
+
+    saveToStorage(list);
+}
+
 // TODO: comment
 export function deleteChecklistItems(items: IListItem[]) {
     // Group items by listId

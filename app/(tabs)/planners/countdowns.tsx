@@ -1,6 +1,6 @@
 import { userAccessAtom } from '@/atoms/userAccess';
-import Countdowns from '@/components/countdowns';
-import EmptyLabel from '@/components/sortedList/EmptyLabel';
+import EmptyLabel from '@/components/lists/components/EmptyLabel';
+import Countdowns from '@/components/lists/Countdowns';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { EAccess } from '@/lib/enums/EAccess';
 import { saveCountdown } from '@/utils/countdownUtils';

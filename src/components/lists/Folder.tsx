@@ -10,14 +10,14 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolder } from '@/lib/types/checklists/IFolder';
 import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { createFolderItem, deleteFolderItem, getFolderFromStorage, getFolderItems, saveTextfieldItem, updateFolderItem } from '@/storage/checklistsStorage';
+import { deleteFolderItem, getFolderFromStorage, getFolderItems, saveTextfieldItem, updateFolderItem } from '@/storage/checklistsStorage';
 import { generateSortId } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
-import SortableList from '../sortedList';
-import { ToolbarIcon } from '../sortedList/Toolbar';
+import SortableList from './components/SortableList';
+import { ToolbarIcon } from './components/Toolbar';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
@@ -210,10 +210,7 @@ const SortedFolder = ({
         storageId: EStorageId.CHECKLISTS,
         storageKey: folderId,
         getItemsFromStorageObject: getFolderItemsMemoized,
-        storageConfig: {
-            createItem: saveTextfieldItem,
-            updateItem: saveTextfieldItem
-        },
+        saveItemToStorage: saveTextfieldItem,
         initializeListItem: initializeEmptyFolder,
         listType
     });

@@ -1,6 +1,4 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
-import SortableList from '@/components/sortedList';
-import { ToolbarProps } from '@/components/sortedList/Toolbar';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import useSortedList from '@/hooks/useSortedList';
@@ -11,13 +9,13 @@ import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { deleteCountdown, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
-import { isItemTextfield } from '@/utils/listUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { IconType } from '../icon';
+import SortableList from './components/SortableList';
 
 const Countdowns = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<ICountdown>();
@@ -96,10 +94,7 @@ const Countdowns = () => {
         storageId: EStorageKey.COUNTDOWN_LIST_KEY,
         storageKey: EStorageKey.COUNTDOWN_LIST_KEY,
         getItemsFromStorageObject: getCountownsMemoized,
-        storageConfig: {
-            createItem: saveCountdown,
-            updateItem: saveCountdown
-        },
+        saveItemToStorage: saveCountdown,
         handleListChange: async () => {
             await CountdownItems.refetchItems();
         },

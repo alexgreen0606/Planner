@@ -1,26 +1,23 @@
+import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/icon';
+import ScrollAnchor from '@/components/lists/components/ScrollAnchor';
+import PlannerCard from '@/components/lists/PlannerCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import PlannerCard from '@/components/plannerCard';
-import ScrollAnchor from '@/components/sortedList/ScrollAnchor';
 import ButtonText from '@/components/text/ButtonText';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { NULL } from '@/lib/constants/generic';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { useCalendarLoad } from '@/providers/CalendarProvider';
 import { getPlannerSetTitles } from '@/storage/plannerSetsStorage';
+import { savePlannerEvent } from '@/storage/plannerStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
-import { calendarEventDataAtom } from '@/atoms/calendarEvents';
-import { savePlannerEvent } from '@/storage/plannerStorage';
-import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 
 const defaultPlannerSet = 'Next 7 Days';
 

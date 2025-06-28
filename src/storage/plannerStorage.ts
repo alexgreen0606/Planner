@@ -229,10 +229,11 @@ export function sanitizeRecurringEventForSave(
  * @param staleStorageId - Optional ID of an event in storage to overwrite with the new event.
  * @returns The sort ID of the saved event.
  */
-export function saveEventToPlanner(event: IPlannerEvent, planner: TPlanner, staleStorageId?: string) {
+export function saveEventToPlanner(event: IPlannerEvent, planner?: TPlanner, staleStorageId?: string) {
+    const storagePlanner = planner ?? getPlannerFromStorage(event.listId);
     const prevEventId = staleStorageId ?? event.id;
-    planner.events = sanitizePlanner(planner.events, event, prevEventId);
-    savePlannerToStorage(event.listId, planner);
+    storagePlanner.events = sanitizePlanner(storagePlanner.events, event, prevEventId);
+    savePlannerToStorage(event.listId, storagePlanner);
     return event.sortId;
 }
 

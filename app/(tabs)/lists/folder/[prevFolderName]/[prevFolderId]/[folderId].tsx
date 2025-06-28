@@ -1,5 +1,5 @@
-import FolderItemBanner from '@/components/checklist/FolderItemBanner';
-import SortedFolder from '@/components/folder';
+import FolderItemBanner from '@/components/banners/FolderItemBanner';
+import SortedFolder from '@/components/lists/Folder';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';

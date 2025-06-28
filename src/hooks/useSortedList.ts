@@ -5,14 +5,9 @@ import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { generateSortId, sanitizeList } from '../utils/listUtils';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
-
-type StorageHandlers<T extends IListItem> = {
-    createItem: (item: T) => Promise<any> | void;
-    updateItem: (item: T) => Promise<any> | void;
-};
 
 interface SortedListConfig<T extends IListItem, S> {
     storageId: string;
@@ -20,9 +15,8 @@ interface SortedListConfig<T extends IListItem, S> {
     handleListChange?: () => Promise<void>;
     // Ensure a callback is used here to prevent infinite rerenders
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
-    setItemsInStorageObject?: (items: T[], currentObject: S) => S;
     initializeListItem?: (item: IListItem) => T;
-    storageConfig?: StorageHandlers<T>;
+    saveItemToStorage: (item: T) => Promise<void> | any;
     initializedStorageObject?: S;
     listType: EListType;
 }
@@ -31,9 +25,8 @@ const useSortedList = <T extends IListItem, S>({
     storageKey,
     storageId,
     getItemsFromStorageObject,
-    setItemsInStorageObject,
     initializeListItem,
-    storageConfig,
+    saveItemToStorage,
     initializedStorageObject,
     handleListChange,
     listType
@@ -71,31 +64,7 @@ const useSortedList = <T extends IListItem, S>({
      * @returns - true if the item still exists in the list, else false
      */
     async function persistItemToStorage(item: T) {
-        let newId = undefined;
-        if (storageConfig) {
-
-            // Handle the storage update directly
-            if (item.status === EItemStatus.NEW) {
-                newId = await storageConfig.createItem({ ...item, status: EItemStatus.STATIC });
-            } else {
-                await storageConfig.updateItem({ ...item, status: EItemStatus.STATIC });
-            }
-        } else {
-
-            // Update the list with the new item and save
-            const updatedList = [...items];
-            const replaceIndex = updatedList.findIndex((existingItem) =>
-                existingItem.id === item.id
-            );
-            if (replaceIndex !== -1) {
-                updatedList[replaceIndex] = item;
-            } else {
-                updatedList.push(item);
-            }
-            const objectToSave = setItemsInStorageObject && storageObject ? setItemsInStorageObject(updatedList, { ...storageObject }) : updatedList;
-            setStorageObject(objectToSave as S);
-        }
-
+        saveItemToStorage(item);
         await handleListChange?.();
     }
 

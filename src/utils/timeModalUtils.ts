@@ -10,6 +10,7 @@ import { isoToDatestamp } from "./dateUtils";
 import { generateSortId } from "./listUtils";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { uuid } from "expo-modules-core";
+import { TPlanner } from "@/lib/types/planner/TPlanner";
 
 // ------------- Helper Utilities -------------
 
@@ -115,24 +116,23 @@ export async function saveCalendarChip(
 }
 
 /**
- * Saves a calendar event to storage and the device calendar. All side effects will be handled,
- * including clonig of recurring events and calendar reloading.
+ * ✅ Saves a calendar event to storage and the device calendar. All side effects will be handled,
+ * including cloning of recurring events and calendar reloading.
  * 
  * @param formData - The data from the Time Modal.
  * @param originalData - The state of the event before the update.
+ * @param planner - The planner to update.
  * @returns - The sort ID of the saved event.
  */
 export async function saveCalendarEventToPlanner(
     formData: FormData,
-    originalData: InitialEventState
+    originalData: InitialEventState,
+    planner: TPlanner
 ): Promise<number> {
     const { title, timeRange: { startIso, endIso }, allDay } = formData;
     const updatingDateRanges: IDateRange[] = [formData.timeRange];
-    let event: IPlannerEvent;
-    let staleStorageId: string | undefined = undefined;
-
     const targetDatestamp = isoToDatestamp(startIso);
-    const planner = getPlannerFromStorage(targetDatestamp);
+    let event: IPlannerEvent;
 
     const eventDetails: Partial<Calendar.Event> = {
         title,
@@ -145,7 +145,8 @@ export async function saveCalendarEventToPlanner(
     switch (originalData.type) {
         case EventSourceType.CALENDAR_CHIP:
             event = {
-                id: "PLACEHOLDER", // Calendar ID will overwrite below
+                id: originalData.event.event.id,
+                calendarId: originalData.event.event.id,
                 sortId: generateSortId(-1, planner.events),
                 listType: EListType.PLANNER,
                 listId: targetDatestamp,
@@ -171,8 +172,7 @@ export async function saveCalendarEventToPlanner(
                     endIso: prevTimeConfig.endIso
                 });
             }
-            staleStorageId = originalData.event.id;
-            sanitizeRecurringEventForSave(event, planner, originalData.event);
+            event = sanitizeRecurringEventForSave(event, planner, originalData.event);
             break;
         case EventSourceType.NEW:
             event = {
@@ -208,7 +208,7 @@ export async function saveCalendarEventToPlanner(
     }
 
     // Phase 4: Save the event to storage.
-    const sortId = saveEventToPlanner(event, planner, staleStorageId);
+    const sortId = saveEventToPlanner(event, planner);
 
     // Phase 5: Reload the calendar data.
     const affectedDatestamps = getMountedDatestampsLinkedToDateRanges(updatingDateRanges);
@@ -222,18 +222,19 @@ export async function saveCalendarEventToPlanner(
  * 
  * @param formData - The data from the Time Modal.
  * @param originalData - The state of the event before the update.
+ * @param planner - The planner to update.
  * @returns The sort ID of the saved event.
  */
 export async function saveTimedEventToPlanner(
     formData: FormData,
-    originalData: InitialEventState
+    originalData: InitialEventState,
+    planner: TPlanner
 ): Promise<number> {
     const { title, timeRange: { startIso, endIso }, allDay } = formData;
     const updatingDateRanges: IDateRange[] = [];
     let event: IPlannerEvent;
 
     const targetDatestamp = isoToDatestamp(startIso);
-    const planner = getPlannerFromStorage(targetDatestamp);
 
     // Phase 1: Extract previous date ranges and event data.
     switch (originalData.type) {

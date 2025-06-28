@@ -20,7 +20,7 @@ import Toolbar, { ToolbarIcon } from './Toolbar';
 interface DraggableListProps<T extends IListItem> {
     listId: string;
     items: T[];
-    onDragEnd?: (updatedItem: T) => Promise<void> | void;
+    onDragEnd?: (updatedItem: T) => Promise<any> | any;
     onContentClick: (item: T) => void;
     getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
