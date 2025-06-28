@@ -9,7 +9,7 @@ import ButtonText from '@/components/text/ButtonText';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { NULL } from '@/lib/constants/generic';
 import { getPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { savePlannerEvent } from '@/storage/plannerStorage';
+import { saveEventToPlanner } from '@/storage/plannerStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
@@ -29,7 +29,7 @@ const Planners = () => {
     const calendarEventData = useAtomValue(calendarEventDataAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
-    useTextfieldFallbackSave(savePlannerEvent);
+    useTextfieldFallbackSave(saveEventToPlanner);
 
     const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
         "2025-06-22": {

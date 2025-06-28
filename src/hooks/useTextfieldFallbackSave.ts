@@ -3,7 +3,7 @@ import { useTextfieldItemAs } from "./useTextfieldItemAs";
 import { useEffect, useRef } from "react";
 
 export const useTextfieldFallbackSave = <T extends IListItem>(
-    saveFunc: (item: T) => Promise<void> | void
+    saveFunc: (item: T) => Promise<any> | any
 ) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
 

@@ -3,9 +3,9 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { hasCalendarAccess } from "@/utils/accessUtils";
-import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
+import { loadCalendarData } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier } from "@/utils/dateUtils";
-import { cloneItem, isItemTextfield, sanitizeList } from "@/utils/listUtils";
+import { cloneItem, sanitizeList } from "@/utils/listUtils";
 import { generatePlanner, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
@@ -80,105 +80,6 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
 
 
 // ------------- Advanced CRUD Utilities -------------
-
-/**
- * Creates or updates a planner event.
- * 
- * Calendar events will be synced to the device.
- * Modified recurring events will be hidden and cloned.
- * Timed events will get a new sort ID to ensures the planner remains chronological.
- * 
- * @param event - The planner event to save.
- * @param prevState - An optional item to use as the event's previous state. Only required for event chips
- * as they do not exist in storage.
- */
-export async function savePlannerEvent(event: IPlannerEvent, prevState?: IPlannerEvent) {
-    const newPlanner = getPlannerFromStorage(event.listId);
-
-    const prevEvent = newPlanner.events.find(existingEvent => existingEvent.id === event.id) ?? prevState;
-    const prevCalendarId = prevEvent?.calendarId;
-
-    let newEvent = { ...event, status: isItemTextfield(event) ? EItemStatus.STATIC : event.status };
-    const newCalendarId = newEvent.calendarId;
-
-    // Phase 1: Clone recurring events to allow customization. 
-    // The recurring event will be hidden and the clone will be saved.
-    if (
-        prevEvent && newEvent.recurringId && (
-            // The event is being added to the calendar
-            newCalendarId ||
-            // The event's title is changing
-            prevEvent.value !== newEvent.value ||
-            // The event time has changed
-            !timeConfigsAreEqual(prevEvent.timeConfig, newEvent.timeConfig)
-        )
-    ) {
-        // Mark the recurring event hidden
-        newPlanner.events = sanitizePlanner(newPlanner.events, {
-            ...prevEvent,
-            status: EItemStatus.HIDDEN
-        });
-
-        // Clone the recurring event and remove its recurring status.
-        newEvent = cloneItem<IPlannerEvent>(
-            newEvent,
-            ['recurringId'],
-            { recurringCloneId: newEvent.recurringId }
-        );
-    }
-
-    // Phase 2: Handle calendar events.
-    if (newCalendarId && hasCalendarAccess()) {
-
-        // Update the device calendar.
-        if (newEvent.calendarId === 'NEW') {
-            const primaryCalendarId = await getPrimaryCalendarId();
-            newEvent.calendarId = await Calendar.createEventAsync(
-                primaryCalendarId,
-                {
-                    title: newEvent.value,
-                    startDate: newEvent.timeConfig!.startIso,
-                    endDate: newEvent.timeConfig!.endIso,
-                    allDay: newEvent.timeConfig!.allDay
-                }
-            );
-        } else {
-            await Calendar.updateEventAsync(
-                newCalendarId,
-                {
-                    title: newEvent.value,
-                    startDate: newEvent.timeConfig!.startIso,
-                    endDate: newEvent.timeConfig!.endIso,
-                    allDay: newEvent.timeConfig!.allDay
-                }
-            );
-        }
-
-        // Track the planner events that have been affected by this function call.
-        const affectedEvents = [event];
-        if (prevEvent) {
-            affectedEvents.push(prevEvent);
-            if (!prevCalendarId) {
-                // The updating event exists in the calendar already and is not a calendar event.
-                // Remove it from the planner so the calendar event can take its place.
-                newPlanner.events = newPlanner.events.filter(existingEvent => existingEvent.id !== newEvent.id);
-                savePlannerToStorage(newEvent.listId, newPlanner);
-            }
-        }
-
-        // Reload the calendar data and allow the planner rebuild to handle the event.
-        const datestampsToReload = getMountedLinkedDatestamps(affectedEvents);
-        await loadCalendarData(datestampsToReload);
-        // return;
-
-
-        // TODO: save a placeholder
-    }
-
-    newPlanner.events = sanitizePlanner(newPlanner.events, newEvent);
-    savePlannerToStorage(newEvent.listId, newPlanner);
-    return;
-}
 
 /**
  * ✅ During the save process, if the event is recurring, hides the original event within the planner
