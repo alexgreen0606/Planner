@@ -9,7 +9,7 @@ import { useScrollContainer } from '@/providers/ScrollContainer';
 import { saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { datestampToMidnightDate } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { generateSortIdByTime, generateTimeIconConfig, handleEventValueUserInput } from '@/utils/plannerUtils';
+import { generateSortIdByTime, generateTimeIconConfig, handleNewEventValue } from '@/utils/plannerUtils';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
@@ -91,13 +91,12 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 fillSpace
                 listType={listType}
                 isLoading={SortedEvents.isLoading}
-                getTextfieldKey={item => `${item.id}-${item.sortId}-${item.startTime}`}
                 saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 toolbarIconSet={toolbarIcons}
                 hideKeyboard={timeModalOpen}
-                handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items) as IRecurringEvent}
+                handleValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items) as IRecurringEvent}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
                 emptyLabelConfig={{

@@ -115,7 +115,6 @@ const Countdowns = () => {
                 items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
                 onContentClick={CountdownItems.toggleItemEdit}
-                getTextfieldKey={(item) => `${item.id}-${item.sortId}`}
                 saveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
                 toolbarIconSet={toolbarIcons}
                 emptyLabelConfig={{

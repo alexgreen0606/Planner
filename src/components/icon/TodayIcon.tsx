@@ -20,7 +20,7 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
     }, [todayDatestamp]);
 
     const day = useMemo(() => {
-        const monthFormat = 'dd';
+        const monthFormat = 'd';
         const date = DateTime.fromISO(todayDatestamp);
         return date.toFormat(monthFormat).toUpperCase();
     }, [todayDatestamp]);

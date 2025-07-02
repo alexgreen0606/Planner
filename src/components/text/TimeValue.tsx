@@ -73,7 +73,7 @@ const TimeValue = ({
             <CustomText variant='time' customStyle={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
             </CustomText>
-            <CustomText variant='standard'>
+            <CustomText variant='pmAmIndicator'>
                 {indicator}
             </CustomText>
         </View>

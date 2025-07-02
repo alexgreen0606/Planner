@@ -45,7 +45,6 @@ const Checklist = () => {
             items={SortedItems.items}
             onDragEnd={SortedItems.persistItemToStorage}
             onContentClick={SortedItems.toggleItemEdit}
-            getTextfieldKey={item => `${item.id}-${item.sortId}`}
             getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleChecklistItemDelete, getIsItemDeleting(item, listType))}
             saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             emptyLabelConfig={{

@@ -8,8 +8,8 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { deleteAllRecurringEvents, resetRecurringEvents, saveEventToPlanner, toggleHideAllRecurringEvents } from '@/storage/plannerStorage';
-import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
+import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner, saveEventToPlannerWithRecurringCheck, toggleHideAllRecurringEventsInPlanner } from '@/storage/plannerStorage';
+import { datestampToDayOfWeek, datestampToMonthDate, getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuView } from '@react-native-menu/menu';
@@ -17,7 +17,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleEventValueUserInput, openTimeModal } from '../../utils/plannerUtils';
+import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleNewEventValue, openTimeModal } from '../../utils/plannerUtils';
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import GenericIcon from '../icon';
@@ -67,8 +67,8 @@ const PlannerCard = ({
         getDeletingItems(listType).some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
-            // and is rooted in this planner (deleting multi-day start events should not mark the end event as deleting)
-            deleteItem.listId === datestamp
+            // and it's not from today
+            deleteItem.listId !== getTodayDatestamp()
         ),
         [getDeletingItems]
     );
@@ -94,20 +94,24 @@ const PlannerCard = ({
                 setIsEditingTitle(true);
                 break;
             case EditAction.DELETE_RECURRING:
-                deleteAllRecurringEvents(datestamp);
+                deleteAllRecurringEventsFromPlanner(datestamp);
                 break;
             case EditAction.RESET_RECURRING:
-                resetRecurringEvents(datestamp);
+                resetRecurringEventsInPlanner(datestamp);
                 break;
             case EditAction.TOGGLE_HIDE_RECURRING:
-                toggleHideAllRecurringEvents(datestamp);
+                toggleHideAllRecurringEventsInPlanner(datestamp);
             default:
                 return;
         }
     }
 
-    function toggleScheduleEventDelete(event: IPlannerEvent) {
+    async function toggleScheduleEventDelete(event: IPlannerEvent) {
         toggleScheduleItemDelete(event, listType);
+        if (event.id === textfieldItem?.id) {
+            await SortedEvents.persistItemToStorage(textfieldItem);
+            setTextfieldItem(null);
+        }
     }
 
     const getItemsFromStorageObject = useCallback((planner: TPlanner) =>
@@ -120,7 +124,7 @@ const PlannerCard = ({
         storageKey: datestamp,
         getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
-        saveItemToStorage: saveEventToPlanner,
+        saveItemToStorage: saveEventToPlannerWithRecurringCheck,
         listType
     });
 
@@ -135,7 +139,7 @@ const PlannerCard = ({
 
     useEffect(() => {
         if ((textfieldItem?.listId === datestamp) && isRecurringHidden) {
-            toggleHideAllRecurringEvents(datestamp);
+            toggleHideAllRecurringEventsInPlanner(datestamp);
         }
     }, [textfieldItem?.listId, isRecurringHidden]);
 
@@ -161,7 +165,7 @@ const PlannerCard = ({
             footer={
                 <View className='flex-row justify-end'>
                     <MenuView
-                        title={datestampToDayOfWeek(datestamp) + ', ' + datestampToMonthDate(datestamp)}
+                        title={`${datestampToDayOfWeek(datestamp)}, ${datestampToMonthDate(datestamp)}`}
                         onPressAction={({ nativeEvent }) => {
                             handleAction(nativeEvent.event as EditAction);
                         }}
@@ -235,14 +239,13 @@ const PlannerCard = ({
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 hideKeyboard={isTimeModalOpen}
-                getTextfieldKey={(item) => `${item.id}-${item.sortId}-${item.timeConfig?.startIso}-${isTimeModalOpen}`}
-                handleValueChange={(text, item) => handleEventValueUserInput(text, item, SortedEvents.items, datestamp)}
+                handleValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, datestamp)}
                 getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
                 getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, isEventDeleting(item))}
                 toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
                 customGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{
-                    label: 'No Plans',
+                    label: 'No plans',
                     className: 'h-20 flex justify-center items-center'
                 }}
             />

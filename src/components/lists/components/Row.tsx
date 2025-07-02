@@ -21,7 +21,7 @@ import Animated, {
     useSharedValue,
     withSpring
 } from "react-native-reanimated";
-import ListTextfield from "./ListTextfield";
+import ListTextfield from "./Textfield";
 import { ToolbarIcon } from "./Toolbar";
 
 const Row = Animated.createAnimatedComponent(View);
@@ -60,7 +60,6 @@ export interface RowProps<T extends IListItem> {
     saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
     onDragEnd?: (updatedItem: T) => Promise<any> | any;
     onContentClick: (item: T) => void;
-    getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
     getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
@@ -73,7 +72,6 @@ export interface RowProps<T extends IListItem> {
  * textfields, and icons.
  */
 const DraggableRow = <T extends IListItem>({
-    getTextfieldKey,
     item: staticItem,
     items,
     dragControls,
@@ -341,7 +339,6 @@ const DraggableRow = <T extends IListItem>({
                         }}
                     >
                         <ListTextfield<T>
-                            key={getTextfieldKey(item)}
                             item={item}
                             toolbarIconSet={toolbarIconSet}
                             onChange={handleTextfieldChange}

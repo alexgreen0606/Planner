@@ -71,7 +71,7 @@ const ListTextfield = <T extends IListItem>({
                 onBlur={() => handleSave(false)}
                 submitBehavior='submit'
                 selectionColor={PlatformColor('systemBlue')}
-                className='flex-1 bg-transparent text-[16px] w-full absolute'
+                className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
                 style={[
                     {
                         height: editable ? (
@@ -87,9 +87,7 @@ const ListTextfield = <T extends IListItem>({
                     customStyle
                 ]}
             />
-            {toolbarIconSet && editable &&
-                <Toolbar iconSets={toolbarIconSet} accessoryKey={item.id} />
-            }
+            {toolbarIconSet && <Toolbar iconSets={toolbarIconSet} accessoryKey={item.id} />}
         </View>
     )
 }

@@ -12,7 +12,7 @@ import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { cancelAnimation, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import DraggableRow from './DraggableRow';
+import DraggableRow from './Row';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import ScrollAnchor from './ScrollAnchor';
 import Toolbar, { ToolbarIcon } from './Toolbar';
@@ -22,7 +22,6 @@ interface DraggableListProps<T extends IListItem> {
     items: T[];
     onDragEnd?: (updatedItem: T) => Promise<any> | any;
     onContentClick: (item: T) => void;
-    getTextfieldKey: (item: T) => string;
     handleValueChange?: (text: string, item: T) => T;
     getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
@@ -73,7 +72,6 @@ const SortableList = <T extends IListItem>({
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [
         textfieldItem?.id,
-        textfieldItem?.sortId,
         items
     ]);
 

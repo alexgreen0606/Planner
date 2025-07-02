@@ -12,7 +12,7 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { deletePlannerEvents, getPlannerFromStorage, unschedulePlannerEvent } from "@/storage/plannerStorage";
+import { deletePlannerEvents, getPlannerFromStorage } from "@/storage/plannerStorage";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { generateSortId } from "@/utils/listUtils";
 import { saveCalendarChip, saveCalendarEventToPlanner, saveTimedEventToPlanner } from "@/utils/timeModalUtils";
@@ -60,6 +60,7 @@ const TimeModal = () => {
     const userAccess = useAtomValue(userAccessAtom);
     const router = useRouter();
 
+    const [loadingSave, setLoadingSave] = useState(false);
     const [initialEventData, setInitialEventData] = useState<InitialEventState | null>(null);
 
     const {
@@ -74,7 +75,7 @@ const TimeModal = () => {
     const isCalendarEvent = watch('isCalendarEvent');
 
     const isEditMode = eventId !== NULL;
-    const isChipModal = sortId === NULL;
+    const isChipModal = initialEventData?.type === EventSourceType.CALENDAR_CHIP;
 
     // Build the initial form data.
     useEffect(() => {
@@ -151,6 +152,7 @@ const TimeModal = () => {
 
     async function handleSave(data: FormData) {
         if (!initialEventData) return;
+        setLoadingSave(true);
 
         const { timeRange: { startIso }, isCalendarEvent, allDay } = data;
 
@@ -249,7 +251,7 @@ const TimeModal = () => {
             primaryButtonConfig={{
                 label: 'Schedule',
                 onClick: handleSubmit(handleSave),
-                disabled: !isValid
+                disabled: !isValid || loadingSave
             }}
             deleteButtonConfig={{
                 label: 'Unschedule',

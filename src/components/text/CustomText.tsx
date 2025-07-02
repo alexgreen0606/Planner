@@ -54,7 +54,11 @@ export const textStyles = {
         flex: 1
     },
     // --- Date Range Selector ---
-
+    timeModalDayOfWeek: {
+        color: PlatformColor('secondaryLabel'),
+        fontSize: 11,
+        fontFamily: 'Text'
+    },
     // --- Event Chip ---
     eventChipLabel: {
         fontFamily: 'RoundRegular',
@@ -93,7 +97,7 @@ export const textStyles = {
         fontFamily: 'RoundHeavy',
         color: PlatformColor('systemGreen'),
     },
-    year: {
+    year2: {
         fontSize: 14,
         fontFamily: 'RoundHeavy',
         color: PlatformColor('systemGreen'),
@@ -120,27 +124,49 @@ export const textStyles = {
         top: '100%',
         marginTop: -2
     },
-    // --- Date ---
-    yearIndicator: {
-
-    },
-    monthIndicator: {
-
-    },
+    // --- Time ---
     time: {
         fontFamily: 'RoundHeavy',
         fontSize: 16,
-        color: PlatformColor('systemTeal')
+        color: PlatformColor('systemTeal'),
+        marginRight: 1
+    },
+    pmAmIndicator: {
+        fontFamily: 'Text',
+        fontSize: 10,
+        color: PlatformColor('secondaryLabel'),
+        marginTop: 2,
+        marginLeft: 1
+    },
+    // --- Date ---
+    weekday: {
+        fontFamily: 'RoundMedium',
+        fontSize: 10,
+        color: PlatformColor('secondaryLabel'),
+        marginRight: 2
     },
     date: {
         fontFamily: 'RoundMedium',
         fontSize: 16,
         color: PlatformColor('systemTeal')
     },
+    year: {
+        fontFamily: 'RoundHeavy',
+        fontSize: 11,
+        color: PlatformColor('secondaryLabel'),
+        marginRight: 2
+    },
+    // --- Concise Date ---
     conciseDate: {
         fontFamily: 'RoundMedium',
         fontSize: 16,
         color: PlatformColor('systemTeal')
+    },
+    // --- Modal ---
+    inputLabel: {
+        color: PlatformColor('secondaryLabel'),
+        fontSize: 14,
+        fontFamily: 'RoundeMedium'
     },
 } satisfies Record<string, TextStyle>;
 

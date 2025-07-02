@@ -2,9 +2,9 @@ import { THIN_LINE_HEIGHT } from '@/lib/constants/layout';
 import React from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
 
-const ThinLine = () =>
+const ThinLine = ({overflow}: {overflow?: boolean}) =>
     <View style={styles.lineContainer}>
-        <View style={styles.thinLine} />
+        <View style={[styles.thinLine, overflow && {width: "200%", marginLeft: '-50%'}]} />
     </View>
 
 const styles = StyleSheet.create({

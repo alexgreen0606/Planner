@@ -14,10 +14,10 @@ const ModalDisplayValue = ({
 }: ModalDisplayValueProps) =>
     <View
         className='flex-row justify-between w-full items-center'
-        style={{ height: MODAL_INPUT_HEIGHT }}
+        style={{ minHeight: MODAL_INPUT_HEIGHT }}
     >
         <CustomText
-            variant='standard'
+            variant='inputLabel'
             customStyle={{ color: PlatformColor('secondaryLabel') }}
         >
             {label}

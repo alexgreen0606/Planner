@@ -38,7 +38,7 @@ const useSortedList = <T extends IListItem, S>({
     const isTogglingTextfields = useRef(false);
 
     const storage = useMMKV({ id: storageId });
-    const [storageObject, setStorageObject] = useMMKVObject<S>(storageKey, storage);
+    const [storageRecord] = useMMKVObject<S>(storageKey, storage);
 
     const [items, setItems] = useState<T[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -47,13 +47,13 @@ const useSortedList = <T extends IListItem, S>({
 
     const buildList = useCallback(async () => {
         try {
-            const fetchedItems = await getItemsFromStorageObject?.(storageObject ?? initializedStorageObject ?? [] as S);
-            setItems(fetchedItems ?? storageObject as T[] ?? []);
+            const fetchedItems = await getItemsFromStorageObject?.(storageRecord ?? initializedStorageObject ?? [] as S);
+            setItems(fetchedItems ?? storageRecord as T[] ?? []);
             if (isLoading) setIsLoading(false);
         } catch (error) {
             console.error(error);
         }
-    }, [storageObject, getItemsFromStorageObject]);
+    }, [storageRecord, getItemsFromStorageObject]);
 
     useEffect(() => {
         buildList();
@@ -144,7 +144,7 @@ const useSortedList = <T extends IListItem, S>({
         persistItemToStorage,
         toggleItemEdit,
         saveTextfieldAndCreateNew,
-        storageObject: storageObject ?? initializedStorageObject,
+        storageObject: storageRecord ?? initializedStorageObject,
         isLoading: isLoading === true
     };
 };

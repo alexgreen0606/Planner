@@ -25,6 +25,7 @@ function syncFormDataToEvent(formData: FormData, event: IPlannerEvent) {
     const { title, timeRange: { startIso, endIso }, allDay } = formData;
     return {
         ...event,
+        listId: isoToDatestamp(startIso),
         value: title,
         timeConfig: {
             startIso,
@@ -260,16 +261,11 @@ export async function saveTimedEventToPlanner(
             break;
         case EventSourceType.PLANNER_EVENT:
             event = syncFormDataToEvent(formData, originalData.event);
+            delete event.calendarId; 
             const prevCalendarId = originalData.event.calendarId;
             const prevTimeConfig = originalData.event.timeConfig!;
             if (prevCalendarId) {
                 await Calendar.deleteEventAsync(prevCalendarId, { futureEvents: false });
-                updatingDateRanges.push({
-                    startIso: originalData.event.timeConfig!.startIso,
-                    endIso: originalData.event.timeConfig!.endIso
-                });
-            }
-            if (prevTimeConfig) {
                 updatingDateRanges.push({
                     startIso: prevTimeConfig.startIso,
                     endIso: prevTimeConfig.endIso
@@ -303,4 +299,29 @@ export async function saveTimedEventToPlanner(
     const affectedDatestamps = getMountedDatestampsLinkedToDateRanges(updatingDateRanges);
     await loadCalendarData(affectedDatestamps);
     return sortId;
+}
+
+/**
+ * ✅ Converts a timed event back to a generic event and saves it to storage.
+ * 
+ * If the event is a calendar event it will be deleted from the device.
+ * 
+ * @param event - The planner event to convert.
+ */
+export async function unschedulePlannerEvent(event: IPlannerEvent) {
+    const unscheduledEvent = { ...event };
+    delete unscheduledEvent.calendarId;
+    delete unscheduledEvent.timeConfig;
+
+    // Save the unscheduled event to storage.
+    const planner = getPlannerFromStorage(event.listId);
+    planner.events = sanitizeList(planner.events, unscheduledEvent);
+    savePlannerToStorage(event.listId, planner);
+
+    // If the event exists in the calendar, delete it and reload the affected planners.
+    if (event.calendarId && hasCalendarAccess()) {
+        await Calendar.deleteEventAsync(event.calendarId);
+        const datestampsToReload = getMountedLinkedDatestamps([event]);
+        await loadCalendarData(datestampsToReload);
+    }
 }

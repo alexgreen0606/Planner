@@ -234,7 +234,6 @@ const SortedFolder = ({
             listType={listType}
             isLoading={SortedItems.isLoading}
             onDragEnd={SortedItems.persistItemToStorage}
-            getTextfieldKey={item => `${item.id}-${item.sortId}`}
             toolbarIconSet={getToolbarIcons()}
             onContentClick={handleItemClick}
             saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}

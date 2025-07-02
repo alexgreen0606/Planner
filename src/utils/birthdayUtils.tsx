@@ -13,7 +13,7 @@ export function eventChipToBirthday(chip: TEventChip, datestamp: string): IBirth
         age: age ? parseInt(age[0], 10) : 0,
         contacted: false,
         listId: datestamp,
-        sortId: -1,
+        sortId: 1, // TODO: dont use 1
         status: EItemStatus.STATIC,
         listType: EListType.BIRTHDAY
     }

@@ -1,12 +1,14 @@
+import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
+import ThinLine from '@/components/ThinLine';
 import { datestampToDayOfWeek, isoToDatestamp } from '@/utils/dateUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { DateTime } from 'luxon';
 import { MotiView } from 'moti';
 import React, { useEffect, useMemo, useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export interface TimeRangeSelectorProps {
     startIso: string;
@@ -204,41 +206,117 @@ const TimeRangeSelector = ({
 
     return (
         <View>
-            <View className='flex-row'>
-                {startIso && (
-                    <View className='flex-1 items-start'>
-                        <CustomText variant='softDetail'>
-                            {startData.dayOfWeek}
-                        </CustomText>
-                        <MotiView animate={{
-                            transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }],
-                        }}>
-                            <TouchableOpacity
-                                onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
-                            >
-                                <DateValue
-                                    isoTimestamp={startIso}
-                                    platformColor={getValueColor(SelectorMode.START_DATE)}
-                                />
-                            </TouchableOpacity>
-                        </MotiView>
-                        {showTimes && (
-                            <MotiView animate={{
-                                transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
-                            }}>
+            <View>
+                <ModalDisplayValue
+                    label='Start'
+                    value={
+                        <View className='flex-row items-center'>
+                            <MotiView
+                                animate={{
+                                    marginRight: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 12 : 8,
+                                    transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }],
+                                }}>
                                 <TouchableOpacity
-                                    onPress={() => toggleSelectorMode(SelectorMode.START_TIME)}
+                                    onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
                                 >
-                                    <TimeValue
+                                    <DateValue
                                         isoTimestamp={startIso}
-                                        platformColor={getValueColor(SelectorMode.START_TIME)}
+                                        platformColor={getValueColor(SelectorMode.START_DATE)}
                                     />
                                 </TouchableOpacity>
                             </MotiView>
-                        )}
-                    </View>
-                )}
+                            {showTimes && (
+                                <MotiView animate={{
+                                    marginLeft: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 12 : 8,
+                                    transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
+                                }}>
+                                    <TouchableOpacity
+                                        onPress={() => toggleSelectorMode(SelectorMode.START_TIME)}
+                                    >
+                                        <TimeValue
+                                            isoTimestamp={startIso}
+                                            platformColor={getValueColor(SelectorMode.START_TIME)}
+                                        />
+                                    </TouchableOpacity>
+                                </MotiView>
+                            )}
+                        </View>
+                    }
+                />
+                {showEndTime && <ThinLine overflow />}
                 {showEndTime && (
+                    <ModalDisplayValue
+                        label='End'
+                        value={showEndTime && (
+                            <View className='flex-row items-center'>
+                                <MotiView
+                                    animate={{
+                                        marginRight: getValueColor(SelectorMode.END_DATE) === 'systemTeal' ? 12 : 8,
+                                        transform: [{ scale: getValueColor(SelectorMode.END_DATE) === 'systemTeal' ? 1.1 : 1 }]
+                                    }}>
+                                    <TouchableOpacity
+                                        onPress={() => toggleSelectorMode(SelectorMode.END_DATE)}
+                                    >
+                                        <DateValue
+                                            isoTimestamp={endIso}
+                                            platformColor={getValueColor(SelectorMode.END_DATE)}
+                                        />
+                                    </TouchableOpacity>
+                                </MotiView>
+                                {showTimes && (
+                                    <MotiView animate={{
+                                        marginLeft: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 12 : 8,
+                                        transform:
+                                            [{ scale: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 1.2 : 1 }]
+                                    }}>
+                                        <TouchableOpacity
+                                            onPress={() => toggleSelectorMode(SelectorMode.END_TIME)}
+                                        >
+                                            <TimeValue
+                                                isoTimestamp={endIso}
+                                                platformColor={getValueColor(SelectorMode.END_TIME)}
+                                            />
+                                        </TouchableOpacity>
+                                    </MotiView>
+                                )}
+                            </View>
+                        )
+                        }
+                    />
+                )}
+
+                {/* <View className='flex-1 items-start'>
+                    <CustomText variant='softDetail'>
+                        {startData.dayOfWeek}
+                    </CustomText>
+                    <MotiView animate={{
+                        transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }],
+                    }}>
+                        <TouchableOpacity
+                            onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
+                        >
+                            <DateValue
+                                isoTimestamp={startIso}
+                                platformColor={getValueColor(SelectorMode.START_DATE)}
+                            />
+                        </TouchableOpacity>
+                    </MotiView>
+                    {showTimes && (
+                        <MotiView animate={{
+                            transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => toggleSelectorMode(SelectorMode.START_TIME)}
+                            >
+                                <TimeValue
+                                    isoTimestamp={startIso}
+                                    platformColor={getValueColor(SelectorMode.START_TIME)}
+                                />
+                            </TouchableOpacity>
+                        </MotiView>
+                    )}
+                </View> */}
+                {/* {showEndTime && (
                     <CustomText variant='indicator'>
                         TO
                     </CustomText>
@@ -276,7 +354,7 @@ const TimeRangeSelector = ({
                             </MotiView>
                         )}
                     </View>
-                )}
+                )} */}
             </View>
             <MotiView
                 animate={{ maxHeight: isInputOpen ? 400 : 0 }}

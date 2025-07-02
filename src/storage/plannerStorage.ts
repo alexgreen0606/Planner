@@ -1,12 +1,12 @@
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { EStorageId } from "@/lib/enums/EStorageId";
-import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
+import { IPlannerEvent, ITimeConfig } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { hasCalendarAccess } from "@/utils/accessUtils";
 import { loadCalendarData } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier } from "@/utils/dateUtils";
-import { cloneItem, sanitizeList } from "@/utils/listUtils";
-import { generatePlanner, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
+import { cloneItem } from "@/utils/listUtils";
+import { generatePlanner, getMountedDatestampsLinkedToDateRanges, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
 
@@ -59,8 +59,6 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
             storage.delete(datestamp);
         }
     });
-
-    console.log(yesterdayPlanner, 'initial yesterday')
 
     return yesterdayPlanner.events
         // Remove hidden and recurring events.
@@ -139,28 +137,18 @@ export function saveEventToPlanner(event: IPlannerEvent, planner?: TPlanner, sta
 }
 
 /**
- * ✅ Converts a timed event back to a generic event and saves it to storage.
+ * ✅ Saves an event to its planner and clones the event if it is recurring.
  * 
- * If the event is a calendar event it will be deleted from the device.
- * 
- * @param event - The planner event to convert.
+ * @param event - The event to save.
  */
-export async function unschedulePlannerEvent(event: IPlannerEvent) {
-    const unscheduledEvent = { ...event };
-    delete unscheduledEvent.calendarId;
-    delete unscheduledEvent.timeConfig;
-
-    // Save the unscheduled event to storage.
+export function saveEventToPlannerWithRecurringCheck(event: IPlannerEvent) {
     const planner = getPlannerFromStorage(event.listId);
-    planner.events = sanitizeList(planner.events, unscheduledEvent);
-    savePlannerToStorage(event.listId, planner);
+    const prevEvent = planner.events.find(e => e.id === event.id);
 
-    // If the event exists in the calendar, delete it and reload the affected planners.
-    if (event.calendarId && hasCalendarAccess()) {
-        await Calendar.deleteEventAsync(event.calendarId);
-        const datestampsToReload = getMountedLinkedDatestamps([event]);
-        await loadCalendarData(datestampsToReload);
-    }
+    const sanitizedEvent = sanitizeRecurringEventForSave(event, planner, prevEvent);
+
+    console.log(planner, 'SAVING')
+    saveEventToPlanner(sanitizedEvent, planner);
 }
 
 /**
@@ -180,7 +168,6 @@ export async function deletePlannerEvents(events: IPlannerEvent[], excludeCalend
     const eventsByList: Record<string, IPlannerEvent[]> = {};
     const deletedCalendarEvents = [];
     for (const event of events) {
-
         // Delete the event from the calendar.
         if (
             event.calendarId &&
@@ -189,14 +176,11 @@ export async function deletePlannerEvents(events: IPlannerEvent[], excludeCalend
         ) {
             await Calendar.deleteEventAsync(event.calendarId);
             deletedCalendarEvents.push(event);
-
-            // Mark the event for storage removal.
-        } else {
-            if (!eventsByList[event.listId]) {
-                eventsByList[event.listId] = [];
-            }
-            eventsByList[event.listId].push(event);
         }
+        if (!eventsByList[event.listId]) {
+            eventsByList[event.listId] = [];
+        }
+        eventsByList[event.listId].push(event);
     }
 
     // Phase 2: Process each storage deletion in parallel.
@@ -209,7 +193,11 @@ export async function deletePlannerEvents(events: IPlannerEvent[], excludeCalend
 
             if (!matchingDeleteEvent) {
                 acc.push(event);
-            } else if (matchingDeleteEvent.recurringId || (matchingDeleteEvent.calendarId && isTodayList)) {
+            } else if (
+                matchingDeleteEvent.recurringId ||
+                matchingDeleteEvent.recurringCloneId ||
+                (matchingDeleteEvent.calendarId && isTodayList)
+            ) {
                 // Special case: recurring events or today's calendar events get hidden.
                 acc.push({ ...event, status: EItemStatus.HIDDEN });
             }
@@ -222,7 +210,9 @@ export async function deletePlannerEvents(events: IPlannerEvent[], excludeCalend
 
     // Phase 3: Reload the calendar data if any of the deleted calendar events affect the mounted planners.
     if (!excludeCalendarRefresh) {
-        const datestampsToReload = getMountedLinkedDatestamps(deletedCalendarEvents);
+        const datestampsToReload = getMountedDatestampsLinkedToDateRanges<ITimeConfig>(
+            deletedCalendarEvents.map(event => event.timeConfig!)
+        );
         await loadCalendarData(datestampsToReload);
     }
 }
@@ -238,7 +228,7 @@ export async function deletePlannerEvents(events: IPlannerEvent[], excludeCalend
  * 
  * @param datestamp - The key of the planner to update. (YYY-MM-DDD)
  */
-export function resetRecurringEvents(datestamp: string) {
+export function resetRecurringEventsInPlanner(datestamp: string) {
     const planner = getPlannerFromStorage(datestamp);
 
     // Strip all recurring events from the planner. The rebuild will add them back in.
@@ -258,7 +248,7 @@ export function resetRecurringEvents(datestamp: string) {
  * 
  * @param datestamp - The key of the planner to update. (YYY-MM-DDD)
  */
-export function toggleHideAllRecurringEvents(datestamp: string) {
+export function toggleHideAllRecurringEventsInPlanner(datestamp: string) {
     const planner = getPlannerFromStorage(datestamp);
     savePlannerToStorage(datestamp, {
         ...planner,
@@ -271,7 +261,7 @@ export function toggleHideAllRecurringEvents(datestamp: string) {
  * 
  * @param datestamp - The key of the planner to update. (YYY-MM-DDD)
  */
-export function deleteAllRecurringEvents(datestamp: string) {
+export function deleteAllRecurringEventsFromPlanner(datestamp: string) {
     const planner = getPlannerFromStorage(datestamp);
 
     const hiddenRecurringPlanner = planner.events.map(event => {

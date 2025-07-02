@@ -15,6 +15,7 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
     const date = DateTime.fromISO(isoTimestamp);
     const monthDay = date.toFormat(dayFormat);
     const year = date.toFormat(yearFormat);
+    const dayOfWeek = date.toFormat('cccc');
 
     // Compute 11 months from now
     const elevenMonthsLater = DateTime.now().plus({ months: 11 });
@@ -36,18 +37,22 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
             )}
         </View>
         :
-        <View className='relative flex-row'>
-            <CustomText
-                variant='date'
-                customStyle={{
-                    marginRight: showYear ? 2 : 0,
-                    color: PlatformColor(platformColor)
-                }}
-            >
-                {monthDay}
-            </CustomText>
+        <View>
+                <CustomText variant='weekday'>
+                    {dayOfWeek}
+                </CustomText>
+                <CustomText
+                    className='-my-0.5'
+                    variant='date'
+                    customStyle={{
+                        marginRight: showYear ? 2 : 0,
+                        color: PlatformColor(platformColor)
+                    }}
+                >
+                    {monthDay}
+                </CustomText>
             {showYear && (
-                <CustomText variant='standard'>
+                <CustomText variant='year'>
                     {year}
                 </CustomText>
             )}
