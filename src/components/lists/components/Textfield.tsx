@@ -71,6 +71,7 @@ const ListTextfield = <T extends IListItem>({
                 onBlur={() => handleSave(false)}
                 submitBehavior='submit'
                 selectionColor={PlatformColor('systemBlue')}
+                returnKeyType='done'
                 className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
                 style={[
                     {

@@ -17,7 +17,6 @@ const FormField = ({
     onChange,
     label,
     hide,
-    placeholder,
     disabled,
     autoCapitalizeWords,
     allDay,
@@ -25,11 +24,11 @@ const FormField = ({
     trigger = false,
 }: FormFieldProps) => {
     if (hide) return null;
+
     switch (type) {
         case EFormFieldType.TEXT:
             return (
                 <ModalTextfield
-                    placeholder={placeholder ?? ''}
                     value={value ?? ''}
                     onChange={onChange}
                     focusTrigger={trigger}

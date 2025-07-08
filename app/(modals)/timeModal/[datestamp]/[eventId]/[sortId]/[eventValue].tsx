@@ -2,13 +2,13 @@ import { calendarEventDataAtom } from "@/atoms/calendarEvents";
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
-import { SelectorMode } from "@/components/form/fields/TimeRangeSelector";
 import Modal from "@/components/modal";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { NULL } from "@/lib/constants/generic";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { ETimeSelectorMode } from "@/lib/enums/ETimeSelectorMode";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
@@ -203,6 +203,7 @@ const TimeModal = () => {
         router.back();
     }
 
+    
     async function handleDelete() {
         await deletePlannerEvents([planEvent]);
 
@@ -214,7 +215,6 @@ const TimeModal = () => {
         [{
             name: 'title',
             type: EFormFieldType.TEXT,
-            placeholder: 'Title',
             rules: { required: true },
             trigger: eventValue === NULL
         }],
@@ -227,7 +227,7 @@ const TimeModal = () => {
             },
             multiDay: isCalendarEvent,
             allDay: isAllDay,
-            trigger: !isEditMode ? SelectorMode.START_TIME : undefined
+            trigger: !isEditMode ? ETimeSelectorMode.START_TIME : undefined
         }],
         [{
             name: 'isCalendarEvent',

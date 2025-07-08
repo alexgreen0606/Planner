@@ -1,23 +1,5 @@
-import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListType } from '@/lib/enums/EListType';
-import { IBirthday } from '@/lib/types/listItems/IBirthday';
-import { TEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import * as Contacts from 'expo-contacts';
 import * as SMS from 'expo-sms';
-
-export function eventChipToBirthday(chip: TEventChip, datestamp: string): IBirthday {
-    const age = chip.label.match(/\d+/);
-    return {
-        id: `${chip.label}-list_item-${age}`,
-        value: extractNameFromBirthdayText(chip.label),
-        age: age ? parseInt(age[0], 10) : 0,
-        contacted: false,
-        listId: datestamp,
-        sortId: 1, // TODO: dont use 1
-        status: EItemStatus.STATIC,
-        listType: EListType.BIRTHDAY
-    }
-}
 
 /**
  * Extracts a person's name from a birthday text string
@@ -26,7 +8,7 @@ export function eventChipToBirthday(chip: TEventChip, datestamp: string): IBirth
  */
 export function extractNameFromBirthdayText(birthdayText: string) {
     return birthdayText.split(/['’]s /)[0] ?? '';
-};
+}
 
 /**
  * Opens the device's Messages app for a specific contact with an optional message

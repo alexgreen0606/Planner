@@ -141,9 +141,11 @@ export const textStyles = {
     // --- Date ---
     weekday: {
         fontFamily: 'RoundMedium',
-        fontSize: 10,
+        fontSize: 9,
         color: PlatformColor('secondaryLabel'),
-        marginRight: 2
+        position: 'absolute',
+        top: '100%',
+        right: 0
     },
     date: {
         fontFamily: 'RoundMedium',
@@ -167,7 +169,7 @@ export const textStyles = {
         color: PlatformColor('secondaryLabel'),
         fontSize: 14,
         fontFamily: 'RoundeMedium'
-    },
+    }
 } satisfies Record<string, TextStyle>;
 
 export type TextVariant = keyof typeof textStyles;

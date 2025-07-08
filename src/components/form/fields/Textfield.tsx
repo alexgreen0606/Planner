@@ -1,39 +1,30 @@
 import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
 import CustomText from '@/components/text/CustomText';
 import { LIST_CONTENT_HEIGHT } from '@/lib/constants/layout';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlatformColor, TextInput, TouchableOpacity } from 'react-native';
 
-export interface ModalTextfieldProps {
-    placeholder: string;
+type ModalTextfieldProps = {
     value: string;
-    onChange: (newVal: string) => void;
-    focusTrigger: boolean;
     autoCapitalizeWords: boolean;
+    focusTrigger: boolean;
+    onChange: (newVal: string) => void;
 };
 
 const ModalTextfield = ({
-    placeholder,
     value,
-    onChange,
+    autoCapitalizeWords,
     focusTrigger,
-    autoCapitalizeWords
+    onChange
 }: ModalTextfieldProps) => {
-    const inputRef = useRef<TextInput>(null);
-
     const [focused, setFocused] = useState(focusTrigger);
 
-    // Manually focus the text input
+    // Manually focus the text input.
     useEffect(() => {
         if (focusTrigger) {
-            // setTimeout(() => {
-            //     inputRef.current?.focus();
-            // }, 50)
             setFocused(true);
         }
     }, [focusTrigger]);
-
-
 
     return (
         <ModalDisplayValue
@@ -42,25 +33,28 @@ const ModalTextfield = ({
                 focused ? (
                     <TextInput
                         autoFocus
-                        ref={inputRef}
                         value={value}
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
-                        placeholder={placeholder}
                         onChangeText={onChange}
-                        selectionColor={PlatformColor('systemBlue')}
-                        className='text-[16px] bg-transparent'
-                        textAlignVertical='center'
                         autoCapitalize={autoCapitalizeWords ? 'words' : undefined}
+                        selectionColor={PlatformColor('systemBlue')}
+                        returnKeyType='next'
+                        textAlignVertical='center'
+                        className='text-[16px] bg-transparent flex-1 pl-4'
                         style={{
                             color: PlatformColor('label'),
                             height: LIST_CONTENT_HEIGHT,
                             fontFamily: 'Text',
-                            textAlign: 'right'
+                            textAlign: 'right',
+                            flexWrap: 'wrap'
                         }}
                     />
                 ) : (
-                    <TouchableOpacity onPress={() => setFocused(true)}>
+                    <TouchableOpacity
+                        onPress={() => setFocused(true)}
+                        className='flex-1 pl-4 py-1 items-end'
+                    >
                         <CustomText variant='standard'>
                             {value}
                         </CustomText>

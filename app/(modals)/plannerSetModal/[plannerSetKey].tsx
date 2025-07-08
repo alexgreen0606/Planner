@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { SelectorMode } from '@/components/form/fields/TimeRangeSelector';
+import { ETimeSelectorMode } from '@/components/form/fields/TimeRangeSelector';
 import { EStorageId } from '@/lib/enums/EStorageId';
 
 export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
@@ -68,7 +68,6 @@ const PlannerSetModal = () => {
         [{
             name: 'title',
             type: EFormFieldType.TEXT,
-            placeholder: 'Title',
             trigger: !isEditMode,
             autoCapitalizeWords: true,
             rules: {
@@ -79,7 +78,7 @@ const PlannerSetModal = () => {
         [{
             name: 'dates',
             type: EFormFieldType.DATE_RANGE,
-            trigger: SelectorMode.START_DATE
+            trigger: ETimeSelectorMode.START_DATE
         }]
     ];
 

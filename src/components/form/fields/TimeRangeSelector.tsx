@@ -1,39 +1,25 @@
 import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
-import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
 import ThinLine from '@/components/ThinLine';
-import { datestampToDayOfWeek, isoToDatestamp } from '@/utils/dateUtils';
+import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { DateTime } from 'luxon';
 import { MotiView } from 'moti';
 import React, { useEffect, useMemo, useState } from 'react';
-import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
-export interface TimeRangeSelectorProps {
+type TimeRangeSelectorProps = {
     startIso: string;
     endIso: string;
+    allDay?: boolean;
+    multiDay?: boolean;
+    triggerOpenField?: ETimeSelectorMode;
     onChange: (
         start: string,
         end: string
     ) => void;
-    allDay?: boolean;
-    multiDay?: boolean;
-    triggerOpenField?: SelectorMode;
-}
-
-export enum SelectorMode {
-    START_TIME = 'START_TIME',
-    END_TIME = 'END_TIME',
-    START_DATE = 'START_DATE',
-    END_DATE = 'END_DATE'
-}
-
-type TimeData = {
-    date: Date;
-    dayOfWeek: string;
-    datestamp: string; // YYYY-MM-DD
-}
+};
 
 const TimeRangeSelector = ({
     startIso,
@@ -43,40 +29,25 @@ const TimeRangeSelector = ({
     multiDay,
     triggerOpenField
 }: TimeRangeSelectorProps) => {
-    const [isInputOpen, setIsInputOpen] = useState(Boolean(triggerOpenField));
-    const [selectorMode, setSelectorMode] = useState<SelectorMode>(SelectorMode.START_TIME);
+    const [selectorMode, setSelectorMode] = useState<ETimeSelectorMode | null>(null);
 
-    const startData: TimeData = useMemo(() => {
-        const date = DateTime.fromISO(startIso).toJSDate();
-        const datestamp = isoToDatestamp(startIso);
-        const dayOfWeek = datestampToDayOfWeek(datestamp);
-        return { date, dayOfWeek, datestamp };
+    const startDate: Date = useMemo(() => {
+        return DateTime.fromISO(startIso).toJSDate();
     }, [startIso]);
 
-    const endData: TimeData = useMemo(() => {
-        const date = DateTime.fromISO(endIso).toJSDate();
-        const datestamp = isoToDatestamp(endIso);
-        const dayOfWeek = datestampToDayOfWeek(datestamp);
-        return { date, dayOfWeek, datestamp };
+    const endDate: Date = useMemo(() => {
+        return DateTime.fromISO(endIso).toJSDate();
     }, [endIso]);
-
-    const dateInEdit = [SelectorMode.START_DATE, SelectorMode.START_TIME].includes(selectorMode) ?
-        startData.date : endData.date;
 
     const showEndTime = endIso && multiDay;
     const showTimes = !allDay;
 
     // ---------- Utility Functions ----------
 
-    function getValueColor(type: SelectorMode) {
-        return isInputOpen && type === selectorMode ? 'systemTeal' : 'label';
-    }
-
-    function toggleSelectorMode(newMode: SelectorMode) {
-        if (newMode === selectorMode && isInputOpen) {
-            setIsInputOpen(false);
+    function toggleSelectorMode(newMode: ETimeSelectorMode) {
+        if (newMode === selectorMode) {
+            setSelectorMode(null);
         } else {
-            setIsInputOpen(true);
             setSelectorMode(newMode);
         }
     }
@@ -129,7 +100,7 @@ const TimeRangeSelector = ({
         };
 
         switch (selectorMode) {
-            case SelectorMode.START_DATE:
+            case ETimeSelectorMode.START_DATE:
                 newStartDate = inputDate.set({
                     hour: currentStartDate.hour,
                     minute: currentStartDate.minute,
@@ -137,14 +108,15 @@ const TimeRangeSelector = ({
                     millisecond: 0
                 });
                 enforceEndLaterThanStart();
-                if (showTimes) {
-                    setSelectorMode(SelectorMode.START_TIME);
-                } else if (showEndTime) {
-                    setSelectorMode(SelectorMode.END_DATE);
-                }
-                break;
 
-            case SelectorMode.START_TIME:
+                if (showTimes) {
+                    setSelectorMode(ETimeSelectorMode.START_TIME);
+                } else if (showEndTime) {
+                    setSelectorMode(ETimeSelectorMode.END_DATE);
+                }
+
+                break;
+            case ETimeSelectorMode.START_TIME:
                 newStartDate = currentStartDate.set({
                     hour: inputDate.hour,
                     minute: inputDate.minute,
@@ -152,12 +124,13 @@ const TimeRangeSelector = ({
                     millisecond: 0
                 });
                 enforceEndLaterThanStart();
-                if (showEndTime) {
-                    setSelectorMode(SelectorMode.END_DATE);
-                }
-                break;
 
-            case SelectorMode.END_DATE:
+                if (showEndTime) {
+                    setSelectorMode(ETimeSelectorMode.END_DATE);
+                }
+
+                break;
+            case ETimeSelectorMode.END_DATE:
                 newEndDate = inputDate.set({
                     hour: currentEndDate.hour,
                     minute: currentEndDate.minute,
@@ -165,21 +138,19 @@ const TimeRangeSelector = ({
                     millisecond: 0
                 });
                 enforceEndLaterThanStart();
-                if (showTimes) {
-                    setSelectorMode(SelectorMode.END_TIME);
-                }
-                break;
 
-            case SelectorMode.END_TIME:
+                if (showTimes) {
+                    setSelectorMode(ETimeSelectorMode.END_TIME);
+                }
+
+                break;
+            case ETimeSelectorMode.END_TIME:
                 newEndDate = currentEndDate.set({
                     hour: inputDate.hour,
                     minute: inputDate.minute,
                     second: 0,
                     millisecond: 0
                 });
-                break;
-
-            default:
                 break;
         }
 
@@ -193,196 +164,198 @@ const TimeRangeSelector = ({
     useEffect(() => {
         if (allDay) {
             resetTimesToMidnight();
-            setIsInputOpen(false);
+            setSelectorMode(null);
         }
     }, [allDay]);
 
     useEffect(() => {
         if (triggerOpenField) {
             setSelectorMode(triggerOpenField);
-            setIsInputOpen(true);
         }
     }, [triggerOpenField]);
 
+    // ------------- Render Helper Functions -------------
+
+    function getValueColor(type: ETimeSelectorMode) {
+        return type === selectorMode ? 'systemTeal' : 'label';
+    }
+
+    function getValueMargin(type: ETimeSelectorMode) {
+        return type === selectorMode ? 12 : 8;
+    }
+
+    function getValueScale(type: ETimeSelectorMode) {
+        return type === selectorMode ? 1.1 : 1;
+    }
+
+    function getSelectorHeight(type: ETimeSelectorMode) {
+        return type === selectorMode ? 400 : 0;
+    }
+
     return (
         <View>
-            <View>
-                <ModalDisplayValue
-                    label='Start'
-                    value={
-                        <View className='flex-row items-center'>
-                            <MotiView
-                                animate={{
-                                    marginRight: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 12 : 8,
-                                    transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }],
-                                }}>
-                                <TouchableOpacity
-                                    onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
-                                >
-                                    <DateValue
-                                        isoTimestamp={startIso}
-                                        platformColor={getValueColor(SelectorMode.START_DATE)}
-                                    />
-                                </TouchableOpacity>
-                            </MotiView>
-                            {showTimes && (
-                                <MotiView animate={{
-                                    marginLeft: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 12 : 8,
-                                    transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
-                                }}>
-                                    <TouchableOpacity
-                                        onPress={() => toggleSelectorMode(SelectorMode.START_TIME)}
-                                    >
-                                        <TimeValue
-                                            isoTimestamp={startIso}
-                                            platformColor={getValueColor(SelectorMode.START_TIME)}
-                                        />
-                                    </TouchableOpacity>
-                                </MotiView>
-                            )}
-                        </View>
-                    }
-                />
-                {showEndTime && <ThinLine overflow />}
-                {showEndTime && (
-                    <ModalDisplayValue
-                        label='End'
-                        value={showEndTime && (
-                            <View className='flex-row items-center'>
-                                <MotiView
-                                    animate={{
-                                        marginRight: getValueColor(SelectorMode.END_DATE) === 'systemTeal' ? 12 : 8,
-                                        transform: [{ scale: getValueColor(SelectorMode.END_DATE) === 'systemTeal' ? 1.1 : 1 }]
-                                    }}>
-                                    <TouchableOpacity
-                                        onPress={() => toggleSelectorMode(SelectorMode.END_DATE)}
-                                    >
-                                        <DateValue
-                                            isoTimestamp={endIso}
-                                            platformColor={getValueColor(SelectorMode.END_DATE)}
-                                        />
-                                    </TouchableOpacity>
-                                </MotiView>
-                                {showTimes && (
-                                    <MotiView animate={{
-                                        marginLeft: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 12 : 8,
-                                        transform:
-                                            [{ scale: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 1.2 : 1 }]
-                                    }}>
-                                        <TouchableOpacity
-                                            onPress={() => toggleSelectorMode(SelectorMode.END_TIME)}
-                                        >
-                                            <TimeValue
-                                                isoTimestamp={endIso}
-                                                platformColor={getValueColor(SelectorMode.END_TIME)}
-                                            />
-                                        </TouchableOpacity>
-                                    </MotiView>
-                                )}
-                            </View>
-                        )
-                        }
-                    />
-                )}
 
-                {/* <View className='flex-1 items-start'>
-                    <CustomText variant='softDetail'>
-                        {startData.dayOfWeek}
-                    </CustomText>
-                    <MotiView animate={{
-                        transform: [{ scale: getValueColor(SelectorMode.START_DATE) === 'systemTeal' ? 1.1 : 1 }],
-                    }}>
-                        <TouchableOpacity
-                            onPress={() => toggleSelectorMode(SelectorMode.START_DATE)}
-                        >
-                            <DateValue
-                                isoTimestamp={startIso}
-                                platformColor={getValueColor(SelectorMode.START_DATE)}
-                            />
-                        </TouchableOpacity>
-                    </MotiView>
-                    {showTimes && (
-                        <MotiView animate={{
-                            transform: [{ scale: getValueColor(SelectorMode.START_TIME) === 'systemTeal' ? 1.1 : 1 }]
-                        }}>
+            {/* Start Display */}
+            <ModalDisplayValue
+                label='Start'
+                value={
+                    <View className='flex-row items-center'>
+                        <MotiView
+                            animate={{
+                                marginRight: getValueMargin(ETimeSelectorMode.START_DATE),
+                                transform: [{ scale: getValueScale(ETimeSelectorMode.START_DATE) }],
+                            }}>
                             <TouchableOpacity
-                                onPress={() => toggleSelectorMode(SelectorMode.START_TIME)}
-                            >
-                                <TimeValue
-                                    isoTimestamp={startIso}
-                                    platformColor={getValueColor(SelectorMode.START_TIME)}
-                                />
-                            </TouchableOpacity>
-                        </MotiView>
-                    )}
-                </View> */}
-                {/* {showEndTime && (
-                    <CustomText variant='indicator'>
-                        TO
-                    </CustomText>
-                )}
-                {showEndTime && (
-                    <View className='flex-1 items-end'>
-                        <CustomText variant='softDetail'>
-                            {endData.dayOfWeek}
-                        </CustomText>
-                        <MotiView animate={{
-                            transform: [{ scale: getValueColor(SelectorMode.END_DATE) === 'systemTeal' ? 1.1 : 1 }]
-                        }}>
-                            <TouchableOpacity
-                                onPress={() => toggleSelectorMode(SelectorMode.END_DATE)}
+                                onPress={() => toggleSelectorMode(ETimeSelectorMode.START_DATE)}
                             >
                                 <DateValue
-                                    isoTimestamp={endIso}
-                                    platformColor={getValueColor(SelectorMode.END_DATE)}
+                                    isoTimestamp={startIso}
+                                    platformColor={getValueColor(ETimeSelectorMode.START_DATE)}
                                 />
                             </TouchableOpacity>
                         </MotiView>
                         {showTimes && (
                             <MotiView animate={{
-                                transform:
-                                    [{ scale: getValueColor(SelectorMode.END_TIME) === 'systemTeal' ? 1.2 : 1 }]
+                                marginLeft: getValueMargin(ETimeSelectorMode.START_TIME),
+                                transform: [{ scale: getValueScale(ETimeSelectorMode.START_TIME) }]
                             }}>
                                 <TouchableOpacity
-                                    onPress={() => toggleSelectorMode(SelectorMode.END_TIME)}
+                                    onPress={() => toggleSelectorMode(ETimeSelectorMode.START_TIME)}
                                 >
                                     <TimeValue
-                                        isoTimestamp={endIso}
-                                        platformColor={getValueColor(SelectorMode.END_TIME)}
+                                        isoTimestamp={startIso}
+                                        platformColor={getValueColor(ETimeSelectorMode.START_TIME)}
                                     />
                                 </TouchableOpacity>
                             </MotiView>
                         )}
                     </View>
-                )} */}
-            </View>
+                }
+            />
+
+            {/* Start Date Picker */}
             <MotiView
-                animate={{ maxHeight: isInputOpen ? 400 : 0 }}
+                animate={{
+                    maxHeight: getSelectorHeight(ETimeSelectorMode.START_DATE)
+                }}
                 transition={{
                     type: 'timing',
                     duration: 300
                 }}
                 className='overflow-hidden items-center'
             >
-                {[SelectorMode.START_DATE, SelectorMode.END_DATE].includes(selectorMode) ? (
-                    <DateTimePicker
-                        value={dateInEdit}
-                        onChange={handleChange}
-                        mode='date'
-                        display='inline'
-                        minimumDate={selectorMode === SelectorMode.END_DATE ? startData.date : DateTime.local().toJSDate()}
-                    />
-                ) : (
-                    <DateTimePicker
-                        value={dateInEdit}
-                        onChange={handleChange}
-                        mode='time'
-                        display='spinner'
-                        minuteInterval={5}
-                        minimumDate={selectorMode === SelectorMode.END_TIME ? startData.date : undefined}
-                    />
-                )}
+                <DateTimePicker
+                    value={startDate}
+                    onChange={handleChange}
+                    mode='date'
+                    display='inline'
+                    minimumDate={DateTime.local().toJSDate()}
+                />
             </MotiView>
+
+            {/* Start Time Picker */}
+            <MotiView
+                animate={{
+                    maxHeight: getSelectorHeight(ETimeSelectorMode.START_TIME)
+                }}
+                transition={{
+                    type: 'timing',
+                    duration: 300
+                }}
+                className='overflow-hidden items-center'
+            >
+                <DateTimePicker
+                    value={startDate}
+                    onChange={handleChange}
+                    mode='time'
+                    display='spinner'
+                    minuteInterval={5}
+                />
+            </MotiView>
+
+            {/* Separator */}
+            {showEndTime && <ThinLine overflow />}
+
+            {/* End Display */}
+            {showEndTime && (
+                <ModalDisplayValue
+                    label='End'
+                    value={showEndTime && (
+                        <View className='flex-row items-center'>
+                            <MotiView animate={{
+                                marginRight: getValueMargin(ETimeSelectorMode.END_DATE),
+                                transform: [{ scale: getValueScale(ETimeSelectorMode.END_DATE) }]
+                            }}>
+                                <TouchableOpacity
+                                    onPress={() => toggleSelectorMode(ETimeSelectorMode.END_DATE)}
+                                >
+                                    <DateValue
+                                        isoTimestamp={endIso}
+                                        platformColor={getValueColor(ETimeSelectorMode.END_DATE)}
+                                    />
+                                </TouchableOpacity>
+                            </MotiView>
+                            {showTimes && (
+                                <MotiView animate={{
+                                    marginLeft: getValueMargin(ETimeSelectorMode.END_TIME),
+                                    transform: [{ scale: getValueScale(ETimeSelectorMode.END_TIME) }]
+                                }}>
+                                    <TouchableOpacity
+                                        onPress={() => toggleSelectorMode(ETimeSelectorMode.END_TIME)}
+                                    >
+                                        <TimeValue
+                                            isoTimestamp={endIso}
+                                            platformColor={getValueColor(ETimeSelectorMode.END_TIME)}
+                                        />
+                                    </TouchableOpacity>
+                                </MotiView>
+                            )}
+                        </View>
+                    )}
+                />
+            )}
+
+            {/* End Date Picker */}
+            <MotiView
+                animate={{
+                    maxHeight: getSelectorHeight(ETimeSelectorMode.END_DATE)
+                }}
+                transition={{
+                    type: 'timing',
+                    duration: 300
+                }}
+                className='overflow-hidden items-center'
+            >
+                <DateTimePicker
+                    value={endDate}
+                    onChange={handleChange}
+                    mode='date'
+                    display='inline'
+                    minimumDate={endDate}
+                />
+            </MotiView>
+
+            {/* End Time Picker */}
+            <MotiView
+                animate={{
+                    maxHeight: getSelectorHeight(ETimeSelectorMode.END_TIME)
+                }}
+                transition={{
+                    type: 'timing',
+                    duration: 300
+                }}
+                className='overflow-hidden items-center'
+            >
+                <DateTimePicker
+                    value={endDate}
+                    onChange={handleChange}
+                    mode='time'
+                    display='spinner'
+                    minuteInterval={5}
+                    minimumDate={endDate}
+                />
+            </MotiView>
+
         </View>
     )
 };

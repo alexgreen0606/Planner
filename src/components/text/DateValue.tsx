@@ -15,7 +15,7 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
     const date = DateTime.fromISO(isoTimestamp);
     const monthDay = date.toFormat(dayFormat);
     const year = date.toFormat(yearFormat);
-    const dayOfWeek = date.toFormat('cccc');
+    const dayOfWeek = date.toFormat('ccc').toUpperCase();
 
     // Compute 11 months from now
     const elevenMonthsLater = DateTime.now().plus({ months: 11 });
@@ -37,10 +37,7 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
             )}
         </View>
         :
-        <View>
-                <CustomText variant='weekday'>
-                    {dayOfWeek}
-                </CustomText>
+        <View className="relative">
                 <CustomText
                     className='-my-0.5'
                     variant='date'
@@ -50,6 +47,9 @@ const DateValue = ({ isoTimestamp, concise, platformColor = 'systemTeal' }: Date
                     }}
                 >
                     {monthDay}
+                </CustomText>
+                <CustomText variant='weekday'>
+                    {dayOfWeek}
                 </CustomText>
             {showYear && (
                 <CustomText variant='year'>

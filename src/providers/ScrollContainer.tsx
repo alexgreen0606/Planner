@@ -391,6 +391,7 @@ export const ScrollContainerProvider = ({
                 <TextInput
                     ref={placeholderInputRef}
                     inputAccessoryViewID='PLACEHOLDER'
+                    returnKeyType='done'
                     style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
                     autoCorrect={false}
                 />

@@ -3,10 +3,10 @@ import { PlatformColor, StyleSheet, View } from "react-native";
 import FormField from "./FormField";
 import { IFormField } from "@/lib/types/form/IFormField";
 
-interface FormProps {
+type FormProps = {
     fields: IFormField[][];
     control: Control<any>;
-}
+};
 
 const Form = ({
     fields,
@@ -19,7 +19,7 @@ const Form = ({
                     <View
                         key={name}
                         className='p-3'
-                        style={{ 
+                        style={{
                             backgroundColor: PlatformColor('systemGray5'),
                             borderTopWidth: i !== 0 ? StyleSheet.hairlineWidth : 0,
                             borderColor: PlatformColor('systemGray')

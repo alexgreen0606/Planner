@@ -7,7 +7,6 @@ export interface IFormField {
     rules?: RegisterOptions;
     defaultValue?: any;
     label?: string;
-    placeholder?: string;
     disabled?: boolean;
     hide?: boolean;
     multiDay?: boolean;

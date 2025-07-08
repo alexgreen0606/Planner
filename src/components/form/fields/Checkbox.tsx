@@ -2,18 +2,18 @@ import React from 'react';
 import ModalDisplayValue from '../../modal/ModalDisplayValue';
 import { PlatformColor, Switch } from 'react-native';
 
-export interface ModalCheckboxProps {
+type ModalCheckboxProps = {
     label: string;
     value: boolean;
-    onChange: (newVal: boolean) => void;
     disabled?: boolean;
+    onChange: (newVal: boolean) => void;
 };
 
 const ModalCheckbox = ({
     label,
     value,
-    onChange,
-    disabled
+    disabled,
+    onChange
 }: ModalCheckboxProps) =>
     <ModalDisplayValue
         label={label}
@@ -22,8 +22,8 @@ const ModalCheckbox = ({
                 value={value}
                 disabled={disabled}
                 onValueChange={onChange}
-                ios_backgroundColor={PlatformColor('secondaryLabel')}
                 trackColor={{ true: PlatformColor('systemBlue') }}
+                ios_backgroundColor={PlatformColor('secondaryLabel')}
             />
         }
     />
