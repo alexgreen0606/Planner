@@ -68,7 +68,8 @@ const TimeModal = () => {
         watch,
         reset,
         formState: { isValid },
-        handleSubmit
+        handleSubmit,
+        setValue
     } = useForm<FormData>();
 
     const isAllDay = watch('allDay');
@@ -203,7 +204,7 @@ const TimeModal = () => {
         router.back();
     }
 
-    
+
     async function handleDelete() {
         await deletePlannerEvents([planEvent]);
 
@@ -244,6 +245,12 @@ const TimeModal = () => {
             hide: !isCalendarEvent
         }]
     ];
+
+    useEffect(() => {
+        if (!isCalendarEvent) {
+            setValue('allDay', false);
+        }
+    }, [isCalendarEvent]);
 
     return (
         <Modal

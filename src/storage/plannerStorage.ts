@@ -137,17 +137,25 @@ export function saveEventToPlanner(event: IPlannerEvent, planner?: TPlanner, sta
 }
 
 /**
- * ✅ Saves an event to its planner and clones the event if it is recurring.
+ * ✅ Saves an event to its planner and handles calendar and recurring events.
  * 
  * @param event - The event to save.
  */
-export function saveEventToPlannerWithRecurringCheck(event: IPlannerEvent) {
+export async function saveEventWithRecurringAndCalendarCheck(event: IPlannerEvent) {
     const planner = getPlannerFromStorage(event.listId);
     const prevEvent = planner.events.find(e => e.id === event.id);
 
     const sanitizedEvent = sanitizeRecurringEventForSave(event, planner, prevEvent);
+    sanitizedEvent.status = EItemStatus.STATIC;
 
-    console.log(planner, 'SAVING')
+    // Update the device calendar if the event is linked to it.
+    const eventValueChanged = sanitizedEvent.value !== prevEvent?.value;
+    if (sanitizedEvent.calendarId && eventValueChanged && hasCalendarAccess()) {
+        await Calendar.updateEventAsync(sanitizedEvent.calendarId, { title: sanitizedEvent.value });
+        loadCalendarData([sanitizedEvent.listId]);
+        return;
+    }
+
     saveEventToPlanner(sanitizedEvent, planner);
 }
 
