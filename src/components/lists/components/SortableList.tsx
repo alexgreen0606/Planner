@@ -17,9 +17,16 @@ import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import ScrollAnchor from './ScrollAnchor';
 import Toolbar, { ToolbarIcon } from './Toolbar';
 
-interface DraggableListProps<T extends IListItem> {
+type DraggableListProps<T extends IListItem> = {
     listId: string;
     items: T[];
+    toolbarIconSet?: ToolbarIcon<T>[][];
+    emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
+    listType: EListType;
+    hideKeyboard?: boolean;
+    isLoading?: boolean;
+    fillSpace?: boolean;
+    disableDrag?: boolean;
     onDragEnd?: (updatedItem: T) => Promise<any> | any;
     onContentClick: (item: T) => void;
     handleValueChange?: (text: string, item: T) => T;
@@ -27,15 +34,8 @@ interface DraggableListProps<T extends IListItem> {
     getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     getRowTextPlatformColor?: (item: T) => string;
     saveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
-    toolbarIconSet?: ToolbarIcon<T>[][];
-    emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     customGetIsDeleting?: (item: T) => boolean;
-    listType: EListType;
-    hideKeyboard?: boolean;
-    isLoading?: boolean;
-    fillSpace?: boolean;
-    disableDrag?: boolean;
-}
+};
 
 const SortableList = <T extends IListItem>({
     listId,
@@ -49,13 +49,25 @@ const SortableList = <T extends IListItem>({
     hideKeyboard,
     ...rest
 }: DraggableListProps<T>) => {
-    const [textfieldItem] = useTextfieldItemAs<T>();
-    const { height: SCREEN_HEIGHT } = useWindowDimensions();
-    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
+    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
+    const { height: SCREEN_HEIGHT } = useWindowDimensions();
+    const [textfieldItem] = useTextfieldItemAs<T>();
 
-    const isListDragging = useSharedValue<boolean>(false);
+    const draggingRowId = useSharedValue<string | null>(null);
     const isAutoScrolling = useSharedValue(false);
+
+    const dragInitialScrollOffset = useSharedValue(0);
+    const dragInitialIndex = useSharedValue<number>(0);
+    const dragInitialTop = useSharedValue(0);
+
+    const dragScrollOffsetDelta = useSharedValue(0);
+    const dragTop = useSharedValue<number>(0);
+
+    const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
+
+    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
+    const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
     // Builds the list out of the existing items and the textfield.
     const list = useMemo(() => {
@@ -65,9 +77,8 @@ const SortableList = <T extends IListItem>({
             fullList = sanitizeList(fullList, textfieldItem);
         }
 
-        if (isListDragging.value) {
-            isListDragging.value = false;
-        }
+        // If the list updates, assume no drag is occuring.
+        draggingRowId.value = null;
 
         return fullList.sort((a, b) => a.sortId - b.sortId);
     }, [
@@ -75,25 +86,14 @@ const SortableList = <T extends IListItem>({
         items
     ]);
 
-    useEffect(() => {
-        runOnUI(measureContentHeight)();
-    }, [list.length]);
-
-    const dragInitialScrollOffset = useSharedValue(0);
-    const dragInitialTop = useSharedValue(0);
-    const dragInitialIndex = useSharedValue<number>(0);
-
-    const dragScrollOffsetDelta = useSharedValue(0);
-    const dragTop = useSharedValue<number>(0);
-    const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
-
     const dragTopMax = useMemo(() =>
         Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1)),
         [list.length]
     );
 
-    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
-    const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
+    useEffect(() => {
+        runOnUI(measureContentHeight)();
+    }, [list.length]);
 
     // ------------- Utility Functions -------------
 
@@ -105,25 +105,28 @@ const SortableList = <T extends IListItem>({
         saveTextfieldAndCreateNew(referenceSortId, isChildId);
     }
 
-    function handleDragStart(initialTop: number, initialIndex: number) {
+    function handleDragStart(rowId: string, initialIndex: number) {
         "worklet";
+        const initialTop = initialIndex * LIST_ITEM_HEIGHT;
+
         dragInitialScrollOffset.value = scrollOffset.value;
-        dragScrollOffsetDelta.value = 0;
         dragInitialIndex.value = initialIndex;
         dragInitialTop.value = initialTop;
+
         dragTop.value = initialTop;
-        isListDragging.value = true;
+        draggingRowId.value = rowId;
     }
 
     function handleDragEnd() {
         "worklet";
         cancelAnimation(scrollOffset);
+        dragScrollOffsetDelta.value = 0;
         isAutoScrolling.value = false;
     }
 
-    // ------------- Animations -------------
+    // ------------- Animation -------------
 
-    // Auto scroll
+    // Auto scroll.
     useAnimatedReaction(
         () => ({
             displacement: scrollOffset.value - dragInitialScrollOffset.value,
@@ -160,7 +163,7 @@ const SortableList = <T extends IListItem>({
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             hideKeyboard={Boolean(hideKeyboard)}
-                            isListDragging={isListDragging}
+                            draggingRowId={draggingRowId}
                             dragControls={{
                                 top: dragTop,
                                 index: dragIndex,

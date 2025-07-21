@@ -12,10 +12,11 @@ import { generateSortId } from "../listUtils";
  * @param event - The calendar event to map.
  * @param datestamp - The planner key for the event.
  * @param planner - The planner the event will exist in.
- * @param sortId - Optional sort ID to use for the event. Default is 1.
+ * @param storRecord - Optional storage event to merge with the calendar event.
+ * @param fallbackSortId - Optional sort ID to use for the event. Otherwise 1 will be used
  * @returns - A new planner event with the calendar data.
  */
-export function mapCalendarToPlanner(event: Event, datestamp: string, planner: IPlannerEvent[], storRecord?: IPlannerEvent): IPlannerEvent {
+export function mapCalendarToPlanner(event: Event, datestamp: string, planner: IPlannerEvent[], storRecord?: IPlannerEvent, fallbackSortId?: number): IPlannerEvent {
     const startDatestamp = isoToDatestamp(event.startDate as string);
     const endDatestamp = isoToDatestamp(event.endDate as string);
 
@@ -29,7 +30,7 @@ export function mapCalendarToPlanner(event: Event, datestamp: string, planner: I
 
     const plannerEvent: IPlannerEvent = {
         ...storRecord,
-        sortId: storRecord?.sortId ?? 1,
+        sortId: fallbackSortId ?? storRecord?.sortId ?? 1,
         id: event.id,
         calendarId: event.id,
         value: event.title,

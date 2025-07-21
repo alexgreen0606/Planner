@@ -33,7 +33,7 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
                 hideRipple
                 platformColor={platformColor}
             />
-            <View className='absolute w-full h-full items-center pt-[0.5px]'>
+            <View className='absolute w-full h-full items-center pt-[0.6px]'>
                 <CustomText
                     variant='time'
                     customStyle={{ fontSize: 8, color: PlatformColor('systemBackground') }}

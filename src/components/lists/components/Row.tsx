@@ -18,11 +18,43 @@ import Animated, {
     runOnJS,
     SharedValue,
     useAnimatedStyle,
+    useDerivedValue,
     useSharedValue,
     withSpring
 } from "react-native-reanimated";
 import ListTextfield from "./Textfield";
 import { ToolbarIcon } from "./Toolbar";
+
+type DraggableRowProps<T extends IListItem> = {
+    item: T;
+    items: T[];
+    itemIndex: number;
+    hideKeyboard: boolean;
+    upperAutoScrollBound: number;
+    lowerAutoScrollBound: number;
+    draggingRowId: SharedValue<string | null>;
+    disableDrag: boolean;
+    dragControls: {
+        handleDragStart: (rowId: string, initialIndex: number) => void;
+        initialIndex: SharedValue<number>;
+        initialTop: SharedValue<number>;
+        isAutoScrolling: SharedValue<boolean>;
+        topMax: number;
+        top: SharedValue<number>;
+        index: DerivedValue<number>;
+        handleDragEnd: () => void;
+    },
+    listType: EListType;
+    toolbarIconSet?: ToolbarIcon<T>[][];
+    saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
+    onDragEnd?: (updatedItem: T) => Promise<any> | any;
+    onContentClick: (item: T) => void;
+    handleValueChange?: (text: string, item: T) => T;
+    getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
+    getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
+    getRowTextPlatformColor?: (item: T) => string;
+    customGetIsDeleting?: (item: T) => boolean;
+};
 
 const Row = Animated.createAnimatedComponent(View);
 
@@ -36,107 +68,83 @@ enum IconPosition {
     LEFT = 'LEFT'
 }
 
-export interface RowProps<T extends IListItem> {
-    item: T;
-    items: T[];
-    itemIndex: number;
-    hideKeyboard: boolean;
-    upperAutoScrollBound: number;
-    lowerAutoScrollBound: number;
-    isListDragging: SharedValue<boolean>;
-    disableDrag: boolean;
-    dragControls: {
-        handleDragStart: (initialTop: number, initialIndex: number) => void;
-        initialIndex: SharedValue<number>;
-        initialTop: SharedValue<number>;
-        isAutoScrolling: SharedValue<boolean>;
-        topMax: number;
-        top: SharedValue<number>;
-        index: DerivedValue<number>;
-        handleDragEnd: () => void;
-    },
-    listType: EListType;
-        toolbarIconSet?: ToolbarIcon<T>[][];
-    saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
-    onDragEnd?: (updatedItem: T) => Promise<any> | any;
-    onContentClick: (item: T) => void;
-    handleValueChange?: (text: string, item: T) => T;
-    getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
-    getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
-    getRowTextPlatformColor?: (item: T) => string;
-    customGetIsDeleting?: (item: T) => boolean;
-}
-
-/**
- * A draggable row component for sortable lists that supports drag-to-reorder,
- * textfields, and icons.
- */
 const DraggableRow = <T extends IListItem>({
     item: staticItem,
     items,
     dragControls,
     disableDrag,
+    itemIndex,
+    toolbarIconSet,
+    draggingRowId,
+    upperAutoScrollBound,
+    lowerAutoScrollBound,
+    listType,
+    hideKeyboard,
+    saveTextfieldAndCreateNew,
+    onDragEnd,
     getLeftIconConfig,
     getRightIconConfig,
     handleValueChange,
     getRowTextPlatformColor,
     onContentClick,
-    itemIndex,
-    toolbarIconSet,
-    isListDragging,
-    upperAutoScrollBound,
-    lowerAutoScrollBound,
-    saveTextfieldAndCreateNew,
-    onDragEnd,
-    listType,
-    hideKeyboard,
     customGetIsDeleting
-}: RowProps<T>) => {
+}: DraggableRowProps<T>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { getIsItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
         autoScroll
     } = useScrollContainer();
+
+    const isItemDeleting = customGetIsDeleting ?? getIsItemDeleting;
+
     const {
-        handleDragStart,
-        handleDragEnd,
         initialIndex,
         initialTop,
         isAutoScrolling,
         topMax,
         top,
         index,
+        handleDragStart,
+        handleDragEnd
     } = dragControls;
+
+    const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
 
     const item = useMemo(() =>
         textfieldItem?.id === staticItem.id ? textfieldItem : staticItem,
         [textfieldItem, staticItem]
     );
 
-    const isItemDeleting = customGetIsDeleting ?? getIsItemDeleting;
-    const pendingDelete = useMemo(
+    const isPendingDelete = useMemo(
         () => isItemDeleting(item, listType),
         [getIsItemDeleting]
     );
 
-    const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
+    const textPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
+    const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
+    const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
+
+    const isRowDragging = useDerivedValue(() => {
+        return draggingRowId.value === item.id
+    })
+
+    // Keep the position of the row up to date.
     useEffect(() => {
         basePosition.value = itemIndex * LIST_ITEM_HEIGHT;
     }, [itemIndex]);
-
-    const isRowDragging = useSharedValue(false);
-
-    // ------------- Row Configuration Variables -------------
-    const customTextPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
-    const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
-    const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
 
     // ------------- Utility Functions -------------
 
     function handleTextfieldChange(text: string) {
         if (!textfieldItem) return;
-        setTextfieldItem(handleValueChange?.(text, textfieldItem) ?? { ...textfieldItem, value: text });
+
+        let newTextfieldItem = { ...textfieldItem, value: text };
+        if (handleValueChange) {
+            newTextfieldItem = handleValueChange(text, textfieldItem);
+        }
+
+        setTextfieldItem(newTextfieldItem);
     }
 
     function handleTextfieldSave(createNew: boolean = true) {
@@ -185,7 +193,7 @@ const DraggableRow = <T extends IListItem>({
         if (index.value === initialIndex.value) {
             // Item didn't move. Clean up and quit.
             handleDragEnd();
-            isRowDragging.value = false;
+            draggingRowId.value = null;
             return;
         }
 
@@ -200,7 +208,7 @@ const DraggableRow = <T extends IListItem>({
         const updatedItem = { ...item, sortId: newSort };
         await onDragEnd?.(updatedItem);
 
-        isRowDragging.value = false;
+        draggingRowId.value = null;
         handleDragEnd();
     }
 
@@ -219,8 +227,7 @@ const DraggableRow = <T extends IListItem>({
             }
         })
         .onStart(() => {
-            handleDragStart(basePosition.value, itemIndex);
-            isRowDragging.value = true;
+            handleDragStart(item.id, itemIndex);
         });
 
     const dragGesture = Gesture.Pan()
@@ -249,11 +256,12 @@ const DraggableRow = <T extends IListItem>({
 
     // ------------- Row Animation -------------
 
-    // Position the row and style it when dragging
+    // Position and style the row while static or dragging.
     const animatedRowStyle = useAnimatedStyle(() => {
-
         let rowOffset = 0;
-        if (isListDragging.value && !isRowDragging.value) {
+
+        // Offset the row if the dragged item has shifted it.
+        if (draggingRowId.value && !isRowDragging.value) {
             if (itemIndex > initialIndex.value && itemIndex <= index.value) {
                 rowOffset = -LIST_ITEM_HEIGHT;
             } else if (itemIndex < initialIndex.value && itemIndex >= index.value) {
@@ -272,7 +280,7 @@ const DraggableRow = <T extends IListItem>({
         }
     });
 
-    // ------------- Render Helper Functions -------------
+    // ------------- Render Helper Function -------------
 
     const renderIcon = (config: TListItemIconConfig<T>, type: IconPosition) => {
         if (config.hideIcon) return null;
@@ -345,8 +353,8 @@ const DraggableRow = <T extends IListItem>({
                             onSubmit={handleTextfieldSave}
                             hideKeyboard={hideKeyboard}
                             customStyle={{
-                                color: PlatformColor(customTextPlatformColor ?? (pendingDelete ? 'tertiaryLabel' : 'label')),
-                                textDecorationLine: pendingDelete ? 'line-through' : undefined
+                                color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
+                                textDecorationLine: isPendingDelete ? 'line-through' : undefined
                             }}
                         />
                     </View>
