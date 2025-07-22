@@ -7,13 +7,10 @@ import { MenuAction, MenuView } from '@react-native-menu/menu';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 
+// ✅ 
+
 const RecurringPlanners = () => {
     const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerKey>(ERecurringPlannerKey.WEEKDAYS);
-
-    useTextfieldFallbackSave(
-        selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
-            saveRecurringWeekdayEvent : saveRecurringEvent
-    );
 
     const recurringPlannerOptions = useMemo(() =>
         Object.values(ERecurringPlannerKey).map((title) => ({
@@ -23,6 +20,11 @@ const RecurringPlanners = () => {
             state: selectedRecurring === title ? 'on' : 'off',
         })),
         [selectedRecurring]
+    );
+
+    useTextfieldFallbackSave(
+        selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
+            saveRecurringWeekdayEvent : saveRecurringEvent
     );
 
     return (

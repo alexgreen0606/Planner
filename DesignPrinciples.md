@@ -10,12 +10,34 @@ When declaring, follow this order (exported after local):
 
 ## Flow of Files 
 When declaring, follow this order (exported after local):
-1. `functions`
+1. `atoms`
+2. `external data`
+6. `constants (fallback)`
 2. `context`
 3. `state`
+4. `MMKV`
 4. `animated variables`
-5. `hooks`
-6. `function`
+6. `constants (prefer)`
+6. `hooks`
+5. `useEffect`
+1. `functions`
+7. `UI`
+
+## Function Names
+Event handlers: 'handle'. Props: 'on'. All else just state what it does.
+1. `atoms`
+2. `external data`
+1. `ref`
+6. `constants (fallback)`
+2. `context`
+3. `state`
+4. `MMKV`
+4. `animated variables`
+6. `constants (prefer)`
+6. `hooks`
+5. `useEffect`
+1. `functions`
+7. `UI`
 
 ## Props  
 - Always define props using `interface`.

@@ -3,7 +3,9 @@ import { MODAL_INPUT_HEIGHT } from '@/lib/constants/layout';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
 
-export interface ModalDisplayValueProps {
+// ✅ 
+
+type ModalDisplayValueProps = {
     label: string;
     value: React.ReactNode;
 };
@@ -23,6 +25,6 @@ const ModalDisplayValue = ({
             {label}
         </CustomText>
         {value}
-    </View>
+    </View>;
 
 export default ModalDisplayValue;

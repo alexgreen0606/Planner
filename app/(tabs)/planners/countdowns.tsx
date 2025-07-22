@@ -8,10 +8,12 @@ import { useAtomValue } from 'jotai';
 import React from 'react';
 import { View } from 'react-native';
 
+// ✅ 
+
 const CountdownPermissionsWrapper = () => {
     const userAccess = useAtomValue(userAccessAtom);
 
-    // Saves the textfield countdown if the user clicks away
+    // Saves the textfield data if the user clicks away
     useTextfieldFallbackSave(saveCountdown);
 
     return userAccess.get(EAccess.CALENDAR) ? (

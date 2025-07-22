@@ -1,17 +1,13 @@
 import { calendarEventDataAtom } from "@/atoms/calendarEvents";
-import { calendarIconMap } from "@/lib/constants/calendarIcons";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListType } from "@/lib/enums/EListType";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
-import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
-import { DateTime } from "luxon";
 import { Event as CalendarEvent } from 'expo-calendar';
+import { DateTime } from "luxon";
 import { hasCalendarAccess } from "./accessUtils";
-import { extractNameFromBirthdayText, openMessage } from "./birthdayUtils";
-import { datestampToMidnightDate, isoToDatestamp } from "./dateUtils";
+import { datestampToMidnightDate } from "./dateUtils";
+import { mapCalendarEventToPlannerChip } from "./map/mapCalendarEventToPlannerChip";
 
 // ---------- Utilities ----------
 
@@ -31,57 +27,6 @@ function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
     });
 
     return { chipsMap, plannersMap };
-}
-
-/**
- * Generates an event chip from a calendar event.
- * 
- * @param event - the calendar event to parse
- * @returns - an event chip representing the calendar event
- */
-function calendarEventToEventChip(event: Calendar.Event, calendar: Calendar.Calendar): TCalendarEventChip {
-    const { title: calendarTitle, color } = calendar;
-    const calendarEventChip: TCalendarEventChip = {
-        event,
-        iconConfig: {
-            type: calendarIconMap[calendarTitle] ?? 'calendar'
-        },
-        color
-    };
-
-    if (calendar.title === 'Birthdays') {
-        calendarEventChip.onClick = () => openMessage(extractNameFromBirthdayText(event.title));
-    }
-
-    // const chipProps: TEventChip = {
-    //     label: event.title,
-    //     iconConfig: {
-    //         type: calendarIconMap[calendar.title] ?? 'calendar',
-    //     },
-    //     color: calendar.color
-    // };
-
-    // if (calendar.isPrimary || calendar.title === 'Calendar') {
-    //     chipProps.planEvent = {
-    //         status: EItemStatus.STATIC,
-    //         sortId: 1,
-    //         calendarId: event.id,
-    //         value: event.title,
-    //         listType: EListType.PLANNER,
-    //         timeConfig: {
-    //             startIso: event.startDate as string,
-    //             endIso: event.endDate as string,
-    //             allDay: event.allDay
-    //         },
-    //         color: calendar.color!,
-    //         // Link all chips for the same calendar event together
-    //         id: event.id,
-    //         // Link all chips for the same calendar event to the same planner
-    //         listId: isoToDatestamp(event.startDate as string),
-    //     };
-    // }
-
-    return calendarEventChip;
 }
 
 /**
@@ -221,7 +166,7 @@ export async function loadCalendarData(datestamps: string[]) {
                 if (!calendarChipGroups[calendarId]) {
                     calendarChipGroups[calendarId] = [];
                 }
-                calendarChipGroups[calendarId].push(calendarEventToEventChip(calEvent, allCalendarsMap[calendarId]));
+                calendarChipGroups[calendarId].push(mapCalendarEventToPlannerChip(calEvent, allCalendarsMap[calendarId], datestamp));
             }
 
             if (validateCalendarEvent(calEvent, datestamp)) {

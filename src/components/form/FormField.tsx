@@ -5,6 +5,10 @@ import ModalCheckbox from "./fields/Checkbox";
 import ModalTextfield from "./fields/Textfield";
 import TimeRangeSelector from "./fields/TimeRangeSelector";
 
+// ✅ 
+
+// TODO: make the form fields map the field type to its props
+
 interface FormFieldProps extends Omit<IFormField, 'name'> {
     type: EFormFieldType;
     value: any;
@@ -33,7 +37,6 @@ const FormField = ({
                     onChange={onChange}
                     focusTrigger={trigger}
                     autoCapitalizeWords={Boolean(autoCapitalizeWords)}
-
                 />
             );
         case EFormFieldType.DATE_RANGE:

@@ -1,16 +1,17 @@
 import { PlatformColor, Text, View } from "react-native"
 
-const LoadingSpinner = () => {
-    return (
-        <View 
+// ✅ 
+
+// TODO: add in something fancier
+
+const LoadingSpinner = () =>
+    <View
         className='w-full h-full justify-center items-center'
-        style={{backgroundColor: PlatformColor('systemBackground')}}
-        >
-            <Text style={{color: PlatformColor('label')}}>
-                Loading
-            </Text>
-        </View>
-    )
-}
+        style={{ backgroundColor: PlatformColor('systemBackground') }}
+    >
+        <Text style={{ color: PlatformColor('label') }}>
+            Loading
+        </Text>
+    </View>;
 
 export default LoadingSpinner;

@@ -10,7 +10,6 @@ import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringPlannerFromStorage } from '@/storage/recurringPlannerStorage';
-import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { jotaiStore } from 'app/_layout';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { uuid } from 'expo-modules-core';
@@ -18,7 +17,8 @@ import { Router } from 'expo-router';
 import { hasCalendarAccess } from './accessUtils';
 import { datestampToDayOfWeek, datestampToMidnightDate, getTodayDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
 import { generateSortId, sanitizeList } from './listUtils';
-import { mapCalendarToPlanner } from './map/mapCalenderEventToPlannerEvent';
+import { mapCalendarEventToPlannerEvent } from './map/mapCalenderEventToPlannerEvent';
+import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 
 // ------------- Utilities -------------
 
@@ -178,7 +178,7 @@ export function setEventsInPlanner(
 // ------------- Modal Utilities -------------
 
 /**
- * Opens the time modal and passes the given event details in the path.
+ * ✅ Opens the time modal and passes the given event details in the path.
  * If the item is new, a null item ID will be passed.
  * 
  * @param datestamp - The key of the planner where the modal open event occured.
@@ -394,7 +394,7 @@ export function syncPlannerWithCalendar(
         if (!calEvent) return accumulator;
 
         // Sync calendar records with the Calendar events.
-        const updatedEvent = mapCalendarToPlanner(calEvent, datestamp, accumulator, planEvent);
+        const updatedEvent = mapCalendarEventToPlannerEvent(calEvent, datestamp, accumulator, planEvent);
         accumulator.push(updatedEvent);
         return accumulator;
 
@@ -404,7 +404,7 @@ export function syncPlannerWithCalendar(
     calendarEvents.forEach(calEvent => {
         if (newPlanner.some(planEvent => planEvent.calendarId === calEvent.id)) return;
         newPlanner.push(
-            mapCalendarToPlanner(calEvent, datestamp, newPlanner)
+            mapCalendarEventToPlannerEvent(calEvent, datestamp, newPlanner)
         );
     });
 
@@ -566,6 +566,10 @@ export function generateTimeIconConfig(
     event: IPlannerEvent | IRecurringEvent,
     openTimeModal: (item: IPlannerEvent | IRecurringEvent) => void
 ) {
+
+    // TODO: open time modal for recurring 
+
+    
     const itemTime = extractEventTime(event);
     return {
         hideIcon: !itemTime,

@@ -19,7 +19,7 @@ import { hasCalendarAccess } from "@/utils/accessUtils";
 import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlier } from "@/utils/dateUtils";
 import { generateSortId, sanitizeList } from "@/utils/listUtils";
-import { mapCalendarToPlanner } from "@/utils/map/mapCalenderEventToPlannerEvent";
+import { mapCalendarEventToPlannerEvent } from "@/utils/map/mapCalenderEventToPlannerEvent";
 import { getMountedDatestampsLinkedToDateRanges } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { uuid } from "expo-modules-core";
@@ -29,7 +29,7 @@ import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-export const TIME_MODAL_PATHNAME = '(modals)/timeModal/';
+// ✅ 
 
 type ModalParams = {
     eventId: string; // NULL for new events
@@ -64,15 +64,13 @@ type FormData = {
 };
 
 const TimeModal = () => {
-    const { eventId, eventValue, datestamp: triggerDatestamp, sortId } = useLocalSearchParams<ModalParams>();
-    const [_, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const mountedDatestamps = useAtomValue(mountedDatestampsAtom);
     const calendarData = useAtomValue(calendarEventDataAtom);
     const userAccess = useAtomValue(userAccessAtom);
-    const router = useRouter();
 
-    const [loading, setLoading] = useState(false);
-    const [initialEventState, setInitialEventState] = useState<TriggerState | null>(null);
+    const { eventId, eventValue, datestamp: triggerDatestamp, sortId } = useLocalSearchParams<ModalParams>();
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+    const router = useRouter();
 
     const {
         control,
@@ -82,6 +80,9 @@ const TimeModal = () => {
         handleSubmit,
         setValue
     } = useForm<FormData>();
+
+    const [loading, setLoading] = useState(false);
+    const [initialEventState, setInitialEventState] = useState<TriggerState | null>(null);
 
     const isAllDay = watch('allDay');
     const isCalendarEvent = watch('isCalendarEvent');
@@ -211,11 +212,11 @@ const TimeModal = () => {
         const { allDay, isCalendarEvent } = data;
 
         if (allDay) {
-            await handleAllDaySave(data);
+            await saveAllDay(data);
         } else if (isCalendarEvent) {
-            await handleCalendarEventSave(data);
+            await saveCalendarEvent(data);
         } else {
-            await handleGenericEventSave(data);
+            await saveGenericEvent(data);
         }
     }
 
@@ -237,7 +238,7 @@ const TimeModal = () => {
             await loadCalendarData(datestampsToReload);
         }
 
-        handleModalCloseWithNewTextfield(unscheduledEvent, planner.events);
+        closeModalWithNewTextfield(unscheduledEvent, planner.events);
     }
 
     async function handleDelete() {
@@ -257,19 +258,19 @@ const TimeModal = () => {
                 await loadCalendarData(datestamps);
             }
         } else if (sourceType === TriggerSource.PLANNER_NEW) {
-            handleModalCloseBackWithNoTextfield();
+            closeModalBackWithNoTextfield();
         } else {
             await deletePlannerEvents([event]);
         }
 
-        handleModalCloseBackWithNoTextfield();
+        closeModalBackWithNoTextfield();
     }
 
     // =======================
     // 2. Helper Functions
     // =======================
 
-    async function handleAllDaySave(data: FormData) {
+    async function saveAllDay(data: FormData) {
         const { endIso } = data.timeRange;
 
         const eventDetails = buildCalendarEventDetails(data);
@@ -283,10 +284,10 @@ const TimeModal = () => {
         await upsertCalendarEvent(prevCalendarId, eventDetails);
         await reloadCalendarFromRanges(updatingDateRanges);
 
-        handleModalCloseToMountedDateOrBack(eventDetails.startDate as string, eventDetails.endDate as string);
+        closeModalToMountedDateOrBack(eventDetails.startDate as string, eventDetails.endDate as string);
     }
 
-    async function handleCalendarEventSave(data: FormData) {
+    async function saveCalendarEvent(data: FormData) {
         const { timeRange } = data;
         const { startIso } = timeRange;
 
@@ -306,13 +307,13 @@ const TimeModal = () => {
         await reloadCalendarFromRanges(updatingDateRanges);
 
         if (isMultiDay(timeRange)) {
-            handleModalCloseToMountedDateOrBack(timeRange.startIso, timeRange.endIso);
+            closeModalToMountedDateOrBack(timeRange.startIso, timeRange.endIso);
         } else {
-            handleModalCloseWithNewTextfield(updatedEvent, targetPlanner.events);
+            closeModalWithNewTextfield(updatedEvent, targetPlanner.events);
         }
     }
 
-    async function handleGenericEventSave(data: FormData) {
+    async function saveGenericEvent(data: FormData) {
         const { timeRange } = data;
         const targetDatestamp = isoToDatestamp(timeRange.startIso);
         const targetPlanner = getPlannerFromStorage(targetDatestamp);
@@ -326,9 +327,9 @@ const TimeModal = () => {
         await reloadCalendarFromRanges(updatingDateRanges);
 
         if (isMultiDay(timeRange)) {
-            handleModalCloseToMountedDateOrBack(timeRange.startIso, timeRange.endIso);
+            closeModalToMountedDateOrBack(timeRange.startIso, timeRange.endIso);
         } else {
-            handleModalCloseWithNewTextfield(updatedEvent, targetPlanner.events);
+            closeModalWithNewTextfield(updatedEvent, targetPlanner.events);
         }
     }
 
@@ -563,7 +564,7 @@ const TimeModal = () => {
 
         const upperSortId = generateSortId(-1, planner.events);
 
-        let unscheduledEvent = mapCalendarToPlanner(
+        let unscheduledEvent = mapCalendarEventToPlannerEvent(
             initialEventState.event.event,
             triggerDatestamp,
             planner.events,
@@ -623,7 +624,9 @@ const TimeModal = () => {
 
     // ---------- Modal Close Handlers ----------
 
-    function handleModalCloseToMountedDateOrBack(startIso: string, endIso: string) {
+    function closeModalToMountedDateOrBack(startIso: string, endIso: string) {
+        if (!canUpdateTextfield()) return;
+
         const startDatestamp = isoToDatestamp(startIso);
         const endDatestamp = isoToDatestamp(endIso);
 
@@ -631,7 +634,7 @@ const TimeModal = () => {
             isTimeEarlier(startDatestamp, triggerDatestamp) &&
             isTimeEarlier(triggerDatestamp, endDatestamp)
         ) { // Trigger datestamp is within range.
-            handleModalCloseBackWithNoTextfield();
+            closeModalBackWithNoTextfield();
             return;
         }
 
@@ -649,10 +652,12 @@ const TimeModal = () => {
             return;
         }
 
-        handleModalCloseBackWithNoTextfield();
+        closeModalBackWithNoTextfield();
     }
 
-    function handleModalCloseWithNewTextfield(event: IPlannerEvent, plannerEvents: IPlannerEvent[]) {
+    function closeModalWithNewTextfield(event: IPlannerEvent, plannerEvents: IPlannerEvent[]) {
+        if (!canUpdateTextfield()) return;
+
         if (mountedDatestamps.all.includes(event.listId)) {
             const newTextfieldSortId = generateSortId(event.sortId, plannerEvents);
             setTextfieldItem({
@@ -665,12 +670,18 @@ const TimeModal = () => {
 
             router.replace(event.listId === getTodayDatestamp() ? '/' : '/planners');
         } else {
-            handleModalCloseBackWithNoTextfield();
+            closeModalBackWithNoTextfield();
         }
     }
 
-    function handleModalCloseBackWithNoTextfield() {
+    function closeModalBackWithNoTextfield() {
+        if (!canUpdateTextfield()) return;
+
         setTextfieldItem(null);
+        router.back();
+    }
+
+    function closeModalBackKeepTextfield() {
         router.back();
     }
 
@@ -725,6 +736,22 @@ const TimeModal = () => {
         const affectedDates = getMountedDatestampsLinkedToDateRanges(ranges);
         await loadCalendarData(affectedDates);
     }
+
+    function canUpdateTextfield() {
+        if (
+            initialEventState?.sourceType !== TriggerSource.PLANNER_NEW &&
+            textfieldItem?.id !== eventId
+        ) {
+            closeModalBackKeepTextfield();
+            return false;
+        }
+
+        return true;
+    }
+
+    // =======================
+    // 3. UI
+    // =======================
 
     return (
         <Modal

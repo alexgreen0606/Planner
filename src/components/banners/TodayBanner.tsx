@@ -8,11 +8,14 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
 
-interface TodayBannerProps {
+// ✅ 
+
+type TodayBannerProps = {
     timestamp: string; // YYYY-MM-DD
-}
+};
 
 const TodayBanner = ({ timestamp }: TodayBannerProps) => {
+
     // TODO: load in weather data
     const high = 47;
     const low = 32;
@@ -23,9 +26,10 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
     const [today, setToday] = useMMKVObject<TPlanner>(timestamp, storage);
 
     useEffect(() => {
-        if (today)
-        setToday({...today, title: ""})
-    }, [])
+        if (today) {
+            setToday({ ...today, title: "" });
+        }
+    }, []);
 
     return (
         <View
@@ -55,6 +59,7 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
                 currentTemp={currentTemp}
                 weatherCode={weatherCode}
             />
+
         </View>
     );
 };

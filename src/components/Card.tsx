@@ -4,14 +4,16 @@ import React, { ReactNode } from 'react';
 import { PlatformColor, View, ViewStyle } from 'react-native';
 import { runOnUI } from 'react-native-reanimated';
 
-interface CardProps {
+// ✅ 
+
+type CardProps = {
     header?: ReactNode;
     footer?: ReactNode;
     style?: ViewStyle;
     contentHeight: number;
     collapsed: boolean;
     children: ReactNode;
-}
+};
 
 const Card = ({
     header,
@@ -54,7 +56,7 @@ const Card = ({
                 )}
             </MotiView>
         </View>
-    )
-}
+    );
+};
 
 export default Card;

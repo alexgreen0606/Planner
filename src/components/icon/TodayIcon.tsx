@@ -1,14 +1,16 @@
+import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
+import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
 import { useMemo } from "react";
 import { PlatformColor, View } from "react-native";
 import GenericIcon from ".";
 import CustomText from "../text/CustomText";
-import { useAtomValue } from "jotai";
-import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 
-interface TodayIconProps {
+// ✅ 
+
+type TodayIconProps = {
     platformColor: string;
-}
+};
 
 const TodayIcon = ({ platformColor }: TodayIconProps) => {
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
@@ -24,6 +26,8 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
         const date = DateTime.fromISO(todayDatestamp);
         return date.toFormat(monthFormat).toUpperCase();
     }, [todayDatestamp]);
+
+    // TODO: create custom style for these in CustomText for these, not customStyle for CustomText
 
     return (
         <View className='relative scale-[1.12]'>

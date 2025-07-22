@@ -1,11 +1,9 @@
-import { NULL } from '@/lib/constants/generic';
 import { EListType } from '@/lib/enums/EListType';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { TIME_MODAL_PATHNAME } from 'app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
@@ -13,21 +11,21 @@ import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
 
+// ✅ 
+
 const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
 const EXPANDED_CHIP_RIGHT_MARGIN = 6;
-
 const CHIP_SET_GAP = 24;
 
-interface EventChipProps {
+type EventChipProps = {
     chip: TCalendarEventChip;
-    onClick?: () => void;
-    toggleCollapsed?: () => void;
     backgroundPlatformColor?: string;
     collapsed?: boolean;
     chipSetIndex: number;
     shiftChipRight: boolean;
     parentPlannerDatestamp: string;
-}
+    onToggleCollapsed?: () => void;
+};
 
 const EventChip = ({
     chip,
@@ -35,12 +33,11 @@ const EventChip = ({
     collapsed = false,
     chipSetIndex,
     shiftChipRight,
-    parentPlannerDatestamp,
-    onClick,
-    toggleCollapsed
+    onToggleCollapsed
 }: EventChipProps) => {
+    const { event: { title, id }, iconConfig, color, onClick, hasClickAccess } = chip;
+
     const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-    const { event: { title, id, allDay }, iconConfig, color } = chip;
     const router = useRouter();
 
     const isPendingDelete = useMemo(() =>
@@ -56,17 +53,9 @@ const EventChip = ({
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
 
-    function handleOpenTimeModal() {
-        router.push(`${TIME_MODAL_PATHNAME
-            }${parentPlannerDatestamp
-            }/${id
-            }/${NULL
-            }/${title
-            }`
-        );
-    }
-
-    // ------------- Render Helper Function -------------
+    // =======================
+    // 1. UI
+    // =======================
 
     const ChipContent = () => (
         <View
@@ -104,17 +93,23 @@ const EventChip = ({
                 marginRight: collapsed ? COLLAPSED_CHIP_RIGHT_MARGIN : EXPANDED_CHIP_RIGHT_MARGIN
             }}
             style={{
-                // Chips stack with the firstly rendered on top
+                // Chips stack with the firstly rendered in front
                 zIndex: 9000 + (40 / (chipSetIndex + 1)),
                 marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
             }}
         >
             {onClick ? (
-                <TouchableOpacity onPress={collapsed ? toggleCollapsed : onClick}>
+                <TouchableOpacity
+                    activeOpacity={collapsed || hasClickAccess ? 0 : 1}
+                    onPress={collapsed ? onToggleCollapsed : () => onClick(router)}
+                >
                     <ChipContent />
                 </TouchableOpacity>
             ) : (
-                <TouchableOpacity onPress={collapsed ? toggleCollapsed : handleOpenTimeModal}>
+                <TouchableOpacity
+                    activeOpacity={collapsed ? 0 : 1}
+                    onPress={collapsed ? onToggleCollapsed : undefined}
+                >
                     <ChipContent />
                 </TouchableOpacity>
             )}

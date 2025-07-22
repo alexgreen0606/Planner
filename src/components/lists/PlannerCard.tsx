@@ -82,8 +82,11 @@ const PlannerCard = ({
         setCollapsed(curr => !curr);
     }
 
-    function handleOpenTimeModal() {
-        openTimeModal(datestamp, textfieldItem, router);
+    function handleOpenTimeModal(event?: IPlannerEvent) {
+        const eventToOpen = event ?? textfieldItem;
+        if (!eventToOpen) throw new Error('No event to open.')
+
+        openTimeModal(datestamp, eventToOpen, router);
     }
 
     // ------------- List Management Utils -------------
@@ -157,9 +160,9 @@ const PlannerCard = ({
                     forecast={forecast}
                     eventChipSets={calendarChips ?? []}
                     collapsed={collapsed}
-                    toggleCollapsed={toggleCollapsed}
+                    onToggleCollapsed={toggleCollapsed}
                     isEditingTitle={isEditingTitle}
-                    endEditTitle={() => setIsEditingTitle(false)}
+                    onEndEditTitle={() => setIsEditingTitle(false)}
                 />
             }
             footer={

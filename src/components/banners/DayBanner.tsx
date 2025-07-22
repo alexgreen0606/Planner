@@ -11,48 +11,56 @@ import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 're
 import EventChipSets from '../eventChip/EventChipSet';
 import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 
-interface DayBannerProps {
+// ✅ 
+
+type DayBannerProps = {
     planner: TPlanner;
-    toggleCollapsed: () => void;
     forecast?: WeatherForecast;
     isEditingTitle: boolean;
     collapsed: boolean;
-    endEditTitle: () => void;
     eventChipSets: TCalendarEventChip[][];
-}
+    onEndEditTitle: () => void;
+    onToggleCollapsed: () => void;
+};
 
 const DayBanner = ({
     planner,
-    toggleCollapsed,
     forecast,
     isEditingTitle,
-    endEditTitle,
     collapsed,
-    eventChipSets
+    eventChipSets,
+    onToggleCollapsed,
+    onEndEditTitle
 }: DayBannerProps) => {
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
 
     const [newPlannerTitle, setNewPlannerTitle] = useState(planner.title);
 
-    const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
+    // TODO: memoize
     const dayOfWeek = datestampToDayOfWeek(planner.datestamp);
     const monthDate = datestampToMonthDate(planner.datestamp);
     const isTomorrow = planner.datestamp === getTomorrowDatestamp();
+
+    const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
+
+    useEffect(() => {
+        setNewPlannerTitle(planner.title);
+    }, [planner.title])
+
+    // =======================
+    // 1. Event Handlers
+    // =======================
 
     function handlePlannerTitleSave() {
         savePlannerToStorage(planner.datestamp, {
             ...planner,
             title: newPlannerTitle.trim()
         });
-        endEditTitle();
+        onEndEditTitle();
     }
 
-    useEffect(() => {
-        setNewPlannerTitle(planner.title);
-    }, [planner.title])
-
     return (
-        <TouchableOpacity onPress={toggleCollapsed}>
+        <TouchableOpacity onPress={onToggleCollapsed}>
             <View className='flex-row justify-between items-center w-full'>
 
                 {/* Date */}
@@ -114,7 +122,7 @@ const DayBanner = ({
                 datestamp={planner.datestamp}
                 sets={eventChipSets}
                 collapsed={collapsed}
-                toggleCollapsed={toggleCollapsed}
+                onToggleCollapsed={onToggleCollapsed}
             />
 
         </TouchableOpacity>

@@ -7,7 +7,9 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { PlatformColor, TextInput, View } from 'react-native';
 
-interface FolderItemBannerProps {
+// ✅ 
+
+type FolderItemBannerProps = {
     itemId: string;
     itemType: EFolderItemType;
     backButtonConfig: {
@@ -15,7 +17,7 @@ interface FolderItemBannerProps {
         hide?: boolean;
         onClick?: () => void;
     };
-}
+};
 
 const FolderItemBanner = ({
     itemId,
@@ -23,6 +25,7 @@ const FolderItemBanner = ({
     backButtonConfig
 }: FolderItemBannerProps) => {
     const router = useRouter();
+
     const {
         folder,
         editingValue,
@@ -80,6 +83,7 @@ const FolderItemBanner = ({
                     </ButtonText>
                 </View>
             )}
+
         </View>
     );
 };

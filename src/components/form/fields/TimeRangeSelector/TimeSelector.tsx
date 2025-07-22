@@ -7,6 +7,8 @@ import { MotiView } from 'moti';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
 
+// ✅ 
+
 type TimeSelectorProps = {
     label: string;
     date: Date;
@@ -33,21 +35,29 @@ const TimeSelector = ({
     onChange
 }: TimeSelectorProps) => {
 
-    const getValueColor = (type: ETimeSelectorMode) => {
+    // =======================
+    // 1. UI Helper Functions
+    // =======================
+
+    function getValueColor(type: ETimeSelectorMode) {
         return type === currentSelectorMode ? 'systemTeal' : 'label';
-    };
+    }
 
-    const getValueMargin = (type: ETimeSelectorMode) => {
+    function getValueMargin(type: ETimeSelectorMode) {
         return type === currentSelectorMode ? 12 : 8;
-    };
+    }
 
-    const getValueScale = (type: ETimeSelectorMode) => {
+    function getValueScale(type: ETimeSelectorMode) {
         return type === currentSelectorMode ? 1.1 : 1;
-    };
+    }
 
-    const getSelectorHeight = (type: ETimeSelectorMode) => {
+    function getSelectorHeight(type: ETimeSelectorMode) {
         return type === currentSelectorMode ? 400 : 0;
-    };
+    }
+
+    // =======================
+    // 2. UI
+    // =======================
 
     return (
         <View>

@@ -16,7 +16,7 @@ import { generateSortId } from "../listUtils";
  * @param fallbackSortId - Optional sort ID to use for the event. Otherwise 1 will be used
  * @returns - A new planner event with the calendar data.
  */
-export function mapCalendarToPlanner(event: Event, datestamp: string, planner: IPlannerEvent[], storRecord?: IPlannerEvent, fallbackSortId?: number): IPlannerEvent {
+export function mapCalendarEventToPlannerEvent(event: Event, datestamp: string, planner: IPlannerEvent[], storRecord?: IPlannerEvent, fallbackSortId?: number): IPlannerEvent {
     const startDatestamp = isoToDatestamp(event.startDate as string);
     const endDatestamp = isoToDatestamp(event.endDate as string);
 

@@ -11,9 +11,12 @@ import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 
+// ✅ 
+
 const Today = () => {
   const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
   const calendarEventData = useAtomValue(calendarEventDataAtom);
+
   const { calendarChips } = useCalendarData(todayDatestamp);
 
   const isCalendarLoading = useMemo(

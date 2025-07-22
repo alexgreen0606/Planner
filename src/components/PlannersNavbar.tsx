@@ -6,6 +6,12 @@ import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import ButtonText from './text/ButtonText';
 
+// ✅ 
+
+type TopNavbarProps = {
+    children: React.ReactNode;
+};
+
 const BAR_HEIGHT = 36;
 const BAR_WIDTH = 320;
 
@@ -20,25 +26,29 @@ const tabs = [
     { label: 'Recurring', pathname: '/planners/recurring', left: HIGHLIGHT_GAP + (HIGHLIGHT_WIDTH * 2) }
 ];
 
-interface TopNavbarProps {
-    children: React.ReactNode;
-}
-
 const PlannersNavbar = ({ children }: TopNavbarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
     const isCountdowns = pathname.includes('countdowns');
 
-    // Determine the current tab's left position based on pathname
+    // Determine the current tab's left position based on pathname.
     const currentTabLeft = useMemo(() => {
         const currentTab = tabs.find(tab => tab.pathname === pathname);
         return currentTab?.left ?? (HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
     }, [pathname]);
 
+    // =======================
+    // 1. Event Handler
+    // =======================
+
     function handleTabChange(tab: any) {
         router.push(tab.pathname);
     }
+
+    // =======================
+    // 2. UI
+    // =======================
 
     return (
         <View
@@ -113,7 +123,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                 {children}
             </ScrollContainerProvider>
         </View>
-    )
-}
+    );
+};
 
 export default PlannersNavbar;

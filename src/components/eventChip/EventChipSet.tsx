@@ -4,13 +4,15 @@ import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import EventChip from '.';
 
-export interface EventChipSetsProps {
+// ✅ 
+
+type EventChipSetsProps = {
     datestamp: string;
     sets: TCalendarEventChip[][];
     collapsed?: boolean;
-    toggleCollapsed?: () => void;
     backgroundPlatformColor?: string;
-}
+    onToggleCollapsed?: () => void;
+};
 
 const COLLAPSED_HEIGHT = 24;
 
@@ -18,10 +20,11 @@ const EventChipSets = ({
     datestamp,
     sets,
     collapsed = false,
-    toggleCollapsed,
+    onToggleCollapsed,
     backgroundPlatformColor,
 }: EventChipSetsProps) => {
     const contentRef = useRef(null);
+
     const [expandedHeight, setExpandedHeight] = useState<number | null>(null);
 
     return (
@@ -49,7 +52,7 @@ const EventChipSets = ({
                             chipSetIndex={chipIndex}
                             shiftChipRight={chipIndex === 0 && setIndex !== 0 && collapsed}
                             collapsed={collapsed}
-                            toggleCollapsed={toggleCollapsed}
+                            onToggleCollapsed={onToggleCollapsed}
                             backgroundPlatformColor={backgroundPlatformColor}
                         />
                     ))

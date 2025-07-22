@@ -3,19 +3,19 @@ import Form from '@/components/form';
 import Modal from '@/components/modal';
 import { NULL } from '@/lib/constants/generic';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
 import { IFormField } from '@/lib/types/form/IFormField';
 import { TPlannerSet } from '@/lib/types/planner/TPlannerSet';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { deletePlannerSet, getPlannerSetTitles, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
-import { getTodayDatestamp } from '@/utils/dateUtils';
-import { ETimeSelectorMode } from '@/components/form/fields/TimeRangeSelector';
-import { EStorageId } from '@/lib/enums/EStorageId';
+import { deletePlannerSet, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
 
-export const PLANNER_SET_MODAL_PATHNAME = '(modals)/plannerSetModal/';
+// ✅ 
 
 type PendingPlannerSet = {
     title: string;
@@ -34,17 +34,13 @@ const emptyFormData: PendingPlannerSet = {
 };
 
 const PlannerSetModal = () => {
-    const { plannerSetKey } = useLocalSearchParams<{ plannerSetKey: string }>();
-    const existingPlannerTitles = getPlannerSetTitles();
-
-    const router = useRouter();
-
     const setPlannerSetKey = useSetAtom(plannerSetKeyAtom);
+
+    const { plannerSetKey } = useLocalSearchParams<{ plannerSetKey: string }>();
+    const router = useRouter();
 
     const storage = useMMKV({ id: EStorageId.PLANNER_SETS });
     const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
-
-    const isEditMode = plannerSetKey !== NULL;
 
     const {
         control,
@@ -63,7 +59,8 @@ const PlannerSetModal = () => {
         mode: 'onChange'
     });
 
-    // Create form fields configuration
+    const isEditMode = plannerSetKey !== NULL;
+
     const formFields: IFormField[][] = [
         [{
             name: 'title',
@@ -95,7 +92,9 @@ const PlannerSetModal = () => {
         });
     }, [plannerSet, reset]);
 
-    // ------------- Utility Functions -------------
+    // =======================
+    // 1. Event Handlers
+    // =======================
 
     function onSubmit(data: PendingPlannerSet) {
         const { startDatestamp, endDatestamp } = data.dates;
@@ -116,6 +115,10 @@ const PlannerSetModal = () => {
         }
         router.back();
     }
+
+    // =======================
+    // 2. UI
+    // =======================
 
     return (
         <Modal

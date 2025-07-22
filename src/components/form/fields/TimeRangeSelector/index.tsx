@@ -8,6 +8,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import TimeSelector from './TimeSelector';
 
+// ✅ 
+
 type TimeRangeSelectorProps = {
     startIso: string;
     endIso: string;
@@ -23,59 +25,58 @@ type TimeRangeSelectorProps = {
 const TimeRangeSelector = ({
     startIso,
     endIso,
-    onChange,
     allDay,
     multiDay,
-    triggerOpenField
+    triggerOpenField,
+    onChange
 }: TimeRangeSelectorProps) => {
     const { today } = useAtomValue(mountedDatestampsAtom);
 
     const [selectorMode, setSelectorMode] = useState<ETimeSelectorMode | null>(null);
 
-    const todayMidnight: Date = useMemo(() => {
-        return DateTime.local().startOf('day').toJSDate();
-    }, [today]);
+    const todayMidnight: Date = useMemo(
+        () => DateTime.local().startOf('day').toJSDate(),
+        [today]
+    );
 
-    const startDate: Date = useMemo(() => {
-        return DateTime.fromISO(startIso).toJSDate();
-    }, [startIso]);
+    const startDate: Date = useMemo(
+        () => DateTime.fromISO(startIso).toJSDate(),
+        [startIso]
+    );
 
-    const endDate: Date = useMemo(() => {
-        return DateTime.fromISO(endIso).toJSDate();
-    }, [endIso]);
+    const endDate: Date = useMemo(
+        () => DateTime.fromISO(endIso).toJSDate(),
+        [endIso]
+    );
 
     const showEndTime = endIso && multiDay;
     const showTimes = !allDay;
 
-    // ---------- Utility Functions ----------
+    // Reset the times to midnight when the events become all-day.
+    useEffect(() => {
+        if (allDay) {
+            resetTimesToMidnight();
+            setSelectorMode(null);
+        }
+    }, [allDay]);
 
-    function toggleSelectorMode(newMode: ETimeSelectorMode) {
+    // Trigger a field focused by the parent component.
+    useEffect(() => {
+        if (triggerOpenField) {
+            setSelectorMode(triggerOpenField);
+        }
+    }, [triggerOpenField]);
+
+    // =======================
+    // 1. Event Handlers
+    // =======================
+
+    function handleToggleSelectorMode(newMode: ETimeSelectorMode) {
         if (newMode === selectorMode) {
             setSelectorMode(null);
         } else {
             setSelectorMode(newMode);
         }
-    }
-
-    function resetTimesToMidnight() {
-        const newStartDate = DateTime.fromISO(startIso)
-            .set({
-                hour: 0,
-                minute: 0,
-                second: 0,
-                millisecond: 0
-            });
-        const newEndDate = DateTime.fromISO(endIso)
-            .set({
-                hour: 0,
-                minute: 0,
-                second: 0,
-                millisecond: 0
-            });
-
-        const newStartIso = newStartDate.toUTC().toISO()!;
-        const newEndIso = newEndDate.toUTC().toISO()!;
-        onChange(newStartIso, newEndIso);
     }
 
     function handleChange(event: DateTimePickerEvent) {
@@ -159,20 +160,30 @@ const TimeRangeSelector = ({
         onChange(newStartIso, newEndIso);
     }
 
-    // ---------- Reactions ----------
+    // =======================
+    // 2. Helper Functions
+    // =======================
 
-    useEffect(() => {
-        if (allDay) {
-            resetTimesToMidnight();
-            setSelectorMode(null);
-        }
-    }, [allDay]);
+    function resetTimesToMidnight() {
+        const newStartDate = DateTime.fromISO(startIso)
+            .set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0
+            });
+        const newEndDate = DateTime.fromISO(endIso)
+            .set({
+                hour: 0,
+                minute: 0,
+                second: 0,
+                millisecond: 0
+            });
 
-    useEffect(() => {
-        if (triggerOpenField) {
-            setSelectorMode(triggerOpenField);
-        }
-    }, [triggerOpenField]);
+        const newStartIso = newStartDate.toUTC().toISO()!;
+        const newEndIso = newEndDate.toUTC().toISO()!;
+        onChange(newStartIso, newEndIso);
+    }
 
     return (
         <View>
@@ -186,7 +197,7 @@ const TimeRangeSelector = ({
                 dateMode={ETimeSelectorMode.START_DATE}
                 timeMode={ETimeSelectorMode.START_TIME}
                 currentSelectorMode={selectorMode}
-                onToggleMode={toggleSelectorMode}
+                onToggleMode={handleToggleSelectorMode}
                 onChange={handleChange}
                 minimumDate={todayMidnight}
             />
@@ -204,7 +215,7 @@ const TimeRangeSelector = ({
                     dateMode={ETimeSelectorMode.END_DATE}
                     timeMode={ETimeSelectorMode.END_TIME}
                     currentSelectorMode={selectorMode}
-                    onToggleMode={toggleSelectorMode}
+                    onToggleMode={handleToggleSelectorMode}
                     onChange={handleChange}
                     minimumDate={startDate}
                 />

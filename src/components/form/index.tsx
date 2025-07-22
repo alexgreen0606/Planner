@@ -3,6 +3,8 @@ import { PlatformColor, StyleSheet, View } from "react-native";
 import FormField from "./FormField";
 import { IFormField } from "@/lib/types/form/IFormField";
 
+// ✅ 
+
 type FormProps = {
     fields: IFormField[][];
     control: Control<any>;
@@ -43,6 +45,6 @@ const Form = ({
                 )}
             </View>
         )}
-    </View>
+    </View>;
 
 export default Form;

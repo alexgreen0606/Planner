@@ -1,22 +1,22 @@
-import { PLANNER_SET_MODAL_PATHNAME } from "app/(modals)/plannerSetModal/[plannerSetKey]"
-import { TIME_MODAL_PATHNAME } from "app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]"
-import { Stack } from "expo-router"
-import { useEffect } from "react";
+import { userAccessAtom } from "@/atoms/userAccess";
+import { NULL } from "@/lib/constants/generic";
+import { PLANNER_SET_MODAL_PATHNAME, TIME_MODAL_PATHNAME } from "@/lib/constants/pathnames";
+import { EAccess } from "@/lib/enums/EAccess";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
+import { EListType } from "@/lib/enums/EListType";
+import { EStorageId } from "@/lib/enums/EStorageId";
+import { EStorageKey } from "@/lib/enums/EStorageKey";
+import { IFolder } from "@/lib/types/checklists/IFolder";
+import { CalendarProvider } from "@/providers/CalendarProvider";
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
-import { useAtom } from "jotai";
-import { userAccessAtom } from "@/atoms/userAccess";
 import { useFonts } from 'expo-font';
-import { CalendarProvider } from "@/providers/CalendarProvider";
-import { EAccess } from "@/lib/enums/EAccess";
+import { Stack } from "expo-router";
+import { useAtom } from "jotai";
+import { useEffect } from "react";
 import { useMMKV, useMMKVObject } from "react-native-mmkv";
-import { EStorageId } from "@/lib/enums/EStorageId";
-import { IFolder } from "@/lib/types/checklists/IFolder";
-import { EStorageKey } from "@/lib/enums/EStorageKey";
-import { NULL } from "@/lib/constants/generic";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { getFolderFromStorage, saveToStorage } from "@/storage/checklistsStorage";
-import { EListType } from "@/lib/enums/EListType";
+
+// ✅ 
 
 const initialRootFolder: IFolder = {
     id: EStorageKey.ROOT_FOLDER_KEY,
@@ -30,12 +30,52 @@ const initialRootFolder: IFolder = {
     listType: EListType.FOLDER
 };
 
+/**
+ * Handles setup of app, including access requests and initializing storage objects.
+ */
 const AccessGuard = () => {
-    const [calendarStatus, requestCalendarPermissions] = Calendar.useCalendarPermissions();
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
 
     const storage = useMMKV({ id: EStorageId.CHECKLISTS });
     const [rootFolder, setRootFolder] = useMMKVObject<IFolder>(EStorageKey.ROOT_FOLDER_KEY, storage);
+
+    const [calendarStatus, requestCalendarPermissions] = Calendar.useCalendarPermissions();
+
+    const [fontsLoaded] = useFonts({
+        'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
+        'RoundMedium': require('../../assets/fonts/SF-Compact-Rounded-Medium.otf'),
+        'Round': require('../../assets/fonts/SF-Compact-Rounded-Regular.otf'),
+        'Text': require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
+    });
+
+    const appReady =
+        fontsLoaded &&
+        userAccess.get(EAccess.CALENDAR) !== undefined &&
+        userAccess.get(EAccess.CONTACTS) !== undefined &&
+        rootFolder;
+
+    // Calendar permissions check.
+    useEffect(() => {
+        if (!calendarStatus || calendarStatus.status === 'undetermined') {
+            requestCalendarPermissions();
+        } else {
+            setUserAccess(prev => {
+                const newMap = new Map(prev);
+                newMap.set(EAccess.CALENDAR, calendarStatus.status === 'granted');
+                return newMap;
+            });
+        }
+    }, [calendarStatus]);
+
+    // Contacts permission check and root folder check.
+    useEffect(() => {
+        checkContactsPermissions();
+        checkRootFolderExistence();
+    }, []);
+
+    // =======================
+    // 1. Helper Functions
+    // =======================
 
     async function checkContactsPermissions() {
         if (userAccess.get(EAccess.CONTACTS) !== undefined) return;
@@ -68,42 +108,14 @@ const AccessGuard = () => {
     }
 
     function checkRootFolderExistence() {
-        console.log(rootFolder, 'root')
         if (!rootFolder) {
             setRootFolder(initialRootFolder);
         }
     }
 
-    // Calendar permissions check.
-    useEffect(() => {
-        if (!calendarStatus || calendarStatus.status === 'undetermined') {
-            requestCalendarPermissions();
-        } else {
-            setUserAccess(prev => {
-                const newMap = new Map(prev);
-                newMap.set(EAccess.CALENDAR, calendarStatus.status === 'granted');
-                return newMap;
-            });
-        }
-    }, [calendarStatus]);
-
-    useEffect(() => {
-        checkContactsPermissions();
-        checkRootFolderExistence();
-    }, []);
-
-    const [fontsLoaded] = useFonts({
-        'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
-        'RoundMedium': require('../../assets/fonts/SF-Compact-Rounded-Medium.otf'),
-        'Round': require('../../assets/fonts/SF-Compact-Rounded-Regular.otf'),
-        'Text': require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
-    });
-
-    const appReady =
-        fontsLoaded &&
-        userAccess.get(EAccess.CALENDAR) !== undefined &&
-        userAccess.get(EAccess.CONTACTS) !== undefined &&
-        rootFolder
+    // =======================
+    // 2. UI
+    // =======================
 
     return appReady && (
         <CalendarProvider>

@@ -30,6 +30,8 @@ const TodayPlanner = () => {
 
     function handleOpenTimeModal(event?: IPlannerEvent) {
         const eventToOpen = event ?? textfieldItem;
+        if (!eventToOpen) throw new Error('No event to open.')
+
         openTimeModal(todayDatestamp, eventToOpen!, router);
     }
 

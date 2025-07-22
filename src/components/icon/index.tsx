@@ -3,6 +3,18 @@ import React from 'react';
 import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SFSymbol } from 'react-native-sfsymbols';
 
+// ✅ 
+
+export interface GenericIconProps<T = void> {
+    type: IconType;
+    size?: 'xs' | 's' | 'm' | 'l' | 'xl';
+    platformColor?: string;
+    style?: ViewStyle;
+    className?: string;
+    hideRipple?: boolean;
+    onClick?: (item?: T) => T | void | Promise<void>;
+};
+
 const sizeMap = {
     xs: 10,
     s: 14,
@@ -45,24 +57,14 @@ const iconMap = {
 
 export type IconType = keyof typeof iconMap;
 
-export interface GenericIconProps<T = void> {
-    type: IconType;
-    size?: 'xs' | 's' | 'm' | 'l' | 'xl';
-    platformColor?: string;
-    onClick?: (item?: T) => T | void | Promise<void>;
-    style?: ViewStyle;
-    className?: string;
-    hideRipple?: boolean;
-};
-
 const GenericIcon = <T,>({
     type,
     size = 'm',
     platformColor: color = 'secondaryLabel',
-    onClick,
     style,
     className,
-    hideRipple = false
+    hideRipple = false,
+    onClick
 }: GenericIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
     return (
@@ -84,7 +86,7 @@ const GenericIcon = <T,>({
                 color={isValidPlatformColor(color) ? PlatformColor(color) : color}
             />
         </Wrapper>
-    )
+    );
 };
 
 export default GenericIcon;

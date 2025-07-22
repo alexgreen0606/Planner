@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import ButtonText from '@/components/text/ButtonText';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { NULL } from '@/lib/constants/generic';
+import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { getPlannerSetTitles } from '@/storage/plannerSetsStorage';
 import { saveEventToPlanner } from '@/storage/plannerStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -15,96 +16,98 @@ import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
-import { PLANNER_SET_MODAL_PATHNAME } from '../../(modals)/plannerSetModal/[plannerSetKey]';
+
+// ✅ 
 
 const defaultPlannerSet = 'Next 7 Days';
 
-const Planners = () => {
-    const allPlannerSetTitles = getPlannerSetTitles();
-    const router = useRouter();
+const forecasts: Record<string, WeatherForecast> = {
+    "2025-06-22": {
+        "date": "2025-04-23",
+        "weatherCode": 61,
+        "weatherDescription": "Slight rain",
+        "temperatureMax": 57,
+        "temperatureMin": 51,
+        "precipitationSum": 0.06,
+        "precipitationProbabilityMax": 24
+    },
+    "2025-06-23": {
+        "date": "2025-03-28",
+        "weatherCode": 65,
+        "weatherDescription": "Heavy rain",
+        "temperatureMax": 57,
+        "temperatureMin": 50,
+        "precipitationSum": 1.19,
+        "precipitationProbabilityMax": 32
+    },
+    "2025-06-24": {
+        "date": "2025-03-29",
+        "weatherCode": 3,
+        "weatherDescription": "Overcast",
+        "temperatureMax": 56,
+        "temperatureMin": 47,
+        "precipitationSum": 0,
+        "precipitationProbabilityMax": 3
+    },
+    "2025-06-25": {
+        "date": "2025-03-30",
+        "weatherCode": 63,
+        "weatherDescription": "Moderate rain",
+        "temperatureMax": 54,
+        "temperatureMin": 45,
+        "precipitationSum": 0.46,
+        "precipitationProbabilityMax": 66
+    },
+    "2025-06-26": {
+        "date": "2025-03-31",
+        "weatherCode": 51,
+        "weatherDescription": "Light drizzle",
+        "temperatureMax": 57,
+        "temperatureMin": 50,
+        "precipitationSum": 0.02,
+        "precipitationProbabilityMax": 34
+    },
+    "2025-06-27": {
+        "date": "2025-04-01",
+        "weatherCode": 53,
+        "weatherDescription": "Moderate drizzle",
+        "temperatureMax": 59,
+        "temperatureMin": 53,
+        "precipitationSum": 0.09,
+        "precipitationProbabilityMax": 34
+    },
+    "2025-06-28": {
+        "date": "2025-04-02",
+        "weatherCode": 53,
+        "weatherDescription": "Moderate drizzle",
+        "temperatureMax": 57,
+        "temperatureMin": 53,
+        "precipitationSum": 0.37,
+        "precipitationProbabilityMax": 41
+    },
+    "2025-06-29": {
+        "date": "2025-04-02",
+        "weatherCode": 53,
+        "weatherDescription": "Moderate drizzle",
+        "temperatureMax": 57,
+        "temperatureMin": 53,
+        "precipitationSum": 0.37,
+        "precipitationProbabilityMax": 41
+    }
+}
 
+const Planners = () => {
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
     const calendarEventData = useAtomValue(calendarEventDataAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
+    const router = useRouter();
+
     useTextfieldFallbackSave(saveEventToPlanner);
 
-    const [forecasts, setForecasts] = useState<Record<string, WeatherForecast>>({
-        "2025-06-22": {
-            "date": "2025-04-23",
-            "weatherCode": 61,
-            "weatherDescription": "Slight rain",
-            "temperatureMax": 57,
-            "temperatureMin": 51,
-            "precipitationSum": 0.06,
-            "precipitationProbabilityMax": 24
-        },
-        "2025-06-23": {
-            "date": "2025-03-28",
-            "weatherCode": 65,
-            "weatherDescription": "Heavy rain",
-            "temperatureMax": 57,
-            "temperatureMin": 50,
-            "precipitationSum": 1.19,
-            "precipitationProbabilityMax": 32
-        },
-        "2025-06-24": {
-            "date": "2025-03-29",
-            "weatherCode": 3,
-            "weatherDescription": "Overcast",
-            "temperatureMax": 56,
-            "temperatureMin": 47,
-            "precipitationSum": 0,
-            "precipitationProbabilityMax": 3
-        },
-        "2025-06-25": {
-            "date": "2025-03-30",
-            "weatherCode": 63,
-            "weatherDescription": "Moderate rain",
-            "temperatureMax": 54,
-            "temperatureMin": 45,
-            "precipitationSum": 0.46,
-            "precipitationProbabilityMax": 66
-        },
-        "2025-06-26": {
-            "date": "2025-03-31",
-            "weatherCode": 51,
-            "weatherDescription": "Light drizzle",
-            "temperatureMax": 57,
-            "temperatureMin": 50,
-            "precipitationSum": 0.02,
-            "precipitationProbabilityMax": 34
-        },
-        "2025-06-27": {
-            "date": "2025-04-01",
-            "weatherCode": 53,
-            "weatherDescription": "Moderate drizzle",
-            "temperatureMax": 59,
-            "temperatureMin": 53,
-            "precipitationSum": 0.09,
-            "precipitationProbabilityMax": 34
-        },
-        "2025-06-28": {
-            "date": "2025-04-02",
-            "weatherCode": 53,
-            "weatherDescription": "Moderate drizzle",
-            "temperatureMax": 57,
-            "temperatureMin": 53,
-            "precipitationSum": 0.37,
-            "precipitationProbabilityMax": 41
-        },
-        "2025-06-29": {
-            "date": "2025-04-02",
-            "weatherCode": 53,
-            "weatherDescription": "Moderate drizzle",
-            "temperatureMax": 57,
-            "temperatureMin": 53,
-            "precipitationSum": 0.37,
-            "precipitationProbabilityMax": 41
-        }
-    });
+    const allPlannerSetTitles = getPlannerSetTitles(); // TODO: use MMKV to watch this
 
     const plannerSetOptions = useMemo(() =>
         [defaultPlannerSet, ...allPlannerSetTitles].map((title) => ({
@@ -135,7 +138,7 @@ const Planners = () => {
             className='flex-1'
             style={{ backgroundColor: PlatformColor('systemBackground') }}
         >
-
+            
             {/* Planner Set Selection */}
             <View className='p-2 flex-row justify-between items-center w-full'>
                 <MenuView
@@ -181,7 +184,7 @@ const Planners = () => {
                     <PlannerCard
                         key={`${datestamp}-planner`}
                         datestamp={datestamp}
-                        forecast={forecasts?.[datestamp]}
+                        forecast={forecasts[datestamp]}
                     />
                 )}
                 <ScrollAnchor />

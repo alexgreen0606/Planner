@@ -11,6 +11,8 @@ import React, { useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
+// ✅ 
+
 type FolderParams = {
   folderId: string,
   prevFolderName: string,
@@ -26,14 +28,23 @@ const FolderScreen = () => {
   const storage = useMMKV({ id: EStorageId.CHECKLISTS });
   const [folder] = useMMKVObject<IFolder>(folderId, storage);
 
-  function onOpenItem(id: string, type: EFolderItemType) {
+  // =======================
+  // 1. Event Handlers
+  // =======================
+
+  function handleOpenItem(id: string, type: EFolderItemType) {
     if (!folder) return;
+
     if (type === EFolderItemType.FOLDER) {
       router.push(`/lists/folder/${folder.value}/${folder.id}/${id}`);
     } else if (type === EFolderItemType.LIST) {
       router.push(`/lists/checklist/${folder.value}/${folder.id}/${id}`);
     }
   }
+
+  // =======================
+  // 2. UI
+  // =======================
 
   return (
     <View
@@ -55,7 +66,7 @@ const FolderScreen = () => {
       >
         <SortedFolder
           parentFolderData={prevFolderId !== NULL ? getFolderFromStorage(prevFolderId)! : undefined}
-          handleOpenItem={onOpenItem}
+          handleOpenItem={handleOpenItem}
           parentClickTrigger={parentClickTrigger}
         />
       </ScrollContainerProvider>

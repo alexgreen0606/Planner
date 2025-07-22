@@ -7,30 +7,32 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ButtonText from '../text/ButtonText';
 import CustomText from '../text/CustomText';
 
-const TopBlurBar = Animated.createAnimatedComponent(View);
-const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
+// ✅ 
 
-const TOP_BLUR_BAR_HEIGHT = 50;
-
-interface ModalProps {
+type ModalProps = {
     title: string;
     primaryButtonConfig: {
         label: string;
-        onClick: () => void;
         platformColor?: string;
         disabled?: boolean;
+        onClick: () => void;
     };
     deleteButtonConfig?: {
         label: string;
         optionLabels: string[];
-        optionHandlers: (() => void)[];
         message?: string;
         hidden?: boolean;
+        optionHandlers: (() => void)[];
     };
-    onClose: () => void;
     customStyle?: ViewStyle;
     children: ReactNode;
-}
+    onClose: () => void;
+};
+
+const TopBlurBar = Animated.createAnimatedComponent(View);
+const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
+
+const TOP_BLUR_BAR_HEIGHT = 50;
 
 const Modal = ({
     title,
@@ -61,6 +63,10 @@ const Modal = ({
         )
         return { opacity };
     });
+
+    // =======================
+    // 1. Event Handler
+    // =======================
 
     function handleDeleteButtonClick() {
         if (!deleteButtonConfig) return;
@@ -173,7 +179,7 @@ const Modal = ({
                 </ButtonText>
             </View>
         </View>
-    )
-}
+    );
+};
 
 export default Modal;

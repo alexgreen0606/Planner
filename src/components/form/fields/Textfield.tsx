@@ -4,10 +4,12 @@ import { LIST_CONTENT_HEIGHT } from '@/lib/constants/layout';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, TextInput, TouchableOpacity } from 'react-native';
 
+// ✅ 
+
 type ModalTextfieldProps = {
     value: string;
-    autoCapitalizeWords: boolean;
     focusTrigger: boolean;
+    autoCapitalizeWords: boolean;
     onChange: (newVal: string) => void;
 };
 
@@ -41,13 +43,11 @@ const ModalTextfield = ({
                         selectionColor={PlatformColor('systemBlue')}
                         returnKeyType='next'
                         textAlignVertical='center'
-                        className='text-[16px] bg-transparent flex-1 pl-4'
+                        className='text-[16px] bg-transparent flex-1 pl-4 text-right flex-wrap'
                         style={{
                             color: PlatformColor('label'),
                             height: LIST_CONTENT_HEIGHT,
-                            fontFamily: 'Text',
-                            textAlign: 'right',
-                            flexWrap: 'wrap'
+                            fontFamily: 'Text'
                         }}
                     />
                 ) : (

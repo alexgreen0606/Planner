@@ -1,11 +1,13 @@
-import { Tabs } from 'expo-router';
 import GenericIcon from '@/components/icon';
 import TodayIcon from '@/components/icon/TodayIcon';
-import { BOTTOM_NAVIGATION_HEIGHT, spacing } from '@/lib/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT } from '@/lib/constants/layout';
+import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// ✅ 
+
 export default function TabLayout() {
-    const {bottom: BOTTOM_SPACER} = useSafeAreaInsets();
+    const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     return (
         <Tabs
             screenOptions={{
