@@ -27,8 +27,6 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
         return date.toFormat(monthFormat).toUpperCase();
     }, [todayDatestamp]);
 
-    // TODO: create custom style for these in CustomText for these, not customStyle for CustomText
-
     return (
         <View className='relative scale-[1.12]'>
             <GenericIcon
@@ -38,19 +36,13 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
                 platformColor={platformColor}
             />
             <View className='absolute w-full h-full items-center pt-[0.6px]'>
-                <CustomText
-                    variant='time'
-                    customStyle={{ fontSize: 8, color: PlatformColor('systemBackground') }}
-                >
+                <CustomText variant='todayMonth'>
                     {month}
                 </CustomText>
                 <CustomText
-                    variant='time'
+                    variant='todayDate'
                     customStyle={{
-                        fontSize: 16,
                         color: PlatformColor(platformColor),
-                        paddingLeft: 1.5,
-                        marginTop: -1
                     }}
                 >
                     {day}

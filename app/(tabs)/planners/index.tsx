@@ -24,7 +24,7 @@ import { PlatformColor, View } from 'react-native';
 const defaultPlannerSet = 'Next 7 Days';
 
 const forecasts: Record<string, WeatherForecast> = {
-    "2025-06-22": {
+    "2025-07-24": {
         "date": "2025-04-23",
         "weatherCode": 61,
         "weatherDescription": "Slight rain",
@@ -33,7 +33,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 0.06,
         "precipitationProbabilityMax": 24
     },
-    "2025-06-23": {
+    "2025-07-25": {
         "date": "2025-03-28",
         "weatherCode": 65,
         "weatherDescription": "Heavy rain",
@@ -42,7 +42,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 1.19,
         "precipitationProbabilityMax": 32
     },
-    "2025-06-24": {
+    "2025-07-26": {
         "date": "2025-03-29",
         "weatherCode": 3,
         "weatherDescription": "Overcast",
@@ -51,7 +51,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 0,
         "precipitationProbabilityMax": 3
     },
-    "2025-06-25": {
+    "2025-07-27": {
         "date": "2025-03-30",
         "weatherCode": 63,
         "weatherDescription": "Moderate rain",
@@ -60,7 +60,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 0.46,
         "precipitationProbabilityMax": 66
     },
-    "2025-06-26": {
+    "2025-07-28": {
         "date": "2025-03-31",
         "weatherCode": 51,
         "weatherDescription": "Light drizzle",
@@ -69,7 +69,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 0.02,
         "precipitationProbabilityMax": 34
     },
-    "2025-06-27": {
+    "2025-07-29": {
         "date": "2025-04-01",
         "weatherCode": 53,
         "weatherDescription": "Moderate drizzle",
@@ -78,7 +78,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 0.09,
         "precipitationProbabilityMax": 34
     },
-    "2025-06-28": {
+    "2025-07-30": {
         "date": "2025-04-02",
         "weatherCode": 53,
         "weatherDescription": "Moderate drizzle",
@@ -87,7 +87,7 @@ const forecasts: Record<string, WeatherForecast> = {
         "precipitationSum": 0.37,
         "precipitationProbabilityMax": 41
     },
-    "2025-06-29": {
+    "2025-07-31": {
         "date": "2025-04-02",
         "weatherCode": 53,
         "weatherDescription": "Moderate drizzle",

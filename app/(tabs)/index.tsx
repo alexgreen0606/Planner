@@ -1,13 +1,13 @@
 import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
-import EventChipSets from '@/components/eventChip/EventChipSet';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import TodayPlanner from '@/components/lists/TodayPlanner';
 import TodayBanner from '@/components/banners/TodayBanner';
+import EventChipSets from '@/components/eventChip/EventChipSet';
+import SlowFadeInView from '@/components/SlowFadeInView';
+import TodayPlanner from '@/components/lists/TodayPlanner';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useAtomValue } from 'jotai';
-import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 
@@ -34,20 +34,13 @@ const Today = () => {
       <ScrollContainerProvider
         header={<TodayBanner timestamp={todayDatestamp} />}
         floatingBanner={calendarChips.length > 0 &&
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{
-              type: 'timing',
-              duration: 2000
-            }}
-          >
+          <SlowFadeInView>
             <EventChipSets
               datestamp={todayDatestamp}
               sets={calendarChips}
               backgroundPlatformColor='systemBackground'
             />
-          </MotiView>
+          </SlowFadeInView>
         }
       >
 

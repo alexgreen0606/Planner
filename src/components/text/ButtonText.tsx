@@ -1,8 +1,10 @@
 import React from 'react';
-import { PlatformColor, StyleSheet, TextProps, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
+import { PlatformColor, TextProps, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import CustomText, { TextVariant } from './CustomText';
 import GenericIcon, { GenericIconProps } from '../icon';
+import CustomText, { TextVariant } from './CustomText';
+
+// ✅ 
 
 const AnimatedText = Animated.createAnimatedComponent(View);
 
@@ -24,7 +26,6 @@ const ButtonText = ({
     iconConfig,
     ...rest
 }: ButtonTextProps) => {
-
     const opacity = useSharedValue(1);
 
     function handlePressStart() {
@@ -46,11 +47,12 @@ const ButtonText = ({
 
     return (
         <TouchableWithoutFeedback onPressIn={handlePressStart} onPressOut={handlePressEnd}>
-            <AnimatedText style={[textStyle, styles.container, containerStyle]}>
+            <AnimatedText
+                className='items-center flex-row'
+                style={[textStyle, containerStyle]}
+            >
                 {iconConfig && (
-                    <GenericIcon
-                        {...iconConfig}
-                    />
+                    <GenericIcon {...iconConfig} />
                 )}
                 <CustomText
                     variant={textType}
@@ -65,14 +67,7 @@ const ButtonText = ({
                 </CustomText>
             </AnimatedText>
         </TouchableWithoutFeedback>
-    )
-}
-
-const styles = StyleSheet.create({
-    container: {
-        alignItems: 'center',
-        flexDirection: 'row'
-    },
-});
+    );
+};
 
 export default ButtonText;

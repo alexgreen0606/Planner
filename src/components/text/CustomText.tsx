@@ -1,6 +1,8 @@
 import React from 'react';
 import { PlatformColor, StyleSheet, TextProps as NativeTextProps, TextStyle, Text } from 'react-native';
 
+// ✅ 
+
 export const textStyles = {
     // --- Standard Text ---
     pageLabel: {
@@ -28,12 +30,22 @@ export const textStyles = {
         fontSize: 16,
         fontFamily: 'Text'
     },
+    // --- Button ---
+    button: {
+        fontSize: 18,
+        fontFamily: 'RoundMedium',
+    },
     // --- Modal ---
     modalTitle: {
         color: PlatformColor('label'),
         fontSize: 20,
         fontWeight: 400,
         fontFamily: 'RoundRegular',
+    },
+    inputLabel: {
+        color: PlatformColor('secondaryLabel'),
+        fontSize: 14,
+        fontFamily: 'RoundeMedium'
     },
     // --- Planner Card ---
     plannerCardHeader: {
@@ -76,31 +88,20 @@ export const textStyles = {
         fontFamily: 'RoundMedium'
     },
     // --- Weather ---
+    currentTemp: {
+        fontSize: 18,
+        color: PlatformColor('label'),
+        fontFamily: 'RoundMedium',
+    },
     highTemp: {
         fontSize: 16,
         color: PlatformColor('label'),
-        fontFamily: 'Text'
+        fontFamily: 'RoundMedium'
     },
     lowTemp: {
-        fontSize: 12,
-        color: PlatformColor('secondaryLabel'),
-        fontFamily: 'Text'
-    },
-    // --- Button ---
-    button: {
-        fontSize: 18,
-        fontFamily: 'RoundMedium',
-    },
-    // --- Birthday ---
-    age: {
-        fontSize: 24,
-        fontFamily: 'RoundHeavy',
-        color: PlatformColor('systemGreen'),
-    },
-    year2: {
         fontSize: 14,
-        fontFamily: 'RoundHeavy',
-        color: PlatformColor('systemGreen'),
+        color: PlatformColor('secondaryLabel'),
+        fontFamily: 'RoundMedium'
     },
     // --- Concise Time ---
     listTime: {
@@ -164,11 +165,18 @@ export const textStyles = {
         fontSize: 16,
         color: PlatformColor('systemTeal')
     },
-    // --- Modal ---
-    inputLabel: {
-        color: PlatformColor('secondaryLabel'),
-        fontSize: 14,
-        fontFamily: 'RoundeMedium'
+    // --- Today Icon ---
+    todayMonth: {
+        fontSize: 8,
+        fontFamily: 'RoundHeavy',
+        color: PlatformColor('systemBackground'),
+        marginRight: 1
+    },
+    todayDate: {
+        fontSize: 16,
+        paddingLeft: 1.5,
+        marginTop: -1,
+        fontFamily: 'RoundHeavy'
     }
 } satisfies Record<string, TextStyle>;
 

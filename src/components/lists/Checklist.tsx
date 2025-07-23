@@ -10,9 +10,11 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback } from 'react';
 import SortableList from './components/SortableList';
 
+// ✅ 
+
 const Checklist = () => {
-    const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
     const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IListItem>();
+    const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
 
     const listType = EListType.CHECKLIST;
 
@@ -21,20 +23,12 @@ const Checklist = () => {
         []
     );
 
-    function setItemsInStorageObject(newItems: IListItem[], currentObject: IChecklist) {
-        return { ...currentObject, items: newItems };
-    }
-
-    function toggleScheduleChecklistItemDelete(item: IListItem) {
-        toggleScheduleItemDelete(item, listType);
-    }
-
     const SortedItems = useSortedList<IListItem, IChecklist>({
         storageId: EStorageId.CHECKLISTS,
         storageKey: checklistId,
+        listType,
         getItemsFromStorageObject,
         saveItemToStorage: saveChecklistItem,
-        listType
     });
 
     return (
@@ -45,7 +39,7 @@ const Checklist = () => {
             items={SortedItems.items}
             onDragEnd={SortedItems.persistItemToStorage}
             onContentClick={SortedItems.toggleItemEdit}
-            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleChecklistItemDelete, getIsItemDeleting(item, listType))}
+            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleItemDelete, getIsItemDeleting(item, listType))}
             onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",

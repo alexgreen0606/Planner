@@ -23,10 +23,12 @@ import Card from '../Card';
 import GenericIcon from '../icon';
 import SortableList from './components/SortableList';
 
-interface PlannerCardProps {
+// ✅ 
+
+type PlannerCardProps = {
     datestamp: string;
     forecast?: WeatherForecast;
-}
+};
 
 enum EditAction {
     EDIT_TITLE = 'EDIT_TITLE',
@@ -54,14 +56,10 @@ const PlannerCard = ({
         [calendarEventData]
     );
 
-    const isTimeModalOpen = useMemo(() =>
-        pathname.includes('timeModal'),
+    const isTimeModalOpen = useMemo(
+        () => pathname.includes('timeModal'),
         [pathname]
     );
-
-    const listType = EListType.PLANNER;
-
-    // ------------- Utility Functions -------------
 
     const isEventDeleting = useCallback((planEvent: IPlannerEvent) =>
         getDeletingItems(listType).some(deleteItem =>
@@ -73,23 +71,54 @@ const PlannerCard = ({
         [getDeletingItems]
     );
 
-    async function toggleCollapsed() {
-        if (textfieldItem) {
-            if (textfieldItem.value.trim() !== '')
-                await SortedEvents.persistItemToStorage(textfieldItem);
-            setTextfieldItem(null);
+    const getItemsFromStorageObject = useCallback((planner: TPlanner) =>
+        buildPlannerEvents(datestamp, planner, calendarEvents),
+        [calendarEvents]
+    );
+
+    const listType = EListType.PLANNER;
+
+    // ------------- List Generation -------------
+    const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
+        storageId: EStorageId.PLANNER,
+        storageKey: datestamp,
+        listType,
+        getItemsFromStorageObject,
+        initializedStorageObject: generatePlanner(datestamp),
+        saveItemToStorage: saveEventWithRecurringAndCalendarCheck
+    });
+
+    const planner = SortedEvents.storageObject;
+    const hasTitle = (planner?.title.length ?? 0) > 0;
+    const isRecurringHidden = planner?.hideRecurring;
+
+    // ------------- Events visible to the user (hide recurring when needed) -------------
+    const visibleEvents = useMemo(() => {
+        if (!isRecurringHidden) return SortedEvents.items;
+        return SortedEvents.items.filter(event => !event.recurringCloneId && !event.recurringId);
+    }, [SortedEvents.items, isRecurringHidden]);
+
+    // =============
+    // 1. Reactions
+    // =============
+
+    // Reveal all recurring events when the textfield item belongs to this planner.
+    useEffect(() => {
+        if (textfieldItem?.listId === datestamp && isRecurringHidden) {
+            toggleHideAllRecurringEventsInPlanner(datestamp);
         }
-        setCollapsed(curr => !curr);
-    }
+    }, [textfieldItem?.listId, isRecurringHidden]);
 
-    function handleOpenTimeModal(event?: IPlannerEvent) {
-        const eventToOpen = event ?? textfieldItem;
-        if (!eventToOpen) throw new Error('No event to open.')
+    // Expand this list if the textfield item belongs to this planner.
+    useEffect(() => {
+        if (textfieldItem?.listId === datestamp && collapsed) {
+            setCollapsed(false);
+        }
+    }, [textfieldItem?.listId]);
 
-        openTimeModal(datestamp, eventToOpen, router);
-    }
-
-    // ------------- List Management Utils -------------
+    // ==================
+    // 2. Event Handlers
+    // ==================
 
     function handleAction(action: EditAction) {
         switch (action) {
@@ -109,50 +138,39 @@ const PlannerCard = ({
         }
     }
 
-    async function toggleScheduleEventDelete(event: IPlannerEvent) {
-        toggleScheduleItemDelete(event, listType);
+    function handleOpenTimeModal(event?: IPlannerEvent) {
+        const eventToOpen = event ?? textfieldItem;
+        if (!eventToOpen) throw new Error('No event to open.')
+
+        openTimeModal(datestamp, eventToOpen, router);
+    }
+
+    async function handleToggleScheduleEventDelete(event: IPlannerEvent) {
+        toggleScheduleItemDelete(event);
+
+        // If this is the textfield, save it.
         if (event.id === textfieldItem?.id) {
             await SortedEvents.persistItemToStorage(textfieldItem);
             setTextfieldItem(null);
         }
     }
 
-    const getItemsFromStorageObject = useCallback((planner: TPlanner) =>
-        buildPlannerEvents(datestamp, planner, calendarEvents),
-        [calendarEvents]
-    );
-
-    const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
-        storageId: EStorageId.PLANNER,
-        storageKey: datestamp,
-        getItemsFromStorageObject,
-        initializedStorageObject: generatePlanner(datestamp),
-        saveItemToStorage: saveEventWithRecurringAndCalendarCheck,
-        listType
-    });
-
-    const planner = SortedEvents.storageObject;
-    const hasTitle = (planner?.title.length ?? 0) > 0;
-    const isRecurringHidden = planner?.hideRecurring;
-
-    const visibleEvents = useMemo(() => {
-        if (!isRecurringHidden) return SortedEvents.items;
-        return SortedEvents.items.filter(event => !event.recurringCloneId && !event.recurringId);
-    }, [SortedEvents.items, isRecurringHidden]);
-
-    useEffect(() => {
-        if ((textfieldItem?.listId === datestamp) && isRecurringHidden) {
-            toggleHideAllRecurringEventsInPlanner(datestamp);
+    async function handleToggleCollapsed() {
+        if (textfieldItem) {
+            if (textfieldItem.value.trim() !== '')
+                await SortedEvents.persistItemToStorage(textfieldItem);
+            setTextfieldItem(null);
         }
-    }, [textfieldItem?.listId, isRecurringHidden]);
+        setCollapsed(curr => !curr);
+    }
 
-    useEffect(() => {
-        if (textfieldItem?.listId === datestamp && collapsed) {
-            setCollapsed(false);
-        }
-    }, [textfieldItem]);
+    // =======
+    // 3. UI
+    // =======
 
-    return !isCalendarLoading && (
+    if (isCalendarLoading) return null;
+
+    return (
         <Card
             header={
                 <DayBanner
@@ -160,7 +178,7 @@ const PlannerCard = ({
                     forecast={forecast}
                     eventChipSets={calendarChips ?? []}
                     collapsed={collapsed}
-                    onToggleCollapsed={toggleCollapsed}
+                    onToggleCollapsed={handleToggleCollapsed}
                     isEditingTitle={isEditingTitle}
                     onEndEditTitle={() => setIsEditingTitle(false)}
                 />
@@ -244,7 +262,7 @@ const PlannerCard = ({
                 hideKeyboard={isTimeModalOpen}
                 onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, datestamp)}
                 onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, isEventDeleting(item))}
+                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, handleToggleScheduleEventDelete, isEventDeleting(item))}
                 toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
                 customOnGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{

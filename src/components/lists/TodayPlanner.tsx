@@ -17,6 +17,8 @@ import React, { useCallback } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 import SortableList from './components/SortableList';
 
+// ✅ 
+
 const TodayPlanner = () => {
     const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
@@ -25,28 +27,21 @@ const TodayPlanner = () => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const listType = EListType.PLANNER;
-    const isTimeModalOpen = pathname.includes('timeModal');
-
-    function handleOpenTimeModal(event?: IPlannerEvent) {
-        const eventToOpen = event ?? textfieldItem;
-        if (!eventToOpen) throw new Error('No event to open.')
-
-        openTimeModal(todayDatestamp, eventToOpen!, router);
-    }
-
-    async function toggleScheduleEventDelete(event: IPlannerEvent) {
-        toggleScheduleItemDelete(event, listType);
-        if (event.id === textfieldItem?.id) {
-            await SortedEvents.persistItemToStorage(textfieldItem);
-            setTextfieldItem(null);
-        }
-    }
-
     const getItemsFromStorageObject = useCallback(async (planner: TPlanner) => {
         return buildPlannerEvents(todayDatestamp, planner, calendarEvents);
     }, [calendarEvents]);
 
+    const recurringStorage = useMMKV({ id: EStorageId.RECURRING_EVENT });
+    useMMKVListener((key) => {
+        if (key === datestampToDayOfWeek(todayDatestamp)) {
+            SortedEvents.refetchItems();
+        }
+    }, recurringStorage);
+
+    const listType = EListType.PLANNER;
+    const isTimeModalOpen = pathname.includes('timeModal');
+
+    // ------------- List Generation -------------
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: EStorageId.PLANNER,
         storageKey: todayDatestamp,
@@ -56,12 +51,30 @@ const TodayPlanner = () => {
         listType
     });
 
-    const recurringStorage = useMMKV({ id: EStorageId.RECURRING_EVENT });
-    useMMKVListener((key) => {
-        if (key === datestampToDayOfWeek(todayDatestamp)) {
-            SortedEvents.refetchItems();
+    // ==================
+    // 1. Event Handlers
+    // ==================
+
+    function handleOpenTimeModal(event?: IPlannerEvent) {
+        const eventToOpen = event ?? textfieldItem;
+        if (!eventToOpen) throw new Error('No event to open.')
+
+        openTimeModal(todayDatestamp, eventToOpen!, router);
+    }
+
+    async function handleToggleScheduleEventDelete(event: IPlannerEvent) {
+        toggleScheduleItemDelete(event);
+
+        // If this is the textfield, save it.
+        if (event.id === textfieldItem?.id) {
+            await SortedEvents.persistItemToStorage(textfieldItem);
+            setTextfieldItem(null);
         }
-    }, recurringStorage);
+    }
+
+    // ======
+    // 4. UI
+    // ======
 
     return (
         <SortableList<IPlannerEvent>
@@ -75,7 +88,7 @@ const TodayPlanner = () => {
             onContentClick={SortedEvents.toggleItemEdit}
             onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, todayDatestamp)}
             onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
+            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, handleToggleScheduleEventDelete, getIsItemDeleting(item, listType))}
             toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{

@@ -12,7 +12,7 @@ import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 type DeleteSchedulerContextType<T extends IListItem> = {
     getDeletingItems: (deleteFunctionKey: EListType) => T[];
     getIsItemDeleting: (item: T, deleteFunctionKey: EListType) => boolean;
-    toggleScheduleItemDelete: (item: T, deleteFunctionKey: EListType) => void;
+    toggleScheduleItemDelete: (item: T) => void;
 }
 
 export const deletionMap: Partial<Record<EListType, (items: any[]) => Promise<void> | void>> = {
@@ -38,7 +38,9 @@ export function DeleteSchedulerProvider<T extends IListItem>({ children }: { chi
         return Boolean(pendingDeleteMap[deleteFunctionKey]?.[item.id]);
     }, [pendingDeleteMap]);
 
-    const toggleScheduleItemDelete = useCallback(async (item: T, listType: EListType) => {
+    const toggleScheduleItemDelete = useCallback(async (item: T) => {
+        const listType = item.listType;
+        
         if (item.id === textfieldItem?.id) {
             setTextfieldItem(null);
             if (item.value.trim() === '') {

@@ -1,4 +1,3 @@
-import { MotiView } from 'moti';
 import React from 'react';
 import {
     Linking,
@@ -10,6 +9,7 @@ import {
 import { SFSymbol } from 'react-native-sfsymbols';
 import { weatherCodeToFontistoIcon } from '../../utils/weatherUtils';
 import CustomText from '../text/CustomText';
+import SlowFadeInView from '../SlowFadeInView';
 
 // ✅ 
 
@@ -41,48 +41,43 @@ const WeatherDisplay = ({
     // 2. UI
     // =======================
 
-    // ------------- Current temperature layout -------------
+    // ------------- Current Temperature Layout -------------
     if (currentTemp !== undefined) {
         return (
-            <TouchableOpacity activeOpacity={1} onPress={handleOpenWeatherApp}>
-                <View className="flex-row gap-2 justify-between items-center">
-                    <CustomText variant="standard">{Math.round(currentTemp)}°</CustomText>
-                    <View className="mx-2">
-                        <SFSymbol
-                            name={weatherCodeToFontistoIcon(weatherCode)}
-                            size={18}
-                            multicolor
-                            resizeMode="center"
-                        />
+            <SlowFadeInView>
+                <TouchableOpacity activeOpacity={1} onPress={handleOpenWeatherApp}>
+                    <View className="flex-row gap-2 justify-between items-center">
+                        <CustomText variant="currentTemp">{Math.round(currentTemp)}°</CustomText>
+                        <View className="mx-4">
+                            <SFSymbol
+                                name={weatherCodeToFontistoIcon(weatherCode)}
+                                size={24}
+                                multicolor
+                                resizeMode="center"
+                            />
+                        </View>
                     </View>
-                </View>
-            </TouchableOpacity>
+                </TouchableOpacity>
+            </SlowFadeInView>
         );
     }
 
-    // ------------- High/low temperature layout -------------
+    // ------------- High/Low Temperature Layout -------------
     if (high !== undefined && low !== undefined) {
         return (
-            <MotiView
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                    type: 'timing',
-                    duration: 2000,
-                }}
-            >
+            <SlowFadeInView>
                 <TouchableOpacity activeOpacity={1} onPress={handleOpenWeatherApp}>
-                    <View className="flex-row gap-1 items-center">
+                    <View className="flex-row gap-1.5 items-center">
                         <CustomText variant="highTemp">{Math.round(high)}°</CustomText>
                         <View
+                            className='h-full'
                             style={{
                                 width: StyleSheet.hairlineWidth,
-                                height: '80%',
-                                backgroundColor: PlatformColor('systemGray3'),
+                                backgroundColor: PlatformColor('systemGray')
                             }}
                         />
                         <CustomText variant="lowTemp">{Math.round(low)}°</CustomText>
-                        <View className="ml-4 mr-3">
+                        <View className="mx-4">
                             <SFSymbol
                                 name={weatherCodeToFontistoIcon(weatherCode)}
                                 size={20}
@@ -92,7 +87,7 @@ const WeatherDisplay = ({
                         </View>
                     </View>
                 </TouchableOpacity>
-            </MotiView>
+            </SlowFadeInView>
         );
     }
 

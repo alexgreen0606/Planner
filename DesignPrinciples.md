@@ -32,6 +32,8 @@ Event handlers: 'handle'. Props: 'on'. All else just state what it does.
 2. `context`
 4. `animated variables`
 3. `state`
+6. `memo`
+7. `callback`
 4. `MMKV`
 6. `constants (prefer)`
 6. `hooks`

@@ -16,14 +16,16 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
-import SortableList from './components/SortableList';
 import { ToolbarIcon } from './components/ListToolbar';
+import SortableList from './components/SortableList';
 
-interface SortedFolderProps {
+// ✅ 
+
+type SortedFolderProps = {
     handleOpenItem: (id: string, type: EFolderItemType) => void;
     parentClickTrigger: number;
     parentFolderData?: IFolder;
-}
+};
 
 const SortedFolder = ({
     handleOpenItem,
@@ -34,54 +36,49 @@ const SortedFolder = ({
     const { folderId } = useLocalSearchParams<{ folderId: string }>();
     const router = useRouter();
 
-    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
-
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
+    const getFolderItemsMemoized = useCallback(getFolderItems, []);
+
+    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
     const [folder] = useMMKVObject<IFolder>(folderId, storage);
 
     const listType = EListType.FOLDER;
+    const isTransferMode = textfieldItem?.status === EItemStatus.TRANSFER;
 
-    /**
-     * If the focused item is being transferred, transfer it to the parent folder.
-     * Otherwise, open the parent folder.
-     */
+    // Rebuild the list when one of the folder's items changes.
+    useMMKVListener((key) => {
+        if (!storage.contains(key)) return;
+        if (
+            folder?.listIds.includes(key) ||
+            folder?.folderIds.includes(key)
+        ) {
+            SortedItems.refetchItems();
+        }
+    }, storage);
+
+    // Handle clicking of the parent folder.
     useEffect(() => {
         if (!folder) return;
         if (parentClickTrigger > 0) {
 
-            // Handle parent folder click
-            if (textfieldItem?.status === EItemStatus.TRANSFER) {
+            if (isTransferMode) {
                 handleItemTransfer();
-                return;
-
             } else if (folder.listId) {
                 router.back();
             }
         }
     }, [parentClickTrigger]);
 
-    // ------------- Utilities -------------
+    // ==================
+    // 1. Event Handlers
+    // ==================
 
-    function initializeEmptyFolder(newItem: IListItem) {
-        return {
-            ...newItem,
-            childrenCount: 0,
-            listId: folderId,
-            type: EFolderItemType.FOLDER,
-            platformColor: 'systemBrown',
-        }
-    };
-
-    function beginItemTransfer(item: IFolderItem) {
+    function handleBeginItemTransfer(item: IFolderItem) {
         setTextfieldItem({ ...item, status: EItemStatus.TRANSFER });
     }
 
-    /**
-     * Transfers the textfield item to a new folder.
-     * @param destination - the folder being transferred to
-     */
-    const handleItemTransfer = (destination?: IFolderItem) => {
+    function handleItemTransfer(destination?: IFolderItem) {
         if (!destination && !parentFolderData?.id || !textfieldItem) return;
         const destinationId = destination ? destination.id : parentFolderData?.id;
 
@@ -103,15 +100,10 @@ const SortedFolder = ({
             sortId: generateSortId(-1, destinationItems)
         });
         setTextfieldItem(null);
-    };
+    }
 
-    /**
-     * Handles clicking a list item. In transfer mode, the textfield item will transfer to the clicked item.
-     * Otherwise, the focused item will be saved and the clicked item will be opened.
-     * @param item - the item that was clicked
-     */
     function handleItemClick(item: IFolderItem) {
-        if (textfieldItem && textfieldItem.status === EItemStatus.TRANSFER) {
+        if (isTransferMode) {
             if (item.id === textfieldItem.id) {
                 setTextfieldItem({ ...textfieldItem, status: EItemStatus.EDIT });
             } else if (item.type === EFolderItemType.FOLDER) {
@@ -124,8 +116,25 @@ const SortedFolder = ({
         handleOpenItem(item.id, item.type);
     }
 
-    // Helper function to create the color selection icon set
-    function createColorSelectionIconSet(item: IFolderItem): GenericIconProps<IFolderItem>[] {
+    // ====================
+    // 2. Helper Functions
+    // ====================
+
+    function initializeEmptyFolder(newItem: IListItem) {
+        return {
+            ...newItem,
+            childrenCount: 0,
+            listId: folderId,
+            type: EFolderItemType.FOLDER,
+            platformColor: 'systemBrown',
+        }
+    }
+
+    function isItemTransfering(item: IFolderItem) {
+        return item.status === EItemStatus.TRANSFER;
+    }
+
+    function generateColorSelectionIconSet(item: IFolderItem): GenericIconProps<IFolderItem>[] {
         return Object.values(selectableColors).map(color => ({
             type: item.platformColor === color ? 'circleFilled' : 'circle',
             platformColor: color,
@@ -133,7 +142,7 @@ const SortedFolder = ({
         }));
     }
 
-    function getToolbarIcons(): ToolbarIcon<IFolderItem>[][] {
+    function generateToolbarIcons(): ToolbarIcon<IFolderItem>[][] {
         const item: IFolderItem = textfieldItem ?? initializeEmptyFolder({ id: '1', value: '', sortId: 1, status: EItemStatus.STATIC, listId: folderId, listType: EListType.FOLDER })
         const isNew = textfieldItem?.status === EItemStatus.NEW;
 
@@ -150,11 +159,11 @@ const SortedFolder = ({
                     platformColor: item.type === EFolderItemType.LIST ? item.platformColor : 'secondaryLabel'
                 }
             ],
-            createColorSelectionIconSet(item)
+            generateColorSelectionIconSet(item)
         ] : [
             [{
                 type: 'transfer',
-                onClick: () => beginItemTransfer(item),
+                onClick: () => handleBeginItemTransfer(item),
             }],
             [{
                 onClick: () => {
@@ -193,18 +202,27 @@ const SortedFolder = ({
                 },
                 type: 'trash'
             }],
-            createColorSelectionIconSet(item)
+            generateColorSelectionIconSet(item)
         ]
     }
 
-    const getFolderItemsMemoized = useCallback(getFolderItems, []);
+    function getIconType(item: IFolderItem) {
+        return isItemTransfering(item) ? 'transfer' : item.type;
+    }
 
-    const isItemTransfering = (item: IFolderItem) => item.status === EItemStatus.TRANSFER;
-    const isTransferMode = textfieldItem?.status === EItemStatus.TRANSFER;
-    const getIconType = (item: IFolderItem) => isItemTransfering(item) ? 'transfer' : item.type;
-    const getIconPlatformColor = (item: IFolderItem) => isItemTransfering(item) ?
-        'systemBlue' : (item.type === EFolderItemType.LIST && isTransferMode) ?
-            'tertiaryLabel' : item.platformColor;
+    function getIconPlatformColor(item: IFolderItem) {
+        if (isItemTransfering(item)) {
+            return 'systemBlue';
+        }
+        if (isTransferMode && item.type === EFolderItemType.LIST) {
+            return 'tertiaryLabel';
+        }
+        return item.platformColor;
+    }
+
+    // ===================
+    // 3. List Generation
+    // ===================
 
     const SortedItems = useSortedList<IFolderItem, IFolder>({
         storageId: EStorageId.CHECKLISTS,
@@ -215,16 +233,9 @@ const SortedFolder = ({
         listType
     });
 
-    // Rebuild the list when one of the folder's items changes
-    useMMKVListener((key) => {
-        if (!storage.contains(key)) return;
-        if (
-            folder?.listIds.includes(key) ||
-            folder?.folderIds.includes(key)
-        ) {
-            SortedItems.refetchItems();
-        }
-    }, storage);
+    // =======
+    // 4. UI
+    // =======
 
     return (
         <SortableList<IFolderItem>
@@ -234,7 +245,7 @@ const SortedFolder = ({
             listType={listType}
             isLoading={SortedItems.isLoading}
             onDragEnd={SortedItems.persistItemToStorage}
-            toolbarIconSet={getToolbarIcons()}
+            toolbarIconSet={generateToolbarIcons()}
             onContentClick={handleItemClick}
             onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             hideKeyboard={isDeleteAlertOpen || isTransferMode}

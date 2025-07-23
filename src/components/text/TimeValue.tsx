@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, PlatformColor } from 'react-native';
-import CustomText from './CustomText';
 import { DateTime } from 'luxon';
+import React, { useEffect, useState } from 'react';
+import { PlatformColor, View } from 'react-native';
+import CustomText from './CustomText';
 
-interface TimeProps {
-    timeValue?: string | null; // HH:MM
+// ✅ 
+
+type TimeValueProps = {
+    timeValue?: string | null;
     isoTimestamp?: string | null;
     endEvent?: boolean;
     startEvent?: boolean;
     concise?: boolean;
     platformColor?: string;
-}
+};
 
 const TimeValue = ({
     timeValue,
@@ -19,7 +21,7 @@ const TimeValue = ({
     startEvent,
     concise,
     platformColor = 'systemTeal'
-}: TimeProps) => {
+}: TimeValueProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
@@ -51,24 +53,30 @@ const TimeValue = ({
         }
     }, [timeValue, isoTimestamp]);
 
-    return concise ? (
-        <View className='flex-row relative'>
-            <CustomText variant='listTime' customStyle={{ color: PlatformColor(platformColor) }}>
-                {hour}{minute}
-            </CustomText>
-            <CustomText variant='listPmAmIndicator'>
-                {indicator}
-            </CustomText>
-            {(startEvent || endEvent) && (
-                <CustomText
-                    variant='listMultiDayIndicator'
-                    className='-translate-x-1/2'
-                >
-                    {startEvent ? 'START' : 'END'}
+    // ------------- Concise Time Layout -------------
+    if (concise) {
+        return (
+            <View className='flex-row relative'>
+                <CustomText variant='listTime' customStyle={{ color: PlatformColor(platformColor) }}>
+                    {hour}{minute}
                 </CustomText>
-            )}
-        </View>
-    ) : (
+                <CustomText variant='listPmAmIndicator'>
+                    {indicator}
+                </CustomText>
+                {(startEvent || endEvent) && (
+                    <CustomText
+                        variant='listMultiDayIndicator'
+                        className='-translate-x-1/2'
+                    >
+                        {startEvent ? 'START' : 'END'}
+                    </CustomText>
+                )}
+            </View>
+        )
+    }
+
+    // ------------- Standard Time Layout -------------
+    return (
         <View className='flex-row relative'>
             <CustomText variant='time' customStyle={{ color: PlatformColor(platformColor) }}>
                 {hour}{minute}
