@@ -236,11 +236,11 @@ const SortedFolder = ({
             onDragEnd={SortedItems.persistItemToStorage}
             toolbarIconSet={getToolbarIcons()}
             onContentClick={handleItemClick}
-            saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
+            onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             hideKeyboard={isDeleteAlertOpen || isTransferMode}
-            getRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
+            onGetRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
                 (isTransferMode && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
-            getRightIconConfig={item => ({
+            onGetRightIconConfig={item => ({
                 customIcon:
                     <CustomText
                         variant='microDetail'
@@ -252,7 +252,7 @@ const SortedFolder = ({
                         {item.childrenCount}
                     </CustomText>
             })}
-            getLeftIconConfig={item => ({
+            onGetLeftIconConfig={item => ({
                 icon: {
                     type: getIconType(item),
                     platformColor: getIconPlatformColor(item)

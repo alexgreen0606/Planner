@@ -10,12 +10,14 @@ import { sanitizeList } from '@/utils/listUtils';
 import { MotiView } from 'moti';
 import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
-import { cancelAnimation, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import DraggableRow from './Row';
 import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
+import DraggableRow from './Row';
 import ScrollAnchor from './ScrollAnchor';
 import Toolbar, { ToolbarIcon } from './Toolbar';
+
+// ✅ 
 
 type DraggableListProps<T extends IListItem> = {
     listId: string;
@@ -29,24 +31,25 @@ type DraggableListProps<T extends IListItem> = {
     disableDrag?: boolean;
     onDragEnd?: (updatedItem: T) => Promise<any> | any;
     onContentClick: (item: T) => void;
-    handleValueChange?: (text: string, item: T) => T;
-    getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
-    getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
-    getRowTextPlatformColor?: (item: T) => string;
-    saveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
-    customGetIsDeleting?: (item: T) => boolean;
+    onValueChange?: (text: string, item: T) => T;
+    onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
+    onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
+    onGetRowTextPlatformColor?: (item: T) => string;
+    onSaveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
+    customOnGetIsDeleting?: (item: T) => boolean;
 };
 
 const SortableList = <T extends IListItem>({
     listId,
     items,
     isLoading,
-    saveTextfieldAndCreateNew,
     emptyLabelConfig,
     fillSpace,
     toolbarIconSet,
-    disableDrag = false,
     hideKeyboard,
+    disableDrag = false,
+    onDragEnd,
+    onSaveTextfieldAndCreateNew,
     ...rest
 }: DraggableListProps<T>) => {
     const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
@@ -54,56 +57,23 @@ const SortableList = <T extends IListItem>({
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const [textfieldItem] = useTextfieldItemAs<T>();
 
+    // ------------- Drag Variables -------------
+
     const draggingRowId = useSharedValue<string | null>(null);
     const isAutoScrolling = useSharedValue(false);
 
     const dragInitialScrollOffset = useSharedValue(0);
-    const dragInitialIndex = useSharedValue<number>(0);
+    const dragInitialIndex = useSharedValue(0);
     const dragInitialTop = useSharedValue(0);
 
     const dragScrollOffsetDelta = useSharedValue(0);
-    const dragTop = useSharedValue<number>(0);
-
+    const dragTop = useSharedValue(0);
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
     const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
-    // Builds the list out of the existing items and the textfield.
-    const list = useMemo(() => {
-        let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
-
-        if (textfieldItem?.listId === listId) {
-            fullList = sanitizeList(fullList, textfieldItem);
-        }
-
-        // If the list updates, assume no drag is occuring.
-        draggingRowId.value = null;
-
-        return fullList.sort((a, b) => a.sortId - b.sortId);
-    }, [
-        textfieldItem?.id,
-        items
-    ]);
-
-    const dragTopMax = useMemo(() =>
-        Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1)),
-        [list.length]
-    );
-
-    useEffect(() => {
-        runOnUI(measureContentHeight)();
-    }, [list.length]);
-
-    // ------------- Utility Functions -------------
-
-    function handleEmptySpaceClick() {
-        handleSaveTextfieldAndCreateNew(-1, true);
-    }
-
-    async function handleSaveTextfieldAndCreateNew(referenceSortId?: number, isChildId: boolean = false) {
-        saveTextfieldAndCreateNew(referenceSortId, isChildId);
-    }
+    // ------------- Drag Utilities -------------
 
     function handleDragStart(rowId: string, initialIndex: number) {
         "worklet";
@@ -117,14 +87,54 @@ const SortableList = <T extends IListItem>({
         draggingRowId.value = rowId;
     }
 
-    function handleDragEnd() {
+    function handleDragEnd(updatedItem?: T) {
         "worklet";
-        cancelAnimation(scrollOffset);
-        dragScrollOffsetDelta.value = 0;
-        isAutoScrolling.value = false;
+
+        if (updatedItem && onDragEnd) {
+            runOnJS(onDragEnd)(updatedItem);
+        } else {
+            cancelAnimation(scrollOffset);
+            dragScrollOffsetDelta.value = 0;
+            isAutoScrolling.value = false;
+            draggingRowId.value = null;
+        }
     }
 
-    // ------------- Animation -------------
+    // Builds the list out of the existing items and the textfield.
+    const list = useMemo(() => {
+        let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
+
+        if (textfieldItem?.listId === listId) {
+            fullList = sanitizeList(fullList, textfieldItem);
+        }
+
+        if (draggingRowId.value) {
+            handleDragEnd();
+        }
+
+        return fullList.sort((a, b) => a.sortId - b.sortId);
+    }, [
+        textfieldItem?.id,
+        items
+    ]);
+
+    const dragTopMax = useMemo(() =>
+        Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1)),
+        [list.length]
+    );
+
+    // =======================
+    // 1. Reactions
+    // =======================
+
+    // Evaluate the scroll container height every time the list length changes.
+    useEffect(() => {
+        runOnUI(measureContentHeight)();
+    }, [list.length]);
+
+    // =======================
+    // 2. Animations
+    // =======================
 
     // Auto scroll.
     useAnimatedReaction(
@@ -139,6 +149,14 @@ const SortableList = <T extends IListItem>({
         }
     );
 
+    // =======================
+    // 3. Event Handlers
+    // =======================
+
+    function handleEmptySpaceClick() {
+        onSaveTextfieldAndCreateNew(-1, true);
+    }
+
     return (
         <MotiView
             animate={{ opacity: isLoading ? 0 : 1 }}
@@ -146,7 +164,7 @@ const SortableList = <T extends IListItem>({
         >
             <View style={{ flex: fillSpace ? 1 : 0 }}>
 
-                {/* List */}
+                {/* List Items */}
                 <View
                     className='w-full'
                     style={{
@@ -159,28 +177,29 @@ const SortableList = <T extends IListItem>({
                             item={item}
                             itemIndex={i}
                             toolbarIconSet={toolbarIconSet}
-                            disableDrag={disableDrag}
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             hideKeyboard={Boolean(hideKeyboard)}
-                            draggingRowId={draggingRowId}
-                            dragControls={{
+                            dragConfig={{
                                 top: dragTop,
                                 index: dragIndex,
                                 initialIndex: dragInitialIndex,
                                 initialTop: dragInitialTop,
                                 isAutoScrolling: isAutoScrolling,
                                 topMax: dragTopMax,
-                                handleDragEnd,
-                                handleDragStart
+                                draggingRowId: draggingRowId,
+                                disableDrag: disableDrag,
+                                onDragEnd: handleDragEnd,
+                                onDragStart: handleDragStart
                             }}
-                            saveTextfieldAndCreateNew={handleSaveTextfieldAndCreateNew}
                             {...rest}
                             items={list}
+                            onSaveTextfieldAndCreateNew={onSaveTextfieldAndCreateNew}
                         />
                     )}
                 </View>
 
+                {/* Lower List Line */}
                 {list.length > 0 && (
                     <Pressable onPress={handleEmptySpaceClick}>
                         <ThinLine />
@@ -209,6 +228,7 @@ const SortableList = <T extends IListItem>({
                 {toolbarIconSet && (
                     <Toolbar iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
                 )}
+
             </View>
         </MotiView>
     );

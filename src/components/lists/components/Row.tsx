@@ -32,28 +32,27 @@ type DraggableRowProps<T extends IListItem> = {
     hideKeyboard: boolean;
     upperAutoScrollBound: number;
     lowerAutoScrollBound: number;
-    draggingRowId: SharedValue<string | null>;
-    disableDrag: boolean;
-    dragControls: {
-        handleDragStart: (rowId: string, initialIndex: number) => void;
+    dragConfig: {
         initialIndex: SharedValue<number>;
         initialTop: SharedValue<number>;
         isAutoScrolling: SharedValue<boolean>;
         topMax: number;
         top: SharedValue<number>;
         index: DerivedValue<number>;
-        handleDragEnd: () => void;
+        draggingRowId: SharedValue<string | null>;
+        disableDrag: boolean;
+        onDragStart: (rowId: string, initialIndex: number) => void;
+        onDragEnd: (updatedItem?: T) => void;
     },
     listType: EListType;
     toolbarIconSet?: ToolbarIcon<T>[][];
-    saveTextfieldAndCreateNew: (referenceSortId?: number, isChildId?: boolean) => Promise<void>;
-    onDragEnd?: (updatedItem: T) => Promise<any> | any;
+    onSaveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
     onContentClick: (item: T) => void;
-    handleValueChange?: (text: string, item: T) => T;
-    getLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
-    getRightIconConfig?: (item: T) => TListItemIconConfig<T>;
-    getRowTextPlatformColor?: (item: T) => string;
-    customGetIsDeleting?: (item: T) => boolean;
+    onValueChange?: (text: string, item: T) => T;
+    onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
+    onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
+    onGetRowTextPlatformColor?: (item: T) => string;
+    customOnGetIsDeleting?: (item: T) => boolean;
 };
 
 const Row = Animated.createAnimatedComponent(View);
@@ -71,23 +70,31 @@ enum IconPosition {
 const DraggableRow = <T extends IListItem>({
     item: staticItem,
     items,
-    dragControls,
-    disableDrag,
+    dragConfig: {
+        initialIndex,
+        initialTop,
+        isAutoScrolling,
+        topMax,
+        top,
+        index,
+        draggingRowId,
+        disableDrag,
+        onDragStart,
+        onDragEnd
+    },
     itemIndex,
     toolbarIconSet,
-    draggingRowId,
     upperAutoScrollBound,
     lowerAutoScrollBound,
     listType,
     hideKeyboard,
-    saveTextfieldAndCreateNew,
-    onDragEnd,
-    getLeftIconConfig,
-    getRightIconConfig,
-    handleValueChange,
-    getRowTextPlatformColor,
+    onSaveTextfieldAndCreateNew,
+    onGetLeftIconConfig,
+    onGetRightIconConfig,
+    onValueChange,
+    onGetRowTextPlatformColor,
     onContentClick,
-    customGetIsDeleting
+    customOnGetIsDeleting
 }: DraggableRowProps<T>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { getIsItemDeleting } = useDeleteScheduler<T>();
@@ -96,20 +103,7 @@ const DraggableRow = <T extends IListItem>({
         autoScroll
     } = useScrollContainer();
 
-    const isItemDeleting = customGetIsDeleting ?? getIsItemDeleting;
-
-    const {
-        initialIndex,
-        initialTop,
-        isAutoScrolling,
-        topMax,
-        top,
-        index,
-        handleDragStart,
-        handleDragEnd
-    } = dragControls;
-
-    const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
+    const isItemDeleting = customOnGetIsDeleting ?? getIsItemDeleting;
 
     const item = useMemo(() =>
         textfieldItem?.id === staticItem.id ? textfieldItem : staticItem,
@@ -121,34 +115,37 @@ const DraggableRow = <T extends IListItem>({
         [getIsItemDeleting]
     );
 
-    const textPlatformColor = useMemo(() => getRowTextPlatformColor?.(item), [item, getRowTextPlatformColor]);
-    const leftIconConfig = useMemo(() => getLeftIconConfig?.(item), [item, getLeftIconConfig]);
-    const rightIconConfig = useMemo(() => getRightIconConfig?.(item), [item, getRightIconConfig]);
+    const textPlatformColor = useMemo(() => onGetRowTextPlatformColor?.(item), [item, onGetRowTextPlatformColor]);
+    const leftIconConfig = useMemo(() => onGetLeftIconConfig?.(item), [item, onGetLeftIconConfig]);
+    const rightIconConfig = useMemo(() => onGetRightIconConfig?.(item), [item, onGetRightIconConfig]);
 
+    const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
     const isRowDragging = useDerivedValue(() => {
         return draggingRowId.value === item.id
-    })
+    });
 
     // Keep the position of the row up to date.
     useEffect(() => {
         basePosition.value = itemIndex * LIST_ITEM_HEIGHT;
     }, [itemIndex]);
 
-    // ------------- Utility Functions -------------
+    // =======================
+    // 1. Event Handlers
+    // =======================
 
     function handleTextfieldChange(text: string) {
         if (!textfieldItem) return;
 
         let newTextfieldItem = { ...textfieldItem, value: text };
-        if (handleValueChange) {
-            newTextfieldItem = handleValueChange(text, textfieldItem);
+        if (onValueChange) {
+            newTextfieldItem = onValueChange(text, textfieldItem);
         }
 
         setTextfieldItem(newTextfieldItem);
     }
 
     function handleTextfieldSave(createNew: boolean = true) {
-        saveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
+        onSaveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
     }
 
     function handleDrag(
@@ -192,7 +189,7 @@ const DraggableRow = <T extends IListItem>({
     async function handleEndDragAndSave() {
         if (index.value === initialIndex.value) {
             // Item didn't move. Clean up and quit.
-            handleDragEnd();
+            onDragEnd();
             draggingRowId.value = null;
             return;
         }
@@ -206,13 +203,12 @@ const DraggableRow = <T extends IListItem>({
         const newSort = generateSortId(parentSortId, withoutDragged);
 
         const updatedItem = { ...item, sortId: newSort };
-        await onDragEnd?.(updatedItem);
-
-        draggingRowId.value = null;
-        handleDragEnd();
+        onDragEnd(updatedItem);
     }
 
-    // ------------- Gestures -------------
+    // =======================
+    // 2. Gestures
+    // =======================
 
     const pressGesture = Gesture.Tap()
         .onEnd(() => {
@@ -227,7 +223,7 @@ const DraggableRow = <T extends IListItem>({
             }
         })
         .onStart(() => {
-            handleDragStart(item.id, itemIndex);
+            onDragStart(item.id, itemIndex);
         });
 
     const dragGesture = Gesture.Pan()
@@ -254,9 +250,10 @@ const DraggableRow = <T extends IListItem>({
 
     const contentGesture = Gesture.Race(dragGesture, longPressGesture, pressGesture);
 
-    // ------------- Row Animation -------------
+    // =======================
+    // 3. Animations
+    // =======================
 
-    // Position and style the row while static or dragging.
     const animatedRowStyle = useAnimatedStyle(() => {
         let rowOffset = 0;
 
@@ -280,9 +277,11 @@ const DraggableRow = <T extends IListItem>({
         }
     });
 
-    // ------------- Render Helper Function -------------
+    // =======================
+    // 4. UI
+    // =======================
 
-    const renderIcon = (config: TListItemIconConfig<T>, type: IconPosition) => {
+    const RowIcon = ({ config, type }: { config: TListItemIconConfig<T>, type: IconPosition }) => {
         if (config.hideIcon) return null;
 
         const size = type === IconPosition.LEFT ? 'm' : 's';
@@ -323,7 +322,7 @@ const DraggableRow = <T extends IListItem>({
         >
 
             {/* Separator Line */}
-            <Pressable onPress={() => saveTextfieldAndCreateNew(item.sortId, true)}>
+            <Pressable onPress={() => onSaveTextfieldAndCreateNew(item.sortId, true)}>
                 <ThinLine />
             </Pressable>
 
@@ -336,7 +335,7 @@ const DraggableRow = <T extends IListItem>({
             >
 
                 {/* Left Icon */}
-                {leftIconConfig && renderIcon(leftIconConfig, IconPosition.LEFT)}
+                {leftIconConfig && <RowIcon config={leftIconConfig} type={IconPosition.LEFT} />}
 
                 {/* Content */}
                 <GestureDetector gesture={contentGesture}>
@@ -361,7 +360,7 @@ const DraggableRow = <T extends IListItem>({
                 </GestureDetector>
 
                 {/* Right Icon */}
-                {rightIconConfig && renderIcon(rightIconConfig, IconPosition.RIGHT)}
+                {rightIconConfig && <RowIcon config={rightIconConfig} type={IconPosition.RIGHT} />}
 
             </View>
         </Row>

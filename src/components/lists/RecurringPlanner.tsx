@@ -91,14 +91,14 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 fillSpace
                 listType={listType}
                 isLoading={SortedEvents.isLoading}
-                saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
+                onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 toolbarIconSet={toolbarIcons}
                 hideKeyboard={timeModalOpen}
-                handleValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items) as IRecurringEvent}
-                getRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
+                onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items) as IRecurringEvent}
+                onGetRightIconConfig={(item) => generateTimeIconConfig(item, toggleTimeModal)}
+                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
                 emptyLabelConfig={{
                     label: `No recurring ${isWeekdayPlanner ? 'weekday' : plannerKey} plans`,
                     className: 'flex-1'

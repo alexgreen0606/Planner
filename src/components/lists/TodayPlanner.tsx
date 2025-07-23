@@ -70,12 +70,12 @@ const TodayPlanner = () => {
             listType={listType}
             items={SortedEvents.items}
             hideKeyboard={isTimeModalOpen}
-            saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
+            onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
             onDragEnd={SortedEvents.persistItemToStorage}
             onContentClick={SortedEvents.toggleItemEdit}
-            handleValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, todayDatestamp)}
-            getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
+            onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, todayDatestamp)}
+            onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
+            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, getIsItemDeleting(item, listType))}
             toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{

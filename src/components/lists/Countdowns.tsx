@@ -115,13 +115,13 @@ const Countdowns = () => {
                 items={CountdownItems.items}
                 hideKeyboard={isDeleteAlertOpen || dateSelectOpen}
                 onContentClick={CountdownItems.toggleItemEdit}
-                saveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
+                onSaveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
                 toolbarIconSet={toolbarIcons}
                 emptyLabelConfig={{
                     label: 'No countdowns',
                     className: 'flex-1'
                 }}
-                getLeftIconConfig={(item) => ({
+                onGetLeftIconConfig={(item) => ({
                     onClick: async () => {
                         if (!textfieldItem) {
                             saveEventOnDateSelectorClose.current = true;
@@ -135,7 +135,7 @@ const Countdowns = () => {
                         </View>
                     )
                 })}
-                getRightIconConfig={(countdown) => ({
+                onGetRightIconConfig={(countdown) => ({
                     customIcon:
                         <View className="[width:55px] items-end">
                             <CustomText adjustsFontSizeToFit numberOfLines={1} variant='microDetail'>

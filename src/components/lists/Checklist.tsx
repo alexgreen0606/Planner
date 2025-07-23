@@ -45,8 +45,8 @@ const Checklist = () => {
             items={SortedItems.items}
             onDragEnd={SortedItems.persistItemToStorage}
             onContentClick={SortedItems.toggleItemEdit}
-            getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleChecklistItemDelete, getIsItemDeleting(item, listType))}
-            saveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
+            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleChecklistItemDelete, getIsItemDeleting(item, listType))}
+            onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",
                 className: 'flex-1'

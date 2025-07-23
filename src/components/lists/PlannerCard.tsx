@@ -238,15 +238,15 @@ const PlannerCard = ({
                 listId={datestamp}
                 items={visibleEvents}
                 listType={listType}
-                saveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
+                onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
                 onDragEnd={SortedEvents.persistItemToStorage}
                 onContentClick={SortedEvents.toggleItemEdit}
                 hideKeyboard={isTimeModalOpen}
-                handleValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, datestamp)}
-                getRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-                getLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, isEventDeleting(item))}
+                onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, datestamp)}
+                onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
+                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleEventDelete, isEventDeleting(item))}
                 toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
-                customGetIsDeleting={isEventDeleting}
+                customOnGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{
                     label: 'No plans',
                     className: 'h-20 flex justify-center items-center'

@@ -30,9 +30,9 @@ Event handlers: 'handle'. Props: 'on'. All else just state what it does.
 1. `ref`
 6. `constants (fallback)`
 2. `context`
+4. `animated variables`
 3. `state`
 4. `MMKV`
-4. `animated variables`
 6. `constants (prefer)`
 6. `hooks`
 5. `useEffect`
