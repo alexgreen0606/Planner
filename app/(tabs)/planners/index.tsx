@@ -2,7 +2,7 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/icon';
-import ScrollAnchor from '@/components/lists/components/ScrollAnchor';
+import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
 import PlannerCard from '@/components/lists/PlannerCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ButtonText from '@/components/text/ButtonText';
@@ -187,7 +187,7 @@ const Planners = () => {
                         forecast={forecasts[datestamp]}
                     />
                 )}
-                <ScrollAnchor />
+                <ScrollContainerAnchor />
             </MotiView>
 
         </View>

@@ -4,16 +4,18 @@ import { IListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
-import Toolbar, { ToolbarIcon } from './Toolbar';
+import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
-interface ListTextfieldProps<T extends IListItem> {
+// ✅ 
+
+type ListTextfieldProps<T extends IListItem> = {
     item: T;
     toolbarIconSet?: ToolbarIcon<T>[][];
     onChange: (newText: string) => void;
     onSubmit: (blurred: boolean) => void;
     hideKeyboard: boolean;
     customStyle: TextStyle;
-}
+};
 
 const ListTextfield = <T extends IListItem>({
     item,
@@ -36,18 +38,7 @@ const ListTextfield = <T extends IListItem>({
         [textfieldItem?.id, item.id, hideKeyboard]
     );
 
-    // ------------- Utility Function -------------
-
-    function handleSave(fromBlur: boolean) {
-        if (hasSaved.current || hideKeyboard) return;
-        hasSaved.current = true;
-
-        onSubmit(fromBlur);
-    }
-
-    // ---------- Focus Handler ----------
-
-    // Focus the textfield when clicked
+    // Focus the textfield when clicked.
     useEffect(() => {
         if (editable && !hideKeyboard) {
             setTimeout(() => {
@@ -58,6 +49,13 @@ const ListTextfield = <T extends IListItem>({
             }, 50);
         }
     }, [hideKeyboard, editable]);
+
+    function handleSave(fromBlur: boolean) {
+        if (hasSaved.current || hideKeyboard) return;
+        hasSaved.current = true;
+
+        onSubmit(fromBlur);
+    }
 
     return (
         <View>
@@ -88,7 +86,7 @@ const ListTextfield = <T extends IListItem>({
                     customStyle
                 ]}
             />
-            {toolbarIconSet && <Toolbar iconSets={toolbarIconSet} accessoryKey={item.id} />}
+            {toolbarIconSet && <ListToolbar iconSets={toolbarIconSet} accessoryKey={item.id} />}
         </View>
     )
 }

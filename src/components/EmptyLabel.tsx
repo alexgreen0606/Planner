@@ -4,23 +4,25 @@ import React from 'react';
 import { Pressable, View, ViewStyle } from 'react-native';
 import { PressableProps } from 'react-native-gesture-handler';
 
+// ✅ 
+
 export interface EmptyLabelProps extends PressableProps {
     label: string;
-    onPress: () => void;
     iconConfig?: GenericIconProps;
     className?: string;
     style?: ViewStyle;
     fontSize?: number;
+    onPress?: () => void;
 };
 
 const EmptyLabel = ({
     label,
     iconConfig,
-    onLayout,
-    onPress,
     style,
     className,
-    fontSize = 14
+    fontSize = 14,
+    onLayout,
+    onPress
 }: EmptyLabelProps) =>
     <Pressable
         onLayout={onLayout}

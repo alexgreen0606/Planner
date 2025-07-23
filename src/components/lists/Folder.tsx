@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 import SortableList from './components/SortableList';
-import { ToolbarIcon } from './components/Toolbar';
+import { ToolbarIcon } from './components/ListToolbar';
 
 interface SortedFolderProps {
     handleOpenItem: (id: string, type: EFolderItemType) => void;

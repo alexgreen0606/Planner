@@ -1,5 +1,5 @@
 import { userAccessAtom } from '@/atoms/userAccess';
-import EmptyLabel from '@/components/lists/components/EmptyLabel';
+import EmptyLabel from '@/components/EmptyLabel';
 import Countdowns from '@/components/lists/Countdowns';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { EAccess } from '@/lib/enums/EAccess';

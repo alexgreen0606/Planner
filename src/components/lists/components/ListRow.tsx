@@ -20,12 +20,12 @@ import Animated, {
     useAnimatedStyle,
     withSpring
 } from "react-native-reanimated";
-import ListTextfield from "./Textfield";
-import { ToolbarIcon } from "./Toolbar";
+import ListTextfield from "./RowTextfield";
+import { ToolbarIcon } from "./ListToolbar";
 
 // ✅ 
 
-type DraggableRowProps<T extends IListItem> = {
+type ListRowProps<T extends IListItem> = {
     item: T;
     items: T[];
     itemIndex: number;
@@ -67,7 +67,7 @@ enum IconPosition {
     LEFT = 'LEFT'
 }
 
-const DraggableRow = <T extends IListItem>({
+const ListRow = <T extends IListItem>({
     item: staticItem,
     items,
     dragConfig: {
@@ -95,7 +95,7 @@ const DraggableRow = <T extends IListItem>({
     onGetRowTextPlatformColor,
     onContentClick,
     customOnGetIsDeleting
-}: DraggableRowProps<T>) => {
+}: ListRowProps<T>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { getIsItemDeleting } = useDeleteScheduler<T>();
     const {
@@ -362,4 +362,4 @@ const DraggableRow = <T extends IListItem>({
     );
 };
 
-export default DraggableRow;
+export default ListRow;

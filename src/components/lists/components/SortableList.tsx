@@ -12,10 +12,10 @@ import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import DraggableRow from './DraggableRow';
-import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
-import ScrollAnchor from './ScrollAnchor';
-import Toolbar, { ToolbarIcon } from './Toolbar';
+import ListRow from './ListRow';
+import EmptyLabel, { EmptyLabelProps } from '../../EmptyLabel';
+import ScrollContainerAnchor from '../../ScrollContainerAnchor';
+import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
 // ✅ 
 
@@ -57,9 +57,7 @@ const SortableList = <T extends IListItem>({
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const [textfieldItem] = useTextfieldItemAs<T>();
 
-    // =======================
-    // 1. Row Drag Handling
-    // =======================
+    // ------------- Drag Variables -------------
 
     const draggingRowId = useSharedValue<string | null>(null);
     const isAutoScrolling = useSharedValue(false);
@@ -74,7 +72,13 @@ const SortableList = <T extends IListItem>({
     const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
 
-    // ------------- Drag Utilities -------------
+    // ==================
+    // 1. Event Handlers
+    // ==================
+
+    function handleEmptySpaceClick() {
+        onSaveTextfieldAndCreateNew(-1, true);
+    }
 
     function handleDragStart(rowId: string, initialIndex: number) {
         "worklet";
@@ -101,17 +105,10 @@ const SortableList = <T extends IListItem>({
         }
     }
 
-    // ------------- Auto Scroll Animation -------------
-    useAnimatedReaction(
-        () => scrollOffset.value - dragInitialScrollOffset.value,
-        (displacement) => {
-            dragTop.value += displacement;
-            dragInitialTop.value += displacement;
-            dragInitialScrollOffset.value = scrollOffset.value;
-        }
-    );
+    // ===================
+    // 2. List Generation
+    // ===================
 
-    // ------------- List Generation -------------
     const list = useMemo(() => {
         let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
 
@@ -133,21 +130,23 @@ const SortableList = <T extends IListItem>({
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1));
 
     // =============
-    // 2. Reactions
+    // 3. Reactions
     // =============
+
+    // Auto Scrolling
+    useAnimatedReaction(
+        () => scrollOffset.value - dragInitialScrollOffset.value,
+        (displacement) => {
+            dragTop.value += displacement;
+            dragInitialTop.value += displacement;
+            dragInitialScrollOffset.value = scrollOffset.value;
+        }
+    );
 
     // Evaluate the scroll container height every time the list length changes.
     useEffect(() => {
         runOnUI(measureContentHeight)();
     }, [list.length]);
-
-    // ==================
-    // 3. Event Handlers
-    // ==================
-
-    function handleEmptySpaceClick() {
-        onSaveTextfieldAndCreateNew(-1, true);
-    }
 
     // ========
     // 4. UI
@@ -168,7 +167,7 @@ const SortableList = <T extends IListItem>({
                     }}
                 >
                     {list.map((item, i) =>
-                        <DraggableRow<T>
+                        <ListRow<T>
                             key={`${item.id}-row`}
                             item={item}
                             itemIndex={i}
@@ -204,7 +203,7 @@ const SortableList = <T extends IListItem>({
 
                 {/* Track Position of List End */}
                 {fillSpace && (
-                    <ScrollAnchor />
+                    <ScrollContainerAnchor />
                 )}
 
                 {/* Empty Label or Click Area */}
@@ -222,7 +221,7 @@ const SortableList = <T extends IListItem>({
 
                 {/* Placeholder Toolbar (prevent flickering between textfields) */}
                 {toolbarIconSet && (
-                    <Toolbar iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
+                    <ListToolbar iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
                 )}
 
             </View>
