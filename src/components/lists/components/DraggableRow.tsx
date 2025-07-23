@@ -9,7 +9,7 @@ import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconCon
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
 import { generateSortId } from "@/utils/listUtils";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { PlatformColor, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import Animated, {
@@ -18,12 +18,12 @@ import Animated, {
     runOnJS,
     SharedValue,
     useAnimatedStyle,
-    useDerivedValue,
-    useSharedValue,
     withSpring
 } from "react-native-reanimated";
 import ListTextfield from "./Textfield";
 import { ToolbarIcon } from "./Toolbar";
+
+// ✅ 
 
 type DraggableRowProps<T extends IListItem> = {
     item: T;
@@ -119,19 +119,9 @@ const DraggableRow = <T extends IListItem>({
     const leftIconConfig = useMemo(() => onGetLeftIconConfig?.(item), [item, onGetLeftIconConfig]);
     const rightIconConfig = useMemo(() => onGetRightIconConfig?.(item), [item, onGetRightIconConfig]);
 
-    const basePosition = useSharedValue(itemIndex * LIST_ITEM_HEIGHT);
-    const isRowDragging = useDerivedValue(() => {
-        return draggingRowId.value === item.id
-    });
-
-    // Keep the position of the row up to date.
-    useEffect(() => {
-        basePosition.value = itemIndex * LIST_ITEM_HEIGHT;
-    }, [itemIndex]);
-
-    // =======================
+    // ==================
     // 1. Event Handlers
-    // =======================
+    // ==================
 
     function handleTextfieldChange(text: string) {
         if (!textfieldItem) return;
@@ -148,7 +138,11 @@ const DraggableRow = <T extends IListItem>({
         onSaveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
     }
 
-    function handleDrag(
+    // ============================
+    // 2. Gesture Helper Functions
+    // ============================
+
+    function drag(
         currentDragDisplacement: number,
         currentTopAbsoluteYPosition: number
     ) {
@@ -186,31 +180,30 @@ const DraggableRow = <T extends IListItem>({
         top.value = Math.max(0, Math.min(initialTop.value + currentDragDisplacement, topMax));
     }
 
-    async function handleEndDragAndSave() {
+    async function endDragAndSave() {
         if (index.value === initialIndex.value) {
             // Item didn't move. Clean up and quit.
             onDragEnd();
-            draggingRowId.value = null;
             return;
         }
 
         // Build the new list after drag.
         const withoutDragged = items.filter(i => i.id !== item.id);
         withoutDragged.splice(index.value, 0, item);
-
-        // Generate the item's new sort ID.
         const parentSortId = withoutDragged[index.value - 1]?.sortId ?? -1;
-        const newSort = generateSortId(parentSortId, withoutDragged);
 
-        const updatedItem = { ...item, sortId: newSort };
-        onDragEnd(updatedItem);
+        onDragEnd({
+            ...item,
+            sortId: generateSortId(parentSortId, withoutDragged)
+        });
     }
 
-    // =======================
-    // 2. Gestures
-    // =======================
+    // ============
+    // 3. Gestures
+    // ============
 
-    const pressGesture = Gesture.Tap()
+    const tapGesture = Gesture.Tap()
+        .maxDuration(200)
         .onEnd(() => {
             runOnJS(onContentClick)(item)
         });
@@ -226,39 +219,42 @@ const DraggableRow = <T extends IListItem>({
             onDragStart(item.id, itemIndex);
         });
 
-    const dragGesture = Gesture.Pan()
+    const panGesture = Gesture.Pan()
         .manualActivation(true)
         .onTouchesMove((_e, state) => {
-            if (isRowDragging.value) {
+            if (draggingRowId.value === item.id) {
                 state.activate();
             } else {
                 state.fail();
             }
         })
         .onUpdate((event) => {
-            handleDrag(
+            drag(
                 event.translationY,
                 event.absoluteY
             );
         })
         .onFinalize(() => {
-            if (!isRowDragging.value) return;
+            if (draggingRowId.value !== item.id) return;
 
-            runOnJS(handleEndDragAndSave)();
+            runOnJS(endDragAndSave)();
         })
-        .simultaneousWithExternalGesture(longPressGesture);
 
-    const contentGesture = Gesture.Race(dragGesture, longPressGesture, pressGesture);
+    const dragGesture = Gesture.Simultaneous(longPressGesture, panGesture);
+    const contentGesture = Gesture.Race(tapGesture, dragGesture);
 
     // =======================
-    // 3. Animations
+    // 4. Animations
     // =======================
 
     const animatedRowStyle = useAnimatedStyle(() => {
+        const isRowDragging = draggingRowId.value === item.id;
+        const basePos = itemIndex * LIST_ITEM_HEIGHT;
+
         let rowOffset = 0;
 
         // Offset the row if the dragged item has shifted it.
-        if (draggingRowId.value && !isRowDragging.value) {
+        if (draggingRowId.value && !isRowDragging) {
             if (itemIndex > initialIndex.value && itemIndex <= index.value) {
                 rowOffset = -LIST_ITEM_HEIGHT;
             } else if (itemIndex < initialIndex.value && itemIndex >= index.value) {
@@ -267,18 +263,18 @@ const DraggableRow = <T extends IListItem>({
         }
 
         return {
-            top: isRowDragging.value ? top.value : withSpring(basePosition.value + rowOffset, LIST_SPRING_CONFIG),
+            top: isRowDragging ? top.value : withSpring(basePos + rowOffset, LIST_SPRING_CONFIG),
             transform: [
                 {
-                    translateY: withSpring(isRowDragging.value ? -6 : 0, LIST_SPRING_CONFIG)
+                    translateY: withSpring(isRowDragging ? -6 : 0, LIST_SPRING_CONFIG)
                 }
             ],
-            opacity: withSpring(isRowDragging.value ? 0.6 : 1, LIST_SPRING_CONFIG)
+            opacity: withSpring(isRowDragging ? 0.6 : 1, LIST_SPRING_CONFIG)
         }
     });
 
     // =======================
-    // 4. UI
+    // 5. UI
     // =======================
 
     const RowIcon = ({ config, type }: { config: TListItemIconConfig<T>, type: IconPosition }) => {
@@ -352,7 +348,10 @@ const DraggableRow = <T extends IListItem>({
                             onSubmit={handleTextfieldSave}
                             hideKeyboard={hideKeyboard}
                             customStyle={{
-                                color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
+                                color: PlatformColor(
+                                    textPlatformColor ??
+                                    (isPendingDelete ? 'tertiaryLabel' : 'label')
+                                ),
                                 textDecorationLine: isPendingDelete ? 'line-through' : undefined
                             }}
                         />
@@ -364,7 +363,7 @@ const DraggableRow = <T extends IListItem>({
 
             </View>
         </Row>
-    )
+    );
 };
 
 export default DraggableRow;
