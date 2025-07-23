@@ -12,8 +12,8 @@ import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import DraggableRow from './DraggableRow';
+import EmptyLabel, { EmptyLabelProps } from './EmptyLabel';
 import ScrollAnchor from './ScrollAnchor';
 import Toolbar, { ToolbarIcon } from './Toolbar';
 
@@ -111,7 +111,7 @@ const SortableList = <T extends IListItem>({
         }
     );
 
-    // ------------- *** List Generation *** -------------
+    // ------------- List Generation -------------
     const list = useMemo(() => {
         let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
 
@@ -132,26 +132,26 @@ const SortableList = <T extends IListItem>({
     // ------------- Drag Bounds Tracker -------------
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1));
 
-    // =======================
+    // =============
     // 2. Reactions
-    // =======================
+    // =============
 
     // Evaluate the scroll container height every time the list length changes.
     useEffect(() => {
         runOnUI(measureContentHeight)();
     }, [list.length]);
 
-    // =======================
+    // ==================
     // 3. Event Handlers
-    // =======================
+    // ==================
 
     function handleEmptySpaceClick() {
         onSaveTextfieldAndCreateNew(-1, true);
     }
 
-    // =======================
+    // ========
     // 4. UI
-    // =======================
+    // ========
 
     return (
         <MotiView

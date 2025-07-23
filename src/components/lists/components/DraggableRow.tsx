@@ -138,11 +138,7 @@ const DraggableRow = <T extends IListItem>({
         onSaveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
     }
 
-    // ============================
-    // 2. Gesture Helper Functions
-    // ============================
-
-    function drag(
+    function handleDrag(
         currentDragDisplacement: number,
         currentTopAbsoluteYPosition: number
     ) {
@@ -180,7 +176,7 @@ const DraggableRow = <T extends IListItem>({
         top.value = Math.max(0, Math.min(initialTop.value + currentDragDisplacement, topMax));
     }
 
-    async function endDragAndSave() {
+    function handleEndDrag() {
         if (index.value === initialIndex.value) {
             // Item didn't move. Clean up and quit.
             onDragEnd();
@@ -199,7 +195,7 @@ const DraggableRow = <T extends IListItem>({
     }
 
     // ============
-    // 3. Gestures
+    // 2. Gestures
     // ============
 
     const tapGesture = Gesture.Tap()
@@ -229,7 +225,7 @@ const DraggableRow = <T extends IListItem>({
             }
         })
         .onUpdate((event) => {
-            drag(
+            handleDrag(
                 event.translationY,
                 event.absoluteY
             );
@@ -237,15 +233,15 @@ const DraggableRow = <T extends IListItem>({
         .onFinalize(() => {
             if (draggingRowId.value !== item.id) return;
 
-            runOnJS(endDragAndSave)();
+            runOnJS(handleEndDrag)();
         })
 
     const dragGesture = Gesture.Simultaneous(longPressGesture, panGesture);
     const contentGesture = Gesture.Race(tapGesture, dragGesture);
 
-    // =======================
-    // 4. Animations
-    // =======================
+    // ==============
+    // 3. Animations
+    // ==============
 
     const animatedRowStyle = useAnimatedStyle(() => {
         const isRowDragging = draggingRowId.value === item.id;
@@ -273,9 +269,9 @@ const DraggableRow = <T extends IListItem>({
         }
     });
 
-    // =======================
-    // 5. UI
-    // =======================
+    // ========
+    // 4. UI
+    // ========
 
     const RowIcon = ({ config, type }: { config: TListItemIconConfig<T>, type: IconPosition }) => {
         if (config.hideIcon) return null;
