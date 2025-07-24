@@ -1,6 +1,7 @@
 import GenericIcon from '@/components/icon';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
-import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
+import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
 import { MotiView } from 'moti';
@@ -26,20 +27,11 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { reloadablePaths, useCalendarLoad } from './CalendarProvider';
+import { useCalendarLoad } from './CalendarProvider';
 
-const TopBlurBar = Animated.createAnimatedComponent(View);
-const LoadingSpinner = Animated.createAnimatedComponent(View);
-const FloatingBanner = Animated.createAnimatedComponent(View);
-const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
+// ✅ 
 
-export enum LoadingStatus {
-    STATIC = 'STATIC', // no overscroll visible
-    LOADING = 'LOADING', // currently rebuilding list
-    COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
-}
-
-interface ScrollContainerProps {
+type ScrollContainerProviderProps = {
     children: React.ReactNode;
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
@@ -48,28 +40,35 @@ interface ScrollContainerProps {
 
     // Tracks the height of any content above the list container
     upperContentHeight?: number;
-}
+};
 
-interface ScrollContainerContextValue {
+type ScrollContainerContextValue = {
     // --- Scroll Variables ---
     scrollOffset: SharedValue<number>;
-    autoScroll: (newOffset: number) => void;
+    handleAutoScroll: (newOffset: number) => void;
+
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
-    measureContentHeight: () => void;
     bottomScrollRef: AnimatedRef<Animated.View>;
+    handleMeasureScrollContentHeight: () => void;
+
     // Placeholder Textfield (prevents keyboard flicker)
-    focusPlaceholder: () => void;
-    blurPlaceholder: () => void;
+    handleFocusPlaceholder: () => void;
+};
+
+export enum LoadingStatus {
+    STATIC = 'STATIC', // no overscroll visible
+    LOADING = 'LOADING', // currently rebuilding list
+    COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
 }
+
+const TopBlurBarContainer = Animated.createAnimatedComponent(View);
+const LoadingSpinner = Animated.createAnimatedComponent(View);
+const FloatingBanner = Animated.createAnimatedComponent(View);
+const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
 
 const ScrollContainerContext = createContext<ScrollContainerContextValue | null>(null);
 
-/**
- * Provider to allow multiple lists to be rendered within a larger scroll container.
- * 
- * Container allows for native scrolling, or manual scrolling by exposing the @scrollOffset variable.
- */
 export const ScrollContainerProvider = ({
     children,
     header,
@@ -77,27 +76,28 @@ export const ScrollContainerProvider = ({
     upperContentHeight = 0,
     floatingBannerHeight: fixedFloatingBannerHeight = 0,
     fixFloatingBannerOnOverscroll = false
-}: ScrollContainerProps) => {
+}: ScrollContainerProviderProps) => {
+    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
+    const { handleReloadPage: onReloadPage } = useCalendarLoad();
+    const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const pathname = usePathname();
-
-    const bottomAnchorAbsolutePosition = useSharedValue(0);
-    const bottomScrollRef = useAnimatedRef<Animated.View>();
 
     const placeholderInputRef = useRef<TextInput>(null);
 
-    const { height: SCREEN_HEIGHT } = useWindowDimensions();
-    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-
-    const { handleReloadPage: reloadPage } = useCalendarLoad();
-
-    const canReloadPath = reloadablePaths.includes(pathname);
-
-    // ----- Page Layout Variables -----
-
-    const [blurBottomNav, setBlurBottomNav] = useState(false);
-
-
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight);
+    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
+    const [blurBottomNav, setBlurBottomNav] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const scrollRef = useAnimatedRef<Animated.ScrollView>();
+    const bottomScrollRef = useAnimatedRef<Animated.View>();
+
+    const bottomAnchorAbsolutePosition = useSharedValue(0);
+    const disableNativeScroll = useSharedValue(false);
+    const scrollOffset = useSharedValue(0);
+
+    const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
+    const loadingRotation = useSharedValue(0);
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
@@ -107,63 +107,75 @@ export const ScrollContainerProvider = ({
     // If no floating banner exists, blur for the default header height
     const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + TOP_SPACER;
 
-    // -----Loading Spinner Variables -----
+    const canReloadPath = reloadablePaths.includes(pathname);
 
-    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
-    const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
-    const loadingRotation = useSharedValue(0);
+    const loadingSpinnerStyle = useAnimatedStyle(() => {
+        const baseTop = (fixFloatingBannerOnOverscroll ? floatingBannerHeight : 0)
+            + TOP_SPACER
+            + OVERSCROLL_RELOAD_THRESHOLD / 3;
 
-    // ----- Scroll Variables -----
+        return {
+            opacity: interpolate(
+                scrollOffset.value,
+                [-OVERSCROLL_RELOAD_THRESHOLD, -OVERSCROLL_RELOAD_THRESHOLD / 2],
+                [1, 0],
+                Extrapolation.CLAMP
+            ),
+            transform: [{ rotate: `${loadingRotation.value}deg` }],
+            top: baseTop,
+        };
+    });
 
-    const scrollOffset = useSharedValue(0);
-    const disableNativeScroll = useSharedValue(false);
-    const scrollRef = useAnimatedRef<Animated.ScrollView>();
+    const floatingBannerStyle = useAnimatedStyle(() => {
+        const baseOffset = (header ? HEADER_HEIGHT : 0) + TOP_SPACER;
+        const shouldFixPositionToTop = scrollOffset.value <= 0 && fixFloatingBannerOnOverscroll;
+        const calculatedTop = baseOffset - scrollOffset.value;
+        return {
+            top: shouldFixPositionToTop ? baseOffset : Math.max(TOP_SPACER, calculatedTop),
+        };
+    });
 
-    // ------------- Utility Functions -------------
+    // Hides the upper fade while the scroll container is not scrolled
+    const topBlurBarStyle = useAnimatedStyle(() => ({
+        opacity: interpolate(
+            scrollOffset.value,
+            [0, HEADER_HEIGHT],
+            [0, 1],
+            Extrapolation.CLAMP
+        ),
+        height: UPPER_FADE_HEIGHT
+    }));
 
-    function triggerHaptic() {
-        ReactNativeHapticFeedback.trigger('impactMedium', {
-            enableVibrateFallback: true,
-            ignoreAndroidSystemSettings: false
-        });
-    }
-
-    // Measures the height of all content within the scroll container.
-    const measureContentHeight = () => {
-        'worklet';
-        try {
-            const measured = measure(bottomScrollRef);
-            if (measured) {
-                bottomAnchorAbsolutePosition.value = UPPER_CONTAINER_PADDING + measured.y - scrollOffset.value;
+    const scrollHandler = useAnimatedScrollHandler({
+        onBeginDrag: () => {
+            runOnJS(setIsDragging)(true);
+        },
+        onScroll: (event) => {
+            if (!disableNativeScroll.value) {
+                scrollOffset.value = event.contentOffset.y;
             }
-        } catch (e) { }
-    };
-
-    const focusPlaceholder = () => {
-        placeholderInputRef.current?.focus();
-    };
-
-    const blurPlaceholder = () => {
-        placeholderInputRef.current?.blur();
-    };
-
-    // ------------- Reload Logic -------------
-
-    // Trigger a page reload
-    useEffect(() => {
-        const executeReload = async () => {
-            await reloadPage();
-            updateLoadingStatus(LoadingStatus.COMPLETE);
+        },
+        onEndDrag: () => {
+            runOnJS(setIsDragging)(false);
+            handleMeasureScrollContentHeight();
+        },
+        onMomentumEnd: () => {
+            runOnJS(setIsDragging)(false);
+            handleMeasureScrollContentHeight();
         }
+    });
 
-        if (loadingStatus === LoadingStatus.LOADING) executeReload();
-    }, [loadingStatus]);
+    // =============
+    // 1. Reactions
+    // =============
 
-    // Aligns both the state and animated values for the loading spinner.
-    function updateLoadingStatus(newStatus: LoadingStatus) {
-        setLoadingStatus(newStatus);
-        loadingAnimationTrigger.value = newStatus;
-    }
+    // Blur the bottom navbar when content extends behind it.
+    useAnimatedReaction(
+        () => bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT,
+        (shouldBlur) => {
+            runOnJS(setBlurBottomNav)(shouldBlur);
+        }
+    );
 
     // Loading Spinner Animation
     useAnimatedReaction(
@@ -193,49 +205,7 @@ export const ScrollContainerProvider = ({
         }
     );
 
-    const loadingSpinnerStyle = useAnimatedStyle(() => {
-        const baseTop = (fixFloatingBannerOnOverscroll ? floatingBannerHeight : 0)
-            + TOP_SPACER
-            + OVERSCROLL_RELOAD_THRESHOLD / 3;
-
-        return {
-            opacity: interpolate(
-                scrollOffset.value,
-                [-OVERSCROLL_RELOAD_THRESHOLD, -OVERSCROLL_RELOAD_THRESHOLD / 2],
-                [1, 0],
-                Extrapolation.CLAMP
-            ),
-            transform: [{ rotate: `${loadingRotation.value}deg` }],
-            top: baseTop,
-        };
-    });
-
-    // ------------- Scrolling Logic -------------
-
-    const [isDragging, setIsDragging] = useState(false);
-
-
-    // Native Scroll Handler
-    const scrollHandler = useAnimatedScrollHandler({
-        onBeginDrag: () => {
-            runOnJS(setIsDragging)(true);
-        },
-        onScroll: (event) => {
-            if (!disableNativeScroll.value) {
-                scrollOffset.value = event.contentOffset.y;
-            }
-        },
-        onEndDrag: () => {
-            runOnJS(setIsDragging)(false);
-            measureContentHeight();
-        },
-        onMomentumEnd: () => {
-            runOnJS(setIsDragging)(false);
-            measureContentHeight();
-        }
-    });
-
-    // Manual Scroll Reaction
+    // Manual scroll and overscroll check.
     useAnimatedReaction(
         () => scrollOffset.value,
         (current) => {
@@ -258,8 +228,21 @@ export const ScrollContainerProvider = ({
         }
     );
 
-    // Auto Scroll
-    const autoScroll = (displacement: number) => {
+    // Trigger a page reload on overscroll.
+    useEffect(() => {
+        const executeReload = async () => {
+            await onReloadPage();
+            updateLoadingStatus(LoadingStatus.COMPLETE);
+        }
+
+        if (loadingStatus === LoadingStatus.LOADING) executeReload();
+    }, [loadingStatus]);
+
+    // =====================
+    // 2. Exposed Functions
+    // =====================
+
+    function handleAutoScroll(displacement: number) {
         'worklet';
         const SECONDS_PER_ITEM = .25;
 
@@ -275,25 +258,44 @@ export const ScrollContainerProvider = ({
                 disableNativeScroll.value = false;
             }
         )
-    };
+    }
 
-    // ------------- Floating Banner Logic -------------
+    function handleMeasureScrollContentHeight() {
+        'worklet';
+        try {
+            const measured = measure(bottomScrollRef);
+            if (measured) {
+                bottomAnchorAbsolutePosition.value = UPPER_CONTAINER_PADDING + measured.y - scrollOffset.value;
+            }
+        } catch (e) { }
+    }
 
-    const floatingBannerStyle = useAnimatedStyle(() => {
-        const baseOffset = (header ? HEADER_HEIGHT : 0) + TOP_SPACER;
-        const shouldFixPositionToTop = scrollOffset.value <= 0 && fixFloatingBannerOnOverscroll;
-        const calculatedTop = baseOffset - scrollOffset.value;
-        return {
-            top: shouldFixPositionToTop ? baseOffset : Math.max(TOP_SPACER, calculatedTop),
-        };
-    });
+    function handleFocusPlaceholder() {
+        placeholderInputRef.current?.focus();
+    }
 
-    // ------------- Blur Bar Logic -------------
+    // =====================
+    // 3. Utility Functions
+    // =====================
 
-    /**
-     * Creates a gradient blur effect that intensifies toward the top of the screen.
-     */
-    function renderTopFadeOut() {
+    function triggerHaptic() {
+        ReactNativeHapticFeedback.trigger('impactMedium', {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false
+        });
+    }
+
+    function updateLoadingStatus(newStatus: LoadingStatus) {
+        setLoadingStatus(newStatus);
+        loadingAnimationTrigger.value = newStatus;
+    }
+
+    // ======
+    // 4. UI
+    // ======
+
+    // Creates a gradient blur effect that intensifies toward the top of the screen.
+    const TopBlurBar = () => {
         const fadeViews = [];
         const blurViews = [];
         const INTENSITY = 5;
@@ -324,7 +326,10 @@ export const ScrollContainerProvider = ({
         }
 
         return (
-            <View>
+            <TopBlurBarContainer
+                className='absolute top-0 left-0 z-[2] w-screen'
+                style={topBlurBarStyle}
+            >
                 {fadeViews}
                 {blurViews}
                 <BlurView
@@ -335,37 +340,18 @@ export const ScrollContainerProvider = ({
                         height: UPPER_FADE_HEIGHT + ADDITIONAL_BLUR_PADDING
                     }}
                 />
-            </View>
+            </TopBlurBarContainer>
         );
     };
-
-    // Hides the upper fade while the scroll container is not scrolled
-    const topBlurBarStyle = useAnimatedStyle(() => ({
-        opacity: interpolate(
-            scrollOffset.value,
-            [0, HEADER_HEIGHT],
-            [0, 1],
-            Extrapolation.CLAMP
-        ),
-        height: UPPER_FADE_HEIGHT
-    }));
-
-    useAnimatedReaction(
-        () => bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT,
-        (shouldBlur) => {
-            runOnJS(setBlurBottomNav)(shouldBlur);
-        }
-    );
 
     return (
         <ScrollContainerContext.Provider value={{
             scrollOffset,
-            autoScroll,
-            measureContentHeight,
             floatingBannerHeight,
             bottomScrollRef,
-            focusPlaceholder,
-            blurPlaceholder
+            handleFocusPlaceholder,
+            handleAutoScroll,
+            handleMeasureScrollContentHeight,
         }}>
 
             {/* Floating Banner */}
@@ -387,7 +373,7 @@ export const ScrollContainerProvider = ({
                 behavior='padding'
                 className='flex-1'
             >
-                {/* Hidden placeholder input to maintain keyboard */}
+                {/* Hidden placeholder input to prevent keyboard flicker */}
                 <TextInput
                     ref={placeholderInputRef}
                     inputAccessoryViewID='PLACEHOLDER'
@@ -429,12 +415,7 @@ export const ScrollContainerProvider = ({
             </KeyboardAvoidingView>
 
             {/* Top Blur Bar */}
-            <TopBlurBar
-                className='absolute top-0 left-0 z-[2] w-screen'
-                style={topBlurBarStyle}
-            >
-                {renderTopFadeOut()}
-            </TopBlurBar>
+            <TopBlurBar />
 
             {/* Bottom Blur Bar */}
             <MotiView
@@ -481,7 +462,7 @@ export const ScrollContainerProvider = ({
 export const useScrollContainer = () => {
     const context = useContext(ScrollContainerContext);
     if (!context) {
-        throw new Error("useSortableList must be used within a Provider");
+        throw new Error("useScrollContainer must be used within a ScrollContainerProvider");
     }
     return context;
 };

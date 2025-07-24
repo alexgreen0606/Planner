@@ -1,7 +1,6 @@
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useScrollContainer } from '@/providers/ScrollContainer';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
@@ -25,7 +24,6 @@ const ListTextfield = <T extends TListItem>({
     hideKeyboard,
     customStyle,
 }: ListTextfieldProps<T>) => {
-    const { blurPlaceholder } = useScrollContainer();
     const [textfieldItem] = useTextfieldItemAs<T>();
 
     const inputRef = useRef<TextInput>(null);
@@ -44,8 +42,6 @@ const ListTextfield = <T extends TListItem>({
             setTimeout(() => {
                 inputRef.current?.focus();
                 hasSaved.current = false;
-
-                blurPlaceholder();
             }, 50);
         }
     }, [hideKeyboard, editable]);

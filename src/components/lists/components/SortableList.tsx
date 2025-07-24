@@ -52,7 +52,7 @@ const SortableList = <T extends TListItem>({
     onSaveTextfieldAndCreateNew,
     ...rest
 }: SortableListProps<T>) => {
-    const { floatingBannerHeight, scrollOffset, measureContentHeight } = useScrollContainer();
+    const { floatingBannerHeight, scrollOffset, handleMeasureScrollContentHeight: measureContentHeight } = useScrollContainer();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const [textfieldItem] = useTextfieldItemAs<T>();

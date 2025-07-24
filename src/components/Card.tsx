@@ -23,7 +23,7 @@ const Card = ({
     contentHeight,
     children,
 }: CardProps) => {
-    const { measureContentHeight } = useScrollContainer();
+    const { handleMeasureScrollContentHeight: measureContentHeight } = useScrollContainer();
     return (
         <View
             className='relative rounded-xl'

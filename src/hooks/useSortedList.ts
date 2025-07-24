@@ -37,7 +37,7 @@ const useSortedList = <T extends TListItem, S>({
 }: SortedListConfig<T, S>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
     const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
-    const { focusPlaceholder } = useScrollContainer();
+    const { handleFocusPlaceholder: focusPlaceholder } = useScrollContainer();
 
     const isTogglingTextfields = useRef(false);
 

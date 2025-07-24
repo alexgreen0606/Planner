@@ -99,7 +99,7 @@ const ListRow = <T extends TListItem>({
     const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
-        autoScroll
+        handleAutoScroll: autoScroll
     } = useScrollContainer();
 
     const isItemDeleting = customOnGetIsDeleting ?? getIsItemDeleting;
