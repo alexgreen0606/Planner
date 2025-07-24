@@ -86,9 +86,9 @@ const PlannerCard = ({
         storageId: EStorageId.PLANNER,
         storageKey: datestamp,
         listType,
-        getItemsFromStorageObject,
+        onGetItemsFromStorageObject: getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
-        saveItemToStorage: saveEventWithRecurringAndCalendarCheck
+        onSaveItemToStorage: saveEventWithRecurringAndCalendarCheck
     });
     // ===================
 
@@ -154,7 +154,7 @@ const PlannerCard = ({
 
         // If this is the textfield, save it.
         if (event.id === textfieldItem?.id) {
-            await SortedEvents.persistItemToStorage(textfieldItem);
+            await SortedEvents.saveItem(textfieldItem);
             setTextfieldItem(null);
         }
     }
@@ -162,7 +162,7 @@ const PlannerCard = ({
     async function handleToggleCollapsed() {
         if (textfieldItem) {
             if (textfieldItem.value.trim() !== '')
-                await SortedEvents.persistItemToStorage(textfieldItem);
+                await SortedEvents.saveItem(textfieldItem);
             setTextfieldItem(null);
         }
         setCollapsed(curr => !curr);
@@ -261,7 +261,7 @@ const PlannerCard = ({
                 items={visibleEvents}
                 listType={listType}
                 onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-                onDragEnd={SortedEvents.persistItemToStorage}
+                onDragEnd={SortedEvents.saveItem}
                 onContentClick={SortedEvents.toggleItemEdit}
                 hideKeyboard={isTimeModalOpen}
                 onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, datestamp)}

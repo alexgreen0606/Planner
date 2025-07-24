@@ -120,12 +120,12 @@ const Countdowns = () => {
     const CountdownItems = useSortedList<ICountdown, ICountdown[]>({
         storageId: EStorageKey.COUNTDOWN_LIST_KEY,
         storageKey: EStorageKey.COUNTDOWN_LIST_KEY,
-        getItemsFromStorageObject: getCountownsMemoized,
-        saveItemToStorage: saveCountdown,
-        handleListChange: async () => {
+        onGetItemsFromStorageObject: getCountownsMemoized,
+        onSaveItemToStorage: saveCountdown,
+        onHandleListChange: async () => {
             await CountdownItems.refetchItems();
         },
-        initializeListItem: initializeCountdown,
+        onInitializeListItem: initializeCountdown,
         listType
     });
 
@@ -149,9 +149,6 @@ const Countdowns = () => {
                 onSaveTextfieldAndCreateNew={CountdownItems.saveTextfieldAndCreateNew}
                 toolbarIconSet={toolbarIcons}
                 onGetLeftIconConfig={(item) => ({
-
-                    // TODO: trigger open the date selector
-
                     onClick: CountdownItems.toggleItemEdit,
                     customIcon: (
                         <View className='w-16'>

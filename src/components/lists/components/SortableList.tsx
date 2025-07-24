@@ -35,7 +35,7 @@ type SortableListProps<T extends IListItem> = {
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    onSaveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
+    onSaveTextfieldAndCreateNew: (textfieldReferenceSortId?: number, isReferenceIdBelowTextfield?: boolean) => void;
     customOnGetIsDeleting?: (item: T) => boolean;
 };
 

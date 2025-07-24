@@ -46,7 +46,7 @@ type ListRowProps<T extends IListItem> = {
     },
     listType: EListType;
     toolbarIconSet?: ToolbarIcon<T>[][];
-    onSaveTextfieldAndCreateNew: (referenceId?: number, isChildId?: boolean) => void;
+    onSaveTextfieldAndCreateNew: (textfieldReferenceSortId?: number, isReferenceIdBelowTextfield?: boolean) => void;
     onContentClick: (item: T) => void;
     onValueChange?: (text: string, item: T) => T;
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;

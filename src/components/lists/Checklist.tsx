@@ -31,8 +31,8 @@ const Checklist = () => {
         storageId: EStorageId.CHECKLISTS,
         storageKey: checklistId,
         listType,
-        getItemsFromStorageObject,
-        saveItemToStorage: saveChecklistItem,
+        onGetItemsFromStorageObject: getItemsFromStorageObject,
+        onSaveItemToStorage: saveChecklistItem,
     });
 
     // ======
@@ -45,7 +45,7 @@ const Checklist = () => {
             fillSpace
             listType={listType}
             items={SortedItems.items}
-            onDragEnd={SortedItems.persistItemToStorage}
+            onDragEnd={SortedItems.saveItem}
             onContentClick={SortedItems.toggleItemEdit}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleItemDelete, getIsItemDeleting(item, listType))}
             onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}

@@ -62,9 +62,9 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: EStorageId.RECURRING_EVENT,
         storageKey: plannerKey,
-        saveItemToStorage: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
+        onSaveItemToStorage: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
         listType,
-        handleListChange: () => setShowTimeInToolbarForUntimedEvent(false)
+        onHandleListChange: () => setShowTimeInToolbarForUntimedEvent(false)
     });
 
     // ==================
@@ -111,7 +111,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 listType={listType}
                 isLoading={SortedEvents.isLoading}
                 onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-                onDragEnd={SortedEvents.persistItemToStorage}
+                onDragEnd={SortedEvents.saveItem}
                 onContentClick={SortedEvents.toggleItemEdit}
                 toolbarIconSet={toolbarIcons}
                 onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items) as IRecurringEvent}

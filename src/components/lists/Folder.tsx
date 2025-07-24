@@ -111,7 +111,7 @@ const SortedFolder = ({
             }
             return;
         } else if (textfieldItem) {
-            SortedItems.persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
+            SortedItems.saveItem({ ...textfieldItem, status: EItemStatus.STATIC });
         }
         handleOpenItem(item.id, item.type);
     }
@@ -227,9 +227,9 @@ const SortedFolder = ({
     const SortedItems = useSortedList<IFolderItem, IFolder>({
         storageId: EStorageId.CHECKLISTS,
         storageKey: folderId,
-        getItemsFromStorageObject: getFolderItemsMemoized,
-        saveItemToStorage: saveTextfieldItem,
-        initializeListItem: initializeEmptyFolder,
+        onGetItemsFromStorageObject: getFolderItemsMemoized,
+        onSaveItemToStorage: saveTextfieldItem,
+        onInitializeListItem: initializeEmptyFolder,
         listType
     });
 
@@ -244,7 +244,7 @@ const SortedFolder = ({
             fillSpace
             listType={listType}
             isLoading={SortedItems.isLoading}
-            onDragEnd={SortedItems.persistItemToStorage}
+            onDragEnd={SortedItems.saveItem}
             toolbarIconSet={generateToolbarIcons()}
             onContentClick={handleItemClick}
             onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}

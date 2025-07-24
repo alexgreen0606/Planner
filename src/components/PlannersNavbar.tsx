@@ -38,17 +38,17 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
         return currentTab?.left ?? (HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
     }, [pathname]);
 
-    // =======================
+    // =================
     // 1. Event Handler
-    // =======================
+    // =================
 
     function handleTabChange(tab: any) {
         router.push(tab.pathname);
     }
 
-    // =======================
+    // =======
     // 2. UI
-    // =======================
+    // =======
 
     return (
         <View

@@ -27,11 +27,11 @@ const FolderItemBanner = ({
     const router = useRouter();
 
     const {
-        folder,
+        folderItem: folder,
         editingValue,
-        onBeginEdit,
-        onTitleChange,
-        onSave
+        handleBeginEditValue,
+        handleValueChange,
+        handleSaveValue
     } = useFolderItem(itemId, itemType);
 
     const isItemEditing = editingValue !== null;
@@ -47,10 +47,10 @@ const FolderItemBanner = ({
                 <TextInput
                     autoFocus
                     value={editingValue}
-                    onChangeText={onTitleChange}
+                    onChangeText={handleValueChange}
                     cursorColor={PlatformColor('systemBlue')}
-                    onSubmitEditing={onSave}
-                    onBlur={onSave}
+                    onSubmitEditing={handleSaveValue}
+                    onBlur={handleSaveValue}
                     className='w-full bg-transparent'
                     style={[
                         textStyles.pageLabel,
@@ -60,7 +60,7 @@ const FolderItemBanner = ({
             ) : (
                 <CustomText
                     variant='pageLabel'
-                    onPress={onBeginEdit}
+                    onPress={handleBeginEditValue}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                 >

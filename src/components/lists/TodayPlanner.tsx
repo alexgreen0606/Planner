@@ -48,8 +48,8 @@ const TodayPlanner = () => {
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: EStorageId.PLANNER,
         storageKey: todayDatestamp,
-        getItemsFromStorageObject,
-        saveItemToStorage: saveEventWithRecurringAndCalendarCheck,
+        onGetItemsFromStorageObject: getItemsFromStorageObject,
+        onSaveItemToStorage: saveEventWithRecurringAndCalendarCheck,
         initializedStorageObject: generatePlanner(todayDatestamp),
         listType
     });
@@ -68,7 +68,7 @@ const TodayPlanner = () => {
     async function handleToggleScheduleEventDelete(event: IPlannerEvent) {
         if (event.id === textfieldItem?.id) {
             // If this is the textfield, save it.
-            await SortedEvents.persistItemToStorage(textfieldItem);
+            await SortedEvents.saveItem(textfieldItem);
             setTextfieldItem(null);
         }
 
@@ -87,7 +87,7 @@ const TodayPlanner = () => {
             items={SortedEvents.items}
             hideKeyboard={isTimeModalOpen}
             onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
-            onDragEnd={SortedEvents.persistItemToStorage}
+            onDragEnd={SortedEvents.saveItem}
             onContentClick={SortedEvents.toggleItemEdit}
             onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, todayDatestamp)}
             onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
