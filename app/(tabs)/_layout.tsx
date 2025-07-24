@@ -1,6 +1,6 @@
 import GenericIcon from '@/components/icon';
 import TodayIcon from '@/components/icon/TodayIcon';
-import { BOTTOM_NAVIGATION_HEIGHT } from '@/lib/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT } from '@/lib/constants/miscLayout';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

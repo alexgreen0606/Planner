@@ -1,6 +1,6 @@
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
@@ -8,7 +8,7 @@ import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
 // ✅ 
 
-type ListTextfieldProps<T extends IListItem> = {
+type ListTextfieldProps<T extends TListItem> = {
     item: T;
     toolbarIconSet?: ToolbarIcon<T>[][];
     onChange: (newText: string) => void;
@@ -17,7 +17,7 @@ type ListTextfieldProps<T extends IListItem> = {
     customStyle: TextStyle;
 };
 
-const ListTextfield = <T extends IListItem>({
+const ListTextfield = <T extends TListItem>({
     item,
     toolbarIconSet,
     onChange,

@@ -1,6 +1,10 @@
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { RegisterOptions } from "react-hook-form";
 
+// ✅ 
+
+// todo: delete once form fields updated
+
 export interface IFormField {
     type: EFormFieldType;
     name: string;

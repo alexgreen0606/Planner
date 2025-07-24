@@ -1,5 +1,7 @@
+// ✅ 
+
 export type TPlannerSet = {
-    title: string; // PK
+    title: string; // Primary Key
     startDatestamp: string;
     endDatestamp: string;
 };

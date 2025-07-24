@@ -2,13 +2,12 @@ import { GenericIconProps } from '@/components/icon';
 import CustomText from '@/components/text/CustomText';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { selectableColors } from '@/lib/constants/selectableColors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolder } from '@/lib/types/checklists/IFolder';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { deleteFolderItem, getFolderFromStorage, getFolderItems, saveTextfieldItem, updateFolderItem } from '@/storage/checklistsStorage';
 import { generateSortId } from '@/utils/listUtils';
@@ -18,6 +17,7 @@ import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 import { ToolbarIcon } from './components/ListToolbar';
 import SortableList from './components/SortableList';
+import { selectableColors } from '@/lib/constants/colors';
 
 // ✅ 
 
@@ -120,7 +120,7 @@ const SortedFolder = ({
     // 2. Helper Functions
     // ====================
 
-    function initializeEmptyFolder(newItem: IListItem) {
+    function initializeEmptyFolder(newItem: TListItem) {
         return {
             ...newItem,
             childrenCount: 0,

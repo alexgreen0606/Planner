@@ -1,3 +1,5 @@
+// ✅ 
+
 export enum EListType {
     CHECKLIST = 'CHECKLIST',
     RECURRING = 'RECURRING',
@@ -7,4 +9,4 @@ export enum EListType {
     PLANNER_SET = 'PLANNER_SET',
     FOLDER = 'FOLDER',
     BIRTHDAY = 'BIRTHDAY'
-};
+}

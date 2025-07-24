@@ -1,4 +1,4 @@
-import { HEADER_HEIGHT } from '@/lib/constants/layout';
+import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';

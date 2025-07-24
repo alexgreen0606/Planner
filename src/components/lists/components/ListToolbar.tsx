@@ -1,20 +1,20 @@
 import GenericIcon, { GenericIconProps } from '@/components/icon';
-import { TOOLBAR_HEIGHT } from '@/lib/constants/layout';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { InputAccessoryView, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 // ✅ 
 
-export interface ToolbarIcon<T extends IListItem> extends GenericIconProps<T> {
+export interface ToolbarIcon<T extends TListItem> extends GenericIconProps<T> {
     customIcon?: React.ReactNode;
 }
 
-type ListToolbarProps<T extends IListItem> = {
+type ListToolbarProps<T extends TListItem> = {
     iconSets: ToolbarIcon<T>[][];
     accessoryKey?: string;
 };
 
-const ListToolbar = <T extends IListItem>({
+const ListToolbar = <T extends TListItem>({
     iconSets,
     accessoryKey
 }: ListToolbarProps<T>) =>

@@ -1,6 +1,8 @@
-import { IListItem } from "./core/TListItem";
+import { TListItem } from "./core/TListItem";
 
-export interface IRecurringEvent extends IListItem {
+// ✅ 
+
+export interface IRecurringEvent extends TListItem {
     startTime?: string; // HH:MM
     weekdayEventId?: string;
 }

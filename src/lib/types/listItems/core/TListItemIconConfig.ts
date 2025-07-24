@@ -1,9 +1,11 @@
 import { GenericIconProps } from "@/components/icon";
-import { IListItem } from "@/types/listItems/core/TListItem";
+import { TListItem } from "./TListItem";
 
-export type TListItemIconConfig<T extends IListItem> = {
+// ✅ 
+
+export type TListItemIconConfig<T extends TListItem> = {
     icon?: GenericIconProps;
     onClick?: (item: T) => void;
     customIcon?: React.ReactNode;
     hideIcon?: boolean;
-}
+};

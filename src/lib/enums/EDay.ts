@@ -1,3 +1,5 @@
+// ✅ 
+
 export enum EDay {
     SUNDAY = 'Sunday',
     MONDAY = 'Monday',

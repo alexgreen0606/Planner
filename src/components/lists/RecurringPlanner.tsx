@@ -24,7 +24,7 @@ type SortedRecurringPlannerProps = {
 };
 
 const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
-    const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IRecurringEvent>();
+    const { handleGetIsItemDeleting: getIsItemDeleting, handleToggleScheduleItemDelete: toggleScheduleItemDelete } = useDeleteScheduler<IRecurringEvent>();
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IRecurringEvent>();
 
     const [showTimeInToolbarForUntimedEvent, setShowTimeInToolbarForUntimedEvent] = useState(false);

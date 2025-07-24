@@ -1,5 +1,5 @@
 import GenericIcon from '@/components/icon';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
 import { OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
@@ -88,7 +88,7 @@ export const ScrollContainerProvider = ({
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
-    const { reloadPage } = useCalendarLoad();
+    const { handleReloadPage: reloadPage } = useCalendarLoad();
 
     const canReloadPath = reloadablePaths.includes(pathname);
 

@@ -1,9 +1,9 @@
 import ThinLine from '@/components/ThinLine';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { sanitizeList } from '@/utils/listUtils';
@@ -19,7 +19,7 @@ import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
 // ✅ 
 
-type SortableListProps<T extends IListItem> = {
+type SortableListProps<T extends TListItem> = {
     listId: string;
     items: T[];
     toolbarIconSet?: ToolbarIcon<T>[][];
@@ -39,7 +39,7 @@ type SortableListProps<T extends IListItem> = {
     customOnGetIsDeleting?: (item: T) => boolean;
 };
 
-const SortableList = <T extends IListItem>({
+const SortableList = <T extends TListItem>({
     listId,
     items,
     isLoading,

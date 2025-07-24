@@ -37,7 +37,7 @@ const EventChip = ({
 }: EventChipProps) => {
     const { event: { title, id }, iconConfig, color, onClick, hasClickAccess } = chip;
 
-    const { getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const { handleGetDeletingItemsByType: getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
     const router = useRouter();
 
     const isPendingDelete = useMemo(() =>

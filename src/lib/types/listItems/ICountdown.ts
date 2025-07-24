@@ -1,5 +1,7 @@
-import { IListItem } from "./core/TListItem";
+import { TListItem } from "./core/TListItem";
 
-export interface ICountdown extends IListItem {
+// ✅ 
+
+export interface ICountdown extends TListItem {
     startIso: string;
 }

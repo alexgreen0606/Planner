@@ -1,4 +1,3 @@
-import { spacing } from "@/lib/constants/layout";
 import { BlurView } from "expo-blur";
 import React, { ReactNode } from 'react';
 import { ActionSheetIOS, PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
@@ -105,7 +104,7 @@ const Modal = ({
                 contentContainerStyle={{
                     paddingTop: TOP_BLUR_BAR_HEIGHT * 1.5,
                     paddingBottom: BOTTOM_SPACER,
-                    paddingHorizontal: spacing.large,
+                    paddingHorizontal: 16,
                     flexGrow: 1
                 }}
             >

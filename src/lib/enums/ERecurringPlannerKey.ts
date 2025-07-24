@@ -1,3 +1,5 @@
+// ✅ 
+
 export enum ERecurringPlannerKey {
     WEEKDAYS = 'Weekdays',
     MONDAY = 'Monday',
@@ -7,4 +9,4 @@ export enum ERecurringPlannerKey {
     FRIDAY = 'Friday',
     SATURDAY = 'Saturday',
     SUNDAY = 'Sunday'
-};
+}

@@ -1,4 +1,4 @@
-import { THIN_LINE_HEIGHT } from '@/lib/constants/layout';
+import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import React from 'react';
 import { PlatformColor, StyleSheet } from 'react-native';
 import { View } from 'react-native';

@@ -1,6 +1,6 @@
 import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
 import CustomText from '@/components/text/CustomText';
-import { LIST_CONTENT_HEIGHT } from '@/lib/constants/layout';
+import { LIST_CONTENT_HEIGHT } from '@/lib/constants/miscLayout';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, TextInput, TouchableOpacity } from 'react-native';
 

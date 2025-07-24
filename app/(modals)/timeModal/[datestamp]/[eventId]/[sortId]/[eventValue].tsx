@@ -12,7 +12,7 @@ import { EListType } from "@/lib/enums/EListType";
 import { ETimeSelectorMode } from "@/lib/enums/ETimeSelectorMode";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
-import { IDateRange, IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
+import { TDateRange, IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEvents, getPlannerFromStorage, sanitizeRecurringEventForSave, saveEventToPlanner, savePlannerToStorage } from "@/storage/plannerStorage";
 import { hasCalendarAccess } from "@/utils/accessUtils";
@@ -225,7 +225,7 @@ const TimeModal = () => {
         setLoading(true);
 
         const planner = getPlannerFromStorage(triggerDatestamp);
-        const updatingDateRanges: IDateRange[] = [];
+        const updatingDateRanges: TDateRange[] = [];
 
         let unscheduledEvent = buildUnscheduledEventFromInitialState(data, planner, updatingDateRanges);
         removeCalendarTimeLinkage(unscheduledEvent);
@@ -337,9 +337,9 @@ const TimeModal = () => {
 
     async function extractAllDayEventContext(
         initialState: TriggerState,
-        currentRange: IDateRange
+        currentRange: TDateRange
     ) {
-        const updatingDateRanges: IDateRange[] = [currentRange];
+        const updatingDateRanges: TDateRange[] = [currentRange];
         let prevCalendarId: string | undefined;
         let prevAllDay: boolean | undefined;
 
@@ -380,7 +380,7 @@ const TimeModal = () => {
     ) {
         const { timeRange, title, allDay } = data;
         const { startIso, endIso } = timeRange;
-        const updatingDateRanges: IDateRange[] = [timeRange];
+        const updatingDateRanges: TDateRange[] = [timeRange];
         let savedEvent: IPlannerEvent;
         let prevCalendarId: string | undefined;
 
@@ -445,7 +445,7 @@ const TimeModal = () => {
     ) {
         const { timeRange, title, allDay } = data;
         const { startIso, endIso } = timeRange;
-        const updatingDateRanges: IDateRange[] = [timeRange];
+        const updatingDateRanges: TDateRange[] = [timeRange];
         let savedEvent: IPlannerEvent;
 
         switch (initialState.sourceType) {
@@ -540,7 +540,7 @@ const TimeModal = () => {
     function buildUnscheduledEventFromInitialState(
         data: FormData,
         planner: TPlanner,
-        updatingDateRanges: IDateRange[]
+        updatingDateRanges: TDateRange[]
     ): IPlannerEvent {
         switch (initialEventState!.sourceType) {
             case TriggerSource.ALL_DAY_CHIP:
@@ -556,7 +556,7 @@ const TimeModal = () => {
     function buildUnscheduledFromAllDayChip(
         data: FormData,
         planner: TPlanner,
-        updatingDateRanges: IDateRange[]
+        updatingDateRanges: TDateRange[]
     ): IPlannerEvent {
         if (initialEventState?.sourceType !== TriggerSource.ALL_DAY_CHIP) {
             throw new Error('buildUnscheduledFromAllDayChip called but initial trigger was not all-day chip.')
@@ -587,7 +587,7 @@ const TimeModal = () => {
     function buildUnscheduledFromPlannerEvent(
         data: FormData,
         planner: TPlanner,
-        updatingDateRanges: IDateRange[]
+        updatingDateRanges: TDateRange[]
     ): IPlannerEvent {
         if (
             !initialEventState ||
@@ -714,7 +714,7 @@ const TimeModal = () => {
         delete event.calendarId;
     }
 
-    function isMultiDay(range: IDateRange): boolean {
+    function isMultiDay(range: TDateRange): boolean {
         return isoToDatestamp(range.startIso) !== isoToDatestamp(range.endIso);
     }
 
@@ -732,7 +732,7 @@ const TimeModal = () => {
         }
     }
 
-    async function reloadCalendarFromRanges(ranges: IDateRange[]) {
+    async function reloadCalendarFromRanges(ranges: TDateRange[]) {
         const affectedDates = getMountedDatestampsLinkedToDateRanges(ranges);
         await loadCalendarData(affectedDates);
     }

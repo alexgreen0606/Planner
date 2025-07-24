@@ -1,18 +1,19 @@
-import { IListItem } from "./core/TListItem";
+import { TListItem } from "./core/TListItem";
 
-export interface IDateRange {
+// ✅ 
+
+export type TDateRange = {
     startIso: string;
     endIso: string;
-}
+};
 
-export interface ITimeConfig extends IDateRange {
+export interface ITimeConfig extends TDateRange {
     allDay: boolean;
     multiDayEnd?: boolean;
     multiDayStart?: boolean;
 }
 
-export interface IPlannerEvent extends IListItem {
-    color?: string;
+export interface IPlannerEvent extends TListItem {
     timeConfig?: ITimeConfig;
     calendarId?: string;
     recurringId?: string;

@@ -2,7 +2,7 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { textfieldItemAtom } from '@/atoms/textfieldData';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
-import { LIST_ITEM_HEIGHT } from '@/lib/constants/layout';
+import { LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
 import { EListType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
@@ -41,7 +41,7 @@ const PlannerCard = ({
     datestamp,
     forecast
 }: PlannerCardProps) => {
-    const { getDeletingItems, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
+    const { handleGetDeletingItemsByType: getDeletingItems, handleToggleScheduleItemDelete: toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
     const { calendarEvents, calendarChips } = useCalendarData(datestamp);
     const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
     const calendarEventData = useAtomValue(calendarEventDataAtom);

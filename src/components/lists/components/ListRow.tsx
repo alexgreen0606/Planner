@@ -1,10 +1,9 @@
 import GenericIcon from "@/components/icon";
 import ThinLine from "@/components/ThinLine";
 import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/layout";
-import { LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { EListType } from "@/lib/enums/EListType";
-import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
@@ -20,12 +19,12 @@ import Animated, {
     useAnimatedStyle,
     withSpring
 } from "react-native-reanimated";
-import ListTextfield from "./RowTextfield";
 import { ToolbarIcon } from "./ListToolbar";
+import ListTextfield from "./RowTextfield";
 
 // ✅ 
 
-type ListRowProps<T extends IListItem> = {
+type ListRowProps<T extends TListItem> = {
     item: T;
     items: T[];
     itemIndex: number;
@@ -67,7 +66,7 @@ enum IconPosition {
     LEFT = 'LEFT'
 }
 
-const ListRow = <T extends IListItem>({
+const ListRow = <T extends TListItem>({
     item: staticItem,
     items,
     dragConfig: {
@@ -97,7 +96,7 @@ const ListRow = <T extends IListItem>({
     customOnGetIsDeleting
 }: ListRowProps<T>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
-    const { getIsItemDeleting } = useDeleteScheduler<T>();
+    const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
     const {
         scrollOffset,
         autoScroll

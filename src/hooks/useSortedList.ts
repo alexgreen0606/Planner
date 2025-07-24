@@ -1,6 +1,6 @@
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
@@ -11,7 +11,7 @@ import { useTextfieldItemAs } from './useTextfieldItemAs';
 
 // ✅ 
 
-type SortedListConfig<T extends IListItem, S> = {
+type SortedListConfig<T extends TListItem, S> = {
     storageId: string;
     storageKey: string;
     listType: EListType;
@@ -22,10 +22,10 @@ type SortedListConfig<T extends IListItem, S> = {
     onGetItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
 
     onHandleListChange?: () => Promise<void> | void;
-    onInitializeListItem?: (item: IListItem) => T;
+    onInitializeListItem?: (item: TListItem) => T;
 };
 
-const useSortedList = <T extends IListItem, S>({
+const useSortedList = <T extends TListItem, S>({
     storageKey,
     storageId,
     initializedStorageObject,
@@ -36,7 +36,7 @@ const useSortedList = <T extends IListItem, S>({
     onSaveItemToStorage
 }: SortedListConfig<T, S>) => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
-    const { getIsItemDeleting } = useDeleteScheduler<T>();
+    const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
     const { focusPlaceholder } = useScrollContainer();
 
     const isTogglingTextfields = useRef(false);
@@ -128,7 +128,7 @@ const useSortedList = <T extends IListItem, S>({
 
         // Phase 5: Create a new list item.
         const updatedList = sanitizeList(items, item);
-        const genericListItem: IListItem = {
+        const genericListItem: TListItem = {
             id: uuid.v4(),
             status: EItemStatus.NEW,
             listId: storageKey,

@@ -7,7 +7,7 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IChecklist } from "@/lib/types/checklists/IChecklist";
 import { IFolder } from "@/lib/types/checklists/IFolder";
-import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
 import { jotaiStore } from "app/_layout";
 import { MMKV } from "react-native-mmkv";
@@ -218,7 +218,7 @@ export const deleteFolderItem = (itemId: string, type: EFolderItemType) => {
     jotaiStore.set(textfieldItemAtom, null);
 }
 
-export function saveChecklistItem(item: IListItem) {
+export function saveChecklistItem(item: TListItem) {
     const list = getListFromStorage(item.listId);
     console.log(list)
     if (!list) return;
@@ -236,7 +236,7 @@ export function saveChecklistItem(item: IListItem) {
 }
 
 // TODO: comment
-export function deleteChecklistItems(items: IListItem[]) {
+export function deleteChecklistItems(items: TListItem[]) {
     // Group items by listId
     const itemsByListId = items.reduce((acc, item) => {
         if (!acc[item.listId]) {
@@ -244,7 +244,7 @@ export function deleteChecklistItems(items: IListItem[]) {
         }
         acc[item.listId].push(item);
         return acc;
-    }, {} as Record<string, IListItem[]>);
+    }, {} as Record<string, TListItem[]>);
 
     // Process each list separately
     Object.entries(itemsByListId).forEach(([listId, itemsToDelete]) => {

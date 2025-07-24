@@ -1,7 +1,9 @@
 import { IColoredListItem } from "../listItems/core/IColoredListItem";
-import { IListItem } from "../listItems/core/TListItem";
+import { TListItem } from "../listItems/core/TListItem";
+
+// ✅ 
 
 export interface IChecklist extends IColoredListItem {
-    items: IListItem[];
+    items: TListItem[];
     listId: string;
-};
+}

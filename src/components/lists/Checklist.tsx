@@ -2,7 +2,7 @@ import useSortedList from '@/hooks/useSortedList';
 import { EListType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IChecklist } from '@/lib/types/checklists/IChecklist';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { saveChecklistItem } from '@/storage/checklistsStorage';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
@@ -13,7 +13,7 @@ import SortableList from './components/SortableList';
 // ✅ 
 
 const Checklist = () => {
-    const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IListItem>();
+    const { handleGetIsItemDeleting: getIsItemDeleting, handleToggleScheduleItemDelete: toggleScheduleItemDelete } = useDeleteScheduler<TListItem>();
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
 
     const listType = EListType.CHECKLIST;
@@ -27,7 +27,7 @@ const Checklist = () => {
     // 1. List Generation
     // ===================
 
-    const SortedItems = useSortedList<IListItem, IChecklist>({
+    const SortedItems = useSortedList<TListItem, IChecklist>({
         storageId: EStorageId.CHECKLISTS,
         storageKey: checklistId,
         listType,
@@ -40,7 +40,7 @@ const Checklist = () => {
     // ======
 
     return (
-        <SortableList<IListItem>
+        <SortableList<TListItem>
             listId={checklistId}
             fillSpace
             listType={listType}

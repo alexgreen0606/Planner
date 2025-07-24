@@ -20,7 +20,7 @@ import SortableList from './components/SortableList';
 // ✅ 
 
 const TodayPlanner = () => {
-    const { getIsItemDeleting, toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
+    const { handleGetIsItemDeleting: getIsItemDeleting, handleToggleScheduleItemDelete: toggleScheduleItemDelete } = useDeleteScheduler<IPlannerEvent>();
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { calendarEvents } = useCalendarData(todayDatestamp);

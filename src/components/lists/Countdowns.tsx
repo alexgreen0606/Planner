@@ -5,7 +5,7 @@ import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { EListType } from '@/lib/enums/EListType';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
-import { IListItem } from '@/lib/types/listItems/core/TListItem';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { deleteCountdown, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
 import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
@@ -104,7 +104,7 @@ const Countdowns = () => {
     // 2. Helper Function
     // ====================
 
-    function initializeCountdown(item: IListItem): ICountdown {
+    function initializeCountdown(item: TListItem): ICountdown {
         return {
             ...item,
             // Place textfield above the first countdown

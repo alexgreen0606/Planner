@@ -1,6 +1,6 @@
 import { IconType } from "@/components/icon";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { IListItem } from "@/lib/types/listItems/core/TListItem";
+import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { uuid } from "expo-modules-core";
 
 // ------------- Sort ID Management -------------
@@ -14,7 +14,7 @@ import { uuid } from "expo-modules-core";
  */
 export function generateSortId(
     referenceSortId: number,
-    listItems: IListItem[],
+    listItems: TListItem[],
     isChildId: boolean = false
 ): number {
     'worklet';
@@ -60,7 +60,7 @@ export function generateSortId(
 * @param item The item to check
 * @returns Whether the item is a textfield
 */
-export function isItemTextfield(item: IListItem): boolean {
+export function isItemTextfield(item: TListItem): boolean {
     return [EItemStatus.NEW, EItemStatus.EDIT].includes(item.status);
 }
 
@@ -75,7 +75,7 @@ export function isItemTextfield(item: IListItem): boolean {
  * @param replaceId The ID of the item to replace in the list. If not provided, syncItem's ID will be used.
  * @returns A clean list sorted by sort ID
  */
-export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T | null, replaceId?: string) {
+export function sanitizeList<T extends TListItem>(list: T[], syncItem?: T | null, replaceId?: string) {
     const updatedList = [...list];
 
     if (syncItem) {
@@ -102,7 +102,7 @@ export function sanitizeList<T extends IListItem>(list: T[], syncItem?: T | null
 * @param pendingDeleteItems The items about to be deleted
 * @returns Icon configuration object containing icon type, color and click handler
 */
-export function generateCheckboxIconConfig<T extends IListItem>(
+export function generateCheckboxIconConfig<T extends TListItem>(
     item: T,
     toggleItemDelete: (item: T) => void,
     isDeleting: boolean
@@ -126,7 +126,7 @@ export function generateCheckboxIconConfig<T extends IListItem>(
  * @param newData - Partial data to overwrite in the clone.
  * @returns A new object with the original item's data, a new ID, deleted keys, and updated data.
  */
-export function cloneItem<T extends IListItem>(item: T, keysToDelete?: (keyof T)[], newData?: Partial<T>) {
+export function cloneItem<T extends TListItem>(item: T, keysToDelete?: (keyof T)[], newData?: Partial<T>) {
     const clone = {
         ...item,
         id: uuid.v4(),

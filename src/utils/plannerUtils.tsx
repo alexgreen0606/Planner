@@ -5,7 +5,7 @@ import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
-import { IDateRange, IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
+import { TDateRange, IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getCarryoverEventsAndCleanStorage, savePlannerToStorage } from '@/storage/plannerStorage';
@@ -111,7 +111,7 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | ICountdown | 
  * @param ranges - The list of ranges to weigh against the mounted datestamps.
  * @returns - A list of mounted datestamps within any of the ranges given.
  */
-export function getMountedDatestampsLinkedToDateRanges<T extends IDateRange>(ranges: T[]) {
+export function getMountedDatestampsLinkedToDateRanges<T extends TDateRange>(ranges: T[]) {
     const allMountedDatestamps = getAllMountedDatestamps();
 
     const affectedDatestamps = [];
