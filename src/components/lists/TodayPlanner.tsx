@@ -41,7 +41,10 @@ const TodayPlanner = () => {
     const listType = EListType.PLANNER;
     const isTimeModalOpen = pathname.includes('timeModal');
 
-    // ------------- List Generation -------------
+    // ===================
+    // 1. List Generation
+    // ===================
+
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: EStorageId.PLANNER,
         storageKey: todayDatestamp,
@@ -52,7 +55,7 @@ const TodayPlanner = () => {
     });
 
     // ==================
-    // 1. Event Handlers
+    // 2. Event Handlers
     // ==================
 
     function handleOpenTimeModal(event?: IPlannerEvent) {
@@ -63,17 +66,17 @@ const TodayPlanner = () => {
     }
 
     async function handleToggleScheduleEventDelete(event: IPlannerEvent) {
-        toggleScheduleItemDelete(event);
-
-        // If this is the textfield, save it.
         if (event.id === textfieldItem?.id) {
+            // If this is the textfield, save it.
             await SortedEvents.persistItemToStorage(textfieldItem);
             setTextfieldItem(null);
         }
+
+        toggleScheduleItemDelete(event);
     }
 
     // ======
-    // 4. UI
+    // 3. UI
     // ======
 
     return (

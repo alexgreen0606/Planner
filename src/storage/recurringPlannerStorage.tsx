@@ -37,12 +37,13 @@ export function saveRecurringPlannerToStorage(key: string, newPlanner: IRecurrin
 // ------------- Weekday Planner -------------
 
 /**
- * ✅ Updates or creates a recurring weekday event.
+ * Updates or creates a recurring weekday event.
  * All affected recurring planners will also be updated.
  * 
  * @param weekdayEvent - the newly updated event
  */
 export function saveRecurringWeekdayEvent(weekdayEvent: IRecurringEvent) {
+    weekdayEvent.status = EItemStatus.STATIC;
 
     // Phase 1: Update all recurring planners with the event.
     Object.values(EWeekday).forEach((day) => {
@@ -61,7 +62,7 @@ export function saveRecurringWeekdayEvent(weekdayEvent: IRecurringEvent) {
 }
 
 /**
- * ✅ Deletes a list of recurring weekday events.
+ * Deletes a list of recurring weekday events.
  * All affected recurring planners will also be updated.
  * 
  * @param eventsToDelete - the list of recurring events to delete

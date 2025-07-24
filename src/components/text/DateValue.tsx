@@ -38,8 +38,8 @@ const DateValue = ({
                     {monthDay.toUpperCase()}
                 </CustomText>
                 {showYear && (
-                    <View className='absolute top-[80%] left-0'>
-                        <CustomText variant='standard'>
+                    <View className='absolute top-[80%]'>
+                        <CustomText variant='conciseDateYear'>
                             {year}
                         </CustomText>
                     </View>

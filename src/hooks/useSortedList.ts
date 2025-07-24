@@ -12,7 +12,7 @@ import { useTextfieldItemAs } from './useTextfieldItemAs';
 interface SortedListConfig<T extends IListItem, S> {
     storageId: string;
     storageKey: string;
-    handleListChange?: () => Promise<void>;
+    handleListChange?: () => Promise<void> | void;
     // Ensure a callback is used here to prevent infinite rerenders
     getItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
     initializeListItem?: (item: IListItem) => T;
@@ -49,6 +49,7 @@ const useSortedList = <T extends IListItem, S>({
         try {
             const fetchedItems = await getItemsFromStorageObject?.(storageRecord ?? initializedStorageObject ?? [] as S);
             setItems(fetchedItems ?? storageRecord as T[] ?? []);
+            console.log(fetchedItems ?? storageRecord as T[] ?? []);
             if (isLoading) setIsLoading(false);
         } catch (error) {
             console.error(error);
@@ -77,11 +78,14 @@ const useSortedList = <T extends IListItem, S>({
 
         isTogglingTextfields.current = true;
 
-        if (textfieldItem && textfieldItem.value.trim() !== '') {
+        if (textfieldItem) {
             // Focus the hidden placeholder field.
             // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
             focusPlaceholder();
-            await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
+
+            if (textfieldItem.value.trim() !== '') {
+                await persistItemToStorage({ ...textfieldItem, status: EItemStatus.STATIC });
+            }
         }
 
         setTextfieldItem({ ...item, status: EItemStatus.EDIT });

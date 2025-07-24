@@ -2,7 +2,7 @@ import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
 import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { MotiView } from 'moti';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
@@ -19,7 +19,7 @@ type TimeSelectorProps = {
     currentSelectorMode: ETimeSelectorMode | null;
     minimumDate?: Date;
     onToggleMode: (mode: ETimeSelectorMode) => void;
-    onChange: (event: any) => void;
+    onChange: (event: DateTimePickerEvent) => void;
 };
 
 const TimeSelector = ({

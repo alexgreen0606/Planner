@@ -165,6 +165,11 @@ export const textStyles = {
         fontSize: 16,
         color: PlatformColor('systemTeal')
     },
+    conciseDateYear: {
+        fontFamily: 'RoundRegular',
+        fontSize: 10,
+        color: PlatformColor('secondaryLabel')
+    },
     // --- Today Icon ---
     todayMonth: {
         fontSize: 8,

@@ -78,7 +78,10 @@ const PlannerCard = ({
 
     const listType = EListType.PLANNER;
 
-    // ------------- List Generation -------------
+    // ===================
+    // 1. List Generation
+    // ===================
+
     const SortedEvents = useSortedList<IPlannerEvent, TPlanner>({
         storageId: EStorageId.PLANNER,
         storageKey: datestamp,
@@ -87,6 +90,7 @@ const PlannerCard = ({
         initializedStorageObject: generatePlanner(datestamp),
         saveItemToStorage: saveEventWithRecurringAndCalendarCheck
     });
+    // ===================
 
     const planner = SortedEvents.storageObject;
     const hasTitle = (planner?.title.length ?? 0) > 0;
@@ -99,7 +103,7 @@ const PlannerCard = ({
     }, [SortedEvents.items, isRecurringHidden]);
 
     // =============
-    // 1. Reactions
+    // 2. Reactions
     // =============
 
     // Reveal all recurring events when the textfield item belongs to this planner.
@@ -117,7 +121,7 @@ const PlannerCard = ({
     }, [textfieldItem?.listId]);
 
     // ==================
-    // 2. Event Handlers
+    // 3. Event Handlers
     // ==================
 
     function handleAction(action: EditAction) {
@@ -165,7 +169,7 @@ const PlannerCard = ({
     }
 
     // =======
-    // 3. UI
+    // 4. UI
     // =======
 
     if (isCalendarLoading) return null;

@@ -23,6 +23,10 @@ const Checklist = () => {
         []
     );
 
+    // ===================
+    // 1. List Generation
+    // ===================
+
     const SortedItems = useSortedList<IListItem, IChecklist>({
         storageId: EStorageId.CHECKLISTS,
         storageKey: checklistId,
@@ -30,6 +34,10 @@ const Checklist = () => {
         getItemsFromStorageObject,
         saveItemToStorage: saveChecklistItem,
     });
+
+    // ======
+    // 2. UI
+    // ======
 
     return (
         <SortableList<IListItem>

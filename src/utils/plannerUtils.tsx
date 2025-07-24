@@ -19,6 +19,7 @@ import { datestampToDayOfWeek, datestampToMidnightDate, getTodayDatestamp, isTim
 import { generateSortId, sanitizeList } from './listUtils';
 import { mapCalendarEventToPlannerEvent } from './map/mapCalenderEventToPlannerEvent';
 import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { ICountdown } from '@/lib/types/listItems/ICountdown';
 
 // ------------- Utilities -------------
 
@@ -84,19 +85,21 @@ function extractTimeValueFromString(text: string, datestamp?: string): Extracted
 }
 
 /**
- * ✅ Parses the given event and returns the start time of the event, or null if none exists.
+ * Parses the given event and returns the start time of the event, or null if none exists.
  * Works for both planner and recurring events (iso or time values [HH:MM]).
  * 
  * @param event - the event to parse 
  * @returns - the item's time value if one exists, else null
  */
-function extractEventTime(event: IPlannerEvent | IRecurringEvent | undefined): string | null {
+function extractEventTime(event: IPlannerEvent | IRecurringEvent | ICountdown | undefined): string | null {
     if (!event) return null;
 
     if ("timeConfig" in event) {
         return event.timeConfig?.multiDayEnd ? event.timeConfig.endIso : event.timeConfig?.startIso ?? null;
     } else if ("startTime" in event) {
         return event.startTime ?? null;
+    } else if ("startIso" in event) {
+        return event.startIso ?? null;
     } else {
         return null;
     }
@@ -250,8 +253,8 @@ export function sanitizePlanner(
  * @returns - The new sort ID for the event.
  */
 export function generateSortIdByTime(
-    event: IPlannerEvent | IRecurringEvent,
-    events: (IPlannerEvent | IRecurringEvent)[]
+    event: IPlannerEvent | IRecurringEvent | ICountdown,
+    events: (IPlannerEvent | IRecurringEvent | ICountdown)[]
 ): number {
     // console.info('generateSortIdByTime START', { event: { ...event }, events: [...events] });
     const planner = sanitizeList(events, event);
@@ -259,7 +262,7 @@ export function generateSortIdByTime(
     const eventTime = extractEventTime(event);
 
     // Handler for situations where the item can remain in its position.
-    function persistEventPosition() {
+    const persistEventPosition = () => {
         if (plannerWithoutEvent.some(item => item.sortId === event.sortId)) {
             // Event has a conflicting sort ID. Place this item below the conflict.
             return generateSortId(event.sortId, plannerWithoutEvent);
@@ -287,7 +290,7 @@ export function generateSortIdByTime(
     ) return persistEventPosition();
 
     // Traverse the list in reverse to find the last event that starts before or at the same time
-    const earlierEventIndex = planner.findLastIndex(existingEvent => {
+    const earlierEventIndex = plannerWithoutEvent.findLastIndex(existingEvent => {
         const existingTime = extractEventTime(existingEvent);
         if (!existingTime || existingEvent.id === event.id) return false;
 
@@ -567,9 +570,6 @@ export function generateTimeIconConfig(
     openTimeModal: (item: IPlannerEvent | IRecurringEvent) => void
 ) {
 
-    // TODO: open time modal for recurring 
-
-    
     const itemTime = extractEventTime(event);
     return {
         hideIcon: !itemTime,
