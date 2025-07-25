@@ -3,83 +3,21 @@ import { ICountdown } from "@/lib/types/listItems/ICountdown";
 import { getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import * as Calendar from 'expo-calendar';
 import { getCalendarMap, loadCalendarData } from "./calendarUtils";
+import { mapCalendarEventToCountdown } from "./map/mapCalendarEventToCountdown";
 import { getAllMountedDatestamps } from "./plannerUtils";
-import { EListType } from "@/lib/enums/EListType";
-import { EStorageKey } from "@/lib/enums/EStorageKey";
+
+// ✅ 
+
+// ===================
+// 1. Upsert Function
+// ===================
 
 /**
- * ✅ Converts a calendar event to a Countdown.
+ * Updates or creates an event in the Countdown Calendar and reloads the Calendar data.
  * 
- * @param calEvent - The calendar event to convert.
- * @param sortId - The sort ID for the Countdown.
- * @returns - A new Countdown Event.
+ * @param countdown The countdown to update or create.
  */
-function calendarEventToCountdown(calEvent: Calendar.Event, sortId?: number): ICountdown {
-    return {
-        id: calEvent.id,
-        value: calEvent.title,
-        sortId: sortId ?? 1,
-        listId: EStorageKey.COUNTDOWN_LIST_KEY,
-        status: EItemStatus.STATIC,
-        startIso: calEvent.startDate as string,
-        listType: EListType.COUNTDOWN
-    }
-}
-
-/**
- * ✅ Fetches the Countdown Calendar from the device and returns its ID.
- * If the Countdown Calendar does not exist, a new one will be created.
- * 
- * @returns - The ID of the device's countdown calendar.
- */
-async function getCountdownCalendarId(): Promise<string> {
-    const calendarMap = await getCalendarMap();
-    const countdownCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Countdowns');
-
-    return countdownCalendar?.id ?? await Calendar.createCalendarAsync({
-        title: 'Countdowns',
-        color: 'rgb(255,56,60)',
-        entityType: Calendar.EntityTypes.EVENT,
-        name: 'Countdowns',
-        ownerAccount: 'PlannerApp'
-    });
-}
-
-/**
- * ✅ Fetches a Countdown event from the device calendar and returns the datestamp it exists in.
- * 
- * @param eventId - The ID representing the Countdown in the device calendar.
- * @returns - The datestamp the Countdown exists in.
- */
-export async function getCountdownEventDatestamp(eventId: string): Promise<string> {
-
-    const calendarEvent = await Calendar.getEventAsync(eventId);
-    if (!calendarEvent) console.error('Countdown does not exist with ID', eventId);
-
-    return isoToDatestamp(calendarEvent.startDate as string);
-}
-
-/**
- * ✅ Fetches all events from the Countdown Calendar.
- * 
- * @returns - All events from the Countdown Calendar.
- */
-export async function getCountdowns(): Promise<ICountdown[]> {
-    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
-    const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
-
-    const id = await getCountdownCalendarId();
-    const calendarEvents = await Calendar.getEventsAsync([id], startDate, endDate);
-
-    return calendarEvents.map((calEvent, i) => calendarEventToCountdown(calEvent, i + 1));
-}
-
-/**
- * ✅ Updates or creates an event in the Countdown Calendar.
- * 
- * @param countdown - The event to update or create.
- */
-export async function saveCountdown(countdown: ICountdown) {
+export async function upsertCountdownAndReloadCalendar(countdown: ICountdown) {
     const countdownDatestamp = isoToDatestamp(countdown.startIso);
     const allVisibleDatestamps = getAllMountedDatestamps();
 
@@ -101,7 +39,7 @@ export async function saveCountdown(countdown: ICountdown) {
     if (createNew) {
         await Calendar.createEventAsync(id, eventDetails);
     } else {
-        const existingEventDatestamp = await getCountdownEventDatestamp(countdown.id);
+        const existingEventDatestamp = await getCountdownDatestamp(countdown.id);
         affectedDatestamps.add(existingEventDatestamp);
 
         await Calendar.updateEventAsync(countdown.id, eventDetails);
@@ -117,12 +55,35 @@ export async function saveCountdown(countdown: ICountdown) {
     await loadCalendarData(datestampsToReload);
 }
 
+// ==================
+// 2. Read Functions
+// ==================
+
 /**
- * ✅ Deletes a Countdown from the device calendar.
+ * Fetches all future and current events from the Countdown Calendar.
  * 
- * @param countdowns - The Countdown to delete.
+ * @returns All list of Countdowns.
  */
-export async function deleteCountdown(countdown: ICountdown) {
+export async function getAllFutureAndCurrentCountdowns(): Promise<ICountdown[]> {
+    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
+    const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
+
+    const id = await getCountdownCalendarId();
+    const calendarEvents = await Calendar.getEventsAsync([id], startDate, endDate);
+
+    return calendarEvents.map((calEvent, i) => mapCalendarEventToCountdown(calEvent, i + 1));
+}
+
+// ====================
+// 2. Delete Functions
+// ====================
+
+/**
+ * Deletes a Countdown from the device calendar.
+ * 
+ * @param countdown The Countdown to delete.
+ */
+export async function deleteCountdownAndReloadCalendar(countdown: ICountdown) {
     const allVisibleDatestamps = getAllMountedDatestamps();
 
     // Phase 1: Delete the event from the calendar.
@@ -135,6 +96,30 @@ export async function deleteCountdown(countdown: ICountdown) {
             affectedDatestamps.push(datestamp);
         }
     }
-    await loadCalendarData(affectedDatestamps);
 
+    await loadCalendarData(affectedDatestamps);
+}
+
+// ===================
+// 4. Helper Function
+// ===================
+
+async function getCountdownCalendarId(): Promise<string> {
+    const calendarMap = await getCalendarMap();
+    const countdownCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Countdowns');
+
+    return countdownCalendar?.id ?? await Calendar.createCalendarAsync({
+        title: 'Countdowns',
+        color: 'rgb(255,56,60)',
+        entityType: Calendar.EntityTypes.EVENT,
+        name: 'Countdowns',
+        ownerAccount: 'PlannerApp'
+    });
+}
+
+async function getCountdownDatestamp(eventId: string): Promise<string> {
+    const calendarEvent = await Calendar.getEventAsync(eventId);
+    if (!calendarEvent) throw new Error(`getCountdownEventDatestamp: Countdown does not exist with ID ${eventId}`);
+
+    return isoToDatestamp(calendarEvent.startDate as string);
 }

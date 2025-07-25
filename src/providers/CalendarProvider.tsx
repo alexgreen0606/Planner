@@ -8,7 +8,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
 import { loadCalendarData } from '@/utils/calendarUtils';
-import { generateDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
+import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { cloneItem } from '@/utils/listUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
@@ -141,7 +141,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         } else {
             const plannerSet = getPlannerSetByTitle(plannerSetKey);
             if (plannerSet) {
-                planner = generateDatestampRange(plannerSet.startDatestamp, plannerSet.endDatestamp);
+                planner = getDatestampRange(plannerSet.startDatestamp, plannerSet.endDatestamp);
             }
         }
 

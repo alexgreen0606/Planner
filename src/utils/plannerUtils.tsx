@@ -15,7 +15,7 @@ import { Event as CalendarEvent } from 'expo-calendar';
 import { uuid } from 'expo-modules-core';
 import { Router } from 'expo-router';
 import { hasCalendarAccess } from './accessUtils';
-import { datestampToDayOfWeek, datestampToMidnightDate, getTodayDatestamp, isTimeEarlier, timeValueToIso } from './dateUtils';
+import { getDayOfWeekFromDatestamp, datestampToMidnightJsDate, getTodayDatestamp, isTimeEarlierOrEqual, timeValueToIso, isTimeEarlier } from './dateUtils';
 import { generateSortId, sanitizeList } from './listUtils';
 import { mapCalendarEventToPlannerEvent } from './map/mapCalenderEventToPlannerEvent';
 import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
@@ -116,12 +116,12 @@ export function getMountedDatestampsLinkedToDateRanges<T extends TDateRange>(ran
 
     const affectedDatestamps = [];
     for (const mountedStart of allMountedDatestamps) {
-        const nextDatestamp = datestampToMidnightDate(mountedStart, 1).toISOString();
+        const nextDatestamp = datestampToMidnightJsDate(mountedStart, 1).toISOString();
         if (ranges.some((range) => {
             const { startIso, endIso } = range;
             return (
-                isTimeEarlier(startIso, nextDatestamp, false) &&
-                isTimeEarlier(mountedStart, endIso)
+                isTimeEarlier(startIso, nextDatestamp) &&
+                isTimeEarlierOrEqual(mountedStart, endIso)
             );
         })) {
             affectedDatestamps.push(mountedStart);
@@ -285,8 +285,8 @@ export function generateSortIdByTime(
     const laterTime = extractEventTime(laterEvent);
 
     if (
-        isTimeEarlier(earlierTime, eventTime) &&
-        isTimeEarlier(eventTime, laterTime)
+        (!earlierTime || isTimeEarlierOrEqual(earlierTime, eventTime)) &&
+        (!laterTime || isTimeEarlierOrEqual(eventTime, laterTime))
     ) return persistEventPosition();
 
     // Traverse the list in reverse to find the last event that starts before or at the same time
@@ -295,7 +295,7 @@ export function generateSortIdByTime(
         if (!existingTime || existingEvent.id === event.id) return false;
 
         // Check if existing event starts before or at the same time as our event
-        return isTimeEarlier(existingTime, eventTime);
+        return isTimeEarlierOrEqual(existingTime, eventTime);
     });
 
     if (earlierEventIndex !== -1) {
@@ -328,7 +328,7 @@ export async function buildPlannerEvents(
     const planner = { ...storagePlanner };
 
     // Phase 1: Merge in any recurring events for the given weekday.
-    const recurringPlanner = getRecurringPlannerFromStorage(datestampToDayOfWeek(datestamp));
+    const recurringPlanner = getRecurringPlannerFromStorage(getDayOfWeekFromDatestamp(datestamp));
     planner.events = syncPlannerWithRecurring(recurringPlanner, planner.events, datestamp);
 
     // Phase 2: Merge in any events from the calendar.

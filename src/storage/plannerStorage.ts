@@ -4,7 +4,7 @@ import { IPlannerEvent, ITimeConfig } from "@/lib/types/listItems/IPlannerEvent"
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { hasCalendarAccess } from "@/utils/accessUtils";
 import { loadCalendarData } from "@/utils/calendarUtils";
-import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier } from "@/utils/dateUtils";
+import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import { cloneItem } from "@/utils/listUtils";
 import { generatePlanner, getMountedDatestampsLinkedToDateRanges, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
@@ -79,7 +79,7 @@ export function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
     // Delete all previous calendars.
     const allStorageKeys = storage.getAllKeys();
     allStorageKeys.forEach(datestamp => {
-        if (isTimeEarlier(datestamp, yesterdayDatestamp)) {
+        if (isTimeEarlierOrEqual(datestamp, yesterdayDatestamp)) {
             storage.delete(datestamp);
         }
     });

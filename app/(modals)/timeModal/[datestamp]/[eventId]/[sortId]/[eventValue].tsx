@@ -17,7 +17,7 @@ import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventsFromStorageAndCalendar, getPlannerFromStorageByDatestamp, hideAndCloneRecurringEventInPlanner, upsertEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
 import { hasCalendarAccess } from "@/utils/accessUtils";
 import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
-import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlier } from "@/utils/dateUtils";
+import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import { generateSortId, sanitizeList } from "@/utils/listUtils";
 import { mapCalendarEventToPlannerEvent } from "@/utils/map/mapCalenderEventToPlannerEvent";
 import { getMountedDatestampsLinkedToDateRanges } from "@/utils/plannerUtils";
@@ -99,8 +99,8 @@ const TimeModal = () => {
             name: 'timeRange',
             type: EFormFieldType.TIME_RANGE,
             defaultValue: {
-                startIso: getIsoRoundedDown5Minutes(),
-                endIso: getIsoRoundedDown5Minutes()
+                startIso: getIsoFromNowTimeRoundedDown5Minutes(),
+                endIso: getIsoFromNowTimeRoundedDown5Minutes()
             },
             multiDay: isCalendarEvent,
             allDay: isAllDay,
@@ -155,7 +155,7 @@ const TimeModal = () => {
         }
 
         const newValue = eventValue === NULL ? '' : eventValue;
-        const nowTimePlannerDateIso = getIsoRoundedDown5Minutes(triggerDatestamp);
+        const nowTimePlannerDateIso = getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp);
 
         // New Event.
         if (eventId === NULL) {
@@ -631,8 +631,8 @@ const TimeModal = () => {
         const endDatestamp = isoToDatestamp(endIso);
 
         if (
-            isTimeEarlier(startDatestamp, triggerDatestamp) &&
-            isTimeEarlier(triggerDatestamp, endDatestamp)
+            isTimeEarlierOrEqual(startDatestamp, triggerDatestamp) &&
+            isTimeEarlierOrEqual(triggerDatestamp, endDatestamp)
         ) { // Trigger datestamp is within range.
             closeModalBackNoTextfield();
             return;

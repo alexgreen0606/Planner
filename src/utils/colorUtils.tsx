@@ -1,3 +1,7 @@
 import { validPlatformColors } from "@/lib/constants/colors";
 
-export const isValidPlatformColor = (color: string) => validPlatformColors.includes(color);
+// ✅ 
+
+export function isValidPlatformColor(color: string) {
+    return validPlatformColors.includes(color);
+}

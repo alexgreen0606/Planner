@@ -7,8 +7,8 @@ import { EListType } from '@/lib/enums/EListType';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
-import { deleteCountdown, getCountdowns, saveCountdown } from '@/utils/countdownUtils';
-import { datestampToMidnightDate, daysBetweenToday, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
+import { deleteCountdownAndReloadCalendar, getAllFutureAndCurrentCountdowns, upsertCountdownAndReloadCalendar } from '@/utils/countdownUtils';
+import { datestampToMidnightJsDate, getDaysUntilIso, getDatestampThreeYearsFromToday, getTodayDatestamp } from '@/utils/dateUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
@@ -29,11 +29,11 @@ const Countdowns = () => {
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
     const todayMidnight = useMemo(
-        () => datestampToMidnightDate(todayDatestamp),
+        () => datestampToMidnightJsDate(todayDatestamp),
         [todayDatestamp]
     );
 
-    const getCountownsMemoized = useCallback(getCountdowns, []);
+    const getCountownsMemoized = useCallback(getAllFutureAndCurrentCountdowns, []);
 
     const listType = EListType.COUNTDOWN;
 
@@ -58,7 +58,7 @@ const Countdowns = () => {
                             style: 'destructive',
                             onPress: async () => {
                                 if (!textfieldItem) return;
-                                await deleteCountdown(textfieldItem);
+                                await deleteCountdownAndReloadCalendar(textfieldItem);
                                 setTextfieldItem(null);
                                 setIsDeleteAlertOpen(false);
                             }
@@ -78,8 +78,8 @@ const Countdowns = () => {
                             : todayMidnight
                     }
                     onChange={handleDateSelect}
-                    minimumDate={datestampToMidnightDate(getTodayDatestamp())}
-                    maximumDate={datestampToMidnightDate(getDatestampThreeYearsFromToday())}
+                    minimumDate={datestampToMidnightJsDate(getTodayDatestamp())}
+                    maximumDate={datestampToMidnightJsDate(getDatestampThreeYearsFromToday())}
                 />
             )
         }]];
@@ -121,7 +121,7 @@ const Countdowns = () => {
         storageId: EStorageKey.COUNTDOWN_LIST_KEY,
         storageKey: EStorageKey.COUNTDOWN_LIST_KEY,
         onGetItemsFromStorageObject: getCountownsMemoized,
-        onSaveItemToStorage: saveCountdown,
+        onSaveItemToStorage: upsertCountdownAndReloadCalendar,
         onHandleListChange: async () => {
             await CountdownItems.refetchItems();
         },
@@ -160,7 +160,7 @@ const Countdowns = () => {
                     customIcon:
                         <View className="[width:55px] items-end">
                             <CustomText adjustsFontSizeToFit numberOfLines={1} variant='microDetail'>
-                                {daysBetweenToday(countdown.startIso)} days
+                                {getDaysUntilIso(countdown.startIso)} days
                             </CustomText>
                         </View>
                 })}

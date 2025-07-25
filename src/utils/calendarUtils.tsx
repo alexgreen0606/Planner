@@ -6,7 +6,7 @@ import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { DateTime } from "luxon";
 import { hasCalendarAccess } from "./accessUtils";
-import { datestampToMidnightDate } from "./dateUtils";
+import { datestampToMidnightJsDate } from "./dateUtils";
 import { mapCalendarEventToPlannerChip } from "./map/mapCalendarEventToPlannerChip";
 
 // ---------- Utilities ----------
@@ -39,8 +39,8 @@ function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
 function validateCalendarEvent(event: Calendar.Event, datestamp: string): boolean {
     if (event.allDay || !event.endDate) return false;
 
-    const dateStart = datestampToMidnightDate(datestamp);
-    const dateEnd = datestampToMidnightDate(datestamp, 1);
+    const dateStart = datestampToMidnightJsDate(datestamp);
+    const dateEnd = datestampToMidnightJsDate(datestamp, 1);
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);
 
@@ -65,8 +65,8 @@ function validateCalendarEvent(event: Calendar.Event, datestamp: string): boolea
 function validateEventChip(event: Calendar.Event, datestamp: string): boolean {
     if (!event.endDate || !event.startDate) return false;
 
-    const dateStart = datestampToMidnightDate(datestamp);
-    const dateEnd = datestampToMidnightDate(datestamp, 1);
+    const dateStart = datestampToMidnightJsDate(datestamp);
+    const dateEnd = datestampToMidnightJsDate(datestamp, 1);
 
     const eventStart = new Date(event.startDate);
     const eventEnd = new Date(event.endDate);

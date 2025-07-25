@@ -1,5 +1,5 @@
 import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
-import { datestampToDayOfWeek, datestampToMonthDate } from '@/utils/dateUtils';
+import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp } from '@/utils/dateUtils';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import CustomText from '../text/CustomText';
@@ -44,10 +44,10 @@ const TodayBanner = ({ timestamp }: TodayBannerProps) => {
                 </CustomText>
                 <View className='absolute bottom-full translate-y-3 flex-row'>
                     <CustomText variant='detail'>
-                        {datestampToDayOfWeek(timestamp)}{' '}
+                        {getDayOfWeekFromDatestamp(timestamp)}{' '}
                     </CustomText>
                     <CustomText variant='softDetail'>
-                        {datestampToMonthDate(timestamp)}
+                        {getMonthDateFromDatestamp(timestamp)}
                     </CustomText>
                 </View>
             </View>

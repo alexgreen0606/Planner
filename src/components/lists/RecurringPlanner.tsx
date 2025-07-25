@@ -6,7 +6,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { upsertRecurringEvent, upsertRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
-import { getIsoRoundedDown5Minutes } from '@/utils/dateUtils';
+import { getIsoFromNowTimeRoundedDown5Minutes } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime, generateTimeIconConfig, handleNewEventValue } from '@/utils/plannerUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
@@ -35,7 +35,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
             const dateTime = DateTime.local().set({ hour, minute, second: 0, millisecond: 0 });
             return dateTime.toJSDate();
         } else {
-            return DateTime.fromISO(getIsoRoundedDown5Minutes()).toJSDate();
+            return DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes()).toJSDate();
         }
     }, [textfieldItem?.startTime]);
 

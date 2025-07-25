@@ -8,7 +8,7 @@ import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { upsertEventToStorageAndCalendarCheckRecurring } from '@/storage/plannerStorage';
-import { datestampToDayOfWeek } from '@/utils/dateUtils';
+import { getDayOfWeekFromDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleNewEventValue, openTimeModal } from '@/utils/plannerUtils';
 import { usePathname, useRouter } from 'expo-router';
@@ -33,7 +33,7 @@ const TodayPlanner = () => {
 
     const recurringStorage = useMMKV({ id: EStorageId.RECURRING_EVENT });
     useMMKVListener((key) => {
-        if (key === datestampToDayOfWeek(todayDatestamp)) {
+        if (key === getDayOfWeekFromDatestamp(todayDatestamp)) {
             SortedEvents.refetchItems();
         }
     }, recurringStorage);

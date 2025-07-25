@@ -1,15 +1,144 @@
 import { DateTime } from 'luxon';
 
+// ✅ 
+
+// ===========================================================
+// 1. Conversion Functions (Datestamp/JS Date/ISO/Time Value)
+// ===========================================================
+
 /**
- * ✅ Generates an array of datestamps encompassing the given start date, end date, and all days in between.
+ * Converts a datestamp and time value into a UTC formatted ISO timestamp.
  * 
- * @param start - start of range YYYY-MM-DD
- * @param end - end of range YYYY-MM-DD
- * @returns - array of datestamps from start to end.
+ * @param datestamp - The datestamp to use in the conversion. (YYYY-MM-DD)
+ * @param timeValue - The time value to use in the conversion. (HH:MM)
+ * @returns An ISO timestamp in UTC format.
  */
-export function generateDatestampRange(start: string, end: string): string[] {
-    const startDate = DateTime.fromISO(start);
-    const endDate = DateTime.fromISO(end);
+export function timeValueToIso(datestamp: string, timeValue: string): string {
+    const [hour, minute] = timeValue.split(':').map(Number);
+    const dateTime = DateTime.fromISO(datestamp).set({ hour, minute });
+
+    if (!dateTime.isValid) {
+        throw new Error('Invalid date or time input');
+    }
+
+    return dateTime.toUTC().toISO();
+}
+
+/**
+ * Converts an ISO timestamp to a datestamp.
+ * 
+ * @param isoTimestamp - The ISO timestamp to convert.
+ * @returns A datestamp representing the ISO timestamp in local time. (YYYY-MM-DD)
+ */
+export function isoToDatestamp(isoTimestamp: string): string {
+    return DateTime.fromISO(isoTimestamp).toISODate()!;
+}
+
+/**
+ * Converts a datestamp into a JS Date object at the start of the day (midnight).
+ * 
+ * Optionally, the date may be shifted a given number of days.
+ * 
+ * @param datestamp - The datestamp to use in the conversion. (YYYY-MM-DD)
+ * @param dayOffset - Number of days to shift from the datestamp.
+ * @returns A JS Date object representing the midnight time of the computed date.
+ */
+export function datestampToMidnightJsDate(datestamp: string, dayOffset: number = 0): Date {
+    const date = DateTime.fromISO(datestamp).plus({ days: dayOffset });
+    return date.startOf('day').toJSDate();
+}
+
+// ========================
+// 2. Validation Functions
+// ========================
+
+/**
+ * Validates if one time is earlier than another.
+ * 
+ * @param time1 - The first time string.
+ * @param time2 - The second time string.
+ * @returns True if time1 is earlier than time2, else false.
+ */
+export function isTimeEarlier(time1: string, time2: string): boolean {
+    return time1.localeCompare(time2) < 0;
+}
+
+/**
+ * Validates if one time is earlier than or equal to another.
+ * 
+ * @param time1 - The first time string.
+ * @param time2 - The second time string.
+ * @returns True if time1 is earlier than or equal to time2, else false.
+ */
+export function isTimeEarlierOrEqual(time1: string, time2: string): boolean {
+    return time1.localeCompare(time2) <= 0;
+}
+
+// =====================
+// 3. Datestamp Getters
+// =====================
+
+/**
+ * Gets the datestamp for yesterday's date.
+ * 
+ * @returns The yesterday datestamp. (YYYY-MM-DD)
+ */
+export function getYesterdayDatestamp(): string {
+    return DateTime.local().minus({ days: 1 }).toISODate();
+}
+
+/**
+ * Gets the datestamp for today's date.
+ * 
+ * @returns The today datestamp. (YYYY-MM-DD)
+ */
+export function getTodayDatestamp(): string {
+    return DateTime.local().toISODate();
+}
+
+/**
+ * Gets the datestamp for tomorrow's date.
+ * 
+ * @returns The tomorrow datestamp. (YYYY-MM-DD)
+ */
+export function getTomorrowDatestamp(): string {
+    return DateTime.local().plus({ days: 1 }).toISODate();
+}
+
+/**
+ * Gets the timestamp for the date 3 years into the future.
+ * 
+ * @returns Datestamp for the date 3 years in the future. (YYYY-MM-DD)
+ */
+export function getDatestampThreeYearsFromToday(): string {
+    return DateTime.utc().plus({ years: 3 }).toISODate();
+}
+
+/**
+ * Gets a list of datestamps from today through the next 7 days.
+ * 
+ * @returns A list of 8 datestamps. (YYYY-MM-DD)
+ */
+export function getNextEightDayDatestamps(): string[] {
+    const today = getTodayDatestamp();
+    const eightDaysAfterTomorrow = DateTime.local().plus({ days: 7 }).toISODate();
+    return getDatestampRange(today, eightDaysAfterTomorrow);
+}
+
+// =========================
+// 4. Miscellaneous Getters
+// =========================
+
+/**
+ * Gets a list of datestamps from the start date through the end date.
+ * 
+ * @param startDatestamp - The start of the range. (YYYY-MM-DD)
+ * @param endDatestamp - The end of the range. (YYYY-MM-DD)
+ * @returns A list of datestamps in chronological order. (YYYY-MM-DD)
+ */
+export function getDatestampRange(startDatestamp: string, endDatestamp: string): string[] {
+    const startDate = DateTime.fromISO(startDatestamp);
+    const endDate = DateTime.fromISO(endDatestamp);
 
     const dates: string[] = [];
     let currentDate = startDate;
@@ -23,137 +152,47 @@ export function generateDatestampRange(start: string, end: string): string[] {
 }
 
 /**
- * ✅ Determines if the given string is a valid datestamp.
+ * Gets the day of the week for a datestamp.
  * 
- * @param datestamp - YYYY-MM-DD
- * @returns - true if valid, else false
+ * @param datestamp - The datestamp to assess. (YYYY-MM-DD)
+ * @returns The day of the week as a string. (ex: `Monday`)
  */
-export function isDatestampValid(datestamp: string): boolean {
-    const date = new Date(datestamp);
-    return !isNaN(date.getTime());
-}
-
-/**
- * Combines a generic hour/minute combo with a given generic timestamp and returns a valid ISO timestamp.
- * @param baseDate - YYYY-MM-DD
- * @param timeValue - HH:MM
- * @returns - ISO timestamp string in format YYYY-MM-DDTHH:MM:00.000Z
- */
-export function timeValueToIso(baseDate: string, timeValue: string): string {
-    const [hour, minute] = timeValue.split(':').map(Number);
-    const dateTime = DateTime.fromISO(baseDate).set({ hour, minute });
-
-    if (!dateTime.isValid) {
-        throw new Error('Invalid date or time input');
-    }
-
-    return dateTime.toUTC().toISO();
-}
-
-/**
- * ✅ Converts an ISO timestamp to a datestamp. (YYYY-MM-DD)
- * 
- * @param isoTimestamp - The ISO timestamp to convert.
- * @returns - Formatted datestamp. (YYYY-MM-DD)
- */
-export function isoToDatestamp(isoTimestamp: string): string {
-    return DateTime.fromISO(isoTimestamp).toISODate()!;
-}
-
-/**
- * Calculates the number of days between today and a given ISO timestamp.
- * @param isoTimestamp - The ISO timestamp string.
- * @returns Number of days between today and the given date.
- */
-export function daysBetweenToday(isoTimestamp: string): number {
-    const today = DateTime.local().startOf('day');
-    const target = DateTime.fromISO(isoTimestamp).startOf('day');
-
-    if (!target.isValid) return 0;
-
-    return Math.round(target.diff(today, 'days').days);
-}
-
-/**
- * Returns true if time1 is earlier than time2.
- * Assumes both time strings are in the same format (ISO or HH:MM).
- * If either of the times doesn't exist, default to true (consider time1 as earlier).
- * 
- * @param time1 - The first time string.
- * @param time2 - The second time string.
- * @param equalMeansEarlier - Signifies if equal times means time1 can be considered earlier. Default is true.
- * @returns True if time1 is earlier or during time2, false otherwise.
- */
-export function isTimeEarlier(
-    time1: string | null,
-    time2?: string | null,
-    equalMeansEarlier = true
-): boolean {
-    if (!time1 || !time2) return true;
-    const comp = time1.localeCompare(time2);
-    return equalMeansEarlier ? comp <= 0 : comp < 0;
-}
-
-/**
- * ✅ Converts a datestamp to the day of the week for that local date.
- * 
- * @param datestamp - The timestamp (YYYY-MM-DD) to assess. 
- * @returns - The day of the week as a string. (e.g., 'Monday')
- */
-export function datestampToDayOfWeek(datestamp: string): string {
+export function getDayOfWeekFromDatestamp(datestamp: string): string {
     return DateTime.fromISO(datestamp).toFormat('cccc');
 }
 
 /**
- * Converts a timestamp to the month and day of the month.
- * @param timestamp - YYYY-MM-DD
- * @returns - month and day in the format: January 5
+ * Gets the month and day for a datestamp.
+ * 
+ * @param datestamp - The datestamp to assess. (YYYY-MM-DD)
+ * @returns The month and day as a string. (ex: `January 12`)
  */
-export function datestampToMonthDate(timestamp: string): string {
-    const date = DateTime.fromISO(timestamp, { zone: 'utc' });
-
-    if (!date.isValid) {
-        throw new Error('Invalid timestamp format');
-    }
-
-    const month = date.toFormat('LLLL');
-    return `${month} ${date.day}`;
+export function getMonthDateFromDatestamp(datestamp: string): string {
+    return DateTime.fromISO(datestamp).toFormat('LLLL d');
 }
 
 /**
- * Generates the timestamp for yesterday's date in YYYY-MM-DD format.
- * @returns - yesterday's timestamp YYYY-MM-DD
+ * Gets the number of days between today and a given ISO timestamp.
+ * 
+ * @param isoTimestamp - The ISO timestamp.
+ * @returns The number of days between today and the given date.
  */
-export function getYesterdayDatestamp(): string {
-    return DateTime.local().minus({ days: 1 }).toISODate();
+export function getDaysUntilIso(isoTimestamp: string): number {
+    const today = DateTime.local().startOf('day');
+    const target = DateTime.fromISO(isoTimestamp).startOf('day');
+    return Math.ceil(target.diff(today, 'days').days);
 }
 
 /**
- * Generates the timestamp for today's date in YYYY-MM-DD format.
- * @returns - today's timestamp YYYY-MM-DD
- */
-export function getTodayDatestamp(): string {
-    return DateTime.local().toISODate();
-}
-
-/**
- * Generates the timestamp for tomorrow's date in YYYY-MM-DD format.
- * @returns - tomorrow's timestamp YYYY-MM-DD
- */
-export function getTomorrowDatestamp(): string {
-    return DateTime.local().plus({ days: 1 }).toISODate();
-}
-
-/**
- * ✅ Generates an ISO timestamp in UTC format, using the current local time
- * (rounded down to the nearest 5 minutes) and an optional datestamp.
+ * Generates an ISO timestamp using the current time rounded down to the nearest 5 minutes
+ * and an optional datestamp for the date. Default is today's date.
  *
- * @param datestamp - Optional datestamp (YYYY-MM-DD) to use for the date.
- * @returns ISO timestamp in UTC format rounded down to the nearest 5 minutes.
+ * @param datestamp - Datestamp to use for the date. (YYYY-MM-DD)
+ * @returns An ISO timestamp in UTC format.
  */
-export function getIsoRoundedDown5Minutes(datestamp?: string): string {
+export function getIsoFromNowTimeRoundedDown5Minutes(datestamp?: string): string {
     const now = DateTime.local();
-    const baseDate = datestamp ? DateTime.fromISO(datestamp) : now;
+    const date = datestamp ? DateTime.fromISO(datestamp) : now;
 
     const roundedTime = now.set({
         minute: Math.floor(now.minute / 5) * 5,
@@ -161,7 +200,7 @@ export function getIsoRoundedDown5Minutes(datestamp?: string): string {
         millisecond: 0,
     });
 
-    const combined = baseDate.set({
+    const combined = date.set({
         hour: roundedTime.hour,
         minute: roundedTime.minute,
         second: 0,
@@ -169,36 +208,4 @@ export function getIsoRoundedDown5Minutes(datestamp?: string): string {
     });
 
     return combined.toUTC().toISO()!;
-}
-
-/**
- * Gets the Date object for a given timestamp's start (midnight local time).
- * @param timestamp - YYYY-MM-DD string
- * @param dayOffset - Number of days to shift from the timestamp
- * @returns - Date object representing the midnight time of the computed date
- */
-export function datestampToMidnightDate(timestamp: string, dayOffset: number = 0): Date {
-    const date = DateTime.fromISO(timestamp).plus({ days: dayOffset });
-
-    // Convert Luxon DateTime back to a native JavaScript Date at midnight
-    return date.startOf('day').toJSDate();
-}
-
-/**
- * Generates the timestamp for the date 3 years into the future in YYYY-MM-DD format.
- * @returns - future timestamp YYYY-MM-DD
- */
-export function getDatestampThreeYearsFromToday(): string {
-    return DateTime.utc().plus({ years: 3 }).toISODate();
-}
-
-/**
- * Generates an array of datestamps for the next seven days from tomorrow to tomorrow + 6.
- * @returns - list of timestamps YYYY-MM-DD
- */
-export function getNextEightDayDatestamps(): string[] {
-    const today = getTodayDatestamp();
-    const eightDaysAfterTomorrow = DateTime.local().plus({ days: 7 }).toISODate();
-
-    return generateDatestampRange(today, eightDaysAfterTomorrow);
 }

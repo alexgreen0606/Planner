@@ -1,11 +1,11 @@
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
-import { TIME_MODAL_PATHNAME } from "app/(modals)/timeModal/[datestamp]/[eventId]/[sortId]/[eventValue]";
 import { Router } from "expo-router";
 import * as Calendar from 'expo-calendar';
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
-import { extractNameFromBirthdayText, openMessage } from "../birthdayUtils";
+import { extractNameFromBirthdayText, openMessageForContact } from "../birthdayUtils";
 import { NULL } from "@/lib/constants/generic";
 import { hasCalendarAccess, hasContactsAccess } from "../accessUtils";
+import { TIME_MODAL_PATHNAME } from "@/lib/constants/pathnames";
 
 /**
  * ✅ Maps a calendar event to an event chip for a given planner.
@@ -27,7 +27,7 @@ export function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: C
     };
 
     if (calendar.title === 'Birthdays') {
-        calendarEventChip.onClick = () => openMessage(extractNameFromBirthdayText(event.title));
+        calendarEventChip.onClick = () => openMessageForContact(extractNameFromBirthdayText(event.title), 'Happy Birthday!');
         calendarEventChip.hasClickAccess = hasContactsAccess();
     }
 

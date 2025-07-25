@@ -9,7 +9,7 @@ import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner, upsertEventToStorageAndCalendarCheckRecurring, toggleHideAllRecurringEventsInPlanner } from '@/storage/plannerStorage';
-import { datestampToDayOfWeek, datestampToMonthDate, getTodayDatestamp } from '@/utils/dateUtils';
+import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuView } from '@react-native-menu/menu';
@@ -190,7 +190,7 @@ const PlannerCard = ({
             footer={
                 <View className='flex-row justify-end'>
                     <MenuView
-                        title={`${datestampToDayOfWeek(datestamp)}, ${datestampToMonthDate(datestamp)}`}
+                        title={`${getDayOfWeekFromDatestamp(datestamp)}, ${getMonthDateFromDatestamp(datestamp)}`}
                         onPressAction={({ nativeEvent }) => {
                             handleAction(nativeEvent.event as EditAction);
                         }}

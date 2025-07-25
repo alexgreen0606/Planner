@@ -1,20 +1,14 @@
 import * as Contacts from 'expo-contacts';
 import * as SMS from 'expo-sms';
 
-/**
- * Extracts a person's name from a birthday text string
- * @param birthdayText String containing a person's name followed by "'s" (e.g. "John's Birthday")
- * @returns The extracted person name or empty string if not found
- */
-export function extractNameFromBirthdayText(birthdayText: string) {
-    return birthdayText.split(/['’]s /)[0] ?? '';
-}
+// ✅ 
 
 /**
- * Opens the device's Messages app for a specific contact with an optional message
- * @param personName The name of the person to find in contacts
- * @param message Optional message to pre-populate (leave empty for no default text)
- * @returns A Promise that resolves to true if SMS was sent, false otherwise
+ * Opens the device's Messages app for a specific contact with a default message.
+ * 
+ * @param personName - The name of the person to find in contacts.
+ * @param message - Message to pre-populate. Default is empty.
+ * @returns True if SMS was sent, else false.
  */
 export async function openMessageForContact(
     personName: string,
@@ -67,13 +61,10 @@ export async function openMessageForContact(
 
         // Log result
         if (result === 'sent') {
-            console.log('SMS sent successfully');
             return true;
         } else if (result === 'cancelled') {
-            console.log('SMS cancelled by user');
             return false;
         } else {
-            console.log('SMS result unknown');
             return false;
         }
     } catch (error) {
@@ -83,19 +74,11 @@ export async function openMessageForContact(
 }
 
 /**
- * Opens the device's Messages app for a birthday message
- * @param personName The name of the person to find in contacts
- * @returns A Promise that resolves to true if SMS was sent, false otherwise
+ * Extracts a person's name from a birthday text string.
+ * 
+ * @param birthdayText - Event title from a birthday event in the device calendar.
+ * @returns A person's first and last name, or an empty string.
  */
-export async function openBirthdayMessage(personName: string): Promise<boolean> {
-    return openMessageForContact(personName, 'Happy Birthday!');
-}
-
-/**
- * Opens the device's Messages app without a pre-filled message
- * @param personName The name of the person to find in contacts
- * @returns A Promise that resolves to true if SMS was sent, false otherwise
- */
-export async function openMessage(personName: string): Promise<boolean> {
-    return openMessageForContact(personName);
+export function extractNameFromBirthdayText(birthdayText: string): string {
+    return birthdayText.split(/['’]s /)[0] ?? '';
 }

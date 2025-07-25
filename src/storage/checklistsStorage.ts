@@ -47,9 +47,9 @@ export function upsertChecklistItem(item: TListItem) {
     saveToStorage(list);
 }
 
-// =====================
+// ==================
 // 2. Read Functions
-// =====================
+// ==================
 
 export function getFolderById(folderId: string): IFolder {
     const folderString = storage.getString(folderId);

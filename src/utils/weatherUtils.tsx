@@ -1,6 +1,8 @@
 import Geolocation from "@react-native-community/geolocation";
 import { fetchWeatherApi } from "openmeteo";
 
+// TODO: Rework this file once WeatherKit is integrated
+
 export interface WeatherForecast {
   date: string;
   weatherCode: number;

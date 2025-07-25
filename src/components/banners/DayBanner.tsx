@@ -3,7 +3,7 @@ import CustomText, { textStyles } from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { savePlannerToStorage } from '@/storage/plannerStorage';
-import { datestampToDayOfWeek, datestampToMonthDate, getTomorrowDatestamp } from '@/utils/dateUtils';
+import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
@@ -37,8 +37,8 @@ const DayBanner = ({
     const [newPlannerTitle, setNewPlannerTitle] = useState(planner.title);
 
     // TODO: memoize
-    const dayOfWeek = datestampToDayOfWeek(planner.datestamp);
-    const monthDate = datestampToMonthDate(planner.datestamp);
+    const dayOfWeek = getDayOfWeekFromDatestamp(planner.datestamp);
+    const monthDate = getMonthDateFromDatestamp(planner.datestamp);
     const isTomorrow = planner.datestamp === getTomorrowDatestamp();
 
     const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
