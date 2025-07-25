@@ -5,7 +5,7 @@ import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolder } from '@/lib/types/checklists/IFolder';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
-import { getFolderFromStorage } from '@/storage/checklistsStorage';
+import { getFolderById } from '@/storage/checklistsStorage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { PlatformColor, View } from 'react-native';
@@ -65,7 +65,7 @@ const FolderScreen = () => {
         }
       >
         <SortedFolder
-          parentFolderData={prevFolderId !== NULL ? getFolderFromStorage(prevFolderId)! : undefined}
+          parentFolderData={prevFolderId !== NULL ? getFolderById(prevFolderId)! : undefined}
           handleOpenItem={handleOpenItem}
           parentClickTrigger={parentClickTrigger}
         />

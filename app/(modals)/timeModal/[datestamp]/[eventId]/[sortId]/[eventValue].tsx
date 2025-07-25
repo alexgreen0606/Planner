@@ -14,7 +14,7 @@ import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { TDateRange, IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { deletePlannerEvents, getPlannerFromStorage, sanitizeRecurringEventForSave, saveEventToPlanner, savePlannerToStorage } from "@/storage/plannerStorage";
+import { deletePlannerEventsFromStorageAndCalendar, getPlannerFromStorageByDatestamp, hideAndCloneRecurringEventInPlanner, upsertEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
 import { hasCalendarAccess } from "@/utils/accessUtils";
 import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
 import { getIsoRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlier } from "@/utils/dateUtils";
@@ -175,7 +175,7 @@ const TimeModal = () => {
             return;
         }
 
-        const planner = getPlannerFromStorage(eventDatestampOrigin);
+        const planner = getPlannerFromStorageByDatestamp(eventDatestampOrigin);
         const event = planner.events.find(e => e.id === eventId)!;
 
         // Existing event.
@@ -224,7 +224,7 @@ const TimeModal = () => {
         if (!initialEventState) return;
         setLoading(true);
 
-        const planner = getPlannerFromStorage(triggerDatestamp);
+        const planner = getPlannerFromStorageByDatestamp(triggerDatestamp);
         const updatingDateRanges: TDateRange[] = [];
 
         let unscheduledEvent = buildUnscheduledEventFromInitialState(data, planner, updatingDateRanges);
@@ -238,7 +238,7 @@ const TimeModal = () => {
             await loadCalendarData(datestampsToReload);
         }
 
-        closeModalWithNewTextfield(unscheduledEvent, planner.events);
+        closeModalNewTextfield(unscheduledEvent, planner.events);
     }
 
     async function handleDelete() {
@@ -258,12 +258,12 @@ const TimeModal = () => {
                 await loadCalendarData(datestamps);
             }
         } else if (sourceType === TriggerSource.PLANNER_NEW) {
-            closeModalBackWithNoTextfield();
+            closeModalBackNoTextfield();
         } else {
-            await deletePlannerEvents([event]);
+            await deletePlannerEventsFromStorageAndCalendar([event]);
         }
 
-        closeModalBackWithNoTextfield();
+        closeModalBackNoTextfield();
     }
 
     // =======================
@@ -284,7 +284,7 @@ const TimeModal = () => {
         await upsertCalendarEvent(prevCalendarId, eventDetails);
         await reloadCalendarFromRanges(updatingDateRanges);
 
-        closeModalToMountedDateOrBack(eventDetails.startDate as string, eventDetails.endDate as string);
+        closeModalMountedDateOrBack(eventDetails.startDate as string, eventDetails.endDate as string);
     }
 
     async function saveCalendarEvent(data: FormData) {
@@ -292,7 +292,7 @@ const TimeModal = () => {
         const { startIso } = timeRange;
 
         const targetDatestamp = isoToDatestamp(startIso);
-        const targetPlanner = getPlannerFromStorage(targetDatestamp);
+        const targetPlanner = getPlannerFromStorageByDatestamp(targetDatestamp);
         const eventDetails = buildCalendarEventDetails(data);
 
         const {
@@ -303,33 +303,33 @@ const TimeModal = () => {
 
         await upsertCalendarEvent(prevCalendarId, eventDetails);
 
-        const updatedEvent = saveEventToPlanner(savedEvent, targetPlanner);
+        const updatedEvent = upsertEventToStorage(savedEvent, targetPlanner);
         await reloadCalendarFromRanges(updatingDateRanges);
 
         if (isMultiDay(timeRange)) {
-            closeModalToMountedDateOrBack(timeRange.startIso, timeRange.endIso);
+            closeModalMountedDateOrBack(timeRange.startIso, timeRange.endIso);
         } else {
-            closeModalWithNewTextfield(updatedEvent, targetPlanner.events);
+            closeModalNewTextfield(updatedEvent, targetPlanner.events);
         }
     }
 
     async function saveGenericEvent(data: FormData) {
         const { timeRange } = data;
         const targetDatestamp = isoToDatestamp(timeRange.startIso);
-        const targetPlanner = getPlannerFromStorage(targetDatestamp);
+        const targetPlanner = getPlannerFromStorageByDatestamp(targetDatestamp);
 
         const {
             savedEvent,
             updatingDateRanges,
         } = await extractGenericEventContext(initialEventState!, data, targetPlanner);
 
-        const updatedEvent = saveEventToPlanner(savedEvent, targetPlanner);
+        const updatedEvent = upsertEventToStorage(savedEvent, targetPlanner);
         await reloadCalendarFromRanges(updatingDateRanges);
 
         if (isMultiDay(timeRange)) {
-            closeModalToMountedDateOrBack(timeRange.startIso, timeRange.endIso);
+            closeModalMountedDateOrBack(timeRange.startIso, timeRange.endIso);
         } else {
-            closeModalWithNewTextfield(updatedEvent, targetPlanner.events);
+            closeModalNewTextfield(updatedEvent, targetPlanner.events);
         }
     }
 
@@ -365,7 +365,7 @@ const TimeModal = () => {
                         endIso: timeConfig.endIso,
                     });
                 }
-                await deletePlannerEvents([initialState.event], true);
+                await deletePlannerEventsFromStorageAndCalendar([initialState.event], true);
                 break;
             }
         }
@@ -413,7 +413,7 @@ const TimeModal = () => {
                     startIso: prevTimeConfig.startIso,
                     endIso: prevTimeConfig.endIso,
                 });
-                savedEvent = sanitizeRecurringEventForSave(savedEvent, planner, initialState.event);
+                savedEvent = hideAndCloneRecurringEventInPlanner(savedEvent, planner, initialState.event);
                 prevCalendarId = initialState.event.calendarId;
                 break;
             }
@@ -481,7 +481,7 @@ const TimeModal = () => {
                     });
                 }
                 delete savedEvent.calendarId;
-                savedEvent = sanitizeRecurringEventForSave(savedEvent, planner, initialState.event);
+                savedEvent = hideAndCloneRecurringEventInPlanner(savedEvent, planner, initialState.event);
                 break;
             }
 
@@ -603,7 +603,7 @@ const TimeModal = () => {
             value: data.title
         };
 
-        unscheduledEvent = sanitizeRecurringEventForSave(
+        unscheduledEvent = hideAndCloneRecurringEventInPlanner(
             unscheduledEvent,
             planner,
             initialEvent
@@ -624,7 +624,7 @@ const TimeModal = () => {
 
     // ---------- Modal Close Handlers ----------
 
-    function closeModalToMountedDateOrBack(startIso: string, endIso: string) {
+    function closeModalMountedDateOrBack(startIso: string, endIso: string) {
         if (!canUpdateTextfield()) return;
 
         const startDatestamp = isoToDatestamp(startIso);
@@ -634,7 +634,7 @@ const TimeModal = () => {
             isTimeEarlier(startDatestamp, triggerDatestamp) &&
             isTimeEarlier(triggerDatestamp, endDatestamp)
         ) { // Trigger datestamp is within range.
-            closeModalBackWithNoTextfield();
+            closeModalBackNoTextfield();
             return;
         }
 
@@ -652,10 +652,10 @@ const TimeModal = () => {
             return;
         }
 
-        closeModalBackWithNoTextfield();
+        closeModalBackNoTextfield();
     }
 
-    function closeModalWithNewTextfield(event: IPlannerEvent, plannerEvents: IPlannerEvent[]) {
+    function closeModalNewTextfield(event: IPlannerEvent, plannerEvents: IPlannerEvent[]) {
         if (!canUpdateTextfield()) return;
 
         if (mountedDatestamps.all.includes(event.listId)) {
@@ -670,11 +670,11 @@ const TimeModal = () => {
 
             router.replace(event.listId === getTodayDatestamp() ? '/' : '/planners');
         } else {
-            closeModalBackWithNoTextfield();
+            closeModalBackNoTextfield();
         }
     }
 
-    function closeModalBackWithNoTextfield() {
+    function closeModalBackNoTextfield() {
         if (!canUpdateTextfield()) return;
 
         setTextfieldItem(null);

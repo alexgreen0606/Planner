@@ -13,7 +13,7 @@ import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { deletePlannerSet, savePlannerSet } from '../../../src/storage/plannerSetsStorage';
+import { deletePlannerSet, upsertPlannerSet } from '../../../src/storage/plannerSetsStorage';
 
 // ✅ 
 
@@ -99,7 +99,7 @@ const PlannerSetModal = () => {
     function onSubmit(data: PendingPlannerSet) {
         const { startDatestamp, endDatestamp } = data.dates;
         data.title = data.title.trim();
-        savePlannerSet({
+        upsertPlannerSet({
             title: data.title,
             startDatestamp,
             endDatestamp

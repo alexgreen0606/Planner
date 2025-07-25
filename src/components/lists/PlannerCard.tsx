@@ -8,7 +8,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner, saveEventWithRecurringAndCalendarCheck, toggleHideAllRecurringEventsInPlanner } from '@/storage/plannerStorage';
+import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner, upsertEventToStorageAndCalendarCheckRecurring, toggleHideAllRecurringEventsInPlanner } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek, datestampToMonthDate, getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -88,7 +88,7 @@ const PlannerCard = ({
         listType,
         onGetItemsFromStorageObject: getItemsFromStorageObject,
         initializedStorageObject: generatePlanner(datestamp),
-        onSaveItemToStorage: saveEventWithRecurringAndCalendarCheck
+        onSaveItemToStorage: upsertEventToStorageAndCalendarCheckRecurring
     });
     // ===================
 

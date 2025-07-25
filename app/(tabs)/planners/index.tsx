@@ -9,8 +9,8 @@ import ButtonText from '@/components/text/ButtonText';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
-import { getPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { saveEventToPlanner } from '@/storage/plannerStorage';
+import { getAllPlannerSetTitles } from '@/storage/plannerSetsStorage';
+import { upsertEventToStorage } from '@/storage/plannerStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
@@ -105,9 +105,9 @@ const Planners = () => {
 
     const router = useRouter();
 
-    useTextfieldFallbackSave(saveEventToPlanner);
+    useTextfieldFallbackSave(upsertEventToStorage);
 
-    const allPlannerSetTitles = getPlannerSetTitles(); // TODO: use MMKV to watch this
+    const allPlannerSetTitles = getAllPlannerSetTitles(); // TODO: use MMKV to watch this
 
     const plannerSetOptions = useMemo(() =>
         [defaultPlannerSet, ...allPlannerSetTitles].map((title) => ({

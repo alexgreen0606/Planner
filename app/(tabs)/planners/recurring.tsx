@@ -2,7 +2,7 @@ import RecurringPlanner from '@/components/lists/RecurringPlanner';
 import ButtonText from '@/components/text/ButtonText';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
-import { saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
+import { upsertRecurringEvent, upsertRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
@@ -24,7 +24,7 @@ const RecurringPlanners = () => {
 
     useTextfieldFallbackSave(
         selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
-            saveRecurringWeekdayEvent : saveRecurringEvent
+            upsertRecurringWeekdayEvent : upsertRecurringEvent
     );
 
     return (

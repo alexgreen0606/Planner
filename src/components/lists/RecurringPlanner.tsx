@@ -5,7 +5,7 @@ import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { saveRecurringEvent, saveRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
+import { upsertRecurringEvent, upsertRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { getIsoRoundedDown5Minutes } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
 import { generateSortIdByTime, generateTimeIconConfig, handleNewEventValue } from '@/utils/plannerUtils';
@@ -50,7 +50,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 mode='time'
                 minuteInterval={5}
                 value={textfieldDate}
-                onChange={handleTimeChangeWithSortIdUpdate}
+                onChange={handleTimeChangeUpdateSortId}
             />
         ) : undefined
     }]];
@@ -62,7 +62,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const SortedEvents = useSortedList<IRecurringEvent, IRecurringEvent[]>({
         storageId: EStorageId.RECURRING_EVENT,
         storageKey: plannerKey,
-        onSaveItemToStorage: isWeekdayPlanner ? saveRecurringWeekdayEvent : saveRecurringEvent,
+        onSaveItemToStorage: isWeekdayPlanner ? upsertRecurringWeekdayEvent : upsertRecurringEvent,
         listType,
         onHandleListChange: () => setShowTimeInToolbarForUntimedEvent(false)
     });
@@ -71,7 +71,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     // 2. Event Handlers
     // ==================
 
-    function handleTimeChangeWithSortIdUpdate(event: DateTimePickerEvent) {
+    function handleTimeChangeUpdateSortId(event: DateTimePickerEvent) {
         if (!textfieldItem) return;
 
         const { timestamp } = event.nativeEvent;

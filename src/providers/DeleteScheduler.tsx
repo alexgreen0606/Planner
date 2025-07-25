@@ -4,8 +4,8 @@ import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
 import { EListType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { deleteChecklistItems } from '@/storage/checklistsStorage';
-import { deletePlannerEvents } from '@/storage/plannerStorage';
-import { deleteRecurringEvents, deleteRecurringWeekdayEvents } from '@/storage/recurringPlannerStorage';
+import { deletePlannerEventsFromStorageAndCalendar } from '@/storage/plannerStorage';
+import { deleteRecurringEventsHideWeekday, deleteRecurringWeekdayEvents } from '@/storage/recurringPlannerStorage';
 import { useAtom } from 'jotai';
 import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react';
 
@@ -18,8 +18,8 @@ type DeleteSchedulerContextType<T extends TListItem> = {
 };
 
 const deletionMap: Partial<Record<EListType, (items: any[]) => Promise<void> | void>> = {
-    [EListType.PLANNER]: deletePlannerEvents,
-    [EListType.RECURRING]: deleteRecurringEvents,
+    [EListType.PLANNER]: deletePlannerEventsFromStorageAndCalendar,
+    [EListType.RECURRING]: deleteRecurringEventsHideWeekday,
     [EListType.RECURRING_WEEKDAY]: deleteRecurringWeekdayEvents,
     [EListType.CHECKLIST]: deleteChecklistItems
 };

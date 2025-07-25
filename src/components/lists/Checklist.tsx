@@ -4,7 +4,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IChecklist } from '@/lib/types/checklists/IChecklist';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { saveChecklistItem } from '@/storage/checklistsStorage';
+import { upsertChecklistItem } from '@/storage/checklistsStorage';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback } from 'react';
@@ -32,7 +32,7 @@ const Checklist = () => {
         storageKey: checklistId,
         listType,
         onGetItemsFromStorageObject: getItemsFromStorageObject,
-        onSaveItemToStorage: saveChecklistItem,
+        onSaveItemToStorage: upsertChecklistItem,
     });
 
     // ======

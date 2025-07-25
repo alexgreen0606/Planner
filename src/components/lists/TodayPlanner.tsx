@@ -7,7 +7,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { saveEventWithRecurringAndCalendarCheck } from '@/storage/plannerStorage';
+import { upsertEventToStorageAndCalendarCheckRecurring } from '@/storage/plannerStorage';
 import { datestampToDayOfWeek } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleNewEventValue, openTimeModal } from '@/utils/plannerUtils';
@@ -49,7 +49,7 @@ const TodayPlanner = () => {
         storageId: EStorageId.PLANNER,
         storageKey: todayDatestamp,
         onGetItemsFromStorageObject: getItemsFromStorageObject,
-        onSaveItemToStorage: saveEventWithRecurringAndCalendarCheck,
+        onSaveItemToStorage: upsertEventToStorageAndCalendarCheckRecurring,
         initializedStorageObject: generatePlanner(todayDatestamp),
         listType
     });

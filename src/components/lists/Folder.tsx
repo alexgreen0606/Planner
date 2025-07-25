@@ -9,7 +9,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolder } from '@/lib/types/checklists/IFolder';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { deleteFolderItem, getFolderFromStorage, getFolderItems, saveTextfieldItem, updateFolderItem } from '@/storage/checklistsStorage';
+import { deleteFolderItemAndChildren, getFolderById, getFolderItemsByParentFolder, upsertFolderItem } from '@/storage/checklistsStorage';
 import { generateSortId } from '@/utils/listUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -38,7 +38,7 @@ const SortedFolder = ({
 
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
-    const getFolderItemsMemoized = useCallback(getFolderItems, []);
+    const getFolderItemsMemoized = useCallback(getFolderItemsByParentFolder, []);
 
     const storage = useMMKV({ id: EStorageId.CHECKLISTS });
     const [folder] = useMMKVObject<IFolder>(folderId, storage);
@@ -86,14 +86,14 @@ const SortedFolder = ({
 
         let destinationFolder = parentFolderData!;
         if (destination) {
-            const foundFolder = getFolderFromStorage(destination.id);
+            const foundFolder = getFolderById(destination.id);
             if (!foundFolder) return;
             destinationFolder = foundFolder;
         }
 
         // Transfer the item to the destination
-        const destinationItems = getFolderItems(destinationFolder);
-        updateFolderItem({
+        const destinationItems = getFolderItemsByParentFolder(destinationFolder);
+        upsertFolderItem({
             ...textfieldItem,
             status: EItemStatus.STATIC,
             listId: destinationId,
@@ -192,7 +192,7 @@ const SortedFolder = ({
                                 text: !!item.childrenCount ? 'Force Delete' : 'Delete',
                                 style: 'destructive',
                                 onPress: () => {
-                                    deleteFolderItem(item.id, item.type);
+                                    deleteFolderItemAndChildren(item.id, item.type);
                                     setTextfieldItem(null);
                                     setIsDeleteAlertOpen(false);
                                 }
@@ -228,7 +228,7 @@ const SortedFolder = ({
         storageId: EStorageId.CHECKLISTS,
         storageKey: folderId,
         onGetItemsFromStorageObject: getFolderItemsMemoized,
-        onSaveItemToStorage: saveTextfieldItem,
+        onSaveItemToStorage: upsertFolderItem,
         onInitializeListItem: initializeEmptyFolder,
         listType
     });

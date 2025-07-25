@@ -504,10 +504,10 @@ export function syncRecurringPlannerWithWeekdayEvent(
     listId: string,
     recurringPlanner: IRecurringEvent[],
     weekdayEvent: IRecurringEvent
-) {
+): IRecurringEvent[] | null {
     const existingEvent = recurringPlanner.find(recEvent => recEvent.weekdayEventId === weekdayEvent.id);
 
-    // Phase 1: Exit early if the event is hidden.
+    // Phase 1: Exit early if the event is already hidden.
     if (existingEvent?.status === EItemStatus.HIDDEN) {
         return null;
     }

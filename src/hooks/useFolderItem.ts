@@ -2,7 +2,7 @@ import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { getFolderItem, updateFolderItem } from '@/storage/checklistsStorage';
+import { getFolderItemById, upsertFolderItem } from '@/storage/checklistsStorage';
 import { useCallback, useEffect, useState } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 
@@ -14,7 +14,7 @@ export const useFolderItem = (
 ) => {
     const [editValue, setEditValue] = useState<string | null>(null);
     const [item, setItem] = useState<IFolderItem | null>(
-        getFolderItem(itemId, itemType)
+        getFolderItemById(itemId, itemType)
     );
 
     const handleBeginEditValue = useCallback(() => {
@@ -29,7 +29,7 @@ export const useFolderItem = (
     const handleSaveValue = useCallback(() => {
         if (!item || !editValue) return;
 
-        updateFolderItem({
+        upsertFolderItem({
             ...item,
             value: editValue,
             status: EItemStatus.STATIC
@@ -42,13 +42,13 @@ export const useFolderItem = (
     // Update the item when its storage record changes.
     useMMKVListener((key) => {
         if (key === itemId) {
-            setItem(getFolderItem(itemId, itemType));
+            setItem(getFolderItemById(itemId, itemType));
         }
     }, storage);
 
     // Fetch the new folder item anytime the hook params change.
     useEffect(() => {
-        const currentFolder = getFolderItem(itemId, itemType);
+        const currentFolder = getFolderItemById(itemId, itemType);
         setItem(currentFolder);
         setEditValue(null);
     }, [itemId, itemType]);

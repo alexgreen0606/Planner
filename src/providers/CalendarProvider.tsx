@@ -6,7 +6,7 @@ import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { getPlannerSet } from '@/storage/plannerSetsStorage';
+import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
 import { loadCalendarData } from '@/utils/calendarUtils';
 import { generateDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { cloneItem } from '@/utils/listUtils';
@@ -139,7 +139,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         if (plannerSetKey === 'Next 7 Days') {
             planner = getNextEightDayDatestamps().slice(1);
         } else {
-            const plannerSet = getPlannerSet(plannerSetKey);
+            const plannerSet = getPlannerSetByTitle(plannerSetKey);
             if (plannerSet) {
                 planner = generateDatestampRange(plannerSet.startDatestamp, plannerSet.endDatestamp);
             }
