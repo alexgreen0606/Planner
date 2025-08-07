@@ -6,7 +6,7 @@ import { useScrollContainer } from '@/providers/ScrollContainer';
 import { uuid } from 'expo-modules-core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { generateSortId, sanitizeList } from '../utils/listUtils';
+import { generateSortId, sortListWithUpsertItem } from '../utils/listUtils';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
 
 // ✅ 
@@ -127,7 +127,7 @@ const useSortedList = <T extends TListItem, S>({
         focusPlaceholder();
 
         // Phase 5: Create a new list item.
-        const updatedList = sanitizeList(items, item);
+        const updatedList = sortListWithUpsertItem(items, item);
         const genericListItem: TListItem = {
             id: uuid.v4(),
             status: EItemStatus.NEW,
@@ -135,8 +135,8 @@ const useSortedList = <T extends TListItem, S>({
             value: '',
             listType,
             sortId: generateSortId(
-                textfieldReferenceSortId!,
                 updatedList,
+                textfieldReferenceSortId!,
                 isReferenceIdBelowTextfield
             )
         };

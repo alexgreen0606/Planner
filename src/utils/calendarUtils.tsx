@@ -9,15 +9,38 @@ import { hasCalendarAccess } from "./accessUtils";
 import { datestampToMidnightJsDate } from "./dateUtils";
 import { mapCalendarEventToPlannerChip } from "./map/mapCalendarEventToPlannerChip";
 
-// ---------- Utilities ----------
+// ✅ 
+
+// ====================
+// 1. Helper Functions
+// ====================
 
 /**
- * ✅ Generates an empty Calendar event map.
+ * Merges new calendar data with current calendar data and sets it in the Jotai store.
+ * 
+ * @param newCalendarData - The calendar data to save.
+ */
+async function saveCalendarDataToStore(newCalendarData: TCalendarData) {
+    const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
+    jotaiStore.set(calendarEventDataAtom, {
+        chipsMap: {
+            ...currentCalendarData.chipsMap,
+            ...newCalendarData.chipsMap
+        },
+        plannersMap: {
+            ...currentCalendarData.plannersMap,
+            ...newCalendarData.plannersMap
+        }
+    });
+}
+
+/**
+ * Generates empty calendar data for the given dates.
  * 
  * @param datestamps - The list of datestamp keys.
- * @returns - A Calendar event map with an empty list for each datestamp.
+ * @returns An object representing empty calendar data for the given dates.
  */
-function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
+function generateEmptyCalendarData(datestamps: string[]): TCalendarData {
     const chipsMap: Record<string, TCalendarEventChip[][]> = {};
     const plannersMap: Record<string, CalendarEvent[]> = {};
 
@@ -30,13 +53,13 @@ function generateEmptyCalendarDataMaps(datestamps: string[]): TCalendarData {
 }
 
 /**
- * ✅ Determines if a calendar event should be displayed in the planner of the given datestamp.
+ * Validates if a calendar event should be displayed in the planner of the given datestamp.
  * 
- * @param event - the calendar event to analyze
- * @param datestamp - the date to consider
- * @returns - true if the event should be an event chip, else false
+ * @param event - The calendar event to analyze.
+ * @param datestamp - The date to consider. (YYYY-MM-DD)
+ * @returns True if the event should be in the given planner, else false.
  */
-function validateCalendarEvent(event: Calendar.Event, datestamp: string): boolean {
+function isPlannerEvent(event: Calendar.Event, datestamp: string): boolean {
     if (event.allDay || !event.endDate) return false;
 
     const dateStart = datestampToMidnightJsDate(datestamp);
@@ -54,15 +77,14 @@ function validateCalendarEvent(event: Calendar.Event, datestamp: string): boolea
 /**
  * Determines if a calendar event should be displayed as an event chip for the given datestamp.
  * 
- * An event will be a chip if:
- * 1. It is an all-day event for the given date.
- * 3. It is a multi-day event that starts on, ends on, or spans the given date.
- * 
- * @param event - the calendar event to analyze
- * @param datestamp -  the date to consider
- * @returns - true if the event should be displayed on the given date as a chip, else false
+ * An event will be a chip if it is an all-day event for the given date or it is a multi-day event that 
+ * starts on, ends on, or spans the given date.
+ *
+ * @param event - The calendar event to analyze.
+ * @param datestamp - The date to consider. (YYYY-MM-DD)
+ * @returns True if the event should be displayed on the given date as a chip, else false.
  */
-function validateEventChip(event: Calendar.Event, datestamp: string): boolean {
+function isEventChip(event: Calendar.Event, datestamp: string): boolean {
     if (!event.endDate || !event.startDate) return false;
 
     const dateStart = datestampToMidnightJsDate(datestamp);
@@ -93,62 +115,26 @@ function validateEventChip(event: Calendar.Event, datestamp: string): boolean {
     }
 }
 
-// ---------- Calendar Interaction Utilities ----------
-
-export async function getCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
-    const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-    const calendarMap = allCalendars.reduce((acc, cal) => {
-        acc[cal.id] = cal;
-        return acc;
-    }, {} as Record<string, Calendar.Calendar>);
-    return calendarMap;
-}
-
-// ------------- Jotai Store Utilities -------------
-
-export async function getPrimaryCalendarId(): Promise<string> {
-    const primaryCalendar = await Calendar.getDefaultCalendarAsync();
-    return primaryCalendar.id;
-}
+// ==========================
+// 2. Calendar Load Function
+// ==========================
 
 /**
- * ✅ Merges new calendar data with current calendar data and sets it in the Jotai store.
- * New date data will take precedence and older date data that is not in the new
- * data will persist.
- * 
- * @param newCalendarData - the new calendar data to save
- */
-async function mergeCalendarDataAndSave(newCalendarData: TCalendarData) {
-    const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
-    jotaiStore.set(calendarEventDataAtom, {
-        chipsMap: {
-            ...currentCalendarData.chipsMap,
-            ...newCalendarData.chipsMap
-        },
-        plannersMap: {
-            ...currentCalendarData.plannersMap,
-            ...newCalendarData.plannersMap
-        }
-    });
-}
-
-/**
- * Loads in all calendar data for the given range of dates.
- * The data will be stored directly into the Jotai store.
+ * Loads in all calendar data for the given range of dates and saves it to the Jotai store.
  * 
  * @param range - range of dates to parse the calendar with
  */
-export async function loadCalendarData(datestamps: string[]) {
+export async function loadCalendarDataToStore(datestamps: string[]) {
     if (datestamps.length === 0) return;
-    console.log(datestamps, 'LOADING')
-    const newCalendarData = generateEmptyCalendarDataMaps(datestamps);
+
+    const newCalendarData = generateEmptyCalendarData(datestamps);
 
     if (!hasCalendarAccess()) {
-        mergeCalendarDataAndSave(newCalendarData);
+        saveCalendarDataToStore(newCalendarData);
         return;
     }
 
-    const allCalendarsMap = await getCalendarMap();
+    const allCalendarsMap = await generateCalendarIdToCalendarMap();
 
     const allCalendarIds = Object.keys(allCalendarsMap);
     const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
@@ -161,7 +147,7 @@ export async function loadCalendarData(datestamps: string[]) {
         const calendarChipGroups: Record<string, TCalendarEventChip[]> = {};
 
         calendarEvents.forEach((calEvent) => {
-            if (validateEventChip(calEvent, datestamp)) {
+            if (isEventChip(calEvent, datestamp)) {
                 const calendarId = calEvent.calendarId;
                 if (!calendarChipGroups[calendarId]) {
                     calendarChipGroups[calendarId] = [];
@@ -169,7 +155,7 @@ export async function loadCalendarData(datestamps: string[]) {
                 calendarChipGroups[calendarId].push(mapCalendarEventToPlannerChip(calEvent, allCalendarsMap[calendarId], datestamp));
             }
 
-            if (validateCalendarEvent(calEvent, datestamp)) {
+            if (isPlannerEvent(calEvent, datestamp)) {
                 newCalendarData.plannersMap[datestamp].push(calEvent);
             }
         });
@@ -178,5 +164,37 @@ export async function loadCalendarData(datestamps: string[]) {
         newCalendarData.chipsMap[datestamp] = Object.values(calendarChipGroups);
     });
 
-    mergeCalendarDataAndSave(newCalendarData);
+    saveCalendarDataToStore(newCalendarData);
+}
+
+// ===================
+// 3. Getter Function
+// ===================
+
+/**
+ * Gets the device calendar ID for the primary calendar.
+ * 
+ * @returns The ID of the primary calendar.
+ */
+export async function getPrimaryCalendarId(): Promise<string> {
+    const primaryCalendar = await Calendar.getDefaultCalendarAsync();
+    return primaryCalendar.id;
+}
+
+// =======================
+// 4. Generation Function
+// =======================
+
+/**
+ * Generates a map of the device's calendar IDs to Calendar objects.
+ * 
+ * @returns A map of calendar IDs to Calendar objects.
+ */
+export async function generateCalendarIdToCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
+    const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const calendarMap = allCalendars.reduce((acc, cal) => {
+        acc[cal.id] = cal;
+        return acc;
+    }, {} as Record<string, Calendar.Calendar>);
+    return calendarMap;
 }

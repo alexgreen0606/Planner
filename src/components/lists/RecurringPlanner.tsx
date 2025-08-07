@@ -8,7 +8,7 @@ import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { upsertRecurringEvent, upsertRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { getIsoFromNowTimeRoundedDown5Minutes } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig, isItemTextfield } from '@/utils/listUtils';
-import { generateSortIdByTime, generateTimeIconConfig, handleNewEventValue } from '@/utils/plannerUtils';
+import { generatePlannerEventTimeIconConfig, generateRecurringEventTimeIconConfig, generateSortIdByTime, updateEventValueWithSmartTimeDetect } from '@/utils/plannerUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { DateTime } from 'luxon';
 import React, { useMemo, useState } from 'react';
@@ -114,9 +114,9 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
                 onDragEnd={SortedEvents.saveItem}
                 onContentClick={SortedEvents.toggleItemEdit}
                 toolbarIconSet={toolbarIcons}
-                onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items) as IRecurringEvent}
-                onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleShowEventTime)}
-                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, toggleScheduleItemDelete, getIsItemDeleting(item, listType))}
+                onValueChange={(text, item) => updateEventValueWithSmartTimeDetect(text, item, SortedEvents.items) as IRecurringEvent}
+                onGetRightIconConfig={(event) => generateRecurringEventTimeIconConfig(event, handleShowEventTime)}
+                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(getIsItemDeleting(item, listType), toggleScheduleItemDelete)}
                 emptyLabelConfig={{
                     label: `No recurring ${isWeekdayPlanner ? 'weekday' : plannerKey} plans`,
                     className: 'flex-1'

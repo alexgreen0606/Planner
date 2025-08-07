@@ -16,11 +16,11 @@ import { TDateRange, IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventsFromStorageAndCalendar, getPlannerFromStorageByDatestamp, hideAndCloneRecurringEventInPlanner, upsertEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
 import { hasCalendarAccess } from "@/utils/accessUtils";
-import { getPrimaryCalendarId, loadCalendarData } from "@/utils/calendarUtils";
+import { getPrimaryCalendarId, loadCalendarDataToStore } from "@/utils/calendarUtils";
 import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
-import { generateSortId, sanitizeList } from "@/utils/listUtils";
+import { generateSortId, sortListWithUpsertItem } from "@/utils/listUtils";
 import { mapCalendarEventToPlannerEvent } from "@/utils/map/mapCalenderEventToPlannerEvent";
-import { getMountedDatestampsLinkedToDateRanges } from "@/utils/plannerUtils";
+import { getAllMountedDatestampsLinkedToDateRanges } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -230,12 +230,12 @@ const TimeModal = () => {
         let unscheduledEvent = buildUnscheduledEventFromInitialState(data, planner, updatingDateRanges);
         removeCalendarTimeLinkage(unscheduledEvent);
 
-        planner.events = sanitizeList(planner.events, unscheduledEvent);
+        planner.events = sortListWithUpsertItem(planner.events, unscheduledEvent);
         savePlannerToStorage(triggerDatestamp, planner);
 
         if (updatingDateRanges.length > 0) {
-            const datestampsToReload = getMountedDatestampsLinkedToDateRanges(updatingDateRanges);
-            await loadCalendarData(datestampsToReload);
+            const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges(updatingDateRanges);
+            await loadCalendarDataToStore(datestampsToReload);
         }
 
         closeModalNewTextfield(unscheduledEvent, planner.events);
@@ -251,11 +251,11 @@ const TimeModal = () => {
             const calendarId = event.event.id;
             if (calendarId && hasCalendarAccess()) {
                 await Calendar.deleteEventAsync(calendarId, { futureEvents: false });
-                const datestamps = getMountedDatestampsLinkedToDateRanges([{
+                const datestamps = getAllMountedDatestampsLinkedToDateRanges([{
                     startIso: event.event.startDate as string,
                     endIso: event.event.endDate as string
                 }]);
-                await loadCalendarData(datestamps);
+                await loadCalendarDataToStore(datestamps);
             }
         } else if (sourceType === TriggerSource.PLANNER_NEW) {
             closeModalBackNoTextfield();
@@ -390,7 +390,7 @@ const TimeModal = () => {
                 savedEvent = {
                     id: event.id,
                     calendarId: event.id,
-                    sortId: generateSortId(-1, planner.events),
+                    sortId: generateSortId(planner.events, -1),
                     listType: EListType.PLANNER,
                     listId: isoToDatestamp(startIso),
                     value: title,
@@ -458,7 +458,7 @@ const TimeModal = () => {
                 await Calendar.deleteEventAsync(event.id, { futureEvents: false });
                 savedEvent = buildGenericPlannerEvent(
                     event.id,
-                    generateSortId(-1, planner.events),
+                    generateSortId(planner.events, -1),
                     title,
                     allDay,
                     startIso,
@@ -562,7 +562,7 @@ const TimeModal = () => {
             throw new Error('buildUnscheduledFromAllDayChip called but initial trigger was not all-day chip.')
         }
 
-        const upperSortId = generateSortId(-1, planner.events);
+        const upperSortId = generateSortId(planner.events, -1);
 
         let unscheduledEvent = mapCalendarEventToPlannerEvent(
             initialEventState.event.event,
@@ -659,7 +659,7 @@ const TimeModal = () => {
         if (!canUpdateTextfield()) return;
 
         if (mountedDatestamps.all.includes(event.listId)) {
-            const newTextfieldSortId = generateSortId(event.sortId, plannerEvents);
+            const newTextfieldSortId = generateSortId(plannerEvents, event.sortId);
             setTextfieldItem({
                 id: uuid.v4(),
                 listId: event.listId,
@@ -733,8 +733,8 @@ const TimeModal = () => {
     }
 
     async function reloadCalendarFromRanges(ranges: TDateRange[]) {
-        const affectedDates = getMountedDatestampsLinkedToDateRanges(ranges);
-        await loadCalendarData(affectedDates);
+        const affectedDates = getAllMountedDatestampsLinkedToDateRanges(ranges);
+        await loadCalendarDataToStore(affectedDates);
     }
 
     function canUpdateTextfield() {

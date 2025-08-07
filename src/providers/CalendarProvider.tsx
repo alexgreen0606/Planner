@@ -7,9 +7,9 @@ import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
-import { loadCalendarData } from '@/utils/calendarUtils';
+import { loadCalendarDataToStore } from '@/utils/calendarUtils';
 import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
-import { cloneItem } from '@/utils/listUtils';
+import { cloneListItemWithKeyRemovalAndUpdate } from '@/utils/listUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { usePathname, useRouter } from 'expo-router';
@@ -81,7 +81,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
                 case '/':
                     // For home page, reload today's calendar data
                     await updateCalendarAndContactPermissions();
-                    await loadCalendarData([mountedDatestamps.today]);
+                    await loadCalendarDataToStore([mountedDatestamps.today]);
                     break;
 
                 case '/planners':
@@ -93,7 +93,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
 
                     await updateCalendarAndContactPermissions();
-                    await loadCalendarData(mountedDatestamps.planner);
+                    await loadCalendarDataToStore(mountedDatestamps.planner);
                     break;
 
                 case '/countdowns':
@@ -151,7 +151,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
             // If textfield item was from yesterday, carry it to today.
             if (textfieldItem.listId === yesterdayDatestamp) {
-                const genericItem = cloneItem<IPlannerEvent>(
+                const genericItem = cloneListItemWithKeyRemovalAndUpdate<IPlannerEvent>(
                     textfieldItem,
                     ['calendarId', 'timeConfig', 'recurringId', 'recurringCloneId'],
                     { listId: today }
@@ -179,7 +179,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
     async function loadMountedDatestampsCalendarData() {
         const todayIsLoading = !plannersMap[mountedDatestamps.today];
-        await loadCalendarData(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
+        await loadCalendarDataToStore(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
     }
 
     return (

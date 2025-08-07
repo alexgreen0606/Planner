@@ -3,10 +3,10 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent, ITimeConfig } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { hasCalendarAccess } from "@/utils/accessUtils";
-import { loadCalendarData } from "@/utils/calendarUtils";
+import { loadCalendarDataToStore } from "@/utils/calendarUtils";
 import { getTodayDatestamp, getYesterdayDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
-import { cloneItem } from "@/utils/listUtils";
-import { generatePlanner, getMountedDatestampsLinkedToDateRanges, sanitizePlanner, timeConfigsAreEqual } from "@/utils/plannerUtils";
+import { cloneListItemWithKeyRemovalAndUpdate } from "@/utils/listUtils";
+import { generateEmptyPlanner, getAllMountedDatestampsLinkedToDateRanges, sortPlannerChronologicalWithUpsert, arePlannerEventTimesEqual } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { MMKV } from 'react-native-mmkv';
 
@@ -29,7 +29,7 @@ export function upsertEventToStorage(
 ): IPlannerEvent {
     const storagePlanner = planner ?? getPlannerFromStorageByDatestamp(event.listId);
     const prevEventId = staleStorageId ?? event.id;
-    storagePlanner.events = sanitizePlanner(storagePlanner.events, event, prevEventId);
+    storagePlanner.events = sortPlannerChronologicalWithUpsert(storagePlanner.events, event, prevEventId);
     savePlannerToStorage(event.listId, storagePlanner);
     return event;
 }
@@ -45,7 +45,7 @@ export async function upsertEventToStorageAndCalendarCheckRecurring(event: IPlan
     const eventValueChanged = sanitizedEvent.value !== prevEvent?.value;
     if (sanitizedEvent.calendarId && eventValueChanged && hasCalendarAccess()) {
         await Calendar.updateEventAsync(sanitizedEvent.calendarId, { title: sanitizedEvent.value });
-        loadCalendarData([sanitizedEvent.listId]);
+        loadCalendarDataToStore([sanitizedEvent.listId]);
         return;
     }
 
@@ -61,7 +61,7 @@ export function getPlannerFromStorageByDatestamp(datestamp: string): TPlanner {
     if (eventsString) {
         return JSON.parse(eventsString);
     }
-    return generatePlanner(datestamp);
+    return generateEmptyPlanner(datestamp);
 }
 
 /**
@@ -153,10 +153,10 @@ export async function deletePlannerEventsFromStorageAndCalendar(events: IPlanner
 
     // Phase 3: Reload the calendar data if any of the deleted calendar events affect the mounted planners.
     if (!excludeCalendarRefresh) {
-        const datestampsToReload = getMountedDatestampsLinkedToDateRanges<ITimeConfig>(
+        const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(
             deletedCalendarEvents.map(event => event.timeConfig!)
         );
-        await loadCalendarData(datestampsToReload);
+        await loadCalendarDataToStore(datestampsToReload);
     }
 }
 
@@ -177,17 +177,17 @@ export function hideAndCloneRecurringEventInPlanner(
             // The event's title is changing
             prevEvent.value !== event.value ||
             // The event time has changed
-            !timeConfigsAreEqual(prevEvent.timeConfig, event.timeConfig)
+            !arePlannerEventTimesEqual(prevEvent.timeConfig, event.timeConfig)
         )
     ) {
         // Hide the recurring event.
-        planner.events = sanitizePlanner(planner.events, {
+        planner.events = sortPlannerChronologicalWithUpsert(planner.events, {
             ...prevEvent,
             status: EItemStatus.HIDDEN
         });
 
         // Strip the recurring event into a generic one.
-        return cloneItem<IPlannerEvent>(
+        return cloneListItemWithKeyRemovalAndUpdate<IPlannerEvent>(
             event,
             ['recurringId'],
             { recurringCloneId: event.recurringId }

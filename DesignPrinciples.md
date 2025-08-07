@@ -23,23 +23,20 @@ When declaring, follow this order (exported after local):
 1. `functions`
 7. `UI`
 
+## Flow of Util Files 
+2. `Types`
+2. `Helper Functions`
+1. `Special Functions`
+6. `Upsert Functions`
+4. `Getter Functions`
+4. `Delete Functions`
+6. `Generation Functions`
+6. `Validation Functions`
+
 ## Function Names
-Event handlers: 'handle'. Props: 'on'. All else just state what it does.
-1. `atoms`
-2. `external data`
-1. `ref`
-6. `constants (fallback)`
-2. `context`
-4. `animated variables`
-3. `state`
-6. `memo`
-7. `callback`
-4. `MMKV`
-6. `constants (prefer)`
-6. `hooks`
-5. `useEffect`
-1. `functions`
-7. `UI`
+- Event handlers: 'handle'. 
+- Props: 'on'. 
+All else just state what it does.
 
 ## Props  
 - Always define props using `interface`.
@@ -51,8 +48,7 @@ Event handlers: 'handle'. Props: 'on'. All else just state what it does.
 - Always leave an **empty line** before a comment, unless describing an if/else block interior.
 
 ## Interfaces and Types  
-- **Props** should always be defined in the pertaining file.  
-- **Configurations** should always be defined as `type` and placed in the `utils` file.
+- **Props** should always be defined in the pertaining file.
 
 ## Naming Conventions  
 - Use `get` for things that already exist.  
@@ -61,22 +57,3 @@ Event handlers: 'handle'. Props: 'on'. All else just state what it does.
 ## Colors
 - `backgrounds`: systemGray6  
 - `dim`: systemGray3
-
-
-I'd like to work on some refactoring of this file. Please organize things nicely and section them off, with a label separating the sections of the format:
-
-// ------------- Animation and Gesture State -------------
-
-Please also add in comments of the format:
-
-/**
-     * 
-     * @param itemId 
-     * @returns 
-     */
-
-Also use functions instead of arrow functions wherever possible.
-
-Only use implementation comments where necessary.
-
-Ensure the code is as clean and easy to read as possible.

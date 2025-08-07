@@ -189,7 +189,7 @@ const ListRow = <T extends TListItem>({
 
         onDragEnd({
             ...item,
-            sortId: generateSortId(parentSortId, withoutDragged)
+            sortId: generateSortId(withoutDragged, parentSortId)
         });
     }
 

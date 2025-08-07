@@ -146,87 +146,9 @@ export const ScrollContainerProvider = ({
         height: UPPER_FADE_HEIGHT
     }));
 
-    const scrollHandler = useAnimatedScrollHandler({
-        onBeginDrag: () => {
-            runOnJS(setIsDragging)(true);
-        },
-        onScroll: (event) => {
-            if (!disableNativeScroll.value) {
-                scrollOffset.value = event.contentOffset.y;
-            }
-        },
-        onEndDrag: () => {
-            runOnJS(setIsDragging)(false);
-            handleMeasureScrollContentHeight();
-        },
-        onMomentumEnd: () => {
-            runOnJS(setIsDragging)(false);
-            handleMeasureScrollContentHeight();
-        }
-    });
-
     // =============
     // 1. Reactions
     // =============
-
-    // Blur the bottom navbar when content extends behind it.
-    useAnimatedReaction(
-        () => bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT,
-        (shouldBlur) => {
-            runOnJS(setBlurBottomNav)(shouldBlur);
-        }
-    );
-
-    // Loading Spinner Animation
-    useAnimatedReaction(
-        () => ({
-            status: loadingAnimationTrigger.value,
-            overscroll: Math.min(0, scrollOffset.value),
-            rotation: loadingRotation.value
-        }),
-        (curr, prev) => {
-            if (curr.status === LoadingStatus.STATIC) return;
-            if (curr.status === LoadingStatus.LOADING && prev?.status !== LoadingStatus.LOADING) {
-                // Begin Spinning Animation
-                runOnJS(triggerHaptic)();
-                loadingRotation.value = withRepeat(
-                    withTiming(loadingRotation.value - 360, {
-                        duration: 500,
-                        easing: Easing.linear
-                    }),
-                    -1,
-                    false,
-                );
-            } else if (curr.status === LoadingStatus.COMPLETE) {
-                if (curr.rotation % 360 >= -1) {
-                    cancelAnimation(loadingRotation);
-                }
-            }
-        }
-    );
-
-    // Manual scroll and overscroll check.
-    useAnimatedReaction(
-        () => scrollOffset.value,
-        (current) => {
-            scrollTo(scrollRef, 0, current, false);
-
-            // Detect pull-to-refresh action
-            if (canReloadPath) {
-
-                // Trigger a reload of the list
-                if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
-                    runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
-                }
-
-                // Allow refreshes when scroll returns to top
-                if (current >= 0 && loadingAnimationTrigger.value === LoadingStatus.COMPLETE) {
-                    runOnJS(updateLoadingStatus)(LoadingStatus.STATIC);
-                }
-            }
-
-        }
-    );
 
     // Trigger a page reload on overscroll.
     useEffect(() => {
@@ -289,6 +211,88 @@ export const ScrollContainerProvider = ({
         setLoadingStatus(newStatus);
         loadingAnimationTrigger.value = newStatus;
     }
+
+    // ==============
+    // 4. Animations
+    // ==============
+
+    const scrollHandler = useAnimatedScrollHandler({
+        onBeginDrag: () => {
+            runOnJS(setIsDragging)(true);
+        },
+        onScroll: (event) => {
+            if (!disableNativeScroll.value) {
+                scrollOffset.value = event.contentOffset.y;
+            }
+        },
+        onEndDrag: () => {
+            runOnJS(setIsDragging)(false);
+            handleMeasureScrollContentHeight();
+        },
+        onMomentumEnd: () => {
+            runOnJS(setIsDragging)(false);
+            handleMeasureScrollContentHeight();
+        }
+    });
+
+    // Blur the bottom navbar when content extends behind it.
+    useAnimatedReaction(
+        () => bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT,
+        (shouldBlur) => {
+            runOnJS(setBlurBottomNav)(shouldBlur);
+        }
+    );
+
+    // Loading Spinner Animation
+    useAnimatedReaction(
+        () => ({
+            status: loadingAnimationTrigger.value,
+            overscroll: Math.min(0, scrollOffset.value),
+            rotation: loadingRotation.value
+        }),
+        (curr, prev) => {
+            if (curr.status === LoadingStatus.STATIC) return;
+            if (curr.status === LoadingStatus.LOADING && prev?.status !== LoadingStatus.LOADING) {
+                // Begin Spinning Animation
+                runOnJS(triggerHaptic)();
+                loadingRotation.value = withRepeat(
+                    withTiming(loadingRotation.value - 360, {
+                        duration: 500,
+                        easing: Easing.linear
+                    }),
+                    -1,
+                    false,
+                );
+            } else if (curr.status === LoadingStatus.COMPLETE) {
+                if (curr.rotation % 360 >= -1) {
+                    cancelAnimation(loadingRotation);
+                }
+            }
+        }
+    );
+
+    // Manual scroll and overscroll check.
+    useAnimatedReaction(
+        () => scrollOffset.value,
+        (current) => {
+            scrollTo(scrollRef, 0, current, false);
+
+            // Detect pull-to-refresh action
+            if (canReloadPath) {
+
+                // Trigger a reload of the list
+                if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
+                    runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
+                }
+
+                // Allow refreshes when scroll returns to top
+                if (current >= 0 && loadingAnimationTrigger.value === LoadingStatus.COMPLETE) {
+                    runOnJS(updateLoadingStatus)(LoadingStatus.STATIC);
+                }
+            }
+
+        }
+    );
 
     // ======
     // 4. UI

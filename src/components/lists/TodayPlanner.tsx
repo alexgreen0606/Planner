@@ -10,8 +10,8 @@ import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { upsertEventToStorageAndCalendarCheckRecurring } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleNewEventValue, openTimeModal } from '@/utils/plannerUtils';
-import { usePathname, useRouter } from 'expo-router';
+import { generateEmptyPlanner, generatePlannerEventTimeIconConfig, generatePlannerToolbarIconSet, syncPlannerWithExternalDataAndUpdateStorage, updateEventValueWithSmartTimeDetect } from '@/utils/plannerUtils';
+import { usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useCallback } from 'react';
 import { useMMKV, useMMKVListener } from 'react-native-mmkv';
@@ -25,10 +25,9 @@ const TodayPlanner = () => {
     const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
     const { calendarEvents } = useCalendarData(todayDatestamp);
     const pathname = usePathname();
-    const router = useRouter();
 
     const getItemsFromStorageObject = useCallback(async (planner: TPlanner) => {
-        return buildPlannerEvents(todayDatestamp, planner, calendarEvents);
+        return syncPlannerWithExternalDataAndUpdateStorage(planner, calendarEvents);
     }, [calendarEvents]);
 
     const recurringStorage = useMMKV({ id: EStorageId.RECURRING_EVENT });
@@ -50,20 +49,13 @@ const TodayPlanner = () => {
         storageKey: todayDatestamp,
         onGetItemsFromStorageObject: getItemsFromStorageObject,
         onSaveItemToStorage: upsertEventToStorageAndCalendarCheckRecurring,
-        initializedStorageObject: generatePlanner(todayDatestamp),
+        initializedStorageObject: generateEmptyPlanner(todayDatestamp),
         listType
     });
 
     // ==================
     // 2. Event Handlers
     // ==================
-
-    function handleOpenTimeModal(event?: IPlannerEvent) {
-        const eventToOpen = event ?? textfieldItem;
-        if (!eventToOpen) throw new Error('No event to open.')
-
-        openTimeModal(todayDatestamp, eventToOpen!, router);
-    }
 
     async function handleToggleScheduleEventDelete(event: IPlannerEvent) {
         if (event.id === textfieldItem?.id) {
@@ -89,10 +81,10 @@ const TodayPlanner = () => {
             onSaveTextfieldAndCreateNew={SortedEvents.saveTextfieldAndCreateNew}
             onDragEnd={SortedEvents.saveItem}
             onContentClick={SortedEvents.toggleItemEdit}
-            onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, todayDatestamp)}
-            onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, handleToggleScheduleEventDelete, getIsItemDeleting(item, listType))}
-            toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
+            onValueChange={(text, item) => updateEventValueWithSmartTimeDetect(text, item, SortedEvents.items, todayDatestamp)}
+            onGetRightIconConfig={generatePlannerEventTimeIconConfig}
+            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(getIsItemDeleting(item, listType), handleToggleScheduleEventDelete)}
+            toolbarIconSet={generatePlannerToolbarIconSet()}
             isLoading={SortedEvents.isLoading}
             emptyLabelConfig={{
                 label: 'All plans complete',

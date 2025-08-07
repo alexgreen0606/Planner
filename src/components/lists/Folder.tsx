@@ -97,7 +97,7 @@ const SortedFolder = ({
             ...textfieldItem,
             status: EItemStatus.STATIC,
             listId: destinationId,
-            sortId: generateSortId(-1, destinationItems)
+            sortId: generateSortId(destinationItems, -1)
         });
         setTextfieldItem(null);
     }

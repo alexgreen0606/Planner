@@ -48,35 +48,9 @@ export function datestampToMidnightJsDate(datestamp: string, dayOffset: number =
     return date.startOf('day').toJSDate();
 }
 
-// ========================
-// 2. Validation Functions
-// ========================
-
-/**
- * Validates if one time is earlier than another.
- * 
- * @param time1 - The first time string.
- * @param time2 - The second time string.
- * @returns True if time1 is earlier than time2, else false.
- */
-export function isTimeEarlier(time1: string, time2: string): boolean {
-    return time1.localeCompare(time2) < 0;
-}
-
-/**
- * Validates if one time is earlier than or equal to another.
- * 
- * @param time1 - The first time string.
- * @param time2 - The second time string.
- * @returns True if time1 is earlier than or equal to time2, else false.
- */
-export function isTimeEarlierOrEqual(time1: string, time2: string): boolean {
-    return time1.localeCompare(time2) <= 0;
-}
-
-// =====================
-// 3. Datestamp Getters
-// =====================
+// ==============================
+// 2. Datestamp Getter Functions
+// ===============================
 
 /**
  * Gets the datestamp for yesterday's date.
@@ -125,9 +99,9 @@ export function getNextEightDayDatestamps(): string[] {
     return getDatestampRange(today, eightDaysAfterTomorrow);
 }
 
-// =========================
-// 4. Miscellaneous Getters
-// =========================
+// ====================
+// 3. Getter Functions
+// ====================
 
 /**
  * Gets a list of datestamps from the start date through the end date.
@@ -208,4 +182,31 @@ export function getIsoFromNowTimeRoundedDown5Minutes(datestamp?: string): string
     });
 
     return combined.toUTC().toISO()!;
+}
+
+
+// ========================
+// 4. Validation Functions
+// ========================
+
+/**
+ * Validates if one time is earlier than another.
+ * 
+ * @param time1 - The first time string.
+ * @param time2 - The second time string.
+ * @returns True if time1 is earlier than time2, else false.
+ */
+export function isTimeEarlier(time1: string, time2: string): boolean {
+    return time1.localeCompare(time2) < 0;
+}
+
+/**
+ * Validates if one time is earlier than or equal to another.
+ * 
+ * @param time1 - The first time string.
+ * @param time2 - The second time string.
+ * @returns True if time1 is earlier than or equal to time2, else false.
+ */
+export function isTimeEarlierOrEqual(time1: string, time2: string): boolean {
+    return time1.localeCompare(time2) <= 0;
 }

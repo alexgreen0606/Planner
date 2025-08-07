@@ -2,8 +2,8 @@ import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { ERecurringPlannerKey } from "@/lib/enums/ERecurringPlannerKey";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
-import { cloneItem } from "@/utils/listUtils";
-import { sanitizePlanner, syncRecurringPlannerWithWeekdayEvent } from "@/utils/plannerUtils";
+import { cloneListItemWithKeyRemovalAndUpdate } from "@/utils/listUtils";
+import { sortPlannerChronologicalWithUpsert, upsertWeekdayEventToRecurringPlanner } from "@/utils/plannerUtils";
 import { MMKV } from "react-native-mmkv";
 
 // ✅ 
@@ -27,9 +27,9 @@ export function upsertRecurringWeekdayEvent(weekdayEvent: IRecurringEvent) {
         const planner = getRecurringPlannerFromStorage(recPlannerKey);
 
         if (recPlannerKey === ERecurringPlannerKey.WEEKDAYS) {
-            updatedPlanner = sanitizePlanner(planner, weekdayEvent);
+            updatedPlanner = sortPlannerChronologicalWithUpsert(planner, weekdayEvent);
         } else {
-            updatedPlanner = syncRecurringPlannerWithWeekdayEvent(recPlannerKey, planner, weekdayEvent);
+            updatedPlanner = upsertWeekdayEventToRecurringPlanner(recPlannerKey, planner, weekdayEvent);
             if (!updatedPlanner) return; // no change is needed, so exit
         }
 
@@ -59,14 +59,14 @@ export function upsertRecurringEvent(recEvent: IRecurringEvent) {
         newEvent.startTime !== oldEvent.startTime
     )) {
         // Clone the event and add it to the planner
-        const clonedEvent = cloneItem<IRecurringEvent>(newEvent, ['weekdayEventId']);
-        newPlanner = sanitizePlanner(newPlanner, clonedEvent);
+        const clonedEvent = cloneListItemWithKeyRemovalAndUpdate<IRecurringEvent>(newEvent, ['weekdayEventId']);
+        newPlanner = sortPlannerChronologicalWithUpsert(newPlanner, clonedEvent);
 
         // Hide the weekday event
         newEvent.status = EItemStatus.HIDDEN;
     }
 
-    newPlanner = sanitizePlanner(newPlanner, newEvent);
+    newPlanner = sortPlannerChronologicalWithUpsert(newPlanner, newEvent);
     saveToStorage(newEvent.listId, newPlanner);
 }
 

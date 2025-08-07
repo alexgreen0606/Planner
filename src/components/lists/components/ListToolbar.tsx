@@ -10,11 +10,13 @@ export interface ToolbarIcon<T extends TListItem> extends GenericIconProps<T> {
 }
 
 type ListToolbarProps<T extends TListItem> = {
+    item: T;
     iconSets: ToolbarIcon<T>[][];
     accessoryKey?: string;
 };
 
 const ListToolbar = <T extends TListItem>({
+    item,
     iconSets,
     accessoryKey
 }: ListToolbarProps<T>) =>
@@ -35,7 +37,7 @@ const ListToolbar = <T extends TListItem>({
                     {iconSet.map((iconConfig, iconIndex) => iconConfig.customIcon ? (
                         <TouchableOpacity
                             key={`${setIndex}-toolbar-set-${iconConfig.type}-${iconIndex}`}
-                            onPress={() => iconConfig.onClick?.()}
+                            onPress={() => iconConfig.onClick?.(item)}
                         >
                             {iconConfig.customIcon}
                         </TouchableOpacity>
@@ -45,7 +47,7 @@ const ListToolbar = <T extends TListItem>({
                             platformColor={iconConfig.platformColor || 'label'}
                             {...iconConfig}
                             size='l'
-                            onClick={() => iconConfig.onClick?.()}
+                            onClick={() => iconConfig.onClick?.(item)}
                         />
                     ))}
                 </View>

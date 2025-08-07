@@ -2,22 +2,22 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { textfieldItemAtom } from '@/atoms/textfieldData';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import useSortedList from '@/hooks/useSortedList';
-import { LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
+import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { EListType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner, upsertEventToStorageAndCalendarCheckRecurring, toggleHideAllRecurringEventsInPlanner } from '@/storage/plannerStorage';
+import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner, toggleHideAllRecurringEventsInPlanner, upsertEventToStorageAndCalendarCheckRecurring } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuView } from '@react-native-menu/menu';
-import { usePathname, useRouter } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
-import { buildEventToolbarIconSet, buildPlannerEvents, generatePlanner, generateTimeIconConfig, handleNewEventValue, openTimeModal } from '../../utils/plannerUtils';
+import { generateEmptyPlanner, generatePlannerEventTimeIconConfig, generatePlannerToolbarIconSet, syncPlannerWithExternalDataAndUpdateStorage, updateEventValueWithSmartTimeDetect } from '../../utils/plannerUtils';
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import GenericIcon from '../icon';
@@ -46,7 +46,6 @@ const PlannerCard = ({
     const [textfieldItem, setTextfieldItem] = useAtom(textfieldItemAtom);
     const calendarEventData = useAtomValue(calendarEventDataAtom);
     const pathname = usePathname();
-    const router = useRouter();
 
     const [collapsed, setCollapsed] = useState(true);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -72,7 +71,7 @@ const PlannerCard = ({
     );
 
     const getItemsFromStorageObject = useCallback((planner: TPlanner) =>
-        buildPlannerEvents(datestamp, planner, calendarEvents),
+        syncPlannerWithExternalDataAndUpdateStorage(planner, calendarEvents),
         [calendarEvents]
     );
 
@@ -87,7 +86,7 @@ const PlannerCard = ({
         storageKey: datestamp,
         listType,
         onGetItemsFromStorageObject: getItemsFromStorageObject,
-        initializedStorageObject: generatePlanner(datestamp),
+        initializedStorageObject: generateEmptyPlanner(datestamp),
         onSaveItemToStorage: upsertEventToStorageAndCalendarCheckRecurring
     });
     // ===================
@@ -142,13 +141,6 @@ const PlannerCard = ({
         }
     }
 
-    function handleOpenTimeModal(event?: IPlannerEvent) {
-        const eventToOpen = event ?? textfieldItem;
-        if (!eventToOpen) throw new Error('No event to open.')
-
-        openTimeModal(datestamp, eventToOpen, router);
-    }
-
     async function handleToggleScheduleEventDelete(event: IPlannerEvent) {
         toggleScheduleItemDelete(event);
 
@@ -178,7 +170,7 @@ const PlannerCard = ({
         <Card
             header={
                 <DayBanner
-                    planner={planner ?? generatePlanner(datestamp)}
+                    planner={planner ?? generateEmptyPlanner(datestamp)}
                     forecast={forecast}
                     eventChipSets={calendarChips ?? []}
                     collapsed={collapsed}
@@ -264,10 +256,10 @@ const PlannerCard = ({
                 onDragEnd={SortedEvents.saveItem}
                 onContentClick={SortedEvents.toggleItemEdit}
                 hideKeyboard={isTimeModalOpen}
-                onValueChange={(text, item) => handleNewEventValue(text, item, SortedEvents.items, datestamp)}
-                onGetRightIconConfig={(item) => generateTimeIconConfig(item, handleOpenTimeModal)}
-                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(item, handleToggleScheduleEventDelete, isEventDeleting(item))}
-                toolbarIconSet={buildEventToolbarIconSet(handleOpenTimeModal)}
+                onValueChange={(text, item) => updateEventValueWithSmartTimeDetect(text, item, SortedEvents.items, datestamp)}
+                onGetRightIconConfig={generatePlannerEventTimeIconConfig}
+                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(isEventDeleting(item), handleToggleScheduleEventDelete)}
+                toolbarIconSet={generatePlannerToolbarIconSet()}
                 customOnGetIsDeleting={isEventDeleting}
                 emptyLabelConfig={{
                     label: 'No plans',
@@ -275,7 +267,7 @@ const PlannerCard = ({
                 }}
             />
         </Card>
-    )
+    );
 }
 
 export default PlannerCard;

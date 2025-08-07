@@ -1,20 +1,21 @@
 import ThinLine from '@/components/ThinLine';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, LIST_ITEM_HEIGHT } from '@/lib/constants/miscLayout';
+import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EListType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainer } from '@/providers/ScrollContainer';
-import { sanitizeList } from '@/utils/listUtils';
+import { sortListWithUpsertItem } from '@/utils/listUtils';
 import { MotiView } from 'moti';
 import React, { useEffect, useMemo } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import ListRow from './ListRow';
 import EmptyLabel, { EmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
+import ListRow from './ListRow';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
 // ✅ 
@@ -41,6 +42,7 @@ type SortableListProps<T extends TListItem> = {
 
 const SortableList = <T extends TListItem>({
     listId,
+    listType,
     items,
     isLoading,
     emptyLabelConfig,
@@ -56,6 +58,15 @@ const SortableList = <T extends TListItem>({
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const [textfieldItem] = useTextfieldItemAs<T>();
+
+    const placeholderItem: T = {
+        id: 'PLACEHOLDER',
+        listId: 'PLACEHOLDER',
+        sortId: 1,
+        value: 'PLACEHOLDER',
+        listType,
+        status: EItemStatus.STATIC
+    } as T;
 
     // ------------- Drag Variables -------------
 
@@ -113,7 +124,7 @@ const SortableList = <T extends TListItem>({
         let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
 
         if (textfieldItem?.listId === listId) {
-            fullList = sanitizeList(fullList, textfieldItem);
+            fullList = sortListWithUpsertItem(fullList, textfieldItem);
         }
 
         if (draggingRowId.value) {
@@ -175,6 +186,7 @@ const SortableList = <T extends TListItem>({
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             hideKeyboard={Boolean(hideKeyboard)}
+                            listType={listType}
                             dragConfig={{
                                 disableDrag: disableDrag,
                                 topMax: dragTopMax,
@@ -221,7 +233,7 @@ const SortableList = <T extends TListItem>({
 
                 {/* Placeholder Toolbar (prevent flickering between textfields) */}
                 {toolbarIconSet && (
-                    <ListToolbar iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
+                    <ListToolbar item={placeholderItem} iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
                 )}
 
             </View>
