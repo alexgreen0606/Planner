@@ -54,7 +54,7 @@ const SortableList = <T extends TListItem>({
     onSaveTextfieldAndCreateNew,
     ...rest
 }: SortableListProps<T>) => {
-    const { floatingBannerHeight, scrollOffset, handleMeasureScrollContentHeight: measureContentHeight } = useScrollContainer();
+    const { floatingBannerHeight, scrollOffset, handleMeasureScrollContentHeight: onMeasureContentHeight } = useScrollContainer();
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const [textfieldItem] = useTextfieldItemAs<T>();
@@ -88,6 +88,12 @@ const SortableList = <T extends TListItem>({
     // ==================
 
     function handleEmptySpaceClick() {
+        if (textfieldItem) {
+            // If a textfield is present, save it and close the keyboard.
+            onSaveTextfieldAndCreateNew();
+            return;
+        }
+        // Open a textfield at the bottom of the list.
         onSaveTextfieldAndCreateNew(-1, true);
     }
 
@@ -156,7 +162,7 @@ const SortableList = <T extends TListItem>({
 
     // Evaluate the scroll container height every time the list length changes.
     useEffect(() => {
-        runOnUI(measureContentHeight)();
+        runOnUI(onMeasureContentHeight)();
     }, [list.length]);
 
     // ========
@@ -226,7 +232,7 @@ const SortableList = <T extends TListItem>({
                     />
                 ) : !isLoading && (
                     <Pressable
-                        style={{ flex: 1 }}
+                        className='flex-1'
                         onPress={handleEmptySpaceClick}
                     />
                 )}

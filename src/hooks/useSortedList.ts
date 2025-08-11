@@ -115,7 +115,6 @@ const useSortedList = <T extends TListItem, S>({
         // Phase 2: Save the item
         if (item) await saveItem(item);
 
-
         // Phase 3: Clear the textfield and exit if no reference ID was given
         if (!textfieldReferenceSortId) {
             setTextfieldItem(undefined);

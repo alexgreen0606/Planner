@@ -10,19 +10,19 @@ import ListToolbar, { ToolbarIcon } from './ListToolbar';
 type ListTextfieldProps<T extends TListItem> = {
     item: T;
     toolbarIconSet?: ToolbarIcon<T>[][];
-    onChange: (newText: string) => void;
-    onSubmit: (blurred: boolean) => void;
     hideKeyboard: boolean;
     customStyle: TextStyle;
+    onChange: (newText: string) => void;
+    onSubmit: (blurred: boolean) => void;
 };
 
 const ListTextfield = <T extends TListItem>({
     item,
     toolbarIconSet,
-    onChange,
-    onSubmit,
     hideKeyboard,
     customStyle,
+    onChange,
+    onSubmit
 }: ListTextfieldProps<T>) => {
     const [textfieldItem] = useTextfieldItemAs<T>();
 
@@ -77,12 +77,12 @@ const ListTextfield = <T extends TListItem>({
                         ) : 0,
                         marginRight: LIST_ICON_SPACING / 2,
                         color: PlatformColor('label'),
-                        fontFamily: 'Text'
+                        fontFamily: 'Text',
                     },
                     customStyle
                 ]}
             />
-            {toolbarIconSet && <ListToolbar iconSets={toolbarIconSet} accessoryKey={item.id} />}
+            {toolbarIconSet && <ListToolbar item={item} iconSets={toolbarIconSet} accessoryKey={item.id} />}
         </View>
     )
 }

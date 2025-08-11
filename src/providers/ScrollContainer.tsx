@@ -18,6 +18,7 @@ import Animated, {
     runOnJS,
     scrollTo,
     SharedValue,
+    useAnimatedKeyboard,
     useAnimatedReaction,
     useAnimatedRef,
     useAnimatedScrollHandler,
@@ -78,8 +79,8 @@ export const ScrollContainerProvider = ({
     fixFloatingBannerOnOverscroll = false
 }: ScrollContainerProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    const { handleReloadPage: onReloadPage } = useCalendarLoad();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
+    const keyboard = useAnimatedKeyboard();
     const pathname = usePathname();
 
     const placeholderInputRef = useRef<TextInput>(null);
@@ -88,6 +89,7 @@ export const ScrollContainerProvider = ({
     const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
     const [blurBottomNav, setBlurBottomNav] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
     const bottomScrollRef = useAnimatedRef<Animated.View>();
@@ -145,6 +147,8 @@ export const ScrollContainerProvider = ({
         ),
         height: UPPER_FADE_HEIGHT
     }));
+
+    const { handleReloadPage: onReloadPage } = useCalendarLoad();
 
     // =============
     // 1. Reactions
@@ -294,6 +298,12 @@ export const ScrollContainerProvider = ({
         }
     );
 
+    // Track if the keyboard is open.
+    useAnimatedReaction(
+        () => keyboard.height.value,
+        (keyboardHeight) => runOnJS(setIsKeyboardOpen)(keyboardHeight > 0)
+    );
+
     // ======
     // 4. UI
     // ======
@@ -355,7 +365,7 @@ export const ScrollContainerProvider = ({
             bottomScrollRef,
             handleFocusPlaceholder,
             handleAutoScroll,
-            handleMeasureScrollContentHeight,
+            handleMeasureScrollContentHeight
         }}>
 
             {/* Floating Banner */}
@@ -393,8 +403,8 @@ export const ScrollContainerProvider = ({
                     keyboardShouldPersistTaps='always'
                     contentContainerStyle={{
                         paddingTop: TOP_SPACER,
-                        paddingBottom: LOWER_CONTAINER_PADDING,
-                        flexGrow: 1,
+                        paddingBottom: isKeyboardOpen ? 0 : LOWER_CONTAINER_PADDING,
+                        flexGrow: 1
                     }}
                 >
 

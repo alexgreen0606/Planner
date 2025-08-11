@@ -11,7 +11,7 @@ When declaring, follow this order (exported after local):
 ## Flow of Files 
 When declaring, follow this order (exported after local):
 1. `atoms`
-2. `external data`
+2. `external hooks`
 6. `constants (fallback)`
 2. `context`
 3. `state`
