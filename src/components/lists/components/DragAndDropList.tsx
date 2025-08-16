@@ -7,22 +7,22 @@ import { EListType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainer } from '@/providers/ScrollContainer';
-import { sortListWithUpsertItem } from '@/utils/listUtils';
 import { MotiView } from 'moti';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
+import { MMKV } from 'react-native-mmkv';
 import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { EmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
-import ListRow from './ListRow';
+import ListItem from './ListItem';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
-// ✅ 
+//
 
-type SortableListProps<T extends TListItem> = {
+type TDragAndDropListProps<T extends TListItem, S = T> = {
+    itemIds: string[];
     listId: string;
-    items: T[];
     toolbarIconSet?: ToolbarIcon<T>[][];
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
     listType: EListType;
@@ -30,45 +30,55 @@ type SortableListProps<T extends TListItem> = {
     isLoading?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
-    onDragEnd?: (updatedItem: T) => Promise<any> | any;
-    onContentClick: (item: T) => void;
-    onValueChange?: (text: string, item: T) => T;
+
+    // NEW
+    storage: MMKV;
+    defaultStorageObject?: S;
+    onCreateItem: (listId: string, index: number) => void;
+    onDeleteItem: (item: T) => void;
+    onValueChange?: (newValue: string, prev: T) => T;
+    onIndexChange?: (newIndex: number, prev: T) => void;
+    onSaveToExternalStorage?: (item: T) => void;
+
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    onSaveTextfieldAndCreateNew: (textfieldReferenceSortId?: number, isReferenceIdBelowTextfield?: boolean) => void;
-    customOnGetIsDeleting?: (item: T) => boolean;
+    customOnGetIsDeleting?: (item: T | undefined) => boolean;
 };
 
-const SortableList = <T extends TListItem>({
+const DragAndDropList = <T extends TListItem, S = T>({
+    itemIds,
     listId,
     listType,
-    items,
     isLoading,
     emptyLabelConfig,
     fillSpace,
     toolbarIconSet,
     hideKeyboard,
     disableDrag = false,
-    onDragEnd,
-    onSaveTextfieldAndCreateNew,
+    storage,
+    onIndexChange,
+    onCreateItem,
     ...rest
-}: SortableListProps<T>) => {
-    const { floatingBannerHeight, scrollOffset, handleMeasureScrollContentHeight: onMeasureContentHeight } = useScrollContainer();
+}: TDragAndDropListProps<T, S>) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
+
+    const {
+        floatingBannerHeight,
+        scrollOffset,
+        handleMeasureScrollContentHeight: onMeasureContentHeight
+    } = useScrollContainer();
+
     const [textfieldItem] = useTextfieldItemAs<T>();
 
     const placeholderItem: T = {
         id: 'PLACEHOLDER',
         listId: 'PLACEHOLDER',
-        sortId: 1,
         value: 'PLACEHOLDER',
         listType,
         status: EItemStatus.STATIC
     } as T;
-
-    // ------------- Drag Variables -------------
 
     const draggingRowId = useSharedValue<string | null>(null);
     const isAutoScrolling = useSharedValue(false);
@@ -76,12 +86,13 @@ const SortableList = <T extends TListItem>({
     const dragInitialScrollOffset = useSharedValue(0);
     const dragInitialIndex = useSharedValue(0);
     const dragInitialTop = useSharedValue(0);
-
     const dragTop = useSharedValue(0);
+
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
     const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
+    const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
 
     // ==================
     // 1. Event Handlers
@@ -89,12 +100,12 @@ const SortableList = <T extends TListItem>({
 
     function handleEmptySpaceClick() {
         if (textfieldItem) {
-            // If a textfield is present, save it and close the keyboard.
-            onSaveTextfieldAndCreateNew();
+            // TODO: If a textfield is present, save it and close the keyboard.
             return;
         }
+
         // Open a textfield at the bottom of the list.
-        onSaveTextfieldAndCreateNew(-1, true);
+        onCreateItem(listId, itemIds.length);
     }
 
     function handleDragStart(rowId: string, initialIndex: number) {
@@ -109,48 +120,23 @@ const SortableList = <T extends TListItem>({
         draggingRowId.value = rowId;
     }
 
-    function handleDragEnd(updatedItem?: T) {
+    function handleDragEnd(newIndex: number, item?: T) {
         "worklet";
 
         cancelAnimation(scrollOffset);
         isAutoScrolling.value = false;
 
-        if (updatedItem && onDragEnd) {
-            runOnJS(onDragEnd)(updatedItem);
-        } else {
-            draggingRowId.value = null;
+        if (onIndexChange && item) {
+            runOnJS(onIndexChange)(newIndex, item);
         }
+        draggingRowId.value = null;
     }
-
-    // ===================
-    // 2. List Generation
-    // ===================
-
-    const list = useMemo(() => {
-        let fullList = items.filter(item => item.status !== EItemStatus.HIDDEN);
-
-        if (textfieldItem?.listId === listId) {
-            fullList = sortListWithUpsertItem(fullList, textfieldItem);
-        }
-
-        if (draggingRowId.value) {
-            handleDragEnd();
-        }
-
-        return fullList.sort((a, b) => a.sortId - b.sortId);
-    }, [
-        textfieldItem?.id,
-        items
-    ]);
-
-    // ------------- Drag Bounds Tracker -------------
-    const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (list.length - 1));
 
     // =============
     // 3. Reactions
     // =============
 
-    // Auto Scrolling
+    // Auto Scrolling.
     useAnimatedReaction(
         () => scrollOffset.value - dragInitialScrollOffset.value,
         (displacement) => {
@@ -163,7 +149,7 @@ const SortableList = <T extends TListItem>({
     // Evaluate the scroll container height every time the list length changes.
     useEffect(() => {
         runOnUI(onMeasureContentHeight)();
-    }, [list.length]);
+    }, [itemIds.length]);
 
     // ========
     // 4. UI
@@ -180,19 +166,21 @@ const SortableList = <T extends TListItem>({
                 <View
                     className='w-full'
                     style={{
-                        height: list.length * LIST_ITEM_HEIGHT
+                        height: itemIds.length * LIST_ITEM_HEIGHT
                     }}
                 >
-                    {list.map((item, i) =>
-                        <ListRow<T>
-                            key={`${item.id}-row`}
-                            item={item}
+                    {itemIds.map((id, i) =>
+                        <ListItem<T>
+                            key={`${id}-row`}
                             itemIndex={i}
+                            listId={listId}
                             toolbarIconSet={toolbarIconSet}
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             hideKeyboard={Boolean(hideKeyboard)}
                             listType={listType}
+                            itemId={id}
+                            storage={storage}
                             dragConfig={{
                                 disableDrag: disableDrag,
                                 topMax: dragTopMax,
@@ -206,14 +194,13 @@ const SortableList = <T extends TListItem>({
                                 onDragStart: handleDragStart
                             }}
                             {...rest}
-                            items={list}
-                            onSaveTextfieldAndCreateNew={onSaveTextfieldAndCreateNew}
+                            onCreateItem={onCreateItem}
                         />
                     )}
                 </View>
 
                 {/* Lower List Line */}
-                {list.length > 0 && (
+                {itemIds.length > 0 && (
                     <Pressable onPress={handleEmptySpaceClick}>
                         <ThinLine />
                     </Pressable>
@@ -225,7 +212,7 @@ const SortableList = <T extends TListItem>({
                 )}
 
                 {/* Empty Label or Click Area */}
-                {emptyLabelConfig && list.length === 0 ? (
+                {emptyLabelConfig && itemIds.length === 0 ? (
                     <EmptyLabel
                         {...emptyLabelConfig}
                         onPress={handleEmptySpaceClick}
@@ -247,4 +234,4 @@ const SortableList = <T extends TListItem>({
     );
 };
 
-export default SortableList;
+export default DragAndDropList;

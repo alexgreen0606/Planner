@@ -1,6 +1,5 @@
 import GenericIcon from "@/components/icon";
 import ThinLine from "@/components/ThinLine";
-import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { EListType } from "@/lib/enums/EListType";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
@@ -8,9 +7,10 @@ import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconCon
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
 import { generateSortId } from "@/utils/listUtils";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { PlatformColor, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
+import { MMKV, useMMKVObject } from "react-native-mmkv";
 import Animated, {
     cancelAnimation,
     DerivedValue,
@@ -19,14 +19,15 @@ import Animated, {
     useAnimatedStyle,
     withSpring
 } from "react-native-reanimated";
+import ListItemTextfield from "./ListItemTextfield";
 import { ToolbarIcon } from "./ListToolbar";
-import ListTextfield from "./RowTextfield";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
 
-// ✅ 
+//
 
-type ListRowProps<T extends TListItem> = {
-    item: T;
-    items: T[];
+type TListItemProps<T extends TListItem> = {
+    listId: string;
+    itemId: string;
     itemIndex: number;
     hideKeyboard: boolean;
     upperAutoScrollBound: number;
@@ -41,17 +42,22 @@ type ListRowProps<T extends TListItem> = {
         draggingRowId: SharedValue<string | null>;
         disableDrag: boolean;
         onDragStart: (rowId: string, initialIndex: number) => void;
-        onDragEnd: (updatedItem?: T) => void;
+        onDragEnd: (newValue: number, prev?: T) => void;
     },
     listType: EListType;
     toolbarIconSet?: ToolbarIcon<T>[][];
-    onSaveTextfieldAndCreateNew: (textfieldReferenceSortId?: number, isReferenceIdBelowTextfield?: boolean) => void;
-    onContentClick: (item: T) => void;
-    onValueChange?: (text: string, item: T) => T;
+
+    // NEW
+    storage: MMKV;
+    onCreateItem: (listId: string, index: number) => void;
+    onDeleteItem: (item: T) => void;
+    onValueChange?: (newValue: string, prev: T) => T;
+    onSaveToExternalStorage?: (item: T) => void;
+
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    customOnGetIsDeleting?: (item: T) => boolean;
+    customOnGetIsDeleting?: (item: T | undefined) => boolean;
 };
 
 const Row = Animated.createAnimatedComponent(View);
@@ -66,9 +72,10 @@ enum IconPosition {
     LEFT = 'LEFT'
 }
 
-const ListRow = <T extends TListItem>({
-    item: staticItem,
-    items,
+const ListItem = <T extends TListItem>({
+    listId,
+    itemId,
+    storage,
     dragConfig: {
         initialIndex,
         initialTop,
@@ -87,55 +94,40 @@ const ListRow = <T extends TListItem>({
     lowerAutoScrollBound,
     listType,
     hideKeyboard,
-    onSaveTextfieldAndCreateNew,
+    onValueChange,
+    onCreateItem,
+    onDeleteItem,
+    onSaveToExternalStorage,
     onGetLeftIconConfig,
     onGetRightIconConfig,
-    onValueChange,
     onGetRowTextPlatformColor,
-    onContentClick,
     customOnGetIsDeleting
-}: ListRowProps<T>) => {
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
-    const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
+}: TListItemProps<T>) => {
+
+    const { handleGetIsItemDeleting: onGetIsItemDeleting } = useDeleteScheduler<T>();
+
     const {
         scrollOffset,
-        handleAutoScroll: autoScroll
+        handleAutoScroll: onAutoScroll
     } = useScrollContainer();
 
-    const isItemDeleting = customOnGetIsDeleting ?? getIsItemDeleting;
-
-    const item = useMemo(() =>
-        textfieldItem?.id === staticItem.id ? textfieldItem : staticItem,
-        [textfieldItem, staticItem]
-    );
+    const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
     const isPendingDelete = useMemo(
-        () => isItemDeleting(item, listType),
-        [getIsItemDeleting]
+        () => customOnGetIsDeleting?.(item) ?? onGetIsItemDeleting(item, listType),
+        [onGetIsItemDeleting, customOnGetIsDeleting]
     );
 
-    const textPlatformColor = useMemo(() => onGetRowTextPlatformColor?.(item), [item, onGetRowTextPlatformColor]);
-    const leftIconConfig = useMemo(() => onGetLeftIconConfig?.(item), [item, onGetLeftIconConfig]);
-    const rightIconConfig = useMemo(() => onGetRightIconConfig?.(item), [item, onGetRightIconConfig]);
+    // Mark the item static whenever it is deleting.
+    useEffect(() => {
+        if (isPendingDelete) {
+            setItem((prev) => prev ? ({ ...prev, status: EItemStatus.STATIC }) : prev);
+        }
+    }, [isPendingDelete]);
 
     // ==================
     // 1. Event Handlers
     // ==================
-
-    function handleTextfieldChange(text: string) {
-        if (!textfieldItem) return;
-
-        let newTextfieldItem = { ...textfieldItem, value: text };
-        if (onValueChange) {
-            newTextfieldItem = onValueChange(text, textfieldItem);
-        }
-
-        setTextfieldItem(newTextfieldItem);
-    }
-
-    function handleTextfieldSave(createNew: boolean = true) {
-        onSaveTextfieldAndCreateNew(createNew ? item.sortId : undefined);
-    }
 
     function handleDrag(
         currentDragDisplacement: number,
@@ -148,7 +140,7 @@ const ListRow = <T extends TListItem>({
             const targetBound = direction === AutoScrollDirection.UP ? 0 : topMax;
             const distanceToBound = targetBound - top.value;
             isAutoScrolling.value = true;
-            autoScroll(distanceToBound);
+            onAutoScroll(distanceToBound);
         };
 
         if (!isAutoScrolling.value) {
@@ -176,21 +168,15 @@ const ListRow = <T extends TListItem>({
     }
 
     function handleEndDrag() {
+        if (!item) return;
+
         if (index.value === initialIndex.value) {
             // Item didn't move. Clean up and quit.
-            onDragEnd();
+            onDragEnd(index.value);
             return;
         }
 
-        // Build the new list after drag.
-        const withoutDragged = items.filter(i => i.id !== item.id);
-        withoutDragged.splice(index.value, 0, item);
-        const parentSortId = withoutDragged[index.value - 1]?.sortId ?? -1;
-
-        onDragEnd({
-            ...item,
-            sortId: generateSortId(withoutDragged, parentSortId)
-        });
+        onDragEnd(index.value, item);
     }
 
     // ============
@@ -200,7 +186,8 @@ const ListRow = <T extends TListItem>({
     const tapGesture = Gesture.Tap()
         .maxDuration(200)
         .onEnd(() => {
-            runOnJS(onContentClick)(item)
+            if (!item || isPendingDelete) return;
+            runOnJS(setItem)({ ...item, status: EItemStatus.EDIT });
         });
 
     const longPressGesture = Gesture.LongPress()
@@ -211,12 +198,15 @@ const ListRow = <T extends TListItem>({
             }
         })
         .onStart(() => {
+            if (!item) return;
             onDragStart(item.id, itemIndex);
         });
 
     const panGesture = Gesture.Pan()
         .manualActivation(true)
         .onTouchesMove((_e, state) => {
+            if (!item) return;
+
             if (draggingRowId.value === item.id) {
                 state.activate();
             } else {
@@ -230,10 +220,12 @@ const ListRow = <T extends TListItem>({
             );
         })
         .onFinalize(() => {
+            if (!item) return;
+
             if (draggingRowId.value !== item.id) return;
 
             runOnJS(handleEndDrag)();
-        })
+        });
 
     const dragGesture = Gesture.Simultaneous(longPressGesture, panGesture);
     const contentGesture = Gesture.Race(tapGesture, dragGesture);
@@ -243,7 +235,7 @@ const ListRow = <T extends TListItem>({
     // ==============
 
     const animatedRowStyle = useAnimatedStyle(() => {
-        const isRowDragging = draggingRowId.value === item.id;
+        const isRowDragging = item && draggingRowId.value === item.id;
         const basePos = itemIndex * LIST_ITEM_HEIGHT;
 
         let rowOffset = 0;
@@ -281,7 +273,7 @@ const ListRow = <T extends TListItem>({
             return (
                 <TouchableOpacity
                     activeOpacity={config.onClick ? 0 : 1}
-                    onPress={() => config.onClick?.(item)}
+                    onPress={() => item && config.onClick?.(item)}
                     className='mr-2'
                 >
                     {config.customIcon}
@@ -293,7 +285,7 @@ const ListRow = <T extends TListItem>({
             return (
                 <GenericIcon
                     {...config.icon}
-                    onClick={() => config.onClick?.(item)}
+                    onClick={() => item && config.onClick?.(item)}
                     size={size}
                     className='mr-4'
                 />
@@ -302,6 +294,12 @@ const ListRow = <T extends TListItem>({
 
         return null;
     };
+
+    const textPlatformColor = useMemo(() => item ? onGetRowTextPlatformColor?.(item) : 'label', [item, onGetRowTextPlatformColor]);
+    const leftIconConfig = useMemo(() => item ? onGetLeftIconConfig?.(item) : undefined, [item, onGetLeftIconConfig]);
+    const rightIconConfig = useMemo(() => item ? onGetRightIconConfig?.(item) : undefined, [item, onGetRightIconConfig]);
+
+    if (!item) return null;
 
     return (
         <Row
@@ -313,7 +311,7 @@ const ListRow = <T extends TListItem>({
         >
 
             {/* Separator Line */}
-            <Pressable onPress={() => onSaveTextfieldAndCreateNew(item.sortId, true)}>
+            <Pressable onPress={() => onCreateItem(listId, itemIndex)}>
                 <ThinLine />
             </Pressable>
 
@@ -336,11 +334,9 @@ const ListRow = <T extends TListItem>({
                             height: LIST_CONTENT_HEIGHT
                         }}
                     >
-                        <ListTextfield<T>
+                        <ListItemTextfield<T>
                             item={item}
                             toolbarIconSet={toolbarIconSet}
-                            onChange={handleTextfieldChange}
-                            onSubmit={handleTextfieldSave}
                             hideKeyboard={hideKeyboard}
                             customStyle={{
                                 color: PlatformColor(
@@ -349,6 +345,11 @@ const ListRow = <T extends TListItem>({
                                 ),
                                 textDecorationLine: isPendingDelete ? 'line-through' : undefined
                             }}
+                            onDeleteItem={onDeleteItem}
+                            onSetItemInStorage={setItem}
+                            onValueChange={onValueChange}
+                            onSaveToExternalStorage={onSaveToExternalStorage}
+                            onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
                         />
                     </View>
                 </GestureDetector>
@@ -361,4 +362,4 @@ const ListRow = <T extends TListItem>({
     );
 };
 
-export default ListRow;
+export default ListItem;

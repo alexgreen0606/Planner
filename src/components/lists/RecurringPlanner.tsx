@@ -15,7 +15,7 @@ import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { IconType } from '../icon';
 import { ToolbarIcon } from './components/ListToolbar';
-import SortableList from './components/SortableList';
+import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
@@ -104,7 +104,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
             className='flex-1'
             style={{ backgroundColor: PlatformColor('systemBackground') }}
         >
-            <SortableList<IRecurringEvent>
+            <DragAndDropList<IRecurringEvent>
                 items={SortedEvents.items}
                 listId={plannerKey}
                 fillSpace

@@ -4,8 +4,8 @@ import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
 import { EListType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { deleteChecklistItems } from '@/storage/checklistsStorage';
-import { deletePlannerEventsFromStorageAndCalendar } from '@/storage/plannerStorage';
 import { deleteRecurringEventsHideWeekday, deleteRecurringWeekdayEvents } from '@/storage/recurringPlannerStorage';
+import { deletePlannerEventsFromStorageAndCalendar } from '@/utils/plannerUtils';
 import { useAtom } from 'jotai';
 import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react';
 
@@ -13,7 +13,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef } from
 
 type DeleteSchedulerContextType<T extends TListItem> = {
     handleGetDeletingItemsByType: (deleteFunctionKey: EListType) => T[];
-    handleGetIsItemDeleting: (item: T, deleteFunctionKey: EListType) => boolean;
+    handleGetIsItemDeleting: (item: T | undefined, deleteFunctionKey: EListType) => boolean;
     handleToggleScheduleItemDelete: (item: T) => void;
 };
 
@@ -42,8 +42,8 @@ export function DeleteSchedulerProvider<T extends TListItem>({ children }: { chi
         return Object.values(typeMap);
     }, [pendingDeleteMap]);
 
-    const handleGetIsItemDeleting = useCallback((item: T, deleteFunctionKey: EListType) => {
-        return Boolean(pendingDeleteMap[deleteFunctionKey]?.[item.id]);
+    const handleGetIsItemDeleting = useCallback((item: T | undefined, deleteFunctionKey: EListType) => {
+        return item ? Boolean(pendingDeleteMap[deleteFunctionKey]?.[item?.id]) : false;
     }, [pendingDeleteMap])
 
     const handleToggleScheduleItemDelete = useCallback(async (item: T) => {
@@ -110,8 +110,8 @@ export function DeleteSchedulerProvider<T extends TListItem>({ children }: { chi
     return (
         <DeleteSchedulerContext.Provider value={{
             handleGetDeletingItemsByType,
-            handleGetIsItemDeleting: handleGetIsItemDeleting,
-            handleToggleScheduleItemDelete: handleToggleScheduleItemDelete
+            handleGetIsItemDeleting,
+            handleToggleScheduleItemDelete
         }}>
             {children}
         </DeleteSchedulerContext.Provider>

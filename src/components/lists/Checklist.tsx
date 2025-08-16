@@ -8,7 +8,7 @@ import { upsertChecklistItem } from '@/storage/checklistsStorage';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback } from 'react';
-import SortableList from './components/SortableList';
+import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
@@ -40,7 +40,7 @@ const Checklist = () => {
     // ======
 
     return (
-        <SortableList<TListItem>
+        <DragAndDropList<TListItem>
             listId={checklistId}
             fillSpace
             listType={listType}

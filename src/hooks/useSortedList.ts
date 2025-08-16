@@ -1,56 +1,47 @@
-import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListType } from '@/lib/enums/EListType';
-import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { useScrollContainer } from '@/providers/ScrollContainer';
-import { uuid } from 'expo-modules-core';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { generateSortId, sortListWithUpsertItem } from '../utils/listUtils';
-import { useTextfieldItemAs } from './useTextfieldItemAs';
+import { useCallback, useEffect, useState } from 'react';
+import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-// ✅ 
+//
 
-type SortedListConfig<T extends TListItem, S> = {
-    storageId: string;
+type SortedListConfig<S> = {
+    storage: MMKV;
     storageKey: string;
-    listType: EListType;
+    // listType: EListType;
     initializedStorageObject?: S;
-    onSaveItemToStorage: (item: T) => Promise<void> | any;
+    // onSaveItemToStorage: (item: string) => Promise<void> | any;
 
     // Ensure a callback is used here to prevent infinite rerenders
-    onGetItemsFromStorageObject?: (storageObject: S) => Promise<T[]> | T[];
+    onGetItemsFromStorageObject?: (storageObject: S) => Promise<string[]> | string[];
 
-    onHandleListChange?: () => Promise<void> | void;
-    onInitializeListItem?: (item: TListItem) => T;
+    // onHandleListChange?: () => Promise<void> | void;
+    // onInitializeListItem?: (item: TListItem) => T;
 };
 
-const useSortedList = <T extends TListItem, S>({
+const useSortedList = <S>({
     storageKey,
-    storageId,
+    storage,
     initializedStorageObject,
-    listType,
-    onHandleListChange,
+    // listType,
+    // onHandleListChange,
     onGetItemsFromStorageObject,
-    onInitializeListItem,
-    onSaveItemToStorage
-}: SortedListConfig<T, S>) => {
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
-    const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
-    const { handleFocusPlaceholder: focusPlaceholder } = useScrollContainer();
+    // onInitializeListItem,
+    // onSaveItemToStorage
+}: SortedListConfig<S>) => {
+    // const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
+    // const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
+    // const { handleFocusPlaceholder: focusPlaceholder } = useScrollContainer();
 
-    const isTogglingTextfields = useRef(false);
+    // const isTogglingTextfields = useRef(false);
 
-    const [items, setItems] = useState<T[]>([]);
+    const [items, setItems] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    const storage = useMMKV({ id: storageId });
     const [storageRecord] = useMMKVObject<S>(storageKey, storage);
 
     const buildList = useCallback(async () => {
         try {
             const fetchedItems = await onGetItemsFromStorageObject?.(storageRecord ?? initializedStorageObject ?? [] as S);
-            setItems(fetchedItems ?? storageRecord as T[] ?? []);
+            setItems(fetchedItems ?? storageRecord as string[] ?? []);
             if (isLoading) setIsLoading(false);
         } catch (error) {
             console.error(error);
@@ -70,88 +61,88 @@ const useSortedList = <T extends TListItem, S>({
     // 2. Utility Functions
     // =====================
 
-    async function saveItem(item: T) {
-        onSaveItemToStorage(item);
-        await onHandleListChange?.();
-    }
+    // async function saveItem(item: T) {
+    //     onSaveItemToStorage(item);
+    //     await onHandleListChange?.();
+    // }
 
-    async function toggleItemEdit(item: T) {
-        if (getIsItemDeleting(item, listType)) return;
+    // async function toggleItemEdit(item: T) {
+    //     if (getIsItemDeleting(item, listType)) return;
 
-        isTogglingTextfields.current = true;
+    //     isTogglingTextfields.current = true;
 
-        if (textfieldItem) {
-            // Focus the hidden placeholder field.
-            // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
-            focusPlaceholder();
+    //     if (textfieldItem) {
+    //         // Focus the hidden placeholder field.
+    //         // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
+    //         focusPlaceholder();
 
-            if (textfieldItem.value.trim() !== '') {
-                await saveItem({ ...textfieldItem, status: EItemStatus.STATIC });
-            }
-        }
+    //         // if (textfieldItem.value.trim() !== '') {
+    //         //     await saveItem({ ...textfieldItem, status: EItemStatus.STATIC });
+    //         // }
+    //     }
 
-        setTextfieldItem({ ...item, status: EItemStatus.EDIT });
+    //     setTextfieldItem({ ...item, status: EItemStatus.EDIT });
 
-        setTimeout(() => {
-            isTogglingTextfields.current = false;
-        }, 200);
+    //     setTimeout(() => {
+    //         isTogglingTextfields.current = false;
+    //     }, 200);
 
-    }
+    // }
 
-    async function saveTextfieldAndCreateNew(
-        textfieldReferenceSortId?: number,
-        isReferenceIdBelowTextfield: boolean = false
-    ) {
-        if (isTogglingTextfields.current) return;
+    // async function saveTextfieldAndCreateNew(
+    //     textfieldReferenceSortId?: number,
+    //     isReferenceIdBelowTextfield: boolean = false
+    // ) {
+    //     if (isTogglingTextfields.current) return;
 
-        const item = textfieldItem ? { ...textfieldItem } : null;
+    //     const item = textfieldItem ? { ...textfieldItem } : null;
 
-        // Phase 1: Clear the textfield and exit if the input is empty.
-        if (item?.value.trim() === '') {
-            setTextfieldItem(null);
-            return;
-        }
+    //     // Phase 1: Clear the textfield and exit if the input is empty.
+    //     if (item?.value.trim() === '') {
+    //         setTextfieldItem(null);
+    //         return;
+    //     }
 
-        // Phase 2: Save the item
-        if (item) await saveItem(item);
+    //     // Phase 2: Save the item
+    //     if (item) await saveItem(item);
 
-        // Phase 3: Clear the textfield and exit if no reference ID was given
-        if (!textfieldReferenceSortId) {
-            setTextfieldItem(undefined);
-            return;
-        }
+    //     // Phase 3: Clear the textfield and exit if no reference ID was given
+    //     if (!textfieldReferenceSortId) {
+    //         setTextfieldItem(undefined);
+    //         return;
+    //     }
 
-        // Phase 4: Focus the hidden placeholder field.
-        // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
-        focusPlaceholder();
+    //     // Phase 4: Focus the hidden placeholder field.
+    //     // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
+    //     focusPlaceholder();
 
-        // Phase 5: Create a new list item.
-        const updatedList = sortListWithUpsertItem(items, item);
-        const genericListItem: TListItem = {
-            id: uuid.v4(),
-            status: EItemStatus.NEW,
-            listId: storageKey,
-            value: '',
-            listType,
-            sortId: generateSortId(
-                updatedList,
-                textfieldReferenceSortId!,
-                isReferenceIdBelowTextfield
-            )
-        };
-        const newItem: T = onInitializeListItem?.(genericListItem) ?? genericListItem as T;
+    //     // Phase 5: Create a new list item.
+    //     const updatedList = sortListWithUpsertItem(items, item);
+    //     const genericListItem: TListItem = {
+    //         id: uuid.v4(),
+    //         status: EItemStatus.NEW,
+    //         listId: storageKey,
+    //         value: '',
+    //         listType,
+    //         sortId: generateSortId(
+    //             updatedList,
+    //             textfieldReferenceSortId!,
+    //             isReferenceIdBelowTextfield
+    //         )
+    //     };
+    //     const newItem: T = onInitializeListItem?.(genericListItem) ?? genericListItem as T;
 
-        setTextfieldItem(newItem);
-    }
+    //     setTextfieldItem(newItem);
+    // }
 
     return {
         items,
         storageObject: storageRecord ?? initializedStorageObject,
         isLoading: isLoading === true,
         refetchItems: buildList,
-        saveItem,
-        toggleItemEdit,
-        saveTextfieldAndCreateNew
+        // saveItem,
+        // toggleItemEdit,
+        // saveTextfieldAndCreateNew
     };
 };
 

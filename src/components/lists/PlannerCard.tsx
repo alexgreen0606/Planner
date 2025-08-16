@@ -21,7 +21,7 @@ import { generateEmptyPlanner, generatePlannerEventTimeIconConfig, generatePlann
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import GenericIcon from '../icon';
-import SortableList from './components/SortableList';
+import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
@@ -248,7 +248,7 @@ const PlannerCard = ({
             collapsed={collapsed}
             contentHeight={(SortedEvents.items.length + 2) * LIST_ITEM_HEIGHT + 60}
         >
-            <SortableList<IPlannerEvent>
+            <DragAndDropList<IPlannerEvent>
                 listId={datestamp}
                 items={visibleEvents}
                 listType={listType}

@@ -390,7 +390,7 @@ const TimeModal = () => {
                 savedEvent = {
                     id: event.id,
                     calendarId: event.id,
-                    sortId: generateSortId(planner.events, -1),
+                    sortId: generateSortId(planner.eventIds, -1),
                     listType: EListType.PLANNER,
                     listId: isoToDatestamp(startIso),
                     value: title,
@@ -458,7 +458,7 @@ const TimeModal = () => {
                 await Calendar.deleteEventAsync(event.id, { futureEvents: false });
                 savedEvent = buildGenericPlannerEvent(
                     event.id,
-                    generateSortId(planner.events, -1),
+                    generateSortId(planner.eventIds, -1),
                     title,
                     allDay,
                     startIso,
@@ -562,12 +562,12 @@ const TimeModal = () => {
             throw new Error('buildUnscheduledFromAllDayChip called but initial trigger was not all-day chip.')
         }
 
-        const upperSortId = generateSortId(planner.events, -1);
+        const upperSortId = generateSortId(planner.eventIds, -1);
 
         let unscheduledEvent = mapCalendarEventToPlannerEvent(
             initialEventState.event.event,
             triggerDatestamp,
-            planner.events,
+            planner.eventIds,
             undefined,
             upperSortId
         );

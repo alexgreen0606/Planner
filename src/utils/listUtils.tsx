@@ -9,6 +9,7 @@ import { uuid } from "expo-modules-core";
 // 1. Sort Functions
 // ==================
 
+// DEPRECATED
 /**
  * Generates a list item sort ID relative to another reference item in the list.
  * 
@@ -59,6 +60,7 @@ export function generateSortId(
     throw new Error(`generateSortId: No item exists in the list with sort ID ${referenceSortId}`);
 }
 
+// DEPRECATED
 /**
  * Sorts a list and optionally saves a given item to the list.
  * 
@@ -145,6 +147,6 @@ export function generateCheckboxIconConfig<T extends TListItem>(
 * @param item The item to validate.
 * @returns True if the item is a textfield, else false.
 */
-export function isItemTextfield(item: TListItem): boolean {
-    return [EItemStatus.NEW, EItemStatus.EDIT].includes(item.status);
+export function isItemTextfield(item: TListItem | undefined): boolean {
+    return item ? [EItemStatus.NEW, EItemStatus.EDIT].includes(item.status) : false;
 }

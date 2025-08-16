@@ -15,7 +15,7 @@ import { DateTime } from 'luxon';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
 import { IconType } from '../icon';
-import SortableList from './components/SortableList';
+import DragAndDropList from './components/DragAndDropList';
 import { ToolbarIcon } from './components/ListToolbar';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
 
@@ -137,7 +137,7 @@ const Countdowns = () => {
         <View className='flex-1'>
 
             {/* Countdown List */}
-            <SortableList<ICountdown>
+            <DragAndDropList<ICountdown>
                 listId={EStorageKey.COUNTDOWN_LIST_KEY}
                 fillSpace
                 disableDrag

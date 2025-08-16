@@ -9,7 +9,7 @@ export interface ToolbarIcon<T extends TListItem> extends GenericIconProps<T> {
     customIcon?: React.ReactNode;
 }
 
-type ListToolbarProps<T extends TListItem> = {
+type TListToolbarProps<T extends TListItem> = {
     item: T;
     iconSets: ToolbarIcon<T>[][];
     accessoryKey?: string;
@@ -19,7 +19,7 @@ const ListToolbar = <T extends TListItem>({
     item,
     iconSets,
     accessoryKey
-}: ListToolbarProps<T>) =>
+}: TListToolbarProps<T>) =>
     <InputAccessoryView nativeID={accessoryKey}>
         <View
             className='gap-4 w-screen flex-row justify-evenly'

@@ -16,7 +16,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 import { ToolbarIcon } from './components/ListToolbar';
-import SortableList from './components/SortableList';
+import DragAndDropList from './components/DragAndDropList';
 import { selectableColors } from '@/lib/constants/colors';
 
 // ✅ 
@@ -238,7 +238,7 @@ const SortedFolder = ({
     // =======
 
     return (
-        <SortableList<IFolderItem>
+        <DragAndDropList<IFolderItem>
             listId={folderId}
             items={SortedItems.items}
             fillSpace
