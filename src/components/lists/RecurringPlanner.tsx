@@ -1,6 +1,6 @@
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
@@ -40,7 +40,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     }, [textfieldItem?.startTime]);
 
     const isWeekdayPlanner = plannerKey === ERecurringPlannerKey.WEEKDAYS;
-    const listType = isWeekdayPlanner ? EListType.RECURRING_WEEKDAY : EListType.RECURRING;
+    const listType = isWeekdayPlanner ? EListItemType.RECURRING_WEEKDAY : EListItemType.RECURRING;
 
     const toolbarIcons: ToolbarIcon<IRecurringEvent>[][] = [[{
         type: 'clock' as TIconType,

@@ -1,5 +1,5 @@
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import * as Calendar from 'expo-calendar';
@@ -19,6 +19,6 @@ export function mapCalendarEventToCountdown(calEvent: Calendar.Event, sortId?: n
         listId: EStorageKey.COUNTDOWN_LIST_KEY,
         status: EItemStatus.STATIC,
         startIso: calEvent.startDate as string,
-        listType: EListType.COUNTDOWN
+        listType: EListItemType.COUNTDOWN
     }
 }

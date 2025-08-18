@@ -2,11 +2,12 @@ import { userAccessAtom } from "@/atoms/userAccess";
 import { NULL } from "@/lib/constants/generic";
 import { PLANNER_SET_MODAL_PATHNAME, TIME_MODAL_PATHNAME } from "@/lib/constants/pathnames";
 import { EAccess } from "@/lib/enums/EAccess";
+import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListType } from "@/lib/enums/EListType";
+import { EListItemType } from "@/lib/enums/EListType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
-import { IFolder } from "@/lib/types/checklists/IFolder";
+import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
 import { CalendarProvider } from "@/providers/CalendarProvider";
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
@@ -18,16 +19,15 @@ import { useMMKV, useMMKVObject } from "react-native-mmkv";
 
 // ✅ 
 
-const initialRootFolder: IFolder = {
+const initialRootFolder: IFolderItem = {
     id: EStorageKey.ROOT_FOLDER_KEY,
     listId: NULL,
-    folderIds: [],
-    listIds: [],
+    itemIds: [],
     value: 'Lists',
-    sortId: 1,
     platformColor: 'systemBlue',
     status: EItemStatus.STATIC,
-    listType: EListType.FOLDER
+    type: EFolderItemType.FOLDER,
+    listType: EListItemType.FOLDER_ITEM
 };
 
 /**
@@ -36,8 +36,8 @@ const initialRootFolder: IFolder = {
 const AccessGuard = () => {
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
 
-    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
-    const [rootFolder, setRootFolder] = useMMKVObject<IFolder>(EStorageKey.ROOT_FOLDER_KEY, storage);
+    const storage = useMMKV({ id: EStorageId.FOLDER });
+    const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(EStorageKey.ROOT_FOLDER_KEY, storage);
 
     const [calendarStatus, requestCalendarPermissions] = Calendar.useCalendarPermissions();
 

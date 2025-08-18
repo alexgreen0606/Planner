@@ -1,5 +1,5 @@
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListType } from "@/lib/enums/EListType";
+import { EListItemType } from "@/lib/enums/EListType";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { Event } from "expo-calendar";
 import { generateSortIdByTime } from "../plannerUtils";
@@ -35,7 +35,7 @@ export function mapCalendarEventToPlannerEvent(event: Event, datestamp: string, 
         calendarId: event.id,
         value: event.title,
         status: EItemStatus.STATIC,
-        listType: EListType.PLANNER,
+        listType: EListItemType.PLANNER,
         listId: datestamp,
         timeConfig: {
             startIso: event.startDate as string,

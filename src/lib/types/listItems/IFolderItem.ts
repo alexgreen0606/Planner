@@ -5,5 +5,5 @@ import { IColoredListItem } from "./core/IColoredListItem";
 
 export interface IFolderItem extends IColoredListItem {
     type: EFolderItemType;
-    childrenCount: number;
+    itemIds: string[];
 }

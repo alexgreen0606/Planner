@@ -3,9 +3,8 @@ import SortedFolder from '@/components/lists/Folder';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { IFolder } from '@/lib/types/checklists/IFolder';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
-import { getFolderById } from '@/storage/checklistsStorage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { PlatformColor, View } from 'react-native';
@@ -20,13 +19,13 @@ type FolderParams = {
 };
 
 const FolderScreen = () => {
-  const { folderId, prevFolderName, prevFolderId } = useLocalSearchParams<FolderParams>();
+  const { folderId, prevFolderName } = useLocalSearchParams<FolderParams>();
   const router = useRouter();
 
   const [parentClickTrigger, setParentClickTrigger] = useState(0);
 
-  const storage = useMMKV({ id: EStorageId.CHECKLISTS });
-  const [folder] = useMMKVObject<IFolder>(folderId, storage);
+  const storage = useMMKV({ id: EStorageId.FOLDER });
+  const [folder] = useMMKVObject<IFolderItem>(folderId, storage);
 
   // =======================
   // 1. Event Handlers
@@ -60,13 +59,11 @@ const FolderScreen = () => {
               label: prevFolderName,
               onClick: () => setParentClickTrigger(curr => curr + 1)
             }}
-            itemType={EFolderItemType.FOLDER}
           />
         }
       >
         <SortedFolder
-          parentFolderData={prevFolderId !== NULL ? getFolderById(prevFolderId)! : undefined}
-          handleOpenItem={handleOpenItem}
+          onOpenItem={handleOpenItem}
           parentClickTrigger={parentClickTrigger}
         />
       </ScrollContainerProvider>

@@ -1,7 +1,7 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import usePlanner from '@/hooks/usePlanner';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
@@ -35,7 +35,7 @@ const TodayPlanner = () => {
         <DragAndDropList<IPlannerEvent>
             fillSpace
             listId={todayDatestamp}
-            listType={EListType.EVENT}
+            listType={EListItemType.EVENT}
             hideKeyboard={isTimeModalOpen}
             isLoading={isLoading}
             storage={eventStorage}
@@ -50,7 +50,7 @@ const TodayPlanner = () => {
             onValueChange={updatePlannerEventValueWithSmartTimeDetect}
             onIndexChange={updatePlannerEventIndexWithChronologicalCheck}
             onGetRightIconConfig={generatePlannerEventTimeIconConfig}
-            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item, EListType.EVENT), onToggleScheduleItemDelete)}
+            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
     );
 };

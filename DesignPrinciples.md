@@ -26,7 +26,7 @@ When declaring, follow this order (exported after local):
 2. `Types`
 2. `Helper Functions`
 1. `Special Functions`
-6. `Upsert Functions`
+6. `Update Functions`
 4. `Getter Functions`
 4. `Delete Functions`
 6. `Generation Functions`

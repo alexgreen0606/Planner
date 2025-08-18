@@ -8,7 +8,7 @@ import { NULL } from "@/lib/constants/generic";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListType } from "@/lib/enums/EListType";
+import { EListItemType } from "@/lib/enums/EListType";
 import { ETimeSelectorMode } from "@/lib/enums/ETimeSelectorMode";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
@@ -391,7 +391,7 @@ const TimeModal = () => {
                     id: event.id,
                     calendarId: event.id,
                     sortId: generateSortId(planner.eventIds, -1),
-                    listType: EListType.PLANNER,
+                    listType: EListItemType.PLANNER,
                     listId: isoToDatestamp(startIso),
                     value: title,
                     timeConfig: { allDay, startIso, endIso },
@@ -422,7 +422,7 @@ const TimeModal = () => {
                 savedEvent = {
                     id: "PLACEHOLDER",
                     sortId: initialState.landingSortId,
-                    listType: EListType.PLANNER,
+                    listType: EListItemType.PLANNER,
                     listId: isoToDatestamp(startIso),
                     value: title,
                     timeConfig: { allDay, startIso, endIso },
@@ -529,7 +529,7 @@ const TimeModal = () => {
         return {
             id,
             sortId,
-            listType: EListType.PLANNER,
+            listType: EListItemType.PLANNER,
             listId,
             value: title,
             timeConfig: { allDay, startIso, endIso },

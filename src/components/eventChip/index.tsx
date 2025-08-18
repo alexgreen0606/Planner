@@ -1,4 +1,4 @@
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
@@ -41,7 +41,7 @@ const EventChip = ({
     const router = useRouter();
 
     const isPendingDelete = useMemo(() =>
-        getDeletingItems(EListType.PLANNER).some(deleteItem =>
+        getDeletingItems(EListItemType.PLANNER).some(deleteItem =>
             // This deleting item is the chip's event
             deleteItem.id === id &&
             // This deleting item is not from today

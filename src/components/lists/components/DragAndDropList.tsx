@@ -3,7 +3,7 @@ import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainer } from '@/providers/ScrollContainer';
@@ -25,13 +25,11 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     listId: string;
     toolbarIconSet?: ToolbarIcon<T>[][];
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
-    listType: EListType;
+    listType: EListItemType;
     hideKeyboard?: boolean;
     isLoading?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
-
-    // NEW
     storage: MMKV;
     defaultStorageObject?: S;
     onCreateItem: (listId: string, index: number) => void;
@@ -39,7 +37,7 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     onValueChange?: (newValue: string, prev: T) => T;
     onIndexChange?: (newIndex: number, prev: T) => void;
     onSaveToExternalStorage?: (item: T) => void;
-
+    onContentClick?: (item: T) => void;
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
@@ -126,9 +124,10 @@ const DragAndDropList = <T extends TListItem, S = T>({
         cancelAnimation(scrollOffset);
         isAutoScrolling.value = false;
 
-        if (onIndexChange && item) {
+        if (!disableDrag && onIndexChange && item) {
             runOnJS(onIndexChange)(newIndex, item);
         }
+
         draggingRowId.value = null;
     }
 
@@ -178,7 +177,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             hideKeyboard={Boolean(hideKeyboard)}
-                            listType={listType}
                             itemId={id}
                             storage={storage}
                             dragConfig={{

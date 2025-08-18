@@ -1,7 +1,7 @@
 import { pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { deleteChecklistItems } from '@/storage/checklistsStorage';
 import { deleteRecurringEventsHideWeekday, deleteRecurringWeekdayEvents } from '@/storage/recurringPlannerStorage';
@@ -12,16 +12,16 @@ import React, { createContext, useCallback, useContext, useEffect, useRef } from
 // ✅ 
 
 type DeleteSchedulerContextType<T extends TListItem> = {
-    handleGetDeletingItemsByType: (deleteFunctionKey: EListType) => T[];
-    handleGetIsItemDeleting: (item: T | undefined, deleteFunctionKey: EListType) => boolean;
+    handleGetDeletingItemsByType: (deleteFunctionKey: EListItemType) => T[];
+    handleGetIsItemDeleting: (item: T | undefined) => boolean;
     handleToggleScheduleItemDelete: (item: T) => void;
 };
 
-const deletionMap: Partial<Record<EListType, (items: any[]) => Promise<void> | void>> = {
-    [EListType.EVENT]: deletePlannerEventsFromStorageAndCalendar,
-    [EListType.RECURRING]: deleteRecurringEventsHideWeekday,
-    [EListType.RECURRING_WEEKDAY]: deleteRecurringWeekdayEvents,
-    [EListType.CHECKLIST]: deleteChecklistItems
+const deletionMap: Partial<Record<EListItemType, (items: any[]) => Promise<void> | void>> = {
+    [EListItemType.EVENT]: deletePlannerEventsFromStorageAndCalendar,
+    [EListItemType.RECURRING]: deleteRecurringEventsHideWeekday,
+    [EListItemType.RECURRING_WEEKDAY]: deleteRecurringWeekdayEvents,
+    [EListItemType.CHECKLIST]: deleteChecklistItems
 };
 
 const DeleteSchedulerContext = createContext<DeleteSchedulerContextType<any> | undefined>(undefined);
@@ -37,13 +37,13 @@ export function DeleteSchedulerProvider<T extends TListItem>({ children }: { chi
     // 1. Exposed Functions
     // =====================
 
-    const handleGetDeletingItemsByType = useCallback((deleteFunctionKey: EListType): T[] => {
+    const handleGetDeletingItemsByType = useCallback((deleteFunctionKey: EListItemType): T[] => {
         const typeMap = pendingDeleteMap[deleteFunctionKey] ?? {};
         return Object.values(typeMap);
     }, [pendingDeleteMap]);
 
-    const handleGetIsItemDeleting = useCallback((item: T | undefined, deleteFunctionKey: EListType) => {
-        return item ? Boolean(pendingDeleteMap[deleteFunctionKey]?.[item?.id]) : false;
+    const handleGetIsItemDeleting = useCallback((item: T | undefined) => {
+        return item ? Boolean(pendingDeleteMap[item.listType]?.[item?.id]) : false;
     }, [pendingDeleteMap])
 
     const handleToggleScheduleItemDelete = useCallback(async (item: T) => {
@@ -95,7 +95,7 @@ export function DeleteSchedulerProvider<T extends TListItem>({ children }: { chi
                 Object.entries(pendingDeleteMap).forEach(([deleteFunctionKey, itemsMap]) => {
                     if (itemsMap && Object.keys(itemsMap).length > 0) {
                         const items = Object.values(itemsMap);
-                        const deleteFn = deletionMap[deleteFunctionKey as EListType];
+                        const deleteFn = deletionMap[deleteFunctionKey as EListItemType];
 
                         deleteFn?.(items);
                     }

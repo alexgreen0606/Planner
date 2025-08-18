@@ -2,7 +2,6 @@ import ButtonText from '@/components/text/ButtonText';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import { useFolderItem } from '@/hooks/useFolderItem';
 import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
-import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { PlatformColor, TextInput, View } from 'react-native';
@@ -11,7 +10,6 @@ import { PlatformColor, TextInput, View } from 'react-native';
 
 type FolderItemBannerProps = {
     itemId: string;
-    itemType: EFolderItemType;
     backButtonConfig: {
         label: string | undefined;
         hide?: boolean;
@@ -21,20 +19,16 @@ type FolderItemBannerProps = {
 
 const FolderItemBanner = ({
     itemId,
-    itemType,
     backButtonConfig
 }: FolderItemBannerProps) => {
     const router = useRouter();
 
     const {
-        folderItem: folder,
-        editingValue,
-        handleBeginEditValue,
-        handleValueChange,
-        handleSaveValue
-    } = useFolderItem(itemId, itemType);
-
-    const isItemEditing = editingValue !== null;
+        item: folder,
+        isEditingValue,
+        handleToggleEditValue,
+        handleEditValue
+    } = useFolderItem(itemId);
 
     return (
         <View
@@ -43,14 +37,13 @@ const FolderItemBanner = ({
         >
 
             {/* Name */}
-            {isItemEditing ? (
+            {isEditingValue ? (
                 <TextInput
                     autoFocus
-                    value={editingValue}
-                    onChangeText={handleValueChange}
+                    value={folder?.value}
+                    onChangeText={handleEditValue}
                     cursorColor={PlatformColor('systemBlue')}
-                    onSubmitEditing={handleSaveValue}
-                    onBlur={handleSaveValue}
+                    onBlur={handleToggleEditValue}
                     className='w-full bg-transparent'
                     style={[
                         textStyles.pageLabel,
@@ -60,7 +53,7 @@ const FolderItemBanner = ({
             ) : (
                 <CustomText
                     variant='pageLabel'
-                    onPress={handleBeginEditValue}
+                    onPress={handleToggleEditValue}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                 >

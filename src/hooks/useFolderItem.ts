@@ -1,63 +1,35 @@
-import { EFolderItemType } from '@/lib/enums/EFolderItemType';
-import { EItemStatus } from '@/lib/enums/EItemStatus';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { getFolderItemById, upsertFolderItem } from '@/storage/checklistsStorage';
-import { useCallback, useEffect, useState } from 'react';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import { useState } from 'react';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-// ✅ 
+//
 
 export const useFolderItem = (
-    itemId: string,
-    itemType: EFolderItemType
+    itemId: string
 ) => {
-    const [editValue, setEditValue] = useState<string | null>(null);
-    const [item, setItem] = useState<IFolderItem | null>(
-        getFolderItemById(itemId, itemType)
-    );
 
-    const handleBeginEditValue = useCallback(() => {
-        if (!item) return;
-        setEditValue(item.value);
-    }, [item]);
+    const [isEditingValue, setIsEditingValue] = useState(false);
 
-    const handleValueChange = useCallback((text: string) => {
-        setEditValue(text);
-    }, []);
+    const storage = useMMKV({ id: EStorageId.FOLDER });
+    const [item, setItem] = useMMKVObject<IFolderItem | null>(itemId, storage);
 
-    const handleSaveValue = useCallback(() => {
-        if (!item || !editValue) return;
+    function handleToggleEditValue() {
+        setIsEditingValue(prev => !prev);
+    }
 
-        upsertFolderItem({
-            ...item,
-            value: editValue,
-            status: EItemStatus.STATIC
+    function handleEditValue(value: string) {
+        setItem((prev) => {
+            if (!prev) return prev;
+            return { ...prev, value };
         });
-        setEditValue(null);
-    }, [item, editValue]);
-
-    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
-
-    // Update the item when its storage record changes.
-    useMMKVListener((key) => {
-        if (key === itemId) {
-            setItem(getFolderItemById(itemId, itemType));
-        }
-    }, storage);
-
-    // Fetch the new folder item anytime the hook params change.
-    useEffect(() => {
-        const currentFolder = getFolderItemById(itemId, itemType);
-        setItem(currentFolder);
-        setEditValue(null);
-    }, [itemId, itemType]);
+    }
 
     return {
-        folderItem: item,
-        editingValue: editValue,
-        handleBeginEditValue,
-        handleValueChange,
-        handleSaveValue
+        item,
+        itemIds: item?.itemIds ?? [],
+        isEditingValue,
+        handleEditValue,
+        handleToggleEditValue
     };
 };

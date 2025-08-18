@@ -65,18 +65,20 @@ export async function upsertEventToStorageAndCalendarCheckRecurring(event: IPlan
 
 export function getPlannerFromStorageByDatestamp(datestamp: string): TPlanner {
     const eventsString = plannerStorage.getString(datestamp);
-    if (eventsString) {
-        return JSON.parse(eventsString);
+    if (!eventsString) {
+        return generateEmptyPlanner(datestamp);
     }
-    return generateEmptyPlanner(datestamp);
+
+    return JSON.parse(eventsString);
 }
 
 export function getPlannerEventFromStorageById(id: string): IPlannerEvent {
     const eventsString = eventStorage.getString(id);
-    if (eventsString) {
-        return JSON.parse(eventsString);
+    if (!eventsString) {
+        throw new Error(`getPlannerEventFromStorageById: No event found in storage with ID ${id}`);
     }
-    throw new Error(`getPlannerEventFromStorageById: No event found in storage with ID ${id}`);
+
+    return JSON.parse(eventsString);
 }
 
 // ====================

@@ -1,12 +1,11 @@
 import GenericIcon from "@/components/icon";
 import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
-import { EListType } from "@/lib/enums/EListType";
+import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
-import { generateSortId } from "@/utils/listUtils";
 import { useEffect, useMemo } from "react";
 import { PlatformColor, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
@@ -21,7 +20,6 @@ import Animated, {
 } from "react-native-reanimated";
 import ListItemTextfield from "./ListItemTextfield";
 import { ToolbarIcon } from "./ListToolbar";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
 
 //
 
@@ -44,16 +42,13 @@ type TListItemProps<T extends TListItem> = {
         onDragStart: (rowId: string, initialIndex: number) => void;
         onDragEnd: (newValue: number, prev?: T) => void;
     },
-    listType: EListType;
     toolbarIconSet?: ToolbarIcon<T>[][];
-
-    // NEW
     storage: MMKV;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string, prev: T) => T;
     onSaveToExternalStorage?: (item: T) => void;
-
+    onContentClick?: (item: T) => void;
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
@@ -92,11 +87,11 @@ const ListItem = <T extends TListItem>({
     toolbarIconSet,
     upperAutoScrollBound,
     lowerAutoScrollBound,
-    listType,
     hideKeyboard,
     onValueChange,
     onCreateItem,
     onDeleteItem,
+    onContentClick,
     onSaveToExternalStorage,
     onGetLeftIconConfig,
     onGetRightIconConfig,
@@ -114,7 +109,7 @@ const ListItem = <T extends TListItem>({
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
     const isPendingDelete = useMemo(
-        () => customOnGetIsDeleting?.(item) ?? onGetIsItemDeleting(item, listType),
+        () => customOnGetIsDeleting?.(item) ?? onGetIsItemDeleting(item),
         [onGetIsItemDeleting, customOnGetIsDeleting]
     );
 
@@ -187,7 +182,12 @@ const ListItem = <T extends TListItem>({
         .maxDuration(200)
         .onEnd(() => {
             if (!item || isPendingDelete) return;
-            runOnJS(setItem)({ ...item, status: EItemStatus.EDIT });
+            if (!onContentClick) {
+                runOnJS(setItem)({ ...item, status: EItemStatus.EDIT });
+                return;
+            }
+
+            runOnJS(onContentClick)(item);
         });
 
     const longPressGesture = Gesture.LongPress()

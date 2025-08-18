@@ -19,7 +19,7 @@ type DayBannerProps = {
     collapsed: boolean;
     eventChipSets: TCalendarEventChip[][];
     onEditTitle: (title: string) => void;
-    onEndEditTitle: () => void;
+    onToggleEditTitle: () => void;
     onToggleCollapsed: () => void;
 };
 
@@ -30,7 +30,7 @@ const DayBanner = ({
     collapsed,
     eventChipSets,
     onEditTitle,
-    onEndEditTitle,
+    onToggleEditTitle,
     onToggleCollapsed
 }: DayBannerProps) => {
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
@@ -62,7 +62,7 @@ const DayBanner = ({
                             />
                         )}
                         {isTomorrow && !isEditingTitle && !planner.title && (
-                            <CustomText variant='plannerCardSoftDetail'>
+                            <CustomText onPress={onToggleEditTitle} variant='plannerCardSoftDetail'>
                                 Tomorrow
                             </CustomText>
                         )}
@@ -72,7 +72,7 @@ const DayBanner = ({
                                 value={planner.title}
                                 editable={isEditingTitle}
                                 onChangeText={onEditTitle}
-                                onBlur={onEndEditTitle}
+                                onBlur={onToggleEditTitle}
                                 style={textStyles.plannerCardSoftDetail}
                             />
                         ) : (
@@ -80,6 +80,7 @@ const DayBanner = ({
                                 variant='plannerCardSoftDetail'
                                 ellipsizeMode='tail'
                                 numberOfLines={1}
+                                onPress={onToggleEditTitle}
                             >
                                 {planner.title}
                             </CustomText>

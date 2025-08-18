@@ -1,73 +1,57 @@
 import { GenericIconProps } from '@/components/icon';
 import CustomText from '@/components/text/CustomText';
-import useSortedList from '@/hooks/useSortedList';
+import { useFolderItem } from '@/hooks/useFolderItem';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { IFolder } from '@/lib/types/checklists/IFolder';
-import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { deleteFolderItemAndChildren, getFolderById, getFolderItemsByParentFolder, upsertFolderItem } from '@/storage/checklistsStorage';
-import { generateSortId } from '@/utils/listUtils';
+import { deleteFolderItemAndChildren, generateNewFolderItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
-import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
-import { ToolbarIcon } from './components/ListToolbar';
+import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
-import { selectableColors } from '@/lib/constants/colors';
+import { ToolbarIcon } from './components/ListToolbar';
 
-// ✅ 
+//
 
-type SortedFolderProps = {
-    handleOpenItem: (id: string, type: EFolderItemType) => void;
+type ISortedFolderProps = {
     parentClickTrigger: number;
-    parentFolderData?: IFolder;
+    onOpenItem: (id: string, type: EFolderItemType) => void;
 };
 
 const SortedFolder = ({
-    handleOpenItem,
     parentClickTrigger,
-    parentFolderData,
-}: SortedFolderProps) => {
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IFolderItem>();
+    onOpenItem,
+}: ISortedFolderProps) => {
+
     const { folderId } = useLocalSearchParams<{ folderId: string }>();
     const router = useRouter();
 
+    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IFolderItem>();
+
+    const { item: folder, itemIds } = useFolderItem(folderId);
+
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
 
-    const getFolderItemsMemoized = useCallback(getFolderItemsByParentFolder, []);
+    const storage = useMMKV({ id: EStorageId.FOLDER });
 
-    const storage = useMMKV({ id: EStorageId.CHECKLISTS });
-    const [folder] = useMMKVObject<IFolder>(folderId, storage);
-
-    const listType = EListType.FOLDER;
+    // TEXTFIELD ITEM status
     const isTransferMode = textfieldItem?.status === EItemStatus.TRANSFER;
-
-    // Rebuild the list when one of the folder's items changes.
-    useMMKVListener((key) => {
-        if (!storage.contains(key)) return;
-        if (
-            folder?.listIds.includes(key) ||
-            folder?.folderIds.includes(key)
-        ) {
-            SortedItems.refetchItems();
-        }
-    }, storage);
 
     // Handle clicking of the parent folder.
     useEffect(() => {
-        if (!folder) return;
-        if (parentClickTrigger > 0) {
+        if (!folder || parentClickTrigger === 0) return;
 
-            if (isTransferMode) {
-                handleItemTransfer();
-            } else if (folder.listId) {
-                router.back();
-            }
+        if (isTransferMode) {
+            handleTransferToParent();
+            return;
         }
+
+        router.back();
     }, [parentClickTrigger]);
 
     // ==================
@@ -78,57 +62,40 @@ const SortedFolder = ({
         setTextfieldItem({ ...item, status: EItemStatus.TRANSFER });
     }
 
-    function handleItemTransfer(destination?: IFolderItem) {
-        if (!destination && !parentFolderData?.id || !textfieldItem) return;
-        const destinationId = destination ? destination.id : parentFolderData?.id;
+    function handleTransferToParent() {
+        // grab the parent folder list (from this item's listId)
 
-        if (!destinationId) return;
+        // insert the ID of the transfer item to the back of the list
 
-        let destinationFolder = parentFolderData!;
-        if (destination) {
-            const foundFolder = getFolderById(destination.id);
-            if (!foundFolder) return;
-            destinationFolder = foundFolder;
-        }
+        // save the list to folderStorage
 
-        // Transfer the item to the destination
-        const destinationItems = getFolderItemsByParentFolder(destinationFolder);
-        upsertFolderItem({
-            ...textfieldItem,
-            status: EItemStatus.STATIC,
-            listId: destinationId,
-            sortId: generateSortId(destinationItems, -1)
-        });
-        setTextfieldItem(null);
+        // chnage the item's listID and status STATIC in itemStorage
+    }
+
+    function handleTransferToChild(destinationItem: IFolderItem) {
+        // add the transfer item ID to the back of its itemIds
+
+        // save the destination folder to folderStorage
+
+        // update the transfer item to STATIC and give it the new listId
     }
 
     function handleItemClick(item: IFolderItem) {
         if (isTransferMode) {
             if (item.id === textfieldItem.id) {
-                setTextfieldItem({ ...textfieldItem, status: EItemStatus.EDIT });
+                // TODO: set textfield item to EDIT mode in storage
             } else if (item.type === EFolderItemType.FOLDER) {
-                handleItemTransfer(item);
+                handleTransferToChild(item);
             }
             return;
-        } else if (textfieldItem) {
-            SortedItems.saveItem({ ...textfieldItem, status: EItemStatus.STATIC });
         }
-        handleOpenItem(item.id, item.type);
+
+        onOpenItem(item.id, item.type);
     }
 
     // ====================
     // 2. Helper Functions
     // ====================
-
-    function initializeEmptyFolder(newItem: TListItem) {
-        return {
-            ...newItem,
-            childrenCount: 0,
-            listId: folderId,
-            type: EFolderItemType.FOLDER,
-            platformColor: 'systemBrown',
-        }
-    }
 
     function isItemTransfering(item: IFolderItem) {
         return item.status === EItemStatus.TRANSFER;
@@ -143,7 +110,8 @@ const SortedFolder = ({
     }
 
     function generateToolbarIcons(): ToolbarIcon<IFolderItem>[][] {
-        const item: IFolderItem = textfieldItem ?? initializeEmptyFolder({ id: '1', value: '', sortId: 1, status: EItemStatus.STATIC, listId: folderId, listType: EListType.FOLDER })
+        return [];
+        const item: IFolderItem = textfieldItem;
         const isNew = textfieldItem?.status === EItemStatus.NEW;
 
         return isNew ? [
@@ -168,10 +136,11 @@ const SortedFolder = ({
             [{
                 onClick: () => {
                     const title = `Delete ${item.type}?`;
+                    const hasNestedItems = item.itemIds.length > 0;
 
                     let message = '';
-                    if (!!item.childrenCount) {
-                        message += `This ${item.type} has ${item.childrenCount} items. Deleting is irreversible and will lose all inner contents.`;
+                    if (hasNestedItems) {
+                        message += `This ${item.type} has ${item.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
                     } else {
                         message += `Would you like to delete this ${item.type}?`;
                     }
@@ -189,10 +158,10 @@ const SortedFolder = ({
                                 }
                             },
                             {
-                                text: !!item.childrenCount ? 'Force Delete' : 'Delete',
+                                text: hasNestedItems ? 'Force Delete' : 'Delete',
                                 style: 'destructive',
                                 onPress: () => {
-                                    deleteFolderItemAndChildren(item.id, item.type);
+                                    deleteFolderItemAndChildren(item);
                                     setTextfieldItem(null);
                                     setIsDeleteAlertOpen(false);
                                 }
@@ -220,34 +189,14 @@ const SortedFolder = ({
         return item.platformColor;
     }
 
-    // ===================
-    // 3. List Generation
-    // ===================
-
-    const SortedItems = useSortedList<IFolderItem, IFolder>({
-        storageId: EStorageId.CHECKLISTS,
-        storageKey: folderId,
-        onGetItemsFromStorageObject: getFolderItemsMemoized,
-        onSaveItemToStorage: upsertFolderItem,
-        onInitializeListItem: initializeEmptyFolder,
-        listType
-    });
-
-    // =======
-    // 4. UI
-    // =======
-
     return (
         <DragAndDropList<IFolderItem>
-            listId={folderId}
-            items={SortedItems.items}
             fillSpace
-            listType={listType}
-            isLoading={SortedItems.isLoading}
-            onDragEnd={SortedItems.saveItem}
+            listId={folderId}
+            itemIds={itemIds}
+            storage={storage}
+            listType={EListItemType.FOLDER_ITEM}
             toolbarIconSet={generateToolbarIcons()}
-            onContentClick={handleItemClick}
-            onSaveTextfieldAndCreateNew={SortedItems.saveTextfieldAndCreateNew}
             hideKeyboard={isDeleteAlertOpen || isTransferMode}
             onGetRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
                 (isTransferMode && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
@@ -260,7 +209,7 @@ const SortedFolder = ({
                                 'tertiaryLabel' : 'secondaryLabel')
                         }}
                     >
-                        {item.childrenCount}
+                        {item.itemIds.length}
                     </CustomText>
             })}
             onGetLeftIconConfig={item => ({
@@ -268,12 +217,16 @@ const SortedFolder = ({
                     type: getIconType(item),
                     platformColor: getIconPlatformColor(item)
                 },
-                onClick: SortedItems.toggleItemEdit
+                onClick: () => null // TODO: set the item to EDIT mode
             })}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",
                 className: 'flex-1'
             }}
+            onDeleteItem={deleteFolderItemAndChildren}
+            onCreateItem={generateNewFolderItemAndSaveToStorage}
+            onContentClick={handleItemClick}
+            onIndexChange={updateListItemIndex}
         />
     );
 };

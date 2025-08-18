@@ -3,7 +3,7 @@ import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
 import useSortedList from '@/hooks/useSortedList';
 import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
@@ -35,7 +35,7 @@ const Countdowns = () => {
 
     const getCountownsMemoized = useCallback(getAllFutureAndCurrentCountdowns, []);
 
-    const listType = EListType.COUNTDOWN;
+    const listType = EListItemType.COUNTDOWN;
 
     const toolbarIcons: ToolbarIcon<ICountdown>[][] = [
         [{

@@ -4,7 +4,7 @@ import { useCalendarData } from '@/hooks/useCalendarData';
 import usePlanner from '@/hooks/usePlanner';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
@@ -68,7 +68,7 @@ const PlannerCard = ({
     const [collapsed, setCollapsed] = useState(true);
 
     const customGetIsEventDeleting = useCallback((planEvent: IPlannerEvent | undefined) =>
-        planEvent ? onGetDeletingItems(EListType.EVENT).some(deleteItem =>
+        planEvent ? onGetDeletingItems(EListItemType.EVENT).some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // and it's not from today
@@ -152,7 +152,7 @@ const PlannerCard = ({
                     collapsed={collapsed}
                     isEditingTitle={isEditingTitle}
                     onEditTitle={onEditTitle}
-                    onEndEditTitle={onToggleEditTitle}
+                    onToggleEditTitle={onToggleEditTitle}
                     onToggleCollapsed={handleToggleCollapsed}
                 />
             }
@@ -228,7 +228,7 @@ const PlannerCard = ({
             <DragAndDropList<IPlannerEvent>
                 listId={datestamp}
                 itemIds={visibleEventIds}
-                listType={EListType.EVENT}
+                listType={EListItemType.EVENT}
                 storage={eventStorage}
                 hideKeyboard={isTimeModalOpen}
                 emptyLabelConfig={{

@@ -1,13 +1,14 @@
 // ✅ 
 
-export enum EListType {
-    CHECKLIST = 'CHECKLIST',
+export enum EListItemType {
+    CHECKLIST = 'CHECKLIST', // TODO: remove
+
     RECURRING = 'RECURRING',
-    // PLANNER = 'PLANNER',
     RECURRING_WEEKDAY = 'RECURRING_WEEKDAY',
     COUNTDOWN = 'COUNTDOWN',
     PLANNER_SET = 'PLANNER_SET',
-    FOLDER = 'FOLDER',
+    FOLDER_ITEM = 'FOLDER_ITEM',
     BIRTHDAY = 'BIRTHDAY',
-    EVENT = 'EVENT'
+    EVENT = 'EVENT',
+    CHECKLIST_ITEM = 'CHECKLIST_ITEM'
 }

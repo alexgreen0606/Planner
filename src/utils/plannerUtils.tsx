@@ -5,7 +5,7 @@ import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
 import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListType } from '@/lib/enums/EListType';
+import { EListItemType } from '@/lib/enums/EListType';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { IPlannerEvent, ITimeConfig, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
@@ -222,7 +222,7 @@ export function syncPlannerWithRecurring(
             id: uuid.v4(),
             listId: datestamp,
             status: EItemStatus.STATIC,
-            listType: EListType.EVENT,
+            listType: EListItemType.EVENT,
             recurringId: recEvent.id,
             value: recEvent.value
         };
@@ -623,7 +623,7 @@ export function generateNewPlannerEventAndSaveToStorage(datestamp: string, index
         value: "",
         listId: datestamp,
         status: EItemStatus.NEW,
-        listType: EListType.EVENT
+        listType: EListItemType.EVENT
     };
     savePlannerEventToStorage(plannerEvent);
 
