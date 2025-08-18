@@ -13,7 +13,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { DateTime } from 'luxon';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
-import { IconType } from '../icon';
+import { TIconType } from '../icon';
 import { ToolbarIcon } from './components/ListToolbar';
 import DragAndDropList from './components/DragAndDropList';
 
@@ -43,7 +43,7 @@ const RecurringPlanner = ({ plannerKey }: SortedRecurringPlannerProps) => {
     const listType = isWeekdayPlanner ? EListType.RECURRING_WEEKDAY : EListType.RECURRING;
 
     const toolbarIcons: ToolbarIcon<IRecurringEvent>[][] = [[{
-        type: 'clock' as IconType,
+        type: 'clock' as TIconType,
         onClick: () => { textfieldItem && handleShowEventTime(textfieldItem) },
         customIcon: textfieldItem?.startTime || showTimeInToolbarForUntimedEvent ? (
             <DateTimePicker

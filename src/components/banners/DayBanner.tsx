@@ -1,15 +1,14 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
+import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { savePlannerToStorage } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { useAtomValue } from 'jotai';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import EventChipSets from '../eventChip/EventChipSet';
-import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 
 // ✅ 
 
@@ -19,6 +18,7 @@ type DayBannerProps = {
     isEditingTitle: boolean;
     collapsed: boolean;
     eventChipSets: TCalendarEventChip[][];
+    onEditTitle: (title: string) => void;
     onEndEditTitle: () => void;
     onToggleCollapsed: () => void;
 };
@@ -29,12 +29,11 @@ const DayBanner = ({
     isEditingTitle,
     collapsed,
     eventChipSets,
-    onToggleCollapsed,
-    onEndEditTitle
+    onEditTitle,
+    onEndEditTitle,
+    onToggleCollapsed
 }: DayBannerProps) => {
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
-
-    const [newPlannerTitle, setNewPlannerTitle] = useState(planner.title);
 
     // TODO: memoize
     const dayOfWeek = getDayOfWeekFromDatestamp(planner.datestamp);
@@ -42,22 +41,6 @@ const DayBanner = ({
     const isTomorrow = planner.datestamp === getTomorrowDatestamp();
 
     const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
-
-    useEffect(() => {
-        setNewPlannerTitle(planner.title);
-    }, [planner.title])
-
-    // =======================
-    // 1. Event Handlers
-    // =======================
-
-    function handlePlannerTitleSave() {
-        savePlannerToStorage(planner.datestamp, {
-            ...planner,
-            title: newPlannerTitle.trim()
-        });
-        onEndEditTitle();
-    }
 
     return (
         <TouchableOpacity onPress={onToggleCollapsed}>
@@ -86,10 +69,10 @@ const DayBanner = ({
                         {isEditingTitle ? (
                             <TextInput
                                 autoFocus
-                                value={newPlannerTitle}
+                                value={planner.title}
                                 editable={isEditingTitle}
-                                onChangeText={setNewPlannerTitle}
-                                onSubmitEditing={handlePlannerTitleSave}
+                                onChangeText={onEditTitle}
+                                onBlur={onEndEditTitle}
                                 style={textStyles.plannerCardSoftDetail}
                             />
                         ) : (

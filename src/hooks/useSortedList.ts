@@ -1,37 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
-import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
 //
 
 type SortedListConfig<S> = {
     storage: MMKV;
     storageKey: string;
-    // listType: EListType;
     initializedStorageObject?: S;
-    // onSaveItemToStorage: (item: string) => Promise<void> | any;
 
     // Ensure a callback is used here to prevent infinite rerenders
     onGetItemsFromStorageObject?: (storageObject: S) => Promise<string[]> | string[];
-
-    // onHandleListChange?: () => Promise<void> | void;
-    // onInitializeListItem?: (item: TListItem) => T;
 };
 
 const useSortedList = <S>({
     storageKey,
     storage,
     initializedStorageObject,
-    // listType,
-    // onHandleListChange,
-    onGetItemsFromStorageObject,
-    // onInitializeListItem,
-    // onSaveItemToStorage
+    onGetItemsFromStorageObject
 }: SortedListConfig<S>) => {
-    // const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<T>();
-    // const { handleGetIsItemDeleting: getIsItemDeleting } = useDeleteScheduler<T>();
-    // const { handleFocusPlaceholder: focusPlaceholder } = useScrollContainer();
-
-    // const isTogglingTextfields = useRef(false);
 
     const [items, setItems] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -48,101 +34,16 @@ const useSortedList = <S>({
         }
     }, [storageRecord, onGetItemsFromStorageObject]);
 
-    // =============
-    // 1. Reactions
-    // =============
-
     // Build the list whenever its dependencies change.
     useEffect(() => {
         buildList();
     }, [buildList]);
-
-    // =====================
-    // 2. Utility Functions
-    // =====================
-
-    // async function saveItem(item: T) {
-    //     onSaveItemToStorage(item);
-    //     await onHandleListChange?.();
-    // }
-
-    // async function toggleItemEdit(item: T) {
-    //     if (getIsItemDeleting(item, listType)) return;
-
-    //     isTogglingTextfields.current = true;
-
-    //     if (textfieldItem) {
-    //         // Focus the hidden placeholder field.
-    //         // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
-    //         focusPlaceholder();
-
-    //         // if (textfieldItem.value.trim() !== '') {
-    //         //     await saveItem({ ...textfieldItem, status: EItemStatus.STATIC });
-    //         // }
-    //     }
-
-    //     setTextfieldItem({ ...item, status: EItemStatus.EDIT });
-
-    //     setTimeout(() => {
-    //         isTogglingTextfields.current = false;
-    //     }, 200);
-
-    // }
-
-    // async function saveTextfieldAndCreateNew(
-    //     textfieldReferenceSortId?: number,
-    //     isReferenceIdBelowTextfield: boolean = false
-    // ) {
-    //     if (isTogglingTextfields.current) return;
-
-    //     const item = textfieldItem ? { ...textfieldItem } : null;
-
-    //     // Phase 1: Clear the textfield and exit if the input is empty.
-    //     if (item?.value.trim() === '') {
-    //         setTextfieldItem(null);
-    //         return;
-    //     }
-
-    //     // Phase 2: Save the item
-    //     if (item) await saveItem(item);
-
-    //     // Phase 3: Clear the textfield and exit if no reference ID was given
-    //     if (!textfieldReferenceSortId) {
-    //         setTextfieldItem(undefined);
-    //         return;
-    //     }
-
-    //     // Phase 4: Focus the hidden placeholder field.
-    //     // Needed to ensure the keyboard doesn't flicker shut during transition to new textfield item.
-    //     focusPlaceholder();
-
-    //     // Phase 5: Create a new list item.
-    //     const updatedList = sortListWithUpsertItem(items, item);
-    //     const genericListItem: TListItem = {
-    //         id: uuid.v4(),
-    //         status: EItemStatus.NEW,
-    //         listId: storageKey,
-    //         value: '',
-    //         listType,
-    //         sortId: generateSortId(
-    //             updatedList,
-    //             textfieldReferenceSortId!,
-    //             isReferenceIdBelowTextfield
-    //         )
-    //     };
-    //     const newItem: T = onInitializeListItem?.(genericListItem) ?? genericListItem as T;
-
-    //     setTextfieldItem(newItem);
-    // }
 
     return {
         items,
         storageObject: storageRecord ?? initializedStorageObject,
         isLoading: isLoading === true,
         refetchItems: buildList,
-        // saveItem,
-        // toggleItemEdit,
-        // saveTextfieldAndCreateNew
     };
 };
 

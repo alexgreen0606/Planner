@@ -1,4 +1,4 @@
-import { IconType } from "@/components/icon";
+import { TIconType } from "@/components/icon";
 import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { uuid } from "expo-modules-core";
@@ -130,7 +130,7 @@ export function generateCheckboxIconConfig<T extends TListItem>(
 ) {
     return {
         icon: {
-            type: isDeleting ? 'circleFilled' : 'circle' as IconType,
+            type: isDeleting ? 'circleFilled' : 'circle' as TIconType,
             platformColor: isDeleting ? 'systemBlue' : 'secondaryLabel'
         },
         onClick: toggleItemDelete

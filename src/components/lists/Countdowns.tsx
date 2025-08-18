@@ -14,7 +14,7 @@ import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, View } from 'react-native';
-import { IconType } from '../icon';
+import { TIconType } from '../icon';
 import DragAndDropList from './components/DragAndDropList';
 import { ToolbarIcon } from './components/ListToolbar';
 import { generateSortIdByTime } from '@/utils/plannerUtils';
@@ -39,7 +39,7 @@ const Countdowns = () => {
 
     const toolbarIcons: ToolbarIcon<ICountdown>[][] = [
         [{
-            type: 'trash' as IconType,
+            type: 'trash' as TIconType,
             onClick: () => {
                 setIsDeleteAlertOpen(true);
                 Alert.alert(
@@ -68,7 +68,7 @@ const Countdowns = () => {
             }
         }],
         [{
-            type: 'calendar' as IconType,
+            type: 'calendar' as TIconType,
             customIcon: (
                 <DateTimePicker
                     mode='date'

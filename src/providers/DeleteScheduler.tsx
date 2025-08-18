@@ -18,7 +18,7 @@ type DeleteSchedulerContextType<T extends TListItem> = {
 };
 
 const deletionMap: Partial<Record<EListType, (items: any[]) => Promise<void> | void>> = {
-    [EListType.PLANNER]: deletePlannerEventsFromStorageAndCalendar,
+    [EListType.EVENT]: deletePlannerEventsFromStorageAndCalendar,
     [EListType.RECURRING]: deleteRecurringEventsHideWeekday,
     [EListType.RECURRING_WEEKDAY]: deleteRecurringWeekdayEvents,
     [EListType.CHECKLIST]: deleteChecklistItems

@@ -6,7 +6,7 @@ import { SFSymbol } from 'react-native-sfsymbols';
 // ✅ 
 
 export interface GenericIconProps<T = void> {
-    type: IconType;
+    type: TIconType;
     size?: 'xs' | 's' | 'm' | 'l' | 'xl';
     platformColor?: string;
     style?: ViewStyle;
@@ -55,7 +55,7 @@ const iconMap = {
     refreshComplete: 'checkmark.arrow.trianglehead.counterclockwise'
 };
 
-export type IconType = keyof typeof iconMap;
+export type TIconType = keyof typeof iconMap;
 
 const GenericIcon = <T,>({
     type,

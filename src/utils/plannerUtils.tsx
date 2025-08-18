@@ -102,7 +102,7 @@ function extractEventTime(event: IPlannerEvent | IRecurringEvent | ICountdown | 
  * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
  * @param event - The event to update within the modal.
  */
-function openTimeModal(
+export function openTimeModal(
     triggerDatestamp: string,
     event: IPlannerEvent
 ) {
@@ -123,7 +123,7 @@ function openTimeModal(
  * @param calendarEvents - The list of calendar events to sync with the planner.
  * @returns A new list of planner events synced with the calendar.
  */
-function syncPlannerWithCalendar(
+export function syncPlannerWithCalendar(
     datestamp: string,
     plannerEvents: IPlannerEvent[],
     calendarEvents: CalendarEvent[]
@@ -171,7 +171,7 @@ function syncPlannerWithCalendar(
  * @param plannerEvents - The list of planner events to update.
  * @returns A new list of planner events synced with the recurring events.
  */
-function syncPlannerWithRecurring(
+export function syncPlannerWithRecurring(
     datestamp: string,
     plannerEvents: IPlannerEvent[]
 ): IPlannerEvent[] {
@@ -863,18 +863,6 @@ export function generateRecurringEventTimeIconConfig(
             <TimeValue timeValue={event.startTime} concise />
         )
     };
-}
-
-/**
- * Generates the toolbar icon set for a planner event. The icon set contains a single icon that opens the Time Modal for the event.
- * 
- * @returns The toolbar icon set for the event.
- */
-export function generatePlannerToolbarIconSet(): ToolbarIcon<IPlannerEvent>[][] {
-    return [[{
-        type: 'clock',
-        onClick: (event: IPlannerEvent | undefined) => event && openTimeModal(event.listId, event)
-    }]];
 }
 
 // =======================

@@ -147,14 +147,6 @@ export function resetRecurringEventsInPlanner(datestamp: string) {
     });
 }
 
-export function toggleHideAllRecurringEventsInPlanner(datestamp: string) {
-    const planner = getPlannerFromStorageByDatestamp(datestamp);
-    savePlannerToStorage(datestamp, {
-        ...planner,
-        hideRecurring: !planner.hideRecurring
-    });
-}
-
 export function deleteAllRecurringEventsFromPlanner(datestamp: string) {
     const planner = getPlannerFromStorageByDatestamp(datestamp);
 
