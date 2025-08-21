@@ -6,11 +6,9 @@ import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
 import PlannerCard from '@/components/lists/PlannerCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ButtonText from '@/components/text/ButtonText';
-import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { getAllPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { upsertEventToStorage } from '@/storage/plannerStorage';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
@@ -19,7 +17,7 @@ import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 
-// ✅ 
+//
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -105,7 +103,7 @@ const Planners = () => {
 
     const router = useRouter();
 
-    useTextfieldFallbackSave(upsertEventToStorage);
+    // useTextfieldFallbackSave(upsertEventToStorage);
 
     const allPlannerSetTitles = getAllPlannerSetTitles(); // TODO: use MMKV to watch this
 

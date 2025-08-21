@@ -1,14 +1,14 @@
-import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
-import { Router } from "expo-router";
-import * as Calendar from 'expo-calendar';
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
-import { extractNameFromBirthdayText, openMessageForContact } from "../birthdayUtils";
 import { NULL } from "@/lib/constants/generic";
-import { hasCalendarAccess, hasContactsAccess } from "../accessUtils";
 import { TIME_MODAL_PATHNAME } from "@/lib/constants/pathnames";
+import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
+import * as Calendar from 'expo-calendar';
+import { Router } from "expo-router";
+import { hasCalendarAccess, hasContactsAccess } from "../accessUtils";
+import { extractNameFromBirthdayText, openMessageForContact } from "../birthdayUtils";
 
 /**
- * ✅ Maps a calendar event to an event chip for a given planner.
+ * Maps a calendar event to an event chip for a given planner.
  * 
  * @param event - The calendar event to map.
  * @param calendar - The calendar the event is from.

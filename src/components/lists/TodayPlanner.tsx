@@ -1,42 +1,36 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import usePlanner from '@/hooks/usePlanner';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
-import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { deletePlannerEventsFromStorageAndCalendar, generateNewPlannerEventAndSaveToStorage, generatePlannerEventTimeIconConfig, updatePlannerEventIndexWithChronologicalCheck, updatePlannerEventValueWithSmartTimeDetect } from '@/utils/plannerUtils';
-import { usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
-//
+// ✅ 
 
 const TodayPlanner = () => {
-    const pathname = usePathname();
 
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
 
     const {
-        handleGetIsItemDeleting: onGetIsItemDeleting,
-        handleToggleScheduleItemDelete: onToggleScheduleItemDelete
+        onGetIsItemDeletingCallback: onGetIsItemDeleting,
+        onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
     } = useDeleteScheduler<IPlannerEvent>();
 
     const { visibleEventIds, isLoading } = usePlanner(todayDatestamp);
 
-    const eventStorage = useMMKV({ id: EStorageId.EVENT });
-
-    const isTimeModalOpen = pathname.includes('timeModal');
+    const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
     return (
         <DragAndDropList<IPlannerEvent>
             fillSpace
             listId={todayDatestamp}
-            listType={EListItemType.EVENT}
-            hideKeyboard={isTimeModalOpen}
+            storageId={EStorageId.PLANNER_EVENT}
             isLoading={isLoading}
             storage={eventStorage}
             itemIds={visibleEventIds}

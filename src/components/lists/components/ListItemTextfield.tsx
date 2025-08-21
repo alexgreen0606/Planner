@@ -1,10 +1,10 @@
-import CustomText from '@/components/text/CustomText';
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
-import { EItemStatus } from '@/lib/enums/EItemStatus';
+import { textfieldIdAtom } from '@/atoms/textfieldId';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/lib/constants/listConstants';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { isItemTextfield } from '@/utils/listUtils';
-import React, { useMemo } from 'react';
+import { useAtom } from 'jotai';
+import React, { useEffect } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
+import { MMKV } from 'react-native-mmkv';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
 //
@@ -12,8 +12,8 @@ import ListToolbar, { ToolbarIcon } from './ListToolbar';
 type TListItemTextfieldProps<T extends TListItem> = {
     item: T;
     toolbarIconSet?: ToolbarIcon<T>[][];
-    hideKeyboard: boolean;
     customStyle: TextStyle;
+    storage: MMKV;
     onSetItemInStorage: (value: T | ((prevValue: T | undefined) => T | undefined) | undefined) => void;
     onCreateChildTextfield: () => void;
     onDeleteItem: (item: T) => void;
@@ -23,17 +23,40 @@ type TListItemTextfieldProps<T extends TListItem> = {
 
 const ListItemTextfield = <T extends TListItem>({
     item,
-    toolbarIconSet,
-    hideKeyboard,
     customStyle,
+    toolbarIconSet,
+    storage,
     onSetItemInStorage,
-    onSaveToExternalStorage,
-    onValueChange,
     onDeleteItem,
-    onCreateChildTextfield
+    onValueChange,
+    onCreateChildTextfield,
+    onSaveToExternalStorage
 }: TListItemTextfieldProps<T>) => {
 
-    const isEditable = useMemo(() => isItemTextfield(item), [item.status]);
+    const [, setTextfieldId] = useAtom(textfieldIdAtom);
+
+    // Save the event to external storage every time the field closes.
+    useEffect(() => {
+        return () => {
+            const currentItemString = storage.getString(item.id);
+            if (!currentItemString) return;
+
+            const currentItem = JSON.parse(currentItemString);
+
+            if (currentItem.value.trim() === '') {
+                onDeleteItem(currentItem);
+                return;
+            }
+
+            onSaveToExternalStorage?.(currentItem);
+
+            setTextfieldId((prev) => prev === item.id ? null : prev);
+        };
+    }, []);
+
+    function handleFocusTextfield() {
+        setTextfieldId(item.id);
+    }
 
     function handleValueChange(newText: string) {
         onSetItemInStorage((prev) => {
@@ -47,21 +70,6 @@ const ListItemTextfield = <T extends TListItem>({
         });
     }
 
-    function handleBlurTextfield() {
-        if (item.value.trim() === '') {
-            onDeleteItem(item);
-            return;
-        }
-
-        onSetItemInStorage((prev) => {
-            if (!prev) return prev;
-
-            const staticEvent = { ...prev, status: EItemStatus.STATIC };
-            onSaveToExternalStorage?.(staticEvent);
-            return staticEvent;
-        });
-    }
-
     function handleSubmitTextfield() {
         if (item.value.trim() === '') {
             onDeleteItem(item);
@@ -71,54 +79,31 @@ const ListItemTextfield = <T extends TListItem>({
         onCreateChildTextfield();
     }
 
-    if (!item) return null;
-
-    if (isEditable) {
-        return (
-            <View>
-                <TextInput
-                    value={item.value}
-                    autoFocus
-                    inputAccessoryViewID={item.id}
-                    submitBehavior='submit'
-                    selectionColor={PlatformColor('systemBlue')}
-                    returnKeyType='done'
-                    className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
-                    style={[
-                        {
-                            height: LIST_CONTENT_HEIGHT,
-                            marginRight: LIST_ICON_SPACING / 2,
-                            color: PlatformColor('label'),
-                            fontFamily: 'Text',
-                        },
-                        customStyle
-                    ]}
-                    onChangeText={handleValueChange}
-                    onSubmitEditing={handleSubmitTextfield}
-                    onBlur={handleBlurTextfield}
-                />
-                {toolbarIconSet && <ListToolbar item={item} iconSets={toolbarIconSet} accessoryKey={item.id} />}
-            </View>
-        )
-    }
-
     return (
-        <CustomText
-            variant='standard'
-            className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
-            style={[
-                {
-                    height: LIST_ITEM_HEIGHT,
-                    paddingTop: LIST_CONTENT_HEIGHT / 8,
-                    marginRight: LIST_ICON_SPACING / 2,
-                    color: PlatformColor('label'),
-                    fontFamily: 'Text',
-                },
-                customStyle
-            ]}
-        >
-            {item.value}
-        </CustomText>
+        <View>
+            <TextInput
+                value={item.value}
+                autoFocus
+                inputAccessoryViewID={item.id}
+                submitBehavior='blurAndSubmit'
+                selectionColor={PlatformColor('systemBlue')}
+                returnKeyType='done'
+                className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
+                style={[
+                    {
+                        height: LIST_CONTENT_HEIGHT,
+                        marginRight: LIST_ICON_SPACING / 2,
+                        color: PlatformColor('label'),
+                        fontFamily: 'Text',
+                    },
+                    customStyle
+                ]}
+                onChangeText={handleValueChange}
+                onSubmitEditing={handleSubmitTextfield}
+                onFocus={handleFocusTextfield}
+            />
+            {toolbarIconSet && <ListToolbar item={item} iconSets={toolbarIconSet} accessoryKey={item.id} />}
+        </View>
     )
 }
 

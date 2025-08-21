@@ -1,5 +1,4 @@
 import { useFolderItem } from '@/hooks/useFolderItem';
-import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
@@ -17,20 +16,20 @@ const Checklist = () => {
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
 
     const {
-        handleGetIsItemDeleting: onGetIsItemDeleting,
-        handleToggleScheduleItemDelete: onToggleScheduleItemDelete
+        onGetIsItemDeletingCallback: onGetIsItemDeleting,
+        onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
     } = useDeleteScheduler<TListItem>();
 
     const { itemIds } = useFolderItem(checklistId);
 
-    const itemStorage = useMMKV({ id: EStorageId.ITEM });
+    const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
 
     return (
         <DragAndDropList<TListItem>
             fillSpace
             listId={checklistId}
             storage={itemStorage}
-            listType={EListItemType.CHECKLIST}
+            storageId={EStorageId.CHECKLIST_ITEM}
             itemIds={itemIds}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",

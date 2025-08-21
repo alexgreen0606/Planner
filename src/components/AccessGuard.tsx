@@ -3,8 +3,6 @@ import { NULL } from "@/lib/constants/generic";
 import { PLANNER_SET_MODAL_PATHNAME, TIME_MODAL_PATHNAME } from "@/lib/constants/pathnames";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListItemType } from "@/lib/enums/EListType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
@@ -25,9 +23,8 @@ const initialRootFolder: IFolderItem = {
     itemIds: [],
     value: 'Lists',
     platformColor: 'systemBlue',
-    status: EItemStatus.STATIC,
     type: EFolderItemType.FOLDER,
-    listType: EListItemType.FOLDER_ITEM
+    storageId: EStorageId.FOLDER_ITEM
 };
 
 /**
@@ -36,7 +33,7 @@ const initialRootFolder: IFolderItem = {
 const AccessGuard = () => {
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
 
-    const storage = useMMKV({ id: EStorageId.FOLDER });
+    const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(EStorageKey.ROOT_FOLDER_KEY, storage);
 
     const [calendarStatus, requestCalendarPermissions] = Calendar.useCalendarPermissions();

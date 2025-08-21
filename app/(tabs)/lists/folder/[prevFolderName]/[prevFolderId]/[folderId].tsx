@@ -24,7 +24,7 @@ const FolderScreen = () => {
 
   const [parentClickTrigger, setParentClickTrigger] = useState(0);
 
-  const storage = useMMKV({ id: EStorageId.FOLDER });
+  const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const [folder] = useMMKVObject<IFolderItem>(folderId, storage);
 
   // =======================

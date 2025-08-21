@@ -5,8 +5,8 @@ import { MMKV } from "react-native-mmkv";
 
 // ✅ 
 
-const folderStorage = new MMKV({ id: EStorageId.FOLDER });
-const itemStorage = new MMKV({ id: EStorageId.ITEM });
+const folderStorage = new MMKV({ id: EStorageId.FOLDER_ITEM });
+const itemStorage = new MMKV({ id: EStorageId.CHECKLIST_ITEM });
 
 // ==================
 // 1. Save Functions
@@ -46,10 +46,10 @@ export function getFolderItemFromStorageById(itemId: string): IFolderItem {
 // 3. Delete Functions
 // ====================
 
-export function deleteFolderItem(itemId: string) {
+export function deleteFolderItemFromStorage(itemId: string) {
     folderStorage.delete(itemId);
 }
 
-export function deleteChecklistItem(itemId: string) {
+export function deleteChecklistItemFromStorage(itemId: string) {
     itemStorage.delete(itemId);
 }

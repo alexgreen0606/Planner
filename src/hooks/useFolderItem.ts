@@ -11,8 +11,8 @@ export const useFolderItem = (
 
     const [isEditingValue, setIsEditingValue] = useState(false);
 
-    const storage = useMMKV({ id: EStorageId.FOLDER });
-    const [item, setItem] = useMMKVObject<IFolderItem | null>(itemId, storage);
+    const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const [item, setItem] = useMMKVObject<IFolderItem>(itemId, storage);
 
     function handleToggleEditValue() {
         setIsEditingValue(prev => !prev);
@@ -30,6 +30,6 @@ export const useFolderItem = (
         itemIds: item?.itemIds ?? [],
         isEditingValue,
         handleEditValue,
-        handleToggleEditValue
+        handleToggleEditValue,
     };
 };

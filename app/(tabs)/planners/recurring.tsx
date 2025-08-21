@@ -2,12 +2,11 @@ import RecurringPlanner from '@/components/lists/RecurringPlanner';
 import ButtonText from '@/components/text/ButtonText';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
 import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
-import { upsertRecurringEvent, upsertRecurringWeekdayEvent } from '@/storage/recurringPlannerStorage';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
 
-// ✅ 
+//
 
 const RecurringPlanners = () => {
     const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerKey>(ERecurringPlannerKey.WEEKDAYS);
@@ -22,10 +21,10 @@ const RecurringPlanners = () => {
         [selectedRecurring]
     );
 
-    useTextfieldFallbackSave(
-        selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
-            upsertRecurringWeekdayEvent : upsertRecurringEvent
-    );
+    // useTextfieldFallbackSave(
+    //     selectedRecurring === ERecurringPlannerKey.WEEKDAYS ?
+    //         upsertRecurringWeekdayEvent : upsertRecurringEvent
+    // );
 
     return (
         <View
@@ -49,7 +48,7 @@ const RecurringPlanners = () => {
             </View>
 
             {/* Recurring Planner Events */}
-            <RecurringPlanner plannerKey={selectedRecurring} />
+            <RecurringPlanner recurringPlannerId={selectedRecurring} />
 
         </View>
     );

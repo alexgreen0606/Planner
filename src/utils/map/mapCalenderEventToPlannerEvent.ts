@@ -1,13 +1,10 @@
-import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListItemType } from "@/lib/enums/EListType";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { Event } from "expo-calendar";
-import { generateSortIdByTime } from "../plannerUtils";
 import { isoToDatestamp } from "../dateUtils";
-import { generateSortId } from "../listUtils";
+import { EStorageId } from "@/lib/enums/EStorageId";
 
 /**
- * ✅ Maps a calendar event to a planner event.
+ * Maps a calendar event to a planner event.
  * 
  * @param event - The calendar event to map.
  * @param datestamp - The planner key for the event.
@@ -30,12 +27,10 @@ export function mapCalendarEventToPlannerEvent(event: Event, datestamp: string, 
 
     const plannerEvent: IPlannerEvent = {
         ...storRecord,
-        sortId: fallbackSortId ?? storRecord?.sortId ?? 1,
         id: event.id,
         calendarId: event.id,
         value: event.title,
-        status: EItemStatus.STATIC,
-        listType: EListItemType.PLANNER,
+        storageId: EStorageId.PLANNER_EVENT,
         listId: datestamp,
         timeConfig: {
             startIso: event.startDate as string,
@@ -46,9 +41,9 @@ export function mapCalendarEventToPlannerEvent(event: Event, datestamp: string, 
         }
     }
 
-    if (!storRecord) {
-        plannerEvent.sortId = generateSortIdByTime(plannerEvent, planner);
-    }
-    
+    // if (!storRecord) {
+    //     plannerEvent.sortId = generateSortIdByTime(plannerEvent, planner);
+    // }
+
     return plannerEvent;
 }

@@ -2,14 +2,13 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { userAccessAtom } from '@/atoms/userAccess';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { useTextfieldItemAs } from '@/hooks/textfields/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
 import { loadCalendarDataToStore } from '@/utils/calendarUtils';
 import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
-import { cloneListItemWithKeyRemovalAndUpdate } from '@/utils/listUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { usePathname, useRouter } from 'expo-router';
@@ -27,7 +26,8 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
 
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+    const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+    const { textfieldItem, onSetTextfieldItem } = useTextfieldItemAs<IPlannerEvent>(plannerEventStorage);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -151,12 +151,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
 
             // If textfield item was from yesterday, carry it to today.
             if (textfieldItem.listId === yesterdayDatestamp) {
-                const genericItem = cloneListItemWithKeyRemovalAndUpdate<IPlannerEvent>(
-                    textfieldItem,
-                    ['calendarId', 'timeConfig', 'recurringId', 'recurringCloneId'],
-                    { listId: today }
-                );
-                setTextfieldItem(genericItem);
+                const newTextfieldItem = { ...textfieldItem };
+                delete textfieldItem.calendarId;
+                delete textfieldItem.timeConfig;
+                delete textfieldItem.recurringId;
+                onSetTextfieldItem(newTextfieldItem);
             }
 
             // If textfield item is now for today and we're on planners page with Next 7 Days view,

@@ -17,5 +17,4 @@ export interface IPlannerEvent extends TListItem {
     timeConfig?: ITimeConfig;
     calendarId?: string;
     recurringId?: string;
-    recurringCloneId?: string;
 }

@@ -1,9 +1,7 @@
 import ThinLine from '@/components/ThinLine';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import { useTextfieldItemAs } from '@/hooks/textfields/useTextfieldItemAs';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
-import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListItemType } from '@/lib/enums/EListType';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainer } from '@/providers/ScrollContainer';
@@ -17,6 +15,7 @@ import EmptyLabel, { EmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 //
 
@@ -25,13 +24,13 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     listId: string;
     toolbarIconSet?: ToolbarIcon<T>[][];
     emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
-    listType: EListItemType;
-    hideKeyboard?: boolean;
+    storageId: EStorageId;
     isLoading?: boolean;
     fillSpace?: boolean;
     disableDrag?: boolean;
     storage: MMKV;
     defaultStorageObject?: S;
+    hideTextfield?: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string, prev: T) => T;
@@ -47,16 +46,17 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
 const DragAndDropList = <T extends TListItem, S = T>({
     itemIds,
     listId,
-    listType,
+    storageId,
     isLoading,
     emptyLabelConfig,
     fillSpace,
     toolbarIconSet,
-    hideKeyboard,
     disableDrag = false,
     storage,
+    hideTextfield = false,
     onIndexChange,
     onCreateItem,
+    onDeleteItem,
     ...rest
 }: TDragAndDropListProps<T, S>) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
@@ -68,14 +68,13 @@ const DragAndDropList = <T extends TListItem, S = T>({
         handleMeasureScrollContentHeight: onMeasureContentHeight
     } = useScrollContainer();
 
-    const [textfieldItem] = useTextfieldItemAs<T>();
+    const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
     const placeholderItem: T = {
         id: 'PLACEHOLDER',
         listId: 'PLACEHOLDER',
         value: 'PLACEHOLDER',
-        listType,
-        status: EItemStatus.STATIC
+        storageId: storageId
     } as T;
 
     const draggingRowId = useSharedValue<string | null>(null);
@@ -98,10 +97,17 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     function handleEmptySpaceClick() {
         if (textfieldItem) {
-            // TODO: If a textfield is present, save it and close the keyboard.
+            if (textfieldItem.value.trim() === '') {
+                console.info('muster')
+                onDeleteItem(textfieldItem);
+                return;
+            }
+            console.info('muster')
+            onCloseTextfield();
             return;
         }
 
+        console.info(textfieldItem)
         // Open a textfield at the bottom of the list.
         onCreateItem(listId, itemIds.length);
     }
@@ -132,7 +138,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
     }
 
     // =============
-    // 3. Reactions
+    // 2. Reactions
     // =============
 
     // Auto Scrolling.
@@ -150,9 +156,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
         runOnUI(onMeasureContentHeight)();
     }, [itemIds.length]);
 
-    // ========
-    // 4. UI
-    // ========
+    // =======
+    // 3. UI
+    // =======
 
     return (
         <MotiView
@@ -176,9 +182,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
                             toolbarIconSet={toolbarIconSet}
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
-                            hideKeyboard={Boolean(hideKeyboard)}
                             itemId={id}
                             storage={storage}
+                            hideTextfield={hideTextfield}
                             dragConfig={{
                                 disableDrag: disableDrag,
                                 topMax: dragTopMax,
@@ -193,6 +199,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
                             }}
                             {...rest}
                             onCreateItem={onCreateItem}
+                            onDeleteItem={onDeleteItem}
                         />
                     )}
                 </View>

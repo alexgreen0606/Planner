@@ -3,22 +3,20 @@ import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
 import Modal from "@/components/modal";
-import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
+import { useTextfieldItemAs } from "@/hooks/textfields/useTextfieldItemAs";
 import { NULL } from "@/lib/constants/generic";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListItemType } from "@/lib/enums/EListType";
+import { EStorageId } from "@/lib/enums/EStorageId";
 import { ETimeSelectorMode } from "@/lib/enums/ETimeSelectorMode";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { TDateRange, IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { deletePlannerEventsFromStorageAndCalendar, getPlannerFromStorageByDatestamp, hideAndCloneRecurringEventInPlanner, upsertEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
+import { getPlannerFromStorageByDatestamp, savePlannerToStorage } from "@/storage/plannerStorage";
 import { hasCalendarAccess } from "@/utils/accessUtils";
 import { getPrimaryCalendarId, loadCalendarDataToStore } from "@/utils/calendarUtils";
 import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
-import { generateSortId, sortListWithUpsertItem } from "@/utils/listUtils";
 import { mapCalendarEventToPlannerEvent } from "@/utils/map/mapCalenderEventToPlannerEvent";
 import { getAllMountedDatestampsLinkedToDateRanges } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
@@ -28,6 +26,7 @@ import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useMMKV } from "react-native-mmkv";
 
 // ✅ 
 
@@ -68,8 +67,10 @@ const TimeModal = () => {
     const calendarData = useAtomValue(calendarEventDataAtom);
     const userAccess = useAtomValue(userAccessAtom);
 
+    const storage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+
     const { eventId, eventValue, datestamp: triggerDatestamp, sortId } = useLocalSearchParams<ModalParams>();
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IPlannerEvent>();
+    const { textfieldItem } = useTextfieldItemAs<IPlannerEvent>(storage);
     const router = useRouter();
 
     const {
@@ -391,7 +392,7 @@ const TimeModal = () => {
                     id: event.id,
                     calendarId: event.id,
                     sortId: generateSortId(planner.eventIds, -1),
-                    listType: EListItemType.PLANNER,
+                    storageId: EListItemType.PLANNER,
                     listId: isoToDatestamp(startIso),
                     value: title,
                     timeConfig: { allDay, startIso, endIso },
@@ -422,7 +423,7 @@ const TimeModal = () => {
                 savedEvent = {
                     id: "PLACEHOLDER",
                     sortId: initialState.landingSortId,
-                    listType: EListItemType.PLANNER,
+                    storageId: EListItemType.PLANNER,
                     listId: isoToDatestamp(startIso),
                     value: title,
                     timeConfig: { allDay, startIso, endIso },
@@ -529,7 +530,7 @@ const TimeModal = () => {
         return {
             id,
             sortId,
-            listType: EListItemType.PLANNER,
+            storageId: EListItemType.PLANNER,
             listId,
             value: title,
             timeConfig: { allDay, startIso, endIso },

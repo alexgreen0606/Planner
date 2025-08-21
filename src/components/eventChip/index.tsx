@@ -1,4 +1,3 @@
-import { EListItemType } from '@/lib/enums/EListType';
 import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
@@ -10,6 +9,7 @@ import React, { useMemo } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 // ✅ 
 
@@ -37,11 +37,11 @@ const EventChip = ({
 }: EventChipProps) => {
     const { event: { title, id }, iconConfig, color, onClick, hasClickAccess } = chip;
 
-    const { handleGetDeletingItemsByType: getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const { onGetDeletingItemsByStorageIdCallback: getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
     const router = useRouter();
 
     const isPendingDelete = useMemo(() =>
-        getDeletingItems(EListItemType.PLANNER).some(deleteItem =>
+        getDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
             // This deleting item is the chip's event
             deleteItem.id === id &&
             // This deleting item is not from today

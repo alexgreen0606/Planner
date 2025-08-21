@@ -1,10 +1,11 @@
+import { textfieldIdAtom } from "@/atoms/textfieldId";
 import { NULL } from "@/lib/constants/generic";
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
-import { EListItemType } from "@/lib/enums/EListType";
+import { EStorageId } from "@/lib/enums/EStorageId";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
-import { deleteChecklistItem, deleteFolderItem, getFolderItemFromStorageById, getListItemFromStorageById, saveChecklistItemToStorage, saveFolderItemToStorage } from "@/storage/checklistsStorage";
+import { deleteChecklistItemFromStorage, deleteFolderItemFromStorage, getFolderItemFromStorageById, getListItemFromStorageById, saveChecklistItemToStorage, saveFolderItemToStorage } from "@/storage/checklistsStorage";
+import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
 
 // ✅ 
@@ -63,7 +64,7 @@ export async function deleteChecklistItems(
 
     // Phase 3: Delete items from storage.
     for (const itemId of itemIdsToDelete) {
-        deleteChecklistItem(itemId);
+        deleteChecklistItemFromStorage(itemId);
     }
 }
 
@@ -96,7 +97,7 @@ export function deleteFolderItemAndChildren(item: IFolderItem) {
     }
 
     // Delete the item.
-    deleteFolderItem(item.id);
+    deleteFolderItemFromStorage(item.id);
 }
 
 // ========================
@@ -116,13 +117,14 @@ export function generateNewChecklistItemAndSaveToStorage(checklistId: string, in
         id: uuid.v4(),
         value: "",
         listId: checklistId,
-        status: EItemStatus.NEW,
-        listType: EListItemType.CHECKLIST_ITEM
+        storageId: EStorageId.CHECKLIST_ITEM
     };
     saveChecklistItemToStorage(item);
 
     checklist.itemIds.splice(index, 0, item.id);
     saveFolderItemToStorage(checklist);
+
+    jotaiStore.set(textfieldIdAtom, item.id);
 }
 
 /**
@@ -138,8 +140,7 @@ export function generateNewFolderItemAndSaveToStorage(parentFolderId: string, in
         id: uuid.v4(),
         value: "",
         listId: parentFolderId,
-        status: EItemStatus.NEW,
-        listType: EListItemType.FOLDER_ITEM,
+        storageId: EStorageId.FOLDER_ITEM,
         platformColor: 'systemBrown',
         type: EFolderItemType.FOLDER,
         itemIds: []
@@ -148,4 +149,6 @@ export function generateNewFolderItemAndSaveToStorage(parentFolderId: string, in
 
     parentFolder.itemIds.splice(index, 0, folderItem.id);
     saveFolderItemToStorage(parentFolder);
+
+    jotaiStore.set(textfieldIdAtom, folderItem.id);
 }

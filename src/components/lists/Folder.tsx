@@ -1,16 +1,16 @@
-import { GenericIconProps } from '@/components/icon';
+import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
 import { useFolderItem } from '@/hooks/useFolderItem';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import useFolderTextfield from '@/hooks/textfields/useFolderTextfield';
 import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
-import { EItemStatus } from '@/lib/enums/EItemStatus';
-import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { deleteFolderItemAndChildren, generateNewFolderItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import React, { useEffect } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
@@ -28,19 +28,101 @@ const SortedFolder = ({
     onOpenItem,
 }: ISortedFolderProps) => {
 
+    const setTextfieldId = useSetAtom(textfieldIdAtom);
+
     const { folderId } = useLocalSearchParams<{ folderId: string }>();
     const router = useRouter();
 
-    const [textfieldItem, setTextfieldItem] = useTextfieldItemAs<IFolderItem>();
+    const {
+        item: folder,
+        itemIds
+    } = useFolderItem(folderId);
 
-    const { item: folder, itemIds } = useFolderItem(folderId);
+    const {
+        isTransferMode,
+        textfieldItem,
+        onEndTransfer,
+        onBeginTransfer,
+        onChangeColor,
+        onToggleType,
+        onCloseTextfield
+    } = useFolderTextfield();
 
-    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
 
-    const storage = useMMKV({ id: EStorageId.FOLDER });
+    const toolbarIconSet: ToolbarIcon<IFolderItem>[][] = !textfieldItem
+        ? []
+        : [
+            // Folder/List toggle
+            textfieldItem.itemIds.length === 0
+                ? [
+                    {
+                        type: "folder",
+                        onClick: onToggleType,
+                        platformColor:
+                            textfieldItem.type === EFolderItemType.FOLDER
+                                ? textfieldItem.platformColor
+                                : "secondaryLabel",
+                    },
+                    {
+                        type: "list",
+                        onClick: onToggleType,
+                        platformColor:
+                            textfieldItem.type === EFolderItemType.LIST
+                                ? textfieldItem.platformColor
+                                : "secondaryLabel",
+                    },
+                ]
+                : [],
 
-    // TEXTFIELD ITEM status
-    const isTransferMode = textfieldItem?.status === EItemStatus.TRANSFER;
+            // Color selection
+            Object.values(selectableColors).map(color => ({
+                type: textfieldItem?.platformColor === color ? 'circleFilled' : 'circle',
+                platformColor: color,
+                onClick: () => onChangeColor(color),
+            })),
+
+            // Transfer
+            [
+                {
+                    type: "transfer",
+                    onClick: onBeginTransfer,
+                },
+            ],
+
+            // Delete
+            [
+                {
+                    onClick: () => {
+                        const title = `Delete ${textfieldItem.type}?`;
+                        const hasNestedItems = textfieldItem.itemIds.length > 0;
+
+                        let message = "";
+                        if (hasNestedItems) {
+                            message += `This ${textfieldItem.type} has ${textfieldItem.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
+                        } else {
+                            message += `Would you like to delete this ${textfieldItem.type}?`;
+                        }
+
+                        Alert.alert(title, message, [
+                            {
+                                text: "Cancel",
+                                style: "cancel",
+                            },
+                            {
+                                text: hasNestedItems ? "Force Delete" : "Delete",
+                                style: "destructive",
+                                onPress: () => {
+                                    onCloseTextfield();
+                                    deleteFolderItemAndChildren(textfieldItem);
+                                },
+                            },
+                        ]);
+                    },
+                    type: "trash",
+                },
+            ],
+        ];
 
     // Handle clicking of the parent folder.
     useEffect(() => {
@@ -58,35 +140,36 @@ const SortedFolder = ({
     // 1. Event Handlers
     // ==================
 
-    function handleBeginItemTransfer(item: IFolderItem) {
-        setTextfieldItem({ ...item, status: EItemStatus.TRANSFER });
-    }
-
     function handleTransferToParent() {
-        // grab the parent folder list (from this item's listId)
+        if (!folder || !textfieldItem) return;
 
-        // insert the ID of the transfer item to the back of the list
+        const parentFolder = getFolderItemFromStorageById(folder.listId);
+        parentFolder.itemIds.push(textfieldItem.id);
+        saveFolderItemToStorage(parentFolder);
 
-        // save the list to folderStorage
+        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== textfieldItem.id) });
+        saveFolderItemToStorage({ ...textfieldItem, listId: folder.listId });
 
-        // chnage the item's listID and status STATIC in itemStorage
+        onEndTransfer();
     }
 
     function handleTransferToChild(destinationItem: IFolderItem) {
-        // add the transfer item ID to the back of its itemIds
+        if (!folder || !textfieldItem) return;
 
-        // save the destination folder to folderStorage
+        const childFolder = getFolderItemFromStorageById(destinationItem.id);
+        childFolder.itemIds.push(textfieldItem.id);
+        saveFolderItemToStorage(childFolder);
 
-        // update the transfer item to STATIC and give it the new listId
+        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== textfieldItem.id) });
+        saveFolderItemToStorage({ ...textfieldItem, listId: destinationItem.id });
     }
 
     function handleItemClick(item: IFolderItem) {
         if (isTransferMode) {
-            if (item.id === textfieldItem.id) {
-                // TODO: set textfield item to EDIT mode in storage
-            } else if (item.type === EFolderItemType.FOLDER) {
+            if (item.type === EFolderItemType.FOLDER && item.id !== textfieldItem?.id) {
                 handleTransferToChild(item);
             }
+            onEndTransfer();
             return;
         }
 
@@ -97,90 +180,16 @@ const SortedFolder = ({
     // 2. Helper Functions
     // ====================
 
-    function isItemTransfering(item: IFolderItem) {
-        return item.status === EItemStatus.TRANSFER;
-    }
-
-    function generateColorSelectionIconSet(item: IFolderItem): GenericIconProps<IFolderItem>[] {
-        return Object.values(selectableColors).map(color => ({
-            type: item.platformColor === color ? 'circleFilled' : 'circle',
-            platformColor: color,
-            onClick: () => setTextfieldItem({ ...item, platformColor: color }),
-        }));
-    }
-
-    function generateToolbarIcons(): ToolbarIcon<IFolderItem>[][] {
-        return [];
-        const item: IFolderItem = textfieldItem;
-        const isNew = textfieldItem?.status === EItemStatus.NEW;
-
-        return isNew ? [
-            [
-                {
-                    type: 'folder',
-                    onClick: () => setTextfieldItem({ ...item, type: EFolderItemType.FOLDER }),
-                    platformColor: item.type === EFolderItemType.FOLDER ? item.platformColor : 'secondaryLabel'
-                },
-                {
-                    type: 'list',
-                    onClick: () => setTextfieldItem({ ...item, type: EFolderItemType.LIST }),
-                    platformColor: item.type === EFolderItemType.LIST ? item.platformColor : 'secondaryLabel'
-                }
-            ],
-            generateColorSelectionIconSet(item)
-        ] : [
-            [{
-                type: 'transfer',
-                onClick: () => handleBeginItemTransfer(item),
-            }],
-            [{
-                onClick: () => {
-                    const title = `Delete ${item.type}?`;
-                    const hasNestedItems = item.itemIds.length > 0;
-
-                    let message = '';
-                    if (hasNestedItems) {
-                        message += `This ${item.type} has ${item.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
-                    } else {
-                        message += `Would you like to delete this ${item.type}?`;
-                    }
-
-                    setIsDeleteAlertOpen(true);
-                    Alert.alert(
-                        title,
-                        message,
-                        [
-                            {
-                                text: 'Cancel',
-                                style: 'cancel',
-                                onPress: () => {
-                                    setIsDeleteAlertOpen(false);
-                                }
-                            },
-                            {
-                                text: hasNestedItems ? 'Force Delete' : 'Delete',
-                                style: 'destructive',
-                                onPress: () => {
-                                    deleteFolderItemAndChildren(item);
-                                    setTextfieldItem(null);
-                                    setIsDeleteAlertOpen(false);
-                                }
-                            }
-                        ]
-                    );
-                },
-                type: 'trash'
-            }],
-            generateColorSelectionIconSet(item)
-        ]
+    function getIsItemTransfering(item: IFolderItem) {
+        return isTransferMode && textfieldItem?.id === item.id;
     }
 
     function getIconType(item: IFolderItem) {
-        return isItemTransfering(item) ? 'transfer' : item.type;
+        return getIsItemTransfering(item) ? 'transfer' : item.type;
     }
 
     function getIconPlatformColor(item: IFolderItem) {
-        if (isItemTransfering(item)) {
+        if (getIsItemTransfering(item)) {
             return 'systemBlue';
         }
         if (isTransferMode && item.type === EFolderItemType.LIST) {
@@ -195,10 +204,10 @@ const SortedFolder = ({
             listId={folderId}
             itemIds={itemIds}
             storage={storage}
-            listType={EListItemType.FOLDER_ITEM}
-            toolbarIconSet={generateToolbarIcons()}
-            hideKeyboard={isDeleteAlertOpen || isTransferMode}
-            onGetRowTextPlatformColor={item => isItemTransfering(item) ? 'systemBlue' :
+            storageId={EStorageId.FOLDER_ITEM}
+            hideTextfield={isTransferMode}
+            toolbarIconSet={toolbarIconSet}
+            onGetRowTextPlatformColor={item => getIsItemTransfering(item) ? 'systemBlue' :
                 (isTransferMode && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
             onGetRightIconConfig={item => ({
                 customIcon:
@@ -217,7 +226,7 @@ const SortedFolder = ({
                     type: getIconType(item),
                     platformColor: getIconPlatformColor(item)
                 },
-                onClick: () => null // TODO: set the item to EDIT mode
+                onClick: () => setTextfieldId(item.id)
             })}
             emptyLabelConfig={{
                 label: "It's a ghost town in here.",

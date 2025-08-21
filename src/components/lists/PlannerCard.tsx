@@ -1,20 +1,17 @@
 import { calendarEventDataAtom } from '@/atoms/calendarEvents';
-import { textfieldItemAtom } from '@/atoms/textfieldData';
+import { useTextfieldItemAs } from '@/hooks/textfields/useTextfieldItemAs';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import usePlanner from '@/hooks/usePlanner';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
-import { EListItemType } from '@/lib/enums/EListType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { deleteAllRecurringEventsFromPlanner, resetRecurringEventsInPlanner } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
 import { MenuView } from '@react-native-menu/menu';
-import { usePathname } from 'expo-router';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
@@ -24,7 +21,7 @@ import Card from '../Card';
 import GenericIcon from '../icon';
 import DragAndDropList from './components/DragAndDropList';
 
-//
+// ✅ 
 
 type TPlannerCardProps = {
     datestamp: string;
@@ -42,14 +39,15 @@ const PlannerCard = ({
     datestamp,
     forecast
 }: TPlannerCardProps) => {
-    const pathname = usePathname();
 
-    const [textfieldItem] = useAtom(textfieldItemAtom);
+    const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+
+    const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
     const calendarEventData = useAtomValue(calendarEventDataAtom);
 
     const {
-        handleGetDeletingItemsByType: onGetDeletingItems,
-        handleToggleScheduleItemDelete: onToggleScheduleItemDelete
+        onGetDeletingItemsByStorageIdCallback: onGetDeletingItems,
+        onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
     } = useDeleteScheduler<IPlannerEvent>();
 
     const { calendarChips } = useCalendarData(datestamp);
@@ -60,15 +58,17 @@ const PlannerCard = ({
         isEditingTitle,
         hasTitle,
         isRecurringHidden,
-        handleEditTitle: onEditTitle,
-        handleToggleEditTitle: onToggleEditTitle,
-        handleToggleHideAllRecurring: onToggleHideAllRecurring
+        onEditTitle,
+        onToggleEditTitle,
+        onToggleHideAllRecurring,
+        onResetRecurringEvents,
+        onDeleteAllRecurringEvents
     } = usePlanner(datestamp);
 
     const [collapsed, setCollapsed] = useState(true);
 
     const customGetIsEventDeleting = useCallback((planEvent: IPlannerEvent | undefined) =>
-        planEvent ? onGetDeletingItems(EListItemType.EVENT).some(deleteItem =>
+        planEvent ? onGetDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
             // The planner event is deleting
             deleteItem.id === planEvent.id &&
             // and it's not from today
@@ -77,10 +77,61 @@ const PlannerCard = ({
         [onGetDeletingItems]
     );
 
-    const eventStorage = useMMKV({ id: EStorageId.EVENT });
+    const overflowActions = [
+        {
+            id: EEditAction.EDIT_TITLE,
+            title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
+            titleColor: '#FFFFFF',
+            image: Platform.select({
+                ios: hasTitle ? 'pencil' : 'plus'
+            }),
+            imageColor: '#FFFFFF'
+        },
+        {
+            id: 'recurring',
+            title: 'Manage Recurring',
+            titleColor: '#FFFFFF',
+            subtitle: 'Hide, delete, and sync events.',
+            image: Platform.select({
+                ios: 'repeat'
+            }),
+            imageColor: '#FFFFFF',
+            subactions: [
+                {
+                    id: EEditAction.TOGGLE_HIDE_RECURRING,
+                    title: `${isRecurringHidden ? 'Show' : 'Hide'} Recurring`,
+                    titleColor: 'rgba(250,180,100,0.5)',
+                    image: Platform.select({
+                        ios: isRecurringHidden ? 'eye' : 'eye.slash'
+                    }),
+                    imageColor: '#FFFFFF'
+                },
+                {
+                    id: EEditAction.RESET_RECURRING,
+                    title: 'Reset Recurring',
+                    subtitle: 'Customized recurring events will be reset.',
+                    titleColor: 'rgb(255,97,101)',
+                    image: Platform.select({
+                        ios: 'arrow.trianglehead.2.counterclockwise.rotate.90'
+                    }),
+                    imageColor: '#FFFFFF',
+                },
+                {
+                    id: EEditAction.DELETE_RECURRING,
+                    title: 'Delete Recurring',
+                    attributes: {
+                        destructive: true
+                    },
+                    image: Platform.select({
+                        ios: 'trash'
+                    }),
+                    imageColor: 'rgb(255,66,69)'
+                }
+            ],
+        }
+    ];
 
     const isCalendarLoading = calendarEventData.plannersMap[datestamp] === undefined;
-    const isTimeModalOpen = pathname.includes('timeModal');
 
     // =============
     // 1. Reactions
@@ -88,7 +139,6 @@ const PlannerCard = ({
 
     // Reveal all recurring events when the textfield item belongs to this planner.
     useEffect(() => {
-        // TEXTFIELD ITEM listId
         if (textfieldItem?.listId === datestamp && isRecurringHidden) {
             onToggleHideAllRecurring();
         }
@@ -96,7 +146,6 @@ const PlannerCard = ({
 
     // Expand this list if the textfield item belongs to this planner.
     useEffect(() => {
-        // TEXTFIELD ITEM listId
         if (textfieldItem?.listId === datestamp && collapsed) {
             setCollapsed(false);
         }
@@ -112,10 +161,10 @@ const PlannerCard = ({
                 onToggleEditTitle();
                 break;
             case EEditAction.DELETE_RECURRING:
-                deleteAllRecurringEventsFromPlanner(datestamp);
+                onDeleteAllRecurringEvents();
                 break;
             case EEditAction.RESET_RECURRING:
-                resetRecurringEventsInPlanner(datestamp);
+                onResetRecurringEvents();
                 break;
             case EEditAction.TOGGLE_HIDE_RECURRING:
                 onToggleHideAllRecurring();
@@ -126,13 +175,9 @@ const PlannerCard = ({
 
     async function handleToggleCollapsed() {
         if (textfieldItem) {
-            // if (textfieldItem.value.trim() !== '')
-            //     await SortedEvents.saveItem(textfieldItem);
-            // setTextfieldItem(null);
-
-
-            // TODO: set item to STATIC
+            onCloseTextfield();
         }
+
         setCollapsed(curr => !curr);
     }
 
@@ -163,59 +208,7 @@ const PlannerCard = ({
                         onPressAction={({ nativeEvent }) => {
                             handleAction(nativeEvent.event as EEditAction);
                         }}
-                        actions={[
-                            {
-                                id: EEditAction.EDIT_TITLE,
-                                title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
-                                titleColor: '#FFFFFF',
-                                image: Platform.select({
-                                    ios: hasTitle ? 'pencil' : 'plus'
-                                }),
-                                imageColor: '#FFFFFF'
-                            },
-                            {
-                                id: 'recurring',
-                                title: 'Manage Recurring',
-                                titleColor: '#FFFFFF',
-                                subtitle: 'Hide, delete, and sync events.',
-                                image: Platform.select({
-                                    ios: 'repeat'
-                                }),
-                                imageColor: '#FFFFFF',
-                                subactions: [
-                                    {
-                                        id: EEditAction.TOGGLE_HIDE_RECURRING,
-                                        title: `${isRecurringHidden ? 'Show' : 'Hide'} Recurring`,
-                                        titleColor: 'rgba(250,180,100,0.5)',
-                                        image: Platform.select({
-                                            ios: isRecurringHidden ? 'eye' : 'eye.slash'
-                                        }),
-                                        imageColor: '#FFFFFF'
-                                    },
-                                    {
-                                        id: EEditAction.RESET_RECURRING,
-                                        title: 'Reset Recurring',
-                                        subtitle: 'Customized recurring events will be reset.',
-                                        titleColor: 'rgb(255,97,101)',
-                                        image: Platform.select({
-                                            ios: 'arrow.trianglehead.2.counterclockwise.rotate.90'
-                                        }),
-                                        imageColor: '#FFFFFF',
-                                    },
-                                    {
-                                        id: EEditAction.DELETE_RECURRING,
-                                        title: 'Delete Recurring',
-                                        attributes: {
-                                            destructive: true
-                                        },
-                                        image: Platform.select({
-                                            ios: 'trash'
-                                        }),
-                                        imageColor: 'rgb(255,66,69)'
-                                    }
-                                ],
-                            }
-                        ]}
+                        actions={overflowActions}
                         shouldOpenOnLongPress={false}
                     >
                         <GenericIcon size='l' type='more' platformColor='systemBlue' />
@@ -228,9 +221,8 @@ const PlannerCard = ({
             <DragAndDropList<IPlannerEvent>
                 listId={datestamp}
                 itemIds={visibleEventIds}
-                listType={EListItemType.EVENT}
+                storageId={EStorageId.PLANNER_EVENT}
                 storage={eventStorage}
-                hideKeyboard={isTimeModalOpen}
                 emptyLabelConfig={{
                     label: 'No plans',
                     className: 'h-20 flex justify-center items-center'

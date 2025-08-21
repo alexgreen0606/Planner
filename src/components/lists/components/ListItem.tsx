@@ -1,12 +1,14 @@
+import { textfieldIdAtom } from "@/atoms/textfieldId";
 import GenericIcon from "@/components/icon";
+import CustomText from "@/components/text/CustomText";
 import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
-import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
-import { useEffect, useMemo } from "react";
+import { useAtom } from "jotai";
+import { useMemo } from "react";
 import { PlatformColor, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
@@ -27,7 +29,6 @@ type TListItemProps<T extends TListItem> = {
     listId: string;
     itemId: string;
     itemIndex: number;
-    hideKeyboard: boolean;
     upperAutoScrollBound: number;
     lowerAutoScrollBound: number;
     dragConfig: {
@@ -44,6 +45,7 @@ type TListItemProps<T extends TListItem> = {
     },
     toolbarIconSet?: ToolbarIcon<T>[][];
     storage: MMKV;
+    hideTextfield: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string, prev: T) => T;
@@ -87,7 +89,7 @@ const ListItem = <T extends TListItem>({
     toolbarIconSet,
     upperAutoScrollBound,
     lowerAutoScrollBound,
-    hideKeyboard,
+    hideTextfield,
     onValueChange,
     onCreateItem,
     onDeleteItem,
@@ -99,11 +101,14 @@ const ListItem = <T extends TListItem>({
     customOnGetIsDeleting
 }: TListItemProps<T>) => {
 
-    const { handleGetIsItemDeleting: onGetIsItemDeleting } = useDeleteScheduler<T>();
+    const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
+
+    const { onGetIsItemDeletingCallback: onGetIsItemDeleting } = useDeleteScheduler<T>();
 
     const {
         scrollOffset,
-        handleAutoScroll: onAutoScroll
+        handleAutoScroll: onAutoScroll,
+        handleFocusPlaceholder
     } = useScrollContainer();
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
@@ -113,12 +118,7 @@ const ListItem = <T extends TListItem>({
         [onGetIsItemDeleting, customOnGetIsDeleting]
     );
 
-    // Mark the item static whenever it is deleting.
-    useEffect(() => {
-        if (isPendingDelete) {
-            setItem((prev) => prev ? ({ ...prev, status: EItemStatus.STATIC }) : prev);
-        }
-    }, [isPendingDelete]);
+    const isEditable = !hideTextfield && (textfieldId === item?.id);
 
     // ==================
     // 1. Event Handlers
@@ -182,8 +182,10 @@ const ListItem = <T extends TListItem>({
         .maxDuration(200)
         .onEnd(() => {
             if (!item || isPendingDelete) return;
+
             if (!onContentClick) {
-                runOnJS(setItem)({ ...item, status: EItemStatus.EDIT });
+                runOnJS(handleFocusPlaceholder)();
+                runOnJS(setTextfieldId)(itemId);
                 return;
             }
 
@@ -299,6 +301,14 @@ const ListItem = <T extends TListItem>({
     const leftIconConfig = useMemo(() => item ? onGetLeftIconConfig?.(item) : undefined, [item, onGetLeftIconConfig]);
     const rightIconConfig = useMemo(() => item ? onGetRightIconConfig?.(item) : undefined, [item, onGetRightIconConfig]);
 
+    const valueStyles = {
+        color: PlatformColor(
+            textPlatformColor ??
+            (isPendingDelete ? 'tertiaryLabel' : 'label')
+        ),
+        textDecorationLine: isPendingDelete ? 'line-through' : undefined
+    };
+
     if (!item) return null;
 
     return (
@@ -334,31 +344,46 @@ const ListItem = <T extends TListItem>({
                             height: LIST_CONTENT_HEIGHT
                         }}
                     >
-                        <ListItemTextfield<T>
-                            item={item}
-                            toolbarIconSet={toolbarIconSet}
-                            hideKeyboard={hideKeyboard}
-                            customStyle={{
-                                color: PlatformColor(
-                                    textPlatformColor ??
-                                    (isPendingDelete ? 'tertiaryLabel' : 'label')
-                                ),
-                                textDecorationLine: isPendingDelete ? 'line-through' : undefined
-                            }}
-                            onDeleteItem={onDeleteItem}
-                            onSetItemInStorage={setItem}
-                            onValueChange={onValueChange}
-                            onSaveToExternalStorage={onSaveToExternalStorage}
-                            onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
-                        />
+                        {isEditable ? (
+                            <ListItemTextfield<T>
+                                item={item}
+                                toolbarIconSet={toolbarIconSet}
+                                storage={storage}
+                                customStyle={valueStyles}
+                                onDeleteItem={onDeleteItem}
+                                onSetItemInStorage={setItem}
+                                onValueChange={onValueChange}
+                                onSaveToExternalStorage={onSaveToExternalStorage}
+                                onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
+                            />
+                        ) : (
+                            <CustomText
+                                variant='standard'
+                                className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
+                                style={
+                                    [
+                                        {
+                                            height: LIST_ITEM_HEIGHT,
+                                            paddingTop: LIST_CONTENT_HEIGHT / 8,
+                                            marginRight: LIST_ICON_SPACING / 2,
+                                            color: PlatformColor('label'),
+                                            fontFamily: 'Text',
+                                        },
+                                        valueStyles
+                                    ]
+                                }
+                            >
+                                {item.value}
+                            </CustomText>
+                        )}
                     </View>
                 </GestureDetector>
 
                 {/* Right Icon */}
                 {rightIconConfig && <RowIcon config={rightIconConfig} type={IconPosition.RIGHT} />}
 
-            </View>
-        </Row>
+            </View >
+        </Row >
     );
 };
 

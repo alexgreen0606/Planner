@@ -1,4 +1,3 @@
-import { EItemStatus } from "@/lib/enums/EItemStatus";
 import { ICountdown } from "@/lib/types/listItems/ICountdown";
 import { getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import * as Calendar from 'expo-calendar';
