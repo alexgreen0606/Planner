@@ -10,6 +10,8 @@ import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
 import { isTimeEarlierOrEqual } from "./dateUtils";
 
+// ✅ 
+
 // ====================
 // 1. Helper Functions
 // ====================
@@ -80,27 +82,97 @@ function calculateChronologicalRecurringEventIndex(
 function deleteRecurringWeekdayEvents(eventsToDelete: IRecurringEvent[]) {
     if (eventsToDelete.length === 0) return;
 
-    // todo: simplify with reduce
-    Object.values(ERecurringPlannerId).forEach((day) => {
-        if ([
+    const deleteIds = new Set(eventsToDelete.map(e => e.id));
+
+    Object.values(ERecurringPlannerId)
+        .filter(day => ![
+            ERecurringPlannerId.WEEKDAYS,
             ERecurringPlannerId.SATURDAY,
             ERecurringPlannerId.SUNDAY
-        ].includes(day)
-        ) return;
+        ].includes(day))
+        .forEach((day) => {
+            const recurringPlanner = getRecurringPlannerFromStorageById(day);
 
-        const recurringPlanner = getRecurringPlannerFromStorageById(day);
-        const plannerEvents = recurringPlanner.eventIds.map(getRecurringEventFromStorageById);
-        const newPlannerEvents = plannerEvents.filter(
-            planEvent => !eventsToDelete.some(delEvent => delEvent.id === planEvent.weekdayEventId || delEvent.id === planEvent.id)
-        );
-        const newPlannerIds = newPlannerEvents.map(e => e.id);
+            // Filter out all the weekday events that are deleting.
+            const eventIds = recurringPlanner.eventIds.reduce<string[]>((acc, id) => {
+                const event = getRecurringEventFromStorageById(id);
+                if (!event.weekdayEventId || !deleteIds.has(event.weekdayEventId)) {
+                    acc.push(event.id);
+                }
+                return acc;
+            }, []);
 
-        saveRecurringPlannerToStorage({ ...recurringPlanner, eventIds: newPlannerIds });
-    });
+            saveRecurringPlannerToStorage({ ...recurringPlanner, eventIds });
+        });
 
     for (const event of eventsToDelete) {
         deleteRecurringEventFromStorage(event.id);
     }
+}
+
+// =============================================
+// 2. Upsert Weekday Events To Weekday Planners
+// =============================================
+
+/**
+ * Updates or inserts a recurring event into all recurring weekday planners.
+ * 
+ * @param weekdayEvent - The event to propagate into the recurring planners.
+ */
+export function upsertEventToWeekdayPlanners(weekdayEvent: IRecurringEvent) {
+
+    Object.values(ERecurringPlannerId)
+        .filter(day => ![
+            ERecurringPlannerId.WEEKDAYS,
+            ERecurringPlannerId.SATURDAY,
+            ERecurringPlannerId.SUNDAY
+        ].includes(day))
+        .forEach((day) => {
+            const recurringPlanner = getRecurringPlannerFromStorageById(day);
+            if (recurringPlanner.deletedWeekdayEventIds.includes(weekdayEvent.id)) return;
+
+            const eventExists = recurringPlanner.eventIds.find((id, index) => {
+                const recEvent = getRecurringEventFromStorageById(id);
+                if (recEvent.weekdayEventId !== weekdayEvent.id) return false;
+
+                const baseEvent: IRecurringEvent = {
+                    ...recEvent,
+                    value: weekdayEvent.value,
+                };
+                if (recEvent.startTime) {
+                    baseEvent.startTime = weekdayEvent.startTime;
+                }
+
+                // Save the event and planner.
+                saveRecurringPlannerToStorage(
+                    updateRecurringEventIndexWithChronologicalCheck(recurringPlanner, index, baseEvent)
+                );
+                saveRecurringEventToStorage(baseEvent);
+
+                return true;
+
+            });
+
+            if (eventExists) return;
+
+            const baseEvent: IRecurringEvent = {
+                ...weekdayEvent,
+                id: uuid.v4(),
+                weekdayEventId: weekdayEvent.id,
+                listId: day,
+                storageId: EStorageId.RECURRING_PLANNER_EVENT
+            };
+            saveRecurringEventToStorage(baseEvent);
+
+            // Insert the event in the back of the list and adjust to preserve chronological ordering.
+            saveRecurringPlannerToStorage(
+                updateRecurringEventIndexWithChronologicalCheck(
+                    recurringPlanner,
+                    recurringPlanner.eventIds.length,
+                    baseEvent
+                )
+            );
+        });
 }
 
 // ====================
@@ -108,14 +180,14 @@ function deleteRecurringWeekdayEvents(eventsToDelete: IRecurringEvent[]) {
 // ====================
 
 /**
- * Generates a new recurring event for a given recurring planner. The new event will focus the textfield.
+ * Creates a new recurring event for a given recurring planner. The new event will focus the textfield.
  * 
  * @param recurringPlannerId - The ID of the recurring planner.
  * @param index - The index of the new item within its recurring planner.
  */
 export function createRecurringEventInStorageAndFocusTextfield(recurringPlannerId: string, index: number) {
-    const recurringPlanner = getRecurringPlannerFromStorageById(recurringPlannerId);
 
+    // Create recurring event and save to storage.
     const recurringEvent: IRecurringEvent = {
         id: uuid.v4(),
         value: "",
@@ -124,51 +196,59 @@ export function createRecurringEventInStorageAndFocusTextfield(recurringPlannerI
     };
     saveRecurringEventToStorage(recurringEvent);
 
+    // Add to recurring planner.
+    const recurringPlanner = getRecurringPlannerFromStorageById(recurringPlannerId);
     recurringPlanner.eventIds.splice(index, 0, recurringEvent.id);
     saveRecurringPlannerToStorage(recurringPlanner);
 
+    // Focus the textfield.
     jotaiStore.set(textfieldIdAtom, recurringEvent.id);
 }
 
+/**
+ * Creates an empty recurring planner for the given ID.
+ * 
+ * @param recurringPlannerId - The ID of the recurring planner.
+ * @returns A new recurring planner object with no events.
+ */
 export function createEmptyRecurringPlanner(recurringPlannerId: string): TRecurringPlanner {
     return {
         id: recurringPlannerId,
         eventIds: [],
         deletedWeekdayEventIds: []
-    };
+    }
 }
 
 /**
- * Generates the icon config representing a recurring event's time. Clicking the icon will open the textfield for the event.
+ * Generates the icon config representing a recurring event's time. Clicking the icon will open the 
+ * textfield for the event.
  * 
- * @param event - The recurring event.
- * @param onBeginEdit - Callback to begin editing the event.
- * @returns Icon configuration for the recurring event's time.
+ * @param event - The recurring event to represent.
+ * @returns The icon configuration for the recurring event's time.
  */
 export function createRecurringEventTimeIconConfig(
-    event: IRecurringEvent,
-    onBeginEdit: (event: IRecurringEvent) => void,
+    event: IRecurringEvent
 ): TListItemIconConfig<IRecurringEvent> {
     return {
         hideIcon: !event.startTime,
-        onClick: () => onBeginEdit(event),
+        onClick: () => jotaiStore.set(textfieldIdAtom, event.id),
         customIcon: (
             <TimeValue timeValue={event.startTime} concise />
         )
-    };
+    }
 }
 
 // ====================
-// 3. Update Functions
+// 4. Update Functions
 // ====================
 
 /**
- * Updates a planner event's position within its planner. 
+ * Updates a recurring planner event's position within its recurring planner. 
  * 
- * @param planner - The planner with the current ordering of events.
+ * @param planner - The recurring planner with the current ordering of events.
  * @param index - The desired index of the event.
- * @param event - The event to place.
- * @returns The updated planner with the new positions of events.
+ * @param event - The recurring event to place.
+ * @returns The updated recurring planner with the new positions of events.
  */
 export function updateRecurringEventIndexWithChronologicalCheck(
     planner: TRecurringPlanner,
@@ -180,10 +260,10 @@ export function updateRecurringEventIndexWithChronologicalCheck(
     planner.eventIds = planner.eventIds.filter(id => id !== event.id);
     planner.eventIds.splice(index, 0, event.id);
 
-    // Verify chronological order
+    // Verify chronological order.
     const newEventIndex = calculateChronologicalRecurringEventIndex(event, planner);
     if (newEventIndex !== index) {
-        // Remove again and insert at corrected index
+        // Remove again and insert at corrected index.
         planner.eventIds = planner.eventIds.filter(id => id !== event.id);
         planner.eventIds.splice(newEventIndex, 0, event.id);
     }
@@ -191,76 +271,16 @@ export function updateRecurringEventIndexWithChronologicalCheck(
     return planner;
 }
 
-/**
- * Updates or inserts a recurring weekday event into all recurring weekday planners.
- * 
- * @param weekdayEvent - The event to propagate into the recurring planners.
- */
-export function updateWeekdayPlannersWithWeekdayEvent(
-    weekdayEvent: IRecurringEvent
-) {
-
-    Object.values(ERecurringPlannerId).forEach((day) => {
-        if ([
-            ERecurringPlannerId.WEEKDAYS,
-            ERecurringPlannerId.SATURDAY,
-            ERecurringPlannerId.SUNDAY
-        ].includes(day)) return;
-
-        const recurringPlanner = getRecurringPlannerFromStorageById(day);
-        if (recurringPlanner.deletedWeekdayEventIds.includes(weekdayEvent.id)) return;
-
-        const eventExists = recurringPlanner.eventIds.find((id, index) => {
-            const recEvent = getRecurringEventFromStorageById(id);
-            if (recEvent.weekdayEventId === weekdayEvent.id) {
-
-                const baseEvent: IRecurringEvent = {
-                    ...recEvent,
-                    value: weekdayEvent.value,
-                };
-
-                if (recEvent.startTime) {
-                    baseEvent.startTime = weekdayEvent.startTime;
-                }
-
-                // Ensure the event does not break chronological ordering.
-                updateRecurringEventIndexWithChronologicalCheck(index, baseEvent);
-
-                saveRecurringEventToStorage(baseEvent);
-                return true;
-            }
-            return false;
-        });
-
-        if (eventExists) return;
-
-        const baseEvent: IRecurringEvent = {
-            ...weekdayEvent,
-            id: uuid.v4(),
-            weekdayEventId: weekdayEvent.id,
-            listId: day,
-            storageId: EStorageId.RECURRING_PLANNER_EVENT
-        };
-
-        saveRecurringEventToStorage(baseEvent);
-
-        // Insert the event in the back of the list and adjust to preserve chronological ordering.
-        updateRecurringEventIndexWithChronologicalCheck(recurringPlanner.eventIds.length, baseEvent);
-    });
-}
-
 // ===================
-// 4. Delete Function
+// 5. Delete Function
 // ===================
 
 /**
- * Deletes a list of recurring events from storage. Weekday events will be hidden.
+ * Deletes a list of recurring events from storage.
  * 
  * @param eventsToDelete - The list of recurring events to delete.
  */
-export async function deleteRecurringEventsFromStorageHideWeekday(
-    eventsToDelete: IRecurringEvent[]
-) {
+export async function deleteRecurringEventsFromStorageHideWeekday(eventsToDelete: IRecurringEvent[]) {
     if (eventsToDelete.length === 0) return;
 
     const plannersToUpdate: Record<string, TRecurringPlanner> = {};
@@ -281,6 +301,7 @@ export async function deleteRecurringEventsFromStorageHideWeekday(
             plannersToUpdate[event.listId].deletedWeekdayEventIds.push(event.weekdayEventId);
         }
 
+        // Determine how to delete this event.
         if (event.listId === ERecurringPlannerId.WEEKDAYS) {
             weekdayEventsToDelete.push(event);
         } else {

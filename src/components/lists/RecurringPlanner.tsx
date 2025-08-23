@@ -4,7 +4,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { createRecurringEventInStorageAndFocusTextfield, createRecurringEventTimeIconConfig, deleteRecurringEventsFromStorageHideWeekday, updateWeekdayPlannersWithWeekdayEvent } from '@/utils/recurringPlannerUtils';
+import { createRecurringEventInStorageAndFocusTextfield, createRecurringEventTimeIconConfig, deleteRecurringEventsFromStorageHideWeekday, upsertEventToWeekdayPlanners } from '@/utils/recurringPlannerUtils';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
@@ -48,7 +48,7 @@ const RecurringPlanner = ({ recurringPlannerId }: SortedRecurringPlannerProps) =
             onCreateItem={createRecurringEventInStorageAndFocusTextfield}
             onIndexChange={onUpdateRecurringEventIndexWithChronologicalCheck}
             onValueChange={onUpdateRecurringEventValueWithTimeParsing}
-            onSaveToExternalStorage={isWeekdayPlanner ? updateWeekdayPlannersWithWeekdayEvent : undefined}
+            onSaveToExternalStorage={isWeekdayPlanner ? upsertEventToWeekdayPlanners : undefined}
             onDeleteItem={(event) => deleteRecurringEventsFromStorageHideWeekday([event])}
             onGetRightIconConfig={(event) => createRecurringEventTimeIconConfig(event, onShowEventTime)}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}

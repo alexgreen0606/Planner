@@ -415,10 +415,10 @@ export function updatePlannerEventIndexWithChronologicalCheck(
     planner.eventIds = planner.eventIds.filter(id => id !== event.id);
     planner.eventIds.splice(index, 0, event.id);
 
-    // Verify chronological order
+    // Verify chronological order.
     const newEventIndex = calculateChronologicalPlannerEventIndex(event, planner);
     if (newEventIndex !== index) {
-        // Remove again and insert at corrected index
+        // Remove again and insert at corrected index.
         planner.eventIds = planner.eventIds.filter(id => id !== event.id);
         planner.eventIds.splice(newEventIndex, 0, event.id);
     }
