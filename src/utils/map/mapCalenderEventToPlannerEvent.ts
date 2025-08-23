@@ -1,18 +1,20 @@
+import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { Event } from "expo-calendar";
-import { isoToDatestamp } from "../dateUtils";
-import { EStorageId } from "@/lib/enums/EStorageId";
 import { uuid } from "expo-modules-core";
+import { isoToDatestamp } from "../dateUtils";
+
+// ✅ 
 
 /**
  * Maps a calendar event to a planner event.
  * 
- * @param datestamp - The date of the planner where the event will be placed.
+ * @param datestamp - The date of the planner where the event will be placed. (YYYY-MM-DD)
  * @param event - The calendar event to map.
- * @param storageRecord - Optional storage event to merge with the calendar event.
- * @returns - A new planner event with the calendar data.
+ * @param existingPlannerEvent - Optional planner event to merge with the calendar event.
+ * @returns A planner event with the calendar data.
  */
-export function mapCalendarEventToPlannerEvent(datestamp: string, event: Event, storageRecord?: IPlannerEvent): IPlannerEvent {
+export function mapCalendarEventToPlannerEvent(datestamp: string, event: Event, existingPlannerEvent?: IPlannerEvent): IPlannerEvent {
     const startDatestamp = isoToDatestamp(event.startDate as string);
     const endDatestamp = isoToDatestamp(event.endDate as string);
 
@@ -25,8 +27,8 @@ export function mapCalendarEventToPlannerEvent(datestamp: string, event: Event, 
         startDatestamp === datestamp && endDatestamp > datestamp;
 
     const plannerEvent: IPlannerEvent = {
-        ...storageRecord,
-        id: storageRecord?.id ?? uuid.v4(),
+        ...existingPlannerEvent,
+        id: existingPlannerEvent?.id ?? uuid.v4(),
         calendarId: event.id,
         value: event.title,
         storageId: EStorageId.PLANNER_EVENT,

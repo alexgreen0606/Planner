@@ -1,5 +1,5 @@
 import ThinLine from '@/components/ThinLine';
-import { useTextfieldItemAs } from '@/hooks/textfields/useTextfieldItemAs';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';

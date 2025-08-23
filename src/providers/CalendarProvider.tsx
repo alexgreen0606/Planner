@@ -2,7 +2,7 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { userAccessAtom } from '@/atoms/userAccess';
-import { useTextfieldItemAs } from '@/hooks/textfields/useTextfieldItemAs';
+import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';

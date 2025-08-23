@@ -1,8 +1,6 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
 import { useFolderItem } from '@/hooks/useFolderItem';
-import useFolderTextfield from '@/hooks/textfields/useFolderTextfield';
-import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
@@ -11,12 +9,11 @@ import { deleteFolderItemAndChildren, generateNewFolderItemAndSaveToStorage, upd
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
-import { Alert, PlatformColor } from 'react-native';
+import { PlatformColor } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
-import { ToolbarIcon } from './components/ListToolbar';
 
-//
+// ✅ 
 
 type ISortedFolderProps = {
     parentClickTrigger: number;
@@ -27,102 +24,20 @@ const SortedFolder = ({
     parentClickTrigger,
     onOpenItem,
 }: ISortedFolderProps) => {
+    const { folderId } = useLocalSearchParams<{ folderId: string }>();
+    const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const router = useRouter();
 
     const setTextfieldId = useSetAtom(textfieldIdAtom);
 
-    const { folderId } = useLocalSearchParams<{ folderId: string }>();
-    const router = useRouter();
-
     const {
         item: folder,
-        itemIds
-    } = useFolderItem(folderId);
-
-    const {
+        itemIds,
         isTransferMode,
         textfieldItem,
+        toolbarIconSet,
         onEndTransfer,
-        onBeginTransfer,
-        onChangeColor,
-        onToggleType,
-        onCloseTextfield
-    } = useFolderTextfield();
-
-    const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
-
-    const toolbarIconSet: ToolbarIcon<IFolderItem>[][] = !textfieldItem
-        ? []
-        : [
-            // Folder/List toggle
-            textfieldItem.itemIds.length === 0
-                ? [
-                    {
-                        type: "folder",
-                        onClick: onToggleType,
-                        platformColor:
-                            textfieldItem.type === EFolderItemType.FOLDER
-                                ? textfieldItem.platformColor
-                                : "secondaryLabel",
-                    },
-                    {
-                        type: "list",
-                        onClick: onToggleType,
-                        platformColor:
-                            textfieldItem.type === EFolderItemType.LIST
-                                ? textfieldItem.platformColor
-                                : "secondaryLabel",
-                    },
-                ]
-                : [],
-
-            // Color selection
-            Object.values(selectableColors).map(color => ({
-                type: textfieldItem?.platformColor === color ? 'circleFilled' : 'circle',
-                platformColor: color,
-                onClick: () => onChangeColor(color),
-            })),
-
-            // Transfer
-            [
-                {
-                    type: "transfer",
-                    onClick: onBeginTransfer,
-                },
-            ],
-
-            // Delete
-            [
-                {
-                    onClick: () => {
-                        const title = `Delete ${textfieldItem.type}?`;
-                        const hasNestedItems = textfieldItem.itemIds.length > 0;
-
-                        let message = "";
-                        if (hasNestedItems) {
-                            message += `This ${textfieldItem.type} has ${textfieldItem.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
-                        } else {
-                            message += `Would you like to delete this ${textfieldItem.type}?`;
-                        }
-
-                        Alert.alert(title, message, [
-                            {
-                                text: "Cancel",
-                                style: "cancel",
-                            },
-                            {
-                                text: hasNestedItems ? "Force Delete" : "Delete",
-                                style: "destructive",
-                                onPress: () => {
-                                    onCloseTextfield();
-                                    deleteFolderItemAndChildren(textfieldItem);
-                                },
-                            },
-                        ]);
-                    },
-                    type: "trash",
-                },
-            ],
-        ];
+    } = useFolderItem(folderId, folderItemStorage);
 
     // Handle clicking of the parent folder.
     useEffect(() => {
@@ -203,7 +118,7 @@ const SortedFolder = ({
             fillSpace
             listId={folderId}
             itemIds={itemIds}
-            storage={storage}
+            storage={folderItemStorage}
             storageId={EStorageId.FOLDER_ITEM}
             hideTextfield={isTransferMode}
             toolbarIconSet={toolbarIconSet}
@@ -229,7 +144,7 @@ const SortedFolder = ({
                 onClick: () => setTextfieldId(item.id)
             })}
             emptyLabelConfig={{
-                label: "It's a ghost town in here.",
+                label: "It's a ghost town in here",
                 className: 'flex-1'
             }}
             onDeleteItem={deleteFolderItemAndChildren}

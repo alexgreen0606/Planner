@@ -9,10 +9,9 @@ import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
-// ✅ 
+
 
 const Checklist = () => {
-
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
 
     const {
@@ -32,7 +31,7 @@ const Checklist = () => {
             storageId={EStorageId.CHECKLIST_ITEM}
             itemIds={itemIds}
             emptyLabelConfig={{
-                label: "It's a ghost town in here.",
+                label: "It's a ghost town in here",
                 className: 'flex-1'
             }}
             onCreateItem={generateNewChecklistItemAndSaveToStorage}

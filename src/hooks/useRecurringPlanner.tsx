@@ -10,7 +10,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
-import { useTextfieldItemAs } from "./textfields/useTextfieldItemAs";
+import { useTextfieldItemAs } from "./useTextfieldItemAs";
 
 // ✅ 
 

@@ -50,7 +50,7 @@ const RecurringPlanner = ({ recurringPlannerId }: SortedRecurringPlannerProps) =
             onValueChange={onUpdateRecurringEventValueWithTimeParsing}
             onSaveToExternalStorage={isWeekdayPlanner ? upsertEventToWeekdayPlanners : undefined}
             onDeleteItem={(event) => deleteRecurringEventsFromStorageHideWeekday([event])}
-            onGetRightIconConfig={(event) => createRecurringEventTimeIconConfig(event, onShowEventTime)}
+            onGetRightIconConfig={(event) => createRecurringEventTimeIconConfig(event)}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
     );

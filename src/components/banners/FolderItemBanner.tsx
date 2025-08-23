@@ -2,9 +2,11 @@ import ButtonText from '@/components/text/ButtonText';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import { useFolderItem } from '@/hooks/useFolderItem';
 import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { PlatformColor, TextInput, View } from 'react-native';
+import { useMMKV } from 'react-native-mmkv';
 
 // ✅ 
 
@@ -21,14 +23,15 @@ const FolderItemBanner = ({
     itemId,
     backButtonConfig
 }: FolderItemBannerProps) => {
+    const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const router = useRouter();
 
     const {
         item: folder,
         isEditingValue,
-        handleToggleEditValue,
-        handleEditValue
-    } = useFolderItem(itemId);
+        onToggleEditValue,
+        onEditValue
+    } = useFolderItem(itemId, itemStorage);
 
     return (
         <View
@@ -41,9 +44,9 @@ const FolderItemBanner = ({
                 <TextInput
                     autoFocus
                     value={folder?.value}
-                    onChangeText={handleEditValue}
+                    onChangeText={onEditValue}
                     cursorColor={PlatformColor('systemBlue')}
-                    onBlur={handleToggleEditValue}
+                    onBlur={onToggleEditValue}
                     className='w-full bg-transparent'
                     style={[
                         textStyles.pageLabel,
@@ -53,7 +56,7 @@ const FolderItemBanner = ({
             ) : (
                 <CustomText
                     variant='pageLabel'
-                    onPress={handleToggleEditValue}
+                    onPress={onToggleEditValue}
                     ellipsizeMode='tail'
                     numberOfLines={1}
                 >

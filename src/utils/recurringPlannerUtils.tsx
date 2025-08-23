@@ -9,6 +9,7 @@ import { deleteRecurringEventFromStorage, getRecurringEventFromStorageById, getR
 import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
 import { isTimeEarlierOrEqual } from "./dateUtils";
+import { mapWeekdayEventToRecurringEvent } from "./map/mapWeekdayEventToRecurringEvent";
 
 // ✅ 
 
@@ -127,49 +128,38 @@ export function upsertEventToWeekdayPlanners(weekdayEvent: IRecurringEvent) {
             ERecurringPlannerId.SATURDAY,
             ERecurringPlannerId.SUNDAY
         ].includes(day))
-        .forEach((day) => {
-            const recurringPlanner = getRecurringPlannerFromStorageById(day);
+        .forEach((recurringPlannerId) => {
+            const recurringPlanner = getRecurringPlannerFromStorageById(recurringPlannerId);
             if (recurringPlanner.deletedWeekdayEventIds.includes(weekdayEvent.id)) return;
 
             const eventExists = recurringPlanner.eventIds.find((id, index) => {
-                const recEvent = getRecurringEventFromStorageById(id);
-                if (recEvent.weekdayEventId !== weekdayEvent.id) return false;
+                const existingEvent = getRecurringEventFromStorageById(id);
+                if (existingEvent.weekdayEventId !== weekdayEvent.id) return false;
 
-                const baseEvent: IRecurringEvent = {
-                    ...recEvent,
-                    value: weekdayEvent.value,
-                };
-                if (recEvent.startTime) {
-                    baseEvent.startTime = weekdayEvent.startTime;
-                }
+                const updatedEvent = mapWeekdayEventToRecurringEvent(recurringPlannerId, weekdayEvent, existingEvent.id);
 
-                // Save the event and planner.
+                // Save the updated event and planner.
+                saveRecurringEventToStorage(updatedEvent);
                 saveRecurringPlannerToStorage(
-                    updateRecurringEventIndexWithChronologicalCheck(recurringPlanner, index, baseEvent)
+                    updateRecurringEventIndexWithChronologicalCheck(recurringPlanner, index, updatedEvent)
                 );
-                saveRecurringEventToStorage(baseEvent);
 
                 return true;
-
             });
 
             if (eventExists) return;
 
-            const baseEvent: IRecurringEvent = {
-                ...weekdayEvent,
-                id: uuid.v4(),
-                weekdayEventId: weekdayEvent.id,
-                listId: day,
-                storageId: EStorageId.RECURRING_PLANNER_EVENT
-            };
-            saveRecurringEventToStorage(baseEvent);
 
-            // Insert the event in the back of the list and adjust to preserve chronological ordering.
+            // Save the new event.
+            const newRecurringEvent = mapWeekdayEventToRecurringEvent(recurringPlannerId, weekdayEvent);
+            saveRecurringEventToStorage(newRecurringEvent);
+
+            // Insert the event in the back of the planner and adjust to preserve chronological ordering.
             saveRecurringPlannerToStorage(
                 updateRecurringEventIndexWithChronologicalCheck(
                     recurringPlanner,
                     recurringPlanner.eventIds.length,
-                    baseEvent
+                    newRecurringEvent
                 )
             );
         });

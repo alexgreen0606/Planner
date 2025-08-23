@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { loadCalendarDataToStore } from './calendarUtils';
 import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { mapCalendarEventToPlannerEvent } from './map/mapCalenderEventToPlannerEvent';
+import { mapRecurringEventToPlannerEvent } from './map/mapRecurringEventToPlannerEvent';
 
 // ✅ 
 
@@ -115,58 +116,46 @@ export function upsertRecurringEventsIntoPlanner(planner: TPlanner): TPlanner {
 
     // Parse the planner to delete old recurring events and update existing ones.
     planner.eventIds.forEach((eventId) => {
-        const planEvent = getPlannerEventFromStorageById(eventId);
+        const plannerEvent = getPlannerEventFromStorageById(eventId);
 
         // Non-recurring events are preserved as-is.
-        if (!planEvent.recurringId) {
-            planner.eventIds.push(planEvent.id);
+        if (!plannerEvent.recurringId) {
+            planner.eventIds.push(plannerEvent.id);
             return;
         }
 
-        const recEvent = recurringEvents.find(recEvent => recEvent.id === planEvent.recurringId);
+        const recurringEvent = recurringEvents.find(recEvent => recEvent.id === plannerEvent.recurringId);
 
         // Don't keep this planner event if its link no longer exists in the recurring planner.
-        if (!recEvent) {
-            deletePlannerEventFromStorageById(planEvent.id);
+        if (!recurringEvent) {
+            deletePlannerEventFromStorageById(plannerEvent.id);
             return;
         }
 
-        existingRecurringIds.add(recEvent.id);
+        existingRecurringIds.add(recurringEvent.id);
 
-        const baseEvent: IPlannerEvent = { ...planEvent, value: recEvent!.value };
-        if (recEvent.startTime) {
-            baseEvent.timeConfig = createPlannerEventTimeConfig(datestamp, recEvent.startTime);
-        }
+        const updatedPlannerEvent = mapRecurringEventToPlannerEvent(datestamp, recurringEvent, plannerEvent);
 
         // Update event in storage and add it to the planner.
-        savePlannerEventToStorage(baseEvent);
-        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, baseEvent);
+        savePlannerEventToStorage(updatedPlannerEvent);
+        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, updatedPlannerEvent);
     });
 
     // Parse the recurring events to add new recurring events.
-    recurringEvents.forEach((recEvent) => {
-        const isEventAdded = existingRecurringIds.has(recEvent.id);
+    recurringEvents.forEach((recurringEvent) => {
+        const isEventAdded = existingRecurringIds.has(recurringEvent.id);
         if (isEventAdded) return;
 
-        const isEventDeleted = deletedRecurringEventIds.includes(recEvent.id);
+        const isEventDeleted = deletedRecurringEventIds.includes(recurringEvent.id);
         if (isEventDeleted) return;
 
-        const baseEvent: IPlannerEvent = {
-            id: uuid.v4(),
-            listId: datestamp,
-            storageId: EStorageId.PLANNER_EVENT,
-            recurringId: recEvent.id,
-            value: recEvent.value
-        };
-        if (recEvent.startTime) {
-            baseEvent.timeConfig = createPlannerEventTimeConfig(datestamp, recEvent.startTime);
-        }
+        const newPlannerEvent = mapRecurringEventToPlannerEvent(datestamp, recurringEvent);
 
         // TODO: may want to add based on the index in the recurring planner?
 
         // Create event in storage and add it to the planner.
-        savePlannerEventToStorage(baseEvent);
-        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, baseEvent);
+        savePlannerEventToStorage(newPlannerEvent);
+        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, newPlannerEvent);
     });
 
     return planner;
@@ -340,9 +329,9 @@ export function createPlannerEventTimeConfig(datestamp: string, timeValue: strin
     }
 }
 
-// ====================
+// ==================
 // 6. Read Functions
-// ====================
+// ==================
 
 /**
  * Gets a list of all planner datestamps that are currently mounted throughout the app.
