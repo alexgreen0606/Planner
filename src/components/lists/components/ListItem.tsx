@@ -9,7 +9,7 @@ import { useDeleteScheduler } from "@/providers/DeleteScheduler";
 import { useScrollContainer } from "@/providers/ScrollContainer";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
-import { PlatformColor, TouchableOpacity, View } from "react-native";
+import { PlatformColor, TextStyle, TouchableOpacity, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
 import Animated, {
@@ -23,7 +23,7 @@ import Animated, {
 import ListItemTextfield from "./ListItemTextfield";
 import { ToolbarIcon } from "./ListToolbar";
 
-//
+// ✅ 
 
 type TListItemProps<T extends TListItem> = {
     listId: string;
@@ -48,13 +48,13 @@ type TListItemProps<T extends TListItem> = {
     hideTextfield: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
-    onValueChange?: (newValue: string, prev: T) => T;
+    onValueChange?: (newValue: string) => void;
     onSaveToExternalStorage?: (item: T) => void;
     onContentClick?: (item: T) => void;
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    customOnGetIsDeleting?: (item: T | undefined) => boolean;
+    onGetIsDeletingCustomCallback?: (item: T | undefined) => boolean;
 };
 
 const Row = Animated.createAnimatedComponent(View);
@@ -98,12 +98,12 @@ const ListItem = <T extends TListItem>({
     onGetLeftIconConfig,
     onGetRightIconConfig,
     onGetRowTextPlatformColor,
-    customOnGetIsDeleting
+    onGetIsDeletingCustomCallback
 }: TListItemProps<T>) => {
 
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
-    const { onGetIsItemDeletingCallback: onGetIsItemDeleting } = useDeleteScheduler<T>();
+    const { onGetIsItemDeletingCallback } = useDeleteScheduler<T>();
 
     const {
         scrollOffset,
@@ -114,11 +114,23 @@ const ListItem = <T extends TListItem>({
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
     const isPendingDelete = useMemo(
-        () => customOnGetIsDeleting?.(item) ?? onGetIsItemDeleting(item),
-        [onGetIsItemDeleting, customOnGetIsDeleting]
+        () => onGetIsDeletingCustomCallback?.(item) ?? onGetIsItemDeletingCallback(item),
+        [onGetIsItemDeletingCallback, onGetIsDeletingCustomCallback]
     );
 
+    const textPlatformColor = useMemo(() => item ? onGetRowTextPlatformColor?.(item) : 'label', [item, onGetRowTextPlatformColor]);
+    const leftIconConfig = useMemo(() => item ? onGetLeftIconConfig?.(item) : undefined, [item, onGetLeftIconConfig]);
+    const rightIconConfig = useMemo(() => item ? onGetRightIconConfig?.(item) : undefined, [item, onGetRightIconConfig]);
+
     const isEditable = !hideTextfield && (textfieldId === item?.id);
+
+    const valueStyles: TextStyle = {
+        color: PlatformColor(
+            textPlatformColor ??
+            (isPendingDelete ? 'tertiaryLabel' : 'label')
+        ),
+        textDecorationLine: isPendingDelete ? 'line-through' : undefined
+    };
 
     // ==================
     // 1. Event Handlers
@@ -297,18 +309,6 @@ const ListItem = <T extends TListItem>({
         return null;
     };
 
-    const textPlatformColor = useMemo(() => item ? onGetRowTextPlatformColor?.(item) : 'label', [item, onGetRowTextPlatformColor]);
-    const leftIconConfig = useMemo(() => item ? onGetLeftIconConfig?.(item) : undefined, [item, onGetLeftIconConfig]);
-    const rightIconConfig = useMemo(() => item ? onGetRightIconConfig?.(item) : undefined, [item, onGetRightIconConfig]);
-
-    const valueStyles = {
-        color: PlatformColor(
-            textPlatformColor ??
-            (isPendingDelete ? 'tertiaryLabel' : 'label')
-        ),
-        textDecorationLine: isPendingDelete ? 'line-through' : undefined
-    };
-
     if (!item) return null;
 
     return (
@@ -348,7 +348,6 @@ const ListItem = <T extends TListItem>({
                             <ListItemTextfield<T>
                                 item={item}
                                 toolbarIconSet={toolbarIconSet}
-                                storage={storage}
                                 customStyle={valueStyles}
                                 onDeleteItem={onDeleteItem}
                                 onSetItemInStorage={setItem}

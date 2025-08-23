@@ -2,6 +2,7 @@ import ThinLine from '@/components/ThinLine';
 import { useTextfieldItemAs } from '@/hooks/textfields/useTextfieldItemAs';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainer } from '@/providers/ScrollContainer';
@@ -15,9 +16,8 @@ import EmptyLabel, { EmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
-import { EStorageId } from '@/lib/enums/EStorageId';
 
-//
+// ✅ 
 
 type TDragAndDropListProps<T extends TListItem, S = T> = {
     itemIds: string[];
@@ -33,14 +33,14 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     hideTextfield?: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
-    onValueChange?: (newValue: string, prev: T) => T;
+    onValueChange?: (newValue: string) => void;
     onIndexChange?: (newIndex: number, prev: T) => void;
     onSaveToExternalStorage?: (item: T) => void;
     onContentClick?: (item: T) => void;
     onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    customOnGetIsDeleting?: (item: T | undefined) => boolean;
+    onGetIsDeletingCustomCallback?: (item: T | undefined) => boolean;
 };
 
 const DragAndDropList = <T extends TListItem, S = T>({
@@ -74,7 +74,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
         id: 'PLACEHOLDER',
         listId: 'PLACEHOLDER',
         value: 'PLACEHOLDER',
-        storageId: storageId
+        storageId
     } as T;
 
     const draggingRowId = useSharedValue<string | null>(null);
@@ -96,20 +96,17 @@ const DragAndDropList = <T extends TListItem, S = T>({
     // ==================
 
     function handleEmptySpaceClick() {
-        if (textfieldItem) {
-            if (textfieldItem.value.trim() === '') {
-                console.info('muster')
-                onDeleteItem(textfieldItem);
-                return;
-            }
-            console.info('muster')
-            onCloseTextfield();
+        if (!textfieldItem) {
+            // Open a textfield at the bottom of the list.
+            onCreateItem(listId, itemIds.length);
             return;
         }
 
-        console.info(textfieldItem)
-        // Open a textfield at the bottom of the list.
-        onCreateItem(listId, itemIds.length);
+        onCloseTextfield();
+
+        if (textfieldItem.value.trim() === '') {
+            onDeleteItem(textfieldItem);
+        }
     }
 
     function handleDragStart(rowId: string, initialIndex: number) {

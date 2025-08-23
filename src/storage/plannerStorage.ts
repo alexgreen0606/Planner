@@ -2,7 +2,7 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { getYesterdayDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
-import { generateEmptyPlanner } from "@/utils/plannerUtils";
+import { createEmptyPlanner } from "@/utils/plannerUtils";
 import { MMKV } from 'react-native-mmkv';
 
 //
@@ -25,7 +25,7 @@ export function savePlannerEventToStorage(event: IPlannerEvent) {
 export function getPlannerFromStorageByDatestamp(datestamp: string): TPlanner {
     const eventsString = plannerStorage.getString(datestamp);
     if (!eventsString) {
-        return generateEmptyPlanner(datestamp);
+        return createEmptyPlanner(datestamp);
     }
 
     return JSON.parse(eventsString);
@@ -40,22 +40,19 @@ export function getPlannerEventFromStorageById(id: string): IPlannerEvent {
     return JSON.parse(eventsString);
 }
 
+export function getAllPlannerDatestampsFromStorage(): string[] {
+    return plannerStorage.getAllKeys();
+}
+
 // ====================
 // 3. Delete Functions
 // ====================
 
-export async function deletePlannerEventFromStorage(eventId: string) {
+export async function deletePlannerFromStorageByDatestamp(datestamp: string) {
+    eventStorage.delete(datestamp);
+}
+
+export async function deletePlannerEventFromStorageById(eventId: string) {
     eventStorage.delete(eventId);
 }
 
-// todo: move to utils
-export async function deleteAllPastPlanners() {
-    const yesterdayDatestamp = getYesterdayDatestamp();
-
-    const allStorageKeys = plannerStorage.getAllKeys();
-    allStorageKeys.forEach(datestamp => {
-        if (isTimeEarlierOrEqual(datestamp, yesterdayDatestamp)) {
-            plannerStorage.delete(datestamp);
-        }
-    });
-}

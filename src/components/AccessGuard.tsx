@@ -6,9 +6,13 @@ import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
+import { TAppMetaData } from "@/lib/types/TAppMetadata";
 import { CalendarProvider } from "@/providers/CalendarProvider";
-import * as Calendar from 'expo-calendar';
-import * as Contacts from 'expo-contacts';
+import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
+import { getTodayDatestamp, getYesterdayDatestamp } from "@/utils/dateUtils";
+import { deleteAllPlannersInStorageBeforeYesterday } from "@/utils/plannerUtils";
+import { useCalendarPermissions } from "expo-calendar";
+import { getPermissionsAsync, requestPermissionsAsync } from 'expo-contacts';
 import { useFonts } from 'expo-font';
 import { Stack } from "expo-router";
 import { useAtom } from "jotai";
@@ -31,12 +35,7 @@ const initialRootFolder: IFolderItem = {
  * Handles setup of app, including access requests and initializing storage objects.
  */
 const AccessGuard = () => {
-    const [userAccess, setUserAccess] = useAtom(userAccessAtom);
-
-    const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
-    const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(EStorageKey.ROOT_FOLDER_KEY, storage);
-
-    const [calendarStatus, requestCalendarPermissions] = Calendar.useCalendarPermissions();
+    const [calendarStatus, requestCalendarPermissions] = useCalendarPermissions();
 
     const [fontsLoaded] = useFonts({
         'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
@@ -44,6 +43,14 @@ const AccessGuard = () => {
         'Round': require('../../assets/fonts/SF-Compact-Rounded-Regular.otf'),
         'Text': require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
     });
+
+    const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const appMetaDataStorage = useMMKV({ id: EStorageId.APP_METADATA_KEY });
+
+    const [userAccess, setUserAccess] = useAtom(userAccessAtom);
+
+    const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(EStorageKey.ROOT_FOLDER_KEY, folderItemStorage);
+    const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
 
     const appReady =
         fontsLoaded &&
@@ -68,20 +75,17 @@ const AccessGuard = () => {
     useEffect(() => {
         checkContactsPermissions();
         checkRootFolderExistence();
+        checkCarryoverEvents();
     }, []);
-
-    // =======================
-    // 1. Helper Functions
-    // =======================
 
     async function checkContactsPermissions() {
         if (userAccess.get(EAccess.CONTACTS) !== undefined) return;
 
         try {
-            const { status } = await Contacts.getPermissionsAsync();
+            const { status } = await getPermissionsAsync();
 
             if (status === 'undetermined') {
-                const { status: newStatus } = await Contacts.requestPermissionsAsync();
+                const { status: newStatus } = await requestPermissionsAsync();
                 setUserAccess(prev => {
                     const newMap = new Map(prev);
                     newMap.set(EAccess.CONTACTS, newStatus === 'granted');
@@ -110,9 +114,51 @@ const AccessGuard = () => {
         }
     }
 
-    // =======================
+    // TODO: move to calendar provider
+    function checkCarryoverEvents() {
+        const todayDatestamp = getTodayDatestamp();
+        const lastLoadedTodayDatestamp = appMetaData?.lastLoadedTodayDatestamp ?? todayDatestamp;
+
+        if (lastLoadedTodayDatestamp !== todayDatestamp) {
+            const yesterdayDatestamp = getYesterdayDatestamp();
+
+            const yesterdayPlanner = getPlannerFromStorageByDatestamp(yesterdayDatestamp);
+            const todayPlanner = getPlannerFromStorageByDatestamp(todayDatestamp);
+
+            deleteAllPlannersInStorageBeforeYesterday();
+
+            yesterdayPlanner.eventIds.reverse().forEach((id) => {
+                const event = getPlannerEventFromStorageById(id);
+
+                // Skip recurring and calendar events
+                if (event.recurringId || event.calendarId) {
+                    deletePlannerEventFromStorageById(event.id);
+                    return;
+                }
+
+                // Link the event to today.
+                event.listId = todayDatestamp;
+
+                // Remove timeConfig.
+                delete event.timeConfig;
+
+                savePlannerEventToStorage(event);
+
+                todayPlanner.eventIds.unshift(event.id);
+            });
+
+            deletePlannerFromStorageByDatestamp(yesterdayDatestamp);
+            savePlannerToStorage(todayPlanner);
+        }
+
+        setAppMetaData({
+            lastLoadedTodayDatestamp: todayDatestamp
+        });
+    }
+
+    // ======
     // 2. UI
-    // =======================
+    // ======
 
     return appReady && (
         <CalendarProvider>

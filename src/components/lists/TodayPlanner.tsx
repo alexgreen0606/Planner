@@ -5,7 +5,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { deletePlannerEventsFromStorageAndCalendar, generateNewPlannerEventAndSaveToStorage, generatePlannerEventTimeIconConfig, updatePlannerEventIndexWithChronologicalCheck, updatePlannerEventValueWithSmartTimeDetect } from '@/utils/plannerUtils';
+import { createNewPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
@@ -14,6 +14,7 @@ import DragAndDropList from './components/DragAndDropList';
 // ✅ 
 
 const TodayPlanner = () => {
+    const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
 
@@ -22,16 +23,17 @@ const TodayPlanner = () => {
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
     } = useDeleteScheduler<IPlannerEvent>();
 
-    const { visibleEventIds, isLoading } = usePlanner(todayDatestamp);
-
-    const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+    const {
+        visibleEventIds,
+        onUpdatePlannerEventIndexWithChronologicalCheck,
+        onUpdatePlannerEventValueWithTimeParsing
+    } = usePlanner(todayDatestamp, eventStorage);
 
     return (
         <DragAndDropList<IPlannerEvent>
             fillSpace
             listId={todayDatestamp}
             storageId={EStorageId.PLANNER_EVENT}
-            isLoading={isLoading}
             storage={eventStorage}
             itemIds={visibleEventIds}
             emptyLabelConfig={{
@@ -39,11 +41,12 @@ const TodayPlanner = () => {
                 className: 'flex-1'
             }}
             toolbarIconSet={plannerToolbarIconConfig}
-            onCreateItem={generateNewPlannerEventAndSaveToStorage}
+            onCreateItem={createNewPlannerEventInStorageAndFocusTextfield}
             onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
-            onValueChange={updatePlannerEventValueWithSmartTimeDetect}
-            onIndexChange={updatePlannerEventIndexWithChronologicalCheck}
-            onGetRightIconConfig={generatePlannerEventTimeIconConfig}
+            onValueChange={onUpdatePlannerEventValueWithTimeParsing}
+            onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
+            onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
+            onGetRightIconConfig={createPlannerEventTimeIconConfig}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
     );

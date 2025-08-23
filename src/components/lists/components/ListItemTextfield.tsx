@@ -1,23 +1,22 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING } from '@/lib/constants/listConstants';
+import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useAtom } from 'jotai';
-import React, { useEffect } from 'react';
+import debounce from 'lodash.debounce';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
-import { MMKV } from 'react-native-mmkv';
 import ListToolbar, { ToolbarIcon } from './ListToolbar';
 
-//
+// ✅ 
 
 type TListItemTextfieldProps<T extends TListItem> = {
     item: T;
     toolbarIconSet?: ToolbarIcon<T>[][];
     customStyle: TextStyle;
-    storage: MMKV;
     onSetItemInStorage: (value: T | ((prevValue: T | undefined) => T | undefined) | undefined) => void;
     onCreateChildTextfield: () => void;
     onDeleteItem: (item: T) => void;
-    onValueChange?: (newText: string, prev: T) => T;
+    onValueChange?: (newValue: string) => void;
     onSaveToExternalStorage?: (item: T) => void;
 };
 
@@ -25,7 +24,6 @@ const ListItemTextfield = <T extends TListItem>({
     item,
     customStyle,
     toolbarIconSet,
-    storage,
     onSetItemInStorage,
     onDeleteItem,
     onValueChange,
@@ -35,38 +33,35 @@ const ListItemTextfield = <T extends TListItem>({
 
     const [, setTextfieldId] = useAtom(textfieldIdAtom);
 
-    // Save the event to external storage every time the field closes.
+    const itemValue = useRef(item.value);
+
+    const handleExternalSaveDebounce = useMemo(
+        () =>
+            debounce((latestItem: T) => {
+                onSaveToExternalStorage?.(latestItem);
+            }, 1500),
+        []
+    );
+
+    // Handle the blur event.
     useEffect(() => {
-        return () => {
-            const currentItemString = storage.getString(item.id);
-            if (!currentItemString) return;
-
-            const currentItem = JSON.parse(currentItemString);
-
-            if (currentItem.value.trim() === '') {
-                onDeleteItem(currentItem);
-                return;
-            }
-
-            onSaveToExternalStorage?.(currentItem);
-
-            setTextfieldId((prev) => prev === item.id ? null : prev);
-        };
+        return handleBlurTextfield;
     }, []);
+
+    // Save to external storage.
+    useEffect(() => {
+        itemValue.current = item.value;
+        handleExternalSaveDebounce(item);
+    }, [item]);
 
     function handleFocusTextfield() {
         setTextfieldId(item.id);
     }
 
-    function handleValueChange(newText: string) {
+    function handleValueChange(value: string) {
         onSetItemInStorage((prev) => {
             if (!prev) return prev;
-
-            if (onValueChange) {
-                return onValueChange(newText, prev);
-            }
-
-            return { ...prev, value: newText };
+            return { ...prev, value };
         });
     }
 
@@ -77,6 +72,17 @@ const ListItemTextfield = <T extends TListItem>({
         }
 
         onCreateChildTextfield();
+    }
+
+    function handleBlurTextfield() {
+        if (itemValue.current.trim() === '') {
+            handleExternalSaveDebounce.cancel();
+            onDeleteItem(item);
+            return;
+        }
+
+        handleExternalSaveDebounce.flush();
+        setTextfieldId((prev) => prev === item.id ? null : prev);
     }
 
     return (
@@ -91,14 +97,15 @@ const ListItemTextfield = <T extends TListItem>({
                 className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
                 style={[
                     {
-                        height: LIST_CONTENT_HEIGHT,
+                        height: LIST_ITEM_HEIGHT,
+                        paddingBottom: LIST_CONTENT_HEIGHT / 2 + 2,
                         marginRight: LIST_ICON_SPACING / 2,
                         color: PlatformColor('label'),
                         fontFamily: 'Text',
                     },
                     customStyle
                 ]}
-                onChangeText={handleValueChange}
+                onChangeText={onValueChange ?? handleValueChange}
                 onSubmitEditing={handleSubmitTextfield}
                 onFocus={handleFocusTextfield}
             />

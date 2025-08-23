@@ -2,6 +2,44 @@ import { DateTime } from 'luxon';
 
 // ✅ 
 
+// ==============================
+// 1. Parse Time Value From Text
+// ==============================
+
+type ParsedTimeResult = {
+    formattedTime: string | null;
+    updatedText: string;
+};
+
+/**
+ * Parses user input for a time (HH:MM AM/PM) and converts it to a time value (HH:MM).
+ * Returns the formatted time and the updated text with the time removed.
+ *
+ * @param text - User input string.
+ * @returns Object containing the formatted time or null, and the updated text
+ */
+export function parseTimeValueFromText(text: string): ParsedTimeResult {
+    const timeRegex = /\b(1[0-2]|[1-9])(?::([0-5][0-9]))?\s?(AM|PM|am|pm)\b/;
+    const match = text.match(timeRegex);
+
+    if (!match) return { formattedTime: null, updatedText: text };
+
+    const timeValue = match[0];
+    const updatedText = text.replace(timeValue, "").trim();
+
+    // Convert to time value
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2] ? parseInt(match[2], 10) : 0;
+    const period = match[3].toUpperCase();
+
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+
+    const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+
+    return { formattedTime, updatedText };
+}
+
 // ===========================================================
 // 1. Conversion Functions (Datestamp/JS Date/ISO/Time Value)
 // ===========================================================
@@ -183,7 +221,6 @@ export function getIsoFromNowTimeRoundedDown5Minutes(datestamp?: string): string
 
     return combined.toUTC().toISO()!;
 }
-
 
 // ========================
 // 4. Validation Functions

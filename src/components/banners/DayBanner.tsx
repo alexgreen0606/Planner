@@ -80,7 +80,7 @@ const DayBanner = ({
                                 variant='plannerCardSoftDetail'
                                 ellipsizeMode='tail'
                                 numberOfLines={1}
-                                onPress={onToggleEditTitle}
+                                onPress={planner.title ? onToggleEditTitle : onToggleCollapsed}
                             >
                                 {planner.title}
                             </CustomText>

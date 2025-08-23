@@ -6,4 +6,5 @@ export type TPlanner = {
     hideRecurring: boolean;
     eventIds: string[];
     deletedRecurringEventIds: string[];
+    deletedCalendarEventIds: string[];
 };

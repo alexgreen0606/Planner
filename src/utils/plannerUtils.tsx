@@ -1,57 +1,48 @@
-
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import TimeValue from '@/components/text/TimeValue';
-import { NULL } from '@/lib/constants/generic';
 import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
-import { ICountdown } from '@/lib/types/listItems/ICountdown';
 import { IPlannerEvent, ITimeConfig, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
-import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { deletePlannerEventFromStorage, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
+import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getAllPlannerDatestampsFromStorage, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
+import { getRecurringEventFromStorageById, getRecurringPlannerFromStorageById } from '@/storage/recurringPlannerStorage';
 import { jotaiStore } from 'app/_layout';
 import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { uuid } from 'expo-modules-core';
 import { router } from 'expo-router';
-import { hasCalendarAccess } from './accessUtils';
 import { loadCalendarDataToStore } from './calendarUtils';
-import { datestampToMidnightJsDate, getTodayDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 import { mapCalendarEventToPlannerEvent } from './map/mapCalenderEventToPlannerEvent';
 
-//
-
-type UserInputMetadata = {
-    updatedText: string;
-    timeConfig: ITimeConfig | undefined;
-};
+// ✅ 
 
 // ====================
 // 1. Helper Functions
 // ====================
 
 /**
- * Generates a new index for an event position that maintains time logic within its planner.
+ * Calculates a valid index for a planner event that maintains chronological ordering within its planner.
  * 
  * @param event - The event to place.
  * @param planner - The planner with the current ordering of events.
  * @returns A new index for the event that maintains chronological ordering within the planner.
  */
-export function generateChronologicalPlannerEventIndex(
+function calculateChronologicalPlannerEventIndex(
     event: IPlannerEvent,
     planner: TPlanner
 ): number {
-    const eventTime = extractEventTime(event);
-    const initialIndex = planner.eventIds.findIndex(id => id === event.id);
+    const eventTime = getPlannerEventTime(event);
+    const prevIndex = planner.eventIds.findIndex(id => id === event.id);
 
-    if (initialIndex === -1) {
-        throw new Error(`generateChronologicalPlannerEventIndex: No event exists in planner ${event.listId} with ID ${event.id}`);
+    if (prevIndex === -1) {
+        throw new Error(`calculateChronologicalPlannerEventIndex: No event exists in planner ${event.listId} with ID ${event.id}`);
     }
 
-    // Pre-Check 1: The event is unscheduled or hidden. Keep it at its current index.
-    if (!eventTime || planner.deletedRecurringEventIds.includes(event.id)) return initialIndex;
+    // Pre-Check 1: The event is unscheduled. Keep it at its current index.
+    if (!eventTime) return prevIndex;
 
     const plannerEvents = planner.eventIds.map(id => {
         if (id === event.id) {
@@ -60,28 +51,23 @@ export function generateChronologicalPlannerEventIndex(
         return getPlannerEventFromStorageById(id);
     });
 
-    const plannerEventsWithoutEvent = [...plannerEvents].filter(e => e.id !== event.id);
-    const timedPlanner = [...plannerEvents].filter(existingEvent => extractEventTime(existingEvent));
+    const plannerEventsWithoutEvent = plannerEvents.filter(e => e.id !== event.id);
+    const timedPlanner = plannerEvents.filter(existingEvent => getPlannerEventTime(existingEvent));
 
     const timedPlannerIndex = timedPlanner.findIndex(e => e.id === event.id);
-
-    const earlierEvent = timedPlanner[timedPlannerIndex - 1];
-    const laterEvent = timedPlanner[timedPlannerIndex + 1];
-    const earlierTime = extractEventTime(earlierEvent);
-    const laterTime = extractEventTime(laterEvent);
+    const earlierTime = getPlannerEventTime(timedPlanner[timedPlannerIndex - 1]);
+    const laterTime = getPlannerEventTime(timedPlanner[timedPlannerIndex + 1]);
 
     // Pre-Check 2: Check if the event conflicts at its current position.
     if (
         (!earlierTime || isTimeEarlierOrEqual(earlierTime, eventTime)) &&
         (!laterTime || isTimeEarlierOrEqual(eventTime, laterTime))
-    ) return initialIndex;
+    ) return prevIndex;
 
     // Traverse the list in reverse to find the last event that starts before or at the same time.
     const earlierEventIndex = plannerEventsWithoutEvent.findLastIndex(e => {
-        const existingTime = extractEventTime(e);
+        const existingTime = getPlannerEventTime(e);
         if (!existingTime) return false;
-
-        // Check if existing event starts before or at the same time as our event
         return isTimeEarlierOrEqual(existingTime, eventTime);
     });
 
@@ -96,265 +82,266 @@ export function generateChronologicalPlannerEventIndex(
 }
 
 /**
- * Parses an event and returns its time, or null if none exists.
+ * Parses a planner event and returns its time. If no time exists, null will be returned.
  * 
  * @param event - The event to parse.
  * @returns The event's time value if one exists, else null.
  */
-function extractEventTime(event: IPlannerEvent | IRecurringEvent | ICountdown | undefined): string | null {
-    if (!event) return null;
-
-    if ("timeConfig" in event) {
-        return event.timeConfig?.multiDayEnd ? event.timeConfig.endIso : event.timeConfig?.startIso ?? null;
-    } else if ("startTime" in event) {
-        return event.startTime ?? null;
-    } else if ("startIso" in event) {
-        return event.startIso ?? null;
-    } else {
-        return null;
-    }
+function getPlannerEventTime(event?: IPlannerEvent): string | null {
+    return event?.timeConfig?.multiDayEnd ? event.timeConfig.endIso : event?.timeConfig?.startIso ?? null;
 }
 
-/**
- * Parses text to find a time value (HH:MM (PM or AM)) case insensitive and returns it along with the updated text.
- * 
- * @param text - The string to parse.
- * @param datestamp - A date to use when generating ISO timestamps. When not provided, time values will be returned (HH:MM format).
- * @returns The text with the time value removed, and a time object representing the time.
- */
-export function extractTimeValueFromString(text: string, datestamp?: string): UserInputMetadata {
-    let timeConfig = undefined;
-    let updatedText = text;
-
-    // Use regex to find a time value typed in (HH:MM (PM or AM))
-    const timeRegex = /\b(1[0-2]|[1-9])(?::(0[0-5]|[1-5][0-9]))?\s?(AM|PM|am|pm|Am|aM|pM|Pm)\b/;
-    const match = text.match(timeRegex);
-
-    if (match) {
-        // Extract the matched time and remove it from the text
-        const timeValue = match[0];
-        updatedText = text.replace(timeValue, "").trim();
-
-        // Convert timeValue to 24-hour format (HH:MM)
-        let hours = parseInt(match[1], 10);
-        const minutes = match[2] ? parseInt(match[2], 10) : 0;
-        const period = match[3].toUpperCase();
-        if (period === "PM" && hours !== 12) {
-            hours += 12;
-        } else if (period === "AM" && hours === 12) {
-            hours = 0;
-        }
-        const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
-
-        timeConfig = {
-            startIso: datestamp ? timeValueToIso(datestamp, formattedTime) : formattedTime,
-            endIso: datestamp ? timeValueToIso(datestamp, "23:55") : "23:55",
-            allDay: false,
-        };
-    }
-
-    return { timeConfig, updatedText };
-}
+// =============================
+// 2. Recurring Synchronization
+// =============================
 
 /**
- * Opens the time modal and passes the given event details in the params.
+ * Upserts all recurring events into a planner for the planner's day of the week. Upserted events will be 
+ * saved to storage. The planner will be returned and NOT saved to storage.
  *
- * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
- * @param event - The event to update within the modal.
+ * @param planner - The planner to update.
+ * @returns A new planner synced with its recurring planner.
  */
-export function openTimeModal(
-    triggerDatestamp: string,
-    event: IPlannerEvent
-) {
-    router.push(`${TIME_MODAL_PATHNAME
-        }${triggerDatestamp
-        }/${event.id
-        }/${1 // TODO: removre
-        }/${event.value.length > 0 ? event.value : NULL
-        }`
-    );
-}
+export function upsertRecurringEventsIntoPlanner(planner: TPlanner): TPlanner {
+    const { datestamp, deletedRecurringEventIds } = planner;
 
-/**
- * Synchronizes a list of planner events with a list of calendar events.
- * 
- * @param datestamp - The date the planner represents. (YYYY-MM-DD)
- * @param plannerEvents - The list of planner events to update.
- * @param calendarEvents - The list of calendar events to sync with the planner.
- * @returns A new list of planner events synced with the calendar.
- */
-export function syncPlannerWithCalendar(
-    datestamp: string,
-    plannerEvents: IPlannerEvent[],
-    calendarEvents: CalendarEvent[]
-): IPlannerEvent[] {
-    return plannerEvents;
-    // Phase 1: Sync storage records with the Calendar.
-    const newPlanner = plannerEvents.reduce<IPlannerEvent[]>((accumulator, planEvent) => {
+    const recurringPlanner = getRecurringPlannerFromStorageById(getDayOfWeekFromDatestamp(datestamp));
+    const recurringEvents = recurringPlanner.eventIds.map(getRecurringEventFromStorageById);
 
-        // Keep non-calendar events.
-        if (
-            !planEvent.calendarId ||
-            planEvent.status === EItemStatus.HIDDEN
-        ) {
-            accumulator.push(planEvent);
-            return accumulator;
+    const existingRecurringIds = new Set<string>();
+
+    // Start with a fresh list.
+    planner.eventIds = [];
+
+    // Parse the planner to delete old recurring events and update existing ones.
+    planner.eventIds.forEach((eventId) => {
+        const planEvent = getPlannerEventFromStorageById(eventId);
+
+        // Non-recurring events are preserved as-is.
+        if (!planEvent.recurringId) {
+            planner.eventIds.push(planEvent.id);
+            return;
         }
 
-        const calEvent = calendarEvents.find(calEvent => calEvent.id === planEvent.calendarId);
+        const recEvent = recurringEvents.find(recEvent => recEvent.id === planEvent.recurringId);
 
-        // Remove calendar records that no longer exist in the Calendar.
-        if (!calEvent) return accumulator;
+        // Don't keep this planner event if its link no longer exists in the recurring planner.
+        if (!recEvent) {
+            deletePlannerEventFromStorageById(planEvent.id);
+            return;
+        }
 
-        // Sync calendar records with the Calendar events.
-        const updatedEvent = mapCalendarEventToPlannerEvent(calEvent, datestamp, accumulator, planEvent);
-        accumulator.push(updatedEvent);
-        return accumulator;
+        existingRecurringIds.add(recEvent.id);
 
-    }, []);
+        const baseEvent: IPlannerEvent = { ...planEvent, value: recEvent!.value };
+        if (recEvent.startTime) {
+            baseEvent.timeConfig = createPlannerEventTimeConfig(datestamp, recEvent.startTime);
+        }
 
-    // Phase 2: Add new calendar events to the planner.
-    calendarEvents.forEach(calEvent => {
-        if (newPlanner.some(planEvent => planEvent.calendarId === calEvent.id)) return;
-        newPlanner.push(
-            mapCalendarEventToPlannerEvent(calEvent, datestamp, newPlanner)
-        );
+        // Update event in storage and add it to the planner.
+        savePlannerEventToStorage(baseEvent);
+        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, baseEvent);
     });
 
-    return newPlanner;
-}
+    // Parse the recurring events to add new recurring events.
+    recurringEvents.forEach((recEvent) => {
+        const isEventAdded = existingRecurringIds.has(recEvent.id);
+        if (isEventAdded) return;
 
-/**
- * Gets all carryover events from yesterday and deletes past planners. Carryover events exclude all 
- * recurring and hidden events. Timed events will be stripped down to generic events.
- * 
- * @returns A list of planner events to append to the front of today's planner.
- */
-// function getCarryoverEventsAndCleanStorage(): IPlannerEvent[] {
-//     const yesterdayDatestamp = getYesterdayDatestamp();
-//     const yesterdayPlanner = getPlannerFromStorageByDatestamp(yesterdayDatestamp);
+        const isEventDeleted = deletedRecurringEventIds.includes(recEvent.id);
+        if (isEventDeleted) return;
 
-//     deleteAllPastPlanners();
+        const baseEvent: IPlannerEvent = {
+            id: uuid.v4(),
+            listId: datestamp,
+            storageId: EStorageId.PLANNER_EVENT,
+            recurringId: recEvent.id,
+            value: recEvent.value
+        };
+        if (recEvent.startTime) {
+            baseEvent.timeConfig = createPlannerEventTimeConfig(datestamp, recEvent.startTime);
+        }
 
-//     const yesterdayPlannerEvents = yesterdayPlanner.eventIds.map(getPlannerEventFromStorageById);
-//     return yesterdayPlannerEvents
-//         // Remove hidden and recurring events.
-//         .filter((event: IPlannerEvent) =>
-//             !event.isHidden &&
-//             !event.recurringId &&
-//             !event.recurringCloneId &&
-//             !event.calendarId
-//         )
-//         // Convert timed events to generic.
-//         .map((event: IPlannerEvent) => {
-//             delete event.timeConfig;
-//             return event;
-//         });
-// }
+        // TODO: may want to add based on the index in the recurring planner?
 
-//     // Phase 3: Merge in carryover events from yesterday. Only applicable for today's planner.
-//     if (datestamp === getTodayDatestamp()) {
-//         const remainingYesterdayEvents = getCarryoverEventsAndCleanStorage();
-//         remainingYesterdayEvents.reverse().forEach(yesterdayEvent => {
-//             const todayEvent = {
-//                 ...yesterdayEvent,
-//                 listId: datestamp
-//             };
-//             savePlannerEventToStorage(todayEvent);
-//             plannerEvents.unshift(todayEvent);
-//         });
-//     }
-
-
-// ====================
-// 5. Update Functions
-// ====================
-
-/**
- * Updates a planner event's value, detecting any time value within the user input and converting it into a time 
- * configuration for the event. The planner will be updated if the event position must change to preserve
- * chronological ordering.
- * 
- * @param userInput - The user input to scan.
- * @param event - The planner event to update.
- * @returns The updated event.
- */
-export function updatePlannerEventValueWithSmartTimeDetect(
-    userInput: string,
-    event: IPlannerEvent
-): IPlannerEvent {
-    let newEvent = { ...event, value: userInput };
-
-    // Phase 1: Clone modified recurring events to allow customization.
-    if (newEvent.recurringId) {
-
-        // Remove this event's link to the recurring planner.
-        const currentPlanner = getPlannerFromStorageByDatestamp(newEvent.listId);
-        savePlannerToStorage({
-            ...currentPlanner,
-            eventIds: currentPlanner.eventIds.filter(id => id !== newEvent.id),
-            deletedRecurringEventIds: [...currentPlanner.deletedRecurringEventIds, newEvent.recurringId]
-        })
-
-        delete newEvent.recurringId;
-    }
-
-    const itemTime = extractEventTime(event);
-    if (itemTime) return newEvent;
-
-    const { timeConfig, updatedText } = extractTimeValueFromString(userInput, event.listId);
-    if (!timeConfig) return newEvent;
-
-    newEvent.value = updatedText;
-    newEvent.timeConfig = timeConfig;
-
-    // Update the event's position within its planner to preserve chronological ordering.
-    const planner = getPlannerFromStorageByDatestamp(newEvent.listId);
-    const currentIndex = planner.eventIds.findIndex(e => e === newEvent.id);
-    if (currentIndex === -1) {
-        throw new Error(`updatePlannerEventValueWithSmartTimeDetect: No event exists in planner ${newEvent.listId} with ID ${newEvent.id}`);
-    }
-
-    updatePlannerEventIndexWithChronologicalCheck(currentIndex, newEvent);
-
-    return newEvent;
-}
-
-export function updatePlannerEventIndex(
-    planner: TPlanner,
-    index: number,
-    event: IPlannerEvent
-): TPlanner {
-    // Remove the event if it exists already
-    planner.eventIds = planner.eventIds.filter(id => id !== event.id);
-
-    // Insert at the requested index
-    planner.eventIds.splice(index, 0, event.id);
-
-    // Verify chronological order
-    const newEventIndex = generateChronologicalPlannerEventIndex(event, planner);
-
-    if (newEventIndex !== index) {
-        // Remove again and insert at corrected index
-        planner.eventIds = planner.eventIds.filter(id => id !== event.id);
-        planner.eventIds.splice(newEventIndex, 0, event.id);
-    }
+        // Create event in storage and add it to the planner.
+        savePlannerEventToStorage(baseEvent);
+        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, baseEvent);
+    });
 
     return planner;
 }
 
-export function updatePlannerEventIndexWithChronologicalCheck(
-    index: number,
-    event: IPlannerEvent
-) {
-    const planner = getPlannerFromStorageByDatestamp(event.listId);
-    const updatedPlanner = updatePlannerEventIndex(planner, index, event);
-    savePlannerToStorage(updatedPlanner);
+// ============================
+// 3. Calendar Synchronization
+// ============================
+
+/**
+ * Upserts all device calendar events into a planner for its date. Upserted events will be saved to storage. The planner
+ * will be returned and NOT saved to storage.
+ * 
+ * @param planner - The planner to update.
+ * @param calendarEvents - The list of calendar events linked to the planner's date.
+ * @returns A new planner synced with the calendar events.
+ */
+export function upsertCalendarEventsIntoPlanner(
+    planner: TPlanner,
+    calendarEvents: CalendarEvent[]
+): TPlanner {
+    const { datestamp, deletedCalendarEventIds } = planner;
+
+    const existingCalendarIds = new Set<string>();
+
+    // Start with a fresh list.
+    planner.eventIds = [];
+
+    // Parse the planner to delete old calendar events and update existing ones.
+    planner.eventIds.forEach((eventId) => {
+        const planEvent = getPlannerEventFromStorageById(eventId);
+
+        // Keep non-calendar events.
+        if (!planEvent.calendarId) {
+            planner.eventIds.push(planEvent.id);
+            return;
+        }
+
+        const calEvent = calendarEvents.find(calEvent => calEvent.id === planEvent.calendarId);
+
+        // Don't keep this planner event if its link no longer exists in the device calendar.
+        if (!calEvent) {
+            deletePlannerEventFromStorageById(planEvent.id);
+            return;
+        }
+
+        existingCalendarIds.add(calEvent.id);
+
+        const updatedEvent = mapCalendarEventToPlannerEvent(datestamp, calEvent, planEvent);
+
+        // Update the event in storage and add it to its planner.
+        savePlannerEventToStorage(updatedEvent);
+        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, updatedEvent);
+    }, []);
+
+    // Parse the calendar to add new calendar events.
+    calendarEvents.forEach((calEvent) => {
+        const isEventAdded = existingCalendarIds.has(calEvent.id);
+        if (isEventAdded) return;
+
+        const isEventDeleted = deletedCalendarEventIds.includes(calEvent.id);
+        if (isEventDeleted) return;
+
+        const newEvent = mapCalendarEventToPlannerEvent(datestamp, calEvent);
+
+        // Create the event in storage and add it to its planner.
+        savePlannerEventToStorage(newEvent);
+        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, newEvent);
+    });
+
+    return planner;
 }
 
+// ===========================
+// 4. Open Planner Time Modal
+// ===========================
+
+/**
+ * Opens the time modal for an event.
+ *
+ * @param eventId - The ID of the event to update within the modal.
+ * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
+ */
+export function openPlannerTimeModal(eventId: string, triggerDatestamp: string) {
+    router.push(`${TIME_MODAL_PATHNAME}/${triggerDatestamp}/${eventId}`);
+}
 
 // ====================
-// 6. Getter Functions
+// 5. Create Functions
+// ====================
+
+/**
+ * Creates a new planner event and focuses the textfield on it.
+ * 
+ * @param datestamp - The date of the planner. (YYYY-MM-DD)
+ * @param index - The index of the new item within its planner.
+ */
+export function createNewPlannerEventInStorageAndFocusTextfield(datestamp: string, index: number) {
+
+    // Create the new planner event.
+    const plannerEvent: IPlannerEvent = {
+        id: uuid.v4(),
+        value: "",
+        listId: datestamp,
+        storageId: EStorageId.PLANNER_EVENT
+    };
+    savePlannerEventToStorage(plannerEvent);
+
+    // Add the event to its planner.
+    const planner = getPlannerFromStorageByDatestamp(datestamp);
+    planner.eventIds.splice(index, 0, plannerEvent.id);
+    savePlannerToStorage(planner);
+
+    // Focus the textifeld on the event.
+    jotaiStore.set(textfieldIdAtom, plannerEvent.id);
+}
+
+/**
+ * Creates a planner event time configuration from a datestamp and time value.
+ *
+ * @param datestamp - The date of the event. (YYYY-MM-DD)
+ * @param timeValue - The time of the event. (HH:MM)
+ * @returns A new time config representing the date and time.
+ */
+export function createPlannerEventTimeConfig(datestamp: string, timeValue: string): ITimeConfig {
+    return {
+        startIso: timeValueToIso(datestamp, timeValue),
+        endIso: timeValueToIso(datestamp, "23:55"),
+        allDay: false
+    }
+}
+
+/**
+ * Creates an empty planner for the given datestamp.
+ * 
+ * @param datestamp - The date of the planner. (YYYY-MM-DD)
+ * @returns A new planner object with no events.
+ */
+export function createEmptyPlanner(datestamp: string): TPlanner {
+    return {
+        datestamp,
+        title: '',
+        eventIds: [],
+        deletedRecurringEventIds: [],
+        deletedCalendarEventIds: [],
+        hideRecurring: false
+    }
+}
+
+/**
+ * Creates the icon config representing a planner event's time. Clicking the icon will open the Time Modal for the event.
+ * 
+ * @param event - The planner event to represent.
+ * @returns The icon configuration for the event's time.
+ */
+export function createPlannerEventTimeIconConfig(
+    event: IPlannerEvent
+): TListItemIconConfig<IPlannerEvent> {
+    const itemTime = getPlannerEventTime(event);
+    return {
+        hideIcon: !itemTime,
+        onClick: () => openPlannerTimeModal(event.id, event.listId),
+        customIcon: (
+            <TimeValue
+                endEvent={event.timeConfig?.multiDayEnd}
+                startEvent={event.timeConfig?.multiDayStart}
+                isoTimestamp={itemTime}
+                concise
+            />
+        )
+    }
+}
+
+// ====================
+// 6. Read Functions
 // ====================
 
 /**
@@ -378,13 +365,10 @@ export function getAllMountedDatestampsLinkedToDateRanges<T extends TDateRange>(
     const affectedDatestamps = [];
     for (const mountedStart of allMountedDatestamps) {
         const nextDatestamp = datestampToMidnightJsDate(mountedStart, 1).toISOString();
-        if (ranges.some((range) => {
-            const { startIso, endIso } = range;
-            return (
-                isTimeEarlier(startIso, nextDatestamp) &&
-                isTimeEarlierOrEqual(mountedStart, endIso)
-            );
-        })) {
+        if (ranges.some((range) =>
+            isTimeEarlier(range.startIso, nextDatestamp) &&
+            isTimeEarlierOrEqual(mountedStart, range.endIso)
+        )) {
             affectedDatestamps.push(mountedStart);
         }
     }
@@ -393,15 +377,65 @@ export function getAllMountedDatestampsLinkedToDateRanges<T extends TDateRange>(
 }
 
 // ====================
-// 7. Delete Functions
+// 7. Update Functions
 // ====================
 
 /**
- * Deletes a list of planner events from the calendar and storage. The calendar data will
- * be reloaded by default after the deletions.
+ * Updates an event in the device calendar using the data within its planner event.
+ * 
+ * @param event - The event with the updated data.
+ */
+export async function updateDeviceCalendarEventByPlannerEvent(event: IPlannerEvent) {
+    if (!event.calendarId || !event.timeConfig) return;
+
+    const { value: title, timeConfig: { startIso, endIso, allDay } } = event;
+    await Calendar.updateEventAsync(event.calendarId, {
+        title,
+        startDate: startIso,
+        endDate: endIso,
+        allDay,
+    }, { futureEvents: false });
+}
+
+/**
+ * Updates a planner event's position within its planner. 
+ * 
+ * @param planner - The planner with the current ordering of events.
+ * @param index - The desired index of the event.
+ * @param event - The event to place.
+ * @returns The updated planner with the new positions of events.
+ */
+export function updatePlannerEventIndexWithChronologicalCheck(
+    planner: TPlanner,
+    index: number,
+    event: IPlannerEvent
+): TPlanner {
+
+    // Add the event to its desired position.
+    planner.eventIds = planner.eventIds.filter(id => id !== event.id);
+    planner.eventIds.splice(index, 0, event.id);
+
+    // Verify chronological order
+    const newEventIndex = calculateChronologicalPlannerEventIndex(event, planner);
+    if (newEventIndex !== index) {
+        // Remove again and insert at corrected index
+        planner.eventIds = planner.eventIds.filter(id => id !== event.id);
+        planner.eventIds.splice(newEventIndex, 0, event.id);
+    }
+
+    return planner;
+}
+
+// ====================
+// 8. Delete Functions
+// ====================
+
+/**
+ * Deletes a list of planner events from the calendar and storage. The calendar data will be reloaded 
+ * by default after the deletions.
  * 
  * @param events - The list of events to delete.
- * @param excludeCalendarRefresh - When true the calendar will not be reloaded after the deletions.
+ * @param excludeCalendarRefresh - Indicates whether to exclude calendar refresh after the deletions. Default is false.
  */
 export async function deletePlannerEventsFromStorageAndCalendar(
     events: IPlannerEvent[],
@@ -411,7 +445,8 @@ export async function deletePlannerEventsFromStorageAndCalendar(
 
     const plannersToUpdate: Record<string, TPlanner> = {};
     const storageIdsToDelete: Set<string> = new Set();
-    const recurringIdsToDelete: Set<string> = new Set();
+    const deletedRecurringIds: string[] = [];
+    const deletedCalendarIds: string[] = [];
     const deletedTimeRanges: ITimeConfig[] = [];
     const calendarDeletePromises: Promise<any>[] = [];
 
@@ -427,17 +462,19 @@ export async function deletePlannerEventsFromStorageAndCalendar(
         const isEventToday = event.listId === todayDatestamp;
 
         // Delete calendar records.
-        if (event.calendarId && !isEventToday && hasCalendarAccess()) {
-            calendarDeletePromises.push(Calendar.deleteEventAsync(event.calendarId));
-            deletedTimeRanges.push(event.timeConfig!);
+        if (event.calendarId) {
+            if (!isEventToday) {
+                // Delete the event from the device calendar.
+                calendarDeletePromises.push(Calendar.deleteEventAsync(event.calendarId));
+                deletedTimeRanges.push(event.timeConfig!);
+            } else {
+                deletedCalendarIds.push(event.calendarId);
+            }
         }
 
         if (event.recurringId) {
-            recurringIdsToDelete.add(event.recurringId);
+            deletedRecurringIds.push(event.recurringId);
         }
-
-        // TODO: handle deletion of calendar events
-        //|| (event.calendarId && isEventToday)
 
         storageIdsToDelete.add(event.id);
     }
@@ -447,13 +484,20 @@ export async function deletePlannerEventsFromStorageAndCalendar(
         savePlannerToStorage({
             ...planner,
             eventIds: planner.eventIds.filter(id => !storageIdsToDelete.has(id)),
-            deletedRecurringEventIds: planner.deletedRecurringEventIds.filter(id => !recurringIdsToDelete.has(id))
+            deletedRecurringEventIds: [
+                ...planner.deletedRecurringEventIds,
+                ...deletedRecurringIds
+            ],
+            deletedCalendarEventIds: [
+                ...planner.deletedCalendarEventIds,
+                ...deletedCalendarIds
+            ]
         });
     }
 
     // Phase 3: Delete events from storage.
     for (const eventId of storageIdsToDelete) {
-        deletePlannerEventFromStorage(eventId);
+        deletePlannerEventFromStorageById(eventId);
     }
 
     // Phase 4: Reload calendar if needed.
@@ -464,96 +508,17 @@ export async function deletePlannerEventsFromStorageAndCalendar(
     }
 }
 
-// ========================
-// 8. Generation Functions
-// ========================
-
 /**
- * Generates a new planner event for a given planner. The new event will focus the textfield.
- * 
- * @param datestamp - The date of the planner. (YYYY-MM-DD)
- * @param index - The index of the new item within its planner.
+ * Deletes all planners and their events from storage that occurred before yesterday's date.
  */
-export function generateNewPlannerEventAndSaveToStorage(datestamp: string, index: number) {
-    const planner = getPlannerFromStorageByDatestamp(datestamp);
+export function deleteAllPlannersInStorageBeforeYesterday() {
+    const yesterdayDatestamp = getYesterdayDatestamp();
 
-    const plannerEvent: IPlannerEvent = {
-        id: uuid.v4(),
-        value: "",
-        listId: datestamp,
-        storageId: EStorageId.PLANNER_EVENT
-    };
-    savePlannerEventToStorage(plannerEvent);
-
-    planner.eventIds.splice(index, 0, plannerEvent.id);
-    savePlannerToStorage(planner);
-
-    jotaiStore.set(textfieldIdAtom, plannerEvent.id);
-}
-
-/**
- * Generates an empty planner for the given datestamp.
- * 
- * @param datestamp - The date of the planner. (YYYY-MM-DD)
- * @returns A new planner object with no linked events.
- */
-export function generateEmptyPlanner(datestamp: string): TPlanner {
-    return {
-        datestamp,
-        title: '',
-        eventIds: [],
-        deletedRecurringEventIds: [],
-        hideRecurring: false
-    };
-}
-
-/**
- * Generates the icon config representing a planner event's time. Clicking the icon will open the Time Modal for the event.
- * 
- * @param event - The planner event.
- * @returns Icon configuration for the event's time.
- */
-export function generatePlannerEventTimeIconConfig(
-    event: IPlannerEvent
-): TListItemIconConfig<IPlannerEvent> {
-    const itemTime = extractEventTime(event);
-    return {
-        hideIcon: !itemTime,
-        onClick: () => openTimeModal(event.listId, event),
-        customIcon: (
-            <TimeValue
-                endEvent={event.timeConfig?.multiDayEnd}
-                startEvent={event.timeConfig?.multiDayStart}
-                isoTimestamp={itemTime}
-                concise
-            />
-        )
-    };
-}
-
-// =======================
-// 9. Validation Function
-// =======================
-
-/**
- * Validates if both given time configurations are eqivalent.
- * 
- * @param timeConfig1 - The first time config to analyze.
- * @param timeConfig2 - The second time config to analyze.
- * @returns True if both configs are equal, else false.
- */
-export function arePlannerEventTimesEqual(
-    timeConfig1?: ITimeConfig,
-    timeConfig2?: ITimeConfig
-): boolean {
-    if (timeConfig1 === timeConfig2) return true; // both undefined
-    if (!timeConfig1 || !timeConfig2) return false; // one is undefined, the other isn't
-
-    return (
-        timeConfig1.allDay === timeConfig2.allDay &&
-        timeConfig1.startIso === timeConfig2.startIso &&
-        timeConfig1.endIso === timeConfig2.endIso &&
-        (timeConfig1.multiDayEnd ?? false) === (timeConfig2.multiDayEnd ?? false) &&
-        (timeConfig1.multiDayStart ?? false) === (timeConfig2.multiDayStart ?? false)
-    );
+    getAllPlannerDatestampsFromStorage().forEach(datestamp => {
+        if (isTimeEarlier(datestamp, yesterdayDatestamp)) {
+            const planner = getPlannerFromStorageByDatestamp(datestamp);
+            planner.eventIds.forEach(deletePlannerEventFromStorageById);
+            deletePlannerFromStorageByDatestamp(datestamp);
+        }
+    });
 }

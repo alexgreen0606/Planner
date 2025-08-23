@@ -3,16 +3,13 @@ import TimeValue from "@/components/text/TimeValue";
 import { ERecurringPlannerKey } from "@/lib/enums/ERecurringPlannerKey";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
-import { IPlannerEvent, ITimeConfig } from "@/lib/types/listItems/IPlannerEvent";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
-import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
-import { getPlannerEventFromStorageById, savePlannerEventToStorage } from "@/storage/plannerStorage";
 import { deleteRecurringEventFromStorage, getRecurringEventFromStorageById, getRecurringPlannerFromStorageById, saveRecurringEventToStorage, saveRecurringPlannerToStorage } from "@/storage/recurringPlannerStorage";
 import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
-import { getDayOfWeekFromDatestamp, isTimeEarlierOrEqual, timeValueToIso } from "./dateUtils";
-import { extractTimeValueFromString, updatePlannerEventIndex } from "./plannerUtils";
+import { isTimeEarlierOrEqual } from "./dateUtils";
+import { extractTimeValueFromString } from "./plannerUtils";
 
 // ====================
 // 1. Helper Functions
@@ -111,100 +108,6 @@ function deleteRecurringWeekdayEvents(eventsToDelete: IRecurringEvent[]) {
     for (const event of eventsToDelete) {
         deleteRecurringEventFromStorage(event.id);
     }
-}
-
-// ============================
-// 2. Synchronization Function
-// ============================
-
-/**
- * Upserts all recurring events into a planner for the event's day of the week. All events will be 
- * saved to storage. The planner will be returned and NOT saved to storage.
- *
- * @param planner - The planner to synchronize.
- * @param plannerEvents - The list of planner events to update.
- * @returns A new planner synced with the recurring planner.
- */
-export function upsertRecurringEventsIntoPlanner(
-    planner: TPlanner,
-): TPlanner {
-    const { datestamp, deletedRecurringEventIds } = planner;
-
-    const getRecurringEventTimeConfig = (recEvent: IRecurringEvent): ITimeConfig => {
-        return {
-            startIso: timeValueToIso(datestamp, recEvent.startTime!),
-            endIso: timeValueToIso(datestamp, '23:55'),
-            allDay: false
-        };
-    };
-
-    const recurringPlanner = getRecurringPlannerFromStorageById(getDayOfWeekFromDatestamp(datestamp));
-
-    const plannerEvents = planner.eventIds.map(getPlannerEventFromStorageById);
-    const recurringEvents = recurringPlanner.eventIds.map(getRecurringEventFromStorageById);
-
-    // Start with a fresh list.
-    planner.eventIds = [];
-
-    const newPlannerEvents = plannerEvents.reduce<IPlannerEvent[]>((acc, planEvent) => {
-
-        // Hidden and non-recurring events are preserved as-is.
-        if (!planEvent.recurringId) {
-            acc.push(planEvent);
-            planner.eventIds.push(planEvent.id);
-            return acc;
-        }
-
-        const recEvent = recurringEvents.find(recEvent => recEvent.id === planEvent.recurringId);
-
-        // Don't keep this recurring event if it no longer exists in the recurring planner.
-        if (!recEvent) return acc;
-
-        const baseEvent: IPlannerEvent = {
-            ...planEvent,
-            value: recEvent!.value
-        };
-
-        if (recEvent.startTime) {
-            baseEvent.timeConfig = getRecurringEventTimeConfig(recEvent);
-        }
-
-        // TODO: what if the time of the event needs it to shift positions?
-
-        savePlannerEventToStorage(baseEvent);
-
-        acc.push(baseEvent);
-        planner.eventIds.push(planEvent.id);
-        return acc;
-    }, []);
-
-    recurringEvents.forEach((recEvent) => {
-        const isEventDeleted = deletedRecurringEventIds.includes(recEvent.id);
-        if (isEventDeleted) return;
-
-        const isEventAdded = newPlannerEvents.some(planEvent => planEvent.recurringId === recEvent.id);
-        if (isEventAdded) return;
-
-        const baseEvent: IPlannerEvent = {
-            id: uuid.v4(),
-            listId: datestamp,
-            storageId: EStorageId.PLANNER_EVENT,
-            recurringId: recEvent.id,
-            value: recEvent.value
-        };
-
-        if (recEvent.startTime) {
-            baseEvent.timeConfig = getRecurringEventTimeConfig(recEvent);
-        }
-
-        savePlannerEventToStorage(baseEvent);
-
-        // TODO: may want to add based on the index in the recurring planner?
-
-        planner = updatePlannerEventIndex(planner, planner.eventIds.length, baseEvent);
-    });
-
-    return planner;
 }
 
 // ====================

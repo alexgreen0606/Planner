@@ -11,25 +11,27 @@ When declaring, follow this order (exported after local):
 ## Flow of Files 
 When declaring, follow this order (exported after local):
 2. `external hooks`
+2. `MMKV storage`
 1. `atoms`
 2. `context`
 3. `state`
-4. `MMKV`
+4. `MMKV variables`
 4. `animated variables`
 6. `constants (prefer)`
 6. `custom hooks`
 5. `useEffect`
-1. `functions`
+4. `event handlers`
+1. `helper functions`
 7. `UI`
 
 ## Flow of Util Files 
 2. `Types`
 2. `Helper Functions`
-1. `Special Functions`
+1. `Special Functions?`
+6. `Create Functions`
+4. `Read Functions`
 6. `Update Functions`
-4. `Getter Functions`
 4. `Delete Functions`
-6. `Generation Functions`
 6. `Validation Functions`
 
 ## Function Names
