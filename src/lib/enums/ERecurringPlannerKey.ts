@@ -1,6 +1,6 @@
 // ✅ 
 
-export enum ERecurringPlannerKey {
+export enum ERecurringPlannerId {
     WEEKDAYS = 'Weekdays',
     MONDAY = 'Monday',
     TUESDAY = 'Tuesday',

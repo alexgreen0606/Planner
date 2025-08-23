@@ -1,7 +1,7 @@
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
-import { generateEmptyRecurringPlanner } from "@/utils/recurringPlannerUtils";
+import { createEmptyRecurringPlanner } from "@/utils/recurringPlannerUtils";
 import { MMKV } from "react-native-mmkv";
 
 // ✅ 
@@ -31,7 +31,7 @@ export function getRecurringPlannerFromStorageById(recurringPlannerId: string): 
         return JSON.parse(eventsString);
     }
 
-    return generateEmptyRecurringPlanner(recurringPlannerId);
+    return createEmptyRecurringPlanner(recurringPlannerId);
 }
 
 export function getRecurringEventFromStorageById(id: string): IRecurringEvent {

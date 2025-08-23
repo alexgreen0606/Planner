@@ -5,7 +5,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { createNewPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
+import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
@@ -41,7 +41,7 @@ const TodayPlanner = () => {
                 className: 'flex-1'
             }}
             toolbarIconSet={plannerToolbarIconConfig}
-            onCreateItem={createNewPlannerEventInStorageAndFocusTextfield}
+            onCreateItem={createPlannerEventInStorageAndFocusTextfield}
             onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
             onValueChange={onUpdatePlannerEventValueWithTimeParsing}
             onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}

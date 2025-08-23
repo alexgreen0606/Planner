@@ -6,9 +6,9 @@ import { TListItem } from "@/lib/types/listItems/core/TListItem";
 /**
 * Generates the configuration for the list item deletion toggle.
 * 
-* @param isDeleting - True if the item is pending delete, else false.
+* @param isDeleting - Signifies if the item is pending deletion.
 * @param toggleItemDelete - Toggles the item in and out of pending delete.
-* @returns Icon configuration for the deletion toggle.
+* @returns The icon configuration for the standard deletion toggle.
 */
 export function generateCheckboxIconConfig<T extends TListItem>(
     isDeleting: boolean,
@@ -20,5 +20,5 @@ export function generateCheckboxIconConfig<T extends TListItem>(
             platformColor: isDeleting ? 'systemBlue' : 'secondaryLabel'
         },
         onClick: toggleItemDelete
-    };
+    }
 }

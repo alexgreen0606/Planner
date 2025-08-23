@@ -264,7 +264,7 @@ export function openPlannerTimeModal(eventId: string, triggerDatestamp: string) 
  * @param datestamp - The date of the planner. (YYYY-MM-DD)
  * @param index - The index of the new item within its planner.
  */
-export function createNewPlannerEventInStorageAndFocusTextfield(datestamp: string, index: number) {
+export function createPlannerEventInStorageAndFocusTextfield(datestamp: string, index: number) {
 
     // Create the new planner event.
     const plannerEvent: IPlannerEvent = {
@@ -282,21 +282,6 @@ export function createNewPlannerEventInStorageAndFocusTextfield(datestamp: strin
 
     // Focus the textifeld on the event.
     jotaiStore.set(textfieldIdAtom, plannerEvent.id);
-}
-
-/**
- * Creates a planner event time configuration from a datestamp and time value.
- *
- * @param datestamp - The date of the event. (YYYY-MM-DD)
- * @param timeValue - The time of the event. (HH:MM)
- * @returns A new time config representing the date and time.
- */
-export function createPlannerEventTimeConfig(datestamp: string, timeValue: string): ITimeConfig {
-    return {
-        startIso: timeValueToIso(datestamp, timeValue),
-        endIso: timeValueToIso(datestamp, "23:55"),
-        allDay: false
-    }
 }
 
 /**
@@ -337,6 +322,21 @@ export function createPlannerEventTimeIconConfig(
                 concise
             />
         )
+    }
+}
+
+/**
+ * Creates a planner event time configuration from a datestamp and time value.
+ *
+ * @param datestamp - The date of the event. (YYYY-MM-DD)
+ * @param timeValue - The time of the event. (HH:MM)
+ * @returns A new time config representing the date and time.
+ */
+export function createPlannerEventTimeConfig(datestamp: string, timeValue: string): ITimeConfig {
+    return {
+        startIso: timeValueToIso(datestamp, timeValue),
+        endIso: timeValueToIso(datestamp, "23:55"),
+        allDay: false
     }
 }
 

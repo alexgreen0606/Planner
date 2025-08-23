@@ -1,3 +1,4 @@
+import { calendarEventDataAtom } from "@/atoms/calendarEvents";
 import GenericIcon from "@/components/icon";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
@@ -7,7 +8,8 @@ import { getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerSt
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, parseTimeValueFromText } from "@/utils/dateUtils";
 import { createEmptyPlanner, createPlannerEventTimeConfig, updatePlannerEventIndexWithChronologicalCheck, upsertCalendarEventsIntoPlanner, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
 import { MenuView } from "@react-native-menu/menu";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useAtomValue } from "jotai";
+import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
 import { useTextfieldItemAs } from "./textfields/useTextfieldItemAs";
@@ -23,14 +25,25 @@ enum EPlannerEditAction {
 }
 
 const usePlanner = (datestamp: string, eventStorage: MMKV) => {
-    const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
     const recurringPlannerStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
+    const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
 
-    const initialLoadComplete = useRef(false);
+    const calendarEventData = useAtomValue(calendarEventDataAtom);
 
     const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
 
+    const {
+        textfieldItem: focusedEvent,
+        onSetTextfieldItem: onSetFocusedEvent,
+        onCloseTextfield: onCloseFocusedEvent
+    } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
+
     const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+    const isLoadingCalendarData = useMemo(
+        () => calendarEventData.plannersMap[datestamp] === undefined,
+        [calendarEventData]
+    );
 
     // TODO: separate into 2 functions so hideRecurring doesnt keep running (incorporate collapsed into this as well)
     const visibleEventIds = useMemo(() => {
@@ -44,33 +57,22 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }, [planner?.eventIds, planner?.hideRecurring]);
 
-    const { textfieldItem, onSetTextfieldItem, onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
-
     const { calendarEvents } = useCalendarData(datestamp);
 
     const isRecurringHidden = planner?.hideRecurring;
-    const isPlannerFocused = planner && (textfieldItem?.listId === planner.datestamp);
+    const isPlannerFocused = planner && (focusedEvent?.listId === planner.datestamp);
     const hasTitle = planner?.title?.length;
 
-    // Build the initial planner with recurring and calendar data.
+    // Build the initial planner with recurring data.
     useEffect(() => {
         setPlanner((prev) => {
-            let newPlanner = prev ?? createEmptyPlanner(datestamp);
-
-            newPlanner = upsertRecurringEventsIntoPlanner(newPlanner);
-            newPlanner = upsertCalendarEventsIntoPlanner(newPlanner, calendarEvents);
-
-            return planner;
+            const newPlanner = prev ?? createEmptyPlanner(datestamp);
+            return upsertRecurringEventsIntoPlanner(newPlanner);
         });
     }, [datestamp]);
 
     // Upsert the calendar events every time the date's calendar changes.
     useEffect(() => {
-        if (!initialLoadComplete.current) {
-            initialLoadComplete.current = true;
-            return;
-        }
-
         setPlanner((prev) => {
             let newPlanner = prev ?? createEmptyPlanner(datestamp);
             return upsertCalendarEventsIntoPlanner(newPlanner, calendarEvents);
@@ -90,9 +92,54 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     // Reveal all recurring events when the planner is focused.
     useEffect(() => {
         if (isPlannerFocused && isRecurringHidden) {
-            handleToggleHideAllRecurring();
+            toggleHideAllRecurring();
         }
-    }, [textfieldItem?.listId, isRecurringHidden]);
+    }, [focusedEvent?.listId, isRecurringHidden]);
+
+    // =====================
+    // 1. Exposed Functions
+    // =====================
+
+    // Scan user input for an initial event time.
+    // Delete recurring event and clone if needed.
+    function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
+        onSetFocusedEvent((prev) => {
+            if (!prev || !planner) return prev;
+
+            const newEvent = { ...prev, value: userInput };
+            const newPlanner = { ...planner };
+
+            // Phase 1: If recurring, delete the event so it can be customized.
+            if (newEvent.recurringId) {
+                newPlanner.eventIds = newPlanner.eventIds.filter(id => id !== newEvent.id);
+                newPlanner.deletedRecurringEventIds.push(newEvent.recurringId);
+                delete newEvent.recurringId;
+            }
+
+            // Don't scan for time values if the event is already timed.
+            if (newEvent.timeConfig) return newEvent;
+
+            // Phase 2: Parse time from user input.
+            const { timeValue, updatedText } = parseTimeValueFromText(userInput);
+            if (!timeValue) return newEvent;
+
+            // Phase 3: Apply planner-specific time config.
+            newEvent.value = updatedText;
+            newEvent.timeConfig = createPlannerEventTimeConfig(newEvent.listId, timeValue);
+
+            // Phase 4: Check chronological order and update index if needed.
+            const currentIndex = newPlanner.eventIds.findIndex(e => e === newEvent.id);
+            if (currentIndex === -1) {
+                throw new Error(`handleUpdatePlannerEventValueWithTimeParsing: No event exists in planner ${newEvent.listId} with ID ${newEvent.id}`);
+            }
+
+            // Save the planner and the event to storage.
+            setPlanner(
+                updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
+            );
+            return newEvent;
+        });
+    }
 
     function handleEditTitle(title: string) {
         setPlanner((prev) => {
@@ -105,14 +152,43 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         setIsEditingTitle(prev => !prev);
     }
 
-    function handleToggleHideAllRecurring() {
+    function handleUpdatePlannerEventIndexWithChronologicalCheck(index: number, event: IPlannerEvent) {
+        setPlanner((prev) => {
+            const newPlanner = prev ?? createEmptyPlanner(datestamp);
+            return updatePlannerEventIndexWithChronologicalCheck(newPlanner, index, event);
+        });
+    }
+
+    // =====================
+    // 2. Helper Functions
+    // =====================
+
+    function triggerPlannerAction(action: EPlannerEditAction) {
+        switch (action) {
+            case EPlannerEditAction.EDIT_TITLE:
+                handleToggleEditTitle();
+                break;
+            case EPlannerEditAction.DELETE_RECURRING:
+                deleteAllRecurringEvents();
+                break;
+            case EPlannerEditAction.RESET_RECURRING:
+                resetRecurringEvents();
+                break;
+            case EPlannerEditAction.TOGGLE_HIDE_RECURRING:
+                toggleHideAllRecurring();
+            default:
+                return;
+        }
+    }
+
+    function toggleHideAllRecurring() {
         setPlanner((prev) => {
             const newPlanner = prev ?? createEmptyPlanner(datestamp);
             return { ...newPlanner, hideRecurring: prev ? !prev.hideRecurring : true }
         });
     }
 
-    function handleResetRecurringEvents() {
+    function resetRecurringEvents() {
         setPlanner((prev) => {
             const newPlanner = prev ?? createEmptyPlanner(datestamp);
             return upsertRecurringEventsIntoPlanner({
@@ -123,7 +199,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }
 
-    function handleDeleteAllRecurringEvents() {
+    function deleteAllRecurringEvents() {
         setPlanner((prev) => {
             const newPlanner = prev ?? createEmptyPlanner(datestamp);
 
@@ -147,71 +223,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }
 
-    function handleUpdatePlannerEventIndexWithChronologicalCheck(index: number, event: IPlannerEvent) {
-        setPlanner((prev) => {
-            const newPlanner = prev ?? createEmptyPlanner(datestamp);
-            return updatePlannerEventIndexWithChronologicalCheck(newPlanner, index, event);
-        });
-    }
-
-    // Scan user input for an initial event time.
-    // Delete recurring event and clone if needed.
-    function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
-        onSetTextfieldItem((prev) => {
-            if (!prev || !planner) return prev;
-
-            const newEvent = { ...prev, value: userInput };
-            let newPlanner = { ...planner };
-
-            // Phase 1: If recurring, delete the event so it can be customized.
-            if (newEvent.recurringId) {
-                newPlanner.eventIds = newPlanner.eventIds.filter(id => id !== newEvent.id);
-                newPlanner.deletedRecurringEventIds.push(newEvent.recurringId);
-                delete newEvent.recurringId;
-            }
-
-            // Phase 2: Parse time from user input.
-            const { formattedTime, updatedText } = parseTimeValueFromText(userInput);
-            if (!formattedTime) return newEvent; // No time detected
-
-            // Phase 3: Apply planner-specific time config.
-            newEvent.value = updatedText;
-            newEvent.timeConfig = createPlannerEventTimeConfig(newEvent.listId, formattedTime);
-
-            // Phase 4: Check chronological order and update index
-            const currentIndex = newPlanner.eventIds.findIndex(e => e === newEvent.id);
-            if (currentIndex === -1) {
-                throw new Error(`handleUpdatePlannerEventValueWithTimeParsing: No event exists in planner ${newEvent.listId} with ID ${newEvent.id}`);
-            }
-
-            // Update the event's position in the list if needed.
-            setPlanner(
-                updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
-            );
-
-            return newEvent;
-        });
-    }
-
-    function handleAction(action: EPlannerEditAction) {
-        switch (action) {
-            case EPlannerEditAction.EDIT_TITLE:
-                handleToggleEditTitle();
-                break;
-            case EPlannerEditAction.DELETE_RECURRING:
-                handleDeleteAllRecurringEvents();
-                break;
-            case EPlannerEditAction.RESET_RECURRING:
-                handleResetRecurringEvents();
-                break;
-            case EPlannerEditAction.TOGGLE_HIDE_RECURRING:
-                handleToggleHideAllRecurring();
-            default:
-                return;
-        }
-    }
-
-    // -------- Overflow Actions --------
+    // =========================
+    // 3. Overflow Actions Icon
+    // =========================
 
     const overflowActions = [
         {
@@ -272,7 +286,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
             <MenuView
                 title={`${getDayOfWeekFromDatestamp(datestamp)}, ${getMonthDateFromDatestamp(datestamp)}`}
                 onPressAction={({ nativeEvent }) => {
-                    handleAction(nativeEvent.event as EPlannerEditAction);
+                    triggerPlannerAction(nativeEvent.event as EPlannerEditAction);
                 }}
                 actions={overflowActions}
                 shouldOpenOnLongPress={false}
@@ -287,8 +301,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         visibleEventIds,
         isEditingTitle,
         isPlannerFocused,
+        isLoading: isLoadingCalendarData,
         OverflowIcon,
-        onCloseTextfield,
+        onCloseTextfield: onCloseFocusedEvent,
         onEditTitle: handleEditTitle,
         onToggleEditTitle: handleToggleEditTitle,
         onUpdatePlannerEventIndexWithChronologicalCheck: handleUpdatePlannerEventIndexWithChronologicalCheck,

@@ -1,4 +1,3 @@
-import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import usePlanner from '@/hooks/usePlanner';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
@@ -9,11 +8,10 @@ import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
-import { useAtomValue } from 'jotai';
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import { createNewPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '../../utils/plannerUtils';
+import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '../../utils/plannerUtils';
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
@@ -31,8 +29,6 @@ const PlannerCard = ({
 }: TPlannerCardProps) => {
     const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
-    const calendarEventData = useAtomValue(calendarEventDataAtom);
-
     const [collapsed, setCollapsed] = useState(true);
 
     const {
@@ -47,6 +43,7 @@ const PlannerCard = ({
         visibleEventIds,
         isEditingTitle,
         isPlannerFocused,
+        isLoading,
         onEditTitle,
         OverflowIcon,
         onCloseTextfield,
@@ -54,8 +51,6 @@ const PlannerCard = ({
         onUpdatePlannerEventValueWithTimeParsing,
         onUpdatePlannerEventIndexWithChronologicalCheck
     } = usePlanner(datestamp, eventStorage);
-
-    const isThisCalendarLoading = calendarEventData.plannersMap[datestamp] === undefined;
 
     // Expand the planner if the textfield item belongs to this planner.
     useEffect(() => {
@@ -82,7 +77,7 @@ const PlannerCard = ({
         setCollapsed(curr => !curr);
     }
 
-    if (isThisCalendarLoading) return null;
+    if (isLoading) return null;
 
     return (
         <Card
@@ -118,7 +113,7 @@ const PlannerCard = ({
                 toolbarIconSet={plannerToolbarIconConfig}
                 onValueChange={onUpdatePlannerEventValueWithTimeParsing}
                 onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
-                onCreateItem={createNewPlannerEventInStorageAndFocusTextfield}
+                onCreateItem={createPlannerEventInStorageAndFocusTextfield}
                 onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
                 onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
                 onGetRightIconConfig={createPlannerEventTimeIconConfig}

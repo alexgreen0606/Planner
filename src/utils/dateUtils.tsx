@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 // ==============================
 
 type ParsedTimeResult = {
-    formattedTime: string | null;
+    timeValue: string | null;
     updatedText: string;
 };
 
@@ -15,17 +15,17 @@ type ParsedTimeResult = {
  * Parses user input for a time (HH:MM AM/PM) and converts it to a time value (HH:MM).
  * Returns the formatted time and the updated text with the time removed.
  *
- * @param text - User input string.
- * @returns Object containing the formatted time or null, and the updated text
+ * @param text - The user input string.
+ * @returns An object containing the updated text and extracted time value (or null if none was found).
  */
 export function parseTimeValueFromText(text: string): ParsedTimeResult {
     const timeRegex = /\b(1[0-2]|[1-9])(?::([0-5][0-9]))?\s?(AM|PM|am|pm)\b/;
     const match = text.match(timeRegex);
 
-    if (!match) return { formattedTime: null, updatedText: text };
+    if (!match) return { timeValue: null, updatedText: text };
 
-    const timeValue = match[0];
-    const updatedText = text.replace(timeValue, "").trim();
+    const timeText = match[0];
+    const updatedText = text.replace(timeText, "").trim();
 
     // Convert to time value
     let hours = parseInt(match[1], 10);
@@ -35,9 +35,9 @@ export function parseTimeValueFromText(text: string): ParsedTimeResult {
     if (period === "PM" && hours !== 12) hours += 12;
     if (period === "AM" && hours === 12) hours = 0;
 
-    const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    const timeValue = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
-    return { formattedTime, updatedText };
+    return { timeValue, updatedText };
 }
 
 // ===========================================================

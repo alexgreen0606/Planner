@@ -1,7 +1,7 @@
 import RecurringPlanner from '@/components/lists/RecurringPlanner';
 import ButtonText from '@/components/text/ButtonText';
 import { useTextfieldFallbackSave } from '@/hooks/useTextfieldFallbackSave';
-import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
+import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import React, { useMemo, useState } from 'react';
 import { PlatformColor, View } from 'react-native';
@@ -9,10 +9,10 @@ import { PlatformColor, View } from 'react-native';
 //
 
 const RecurringPlanners = () => {
-    const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerKey>(ERecurringPlannerKey.WEEKDAYS);
+    const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerId>(ERecurringPlannerId.WEEKDAYS);
 
     const recurringPlannerOptions = useMemo(() =>
-        Object.values(ERecurringPlannerKey).map((title) => ({
+        Object.values(ERecurringPlannerId).map((title) => ({
             id: title,
             title,
             titleColor: 'blue',
@@ -36,7 +36,7 @@ const RecurringPlanners = () => {
             <View className='p-2 flex-row'>
                 <MenuView
                     onPressAction={({ nativeEvent }) => {
-                        setSelectedRecurring(nativeEvent.event as ERecurringPlannerKey)
+                        setSelectedRecurring(nativeEvent.event as ERecurringPlannerId)
                     }}
                     actions={recurringPlannerOptions as MenuAction[]}
                     shouldOpenOnLongPress={false}

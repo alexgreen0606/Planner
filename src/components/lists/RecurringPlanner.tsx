@@ -1,24 +1,21 @@
-import useRecurringTextfield from '@/hooks/textfields/useRecurringTextfield';
 import useRecurringPlanner from '@/hooks/useRecurringPlanner';
-import { ERecurringPlannerKey } from '@/lib/enums/ERecurringPlannerKey';
+import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { deleteRecurringEventsFromStorageHideWeekday, generateNewRecurringEventAndSaveToStorage, generateRecurringEventTimeIconConfig, updateRecurringEventIndexWithChronologicalCheck, updateRecurringEventValueWithCloningAndSmartTimeDetect, updateWeekdayPlannersWithWeekdayEvent } from '@/utils/recurringPlannerUtils';
+import { createRecurringEventInStorageAndFocusTextfield, createRecurringEventTimeIconConfig, deleteRecurringEventsFromStorageHideWeekday, updateWeekdayPlannersWithWeekdayEvent } from '@/utils/recurringPlannerUtils';
 import React from 'react';
-import { PlatformColor, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
-//
+// ✅ 
 
 type SortedRecurringPlannerProps = {
-    recurringPlannerId: ERecurringPlannerKey;
+    recurringPlannerId: ERecurringPlannerId;
 };
 
 const RecurringPlanner = ({ recurringPlannerId }: SortedRecurringPlannerProps) => {
-
     const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
 
     const {
@@ -26,11 +23,15 @@ const RecurringPlanner = ({ recurringPlannerId }: SortedRecurringPlannerProps) =
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
     } = useDeleteScheduler<IRecurringEvent>();
 
-    const { eventIds } = useRecurringPlanner(recurringPlannerId);
+    const {
+        eventIds,
+        toolbarIcons,
+        onShowEventTime,
+        onUpdateRecurringEventIndexWithChronologicalCheck,
+        onUpdateRecurringEventValueWithTimeParsing
+    } = useRecurringPlanner(recurringPlannerId, recurringEventStorage);
 
-    const { toolbarIcons, onShowEventTime } = useRecurringTextfield();
-
-    const isWeekdayPlanner = recurringPlannerId === ERecurringPlannerKey.WEEKDAYS;
+    const isWeekdayPlanner = recurringPlannerId === ERecurringPlannerId.WEEKDAYS;
 
     return (
         <DragAndDropList<IRecurringEvent>
@@ -44,12 +45,12 @@ const RecurringPlanner = ({ recurringPlannerId }: SortedRecurringPlannerProps) =
                 label: `No recurring ${isWeekdayPlanner ? 'weekday' : recurringPlannerId} plans`,
                 className: 'flex-1'
             }}
-            onCreateItem={generateNewRecurringEventAndSaveToStorage}
-            onIndexChange={updateRecurringEventIndexWithChronologicalCheck}
-            onValueChange={updateRecurringEventValueWithCloningAndSmartTimeDetect}
+            onCreateItem={createRecurringEventInStorageAndFocusTextfield}
+            onIndexChange={onUpdateRecurringEventIndexWithChronologicalCheck}
+            onValueChange={onUpdateRecurringEventValueWithTimeParsing}
             onSaveToExternalStorage={isWeekdayPlanner ? updateWeekdayPlannersWithWeekdayEvent : undefined}
             onDeleteItem={(event) => deleteRecurringEventsFromStorageHideWeekday([event])}
-            onGetRightIconConfig={(event) => generateRecurringEventTimeIconConfig(event, onShowEventTime)}
+            onGetRightIconConfig={(event) => createRecurringEventTimeIconConfig(event, onShowEventTime)}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
     );
