@@ -8,6 +8,6 @@ export type TCalendarEventChip = {
     event: CalendarEvent;
     color: string;
     iconConfig: GenericIconProps;
-    onClick?: (router?: Router) => void;
+    onClick?: () => void;
     hasClickAccess?: boolean;
 };

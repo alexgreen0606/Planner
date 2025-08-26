@@ -19,10 +19,7 @@ type FolderItemBannerProps = {
     };
 };
 
-const FolderItemBanner = ({
-    itemId,
-    backButtonConfig
-}: FolderItemBannerProps) => {
+const FolderItemBanner = ({ itemId, backButtonConfig }: FolderItemBannerProps) => {
     const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const router = useRouter();
 
@@ -30,7 +27,7 @@ const FolderItemBanner = ({
         item: folder,
         isEditingValue,
         onToggleEditValue,
-        onEditValue
+        onValueChange
     } = useFolderItem(itemId, itemStorage);
 
     return (
@@ -44,7 +41,7 @@ const FolderItemBanner = ({
                 <TextInput
                     autoFocus
                     value={folder?.value}
-                    onChangeText={onEditValue}
+                    onChangeText={onValueChange}
                     cursorColor={PlatformColor('systemBlue')}
                     onBlur={onToggleEditValue}
                     className='w-full bg-transparent'

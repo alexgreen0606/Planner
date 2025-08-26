@@ -165,11 +165,11 @@ const AccessGuard = () => {
             <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
-                    name={`${TIME_MODAL_PATHNAME}[datestamp]/[eventId]/[sortId]/[eventValue]`}
+                    name={`${TIME_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
                     options={{ presentation: 'modal', headerShown: false }}
                 />
                 <Stack.Screen
-                    name={`${PLANNER_SET_MODAL_PATHNAME}[plannerSetKey]`}
+                    name={`${PLANNER_SET_MODAL_PATHNAME}/[plannerSetKey]`}
                     options={{ presentation: 'modal', headerShown: false }}
                 />
             </Stack>

@@ -240,7 +240,7 @@ export function upsertCalendarEventsIntoPlanner(
  * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
  */
 export function openPlannerTimeModal(eventId: string, triggerDatestamp: string) {
-    router.push(`${TIME_MODAL_PATHNAME}/${triggerDatestamp}/${eventId}`);
+    router.push(`${TIME_MODAL_PATHNAME}/${eventId}/${triggerDatestamp}`);
 }
 
 // ====================
@@ -419,17 +419,25 @@ export function updatePlannerEventIndexWithChronologicalCheck(
 // 8. Delete Functions
 // ====================
 
+type TPlannerEventDeleteOptions = {
+    excludeCalendarRefresh?: boolean;
+    excludeCalendarDelete?: boolean;
+    deleteBothMultiDayStorageRecords?: boolean;
+}
+
 /**
  * Deletes a list of planner events from the calendar and storage. The calendar data will be reloaded 
  * by default after the deletions.
  * 
  * @param events - The list of events to delete.
- * @param excludeCalendarRefresh - Indicates whether to exclude calendar refresh after the deletions. Default is false.
+ * @param options - Set of rules to control speicifc actions of the deletions.
  */
 export async function deletePlannerEventsFromStorageAndCalendar(
     events: IPlannerEvent[],
-    excludeCalendarRefresh: boolean = false
+    options: TPlannerEventDeleteOptions = {}
 ) {
+    const { excludeCalendarRefresh, excludeCalendarDelete, deleteBothMultiDayStorageRecords } = options;
+
     const todayDatestamp = getTodayDatestamp();
 
     const plannersToUpdate: Record<string, TPlanner> = {};
@@ -450,9 +458,26 @@ export async function deletePlannerEventsFromStorageAndCalendar(
 
         const isEventToday = event.listId === todayDatestamp;
 
-        // Delete calendar records.
+        // Handle deletion of calendar records.
         if (event.calendarId) {
-            if (!isEventToday) {
+
+            // Handle deletion of multi-day event records.
+            const isMultiDay = !!event.timeConfig!.startEventId || !!event.timeConfig!.endEventId;
+            if (isMultiDay) {
+                if (event.timeConfig!.startEventId === event.id) {
+                    // The start event is deleting.
+                    // If needed, delete the end event as well.
+                    if (deleteBothMultiDayStorageRecords) {
+                        storageIdsToDelete.add(event.timeConfig!.endEventId!);
+                    }
+                } else {
+                    // The end event is deleting. Delete the start event as well.
+                    storageIdsToDelete.add(event.timeConfig!.startEventId!);
+                }
+            }
+
+            // Decide whether to delete the calendar record or just hide it.
+            if (!excludeCalendarDelete && !isEventToday) {
                 // Delete the event from the device calendar.
                 calendarDeletePromises.push(Calendar.deleteEventAsync(event.calendarId));
                 deletedTimeRanges.push(event.timeConfig!);
@@ -491,7 +516,7 @@ export async function deletePlannerEventsFromStorageAndCalendar(
 
     // Phase 4: Reload calendar if needed.
     await Promise.all(calendarDeletePromises);
-    if (!excludeCalendarRefresh && deletedTimeRanges.length > 0) {
+    if (!excludeCalendarRefresh && !excludeCalendarDelete && deletedTimeRanges.length > 0) {
         const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(deletedTimeRanges);
         await loadCalendarDataToStore(datestampsToReload);
     }

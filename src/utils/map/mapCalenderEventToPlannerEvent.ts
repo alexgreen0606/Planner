@@ -4,7 +4,7 @@ import { Event } from "expo-calendar";
 import { uuid } from "expo-modules-core";
 import { isoToDatestamp } from "../dateUtils";
 
-// ✅ 
+//
 
 /**
  * Maps a calendar event to a planner event.

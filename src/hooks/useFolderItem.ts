@@ -1,15 +1,14 @@
 import { ToolbarIcon } from '@/components/lists/components/ListToolbar';
 import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
-import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import { useTextfieldItemAs } from './useTextfieldItemAs';
 
-//
+// ✅ 
 
 export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     const [item, setItem] = useMMKVObject<IFolderItem>(itemId, itemStorage);
@@ -27,7 +26,7 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         setIsEditingValue(prev => !prev);
     }
 
-    function handleEditValue(value: string) {
+    function handleValueChange(value: string) {
         setItem((prev) => {
             if (!prev) return prev;
             return { ...prev, value };
@@ -146,7 +145,7 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         textfieldItem,
         toolbarIconSet,
         onEndTransfer: handleEndItemTransfer,
-        onEditValue: handleEditValue,
+        onValueChange: handleValueChange,
         onToggleEditValue: handleToggleEditValue,
     }
 };

@@ -6,6 +6,7 @@ import * as Calendar from 'expo-calendar';
 import { Router } from "expo-router";
 import { hasCalendarAccess, hasContactsAccess } from "../accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "../birthdayUtils";
+import { openPlannerTimeModal } from "../plannerUtils";
 
 /**
  * Maps a calendar event to an event chip for a given planner.
@@ -32,17 +33,7 @@ export function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: C
     }
 
     if (calendar.isPrimary || calendar.title === 'Calendar') {
-        calendarEventChip.onClick = (router?: Router) => {
-            if (!router) throw new Error('No router provided to chip.')
-            router.push(`${TIME_MODAL_PATHNAME
-                }${datestamp
-                }/${event.id
-                }/${NULL
-                }/${event.title
-                }`
-            );
-        };
-        calendarEventChip.hasClickAccess = hasCalendarAccess();
+        calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
     }
 
     return calendarEventChip;

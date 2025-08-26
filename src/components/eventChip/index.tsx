@@ -1,15 +1,14 @@
+import { EStorageId } from '@/lib/enums/EStorageId';
 import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteScheduler } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
-import { EStorageId } from '@/lib/enums/EStorageId';
 
 // ✅ 
 
@@ -38,7 +37,6 @@ const EventChip = ({
     const { event: { title, id }, iconConfig, color, onClick, hasClickAccess } = chip;
 
     const { onGetDeletingItemsByStorageIdCallback: getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
-    const router = useRouter();
 
     const isPendingDelete = useMemo(() =>
         getDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
@@ -101,7 +99,7 @@ const EventChip = ({
             {onClick ? (
                 <TouchableOpacity
                     activeOpacity={collapsed || hasClickAccess ? 0 : 1}
-                    onPress={collapsed ? onToggleCollapsed : () => onClick(router)}
+                    onPress={collapsed ? onToggleCollapsed : onClick}
                 >
                     <ChipContent />
                 </TouchableOpacity>

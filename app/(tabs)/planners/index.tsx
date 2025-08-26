@@ -103,8 +103,6 @@ const Planners = () => {
 
     const router = useRouter();
 
-    // useTextfieldFallbackSave(upsertEventToStorage);
-
     const allPlannerSetTitles = getAllPlannerSetTitles(); // TODO: use MMKV to watch this
 
     const plannerSetOptions = useMemo(() =>
@@ -156,14 +154,14 @@ const Planners = () => {
                             type='edit'
                             size='l'
                             platformColor='systemBlue'
-                            onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${plannerSetKey}`)}
+                            onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}/${plannerSetKey}`)}
                         />
                     )}
                     <GenericIcon
                         type='add'
                         size='l'
                         platformColor='systemBlue'
-                        onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}${NULL}`)}
+                        onClick={() => router.push(`${PLANNER_SET_MODAL_PATHNAME}/${NULL}`)}
                     />
                 </View>
             </View>
