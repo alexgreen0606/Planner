@@ -12,7 +12,7 @@ import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
 import { getPrimaryCalendarId, loadCalendarDataToStore } from "@/utils/calendarUtils";
 import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
-import { createPlannerEventInStorageAndFocusTextfield, deletePlannerEventsFromStorageAndCalendar, getAllMountedDatestampsLinkedToDateRanges, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
+import { createPlannerEventInStorageAndFocusTextfield, deletePlannerEventsFromStorageAndCalendar, getAllMountedDatestampsLinkedToDateRanges, getPlannerEventFromStorageByCalendarId, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -472,12 +472,10 @@ const TimeModal = () => {
                 // Delete the planner events from storage. 
                 // Exclude calendar refresh (will be handled within this modal).
                 // Exclude calendar delete (ID will be reused).
-                // Ensure both the start and end events are deleted.
                 const eventsToDelete = [endPlannerEvent];
                 deletePlannerEventsFromStorageAndCalendar(eventsToDelete, {
                     excludeCalendarDelete: true,
-                    excludeCalendarRefresh: true,
-                    deleteBothMultiDayStorageRecords: true
+                    excludeCalendarRefresh: true
                 });
 
                 break;
@@ -542,11 +540,9 @@ const TimeModal = () => {
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_SINGLE_DAY
-                const { endPlannerEvent } = initialState;
+                const { startPlannerEvent, endPlannerEvent } = initialState;
                 const { timeConfig } = endPlannerEvent;
                 const { startEventId, endEventId } = timeConfig!;
-
-                const startDatestamp = isoToDatestamp(timeConfig!.startIso);
 
                 calendarId = endPlannerEvent.calendarId;
 
@@ -557,10 +553,10 @@ const TimeModal = () => {
                 removeEventIdFromPlannerInStorage(endEventId!);
                 deletePlannerEventFromStorageById(endEventId!);
 
-                if (!getDoesPlannerStillExistInStorage(startDatestamp)) break;
+                if (!startPlannerEvent || !getDoesPlannerStillExistInStorage(startPlannerEvent.listId)) break;
 
                 // Re-use the position and ID of the existing start event.
-                const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
+                const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
                 carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startEventId!, hasMovedPlanners);
 
                 break;
@@ -622,11 +618,9 @@ const TimeModal = () => {
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → NON_CALENDAR
-                const { endPlannerEvent } = initialState;
+                const { startPlannerEvent, endPlannerEvent } = initialState;
                 const { timeConfig } = endPlannerEvent;
                 const { startEventId, endEventId, startIso: prevStartIso } = timeConfig!;
-
-                const startDatestamp = isoToDatestamp(prevStartIso);
 
                 // Delete the event in the calendar.
                 await Calendar.deleteEventAsync(endPlannerEvent.calendarId!, { futureEvents: false });
@@ -640,10 +634,10 @@ const TimeModal = () => {
 
                 // Exit early if the start event's planner no longer exists.
                 // Storage has no useful data to carry over.
-                if (!getDoesPlannerStillExistInStorage(startDatestamp)) break;
+                if (!startPlannerEvent || !getDoesPlannerStillExistInStorage(startPlannerEvent.listId)) break;
 
                 // Carryover the start event's ID and index to reuse with the new event.
-                const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
+                const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
                 carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startEventId!, hasMovedPlanners);
 
                 break;
@@ -657,10 +651,6 @@ const TimeModal = () => {
 
                 // Mark the range of the calendar event to reload the calendar data.
                 affectedDateRanges.push(timeConfig!);
-
-                // Exit early if the start event's planner no longer exists.
-                // Storage has no useful data to carry over.
-                if (!getDoesPlannerStillExistInStorage(startDatestamp)) break;
 
                 // Carryover the event's ID and index to reuse with the new event.
                 const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
@@ -712,25 +702,23 @@ const TimeModal = () => {
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_MULTI_DAY
                 const { startPlannerEvent, endPlannerEvent } = initialState;
                 const { listId: endDatestamp } = endPlannerEvent;
+                const { timeConfig } = endPlannerEvent;
 
                 calendarId = endPlannerEvent.calendarId;
-
-                const { timeConfig } = endPlannerEvent;
 
                 // Mark the previous time range of the calendar event to reload the calendar.
                 affectedDateRanges.push(timeConfig!);
 
                 // Re-use the position and ID of the existing end event.
                 const hasEndMovedPlanners = getHasEventMovedPlanners(endDatestamp, endIso);
-                previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(endPlannerEvent!.id, hasEndMovedPlanners));
+                previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(endPlannerEvent.id, hasEndMovedPlanners));
 
                 // Exit early if the start event's planner no longer exists.
                 // Storage has no more useful data to carry over.
-                const startDatestamp = isoToDatestamp(timeConfig!.startIso);
-                if (!getDoesPlannerStillExistInStorage(startDatestamp)) break;
+                if (!startPlannerEvent || !getDoesPlannerStillExistInStorage(startPlannerEvent.listId)) break;
 
                 // Re-use the position and ID of the existing start event.
-                const hasStartMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
+                const hasStartMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
                 previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(startPlannerEvent!.id, hasStartMovedPlanners));
 
                 break;
@@ -881,12 +869,6 @@ const TimeModal = () => {
         const planner = getPlannerFromStorageByDatestamp(event.listId);
         planner.deletedRecurringEventIds.push(eventId);
         savePlannerToStorage(planner);
-    }
-
-    function getPlannerEventFromStorageByCalendarId(datestamp: string, calendarEventId: string): IPlannerEvent {
-        const storagePlanner = getPlannerFromStorageByDatestamp(datestamp);
-        const storageEvents = storagePlanner.eventIds.map(getPlannerEventFromStorageById);
-        return storageEvents.find(e => e.calendarId === calendarEventId)!;
     }
 
     function getEventMetadataAndCleanPreviousPlanner(eventId: string, hasMovedPlanners: boolean): TCarryoverEventMetadata {

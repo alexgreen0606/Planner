@@ -1,13 +1,15 @@
 import { calendarEventDataAtom } from "@/atoms/calendarEvents";
+import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
 import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { DateTime } from "luxon";
-import { hasCalendarAccess } from "./accessUtils";
+import { hasCalendarAccess, hasContactsAccess } from "./accessUtils";
+import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
 import { datestampToMidnightJsDate } from "./dateUtils";
-import { mapCalendarEventToPlannerChip } from "./map/mapCalendarEventToPlannerChip";
+import { openPlannerTimeModal } from "./plannerUtils";
 
 // ✅ 
 
@@ -113,6 +115,37 @@ function isEventChip(event: Calendar.Event, datestamp: string): boolean {
                 eventStart < dateStart && eventEnd > dateStart
             );
     }
+}
+
+/**
+ * Maps a calendar event to an event chip for a given planner.
+ * 
+ * @param event - The calendar event to map.
+ * @param calendar - The calendar the event is from.
+ * @param datestamp - The key of the planner where the chip will reside.
+ * @returns A planner event chip representing the calendar event.
+ */
+function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar.Calendar, datestamp: string): TCalendarEventChip {
+    const { title: calendarTitle, color } = calendar;
+
+    const calendarEventChip: TCalendarEventChip = {
+        event,
+        color,
+        iconConfig: {
+            type: calendarIconMap[calendarTitle] ?? 'calendar'
+        }
+    };
+
+    if (calendar.title === 'Birthdays') {
+        calendarEventChip.onClick = () => openMessageForContact(extractNameFromBirthdayText(event.title), 'Happy Birthday!');
+        calendarEventChip.hasClickAccess = hasContactsAccess();
+    }
+
+    if (calendar.isPrimary || calendar.title === 'Calendar') {
+        calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
+    }
+
+    return calendarEventChip;
 }
 
 // ==========================

@@ -6,7 +6,7 @@ import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_C
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteScheduler } from "@/providers/DeleteScheduler";
-import { useScrollContainer } from "@/providers/ScrollContainer";
+import { useScrollContainerContext } from "@/providers/ScrollContainer";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
 import { PlatformColor, TextStyle, TouchableOpacity, View } from "react-native";
@@ -100,16 +100,15 @@ const ListItem = <T extends TListItem>({
     onGetRowTextPlatformColor,
     onGetIsDeletingCustomCallback
 }: TListItemProps<T>) => {
-
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
     const { onGetIsItemDeletingCallback } = useDeleteScheduler<T>();
 
     const {
         scrollOffset,
-        handleAutoScroll: onAutoScroll,
-        handleFocusPlaceholder
-    } = useScrollContainer();
+        onAutoScroll: onAutoScroll,
+        onFocusPlaceholder: handleFocusPlaceholder
+    } = useScrollContainerContext();
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
@@ -122,8 +121,6 @@ const ListItem = <T extends TListItem>({
     const leftIconConfig = useMemo(() => item ? onGetLeftIconConfig?.(item) : undefined, [item, onGetLeftIconConfig]);
     const rightIconConfig = useMemo(() => item ? onGetRightIconConfig?.(item) : undefined, [item, onGetRightIconConfig]);
 
-    const isEditable = !hideTextfield && (textfieldId === item?.id);
-
     const valueStyles: TextStyle = {
         color: PlatformColor(
             textPlatformColor ??
@@ -131,6 +128,8 @@ const ListItem = <T extends TListItem>({
         ),
         textDecorationLine: isPendingDelete ? 'line-through' : undefined
     };
+
+    const isEditable = !hideTextfield && (textfieldId === item?.id);
 
     // ==================
     // 1. Event Handlers

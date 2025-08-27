@@ -1,6 +1,7 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { useAtom } from 'jotai';
 import debounce from 'lodash.debounce';
 import React, { useEffect, useMemo, useRef } from 'react';
@@ -35,13 +36,15 @@ const ListItemTextfield = <T extends TListItem>({
 
     const itemValue = useRef(item.value);
 
-    const handleExternalSaveDebounce = useMemo(
+    const handleSaveToExternalStorageDebounce = useMemo(
         () =>
             debounce((latestItem: T) => {
                 onSaveToExternalStorage?.(latestItem);
             }, 1500),
         []
     );
+
+    const { onFocusPlaceholder: handleFocusPlaceholder } = useScrollContainerContext();
 
     // Handle the blur event.
     useEffect(() => {
@@ -51,12 +54,8 @@ const ListItemTextfield = <T extends TListItem>({
     // Save to external storage.
     useEffect(() => {
         itemValue.current = item.value;
-        handleExternalSaveDebounce(item);
+        handleSaveToExternalStorageDebounce(item);
     }, [item]);
-
-    function handleFocusTextfield() {
-        setTextfieldId(item.id);
-    }
 
     function handleValueChange(value: string) {
         onSetItemInStorage((prev) => {
@@ -71,17 +70,19 @@ const ListItemTextfield = <T extends TListItem>({
             return;
         }
 
+        handleFocusPlaceholder();
+
         onCreateChildTextfield();
     }
 
     function handleBlurTextfield() {
         if (itemValue.current.trim() === '') {
-            handleExternalSaveDebounce.cancel();
+            handleSaveToExternalStorageDebounce.cancel();
             onDeleteItem(item);
             return;
         }
 
-        handleExternalSaveDebounce.flush();
+        handleSaveToExternalStorageDebounce.flush();
         setTextfieldId((prev) => prev === item.id ? null : prev);
     }
 
@@ -91,7 +92,7 @@ const ListItemTextfield = <T extends TListItem>({
                 value={item.value}
                 autoFocus
                 inputAccessoryViewID={item.id}
-                submitBehavior='blurAndSubmit'
+                submitBehavior='submit'
                 selectionColor={PlatformColor('systemBlue')}
                 returnKeyType='done'
                 className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
@@ -107,7 +108,6 @@ const ListItemTextfield = <T extends TListItem>({
                 ]}
                 onChangeText={onValueChange ?? handleValueChange}
                 onSubmitEditing={handleSubmitTextfield}
-                onFocus={handleFocusTextfield}
             />
             {toolbarIconSet && <ListToolbar item={item} iconSets={toolbarIconSet} accessoryKey={item.id} />}
         </View>

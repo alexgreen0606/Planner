@@ -13,15 +13,15 @@ import DragAndDropList from './components/DragAndDropList';
 
 const Checklist = () => {
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
+    const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
 
     const {
         onGetIsItemDeletingCallback: onGetIsItemDeleting,
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
     } = useDeleteScheduler<TListItem>();
 
-    const { itemIds } = useFolderItem(checklistId);
-
-    const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
+    const { itemIds } = useFolderItem(checklistId, folderItemStorage);
 
     return (
         <DragAndDropList<TListItem>

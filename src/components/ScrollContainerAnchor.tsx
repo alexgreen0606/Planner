@@ -1,4 +1,4 @@
-import { useScrollContainer } from '@/providers/ScrollContainer';
+import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import React from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -8,7 +8,7 @@ import Animated from 'react-native-reanimated';
 const ScrollAnchorView = Animated.createAnimatedComponent(View);
 
 export const ScrollContainerAnchor = () => {
-    const { bottomScrollRef } = useScrollContainer();
+    const { bottomScrollRef } = useScrollContainerContext();
     return <ScrollAnchorView ref={bottomScrollRef} />;
 };
 

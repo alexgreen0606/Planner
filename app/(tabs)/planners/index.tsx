@@ -2,9 +2,9 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/icon';
-import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
 import PlannerCard from '@/components/lists/PlannerCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
 import ButtonText from '@/components/text/ButtonText';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
@@ -132,7 +132,7 @@ const Planners = () => {
     ) : (
         <View
             className='flex-1'
-            style={{ backgroundColor: PlatformColor('systemBackground') }}
+            style={{ backgroundColor: PlatformColor('systemBackground') }} // TODO: systemGray4
         >
             
             {/* Planner Set Selection */}

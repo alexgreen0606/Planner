@@ -1,4 +1,4 @@
-import { useScrollContainer } from '@/providers/ScrollContainer';
+import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { MotiView } from 'moti';
 import React, { ReactNode } from 'react';
 import { PlatformColor, View, ViewStyle } from 'react-native';
@@ -23,7 +23,7 @@ const Card = ({
     contentHeight,
     children,
 }: CardProps) => {
-    const { handleMeasureScrollContentHeight: measureContentHeight } = useScrollContainer();
+    const { onMeasureScrollContentHeight: measureContentHeight } = useScrollContainerContext();
     return (
         <View
             className='relative rounded-xl'

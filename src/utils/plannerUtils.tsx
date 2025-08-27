@@ -5,6 +5,7 @@ import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { IPlannerEvent, ITimeConfig, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getAllPlannerDatestampsFromStorage, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { getRecurringEventFromStorageById, getRecurringPlannerFromStorageById } from '@/storage/recurringPlannerStorage';
@@ -14,9 +15,7 @@ import { Event as CalendarEvent } from 'expo-calendar';
 import { uuid } from 'expo-modules-core';
 import { router } from 'expo-router';
 import { loadCalendarDataToStore } from './calendarUtils';
-import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
-import { mapCalendarEventToPlannerEvent } from './map/mapCalenderEventToPlannerEvent';
-import { mapRecurringEventToPlannerEvent } from './map/mapRecurringEventToPlannerEvent';
+import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 
 // ✅ 
 
@@ -89,7 +88,105 @@ function calculateChronologicalPlannerEventIndex(
  * @returns The event's time value if one exists, else null.
  */
 function getPlannerEventTime(event?: IPlannerEvent): string | null {
-    return event?.timeConfig?.multiDayEnd ? event.timeConfig.endIso : event?.timeConfig?.startIso ?? null;
+    if (!event) return null;
+    return event.timeConfig?.endEventId === event.id ? event.timeConfig.endIso : event.timeConfig?.startIso ?? null;
+}
+
+/**
+ * Maps a calendar event to a planner event.
+ * 
+ * @param datestamp - The date of the planner where the event will be placed. (YYYY-MM-DD)
+ * @param event - The calendar event to map.
+ * @param existingPlannerEvent - Optional planner event to merge with the calendar event.
+ * @returns A planner event with the calendar data.
+ */
+function mapCalendarEventToPlannerEvent(datestamp: string, event: Calendar.Event, existingPlannerEvent?: IPlannerEvent): IPlannerEvent {
+    const startDatestamp = isoToDatestamp(event.startDate as string);
+    const endDatestamp = isoToDatestamp(event.endDate as string);
+
+    // This is a new multi-day event.
+    // Create the start and end events.
+    if (!existingPlannerEvent && startDatestamp !== endDatestamp) {
+        const startEventId = uuid.v4();
+        const endEventId = uuid.v4();
+
+        const startEvent: IPlannerEvent = {
+            id: startEventId,
+            calendarId: event.id,
+            value: event.title,
+            storageId: EStorageId.PLANNER_EVENT,
+            listId: startDatestamp,
+            timeConfig: {
+                startIso: event.startDate as string,
+                endIso: event.endDate as string,
+                allDay: false,
+                startEventId,
+                endEventId
+            }
+        };
+
+        const endEvent = {
+            ...startEvent,
+            id: endEventId,
+            listId: endDatestamp,
+            timeConfig: {
+                ...startEvent.timeConfig!,
+                startEventId,
+                endEventId
+            }
+        };
+
+        if (datestamp === startDatestamp) {
+            savePlannerEventToStorage(endEvent);
+            return startEvent;
+        } else {
+            if (startDatestamp > getYesterdayDatestamp()) {
+                savePlannerEventToStorage(startEvent);
+            }
+            return endEvent;
+        }
+    }
+
+    const plannerEvent: IPlannerEvent = {
+        ...existingPlannerEvent,
+        id: existingPlannerEvent?.id ?? uuid.v4(),
+        calendarId: event.id,
+        value: event.title,
+        storageId: EStorageId.PLANNER_EVENT,
+        listId: datestamp,
+        timeConfig: {
+            ...existingPlannerEvent?.timeConfig,
+            startIso: event.startDate as string,
+            endIso: event.endDate as string,
+            allDay: false
+        }
+    };
+
+    return plannerEvent;
+}
+
+/**
+ * Maps a recurring event to a planner event.
+ * 
+ * @param datestamp - The date of the planner where the event will be placed. (YYYY-MM-DD)
+ * @param recurringEvent - The recurring event to map.
+ * @param existingPlannerEvent - Optional planner event to merge with the recurring event.
+ * @returns A new planner event with the recurring event data.
+ */
+function mapRecurringEventToPlannerEvent(datestamp: string, recurringEvent: IRecurringEvent, existingPlannerEvent?: IPlannerEvent): IPlannerEvent {
+    const plannerEvent: IPlannerEvent = {
+        ...existingPlannerEvent,
+        id: existingPlannerEvent?.id ?? uuid.v4(),
+        listId: datestamp,
+        storageId: EStorageId.PLANNER_EVENT,
+        recurringId: recurringEvent.id,
+        value: recurringEvent.value
+    };
+    if (recurringEvent.startTime) {
+        plannerEvent.timeConfig = createPlannerEventTimeConfig(datestamp, recurringEvent.startTime);
+    }
+
+    return plannerEvent;
 }
 
 // =============================
@@ -111,11 +208,13 @@ export function upsertRecurringEventsIntoPlanner(planner: TPlanner): TPlanner {
 
     const existingRecurringIds = new Set<string>();
 
+    const originalEventIds = [...planner.eventIds];
+
     // Start with a fresh list.
     planner.eventIds = [];
 
     // Parse the planner to delete old recurring events and update existing ones.
-    planner.eventIds.forEach((eventId) => {
+    originalEventIds.forEach((eventId) => {
         const plannerEvent = getPlannerEventFromStorageById(eventId);
 
         // Non-recurring events are preserved as-is.
@@ -181,11 +280,13 @@ export function upsertCalendarEventsIntoPlanner(
 
     const existingCalendarIds = new Set<string>();
 
+    const originalEventIds = [...planner.eventIds];
+
     // Start with a fresh list.
     planner.eventIds = [];
 
     // Parse the planner to delete old calendar events and update existing ones.
-    planner.eventIds.forEach((eventId) => {
+    originalEventIds.forEach((eventId) => {
         const planEvent = getPlannerEventFromStorageById(eventId);
 
         // Keep non-calendar events.
@@ -305,8 +406,8 @@ export function createPlannerEventTimeIconConfig(
         onClick: () => openPlannerTimeModal(event.id, event.listId),
         customIcon: (
             <TimeValue
-                endEvent={event.timeConfig?.multiDayEnd}
-                startEvent={event.timeConfig?.multiDayStart}
+                endEvent={event.timeConfig?.endEventId === event.id}
+                startEvent={event.timeConfig?.startEventId === event.id}
                 isoTimestamp={itemTime}
                 concise
             />
@@ -363,6 +464,13 @@ export function getAllMountedDatestampsLinkedToDateRanges<T extends TDateRange>(
     }
 
     return affectedDatestamps;
+}
+
+// ------- COMMENT ---------
+export function getPlannerEventFromStorageByCalendarId(datestamp: string, calendarEventId: string): IPlannerEvent {
+    const storagePlanner = getPlannerFromStorageByDatestamp(datestamp);
+    const storageEvents = storagePlanner.eventIds.map(getPlannerEventFromStorageById);
+    return storageEvents.find(e => e.calendarId === calendarEventId)!;
 }
 
 // ====================
@@ -422,7 +530,6 @@ export function updatePlannerEventIndexWithChronologicalCheck(
 type TPlannerEventDeleteOptions = {
     excludeCalendarRefresh?: boolean;
     excludeCalendarDelete?: boolean;
-    deleteBothMultiDayStorageRecords?: boolean;
 }
 
 /**
@@ -436,61 +543,76 @@ export async function deletePlannerEventsFromStorageAndCalendar(
     events: IPlannerEvent[],
     options: TPlannerEventDeleteOptions = {}
 ) {
-    const { excludeCalendarRefresh, excludeCalendarDelete, deleteBothMultiDayStorageRecords } = options;
+    const { excludeCalendarRefresh, excludeCalendarDelete } = options;
 
     const todayDatestamp = getTodayDatestamp();
 
     const plannersToUpdate: Record<string, TPlanner> = {};
     const storageIdsToDelete: Set<string> = new Set();
-    const deletedRecurringIds: string[] = [];
-    const deletedCalendarIds: string[] = [];
-    const deletedTimeRanges: ITimeConfig[] = [];
+    const recurringIdsToDelete: string[] = [];
+    const calendarIdsToHide: string[] = [];
+    const affectedCalendarRanges: ITimeConfig[] = [];
     const calendarDeletePromises: Promise<any>[] = [];
 
     // Phase 1: Process all events.
     for (const event of events) {
-
-        // Load in the planner to update.
-        if (!plannersToUpdate[event.listId]) {
-            const planner = getPlannerFromStorageByDatestamp(event.listId);
-            plannersToUpdate[event.listId] = planner;
-        }
+        const { listId: datestamp, timeConfig, calendarId, recurringId, id } = event;
 
         const isEventToday = event.listId === todayDatestamp;
 
-        // Handle deletion of calendar records.
-        if (event.calendarId) {
+        // Load in the planner to update.
+        if (!plannersToUpdate[datestamp]) {
+            const planner = getPlannerFromStorageByDatestamp(datestamp);
+            plannersToUpdate[datestamp] = planner;
+        }
 
-            // Handle deletion of multi-day event records.
-            const isMultiDay = !!event.timeConfig!.startEventId || !!event.timeConfig!.endEventId;
-            if (isMultiDay) {
-                if (event.timeConfig!.startEventId === event.id) {
-                    // The start event is deleting.
-                    // If needed, delete the end event as well.
-                    if (deleteBothMultiDayStorageRecords) {
-                        storageIdsToDelete.add(event.timeConfig!.endEventId!);
-                    }
+        // Ensure recurring events are marked as deleted so they are not re-synced with the recurring planner.
+        if (recurringId) {
+            recurringIdsToDelete.push(recurringId);
+        }
+
+        if (calendarId) {
+
+            // Ensure both start and end events are deleted for multi-day events not from today.
+            const isMultiDay = !!timeConfig!.startEventId || !!timeConfig!.endEventId;
+            if (isMultiDay && !isEventToday) {
+                const startEventDatestamp = isoToDatestamp(timeConfig!.startIso);
+                const endEventDatestamp = isoToDatestamp(timeConfig!.endIso);
+                const isStartEvent = startEventDatestamp === datestamp;
+
+                // Ensure both start and end events are deleted.
+                if (isStartEvent) {
+
+                    // Ensure the end event is deleted from storage.
+                    const endPlanner = getPlannerFromStorageByDatestamp(endEventDatestamp);
+                    plannersToUpdate[endEventDatestamp] = endPlanner;
+                    storageIdsToDelete.add(timeConfig!.endEventId!);
                 } else {
-                    // The end event is deleting. Delete the start event as well.
-                    storageIdsToDelete.add(event.timeConfig!.startEventId!);
+
+                    // Ensure the start event is deleted from storage.
+                    const startPlanner = getPlannerFromStorageByDatestamp(startEventDatestamp);
+                    plannersToUpdate[startEventDatestamp] = startPlanner;
+                    storageIdsToDelete.add(timeConfig!.startEventId!);
                 }
             }
 
-            // Decide whether to delete the calendar record or just hide it.
-            if (!excludeCalendarDelete && !isEventToday) {
-                // Delete the event from the device calendar.
-                calendarDeletePromises.push(Calendar.deleteEventAsync(event.calendarId));
-                deletedTimeRanges.push(event.timeConfig!);
-            } else {
-                deletedCalendarIds.push(event.calendarId);
+            // Handle calendar deletions.
+            if (!excludeCalendarDelete) { // Excluding means the calendar ID will be reused for a new event. (see TimeModal)
+                if (isEventToday) {
+                    // Mock a calendar delete (event remains in calendar but stays hidden in planner).
+                    calendarIdsToHide.push(calendarId);
+                } else {
+                    // Delete the event from the device calendar.
+                    calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId));
+                    affectedCalendarRanges.push(event.timeConfig!);
+                }
             }
+
         }
 
-        if (event.recurringId) {
-            deletedRecurringIds.push(event.recurringId);
-        }
-
+        // Mark the event deletion from storage.
         storageIdsToDelete.add(event.id);
+
     }
 
     // Phase 2: Update all planners in storage.
@@ -500,11 +622,11 @@ export async function deletePlannerEventsFromStorageAndCalendar(
             eventIds: planner.eventIds.filter(id => !storageIdsToDelete.has(id)),
             deletedRecurringEventIds: [
                 ...planner.deletedRecurringEventIds,
-                ...deletedRecurringIds
+                ...recurringIdsToDelete
             ],
             deletedCalendarEventIds: [
                 ...planner.deletedCalendarEventIds,
-                ...deletedCalendarIds
+                ...calendarIdsToHide
             ]
         });
     }
@@ -516,8 +638,8 @@ export async function deletePlannerEventsFromStorageAndCalendar(
 
     // Phase 4: Reload calendar if needed.
     await Promise.all(calendarDeletePromises);
-    if (!excludeCalendarRefresh && !excludeCalendarDelete && deletedTimeRanges.length > 0) {
-        const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(deletedTimeRanges);
+    if (!excludeCalendarRefresh && !excludeCalendarDelete && affectedCalendarRanges.length > 0) {
+        const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(affectedCalendarRanges);
         await loadCalendarDataToStore(datestampsToReload);
     }
 }

@@ -5,7 +5,7 @@ import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLay
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
-import { useScrollContainer } from '@/providers/ScrollContainer';
+import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { MotiView } from 'moti';
 import React, { useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
@@ -65,8 +65,8 @@ const DragAndDropList = <T extends TListItem, S = T>({
     const {
         floatingBannerHeight,
         scrollOffset,
-        handleMeasureScrollContentHeight: onMeasureContentHeight
-    } = useScrollContainer();
+        onMeasureScrollContentHeight: onMeasureContentHeight
+    } = useScrollContainerContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 

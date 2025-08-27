@@ -46,15 +46,15 @@ type ScrollContainerProviderProps = {
 type ScrollContainerContextValue = {
     // --- Scroll Variables ---
     scrollOffset: SharedValue<number>;
-    handleAutoScroll: (newOffset: number) => void;
+    onAutoScroll: (newOffset: number) => void;
 
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
     bottomScrollRef: AnimatedRef<Animated.View>;
-    handleMeasureScrollContentHeight: () => void;
+    onMeasureScrollContentHeight: () => void;
 
     // Placeholder Textfield (prevents keyboard flicker)
-    handleFocusPlaceholder: () => void;
+    onFocusPlaceholder: () => void;
 };
 
 export enum LoadingStatus {
@@ -197,6 +197,7 @@ export const ScrollContainerProvider = ({
     }
 
     function handleFocusPlaceholder() {
+        console.info('focusPlaceholder', placeholderInputRef.current)
         placeholderInputRef.current?.focus();
     }
 
@@ -313,7 +314,7 @@ export const ScrollContainerProvider = ({
         const fadeViews = [];
         const blurViews = [];
         const INTENSITY = 5;
-        const NUM_VIEWS = 10;
+        const NUM_VIEWS = 5;
         const ADDITIONAL_BLUR_PADDING = 16;
 
         for (let i = 1; i <= NUM_VIEWS; i++) {
@@ -363,9 +364,9 @@ export const ScrollContainerProvider = ({
             scrollOffset,
             floatingBannerHeight,
             bottomScrollRef,
-            handleFocusPlaceholder,
-            handleAutoScroll,
-            handleMeasureScrollContentHeight
+            onFocusPlaceholder: handleFocusPlaceholder,
+            onAutoScroll: handleAutoScroll,
+            onMeasureScrollContentHeight: handleMeasureScrollContentHeight
         }}>
 
             {/* Floating Banner */}
@@ -395,6 +396,7 @@ export const ScrollContainerProvider = ({
                     style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
                     autoCorrect={false}
                 />
+
                 <ScrollContainer
                     ref={scrollRef}
                     scrollEventThrottle={SCROLL_THROTTLE}
@@ -473,7 +475,7 @@ export const ScrollContainerProvider = ({
     );
 };
 
-export const useScrollContainer = () => {
+export const useScrollContainerContext = () => {
     const context = useContext(ScrollContainerContext);
     if (!context) {
         throw new Error("useScrollContainer must be used within a ScrollContainerProvider");

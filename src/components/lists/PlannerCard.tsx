@@ -62,7 +62,7 @@ const PlannerCard = ({
     const handleGetIsEventDeletingCallback = useCallback((planEvent: IPlannerEvent | undefined) =>
         planEvent ? onGetDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
             // The planner event is deleting
-            deleteItem.id === planEvent.id &&
+            (deleteItem.id === planEvent.id || (deleteItem.calendarId && (deleteItem.calendarId === planEvent.calendarId))) &&
             // and it's not from today
             deleteItem.listId !== getTodayDatestamp()
         ) : false,
