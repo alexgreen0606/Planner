@@ -12,8 +12,8 @@ import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
-import { useTextfieldItemAs } from "./useTextfieldItemAs";
 import { useCalendarData } from "./useCalendarData";
+import { useTextfieldItemAs } from "./useTextfieldItemAs";
 
 // ✅ 
 
@@ -100,8 +100,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     // 1. Exposed Functions
     // =====================
 
-    // Scan user input for an initial event time.
-    // Delete recurring event and clone if needed.
     function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
         onSetFocusedEvent((prev) => {
             if (!prev || !planner) return prev;
@@ -159,9 +157,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }
 
-    // =====================
+    // ====================
     // 2. Helper Functions
-    // =====================
+    // ====================
 
     function triggerPlannerAction(action: EPlannerEditAction) {
         switch (action) {
@@ -223,9 +221,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }
 
-    // =========================
-    // 3. Overflow Actions Icon
-    // =========================
+    // ====================
+    // 3. Overflow Actions
+    // ====================
 
     const overflowActions = [
         {

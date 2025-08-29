@@ -39,7 +39,6 @@ type TListItemProps<T extends TListItem> = {
         top: SharedValue<number>;
         index: DerivedValue<number>;
         draggingRowId: SharedValue<string | null>;
-        disableDrag: boolean;
         onDragStart: (rowId: string, initialIndex: number) => void;
         onDragEnd: (newValue: number, prev?: T) => void;
     },
@@ -81,7 +80,6 @@ const ListItem = <T extends TListItem>({
         top,
         index,
         draggingRowId,
-        disableDrag,
         onDragStart,
         onDragEnd
     },
@@ -206,19 +204,27 @@ const ListItem = <T extends TListItem>({
     const longPressGesture = Gesture.LongPress()
         .minDuration(500)
         .onTouchesDown((_e, state) => {
-            if (disableDrag) {
+            if (!item || isPendingDelete) {
                 state.fail();
             }
         })
         .onStart(() => {
-            if (!item) return;
+            if (!item || isPendingDelete) return
             onDragStart(item.id, itemIndex);
         });
 
     const panGesture = Gesture.Pan()
         .manualActivation(true)
+        .onTouchesDown((_e, state) => {
+            if (!item || isPendingDelete) {
+                state.fail();
+            }
+        })
         .onTouchesMove((_e, state) => {
-            if (!item) return;
+            if (!item || isPendingDelete) {
+                state.fail();
+                return;
+            }
 
             if (draggingRowId.value === item.id) {
                 state.activate();

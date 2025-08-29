@@ -1,11 +1,10 @@
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { getYesterdayDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import { createEmptyPlanner } from "@/utils/plannerUtils";
 import { MMKV } from 'react-native-mmkv';
 
-//
+// ✅ 
 
 const plannerStorage = new MMKV({ id: EStorageId.PLANNER });
 const eventStorage = new MMKV({ id: EStorageId.PLANNER_EVENT });

@@ -197,7 +197,6 @@ export const ScrollContainerProvider = ({
     }
 
     function handleFocusPlaceholder() {
-        console.info('focusPlaceholder', placeholderInputRef.current)
         placeholderInputRef.current?.focus();
     }
 

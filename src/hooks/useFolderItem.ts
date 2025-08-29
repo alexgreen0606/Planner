@@ -41,18 +41,18 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     // 2. Helper Functions
     // ====================
 
-    function handleBeginItemTransfer() {
+    function beginFocusedItemTransfer() {
         setIsTransfering(true);
     }
 
-    function handleChangeItemColor(platformColor: string) {
+    function changeFocusedItemColor(platformColor: string) {
         onSetTextfieldItem((prev) => {
             if (!prev) return prev;
             return { ...prev, platformColor };
         });
     }
 
-    function handleToggleItemType() {
+    function toggleFocusedItemType() {
         onSetTextfieldItem((prev) => {
             if (!prev) return prev;
             return {
@@ -63,6 +63,10 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         });
     }
 
+    // ==================
+    // 3. Toolbar Config
+    // ==================
+
     const toolbarIconSet: ToolbarIcon<IFolderItem>[][] = !textfieldItem
         ? []
         : [
@@ -71,7 +75,7 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                 ? [
                     {
                         type: "folder",
-                        onClick: handleToggleItemType,
+                        onClick: toggleFocusedItemType,
                         platformColor:
                             textfieldItem.type === EFolderItemType.FOLDER
                                 ? textfieldItem.platformColor
@@ -79,7 +83,7 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                     },
                     {
                         type: "list",
-                        onClick: handleToggleItemType,
+                        onClick: toggleFocusedItemType,
                         platformColor:
                             textfieldItem.type === EFolderItemType.LIST
                                 ? textfieldItem.platformColor
@@ -92,14 +96,14 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
             Object.values(selectableColors).map(color => ({
                 type: textfieldItem?.platformColor === color ? 'circleFilled' : 'circle',
                 platformColor: color,
-                onClick: () => handleChangeItemColor(color),
+                onClick: () => changeFocusedItemColor(color),
             })),
 
             // Transfer
             [
                 {
                     type: "transfer",
-                    onClick: handleBeginItemTransfer,
+                    onClick: beginFocusedItemTransfer,
                 },
             ],
 
@@ -116,6 +120,8 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                         } else {
                             message += `Would you like to delete this ${textfieldItem.type}?`;
                         }
+
+                        onCloseTextfield();
 
                         Alert.alert(title, message, [
                             {

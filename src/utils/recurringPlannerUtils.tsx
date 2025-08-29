@@ -9,7 +9,6 @@ import { deleteRecurringEventFromStorage, getRecurringEventFromStorageById, getR
 import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
 import { isTimeEarlierOrEqual } from "./dateUtils";
-import { mapWeekdayEventToRecurringEvent } from "./map/mapWeekdayEventToRecurringEvent";
 
 // ✅ 
 
@@ -108,6 +107,23 @@ function deleteRecurringWeekdayEvents(eventsToDelete: IRecurringEvent[]) {
 
     for (const event of eventsToDelete) {
         deleteRecurringEventFromStorage(event.id);
+    }
+}
+
+/**
+ * Maps a weekday event to a recurring event for a given recurring planner.
+ * 
+ * @param recurringPlannerId - The ID of the recurring planner to place the event in. (ex: Tuesday)
+ * @param weekdayEvent - The event from the recurring weekday planner.
+ * @param existingEventId - The ID of an existing recurring event in the recurring planner to update.
+ * @returns A recurring event representing the weekday event.
+ */
+function mapWeekdayEventToRecurringEvent(recurringPlannerId: string, weekdayEvent: IRecurringEvent, existingEventId?: string): IRecurringEvent {
+    return {
+        ...weekdayEvent,
+        id: existingEventId ?? uuid.v4(),
+        listId: recurringPlannerId,
+        weekdayEventId: weekdayEvent.id
     }
 }
 

@@ -2,6 +2,7 @@ import { TListItem } from "./core/TListItem";
 
 // ✅ 
 
-export interface ICountdown extends TListItem {
+export interface ICountdownEvent extends TListItem {
     startIso: string;
+    calendarId?: string;
 }

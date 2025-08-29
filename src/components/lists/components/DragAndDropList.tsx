@@ -27,7 +27,6 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     storageId: EStorageId;
     isLoading?: boolean;
     fillSpace?: boolean;
-    disableDrag?: boolean;
     storage: MMKV;
     defaultStorageObject?: S;
     hideTextfield?: boolean;
@@ -51,7 +50,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     emptyLabelConfig,
     fillSpace,
     toolbarIconSet,
-    disableDrag = false,
     storage,
     hideTextfield = false,
     onIndexChange,
@@ -119,6 +117,8 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
         dragTop.value = initialTop;
         draggingRowId.value = rowId;
+
+        runOnJS(onCloseTextfield)();
     }
 
     function handleDragEnd(newIndex: number, item?: T) {
@@ -127,7 +127,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
         cancelAnimation(scrollOffset);
         isAutoScrolling.value = false;
 
-        if (!disableDrag && onIndexChange && item) {
+        if (onIndexChange && item) {
             runOnJS(onIndexChange)(newIndex, item);
         }
 
@@ -183,7 +183,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
                             storage={storage}
                             hideTextfield={hideTextfield}
                             dragConfig={{
-                                disableDrag: disableDrag,
                                 topMax: dragTopMax,
                                 isAutoScrolling: isAutoScrolling,
                                 draggingRowId: draggingRowId,
