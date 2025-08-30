@@ -15,9 +15,9 @@ import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
-import { PlatformColor, View } from 'react-native';
+import { View } from 'react-native';
 
-//
+// ✅ 
 
 const defaultPlannerSet = 'Next 7 Days';
 
@@ -97,11 +97,11 @@ const forecasts: Record<string, WeatherForecast> = {
 }
 
 const Planners = () => {
+    const router = useRouter();
+
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
     const calendarEventData = useAtomValue(calendarEventDataAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
-
-    const router = useRouter();
 
     const allPlannerSetTitles = getAllPlannerSetTitles(); // TODO: use MMKV to watch this
 
@@ -130,13 +130,10 @@ const Planners = () => {
     return isLoadingEntirePlanner ? (
         <LoadingSpinner />
     ) : (
-        <View
-            className='flex-1'
-            style={{ backgroundColor: PlatformColor('systemBackground') }} // TODO: systemGray4
-        >
-            
+        <View className='flex-1'>
+
             {/* Planner Set Selection */}
-            <View className='p-2 flex-row justify-between items-center w-full'>
+            <View className='px-3 pt-3 flex-row justify-between items-center w-full'>
                 <MenuView
                     onPressAction={({ nativeEvent }) => {
                         setPlannerSetKey(nativeEvent.event)
@@ -168,7 +165,7 @@ const Planners = () => {
 
             {/* Planner Set Display */}
             <MotiView
-                className='p-2 gap-4'
+                className='p-4 gap-4'
                 from={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{
@@ -187,7 +184,7 @@ const Planners = () => {
             </MotiView>
 
         </View>
-    );
+    )
 };
 
 export default Planners;

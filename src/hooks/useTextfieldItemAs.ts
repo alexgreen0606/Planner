@@ -5,7 +5,7 @@ import { MMKV, useMMKVObject } from "react-native-mmkv";
 
 // ✅ 
 
-export function useTextfieldItemAs<T extends TListItem>(storage: MMKV) {
+function useTextfieldItemAs<T extends TListItem>(storage: MMKV) {
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
     const [textfieldItem, setTextfieldItem] = useMMKVObject<T>(textfieldId ?? 'EMPTY_KEY', storage);
@@ -20,5 +20,7 @@ export function useTextfieldItemAs<T extends TListItem>(storage: MMKV) {
         onSetTextfieldId: setTextfieldId,
         onSetTextfieldItem: setTextfieldItem,
         onCloseTextfield: handleCloseTextfield
-    };
+    }
 }
+
+export default useTextfieldItemAs;

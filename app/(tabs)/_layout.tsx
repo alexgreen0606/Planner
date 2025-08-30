@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ✅ 
 
-export default function TabLayout() {
+const TabLayout = () => {
     const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     return (
         <Tabs
@@ -61,5 +61,7 @@ export default function TabLayout() {
                 }}
             />
         </Tabs>
-    );
-}
+    )
+};
+
+export default TabLayout;

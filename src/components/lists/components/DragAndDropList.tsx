@@ -1,6 +1,4 @@
-import ThinLine from '@/components/ThinLine';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
-import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
+import ThinLine from '@/components/ThinLine';import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
@@ -12,18 +10,19 @@ import { Pressable, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import EmptyLabel, { EmptyLabelProps } from '../../EmptyLabel';
+import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
-import ListToolbar, { ToolbarIcon } from './ListToolbar';
+import ListToolbar, { IToolbarIconConfig } from './ListToolbar';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 // ✅ 
 
 type TDragAndDropListProps<T extends TListItem, S = T> = {
     itemIds: string[];
     listId: string;
-    toolbarIconSet?: ToolbarIcon<T>[][];
-    emptyLabelConfig?: Omit<EmptyLabelProps, 'onPress'>;
+    toolbarIconSet?: IToolbarIconConfig<T>[][];
+    emptyLabelConfig?: Omit<IEmptyLabelProps, 'onPress'>;
     storageId: EStorageId;
     isLoading?: boolean;
     fillSpace?: boolean;
@@ -60,21 +59,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
 
-    const {
-        floatingBannerHeight,
-        scrollOffset,
-        onMeasureScrollContentHeight: onMeasureContentHeight
-    } = useScrollContainerContext();
-
-    const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
-
-    const placeholderItem: T = {
-        id: 'PLACEHOLDER',
-        listId: 'PLACEHOLDER',
-        value: 'PLACEHOLDER',
-        storageId
-    } as T;
-
     const draggingRowId = useSharedValue<string | null>(null);
     const isAutoScrolling = useSharedValue(false);
 
@@ -85,9 +69,39 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
+    const {
+        floatingBannerHeight,
+        scrollOffset,
+        onMeasureScrollContentHeight: onMeasureContentHeight
+    } = useScrollContainerContext();
+
+    const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
+
     const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
+
+    const placeholderItem: T = {
+        id: 'PLACEHOLDER',
+        listId: 'PLACEHOLDER',
+        value: 'PLACEHOLDER',
+        storageId
+    } as T;
+
+    // Auto Scrolling.
+    useAnimatedReaction(
+        () => scrollOffset.value - dragInitialScrollOffset.value,
+        (displacement) => {
+            dragTop.value += displacement;
+            dragInitialTop.value += displacement;
+            dragInitialScrollOffset.value = scrollOffset.value;
+        }
+    );
+
+    // Evaluate the scroll container height every time the list length changes.
+    useEffect(() => {
+        runOnUI(onMeasureContentHeight)();
+    }, [itemIds.length]);
 
     // ==================
     // 1. Event Handlers
@@ -134,28 +148,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
         draggingRowId.value = null;
     }
 
-    // =============
-    // 2. Reactions
-    // =============
-
-    // Auto Scrolling.
-    useAnimatedReaction(
-        () => scrollOffset.value - dragInitialScrollOffset.value,
-        (displacement) => {
-            dragTop.value += displacement;
-            dragInitialTop.value += displacement;
-            dragInitialScrollOffset.value = scrollOffset.value;
-        }
-    );
-
-    // Evaluate the scroll container height every time the list length changes.
-    useEffect(() => {
-        runOnUI(onMeasureContentHeight)();
-    }, [itemIds.length]);
-
-    // =======
-    // 3. UI
-    // =======
+    // ======
+    // 2. UI
+    // ======
 
     return (
         <MotiView
@@ -232,7 +227,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
             </View>
         </MotiView>
-    );
+    )
 };
 
 export default DragAndDropList;

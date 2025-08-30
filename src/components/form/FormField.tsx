@@ -18,7 +18,6 @@ interface FormFieldProps extends Omit<IFormField, 'name'> {
 const FormField = ({
     type,
     value,
-    onChange,
     label,
     hide,
     disabled,
@@ -26,6 +25,7 @@ const FormField = ({
     allDay,
     multiDay,
     trigger = false,
+    onChange,
 }: FormFieldProps) => {
     if (hide) return null;
 

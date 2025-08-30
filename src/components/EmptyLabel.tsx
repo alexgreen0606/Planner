@@ -6,7 +6,7 @@ import { PressableProps } from 'react-native-gesture-handler';
 
 // ✅ 
 
-export interface EmptyLabelProps extends PressableProps {
+export interface IEmptyLabelProps extends PressableProps {
     label: string;
     iconConfig?: GenericIconProps;
     className?: string;
@@ -23,7 +23,7 @@ const EmptyLabel = ({
     fontSize = 14,
     onLayout,
     onPress
-}: EmptyLabelProps) =>
+}: IEmptyLabelProps) =>
     <Pressable
         onLayout={onLayout}
         onPress={onPress}
@@ -44,6 +44,6 @@ const EmptyLabel = ({
                 {label}
             </CustomText>
         </View>
-    </Pressable>
+    </Pressable>;
 
 export default EmptyLabel;

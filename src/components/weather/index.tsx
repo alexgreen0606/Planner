@@ -27,19 +27,11 @@ const WeatherDisplay = ({
     currentTemp,
 }: WeatherDisplayProps) => {
 
-    // =======================
-    // 1. Event Handler
-    // =======================
-
     function handleOpenWeatherApp() {
         try {
             Linking.openURL('weather://');
         } catch (error) { }
     }
-
-    // =======================
-    // 2. UI
-    // =======================
 
     // ------------- Current Temperature Layout -------------
     if (currentTemp !== undefined) {

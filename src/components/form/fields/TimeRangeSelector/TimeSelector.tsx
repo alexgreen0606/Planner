@@ -9,7 +9,7 @@ import { TouchableOpacity, View } from 'react-native';
 
 // ✅ 
 
-type TimeSelectorProps = {
+type TTimeSelectorProps = {
     label: string;
     date: Date;
     isoTimestamp: string;
@@ -33,11 +33,7 @@ const TimeSelector = ({
     minimumDate,
     onToggleMode,
     onChange
-}: TimeSelectorProps) => {
-
-    // =======================
-    // 1. UI Helper Functions
-    // =======================
+}: TTimeSelectorProps) => {
 
     function getValueColor(type: ETimeSelectorMode) {
         return type === currentSelectorMode ? 'systemTeal' : 'label';
@@ -54,10 +50,6 @@ const TimeSelector = ({
     function getSelectorHeight(type: ETimeSelectorMode) {
         return type === currentSelectorMode ? 400 : 0;
     }
-
-    // =======================
-    // 2. UI
-    // =======================
 
     return (
         <View>
@@ -142,7 +134,7 @@ const TimeSelector = ({
             </MotiView>
 
         </View>
-    );
+    )
 };
 
 export default TimeSelector;

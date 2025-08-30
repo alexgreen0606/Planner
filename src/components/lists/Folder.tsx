@@ -1,17 +1,18 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
-import { useFolderItem } from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
-import { deleteFolderItemAndChildren, generateNewFolderItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
+import { deleteFolderItemAndChildren, createNewFolderItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React, { useEffect } from 'react';
 import { PlatformColor } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
+import useFolderItem from '@/hooks/useFolderItem';
 
 // ✅ 
 
@@ -38,6 +39,8 @@ const SortedFolder = ({
         toolbarIconSet,
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
+
+    const { onFocusPlaceholder } = useScrollContainerContext();
 
     // Handle clicking of the parent folder.
     useEffect(() => {
@@ -141,18 +144,21 @@ const SortedFolder = ({
                     type: getIconType(item),
                     platformColor: getIconPlatformColor(item)
                 },
-                onClick: () => setTextfieldId(item.id)
+                onClick: () => {
+                    onFocusPlaceholder();
+                    setTextfieldId(item.id);
+                }
             })}
             emptyLabelConfig={{
                 label: "It's a ghost town in here",
                 className: 'flex-1'
             }}
             onDeleteItem={deleteFolderItemAndChildren}
-            onCreateItem={generateNewFolderItemAndSaveToStorage}
+            onCreateItem={createNewFolderItemAndSaveToStorage}
             onContentClick={handleItemClick}
             onIndexChange={updateListItemIndex}
         />
-    );
+    )
 };
 
 export default SortedFolder;

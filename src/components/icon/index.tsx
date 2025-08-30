@@ -7,16 +7,17 @@ import { SFSymbol } from 'react-native-sfsymbols';
 
 export interface GenericIconProps<T = void> {
     type: TIconType;
-    size?: 'xs' | 's' | 'm' | 'l' | 'xl';
+    size?: 'xs' | 's' | 'm' | 'ms' | 'l' | 'xl';
     platformColor?: string;
     style?: ViewStyle;
     className?: string;
     hideRipple?: boolean;
     onClick?: (item?: T) => T | void | Promise<void>;
-};
+}
 
 const sizeMap = {
     xs: 10,
+    ms: 12,
     s: 14,
     m: 16,
     l: 18,
@@ -24,7 +25,7 @@ const sizeMap = {
 };
 
 const iconMap = {
-    transfer: 'arrow.uturn.down',
+    transfer: 'arrow.uturn.right',
     recurringCalendar: 'arrow.trianglehead.2.clockwise.rotate.90',
     folder: 'folder.fill',
     openFolder: 'folder.fill',
@@ -52,7 +53,9 @@ const iconMap = {
     messageFilled: 'checkmark.message',
     alert: 'exclamationmark.triangle',
     refresh: 'arrow.trianglehead.counterclockwise',
-    refreshComplete: 'checkmark.arrow.trianglehead.counterclockwise'
+    refreshComplete: 'checkmark.arrow.trianglehead.counterclockwise',
+    turnDown: 'arrow.turn.right.down',
+    turnUp: 'arrow.turn.left.up',
 };
 
 export type TIconType = keyof typeof iconMap;

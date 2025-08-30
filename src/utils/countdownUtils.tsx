@@ -5,7 +5,7 @@ import { deleteCountdownEventFromStorageById, getCountdownEventFromStorageById, 
 import { getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import * as Calendar from 'expo-calendar';
 import { uuid } from "expo-modules-core";
-import { generateCalendarIdToCalendarMap, loadCalendarDataToStore } from "./calendarUtils";
+import { createCalendarIdToCalendarMap, loadCalendarDataToStore } from "./calendarUtils";
 import { getAllMountedDatestampsFromStore } from "./plannerUtils";
 
 // ✅ 
@@ -15,12 +15,12 @@ import { getAllMountedDatestampsFromStore } from "./plannerUtils";
 // ====================
 
 /**
+ * Gets the device calendar ID for the Countdown Calendar. If no such calendar exists, it will be created.
  * 
- * 
- * @returns 
+ * @returns The ID of the Countdown Calendar.
  */
 async function getCountdownCalendarId(): Promise<string> {
-    const calendarMap = await generateCalendarIdToCalendarMap();
+    const calendarMap = await createCalendarIdToCalendarMap();
     const countdownCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Countdowns');
 
     return countdownCalendar?.id ?? await Calendar.createCalendarAsync({
@@ -35,26 +35,26 @@ async function getCountdownCalendarId(): Promise<string> {
 /**
  * Converts a calendar event to a Countdown.
  * 
- * @param calEvent - The calendar event to convert.
- * @param sortId - The sort ID for the Countdown. Default is 1.
- * @returns - A new Countdown Event.
+ * @param calendarEvent - The calendar event to convert.
+ * @param existingEventId - An ID to use for the event. If not provided, a new ID will be generated.
+ * @returns A Countdown Event with the data from the calendar event.
  */
-function mapCalendarEventToCountdown(calEvent: Calendar.Event, existingEventId?: string): ICountdownEvent {
+function mapCalendarEventToCountdown(calendarEvent: Calendar.Event, existingEventId?: string): ICountdownEvent {
     return {
         id: existingEventId ?? uuid.v4(),
-        value: calEvent.title,
+        value: calendarEvent.title,
         listId: EStorageKey.COUNTDOWN_LIST_KEY,
-        startIso: calEvent.startDate as string,
+        startIso: calendarEvent.startDate as string,
         storageId: EStorageId.COUNTDOWN_EVENT,
-        calendarId: calEvent.id
+        calendarId: calendarEvent.id
     }
 }
 
 /**
- * Calculates a valid index for a planner event that maintains chronological ordering within its planner.
+ * Calculates a valid index for a countdown event that maintains chronological ordering within the planner.
  * 
- * @param event - The event to place.
- * @param planner - The planner with the current ordering of events.
+ * @param event - The countdown event to assess.
+ * @param countdownIds - The planner with the current ordering of events.
  * @returns A new index for the event that maintains chronological ordering within the planner.
  */
 function calculateChronologicalCountdownEventIndex(
@@ -100,7 +100,7 @@ function calculateChronologicalCountdownEventIndex(
 }
 
 // ============================
-// 3. Calendar Synchronization
+// 2. Calendar Synchronization
 // ============================
 
 /**
@@ -108,8 +108,8 @@ function calculateChronologicalCountdownEventIndex(
  * will be returned and NOT saved to storage.
  * 
  * @param countdownEventIds - The planner to update.
- * @param calendarEvents - The list of calendar events linked to the planner's date.
- * @returns A new planner synced with the calendar events.
+ * @param calendarEvents - The list of calendar events linked to the Countdown Planner.
+ * @returns A new countdown planner synced with the calendar events.
  */
 export function upsertCalendarEventsIntoCountdownPlanner(
     countdownEventIds: string[],
@@ -159,15 +159,31 @@ export function upsertCalendarEventsIntoCountdownPlanner(
     return newCountdownPlanner;
 }
 
-
-// ===================
-// 2. Upsert Function
-// ===================
+// =================
+// 3. Read Function
+// =================
 
 /**
- * Updates an event in the device calendar using the data within its planner event.
+ * Fetches all future and current events from the Countdown Calendar.
  * 
- * @param event - The event with the updated data.
+ * @returns All countdown events from the device calendar from today and later in the future.
+ */
+export async function getAllCountdownEventsFromCalendar(): Promise<Calendar.Event[]> {
+    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
+    const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
+
+    const id = await getCountdownCalendarId();
+    return await Calendar.getEventsAsync([id], startDate, endDate);
+}
+
+// ====================
+// 4. Update Functions
+// ====================
+
+/**
+ * Updates an event in the device calendar using the data within its countdown event.
+ * 
+ * @param countdownEvent - The countdown event with the updated data.
  */
 export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: ICountdownEvent) {
     if (countdownEvent.value.trim() === '') return;
@@ -192,7 +208,7 @@ export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: 
         saveCountdownEventToStorage(newEvent);
     }
 
-    // Phase 4: Reload the calendar data if the event affects the current planners.
+    // Reload the calendar data if the event affects the current planners.
     const allVisibleDatestamps = getAllMountedDatestampsFromStore();
     const datestamp = isoToDatestamp(startDate);
     if (allVisibleDatestamps.includes(datestamp)) {
@@ -201,12 +217,12 @@ export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: 
 }
 
 /**
- * Updates a planner event's position within its planner. 
+ * Updates a countdown event's position within its planner.
  * 
- * @param planner - The planner with the current ordering of events.
+ * @param countdownIds - The current ordering of countdown event IDs.
  * @param index - The desired index of the event.
- * @param event - The event to place.
- * @returns The updated planner with the new positions of events.
+ * @param event - The countdown event to place.
+ * @returns The updated countdown planner with the new positions of events.
  */
 export function updateCountdownEventIndexWithChronologicalCheck(
     countdownIds: string[],
@@ -230,28 +246,11 @@ export function updateCountdownEventIndexWithChronologicalCheck(
 }
 
 // ===================
-// 3. Getter Function
+// 5. Delete Function
 // ===================
 
 /**
-     * Fetches all future and current events from the Countdown Calendar.
-     * 
-     * @returns All list of Countdowns.
-     */
-export async function getAllCountdownEventsFromCalendar(): Promise<Calendar.Event[]> {
-    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
-    const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
-
-    const id = await getCountdownCalendarId();
-    return await Calendar.getEventsAsync([id], startDate, endDate);
-}
-
-// ===================
-// 4. Delete Function
-// ===================
-
-/**
- * Deletes a Countdown from the device calendar.
+ * Deletes a Countdown from the device calendar and storage.
  * 
  * @param countdownEvent The Countdown to delete.
  */

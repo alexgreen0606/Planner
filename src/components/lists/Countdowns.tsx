@@ -1,7 +1,6 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
-import { useCountdownPlanner } from '@/hooks/useCountdownPlanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { ICountdownEvent } from '@/lib/types/listItems/ICountdownEvent';
@@ -12,6 +11,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
+import useCountdownPlanner from '@/hooks/useCountdownPlanner';
 
 // ✅ 
 
@@ -62,7 +62,7 @@ const Countdowns = () => {
             onDeleteItem={deleteCountdownAndReloadCalendar}
             onIndexChange={onUpdateCountdownEventIndexWithChronologicalCheck}
         />
-    );
+    )
 };
 
 export default Countdowns;

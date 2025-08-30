@@ -5,7 +5,7 @@ import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
-import { useDeleteScheduler } from "@/providers/DeleteScheduler";
+import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
 import { useScrollContainerContext } from "@/providers/ScrollContainer";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
@@ -21,7 +21,7 @@ import Animated, {
     withSpring
 } from "react-native-reanimated";
 import ListItemTextfield from "./ListItemTextfield";
-import { ToolbarIcon } from "./ListToolbar";
+import { IToolbarIconConfig } from "./ListToolbar";
 
 // ✅ 
 
@@ -42,7 +42,7 @@ type TListItemProps<T extends TListItem> = {
         onDragStart: (rowId: string, initialIndex: number) => void;
         onDragEnd: (newValue: number, prev?: T) => void;
     },
-    toolbarIconSet?: ToolbarIcon<T>[][];
+    toolbarIconSet?: IToolbarIconConfig<T>[][];
     storage: MMKV;
     hideTextfield: boolean;
     onCreateItem: (listId: string, index: number) => void;
@@ -100,7 +100,7 @@ const ListItem = <T extends TListItem>({
 }: TListItemProps<T>) => {
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
-    const { onGetIsItemDeletingCallback } = useDeleteScheduler<T>();
+    const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>();
 
     const {
         scrollOffset,
@@ -279,9 +279,9 @@ const ListItem = <T extends TListItem>({
         }
     });
 
-    // ========
+    // ======
     // 4. UI
-    // ========
+    // ======
 
     const RowIcon = ({ config, type }: { config: TListItemIconConfig<T>, type: IconPosition }) => {
         if (config.hideIcon) return null;
@@ -388,7 +388,7 @@ const ListItem = <T extends TListItem>({
 
             </View >
         </Row >
-    );
+    )
 };
 
 export default ListItem;

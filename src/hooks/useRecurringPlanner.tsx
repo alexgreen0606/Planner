@@ -1,5 +1,5 @@
 import { TIconType } from "@/components/icon";
-import { ToolbarIcon } from "@/components/lists/components/ListToolbar";
+import { IToolbarIconConfig } from "@/components/lists/components/ListToolbar";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
@@ -10,7 +10,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
-import { useTextfieldItemAs } from "./useTextfieldItemAs";
+import useTextfieldItemAs from "./useTextfieldItemAs";
 
 // ✅ 
 
@@ -19,14 +19,14 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
 
     const [recurringPlanner, setRecurringPlanner] = useMMKVObject<TRecurringPlanner>(recurringPlannerId, recurringStorage);
 
+    const [showTimeInToolbarForUntimedEvent, setShowTimeInToolbarForUntimedEvent] = useState(false);
+
     const {
         textfieldId: focusedEventId,
         textfieldItem: focusedEvent,
         onSetTextfieldId: onSetFocusedEventId,
         onSetTextfieldItem: onSetFocusedEvent
     } = useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
-
-    const [showTimeInToolbarForUntimedEvent, setShowTimeInToolbarForUntimedEvent] = useState(false);
 
     const textfieldDate = useMemo(() => {
         if (focusedEvent?.startTime) {
@@ -89,18 +89,9 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
         });
     }
 
-    function showEventTime(item: IRecurringEvent) {
-        if (focusedEventId !== item.id) {
-            // If this isn't the textfield, make it so.
-            onSetFocusedEventId(item.id);
-        }
-
-        setShowTimeInToolbarForUntimedEvent(true);
-    }
-
-    // ===================
-    // 2. Helper Function
-    // ===================
+    // ====================
+    // 2. Helper Functions
+    // ====================
 
     function updateRecurringEventTimeWithChronologicalCheck(event: DateTimePickerEvent) {
         onSetFocusedEvent((prev) => {
@@ -132,11 +123,20 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
         });
     }
 
+    function showEventTime(item: IRecurringEvent) {
+        if (focusedEventId !== item.id) {
+            // If this isn't the textfield, make it so.
+            onSetFocusedEventId(item.id);
+        }
+
+        setShowTimeInToolbarForUntimedEvent(true);
+    }
+
     // =========================
     // 3. Toolbar Configuration
     // =========================
 
-    const toolbarIcons: ToolbarIcon<IRecurringEvent>[][] = [[{
+    const toolbarIcons: IToolbarIconConfig<IRecurringEvent>[][] = [[{
         type: 'clock' as TIconType,
         onClick: () => { focusedEvent && showEventTime(focusedEvent) },
         customIcon: focusedEvent?.startTime || showTimeInToolbarForUntimedEvent ? (
@@ -152,10 +152,9 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
     return {
         eventIds: recurringPlanner?.eventIds ?? [],
         toolbarIcons,
-        onShowEventTime: showEventTime,
         onUpdateRecurringEventValueWithTimeParsing: handleUpdateRecurringEventValueWithTimeParsing,
         onUpdateRecurringEventIndexWithChronologicalCheck: handleUpdateRecurringEventIndexWithChronologicalCheck
-    };
+    }
 };
 
 export default useRecurringPlanner;

@@ -167,7 +167,7 @@ export async function loadCalendarDataToStore(datestamps: string[]) {
         return;
     }
 
-    const allCalendarsMap = await generateCalendarIdToCalendarMap();
+    const allCalendarsMap = await createCalendarIdToCalendarMap();
 
     const allCalendarIds = Object.keys(allCalendarsMap);
     const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
@@ -201,8 +201,26 @@ export async function loadCalendarDataToStore(datestamps: string[]) {
 }
 
 // ===================
-// 3. Getter Function
+// 3. Create Function
 // ===================
+
+/**
+ * Generates a map of the device's calendar IDs to calendars.
+ * 
+ * @returns A map of calendar IDs to Calendar objects.
+ */
+export async function createCalendarIdToCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
+    const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const calendarMap = allCalendars.reduce((acc, cal) => {
+        acc[cal.id] = cal;
+        return acc;
+    }, {} as Record<string, Calendar.Calendar>);
+    return calendarMap;
+}
+
+// =================
+// 4. Read Function
+// =================
 
 /**
  * Gets the device calendar ID for the primary calendar.
@@ -212,22 +230,4 @@ export async function loadCalendarDataToStore(datestamps: string[]) {
 export async function getPrimaryCalendarId(): Promise<string> {
     const primaryCalendar = await Calendar.getDefaultCalendarAsync();
     return primaryCalendar.id;
-}
-
-// =======================
-// 4. Generation Function
-// =======================
-
-/**
- * Generates a map of the device's calendar IDs to Calendar objects.
- * 
- * @returns A map of calendar IDs to Calendar objects.
- */
-export async function generateCalendarIdToCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
-    const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-    const calendarMap = allCalendars.reduce((acc, cal) => {
-        acc[cal.id] = cal;
-        return acc;
-    }, {} as Record<string, Calendar.Calendar>);
-    return calendarMap;
 }

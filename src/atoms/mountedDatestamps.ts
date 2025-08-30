@@ -7,7 +7,7 @@ type MountedDatestamps = {
     today: string;
     planner: string[];
     all: string[];
-}
+};
 
 const todayDatestamp = getTodayDatestamp();
 

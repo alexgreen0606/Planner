@@ -1,4 +1,4 @@
-import { ToolbarIcon } from '@/components/lists/components/ListToolbar';
+import { IToolbarIconConfig } from '@/components/lists/components/ListToolbar';
 import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
@@ -6,17 +6,19 @@ import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
-import { useTextfieldItemAs } from './useTextfieldItemAs';
+import ToggleFolderItemTypeIcon from '@/components/icon/ToggleFolderItemTypeIcon';
+import TransferFolderIcon from '@/components/icon/TransferFolderIcon';
+import useTextfieldItemAs from './useTextfieldItemAs';
 
 // ✅ 
 
-export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
+const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     const [item, setItem] = useMMKVObject<IFolderItem>(itemId, itemStorage);
-
-    const { textfieldItem, onSetTextfieldItem, onCloseTextfield } = useTextfieldItemAs<IFolderItem>(itemStorage);
 
     const [isTransfering, setIsTransfering] = useState(false);
     const [isEditingValue, setIsEditingValue] = useState(false);
+
+    const { textfieldItem, onSetTextfieldItem, onCloseTextfield } = useTextfieldItemAs<IFolderItem>(itemStorage);
 
     // =====================
     // 1. Exposed Functions
@@ -67,46 +69,9 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     // 3. Toolbar Config
     // ==================
 
-    const toolbarIconSet: ToolbarIcon<IFolderItem>[][] = !textfieldItem
+    const toolbarIconSet: IToolbarIconConfig<IFolderItem>[][] = !textfieldItem
         ? []
         : [
-            // Folder/List toggle
-            textfieldItem.itemIds.length === 0
-                ? [
-                    {
-                        type: "folder",
-                        onClick: toggleFocusedItemType,
-                        platformColor:
-                            textfieldItem.type === EFolderItemType.FOLDER
-                                ? textfieldItem.platformColor
-                                : "secondaryLabel",
-                    },
-                    {
-                        type: "list",
-                        onClick: toggleFocusedItemType,
-                        platformColor:
-                            textfieldItem.type === EFolderItemType.LIST
-                                ? textfieldItem.platformColor
-                                : "secondaryLabel",
-                    },
-                ]
-                : [],
-
-            // Color selection
-            Object.values(selectableColors).map(color => ({
-                type: textfieldItem?.platformColor === color ? 'circleFilled' : 'circle',
-                platformColor: color,
-                onClick: () => changeFocusedItemColor(color),
-            })),
-
-            // Transfer
-            [
-                {
-                    type: "transfer",
-                    onClick: beginFocusedItemTransfer,
-                },
-            ],
-
             // Delete
             [
                 {
@@ -141,6 +106,38 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                     type: "trash",
                 },
             ],
+
+            // Folder/List toggle
+            textfieldItem.itemIds.length === 0
+                ? [
+                    {
+                        customIcon: (
+                            <ToggleFolderItemTypeIcon currentType={textfieldItem.type} />
+                        ),
+                        type: textfieldItem.type,
+                        onClick: toggleFocusedItemType,
+                    },
+                ]
+                : [],
+
+            // Transfer
+            textfieldItem.value.length > 0
+                ? [
+                    {
+                        type: "transfer",
+                        onClick: beginFocusedItemTransfer,
+                        customIcon: (
+                            <TransferFolderIcon />
+                        )
+                    },
+                ] : [],
+
+            // Color selection
+            Object.values(selectableColors).map(color => ({
+                type: textfieldItem?.platformColor === color ? 'circleFilled' : 'circle',
+                platformColor: color,
+                onClick: () => changeFocusedItemColor(color),
+            })),
         ];
 
     return {
@@ -155,3 +152,5 @@ export const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         onToggleEditValue: handleToggleEditValue,
     }
 };
+
+export default useFolderItem;

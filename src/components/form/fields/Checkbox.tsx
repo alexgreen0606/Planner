@@ -4,7 +4,7 @@ import { PlatformColor, Switch } from 'react-native';
 
 // ✅ 
 
-type ModalCheckboxProps = {
+type TModalCheckboxProps = {
     label: string;
     value: boolean;
     disabled?: boolean;
@@ -16,7 +16,7 @@ const ModalCheckbox = ({
     value,
     disabled,
     onChange
-}: ModalCheckboxProps) =>
+}: TModalCheckboxProps) =>
     <ModalDisplayValue
         label={label}
         value={
@@ -29,5 +29,6 @@ const ModalCheckbox = ({
             />
         }
     />;
+
 
 export default ModalCheckbox;

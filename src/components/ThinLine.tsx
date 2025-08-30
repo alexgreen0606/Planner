@@ -5,7 +5,7 @@ import { View } from 'react-native';
 
 // ✅ 
 
-const ThinLine = ({ overflow }: { overflow?: boolean }) => (
+const ThinLine = ({ overflow }: { overflow?: boolean }) =>
     <View className="w-full justify-center" style={{ height: THIN_LINE_HEIGHT }}>
         <View
             className="w-full"
@@ -20,7 +20,6 @@ const ThinLine = ({ overflow }: { overflow?: boolean }) => (
                 },
             ]}
         />
-    </View>
-);
+    </View>;
 
 export default ThinLine;

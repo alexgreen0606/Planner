@@ -2,7 +2,7 @@ import useRecurringPlanner from '@/hooks/useRecurringPlanner';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { createRecurringEventInStorageAndFocusTextfield, createRecurringEventTimeIconConfig, deleteRecurringEventsFromStorageHideWeekday, upsertEventToWeekdayPlanners } from '@/utils/recurringPlannerUtils';
 import React from 'react';
@@ -11,22 +11,21 @@ import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
-type SortedRecurringPlannerProps = {
+type TSortedRecurringPlannerProps = {
     recurringPlannerId: ERecurringPlannerId;
 };
 
-const RecurringPlanner = ({ recurringPlannerId }: SortedRecurringPlannerProps) => {
+const RecurringPlanner = ({ recurringPlannerId }: TSortedRecurringPlannerProps) => {
     const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
 
     const {
         onGetIsItemDeletingCallback: onGetIsItemDeleting,
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteScheduler<IRecurringEvent>();
+    } = useDeleteSchedulerContext<IRecurringEvent>();
 
     const {
         eventIds,
         toolbarIcons,
-        onShowEventTime,
         onUpdateRecurringEventIndexWithChronologicalCheck,
         onUpdateRecurringEventValueWithTimeParsing
     } = useRecurringPlanner(recurringPlannerId, recurringEventStorage);

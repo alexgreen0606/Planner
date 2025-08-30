@@ -1,6 +1,6 @@
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { TIconType } from "@/components/icon";
-import { ToolbarIcon } from "@/components/lists/components/ListToolbar";
+import { IToolbarIconConfig } from "@/components/lists/components/ListToolbar";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { ICountdownEvent } from "@/lib/types/listItems/ICountdownEvent";
@@ -14,11 +14,11 @@ import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
-import { useTextfieldItemAs } from "./useTextfieldItemAs";
+import useTextfieldItemAs from "./useTextfieldItemAs";
 
 // ✅ 
 
-export const useCountdownPlanner = (countdownEventStorage: MMKV) => {
+const useCountdownPlanner = (countdownEventStorage: MMKV) => {
     const countdownPlannerStorage = useMMKV({ id: EStorageId.COUNTDOWN_PLANNER });
 
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
@@ -110,7 +110,7 @@ export const useCountdownPlanner = (countdownEventStorage: MMKV) => {
     // 3. Toolbar Config
     // ==================
 
-    const toolbarIcons: ToolbarIcon<ICountdownEvent>[][] = [
+    const toolbarIcons: IToolbarIconConfig<ICountdownEvent>[][] = [
         [{
             type: 'trash' as TIconType,
             onClick: () => {
@@ -160,3 +160,5 @@ export const useCountdownPlanner = (countdownEventStorage: MMKV) => {
         onUpdateCountdownEventIndexWithChronologicalCheck: handleUpdateCountdownEventIndexWithChronologicalCheck
     }
 };
+
+export default useCountdownPlanner;

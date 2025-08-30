@@ -6,7 +6,7 @@ import { runOnUI } from 'react-native-reanimated';
 
 // ✅ 
 
-type CardProps = {
+type TCardProps = {
     header?: ReactNode;
     footer?: ReactNode;
     style?: ViewStyle;
@@ -22,8 +22,8 @@ const Card = ({
     collapsed = false,
     contentHeight,
     children,
-}: CardProps) => {
-    const { onMeasureScrollContentHeight: measureContentHeight } = useScrollContainerContext();
+}: TCardProps) => {
+    const { onMeasureScrollContentHeight } = useScrollContainerContext();
     return (
         <View
             className='relative rounded-xl'
@@ -46,7 +46,7 @@ const Card = ({
                     type: 'timing',
                     duration: 300
                 }}
-                onDidAnimate={runOnUI(measureContentHeight)}
+                onDidAnimate={runOnUI(onMeasureScrollContentHeight)}
             >
                 {children}
                 {footer && (
@@ -56,7 +56,7 @@ const Card = ({
                 )}
             </MotiView>
         </View>
-    );
+    )
 };
 
 export default Card;

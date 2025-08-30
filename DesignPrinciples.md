@@ -11,14 +11,16 @@ When declaring, follow this order (exported after local):
 ## Flow of Files 
 When declaring, follow this order (exported after local):
 2. `external hooks`
-2. `MMKV storage`
 1. `atoms`
 2. `context`
-3. `state`
-4. `MMKV variables`
+4. `useRef`
+4. `useMMKVObject`
+3. `useState`
+5. `useMemo`
 4. `animated variables`
-6. `constants (prefer)`
 6. `custom hooks`
+6. `constants`
+5. `useMMKVListener`
 5. `useEffect`
 4. `event handlers`
 1. `helper functions`

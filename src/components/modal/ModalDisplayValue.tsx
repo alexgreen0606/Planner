@@ -5,7 +5,7 @@ import { PlatformColor, View } from 'react-native';
 
 // ✅ 
 
-type ModalDisplayValueProps = {
+type TModalDisplayValueProps = {
     label: string;
     value: React.ReactNode;
 };
@@ -13,7 +13,7 @@ type ModalDisplayValueProps = {
 const ModalDisplayValue = ({
     label,
     value,
-}: ModalDisplayValueProps) =>
+}: TModalDisplayValueProps) =>
     <View
         className='flex-row justify-between w-full items-center'
         style={{ minHeight: MODAL_INPUT_HEIGHT }}

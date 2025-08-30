@@ -1,7 +1,7 @@
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { MotiView } from 'moti';
@@ -12,11 +12,7 @@ import CustomText from '../text/CustomText';
 
 // ✅ 
 
-const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
-const EXPANDED_CHIP_RIGHT_MARGIN = 6;
-const CHIP_SET_GAP = 24;
-
-type EventChipProps = {
+type TEventChipProps = {
     chip: TCalendarEventChip;
     backgroundPlatformColor?: string;
     collapsed?: boolean;
@@ -26,6 +22,10 @@ type EventChipProps = {
     onToggleCollapsed?: () => void;
 };
 
+const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
+const EXPANDED_CHIP_RIGHT_MARGIN = 6;
+const CHIP_SET_GAP = 24;
+
 const EventChip = ({
     chip,
     backgroundPlatformColor = 'systemGray6',
@@ -33,10 +33,10 @@ const EventChip = ({
     chipSetIndex,
     shiftChipRight,
     onToggleCollapsed
-}: EventChipProps) => {
+}: TEventChipProps) => {
     const { event: { title, id }, iconConfig, color, onClick, hasClickAccess } = chip;
 
-    const { onGetDeletingItemsByStorageIdCallback: getDeletingItems } = useDeleteScheduler<IPlannerEvent>();
+    const { onGetDeletingItemsByStorageIdCallback: getDeletingItems } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const isPendingDelete = useMemo(() =>
         getDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
@@ -50,10 +50,6 @@ const EventChip = ({
 
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
-
-    // =======================
-    // 1. UI
-    // =======================
 
     const ChipContent = () => (
         <View
@@ -83,7 +79,7 @@ const EventChip = ({
                 </CustomText>
             )}
         </View>
-    );
+    )
 
     return (
         <MotiView
@@ -112,7 +108,7 @@ const EventChip = ({
                 </TouchableOpacity>
             )}
         </MotiView>
-    );
+    )
 };
 
 export default EventChip;

@@ -6,7 +6,7 @@ import EventChip from '.';
 
 // ✅ 
 
-type EventChipSetsProps = {
+type TEventChipSetsProps = {
     datestamp: string;
     sets: TCalendarEventChip[][];
     collapsed?: boolean;
@@ -22,7 +22,7 @@ const EventChipSets = ({
     collapsed = false,
     onToggleCollapsed,
     backgroundPlatformColor,
-}: EventChipSetsProps) => {
+}: TEventChipSetsProps) => {
     const contentRef = useRef(null);
 
     const [expandedHeight, setExpandedHeight] = useState<number | null>(null);
@@ -59,7 +59,7 @@ const EventChipSets = ({
                 )}
             </View>
         </MotiView>
-    );
+    )
 };
 
 export default EventChipSets;

@@ -5,7 +5,7 @@ import CustomText from './CustomText';
 
 // ✅ 
 
-type DateValueProps = {
+type TDateValueProps = {
     isoTimestamp: string;
     concise?: boolean;
     platformColor?: string;
@@ -15,7 +15,7 @@ const DateValue = ({
     isoTimestamp,
     concise,
     platformColor = 'systemTeal'
-}: DateValueProps) => {
+}: TDateValueProps) => {
     const dayFormat = concise ? 'MMM d' : 'MMMM d';
     const yearFormat = concise ? 'yyyy' : 'yyyy';
 

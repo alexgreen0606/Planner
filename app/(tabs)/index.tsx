@@ -2,14 +2,14 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import TodayBanner from '@/components/banners/TodayBanner';
 import EventChipSets from '@/components/eventChip/EventChipSet';
-import SlowFadeInView from '@/components/SlowFadeInView';
 import TodayPlanner from '@/components/lists/TodayPlanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import SlowFadeInView from '@/components/SlowFadeInView';
 import { useCalendarData } from '@/hooks/useCalendarData';
+import { useAppPlatformColors } from '@/hooks/useColorTheme';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
-import { PlatformColor, View } from 'react-native';
 
 // ✅ 
 
@@ -19,6 +19,8 @@ const Today = () => {
 
   const { calendarChips } = useCalendarData(todayDatestamp);
 
+  const { background } = useAppPlatformColors();
+
   const isCalendarLoading = useMemo(
     () => calendarEventData.plannersMap[todayDatestamp] === undefined,
     [todayDatestamp, calendarEventData]
@@ -27,29 +29,21 @@ const Today = () => {
   return isCalendarLoading ? (
     <LoadingSpinner />
   ) : (
-    <View
-      className='flex-1'
-      style={{ backgroundColor: PlatformColor('systemBackground') }}
+    <ScrollContainerProvider
+      header={<TodayBanner timestamp={todayDatestamp} />}
+      floatingBanner={calendarChips.length > 0 &&
+        <SlowFadeInView>
+          <EventChipSets
+            datestamp={todayDatestamp}
+            sets={calendarChips}
+            backgroundPlatformColor={background}
+          />
+        </SlowFadeInView>
+      }
     >
-      <ScrollContainerProvider
-        header={<TodayBanner timestamp={todayDatestamp} />}
-        floatingBanner={calendarChips.length > 0 &&
-          <SlowFadeInView>
-            <EventChipSets
-              datestamp={todayDatestamp}
-              sets={calendarChips}
-              backgroundPlatformColor='systemBackground'
-            />
-          </SlowFadeInView>
-        }
-      >
-
-        {/* Planner */}
-        <TodayPlanner />
-
-      </ScrollContainerProvider>
-    </View>
-  );
+      <TodayPlanner />
+    </ScrollContainerProvider>
+  )
 };
 
 export default Today;

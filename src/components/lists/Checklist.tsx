@@ -1,15 +1,15 @@
-import { useFolderItem } from '@/hooks/useFolderItem';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
-import { deleteChecklistItems, generateNewChecklistItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
+import { deleteChecklistItems, createNewChecklistItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
+import useFolderItem from '@/hooks/useFolderItem';
 
-
+// ✅ 
 
 const Checklist = () => {
     const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
@@ -19,7 +19,7 @@ const Checklist = () => {
     const {
         onGetIsItemDeletingCallback: onGetIsItemDeleting,
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteScheduler<TListItem>();
+    } = useDeleteSchedulerContext<TListItem>();
 
     const { itemIds } = useFolderItem(checklistId, folderItemStorage);
 
@@ -34,12 +34,12 @@ const Checklist = () => {
                 label: "It's a ghost town in here",
                 className: 'flex-1'
             }}
-            onCreateItem={generateNewChecklistItemAndSaveToStorage}
+            onCreateItem={createNewChecklistItemAndSaveToStorage}
             onDeleteItem={(item) => deleteChecklistItems([item])}
             onIndexChange={updateListItemIndex}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
-    );
+    )
 };
 
 export default Checklist;

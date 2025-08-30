@@ -2,20 +2,20 @@ import React from 'react';
 import { PlatformColor, TextProps, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import GenericIcon, { GenericIconProps } from '../icon';
-import CustomText, { TextVariant } from './CustomText';
+import CustomText, { TTextVariant } from './CustomText';
 
 // ✅ 
 
-const AnimatedText = Animated.createAnimatedComponent(View);
-
-interface ButtonTextProps extends TextProps {
+interface IButtonTextProps extends TextProps {
     platformColor?: string;
     onClick?: () => void;
     children: React.ReactNode;
     containerStyle?: ViewStyle;
     iconConfig?: GenericIconProps;
-    textType?: TextVariant;
+    textType?: TTextVariant;
 }
+
+const AnimatedText = Animated.createAnimatedComponent(View);
 
 const ButtonText = ({
     platformColor = 'systemBlue',
@@ -25,7 +25,7 @@ const ButtonText = ({
     containerStyle,
     iconConfig,
     ...rest
-}: ButtonTextProps) => {
+}: IButtonTextProps) => {
     const opacity = useSharedValue(1);
 
     function handlePressStart() {
@@ -67,7 +67,7 @@ const ButtonText = ({
                 </CustomText>
             </AnimatedText>
         </TouchableWithoutFeedback>
-    );
+    )
 };
 
 export default ButtonText;

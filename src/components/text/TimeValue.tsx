@@ -5,7 +5,7 @@ import CustomText from './CustomText';
 
 // ✅ 
 
-type TimeValueProps = {
+type TTimeValueProps = {
     timeValue?: string | null;
     isoTimestamp?: string | null;
     endEvent?: boolean;
@@ -21,7 +21,7 @@ const TimeValue = ({
     startEvent,
     concise,
     platformColor = 'systemTeal'
-}: TimeValueProps) => {
+}: TTimeValueProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
     const [indicator, setIndicator] = useState('');
@@ -85,7 +85,7 @@ const TimeValue = ({
                 {indicator}
             </CustomText>
         </View>
-    );
+    )
 };
 
 export default TimeValue;

@@ -8,7 +8,7 @@ import CustomText from '../text/CustomText';
 
 // ✅ 
 
-type ModalProps = {
+type TModalProps = {
     title: string;
     primaryButtonConfig: {
         label: string;
@@ -40,10 +40,10 @@ const Modal = ({
     onClose,
     customStyle,
     children,
-}: ModalProps) => {
+}: TModalProps) => {
     const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-
     const scrollRef = useAnimatedRef();
+
     const scrollOffset = useSharedValue(0);
 
     // Keep track of modal scroll position
@@ -62,10 +62,6 @@ const Modal = ({
         )
         return { opacity };
     });
-
-    // =======================
-    // 1. Event Handler
-    // =======================
 
     function handleDeleteButtonClick() {
         if (!deleteButtonConfig) return;
@@ -178,7 +174,7 @@ const Modal = ({
                 </ButtonText>
             </View>
         </View>
-    );
+    )
 };
 
 export default Modal;

@@ -10,7 +10,7 @@ import { useMMKV } from 'react-native-mmkv';
 
 // ✅ 
 
-type FolderItemBannerProps = {
+type TFolderItemBannerProps = {
     itemId: string;
     backButtonConfig: {
         label: string | undefined;
@@ -19,7 +19,7 @@ type FolderItemBannerProps = {
     };
 };
 
-const FolderItemBanner = ({ itemId, backButtonConfig }: FolderItemBannerProps) => {
+const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) => {
     const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const router = useRouter();
 
@@ -78,7 +78,7 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: FolderItemBannerProps) =
             )}
 
         </View>
-    );
+    )
 };
 
 export default FolderItemBanner;

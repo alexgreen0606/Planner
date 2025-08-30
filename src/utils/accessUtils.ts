@@ -5,7 +5,7 @@ import { jotaiStore } from "app/_layout";
 // ✅ 
 
 /**
- * Checks if the user has granted calendar access.
+ * Validates if the user has granted calendar access.
  * 
  * @returns True if calendar access is granted, false if denied.
  */
@@ -15,7 +15,7 @@ export function hasCalendarAccess(): boolean {
 }
 
 /**
- * Checks if the user has granted contacts access.
+ * Validates if the user has granted contacts access.
  * 
  * @returns True if contacts access is granted, false if denied.
  */

@@ -5,15 +5,15 @@ import { InputAccessoryView, PlatformColor, StyleSheet, TouchableOpacity, View }
 
 // ✅ 
 
-export interface ToolbarIcon<T extends TListItem> extends GenericIconProps<T> {
-    customIcon?: React.ReactNode;
-}
-
 type TListToolbarProps<T extends TListItem> = {
     item: T;
-    iconSets: ToolbarIcon<T>[][];
+    iconSets: IToolbarIconConfig<T>[][];
     accessoryKey?: string;
 };
+
+export interface IToolbarIconConfig<T extends TListItem> extends GenericIconProps<T> {
+    customIcon?: React.ReactNode;
+}
 
 const ListToolbar = <T extends TListItem>({
     item,

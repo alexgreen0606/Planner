@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 // ✅ 
 
-export const useCalendarData = (datestamp: string) => {
+const useCalendarData = (datestamp: string) => {
     const [calendarChips] = useAtom(calendarChipsByDate(datestamp));
     const [calendarEvents] = useAtom(calendarPlannerByDate(datestamp));
 
@@ -18,3 +18,5 @@ export const useCalendarData = (datestamp: string) => {
         calendarEvents: memoizedCalendarEvents
     };
 };
+
+export default useCalendarData;

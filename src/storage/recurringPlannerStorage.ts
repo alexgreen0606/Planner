@@ -47,6 +47,6 @@ export function getRecurringEventFromStorageById(id: string): IRecurringEvent {
 // 3. Delete Function
 // ===================
 
-export function deleteRecurringEventFromStorage(recurringEventId: string) {
+export function deleteRecurringEventFromStorageById(recurringEventId: string) {
     recurringEventStorage.delete(recurringEventId);
 }

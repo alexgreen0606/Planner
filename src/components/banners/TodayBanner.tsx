@@ -1,29 +1,29 @@
 import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp } from '@/utils/dateUtils';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import CustomText from '../text/CustomText';
 import WeatherDisplay from '../weather';
-import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
-import { EStorageId } from '@/lib/enums/EStorageId';
 
 // ✅ 
 
-type TodayBannerProps = {
+type TTodayBannerProps = {
     timestamp: string; // YYYY-MM-DD
 };
 
-const TodayBanner = ({ timestamp }: TodayBannerProps) => {
+const TodayBanner = ({ timestamp }: TTodayBannerProps) => {
+    const storage = useMMKV({ id: EStorageId.PLANNER });
+
+    const [today, setToday] = useMMKVObject<TPlanner>(timestamp, storage);
 
     // TODO: load in weather data
     const high = 47;
     const low = 32;
     const weatherCode = 0;
     const currentTemp = 37;
-
-    const storage = useMMKV({ id: EStorageId.PLANNER });
-    const [today, setToday] = useMMKVObject<TPlanner>(timestamp, storage);
 
     useEffect(() => {
         if (today) {

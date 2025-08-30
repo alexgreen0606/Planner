@@ -2,7 +2,7 @@ import { calendarEventDataAtom } from '@/atoms/calendarEvents';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { userAccessAtom } from '@/atoms/userAccess';
-import { useTextfieldItemAs } from '@/hooks/useTextfieldItemAs';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
@@ -18,24 +18,20 @@ import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 
 // ✅ 
 
-const CalendarContext = createContext({ handleReloadPage: async () => { } });
+const CalendarContext = createContext({ onReloadPage: async () => { } });
 
 export function CalendarProvider({ children }: { children: React.ReactNode }) {
+    const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
+    const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+    const pathname = usePathname();
+    const router = useRouter();
+
     const [mountedDatestamps, setMountedDatestamps] = useAtom(mountedDatestampsAtom);
     const { plannersMap } = useAtomValue(calendarEventDataAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
 
-    const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
     const { textfieldItem, onSetTextfieldItem } = useTextfieldItemAs<IPlannerEvent>(plannerEventStorage);
-    const pathname = usePathname();
-    const router = useRouter();
-
-    const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
-
-    // =============
-    // 1. Reactions
-    // =============
 
     // Update the mounted datestamps atom when the planner set data changes.
     useMMKVListener((key) => {
@@ -71,9 +67,9 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         return () => clearTimeout(timeoutId);
     }, [setMountedDatestamps]);
 
-    // =====================
-    // 2. Exposed Function
-    // =====================
+    // ====================
+    // 1. Exposed Function
+    // ====================
 
     async function handleReloadPage() {
         try {
@@ -112,7 +108,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     }
 
     // =====================
-    // 3. Utility Functions
+    // 2. Utility Functions
     // =====================
 
     async function updateCalendarAndContactPermissions() {
@@ -182,16 +178,16 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <CalendarContext.Provider value={{ handleReloadPage }}>
+        <CalendarContext.Provider value={{ onReloadPage: handleReloadPage }}>
             {children}
         </CalendarContext.Provider>
-    );
+    )
 }
 
-export function useCalendarLoad() {
+export function useCalendarContext() {
     const context = useContext(CalendarContext);
     if (!context) {
-        throw new Error('useCalendarLoad must be used within a CalendarProvider.');
+        throw new Error('useCalendarContext must be used within a CalendarProvider.');
     }
     return context;
 }

@@ -10,7 +10,6 @@ import { View } from 'react-native';
 
 const CountdownPermissionsWrapper = () => {
     const userAccess = useAtomValue(userAccessAtom);
-
     return userAccess.get(EAccess.CALENDAR) ? (
         <Countdowns />
     ) : (

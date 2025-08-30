@@ -3,11 +3,11 @@ import { ReactNode } from "react"
 
 // ✅ 
 
-type FadeInViewProps = {
+type TFadeInViewProps = {
     children: ReactNode;
 };
 
-const SlowFadeInView = ({ children }: FadeInViewProps) =>
+const SlowFadeInView = ({ children }: TFadeInViewProps) =>
     <MotiView
         from={{ opacity: 0 }}
         animate={{ opacity: 1 }}

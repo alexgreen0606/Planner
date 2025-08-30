@@ -5,7 +5,7 @@ import { IFormField } from "@/lib/types/form/IFormField";
 
 // ✅ 
 
-type FormProps = {
+type TFormProps = {
     fields: IFormField[][];
     control: Control<any>;
 };
@@ -13,7 +13,7 @@ type FormProps = {
 const Form = ({
     fields,
     control
-}: FormProps) =>
+}: TFormProps) =>
     <View className='gap-4'>
         {fields.map((row, i) =>
             <View key={`form-row-${i}`} className='rounded-xl overflow-hidden'>

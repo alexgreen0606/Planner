@@ -10,7 +10,7 @@ import TimeSelector from './TimeSelector';
 
 // ✅ 
 
-type TimeRangeSelectorProps = {
+type TTimeRangeSelectorProps = {
     startIso: string;
     endIso: string;
     allDay?: boolean;
@@ -29,7 +29,7 @@ const TimeRangeSelector = ({
     multiDay,
     triggerOpenField,
     onChange
-}: TimeRangeSelectorProps) => {
+}: TTimeRangeSelectorProps) => {
     const { today } = useAtomValue(mountedDatestampsAtom);
 
     const [selectorMode, setSelectorMode] = useState<ETimeSelectorMode | null>(null);
@@ -67,9 +67,9 @@ const TimeRangeSelector = ({
         }
     }, [triggerOpenField]);
 
-    // =======================
+    // ==================
     // 1. Event Handlers
-    // =======================
+    // ==================
 
     function handleToggleSelectorMode(newMode: ETimeSelectorMode) {
         if (newMode === selectorMode) {
@@ -160,9 +160,9 @@ const TimeRangeSelector = ({
         onChange(newStartIso, newEndIso);
     }
 
-    // =======================
-    // 2. Helper Functions
-    // =======================
+    // ===================
+    // 2. Helper Function
+    // ===================
 
     function resetTimesToMidnight() {
         const newStartDate = DateTime.fromISO(startIso)

@@ -110,10 +110,10 @@ export function DeleteSchedulerProvider<T extends TListItem>({ children }: { chi
         }}>
             {children}
         </DeleteSchedulerContext.Provider>
-    );
+    )
 }
 
-export function useDeleteScheduler<T extends TListItem>(): DeleteSchedulerContextType<T> {
+export function useDeleteSchedulerContext<T extends TListItem>(): DeleteSchedulerContextType<T> {
     const context = useContext(DeleteSchedulerContext);
     if (!context) {
         throw new Error('useDeleteScheduler must be used within a DeleteSchedulerProvider');

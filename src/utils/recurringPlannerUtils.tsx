@@ -5,7 +5,7 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
-import { deleteRecurringEventFromStorage, getRecurringEventFromStorageById, getRecurringPlannerFromStorageById, saveRecurringEventToStorage, saveRecurringPlannerToStorage } from "@/storage/recurringPlannerStorage";
+import { deleteRecurringEventFromStorageById, getRecurringEventFromStorageById, getRecurringPlannerFromStorageById, saveRecurringEventToStorage, saveRecurringPlannerToStorage } from "@/storage/recurringPlannerStorage";
 import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
 import { isTimeEarlierOrEqual } from "./dateUtils";
@@ -106,7 +106,7 @@ function deleteRecurringWeekdayEvents(eventsToDelete: IRecurringEvent[]) {
         });
 
     for (const event of eventsToDelete) {
-        deleteRecurringEventFromStorage(event.id);
+        deleteRecurringEventFromStorageById(event.id);
     }
 }
 
@@ -328,6 +328,6 @@ export async function deleteRecurringEventsFromStorageHideWeekday(eventsToDelete
 
     // Phase 4: Delete events from storage.
     for (const eventId of eventIdsToDelete) {
-        deleteRecurringEventFromStorage(eventId);
+        deleteRecurringEventFromStorageById(eventId);
     }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlatformColor, StyleSheet, TextProps as NativeTextProps, TextStyle, Text } from 'react-native';
+import { TextProps as NativeTextProps, PlatformColor, StyleSheet, Text, TextStyle } from 'react-native';
 
 // ✅ 
 
@@ -185,15 +185,15 @@ export const textStyles = {
     }
 } satisfies Record<string, TextStyle>;
 
-export type TextVariant = keyof typeof textStyles;
+export type TTextVariant = keyof typeof textStyles;
 
-interface TextProps extends NativeTextProps {
-    variant: TextVariant;
+interface ITextProps extends NativeTextProps {
+    variant: TTextVariant;
     children: React.ReactNode;
     customStyle?: TextStyle;
 }
 
-const CustomText = ({ variant, children, customStyle, ...rest }: TextProps) =>
+const CustomText = ({ variant, children, customStyle, ...rest }: ITextProps) =>
     <Text
         // @ts-ignore allow custom text styles
         style={[styles[variant], customStyle]}

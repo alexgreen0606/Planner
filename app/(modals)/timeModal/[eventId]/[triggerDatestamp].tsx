@@ -24,17 +24,10 @@ import { useMMKV } from "react-native-mmkv";
 
 // ✅ 
 
-type ModalParams = {
+type TModalParams = {
     eventId: string;
     triggerDatestamp: string; // Planner key that triggered the modal open
 };
-
-enum EEventType {
-    NON_CALENDAR = 'NON_CALENDAR_EVENT',
-    CALENDAR_SINGLE_DAY = 'CALENDAR_SINGLE_DAY',
-    CALENDAR_MULTI_DAY = 'CALENDAR_MULTI_DAY',
-    CALENDAR_ALL_DAY = 'CALENDAR_ALL_DAY',
-}
 
 // The state of the event at time of modal open.
 type TEventState =
@@ -48,7 +41,7 @@ type TCarryoverEventMetadata = {
     index: number | null // null means the event has moved to a new planner
 };
 
-type FormData = {
+type TFormData = {
     title: string;
     timeRange: {
         startIso: string;
@@ -58,8 +51,15 @@ type FormData = {
     allDay: boolean;
 };
 
-const TimeModal = () => {
-    const { eventId, triggerDatestamp } = useLocalSearchParams<ModalParams>();
+enum EEventType {
+    NON_CALENDAR = 'NON_CALENDAR_EVENT',
+    CALENDAR_SINGLE_DAY = 'CALENDAR_SINGLE_DAY',
+    CALENDAR_MULTI_DAY = 'CALENDAR_MULTI_DAY',
+    CALENDAR_ALL_DAY = 'CALENDAR_ALL_DAY',
+}
+
+const PlannerEventTimeModal = () => {
+    const { eventId, triggerDatestamp } = useLocalSearchParams<TModalParams>();
     const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
     const router = useRouter();
 
@@ -70,7 +70,7 @@ const TimeModal = () => {
         formState: { isValid },
         handleSubmit,
         setValue
-    } = useForm<FormData>({
+    } = useForm<TFormData>({
         defaultValues: {
             title: '',
             timeRange: {
@@ -167,7 +167,7 @@ const TimeModal = () => {
                 setLoading(false);
                 return;
             } else if (!plannerEvent) {
-                throw new Error(`TimeModal: No event found in storage or the calendar with ID ${eventId}`);
+                throw new Error(`PlannerEventTimeModal: No event found in storage or the calendar with ID ${eventId}`);
             }
 
             if (plannerEvent.calendarId) { // CALENDAR_SINGLE_DAY
@@ -208,7 +208,7 @@ const TimeModal = () => {
     // 1. Event Handlers
     // ==================
 
-    async function handleSaveFormData(data: FormData) {
+    async function handleSaveFormData(data: TFormData) {
         if (!initialEventState) return;
 
         setLoading(true);
@@ -227,7 +227,7 @@ const TimeModal = () => {
         }
     }
 
-    async function handleUnschedule(data: FormData) {
+    async function handleUnschedule(data: TFormData) {
         if (!initialEventState) return;
 
         const { timeRange, title } = data;
@@ -295,7 +295,7 @@ const TimeModal = () => {
     // 2. Helper Functions
     // ====================
 
-    async function saveAllDayCalendarEvent(data: FormData) {
+    async function saveAllDayCalendarEvent(data: TFormData) {
         if (!initialEventState) return;
 
         const { timeRange } = data;
@@ -319,7 +319,7 @@ const TimeModal = () => {
         closeModalMountedDateOrBack(timeRange.startIso, timeRange.endIso);
     }
 
-    async function saveSingleDayCalendarEvent(data: FormData) {
+    async function saveSingleDayCalendarEvent(data: TFormData) {
         if (!initialEventState) return;
 
         const { timeRange } = data;
@@ -354,7 +354,7 @@ const TimeModal = () => {
         closeModalNewTextfield(targetDatestamp, finalEventIndex + 1);
     }
 
-    async function saveNonCalendarEvent(data: FormData) {
+    async function saveNonCalendarEvent(data: TFormData) {
         if (!initialEventState) return;
 
         const { timeRange } = data;
@@ -379,7 +379,7 @@ const TimeModal = () => {
         closeModalNewTextfield(targetDatestamp, finalEventIndex + 1);
     }
 
-    async function saveMultiDayCalendarEvent(data: FormData) {
+    async function saveMultiDayCalendarEvent(data: TFormData) {
         if (!initialEventState) return;
 
         const { timeRange } = data;
@@ -745,7 +745,7 @@ const TimeModal = () => {
 
     // ---------- Builders ----------
 
-    function buildCalendarEventDetails(data: FormData): Partial<Calendar.Event> {
+    function buildCalendarEventDetails(data: TFormData): Partial<Calendar.Event> {
         const { title, allDay, timeRange: { startIso, endIso } } = data;
         return {
             title,
@@ -802,7 +802,7 @@ const TimeModal = () => {
 
     // ---------- Miscellaneous Helpers ----------
 
-    function upsertFormDataToPlannerEvent(formData: FormData, existingId?: string): IPlannerEvent {
+    function upsertFormDataToPlannerEvent(formData: TFormData, existingId?: string): IPlannerEvent {
         const { title, timeRange: { startIso, endIso }, allDay } = formData;
         return {
             id: existingId ?? uuid.v4(),
@@ -918,7 +918,7 @@ const TimeModal = () => {
         >
             <Form fields={formFields} control={control} />
         </Modal>
-    );
-}
+    )
+};
 
-export default TimeModal;
+export default PlannerEventTimeModal;

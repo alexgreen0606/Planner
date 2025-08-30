@@ -7,4 +7,4 @@ export type TListItem = {
     value: string;
     listId: string;
     storageId: EStorageId;
-}
+};

@@ -5,10 +5,11 @@ import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import ButtonText from './text/ButtonText';
+import useAppPlatformColors from '@/hooks/useColorTheme';
 
 // ✅ 
 
-type TopNavbarProps = {
+type TTopNavbarProps = {
     children: React.ReactNode;
 };
 
@@ -26,11 +27,11 @@ const tabs = [
     { label: 'Recurring', pathname: '/planners/recurring', left: HIGHLIGHT_GAP + (HIGHLIGHT_WIDTH * 2) }
 ];
 
-const PlannersNavbar = ({ children }: TopNavbarProps) => {
+const PlannersNavbar = ({ children }: TTopNavbarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const isCountdowns = pathname.includes('countdowns');
+    const { background } = useAppPlatformColors();
 
     // Determine the current tab's left position based on pathname.
     const currentTabLeft = useMemo(() => {
@@ -38,22 +39,16 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
         return currentTab?.left ?? (HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
     }, [pathname]);
 
-    // =================
-    // 1. Event Handler
-    // =================
+    const isCountdowns = pathname.includes('countdowns');
 
     function handleTabChange(tab: any) {
         router.push(tab.pathname);
     }
 
-    // =======
-    // 2. UI
-    // =======
-
     return (
         <View
             className='flex-1'
-            style={{ backgroundColor: PlatformColor('systemBackground') }}
+            style={{ backgroundColor: PlatformColor(background) }}
         >
             <ScrollContainerProvider
                 upperContentHeight={isCountdowns ? 0 : BAR_HEIGHT}
@@ -123,7 +118,7 @@ const PlannersNavbar = ({ children }: TopNavbarProps) => {
                 {children}
             </ScrollContainerProvider>
         </View>
-    );
+    )
 };
 
 export default PlannersNavbar;

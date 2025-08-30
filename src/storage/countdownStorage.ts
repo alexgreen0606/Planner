@@ -47,6 +47,5 @@ export function getCountdownEventFromStorageById(id: string): ICountdownEvent {
 // ===================
 
 export function deleteCountdownEventFromStorageById(countdownEventId: string) {
-    console.info('deleting', countdownEventId)
     countdownEventStorage.delete(countdownEventId);
 }

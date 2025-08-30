@@ -1,10 +1,9 @@
-import { useCalendarData } from '@/hooks/useCalendarData';
 import usePlanner from '@/hooks/usePlanner';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -15,6 +14,7 @@ import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIco
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
+import useCalendarData from '@/hooks/useCalendarData';
 
 // ✅ 
 
@@ -34,7 +34,7 @@ const PlannerCard = ({
     const {
         onGetDeletingItemsByStorageIdCallback: onGetDeletingItems,
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteScheduler<IPlannerEvent>();
+    } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const { calendarChips } = useCalendarData(datestamp);
 
@@ -52,13 +52,6 @@ const PlannerCard = ({
         onUpdatePlannerEventIndexWithChronologicalCheck
     } = usePlanner(datestamp, eventStorage);
 
-    // Expand the planner if the textfield item belongs to this planner.
-    useEffect(() => {
-        if (isPlannerFocused && collapsed) {
-            handleToggleCollapsed();
-        }
-    }, [isPlannerFocused]);
-
     const handleGetIsEventDeletingCallback = useCallback((planEvent: IPlannerEvent | undefined) =>
         planEvent ? onGetDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
             // The planner event is deleting
@@ -68,6 +61,13 @@ const PlannerCard = ({
         ) : false,
         [onGetDeletingItems]
     );
+
+    // Expand the planner if the textfield item belongs to this planner.
+    useEffect(() => {
+        if (isPlannerFocused && collapsed) {
+            handleToggleCollapsed();
+        }
+    }, [isPlannerFocused]);
 
     function handleToggleCollapsed() {
         if (isPlannerFocused) {

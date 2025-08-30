@@ -12,7 +12,7 @@ import EventChipSets from '../eventChip/EventChipSet';
 
 // ✅ 
 
-type DayBannerProps = {
+type TDayBannerProps = {
     planner: TPlanner;
     forecast?: WeatherForecast;
     isEditingTitle: boolean;
@@ -32,7 +32,7 @@ const DayBanner = ({
     onEditTitle,
     onToggleEditTitle,
     onToggleCollapsed
-}: DayBannerProps) => {
+}: TDayBannerProps) => {
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
 
     // TODO: memoize
@@ -110,7 +110,7 @@ const DayBanner = ({
             />
 
         </TouchableOpacity>
-    );
-}
+    )
+};
 
 export default DayBanner;

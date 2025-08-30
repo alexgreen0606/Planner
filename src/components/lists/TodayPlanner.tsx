@@ -3,7 +3,7 @@ import usePlanner from '@/hooks/usePlanner';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { useDeleteScheduler } from '@/providers/DeleteScheduler';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import { useAtomValue } from 'jotai';
@@ -21,7 +21,7 @@ const TodayPlanner = () => {
     const {
         onGetIsItemDeletingCallback: onGetIsItemDeleting,
         onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteScheduler<IPlannerEvent>();
+    } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const {
         visibleEventIds,
@@ -49,7 +49,7 @@ const TodayPlanner = () => {
             onGetRightIconConfig={createPlannerEventTimeIconConfig}
             onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
-    );
+    )
 };
 
 export default TodayPlanner;

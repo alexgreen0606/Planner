@@ -17,15 +17,15 @@ import { deletePlannerSet, upsertPlannerSet } from '../../../src/storage/planner
 
 // ✅ 
 
-type PendingPlannerSet = {
+type TPendingPlannerSet = {
     title: string;
     dates: {
         startDatestamp: string,
         endDatestamp: string
     }
-}
+};
 
-const emptyFormData: PendingPlannerSet = {
+const emptyFormData: TPendingPlannerSet = {
     title: '',
     dates: {
         startDatestamp: getTodayDatestamp(),
@@ -34,20 +34,20 @@ const emptyFormData: PendingPlannerSet = {
 };
 
 const PlannerSetModal = () => {
-    const setPlannerSetKey = useSetAtom(plannerSetKeyAtom);
-
     const { plannerSetKey } = useLocalSearchParams<{ plannerSetKey: string }>();
+    const storage = useMMKV({ id: EStorageId.PLANNER_SETS });
     const router = useRouter();
 
-    const storage = useMMKV({ id: EStorageId.PLANNER_SETS });
+    const setPlannerSetKey = useSetAtom(plannerSetKeyAtom);
+
     const [plannerSet] = useMMKVObject<TPlannerSet>(plannerSetKey, storage);
 
     const {
         control,
-        handleSubmit,
+        handleSubmit: onSubmit,
         reset,
         formState: { isValid }
-    } = useForm<PendingPlannerSet>({
+    } = useForm<TPendingPlannerSet>({
         defaultValues: {
             ...emptyFormData,
             ...plannerSet,
@@ -92,19 +92,21 @@ const PlannerSetModal = () => {
         });
     }, [plannerSet, reset]);
 
-    // =======================
+    // ==================
     // 1. Event Handlers
-    // =======================
+    // ==================
 
-    function onSubmit(data: PendingPlannerSet) {
+    function handleSubmit(data: TPendingPlannerSet) {
         const { startDatestamp, endDatestamp } = data.dates;
-        data.title = data.title.trim();
+        const newTitle = data.title.trim();
+
         upsertPlannerSet({
-            title: data.title,
+            title: newTitle,
             startDatestamp,
             endDatestamp
         });
-        setPlannerSetKey(data.title);
+
+        setPlannerSetKey(newTitle);
         router.back();
     }
 
@@ -113,19 +115,20 @@ const PlannerSetModal = () => {
             deletePlannerSet(plannerSet);
             setPlannerSetKey('Next 7 Days');
         }
+        
         router.back();
     }
 
-    // =======================
+    // ======
     // 2. UI
-    // =======================
+    // ======
 
     return (
         <Modal
             title={isEditMode ? 'Edit Planner Set' : 'Create Planner Set'}
             primaryButtonConfig={{
                 label: 'Save',
-                onClick: handleSubmit(onSubmit),
+                onClick: onSubmit(handleSubmit),
                 disabled: !isValid
             }}
             deleteButtonConfig={{
@@ -142,7 +145,7 @@ const PlannerSetModal = () => {
                 control={control}
             />
         </Modal>
-    );
+    )
 };
 
 export default PlannerSetModal;

@@ -35,7 +35,10 @@ const initialRootFolder: IFolderItem = {
  * Handles setup of app, including access requests and initializing storage objects.
  */
 const AccessGuard = () => {
-    const [calendarStatus, requestCalendarPermissions] = useCalendarPermissions();
+    const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const appMetaDataStorage = useMMKV({ id: EStorageId.APP_METADATA_KEY });
+
+    const [userAccess, setUserAccess] = useAtom(userAccessAtom);
 
     const [fontsLoaded] = useFonts({
         'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
@@ -44,13 +47,10 @@ const AccessGuard = () => {
         'Text': require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
     });
 
-    const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
-    const appMetaDataStorage = useMMKV({ id: EStorageId.APP_METADATA_KEY });
-
-    const [userAccess, setUserAccess] = useAtom(userAccessAtom);
-
     const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(EStorageKey.ROOT_FOLDER_KEY, folderItemStorage);
     const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
+
+    const [calendarStatus, requestCalendarPermissions] = useCalendarPermissions();
 
     const appReady =
         fontsLoaded &&
@@ -174,7 +174,7 @@ const AccessGuard = () => {
                 />
             </Stack>
         </CalendarProvider>
-    );
+    )
 };
 
 export default AccessGuard;

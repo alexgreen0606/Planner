@@ -1,4 +1,5 @@
 import GenericIcon from '@/components/icon';
+import useAppPlatformColors from '@/hooks/useColorTheme';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
@@ -28,11 +29,11 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCalendarLoad } from './CalendarProvider';
+import { useCalendarContext } from './CalendarProvider';
 
 // ✅ 
 
-type ScrollContainerProviderProps = {
+type TScrollContainerProviderProps = {
     children: React.ReactNode;
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
@@ -43,7 +44,7 @@ type ScrollContainerProviderProps = {
     upperContentHeight?: number;
 };
 
-type ScrollContainerContextValue = {
+type TScrollContainerContextValue = {
     // --- Scroll Variables ---
     scrollOffset: SharedValue<number>;
     onAutoScroll: (newOffset: number) => void;
@@ -57,7 +58,7 @@ type ScrollContainerContextValue = {
     onFocusPlaceholder: () => void;
 };
 
-export enum LoadingStatus {
+export enum ELoadingStatus {
     STATIC = 'STATIC', // no overscroll visible
     LOADING = 'LOADING', // currently rebuilding list
     COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
@@ -68,7 +69,7 @@ const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
 
-const ScrollContainerContext = createContext<ScrollContainerContextValue | null>(null);
+const ScrollContainerContext = createContext<TScrollContainerContextValue | null>(null);
 
 export const ScrollContainerProvider = ({
     children,
@@ -77,29 +78,33 @@ export const ScrollContainerProvider = ({
     upperContentHeight = 0,
     floatingBannerHeight: fixedFloatingBannerHeight = 0,
     fixFloatingBannerOnOverscroll = false
-}: ScrollContainerProviderProps) => {
+}: TScrollContainerProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const keyboard = useAnimatedKeyboard();
     const pathname = usePathname();
 
-    const placeholderInputRef = useRef<TextInput>(null);
-
-    const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight);
-    const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>(LoadingStatus.STATIC);
-    const [blurBottomNav, setBlurBottomNav] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+    const { onReloadPage } = useCalendarContext();
 
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
     const bottomScrollRef = useAnimatedRef<Animated.View>();
+
+    const placeholderInputRef = useRef<TextInput>(null);
+
+    const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight);
+    const [loadingStatus, setLoadingStatus] = useState<ELoadingStatus>(ELoadingStatus.STATIC);
+    const [blurBottomNav, setBlurBottomNav] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
     const disableNativeScroll = useSharedValue(false);
     const scrollOffset = useSharedValue(0);
 
-    const loadingAnimationTrigger = useSharedValue<LoadingStatus>(LoadingStatus.STATIC);
+    const loadingAnimationTrigger = useSharedValue<ELoadingStatus>(ELoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
+
+    const { background } = useAppPlatformColors();
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
@@ -148,24 +153,18 @@ export const ScrollContainerProvider = ({
         height: UPPER_FADE_HEIGHT
     }));
 
-    const { handleReloadPage: onReloadPage } = useCalendarLoad();
-
-    // =============
-    // 1. Reactions
-    // =============
-
     // Trigger a page reload on overscroll.
     useEffect(() => {
         const executeReload = async () => {
             await onReloadPage();
-            updateLoadingStatus(LoadingStatus.COMPLETE);
+            updateLoadingStatus(ELoadingStatus.COMPLETE);
         }
 
-        if (loadingStatus === LoadingStatus.LOADING) executeReload();
+        if (loadingStatus === ELoadingStatus.LOADING) executeReload();
     }, [loadingStatus]);
 
     // =====================
-    // 2. Exposed Functions
+    // 1. Exposed Functions
     // =====================
 
     function handleAutoScroll(displacement: number) {
@@ -200,9 +199,9 @@ export const ScrollContainerProvider = ({
         placeholderInputRef.current?.focus();
     }
 
-    // =====================
-    // 3. Utility Functions
-    // =====================
+    // ====================
+    // 2. Helper Functions
+    // ====================
 
     function triggerHaptic() {
         ReactNativeHapticFeedback.trigger('impactMedium', {
@@ -211,13 +210,13 @@ export const ScrollContainerProvider = ({
         });
     }
 
-    function updateLoadingStatus(newStatus: LoadingStatus) {
+    function updateLoadingStatus(newStatus: ELoadingStatus) {
         setLoadingStatus(newStatus);
         loadingAnimationTrigger.value = newStatus;
     }
 
     // ==============
-    // 4. Animations
+    // 3. Animations
     // ==============
 
     const scrollHandler = useAnimatedScrollHandler({
@@ -255,8 +254,8 @@ export const ScrollContainerProvider = ({
             rotation: loadingRotation.value
         }),
         (curr, prev) => {
-            if (curr.status === LoadingStatus.STATIC) return;
-            if (curr.status === LoadingStatus.LOADING && prev?.status !== LoadingStatus.LOADING) {
+            if (curr.status === ELoadingStatus.STATIC) return;
+            if (curr.status === ELoadingStatus.LOADING && prev?.status !== ELoadingStatus.LOADING) {
                 // Begin Spinning Animation
                 runOnJS(triggerHaptic)();
                 loadingRotation.value = withRepeat(
@@ -267,7 +266,7 @@ export const ScrollContainerProvider = ({
                     -1,
                     false,
                 );
-            } else if (curr.status === LoadingStatus.COMPLETE) {
+            } else if (curr.status === ELoadingStatus.COMPLETE) {
                 if (curr.rotation % 360 >= -1) {
                     cancelAnimation(loadingRotation);
                 }
@@ -285,13 +284,13 @@ export const ScrollContainerProvider = ({
             if (canReloadPath) {
 
                 // Trigger a reload of the list
-                if (loadingAnimationTrigger.value === LoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
-                    runOnJS(updateLoadingStatus)(LoadingStatus.LOADING);
+                if (loadingAnimationTrigger.value === ELoadingStatus.STATIC && current <= -OVERSCROLL_RELOAD_THRESHOLD) {
+                    runOnJS(updateLoadingStatus)(ELoadingStatus.LOADING);
                 }
 
                 // Allow refreshes when scroll returns to top
-                if (current >= 0 && loadingAnimationTrigger.value === LoadingStatus.COMPLETE) {
-                    runOnJS(updateLoadingStatus)(LoadingStatus.STATIC);
+                if (current >= 0 && loadingAnimationTrigger.value === ELoadingStatus.COMPLETE) {
+                    runOnJS(updateLoadingStatus)(ELoadingStatus.STATIC);
                 }
             }
 
@@ -334,7 +333,7 @@ export const ScrollContainerProvider = ({
                     className='absolute z-[1] top-0 left-0 opacity-[.1] w-screen'
                     style={{
                         height: ((UPPER_FADE_HEIGHT / NUM_VIEWS) * i),
-                        backgroundColor: PlatformColor('systemBackground')
+                        backgroundColor: PlatformColor(background)
                     }} />
             )
         }
@@ -367,111 +366,113 @@ export const ScrollContainerProvider = ({
             onAutoScroll: handleAutoScroll,
             onMeasureScrollContentHeight: handleMeasureScrollContentHeight
         }}>
+            <View className='flex-1' style={{ backgroundColor: PlatformColor(background) }}>
 
-            {/* Floating Banner */}
-            <FloatingBanner
-                className="absolute z-[3] flex justify-center w-full px-2"
-                style={floatingBannerStyle}
-                onLayout={(event) => {
-                    if (fixedFloatingBannerHeight) return;
+                {/* Floating Banner */}
+                <FloatingBanner
+                    className="absolute z-[3] flex justify-center w-full px-2"
+                    style={floatingBannerStyle}
+                    onLayout={(event) => {
+                        if (fixedFloatingBannerHeight) return;
 
-                    const { height } = event.nativeEvent.layout;
-                    setFloatingBannerHeight(height);
-                }}
-            >
-                {floatingBanner}
-            </FloatingBanner>
-
-            {/* Scroll Container */}
-            <KeyboardAvoidingView
-                behavior='padding'
-                className='flex-1'
-            >
-                {/* Hidden placeholder input to prevent keyboard flicker */}
-                <TextInput
-                    ref={placeholderInputRef}
-                    inputAccessoryViewID='PLACEHOLDER'
-                    returnKeyType='done'
-                    style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
-                    autoCorrect={false}
-                />
-
-                <ScrollContainer
-                    ref={scrollRef}
-                    scrollEventThrottle={SCROLL_THROTTLE}
-                    scrollToOverflowEnabled={true}
-                    onScroll={scrollHandler}
-                    keyboardShouldPersistTaps='always'
-                    contentContainerStyle={{
-                        paddingTop: TOP_SPACER,
-                        paddingBottom: isKeyboardOpen ? 0 : LOWER_CONTAINER_PADDING,
-                        flexGrow: 1
+                        const { height } = event.nativeEvent.layout;
+                        setFloatingBannerHeight(height);
                     }}
                 >
+                    {floatingBanner}
+                </FloatingBanner>
 
-                    {/* Header */}
-                    {header && (
-                        <View
-                            className='py-2 px-2'
-                            style={{ height: HEADER_HEIGHT }}
-                        >
-                            {header}
-                        </View>
-                    )}
-
-                    {/* Floating Banner Spacer */}
-                    <View className='opacity-0'>
-                        {floatingBanner}
-                    </View>
-
-                    {children}
-
-                </ScrollContainer>
-            </KeyboardAvoidingView>
-
-            {/* Top Blur Bar */}
-            <TopBlurBar />
-
-            {/* Bottom Blur Bar */}
-            <MotiView
-                className="absolute bottom-0 w-screen"
-                animate={{
-                    opacity: (blurBottomNav && !isDragging) ? 1 : 0
-                }}
-                transition={{
-                    type: 'timing',
-                    duration: 400
-                }}
-            >
-                <BlurView
-                    tint="systemUltraThinMaterial"
-                    intensity={100}
-                    className='w-screen'
-                    style={{ height: LOWER_CONTAINER_PADDING }}
-                />
-            </MotiView>
-
-
-            {/* Loading Spinner */}
-            {canReloadPath && (
-                <LoadingSpinner
-                    className='absolute z-[1] self-center'
-                    style={loadingSpinnerStyle}
+                {/* Scroll Container */}
+                <KeyboardAvoidingView
+                    behavior='padding'
+                    className='flex-1'
                 >
-                    <GenericIcon
-                        size='l'
-                        platformColor={loadingStatus === LoadingStatus.COMPLETE ?
-                            'systemBlue' : 'secondaryLabel'
-                        }
-                        type={loadingStatus === LoadingStatus.COMPLETE ?
-                            'refreshComplete' : 'refresh'
-                        }
+                    {/* Hidden placeholder input to prevent keyboard flicker */}
+                    <TextInput
+                        ref={placeholderInputRef}
+                        inputAccessoryViewID='PLACEHOLDER'
+                        returnKeyType='done'
+                        style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
+                        autoCorrect={false}
                     />
-                </LoadingSpinner>
-            )}
 
+                    <ScrollContainer
+                        ref={scrollRef}
+                        scrollEventThrottle={SCROLL_THROTTLE}
+                        scrollToOverflowEnabled={true}
+                        onScroll={scrollHandler}
+                        keyboardShouldPersistTaps='always'
+                        contentContainerStyle={{
+                            paddingTop: TOP_SPACER,
+                            paddingBottom: isKeyboardOpen ? 0 : LOWER_CONTAINER_PADDING,
+                            flexGrow: 1
+                        }}
+                    >
+
+                        {/* Header */}
+                        {header && (
+                            <View
+                                className='py-2 px-2'
+                                style={{ height: HEADER_HEIGHT }}
+                            >
+                                {header}
+                            </View>
+                        )}
+
+                        {/* Floating Banner Spacer */}
+                        <View className='opacity-0'>
+                            {floatingBanner}
+                        </View>
+
+                        {children}
+
+                    </ScrollContainer>
+                </KeyboardAvoidingView>
+
+                {/* Top Blur Bar */}
+                <TopBlurBar />
+
+                {/* Bottom Blur Bar */}
+                <MotiView
+                    className="absolute bottom-0 w-screen"
+                    animate={{
+                        opacity: (blurBottomNav && !isDragging) ? 1 : 0
+                    }}
+                    transition={{
+                        type: 'timing',
+                        duration: 400
+                    }}
+                >
+                    <BlurView
+                        tint="systemUltraThinMaterial"
+                        intensity={100}
+                        className='w-screen'
+                        style={{ height: LOWER_CONTAINER_PADDING }}
+                    />
+                </MotiView>
+
+
+                {/* Loading Spinner */}
+                {canReloadPath && (
+                    <LoadingSpinner
+                        className='absolute z-[1] self-center'
+                        style={loadingSpinnerStyle}
+                    >
+                        <GenericIcon
+                            size='l'
+                            platformColor={loadingStatus === ELoadingStatus.COMPLETE ?
+                                'systemBlue' : 'secondaryLabel'
+                            }
+                            type={loadingStatus === ELoadingStatus.COMPLETE ?
+                                'refreshComplete' : 'refresh'
+                            }
+                        />
+                    </LoadingSpinner>
+                )}
+
+            </View>
         </ScrollContainerContext.Provider>
-    );
+    )
 };
 
 export const useScrollContainerContext = () => {

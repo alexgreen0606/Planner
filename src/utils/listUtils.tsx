@@ -17,7 +17,7 @@ export function generateCheckboxIconConfig<T extends TListItem>(
     return {
         icon: {
             type: isDeleting ? 'circleFilled' : 'circle' as TIconType,
-            platformColor: isDeleting ? 'systemBlue' : 'secondaryLabel'
+            platformColor: isDeleting ? 'tertiaryLabel' : 'secondaryLabel'
         },
         onClick: toggleItemDelete
     }

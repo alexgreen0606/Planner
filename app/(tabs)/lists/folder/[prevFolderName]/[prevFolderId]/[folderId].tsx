@@ -1,4 +1,4 @@
-import FolderItemBanner from '@/components/banners/FolderItemBanner';
+import { FolderItemBanner } from '@/components/banners/FolderItemBanner';
 import SortedFolder from '@/components/lists/Folder';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
@@ -7,29 +7,24 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { PlatformColor, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 // ✅ 
 
-type FolderParams = {
+type TFolderParams = {
   folderId: string,
   prevFolderName: string,
   prevFolderId: string
 };
 
 const FolderScreen = () => {
-  const { folderId, prevFolderName } = useLocalSearchParams<FolderParams>();
+  const { folderId, prevFolderName } = useLocalSearchParams<TFolderParams>();
+  const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const router = useRouter();
 
-  const [parentClickTrigger, setParentClickTrigger] = useState(0);
-
-  const storage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const [folder] = useMMKVObject<IFolderItem>(folderId, storage);
 
-  // =======================
-  // 1. Event Handlers
-  // =======================
+  const [parentClickTrigger, setParentClickTrigger] = useState(0);
 
   function handleOpenItem(id: string, type: EFolderItemType) {
     if (!folder) return;
@@ -41,33 +36,22 @@ const FolderScreen = () => {
     }
   }
 
-  // =======================
-  // 2. UI
-  // =======================
-
   return (
-    <View
-      className='flex-1'
-      style={{ backgroundColor: PlatformColor('systemBackground') }}
-    >
-      <ScrollContainerProvider
-        header={
-          <FolderItemBanner
-            itemId={folderId}
-            backButtonConfig={{
-              hide: prevFolderName === NULL,
-              label: prevFolderName,
-              onClick: () => setParentClickTrigger(curr => curr + 1)
-            }}
-          />
-        }
-      >
-        <SortedFolder
-          onOpenItem={handleOpenItem}
-          parentClickTrigger={parentClickTrigger}
-        />
-      </ScrollContainerProvider>
-    </View>
+    <ScrollContainerProvider header={
+      <FolderItemBanner
+        itemId={folderId}
+        backButtonConfig={{
+          hide: prevFolderName === NULL,
+          label: prevFolderName,
+          onClick: () => setParentClickTrigger(curr => curr + 1)
+        }}
+      />
+    }>
+      <SortedFolder
+        onOpenItem={handleOpenItem}
+        parentClickTrigger={parentClickTrigger}
+      />
+    </ScrollContainerProvider>
   );
 };
 
