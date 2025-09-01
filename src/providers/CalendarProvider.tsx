@@ -5,16 +5,20 @@ import { userAccessAtom } from '@/atoms/userAccess';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { TAppMetaData } from '@/lib/types/TAppMetadata';
 import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
+import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { loadCalendarDataToStore } from '@/utils/calendarUtils';
 import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
+import { deleteAllPlannersInStorageBeforeYesterday } from '@/utils/plannerUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { createContext, useContext, useEffect } from 'react';
-import { useMMKV, useMMKVListener } from 'react-native-mmkv';
+import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 // ✅ 
 
@@ -23,6 +27,7 @@ const CalendarContext = createContext({ onReloadPage: async () => { } });
 export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
     const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+    const appMetaDataStorage = useMMKV({ id: EStorageId.APP_METADATA_KEY });
     const pathname = usePathname();
     const router = useRouter();
 
@@ -30,6 +35,8 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const { plannersMap } = useAtomValue(calendarEventDataAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
+
+    const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
 
     const { textfieldItem, onSetTextfieldItem } = useTextfieldItemAs<IPlannerEvent>(plannerEventStorage);
 
@@ -49,6 +56,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         loadMountedDatestampsCalendarData();
     }, [mountedDatestamps]);
+
+    // Carryover yesterday's events to today if needed.
+    useEffect(() => {
+        carryoverYesterdayEvents();
+    }, [mountedDatestamps.today]);
 
     // Update the mounted datestamps atom at midnight.
     useEffect(() => {
@@ -79,7 +91,6 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
                     await updateCalendarAndContactPermissions();
                     await loadCalendarDataToStore([mountedDatestamps.today]);
                     break;
-
                 case '/planners':
                     // For planners page, reload planner calendar data
 
@@ -91,16 +102,11 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
                     await updateCalendarAndContactPermissions();
                     await loadCalendarDataToStore(mountedDatestamps.planner);
                     break;
-
                 case '/countdowns':
                     // TODO: Add countdown reload logic here
                     // await reloadCountdowns();
                     await updateCalendarAndContactPermissions();
                     break;
-
-                default:
-                    // No action for other paths
-                    return;
             }
         } catch (error) {
             console.error('Error during reload:', error);
@@ -175,6 +181,47 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     async function loadMountedDatestampsCalendarData() {
         const todayIsLoading = !plannersMap[mountedDatestamps.today];
         await loadCalendarDataToStore(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
+    }
+
+    function carryoverYesterdayEvents() {
+        const todayDatestamp = getTodayDatestamp();
+        const lastLoadedTodayDatestamp = appMetaData?.lastLoadedTodayDatestamp ?? todayDatestamp;
+
+        if (lastLoadedTodayDatestamp !== todayDatestamp) {
+            const yesterdayDatestamp = getYesterdayDatestamp();
+
+            const yesterdayPlanner = getPlannerFromStorageByDatestamp(yesterdayDatestamp);
+            const todayPlanner = getPlannerFromStorageByDatestamp(todayDatestamp);
+
+            deleteAllPlannersInStorageBeforeYesterday();
+
+            yesterdayPlanner.eventIds.reverse().forEach((id) => {
+                const event = getPlannerEventFromStorageById(id);
+
+                // Skip recurring and calendar events
+                if (event.recurringId || event.calendarId) {
+                    deletePlannerEventFromStorageById(event.id);
+                    return;
+                }
+
+                // Link the event to today.
+                event.listId = todayDatestamp;
+
+                // Remove timeConfig.
+                delete event.timeConfig;
+
+                savePlannerEventToStorage(event);
+
+                todayPlanner.eventIds.unshift(event.id);
+            });
+
+            deletePlannerFromStorageByDatestamp(yesterdayDatestamp);
+            savePlannerToStorage(todayPlanner);
+        }
+
+        setAppMetaData({
+            lastLoadedTodayDatestamp: todayDatestamp
+        });
     }
 
     return (

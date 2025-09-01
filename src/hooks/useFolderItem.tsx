@@ -3,7 +3,7 @@ import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import ToggleFolderItemTypeIcon from '@/components/icon/ToggleFolderItemTypeIcon';
@@ -15,10 +15,17 @@ import useTextfieldItemAs from './useTextfieldItemAs';
 const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     const [item, setItem] = useMMKVObject<IFolderItem>(itemId, itemStorage);
 
-    const [isTransfering, setIsTransfering] = useState(false);
+    const [transferingItem, setTransferingItem] = useState<IFolderItem | null>(null);
     const [isEditingValue, setIsEditingValue] = useState(false);
 
-    const { textfieldItem, onSetTextfieldItem, onCloseTextfield } = useTextfieldItemAs<IFolderItem>(itemStorage);
+    const { textfieldItem, textfieldId, onSetTextfieldItem, onCloseTextfield } = useTextfieldItemAs<IFolderItem>(itemStorage);
+
+    // Clear the transfering item if a new item begins editing.
+    useEffect(() => {
+        if (textfieldId) {
+            setTransferingItem(null);
+        }
+    }, [textfieldId]);
 
     // =====================
     // 1. Exposed Functions
@@ -36,7 +43,7 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     }
 
     function handleEndItemTransfer() {
-        setIsTransfering(false);
+        setTransferingItem(null);
     }
 
     // ====================
@@ -44,7 +51,10 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     // ====================
 
     function beginFocusedItemTransfer() {
-        setIsTransfering(true);
+        if (!textfieldItem) return;
+
+        setTransferingItem({ ...textfieldItem });
+        onCloseTextfield();
     }
 
     function changeFocusedItemColor(platformColor: string) {
@@ -76,6 +86,10 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
             [
                 {
                     onClick: () => {
+                        onCloseTextfield();
+
+                        if (textfieldItem.value.trim() === '') return;
+
                         const title = `Delete ${textfieldItem.type}?`;
                         const hasNestedItems = textfieldItem.itemIds.length > 0;
 
@@ -85,8 +99,6 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                         } else {
                             message += `Would you like to delete this ${textfieldItem.type}?`;
                         }
-
-                        onCloseTextfield();
 
                         Alert.alert(title, message, [
                             {
@@ -108,29 +120,27 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
             ],
 
             // Folder/List toggle
-            textfieldItem.itemIds.length === 0
-                ? [
-                    {
-                        customIcon: (
-                            <ToggleFolderItemTypeIcon currentType={textfieldItem.type} />
-                        ),
-                        type: textfieldItem.type,
-                        onClick: toggleFocusedItemType,
-                    },
-                ]
-                : [],
+            [
+                {
+                    customIcon: (
+                        <ToggleFolderItemTypeIcon disabled={textfieldItem.itemIds.length > 0} currentType={textfieldItem.type} />
+                    ),
+                    type: textfieldItem.type,
+                    onClick: textfieldItem.itemIds.length > 0 ? undefined : toggleFocusedItemType,
+
+                },
+            ],
 
             // Transfer
-            textfieldItem.value.length > 0
-                ? [
-                    {
-                        type: "transfer",
-                        onClick: beginFocusedItemTransfer,
-                        customIcon: (
-                            <TransferFolderIcon />
-                        )
-                    },
-                ] : [],
+            [
+                {
+                    type: "transfer",
+                    onClick: textfieldItem.value.length === 0 ? undefined : beginFocusedItemTransfer,
+                    customIcon: (
+                        <TransferFolderIcon disabled={textfieldItem.value.length === 0} />
+                    )
+                },
+            ],
 
             // Color selection
             Object.values(selectableColors).map(color => ({
@@ -144,9 +154,10 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         item,
         itemIds: item?.itemIds ?? [],
         isEditingValue,
-        isTransferMode: isTransfering,
+        isTransferMode: !!transferingItem,
         textfieldItem,
         toolbarIconSet,
+        transferingItem,
         onEndTransfer: handleEndItemTransfer,
         onValueChange: handleValueChange,
         onToggleEditValue: handleToggleEditValue,

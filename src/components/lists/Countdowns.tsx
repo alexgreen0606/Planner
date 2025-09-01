@@ -37,7 +37,7 @@ const Countdowns = () => {
             isLoading={isLoading}
             storage={countdownEventStorage}
             toolbarIconSet={toolbarIcons}
-            onGetLeftIconConfig={(item) => ({
+            onGetLeftIconConfigCallback={(item) => ({
                 onClick: () => setTextfieldId(item.id),
                 customIcon: (
                     <View className='w-16'>

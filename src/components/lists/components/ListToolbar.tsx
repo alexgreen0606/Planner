@@ -38,6 +38,7 @@ const ListToolbar = <T extends TListItem>({
                         <TouchableOpacity
                             key={`${setIndex}-toolbar-set-${iconConfig.type}-${iconIndex}`}
                             onPress={() => iconConfig.onClick?.(item)}
+                            activeOpacity={iconConfig.onClick ? 0 : 1}
                         >
                             {iconConfig.customIcon}
                         </TouchableOpacity>

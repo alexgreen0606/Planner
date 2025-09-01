@@ -1,6 +1,6 @@
-import { TIconType } from "@/components/icon";
 import { openPlannerTimeModal } from "@/utils/plannerUtils";
 import { IPlannerEvent } from "../types/listItems/IPlannerEvent";
+import { TIconType } from "./icons";
 
 // ✅ 
 

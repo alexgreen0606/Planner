@@ -8,11 +8,14 @@ import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage
 import { deleteFolderItemAndChildren, createNewFolderItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
-import React, { useEffect } from 'react';
-import { PlatformColor } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 import useFolderItem from '@/hooks/useFolderItem';
+import TransferFolderIcon from '../icon/TransferFolderIcon';
+import AnimatedIcon from '../icon/AnimatedIcon';
+import { TIconType } from '@/lib/constants/icons';
 
 // ✅ 
 
@@ -35,12 +38,53 @@ const SortedFolder = ({
         item: folder,
         itemIds,
         isTransferMode,
-        textfieldItem,
         toolbarIconSet,
+        transferingItem,
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
 
     const { onFocusPlaceholder } = useScrollContainerContext();
+
+    // const getLeftIconConfigCallback = useCallback((item: IFolderItem) => {
+    //     return {
+    //         icon: {
+    //             type: item.type,
+    //             platformColor: getIconPlatformColor(item)
+    //         },
+    //         onClick: () => {
+    //             onFocusPlaceholder();
+    //             setTextfieldId(item.id);
+    //         },
+    //         customIcon: getIsItemTransfering(item.id) ? (
+    //             <View className='scale-[0.8] pr-2'>
+    //                 <TransferFolderIcon disabled={false} />
+    //             </View>
+    //         ) : (
+    //             <MemoizedAnimatedIcon
+    //                 type={item.type}
+    //                 platformColor={getIconPlatformColor(item)}
+    //             />
+    //         )
+    //     }
+    // }, [transferingItem]);
+
+    const getLeftIconConfig = (item: IFolderItem) => {
+        return getIsItemTransfering(item.id) ? (
+            <View className='scale-[0.8] pr-2'>
+                <TransferFolderIcon disabled={false} />
+            </View>
+        ) : (
+            <TouchableOpacity onPress={() => {
+                onFocusPlaceholder();
+                setTextfieldId(item.id);
+            }} >
+                <AnimatedIcon
+                    type={item.type}
+                    platformColor={getIconPlatformColor(item)}
+                />
+            </TouchableOpacity>
+        )
+    }
 
     // Handle clicking of the parent folder.
     useEffect(() => {
@@ -59,32 +103,32 @@ const SortedFolder = ({
     // ==================
 
     function handleTransferToParent() {
-        if (!folder || !textfieldItem) return;
+        if (!folder || !transferingItem) return;
 
         const parentFolder = getFolderItemFromStorageById(folder.listId);
-        parentFolder.itemIds.push(textfieldItem.id);
+        parentFolder.itemIds.push(transferingItem.id);
         saveFolderItemToStorage(parentFolder);
 
-        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== textfieldItem.id) });
-        saveFolderItemToStorage({ ...textfieldItem, listId: folder.listId });
+        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== transferingItem.id) });
+        saveFolderItemToStorage({ ...transferingItem, listId: folder.listId });
 
         onEndTransfer();
     }
 
     function handleTransferToChild(destinationItem: IFolderItem) {
-        if (!folder || !textfieldItem) return;
+        if (!folder || !transferingItem) return;
 
         const childFolder = getFolderItemFromStorageById(destinationItem.id);
-        childFolder.itemIds.push(textfieldItem.id);
+        childFolder.itemIds.push(transferingItem.id);
         saveFolderItemToStorage(childFolder);
 
-        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== textfieldItem.id) });
-        saveFolderItemToStorage({ ...textfieldItem, listId: destinationItem.id });
+        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== transferingItem.id) });
+        saveFolderItemToStorage({ ...transferingItem, listId: destinationItem.id });
     }
 
     function handleItemClick(item: IFolderItem) {
         if (isTransferMode) {
-            if (item.type === EFolderItemType.FOLDER && item.id !== textfieldItem?.id) {
+            if (item.type === EFolderItemType.FOLDER && item.id !== transferingItem?.id) {
                 handleTransferToChild(item);
             }
             onEndTransfer();
@@ -98,22 +142,28 @@ const SortedFolder = ({
     // 2. Helper Functions
     // ====================
 
-    function getIsItemTransfering(item: IFolderItem) {
-        return isTransferMode && textfieldItem?.id === item.id;
-    }
-
-    function getIconType(item: IFolderItem) {
-        return getIsItemTransfering(item) ? 'transfer' : item.type;
+    function getIsItemTransfering(itemId: string) {
+        return isTransferMode && transferingItem?.id === itemId;
     }
 
     function getIconPlatformColor(item: IFolderItem) {
-        if (getIsItemTransfering(item)) {
+        if (getIsItemTransfering(item.id)) {
             return 'systemBlue';
         }
         if (isTransferMode && item.type === EFolderItemType.LIST) {
             return 'tertiaryLabel';
         }
         return item.platformColor;
+    }
+
+    function getRowTextPlatformColor(item: IFolderItem) {
+        if (getIsItemTransfering(item.id)) {
+            return 'tertiaryLabel';
+        }
+        if (isTransferMode && item.type === EFolderItemType.LIST) {
+            return 'tertiaryLabel';
+        }
+        return 'label';
     }
 
     return (
@@ -123,32 +173,19 @@ const SortedFolder = ({
             itemIds={itemIds}
             storage={folderItemStorage}
             storageId={EStorageId.FOLDER_ITEM}
-            hideTextfield={isTransferMode}
             toolbarIconSet={toolbarIconSet}
-            onGetRowTextPlatformColor={item => getIsItemTransfering(item) ? 'systemBlue' :
-                (isTransferMode && item.type === EFolderItemType.LIST) ? 'tertiaryLabel' : 'label'}
-            onGetRightIconConfig={item => ({
-                customIcon:
-                    <CustomText
-                        variant='microDetail'
-                        customStyle={{
-                            color: PlatformColor((item.type === EFolderItemType.LIST && isTransferMode) ?
-                                'tertiaryLabel' : 'secondaryLabel')
-                        }}
-                    >
-                        {item.itemIds.length}
-                    </CustomText>
-            })}
-            onGetLeftIconConfig={item => ({
-                icon: {
-                    type: getIconType(item),
-                    platformColor: getIconPlatformColor(item)
-                },
-                onClick: () => {
-                    onFocusPlaceholder();
-                    setTextfieldId(item.id);
-                }
-            })}
+            onGetRowTextPlatformColor={getRowTextPlatformColor}
+            onGetRightIcon={(item) => (
+                <CustomText
+                    variant='microDetail'
+                    customStyle={{
+                        color: PlatformColor(getRowTextPlatformColor(item))
+                    }}
+                >
+                    {item.itemIds.length}
+                </CustomText>
+            )}
+            onGetLeftIcon={getLeftIconConfig}
             emptyLabelConfig={{
                 label: "It's a ghost town in here",
                 className: 'flex-1'

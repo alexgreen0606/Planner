@@ -10,6 +10,9 @@ import { hasCalendarAccess, hasContactsAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
 import { datestampToMidnightJsDate } from "./dateUtils";
 import { openPlannerTimeModal } from "./plannerUtils";
+import { router } from "expo-router";
+import { getCountdownEventIdFromStorageByCalendarId } from "./countdownUtils";
+import { textfieldIdAtom } from "@/atoms/textfieldId";
 
 // ✅ 
 
@@ -143,6 +146,20 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
 
     if (calendar.isPrimary || calendar.title === 'Calendar') {
         calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
+        calendarEventChip.hasClickAccess = true;
+    }
+
+    if (calendar.title === 'Countdowns') {
+        calendarEventChip.onClick = () => {
+            const foundStorageId = getCountdownEventIdFromStorageByCalendarId(event.id);
+            if (!foundStorageId) return;
+
+            console.info(foundStorageId, 'found')
+
+            jotaiStore.set(textfieldIdAtom, foundStorageId);
+            router.push('/planners/countdowns');
+        };
+        calendarEventChip.hasClickAccess = true;
     }
 
     return calendarEventChip;

@@ -1,35 +1,35 @@
-import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
-import { EStorageId } from '@/lib/enums/EStorageId';
+import { HEADER_HEIGHT, PAGE_LABEL_HEIGHT } from '@/lib/constants/miscLayout';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp } from '@/utils/dateUtils';
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
-import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import CustomText from '../text/CustomText';
+import React from 'react';
+import { TextInput, View } from 'react-native';
+import ButtonText from '../text/ButtonText';
+import CustomText, { textStyles } from '../text/CustomText';
 import WeatherDisplay from '../weather';
 
 // ✅ 
 
 type TTodayBannerProps = {
-    timestamp: string; // YYYY-MM-DD
+    datestamp: string; // YYYY-MM-DD
+    today: TPlanner;
+    isEditingTitle: boolean;
+    onEditTitle: (title: string) => void;
+    onToggleEditTitle: () => void;
 };
 
-const TodayBanner = ({ timestamp }: TTodayBannerProps) => {
-    const storage = useMMKV({ id: EStorageId.PLANNER });
-
-    const [today, setToday] = useMMKVObject<TPlanner>(timestamp, storage);
+const TodayBanner = ({
+    datestamp,
+    today,
+    isEditingTitle,
+    onEditTitle,
+    onToggleEditTitle
+}: TTodayBannerProps) => {
 
     // TODO: load in weather data
     const high = 47;
     const low = 32;
     const weatherCode = 0;
     const currentTemp = 37;
-
-    useEffect(() => {
-        if (today) {
-            setToday({ ...today, title: "" });
-        }
-    }, []);
 
     return (
         <View
@@ -38,16 +38,35 @@ const TodayBanner = ({ timestamp }: TTodayBannerProps) => {
         >
 
             {/* Date */}
-            <View className='relative'>
-                <CustomText variant='pageLabel'>
-                    {today?.title || "Today's Plans"}
-                </CustomText>
+            <View className='relative flex-1'>
+                {isEditingTitle ? (
+                    <TextInput
+                        autoFocus
+                        autoCapitalize='words'
+                        value={today.title}
+                        onChangeText={onEditTitle}
+                        onBlur={onToggleEditTitle}
+                        style={[textStyles.pageLabel, {
+                            paddingRight: 14,
+                            height: PAGE_LABEL_HEIGHT
+                        }]}
+                    />
+                ) : (
+                    <ButtonText
+                        textType='pageLabel'
+                        platformColor='label'
+                        onPress={onToggleEditTitle}
+                        containerStyle={{ paddingRight: 14, height: PAGE_LABEL_HEIGHT }}
+                    >
+                        {today.title.trim() || "Today's Plans"}
+                    </ButtonText>
+                )}
                 <View className='absolute bottom-full translate-y-3 flex-row'>
                     <CustomText variant='detail'>
-                        {getDayOfWeekFromDatestamp(timestamp)}{' '}
+                        {getDayOfWeekFromDatestamp(datestamp)}{' '}
                     </CustomText>
                     <CustomText variant='softDetail'>
-                        {getMonthDateFromDatestamp(timestamp)}
+                        {getMonthDateFromDatestamp(datestamp)}
                     </CustomText>
                 </View>
             </View>

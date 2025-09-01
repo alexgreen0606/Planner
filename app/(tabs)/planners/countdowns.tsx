@@ -4,7 +4,7 @@ import Countdowns from '@/components/lists/Countdowns';
 import { EAccess } from '@/lib/enums/EAccess';
 import { useAtomValue } from 'jotai';
 import React from 'react';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
 
 // ✅ 
 
@@ -15,10 +15,13 @@ const CountdownPermissionsWrapper = () => {
     ) : (
         <View className='flex-1 items-center justify-center'>
             <EmptyLabel
-                label='Countdowns requires calendar access.'
-                onPress={() => null} // TODO: open setting on click
+                label='Calendar access required. Click here to open settings.'
+                onPress={() => {
+                    Linking.openSettings();
+                }}
                 iconConfig={{
-                    type: 'alert'
+                    type: 'alert',
+                    platformColor: 'tertiaryLabel'
                 }}
             />
         </View>

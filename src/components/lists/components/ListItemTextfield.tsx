@@ -83,6 +83,7 @@ const ListItemTextfield = <T extends TListItem>({
         }
 
         handleSaveToExternalStorageDebounce.flush();
+
         setTextfieldId((prev) => prev === item.id ? null : prev);
     }
 

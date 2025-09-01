@@ -1,15 +1,13 @@
 import { textfieldIdAtom } from "@/atoms/textfieldId";
-import GenericIcon from "@/components/icon";
 import CustomText from "@/components/text/CustomText";
 import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
-import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
 import { useScrollContainerContext } from "@/providers/ScrollContainer";
 import { useAtom } from "jotai";
-import { useMemo } from "react";
-import { PlatformColor, TextStyle, TouchableOpacity, View } from "react-native";
+import React, { ReactNode, useMemo } from "react";
+import { PlatformColor, TextStyle, View } from "react-native";
 import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
 import Animated, {
@@ -44,16 +42,15 @@ type TListItemProps<T extends TListItem> = {
     },
     toolbarIconSet?: IToolbarIconConfig<T>[][];
     storage: MMKV;
-    hideTextfield: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
     onSaveToExternalStorage?: (item: T) => void;
     onContentClick?: (item: T) => void;
-    onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
-    onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    onGetIsDeletingCustomCallback?: (item: T | undefined) => boolean;
+    onGetLeftIcon?: (item: T) => ReactNode;
+    onGetRightIcon?: (item: T) => ReactNode;
+    onGetIsItemDeletingCustom?: (item: T) => boolean;
 };
 
 const Row = Animated.createAnimatedComponent(View);
@@ -87,16 +84,15 @@ const ListItem = <T extends TListItem>({
     toolbarIconSet,
     upperAutoScrollBound,
     lowerAutoScrollBound,
-    hideTextfield,
     onValueChange,
     onCreateItem,
     onDeleteItem,
     onContentClick,
     onSaveToExternalStorage,
-    onGetLeftIconConfig,
-    onGetRightIconConfig,
+    onGetRightIcon,
     onGetRowTextPlatformColor,
-    onGetIsDeletingCustomCallback
+    onGetLeftIcon,
+    onGetIsItemDeletingCustom
 }: TListItemProps<T>) => {
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
@@ -110,14 +106,9 @@ const ListItem = <T extends TListItem>({
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
-    const isPendingDelete = useMemo(
-        () => onGetIsDeletingCustomCallback?.(item) ?? onGetIsItemDeletingCallback(item),
-        [onGetIsItemDeletingCallback, onGetIsDeletingCustomCallback]
-    );
-
     const textPlatformColor = useMemo(() => item ? onGetRowTextPlatformColor?.(item) : 'label', [item, onGetRowTextPlatformColor]);
-    const leftIconConfig = useMemo(() => item ? onGetLeftIconConfig?.(item) : undefined, [item, onGetLeftIconConfig]);
-    const rightIconConfig = useMemo(() => item ? onGetRightIconConfig?.(item) : undefined, [item, onGetRightIconConfig]);
+
+    const isPendingDelete = item ? (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item)) : false;
 
     const valueStyles: TextStyle = {
         color: PlatformColor(
@@ -127,7 +118,7 @@ const ListItem = <T extends TListItem>({
         textDecorationLine: isPendingDelete ? 'line-through' : undefined
     };
 
-    const isEditable = !hideTextfield && (textfieldId === item?.id);
+    const isEditable = textfieldId === item?.id;
 
     // ==================
     // 1. Event Handlers
@@ -283,37 +274,6 @@ const ListItem = <T extends TListItem>({
     // 4. UI
     // ======
 
-    const RowIcon = ({ config, type }: { config: TListItemIconConfig<T>, type: IconPosition }) => {
-        if (config.hideIcon) return null;
-
-        const size = type === IconPosition.LEFT ? 'm' : 's';
-
-        if (config.customIcon) {
-            return (
-                <TouchableOpacity
-                    activeOpacity={config.onClick ? 0 : 1}
-                    onPress={() => item && config.onClick?.(item)}
-                    className='mr-2'
-                >
-                    {config.customIcon}
-                </TouchableOpacity>
-            );
-        }
-
-        if (config.icon) {
-            return (
-                <GenericIcon
-                    {...config.icon}
-                    onClick={() => item && config.onClick?.(item)}
-                    size={size}
-                    className='mr-4'
-                />
-            );
-        }
-
-        return null;
-    };
-
     if (!item) return null;
 
     return (
@@ -331,7 +291,7 @@ const ListItem = <T extends TListItem>({
             </Pressable>
 
             <View
-                className="flex-row  justify-center items-center"
+                className="flex-row  justify-center items-center gap-2"
                 style={{
                     height: LIST_CONTENT_HEIGHT,
                     marginLeft: LIST_ICON_SPACING
@@ -339,7 +299,7 @@ const ListItem = <T extends TListItem>({
             >
 
                 {/* Left Icon */}
-                {leftIconConfig && <RowIcon config={leftIconConfig} type={IconPosition.LEFT} />}
+                {onGetLeftIcon?.(item)}
 
                 {/* Content */}
                 <GestureDetector gesture={contentGesture}>
@@ -384,7 +344,7 @@ const ListItem = <T extends TListItem>({
                 </GestureDetector>
 
                 {/* Right Icon */}
-                {rightIconConfig && <RowIcon config={rightIconConfig} type={IconPosition.RIGHT} />}
+                {onGetRightIcon?.(item)}
 
             </View >
         </Row >

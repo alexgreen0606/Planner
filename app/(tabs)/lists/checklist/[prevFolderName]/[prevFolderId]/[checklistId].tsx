@@ -1,4 +1,4 @@
-import { FolderItemBanner } from '@/components/banners/FolderItemBanner';
+import FolderItemBanner from '@/components/banners/FolderItemBanner';
 import Checklist from '@/components/lists/Checklist';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useLocalSearchParams } from 'expo-router';

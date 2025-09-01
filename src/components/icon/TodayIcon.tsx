@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { PlatformColor, View } from "react-native";
 import GenericIcon from ".";
 import CustomText from "../text/CustomText";
+import useAppPlatformColors from "@/hooks/useColorTheme";
 
 // ✅ 
 
@@ -14,6 +15,8 @@ type TodayIconProps = {
 
 const TodayIcon = ({ platformColor }: TodayIconProps) => {
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
+
+    const { background } = useAppPlatformColors();
 
     const month = useMemo(() => {
         const monthFormat = 'MMM';
@@ -36,7 +39,7 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
                 platformColor={platformColor}
             />
             <View className='absolute w-full h-full items-center pt-[0.6px]'>
-                <CustomText variant='todayMonth'>
+                <CustomText variant='todayMonth' customStyle={{ color: PlatformColor(background) }}>
                     {month}
                 </CustomText>
                 <CustomText

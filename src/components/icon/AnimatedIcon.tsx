@@ -1,12 +1,11 @@
 import { iconMap, sizeMap, TIconType } from '@/lib/constants/icons';
-import { isValidPlatformColor } from '@/utils/colorUtils';
+import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { SFSymbol } from 'react-native-sfsymbols';
 
 // ✅ 
 
-export interface GenericIconProps<T = void> {
+export interface AnimatedIconProps<T = void> {
     type: TIconType;
     size?: 'xs' | 's' | 'm' | 'ms' | 'l' | 'xl';
     platformColor?: string;
@@ -16,7 +15,7 @@ export interface GenericIconProps<T = void> {
     onClick?: (item?: T) => T | void | Promise<void>;
 }
 
-const GenericIcon = <T,>({
+const AnimatedIcon = <T,>({
     type,
     size = 'm',
     platformColor: color = 'secondaryLabel',
@@ -24,7 +23,7 @@ const GenericIcon = <T,>({
     className,
     hideRipple = false,
     onClick
-}: GenericIconProps<T>) => {
+}: AnimatedIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
     return (
         <Wrapper
@@ -39,13 +38,19 @@ const GenericIcon = <T,>({
             }}
             className={className}
         >
-            <SFSymbol
+            <SymbolView
                 name={iconMap[type]}
+                type='palette'
+                animationSpec={{
+                    effect: { type: 'bounce' },
+                    repeating: false,
+                }}
                 size={sizeMap[size]}
-                color={isValidPlatformColor(color) ? PlatformColor(color) : color}
+                tintColor={PlatformColor(color)}
+                style={{ transform: [{ scale: 1.2 }] }}
             />
         </Wrapper>
     );
 };
 
-export default GenericIcon;
+export default AnimatedIcon;

@@ -2,12 +2,12 @@ import { textfieldIdAtom } from "@/atoms/textfieldId";
 import TimeValue from "@/components/text/TimeValue";
 import { ERecurringPlannerId } from "@/lib/enums/ERecurringPlannerKey";
 import { EStorageId } from "@/lib/enums/EStorageId";
-import { TListItemIconConfig } from "@/lib/types/listItems/core/TListItemIconConfig";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
 import { deleteRecurringEventFromStorageById, getRecurringEventFromStorageById, getRecurringPlannerFromStorageById, saveRecurringEventToStorage, saveRecurringPlannerToStorage } from "@/storage/recurringPlannerStorage";
 import { jotaiStore } from "app/_layout";
 import { uuid } from "expo-modules-core";
+import { TouchableOpacity } from "react-native";
 import { isTimeEarlierOrEqual } from "./dateUtils";
 
 // ✅ 
@@ -226,22 +226,18 @@ export function createEmptyRecurringPlanner(recurringPlannerId: string): TRecurr
 }
 
 /**
- * Generates the icon config representing a recurring event's time. Clicking the icon will open the 
+ * Creates the icon representing a recurring event's time. Clicking the icon will open the 
  * textfield for the event.
  * 
  * @param event - The recurring event to represent.
- * @returns The icon configuration for the recurring event's time.
+ * @returns The icon for the recurring event's time.
  */
-export function createRecurringEventTimeIconConfig(
-    event: IRecurringEvent
-): TListItemIconConfig<IRecurringEvent> {
-    return {
-        hideIcon: !event.startTime,
-        onClick: () => jotaiStore.set(textfieldIdAtom, event.id),
-        customIcon: (
+export function createRecurringEventTimeIcon(event: IRecurringEvent) {
+    return event.startTime && (
+        <TouchableOpacity onPress={() => jotaiStore.set(textfieldIdAtom, event.id)}>
             <TimeValue timeValue={event.startTime} concise />
-        )
-    }
+        </TouchableOpacity>
+    )
 }
 
 // ====================

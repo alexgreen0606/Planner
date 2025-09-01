@@ -1,4 +1,4 @@
-import { FolderItemBanner } from '@/components/banners/FolderItemBanner';
+import FolderItemBanner from '@/components/banners/FolderItemBanner';
 import SortedFolder from '@/components/lists/Folder';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';

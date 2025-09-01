@@ -6,16 +6,17 @@ import GenericIcon from ".";
 
 type TToggleFolderItemTypeIconProps = {
     currentType: EFolderItemType;
+    disabled: boolean;
 };
 
-const ToggleFolderItemTypeIcon = ({ currentType }: TToggleFolderItemTypeIconProps) =>
-    <View className='gap-1'>
+const ToggleFolderItemTypeIcon = ({ currentType, disabled }: TToggleFolderItemTypeIconProps) =>
+    <View className='gap-1 scale-[0.8]'>
         <View className='flex-row gap-1'>
             <GenericIcon
                 type='folder'
                 size='s'
                 hideRipple
-                platformColor={currentType === EFolderItemType.FOLDER ? 'label' : 'tertiaryLabel'}
+                platformColor={disabled ? 'tertiaryLabel' : currentType === EFolderItemType.FOLDER ? 'label' : 'tertiaryLabel'}
             />
             <GenericIcon
                 type='turnDown'
@@ -36,7 +37,7 @@ const ToggleFolderItemTypeIcon = ({ currentType }: TToggleFolderItemTypeIconProp
                 type='list'
                 size='s'
                 hideRipple
-                platformColor={currentType === EFolderItemType.FOLDER ? 'tertiaryLabel' : 'label'}
+                platformColor={disabled ? 'tertiaryLabel' : currentType === EFolderItemType.FOLDER ? 'tertiaryLabel' : 'label'}
             />
 
         </View>

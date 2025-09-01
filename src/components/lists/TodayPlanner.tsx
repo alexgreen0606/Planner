@@ -1,34 +1,30 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
-import usePlanner from '@/hooks/usePlanner';
+import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
-import { generateCheckboxIconConfig } from '@/utils/listUtils';
-import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
+import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import { useAtomValue } from 'jotai';
 import React from 'react';
-import { useMMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
-const TodayPlanner = () => {
-    const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+type TTodayPlannerProps = {
+    eventStorage: MMKV;
+    visibleEventIds: string[];
+    onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void
+    onUpdatePlannerEventValueWithTimeParsing: (userInput: string) => void
+}
 
+const TodayPlanner = ({
+    visibleEventIds,
+    eventStorage,
+    onUpdatePlannerEventIndexWithChronologicalCheck,
+    onUpdatePlannerEventValueWithTimeParsing
+}: TTodayPlannerProps) => {
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
-
-    const {
-        onGetIsItemDeletingCallback: onGetIsItemDeleting,
-        onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteSchedulerContext<IPlannerEvent>();
-
-    const {
-        visibleEventIds,
-        onUpdatePlannerEventIndexWithChronologicalCheck,
-        onUpdatePlannerEventValueWithTimeParsing
-    } = usePlanner(todayDatestamp, eventStorage);
-
     return (
         <DragAndDropList<IPlannerEvent>
             fillSpace
@@ -36,18 +32,18 @@ const TodayPlanner = () => {
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}
             itemIds={visibleEventIds}
+            toolbarIconSet={plannerToolbarIconConfig}
             emptyLabelConfig={{
                 label: 'All plans complete',
                 className: 'flex-1'
             }}
-            toolbarIconSet={plannerToolbarIconConfig}
             onCreateItem={createPlannerEventInStorageAndFocusTextfield}
             onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
             onValueChange={onUpdatePlannerEventValueWithTimeParsing}
             onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
             onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
-            onGetRightIconConfig={createPlannerEventTimeIconConfig}
-            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
+            onGetRightIcon={createPlannerEventTimeIcon}
+            onGetLeftIcon={useGetPlannerEventToggle}
         />
     )
 };

@@ -2,7 +2,7 @@ import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
 import Modal from "@/components/modal";
-import { useTextfieldItemAs } from "@/hooks/useTextfieldItemAs";
+import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { EStorageId } from "@/lib/enums/EStorageId";

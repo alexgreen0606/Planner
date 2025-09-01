@@ -133,7 +133,7 @@ export function upsertCalendarEventsIntoCountdownPlanner(
 
         existingCalendarIds.add(calendarEvent.id);
 
-        const updatedEvent = mapCalendarEventToCountdown(calendarEvent);
+        const updatedEvent = mapCalendarEventToCountdown(calendarEvent, eventId);
 
         newCountdownPlanner.push(updatedEvent.id);
 
@@ -174,6 +174,18 @@ export async function getAllCountdownEventsFromCalendar(): Promise<Calendar.Even
 
     const id = await getCountdownCalendarId();
     return await Calendar.getEventsAsync([id], startDate, endDate);
+}
+
+/**
+ * Fetches a countdown event from storage by its calendar event ID.
+ * 
+ * @param calendarEventId - The ID of the calendar event.
+ * @returns The countdown event associated with the calendar event ID.
+ */
+export function getCountdownEventIdFromStorageByCalendarId(calendarEventId: string): string | undefined {
+    const storagePlanner = getCountdownPlannerFromStorage();
+    const storageEvents = storagePlanner.map(getCountdownEventFromStorageById);
+    return storageEvents.find(e => e.calendarId === calendarEventId)?.id;
 }
 
 // ====================
@@ -257,7 +269,9 @@ export function updateCountdownEventIndexWithChronologicalCheck(
 export async function deleteCountdownAndReloadCalendar(countdownEvent: ICountdownEvent) {
 
     // Phase 1: Delete the event from the calendar.
-    await Calendar.deleteEventAsync(countdownEvent.id);
+    if (countdownEvent.calendarId) {
+        await Calendar.deleteEventAsync(countdownEvent.calendarId);
+    }
 
     // Phase 2: Remove the event from its planner in storage.
     const countdownPlanner = getCountdownPlannerFromStorage();

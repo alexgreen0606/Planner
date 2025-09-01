@@ -1,20 +1,19 @@
+import useCalendarData from '@/hooks/useCalendarData';
+import useIsPlannerEventDeleting from '@/hooks/useIsPlannerEventDeleting';
 import usePlanner from '@/hooks/usePlanner';
+import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
-import { getTodayDatestamp } from '@/utils/dateUtils';
-import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { WeatherForecast } from '@/utils/weatherUtils';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIconConfig, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '../../utils/plannerUtils';
+import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '../../utils/plannerUtils';
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
-import useCalendarData from '@/hooks/useCalendarData';
 
 // ✅ 
 
@@ -30,11 +29,6 @@ const PlannerCard = ({
     const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
     const [collapsed, setCollapsed] = useState(true);
-
-    const {
-        onGetDeletingItemsByStorageIdCallback: onGetDeletingItems,
-        onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const { calendarChips } = useCalendarData(datestamp);
 
@@ -52,17 +46,6 @@ const PlannerCard = ({
         onUpdatePlannerEventIndexWithChronologicalCheck
     } = usePlanner(datestamp, eventStorage);
 
-    const handleGetIsEventDeletingCallback = useCallback((planEvent: IPlannerEvent | undefined) =>
-        planEvent ? onGetDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
-            // The planner event is deleting
-            (deleteItem.id === planEvent.id || (deleteItem.calendarId && (deleteItem.calendarId === planEvent.calendarId))) &&
-            // and it's not from today
-            deleteItem.listId !== getTodayDatestamp()
-        ) : false,
-        [onGetDeletingItems]
-    );
-
-    // Expand the planner if the textfield item belongs to this planner.
     useEffect(() => {
         if (isPlannerFocused && collapsed) {
             handleToggleCollapsed();
@@ -116,9 +99,9 @@ const PlannerCard = ({
                 onCreateItem={createPlannerEventInStorageAndFocusTextfield}
                 onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
                 onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
-                onGetRightIconConfig={createPlannerEventTimeIconConfig}
-                onGetLeftIconConfig={(item) => generateCheckboxIconConfig(handleGetIsEventDeletingCallback(item), onToggleScheduleItemDelete)}
-                onGetIsDeletingCustomCallback={handleGetIsEventDeletingCallback}
+                onGetRightIcon={createPlannerEventTimeIcon}
+                onGetLeftIcon={useGetPlannerEventToggle}
+                onGetIsItemDeletingCustom={useIsPlannerEventDeleting}
             />
         </Card>
     );

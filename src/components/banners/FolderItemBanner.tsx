@@ -1,6 +1,6 @@
 import ButtonText from '@/components/text/ButtonText';
 import CustomText, { textStyles } from '@/components/text/CustomText';
-import { useFolderItem } from '@/hooks/useFolderItem';
+import useFolderItem from '@/hooks/useFolderItem';
 import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { useRouter } from 'expo-router';

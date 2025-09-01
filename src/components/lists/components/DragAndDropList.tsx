@@ -2,10 +2,9 @@ import ThinLine from '@/components/ThinLine';import { LIST_ITEM_HEIGHT } from '@
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { MotiView } from 'moti';
-import React, { useEffect } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
@@ -28,17 +27,16 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     fillSpace?: boolean;
     storage: MMKV;
     defaultStorageObject?: S;
-    hideTextfield?: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
     onIndexChange?: (newIndex: number, prev: T) => void;
     onSaveToExternalStorage?: (item: T) => void;
     onContentClick?: (item: T) => void;
-    onGetLeftIconConfig?: (item: T) => TListItemIconConfig<T>;
-    onGetRightIconConfig?: (item: T) => TListItemIconConfig<T>;
     onGetRowTextPlatformColor?: (item: T) => string;
-    onGetIsDeletingCustomCallback?: (item: T | undefined) => boolean;
+    onGetIsItemDeletingCustom?: (item: T) => boolean;
+    onGetLeftIcon?: (item: T) => ReactNode;
+    onGetRightIcon?: (item: T) => ReactNode;
 };
 
 const DragAndDropList = <T extends TListItem, S = T>({
@@ -50,7 +48,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     fillSpace,
     toolbarIconSet,
     storage,
-    hideTextfield = false,
     onIndexChange,
     onCreateItem,
     onDeleteItem,
@@ -176,7 +173,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             itemId={id}
                             storage={storage}
-                            hideTextfield={hideTextfield}
                             dragConfig={{
                                 topMax: dragTopMax,
                                 isAutoScrolling: isAutoScrolling,

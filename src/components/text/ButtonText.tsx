@@ -8,11 +8,11 @@ import CustomText, { TTextVariant } from './CustomText';
 
 interface IButtonTextProps extends TextProps {
     platformColor?: string;
-    onClick?: () => void;
     children: React.ReactNode;
     containerStyle?: ViewStyle;
     iconConfig?: GenericIconProps;
     textType?: TTextVariant;
+    onClick?: () => void;
 }
 
 const AnimatedText = Animated.createAnimatedComponent(View);
@@ -20,10 +20,10 @@ const AnimatedText = Animated.createAnimatedComponent(View);
 const ButtonText = ({
     platformColor = 'systemBlue',
     textType = 'button',
-    onClick,
     children,
     containerStyle,
     iconConfig,
+    onClick,
     ...rest
 }: IButtonTextProps) => {
     const opacity = useSharedValue(1);

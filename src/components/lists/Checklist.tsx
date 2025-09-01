@@ -2,7 +2,6 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { deleteChecklistItems, createNewChecklistItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
-import { generateCheckboxIconConfig } from '@/utils/listUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
@@ -37,7 +36,7 @@ const Checklist = () => {
             onCreateItem={createNewChecklistItemAndSaveToStorage}
             onDeleteItem={(item) => deleteChecklistItems([item])}
             onIndexChange={updateListItemIndex}
-            onGetLeftIconConfig={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
+            // onGetLeftIconConfigCallback={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
         />
     )
 };

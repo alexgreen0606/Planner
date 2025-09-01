@@ -3,7 +3,6 @@ import { textfieldIdAtom } from '@/atoms/textfieldId';
 import TimeValue from '@/components/text/TimeValue';
 import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { TListItemIconConfig } from '@/lib/types/listItems/core/TListItemIconConfig';
 import { IPlannerEvent, ITimeConfig, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
@@ -14,6 +13,8 @@ import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { uuid } from 'expo-modules-core';
 import { router } from 'expo-router';
+import { ReactNode } from 'react';
+import { TouchableOpacity } from 'react-native';
 import { loadCalendarDataToStore } from './calendarUtils';
 import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 
@@ -392,27 +393,23 @@ export function createEmptyPlanner(datestamp: string): TPlanner {
 }
 
 /**
- * Creates the icon config representing a planner event's time. Clicking the icon will open the Time Modal for the event.
+ * Creates the icon representing a planner event's time. Clicking the icon will open the Time Modal for the event.
  * 
  * @param event - The planner event to represent.
- * @returns The icon configuration for the event's time.
+ * @returns The icon for the event's time.
  */
-export function createPlannerEventTimeIconConfig(
-    event: IPlannerEvent
-): TListItemIconConfig<IPlannerEvent> {
+export function createPlannerEventTimeIcon(event: IPlannerEvent): ReactNode {
     const itemTime = getPlannerEventTime(event);
-    return {
-        hideIcon: !itemTime,
-        onClick: () => openPlannerTimeModal(event.id, event.listId),
-        customIcon: (
+    return itemTime && (
+        <TouchableOpacity onPress={() => openPlannerTimeModal(event.id, event.listId)}>
             <TimeValue
                 endEvent={event.timeConfig?.endEventId === event.id}
                 startEvent={event.timeConfig?.startEventId === event.id}
                 isoTimestamp={itemTime}
                 concise
             />
-        )
-    }
+        </TouchableOpacity>
+    )
 }
 
 /**

@@ -200,7 +200,7 @@ const CustomText = ({ variant, children, customStyle, ...rest }: ITextProps) =>
         {...rest}
     >
         {children}
-    </Text>
+    </Text>;
 
 const styles = StyleSheet.create(textStyles);
 

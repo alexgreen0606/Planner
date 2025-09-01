@@ -75,6 +75,8 @@ PODS:
     - Yoga
   - ExpoSMS (13.1.4):
     - ExpoModulesCore
+  - ExpoSymbols (0.4.5):
+    - ExpoModulesCore
   - fast_float (6.1.4)
   - FBLazyVector (0.79.4)
   - fmt (11.0.2)
@@ -2220,6 +2222,7 @@ DEPENDENCIES:
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSMS (from `../node_modules/expo-sms/ios`)
+  - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
@@ -2340,6 +2343,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoSMS:
     :path: "../node_modules/expo-sms/ios"
+  ExpoSymbols:
+    :path: "../node_modules/expo-symbols/ios"
   fast_float:
     :podspec: "../node_modules/react-native/third-party-podspecs/fast_float.podspec"
   FBLazyVector:
@@ -2522,6 +2527,7 @@ SPEC CHECKSUMS:
   ExpoLinking: b85ff4eafeae6fc638c6cace60007ae521af0ef4
   ExpoModulesCore: d431ffe83c8673d02cb38425594a5f5480fd3061
   ExpoSMS: 770f0b60a777f5d3f65fd7fc369ff62ff97e09a9
+  ExpoSymbols: c5612a90fb9179cdaebcd19bea9d8c69e5d3b859
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 15c28682af535aa55b9b31e64deff54b7ed7d453
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd

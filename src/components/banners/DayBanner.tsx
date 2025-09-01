@@ -70,7 +70,7 @@ const DayBanner = ({
                             <TextInput
                                 autoFocus
                                 value={planner.title}
-                                editable={isEditingTitle}
+                                autoCapitalize='words'
                                 onChangeText={onEditTitle}
                                 onBlur={onToggleEditTitle}
                                 style={textStyles.plannerCardSoftDetail}
