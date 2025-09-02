@@ -1,6 +1,7 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
+import useCountdownPlanner from '@/hooks/useCountdownPlanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { ICountdownEvent } from '@/lib/types/listItems/ICountdownEvent';
@@ -8,10 +9,9 @@ import { deleteCountdownAndReloadCalendar, updateDeviceCalendarEventByCountdownE
 import { getDaysUntilIso } from '@/utils/dateUtils';
 import { useSetAtom } from 'jotai';
 import React from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
-import useCountdownPlanner from '@/hooks/useCountdownPlanner';
 
 // ✅ 
 
@@ -37,22 +37,18 @@ const Countdowns = () => {
             isLoading={isLoading}
             storage={countdownEventStorage}
             toolbarIconSet={toolbarIcons}
-            onGetLeftIconConfigCallback={(item) => ({
-                onClick: () => setTextfieldId(item.id),
-                customIcon: (
-                    <View className='w-16'>
-                        <DateValue concise isoTimestamp={item.startIso} />
-                    </View>
-                )
-            })}
-            onGetRightIconConfig={(countdown) => ({
-                customIcon:
-                    <View className="[width:55px] items-end">
-                        <CustomText adjustsFontSizeToFit numberOfLines={1} variant='microDetail'>
-                            {getDaysUntilIso(countdown.startIso)} days
-                        </CustomText>
-                    </View>
-            })}
+            onGetLeftIcon={(item) => (
+                <TouchableOpacity onPress={() => setTextfieldId(item.id)} className='w-16'>
+                    <DateValue concise isoTimestamp={item.startIso} />
+                </TouchableOpacity>
+            )}
+            onGetRightIcon={(countdown) => (
+                <View className="[width:55px] items-end">
+                    <CustomText adjustsFontSizeToFit numberOfLines={1} variant='microDetail'>
+                        {getDaysUntilIso(countdown.startIso)} days
+                    </CustomText>
+                </View>
+            )}
             emptyLabelConfig={{
                 label: 'No countdowns',
                 className: 'flex-1'

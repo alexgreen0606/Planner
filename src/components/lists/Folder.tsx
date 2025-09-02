@@ -1,21 +1,20 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
+import useFolderItem from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
-import { deleteFolderItemAndChildren, createNewFolderItemAndSaveToStorage, updateListItemIndex } from '@/utils/checklistUtils';
+import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import DragAndDropList from './components/DragAndDropList';
-import useFolderItem from '@/hooks/useFolderItem';
-import TransferFolderIcon from '../icon/TransferFolderIcon';
 import AnimatedIcon from '../icon/AnimatedIcon';
-import { TIconType } from '@/lib/constants/icons';
+import TransferFolderIcon from '../icon/TransferFolderIcon';
+import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
@@ -44,29 +43,6 @@ const SortedFolder = ({
     } = useFolderItem(folderId, folderItemStorage);
 
     const { onFocusPlaceholder } = useScrollContainerContext();
-
-    // const getLeftIconConfigCallback = useCallback((item: IFolderItem) => {
-    //     return {
-    //         icon: {
-    //             type: item.type,
-    //             platformColor: getIconPlatformColor(item)
-    //         },
-    //         onClick: () => {
-    //             onFocusPlaceholder();
-    //             setTextfieldId(item.id);
-    //         },
-    //         customIcon: getIsItemTransfering(item.id) ? (
-    //             <View className='scale-[0.8] pr-2'>
-    //                 <TransferFolderIcon disabled={false} />
-    //             </View>
-    //         ) : (
-    //             <MemoizedAnimatedIcon
-    //                 type={item.type}
-    //                 platformColor={getIconPlatformColor(item)}
-    //             />
-    //         )
-    //     }
-    // }, [transferingItem]);
 
     const getLeftIconConfig = (item: IFolderItem) => {
         return getIsItemTransfering(item.id) ? (

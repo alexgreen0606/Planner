@@ -284,7 +284,7 @@ const ListItem = <T extends TListItem>({
             </Pressable>
 
             <View
-                className="flex-row  justify-center items-center gap-2"
+                className="flex-row  justify-center items-center gap-2 pr-2"
                 style={{
                     height: LIST_CONTENT_HEIGHT,
                     marginLeft: LIST_ICON_SPACING

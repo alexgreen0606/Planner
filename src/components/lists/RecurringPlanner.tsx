@@ -1,8 +1,8 @@
+import useListItemToggle from '@/hooks/useListItemToggle';
 import useRecurringPlanner from '@/hooks/useRecurringPlanner';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { createRecurringEventInStorageAndFocusTextfield, createRecurringEventTimeIcon, deleteRecurringEventsFromStorageHideWeekday, upsertEventToWeekdayPlanners } from '@/utils/recurringPlannerUtils';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
@@ -16,11 +16,6 @@ type TSortedRecurringPlannerProps = {
 
 const RecurringPlanner = ({ recurringPlannerId }: TSortedRecurringPlannerProps) => {
     const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
-
-    const {
-        onGetIsItemDeletingCallback: onGetIsItemDeleting,
-        onToggleScheduleItemDeleteCallback: onToggleScheduleItemDelete
-    } = useDeleteSchedulerContext<IRecurringEvent>();
 
     const {
         eventIds,
@@ -49,9 +44,9 @@ const RecurringPlanner = ({ recurringPlannerId }: TSortedRecurringPlannerProps) 
             onSaveToExternalStorage={isWeekdayPlanner ? upsertEventToWeekdayPlanners : undefined}
             onDeleteItem={(event) => deleteRecurringEventsFromStorageHideWeekday([event])}
             onGetRightIcon={createRecurringEventTimeIcon}
-        // onGetLeftIconConfigCallback={(item) => generateCheckboxIconConfig(onGetIsItemDeleting(item), onToggleScheduleItemDelete)}
+            onGetLeftIcon={useListItemToggle}
         />
-    );
+    )
 };
 
 export default RecurringPlanner;

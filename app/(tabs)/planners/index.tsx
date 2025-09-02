@@ -22,7 +22,7 @@ import { View } from 'react-native';
 const defaultPlannerSet = 'Next 7 Days';
 
 const forecasts: Record<string, WeatherForecast> = {
-    "2025-07-24": {
+    "2025-09-02": {
         "date": "2025-04-23",
         "weatherCode": 61,
         "weatherDescription": "Slight rain",

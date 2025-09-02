@@ -62,7 +62,7 @@ const DayBanner = ({
                             />
                         )}
                         {isTomorrow && !isEditingTitle && !planner.title && (
-                            <CustomText onPress={onToggleEditTitle} variant='plannerCardSoftDetail'>
+                            <CustomText variant='plannerCardSoftDetail'>
                                 Tomorrow
                             </CustomText>
                         )}
@@ -80,7 +80,6 @@ const DayBanner = ({
                                 variant='plannerCardSoftDetail'
                                 ellipsizeMode='tail'
                                 numberOfLines={1}
-                                onPress={planner.title ? onToggleEditTitle : onToggleCollapsed}
                             >
                                 {planner.title}
                             </CustomText>
