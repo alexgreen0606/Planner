@@ -39,6 +39,7 @@ const AnimatedIcon = <T,>({
             className={className}
         >
             <SymbolView
+                // @ts-ignore
                 name={iconMap[type]}
                 type='palette'
                 animationSpec={{

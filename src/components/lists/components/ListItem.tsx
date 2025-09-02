@@ -60,11 +60,6 @@ enum AutoScrollDirection {
     DOWN = 'DOWN'
 }
 
-enum IconPosition {
-    RIGHT = 'RIGHT',
-    LEFT = 'LEFT'
-}
-
 const ListItem = <T extends TListItem>({
     listId,
     itemId,
@@ -262,9 +257,7 @@ const ListItem = <T extends TListItem>({
         return {
             top: isRowDragging ? top.value : withSpring(basePos + rowOffset, LIST_SPRING_CONFIG),
             transform: [
-                {
-                    translateY: withSpring(isRowDragging ? -6 : 0, LIST_SPRING_CONFIG)
-                }
+                { translateY: withSpring(isRowDragging ? -6 : 0, LIST_SPRING_CONFIG) }
             ],
             opacity: withSpring(isRowDragging ? 0.6 : 1, LIST_SPRING_CONFIG)
         }

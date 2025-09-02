@@ -7,7 +7,8 @@ import { deleteChecklistItems } from '@/utils/checklistUtils';
 import { deletePlannerEventsFromStorageAndCalendar } from '@/utils/plannerUtils';
 import { deleteRecurringEventsFromStorageHideWeekday } from '@/utils/recurringPlannerUtils';
 import { useAtom } from 'jotai';
-import React, { createContext, useCallback, useContext, useEffect, useRef } from 'react';
+import debounce from 'lodash.debounce';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
 
 // ✅ 
 
@@ -26,38 +27,23 @@ const deletionMap: Partial<Record<EStorageId, (items: any[]) => Promise<void> | 
 const DeleteSchedulerContext = createContext<DeleteSchedulerContextType<any> | undefined>(undefined);
 
 export function DeleteSchedulerProvider<T extends TListItem>({ children }: { children: React.ReactNode }) {
-    
     const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
-    const deleteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Schedule deletion of pending items.
-    useEffect(() => {
-        if (deleteTimeoutRef.current) {
-            clearTimeout(deleteTimeoutRef.current);
-        }
-
-        const hasAnyPendingDeletes = Object.values(pendingDeleteMap).some(
-            typeMap => typeMap && Object.keys(typeMap).length > 0
-        );
-
-        if (hasAnyPendingDeletes) {
-            deleteTimeoutRef.current = setTimeout(() => {
-                Object.entries(pendingDeleteMap).forEach(([deleteFunctionKey, itemsMap]) => {
+    const debouncedProcessDeletes = useMemo(
+        () => debounce(() =>
+            setPendingDeleteMap(currentMap => {
+                Object.entries(currentMap).forEach(([deleteFunctionKey, itemsMap]) => {
                     if (itemsMap && Object.keys(itemsMap).length > 0) {
                         const items = Object.values(itemsMap);
                         const deleteFn = deletionMap[deleteFunctionKey as EStorageId];
-
                         deleteFn?.(items);
                     }
                 });
-
-                setPendingDeleteMap({});
-                deleteTimeoutRef.current = null;
-            }, DELETE_ITEMS_DELAY_MS);
-        }
-    }, [pendingDeleteMap]);
+                return {};
+            }), DELETE_ITEMS_DELAY_MS),
+        []
+    );
 
     // =====================
     // 2. Exposed Functions
@@ -100,6 +86,8 @@ export function DeleteSchedulerProvider<T extends TListItem>({ children }: { chi
             newMap[storageId] = typeMap;
             return newMap;
         });
+
+        debouncedProcessDeletes();
     }, [setPendingDeleteMap]);
 
     return (

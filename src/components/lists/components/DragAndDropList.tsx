@@ -1,4 +1,6 @@
-import ThinLine from '@/components/ThinLine';import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
+import ThinLine from '@/components/ThinLine';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
+import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
@@ -13,7 +15,6 @@ import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
 import ListToolbar, { IToolbarIconConfig } from './ListToolbar';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 // ✅ 
 
@@ -95,6 +96,10 @@ const DragAndDropList = <T extends TListItem, S = T>({
         }
     );
 
+    useEffect(() => {
+        draggingRowId.value = null;
+    }, [itemIds]);
+
     // Evaluate the scroll container height every time the list length changes.
     useEffect(() => {
         runOnUI(onMeasureContentHeight)();
@@ -118,7 +123,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
         }
     }
 
-    function handleDragStart(rowId: string, initialIndex: number) {
+    function handleDragStartWorklet(rowId: string, initialIndex: number) {
         "worklet";
         const initialTop = initialIndex * LIST_ITEM_HEIGHT;
 
@@ -132,7 +137,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
         runOnJS(onCloseTextfield)();
     }
 
-    function handleDragEnd(newIndex: number, item?: T) {
+    function handleDragEndWorklet(newIndex: number, item?: T) {
         "worklet";
 
         cancelAnimation(scrollOffset);
@@ -141,8 +146,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
         if (onIndexChange && item) {
             runOnJS(onIndexChange)(newIndex, item);
         }
-
-        draggingRowId.value = null;
     }
 
     // ======
@@ -181,8 +184,8 @@ const DragAndDropList = <T extends TListItem, S = T>({
                                 initialIndex: dragInitialIndex,
                                 top: dragTop,
                                 index: dragIndex,
-                                onDragEnd: handleDragEnd,
-                                onDragStart: handleDragStart
+                                onDragEnd: handleDragEndWorklet,
+                                onDragStart: handleDragStartWorklet
                             }}
                             {...rest}
                             onCreateItem={onCreateItem}
