@@ -14,14 +14,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
-import ListToolbar, { IToolbarIconConfig } from './ListToolbar';
+import ListToolbar from './ListToolbar';
 
 // ✅ 
 
 type TDragAndDropListProps<T extends TListItem, S = T> = {
     itemIds: string[];
     listId: string;
-    toolbarIconSet?: IToolbarIconConfig<T>[][];
+    toolbarIconSet?: ReactNode[][];
     emptyLabelConfig?: Omit<IEmptyLabelProps, 'onPress'>;
     storageId: EStorageId;
     isLoading?: boolean;
@@ -96,6 +96,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
         }
     );
 
+    // Clear any pending drag once the result is officially saved.
     useEffect(() => {
         draggingRowId.value = null;
     }, [itemIds]);
@@ -146,6 +147,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
         if (onIndexChange && item) {
             runOnJS(onIndexChange)(newIndex, item);
         }
+
+        // Ensure the drag is cancelled in cases where the drag result was denied.
+        runOnJS(setTimeout)(() => draggingRowId.value = null, 250);
     }
 
     // ======
@@ -221,7 +225,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
                 {/* Placeholder Toolbar (prevent flickering between textfields) */}
                 {toolbarIconSet && (
-                    <ListToolbar item={placeholderItem} iconSets={toolbarIconSet} accessoryKey='PLACEHOLDER' />
+                    <ListToolbar iconSet={toolbarIconSet} accessoryKey='PLACEHOLDER' />
                 )}
 
             </View>

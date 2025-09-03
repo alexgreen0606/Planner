@@ -303,12 +303,12 @@ export async function deleteRecurringEventsFromStorageHideWeekday(eventsToDelete
             plannersToUpdate[event.listId].deletedWeekdayEventIds.push(event.weekdayEventId);
         }
 
-        // Determine how to delete this event.
+        // Mark the weekday events to delete from all the recurring planners
         if (event.listId === ERecurringPlannerId.WEEKDAYS) {
             weekdayEventsToDelete.push(event);
-        } else {
-            eventIdsToDelete.add(event.id);
         }
+
+        eventIdsToDelete.add(event.id);
     }
 
     // Phase 2: Update all planners in storage.

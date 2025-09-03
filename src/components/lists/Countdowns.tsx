@@ -23,7 +23,6 @@ const Countdowns = () => {
     const {
         toolbarIcons,
         countdownEventIds,
-        isLoading,
         onCreateCountdownEventInStorageAndFocusTextfield,
         onUpdateCountdownEventIndexWithChronologicalCheck
     } = useCountdownPlanner(countdownEventStorage);
@@ -34,7 +33,6 @@ const Countdowns = () => {
             fillSpace
             itemIds={countdownEventIds}
             storageId={EStorageId.COUNTDOWN_EVENT}
-            isLoading={isLoading}
             storage={countdownEventStorage}
             toolbarIconSet={toolbarIcons}
             onGetLeftIcon={(item) => (

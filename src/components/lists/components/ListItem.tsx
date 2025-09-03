@@ -19,7 +19,6 @@ import Animated, {
     withSpring
 } from "react-native-reanimated";
 import ListItemTextfield from "./ListItemTextfield";
-import { IToolbarIconConfig } from "./ListToolbar";
 
 // ✅ 
 
@@ -40,7 +39,7 @@ type TListItemProps<T extends TListItem> = {
         onDragStart: (rowId: string, initialIndex: number) => void;
         onDragEnd: (newValue: number, prev?: T) => void;
     },
-    toolbarIconSet?: IToolbarIconConfig<T>[][];
+    toolbarIconSet?: ReactNode[][];
     storage: MMKV;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;

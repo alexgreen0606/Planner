@@ -30,6 +30,7 @@ const Today = () => {
     isEditingTitle,
     planner,
     visibleEventIds,
+    toolbarIcons,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onUpdatePlannerEventValueWithTimeParsing,
     onEditTitle,
@@ -65,6 +66,7 @@ const Today = () => {
       }
     >
       <TodayPlanner
+        toolbarIcons={toolbarIcons}
         eventStorage={eventStorage}
         visibleEventIds={visibleEventIds}
         onUpdatePlannerEventIndexWithChronologicalCheck={onUpdatePlannerEventIndexWithChronologicalCheck}

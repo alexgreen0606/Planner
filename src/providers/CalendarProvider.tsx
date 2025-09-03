@@ -8,9 +8,11 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TAppMetaData } from '@/lib/types/TAppMetadata';
+import { getCountdownPlannerFromStorage, saveCountdownPlannerToStorage } from '@/storage/countdownStorage';
 import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
 import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { loadCalendarDataToStore } from '@/utils/calendarUtils';
+import { getAllCountdownEventsFromCalendar, upsertCalendarEventsIntoCountdownPlanner } from '@/utils/countdownUtils';
 import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { deleteAllPlannersInStorageBeforeYesterday } from '@/utils/plannerUtils';
 import * as Calendar from 'expo-calendar';
@@ -46,6 +48,10 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
             updateMountedDatestamps()
         }
     }, plannerSetStorage);
+
+    useEffect(() => {
+        loadCountdownEventsAndUpdateStorage();
+    }, []);
 
     // Update the mounted datestamps atom when the selected planner set changes.
     useEffect(() => {
@@ -89,23 +95,24 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
                 case '/':
                     // For home page, reload today's calendar data
                     await updateCalendarAndContactPermissions();
+                    await loadCountdownEventsAndUpdateStorage();
                     await loadCalendarDataToStore([mountedDatestamps.today]);
                     break;
                 case '/planners':
                     // For planners page, reload planner calendar data
 
+                    // TODO: need to wait until atom updates?
+
+                    await updateCalendarAndContactPermissions();
+                    await loadCountdownEventsAndUpdateStorage();
+                    await loadCalendarDataToStore(mountedDatestamps.planner);
+                    break;
+                case '/planners/countdowns':
+                    await updateCalendarAndContactPermissions();
 
                     // TODO: need to wait until atom updates?
 
-
-
-                    await updateCalendarAndContactPermissions();
-                    await loadCalendarDataToStore(mountedDatestamps.planner);
-                    break;
-                case '/countdowns':
-                    // TODO: Add countdown reload logic here
-                    // await reloadCountdowns();
-                    await updateCalendarAndContactPermissions();
+                    await loadCountdownEventsAndUpdateStorage();
                     break;
             }
         } catch (error) {
@@ -181,6 +188,17 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     async function loadMountedDatestampsCalendarData() {
         const todayIsLoading = !plannersMap[mountedDatestamps.today];
         await loadCalendarDataToStore(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
+    }
+
+    async function loadCountdownEventsAndUpdateStorage() {
+        const calendarEvents = await getAllCountdownEventsFromCalendar();
+        const currentCountdownPlanner = getCountdownPlannerFromStorage();
+        saveCountdownPlannerToStorage(
+            upsertCalendarEventsIntoCountdownPlanner(currentCountdownPlanner, calendarEvents)
+        );
+
+        // Re-build the mounted datestamps so any countdown chips have storage references.
+        await loadMountedDatestampsCalendarData();
     }
 
     function carryoverYesterdayEvents() {

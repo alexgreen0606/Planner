@@ -4,15 +4,15 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { useAtom } from 'jotai';
 import debounce from 'lodash.debounce';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
-import ListToolbar, { IToolbarIconConfig } from './ListToolbar';
+import ListToolbar from './ListToolbar';
 
 // ✅ 
 
 type TListItemTextfieldProps<T extends TListItem> = {
     item: T;
-    toolbarIconSet?: IToolbarIconConfig<T>[][];
+    toolbarIconSet?: ReactNode[][];
     customStyle: TextStyle;
     onSetItemInStorage: (value: T | ((prevValue: T | undefined) => T | undefined) | undefined) => void;
     onCreateChildTextfield: () => void;
@@ -113,7 +113,7 @@ const ListItemTextfield = <T extends TListItem>({
                 onChangeText={onValueChange ?? handleValueChange}
                 onSubmitEditing={handleSubmitTextfield}
             />
-            {toolbarIconSet && <ListToolbar item={item} iconSets={toolbarIconSet} accessoryKey={item.id} />}
+            {toolbarIconSet && <ListToolbar iconSet={toolbarIconSet} accessoryKey={item.id} />}
         </View>
     )
 }

@@ -153,7 +153,7 @@ export function upsertCalendarEventsIntoCountdownPlanner(
 
         // Create the event in storage and add it to the countdown planner.
         saveCountdownEventToStorage(newEvent);
-        countdownEventIds = updateCountdownEventIndexWithChronologicalCheck(countdownEventIds, countdownEventIds.length, newEvent);
+        newCountdownPlanner = updateCountdownEventIndexWithChronologicalCheck(countdownEventIds, countdownEventIds.length, newEvent);
     });
 
     return newCountdownPlanner;

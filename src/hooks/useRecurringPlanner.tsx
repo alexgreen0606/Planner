@@ -1,5 +1,4 @@
-import { TIconType } from "@/components/icon";
-import { IToolbarIconConfig } from "@/components/lists/components/ListToolbar";
+import GenericIcon from "@/components/icon";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
@@ -11,6 +10,7 @@ import { DateTime } from "luxon";
 import { useMemo, useState } from "react";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
 import useTextfieldItemAs from "./useTextfieldItemAs";
+import { View } from "react-native";
 
 // ✅ 
 
@@ -28,7 +28,7 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
         onSetTextfieldItem: onSetFocusedEvent
     } = useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
 
-    const textfieldDate = useMemo(() => {
+    const focusedDate = useMemo(() => {
         if (focusedEvent?.startTime) {
             const [hour, minute] = focusedEvent.startTime.split(':').map(Number);
             const dateTime = DateTime.local().set({ hour, minute, second: 0, millisecond: 0 });
@@ -94,6 +94,7 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
     // ====================
 
     function updateRecurringEventTimeWithChronologicalCheck(event: DateTimePickerEvent) {
+        console.info(event)
         onSetFocusedEvent((prev) => {
             if (!prev || !recurringPlanner) return prev;
 
@@ -119,6 +120,7 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
             setRecurringPlanner(
                 updateRecurringEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
             );
+            
             return newEvent;
         });
     }
@@ -136,18 +138,30 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
     // 3. Toolbar Configuration
     // =========================
 
-    const toolbarIcons: IToolbarIconConfig<IRecurringEvent>[][] = [[{
-        type: 'clock' as TIconType,
-        onClick: () => { focusedEvent && showEventTime(focusedEvent) },
-        customIcon: focusedEvent?.startTime || showTimeInToolbarForUntimedEvent ? (
+    const toolbarIcons = [
+        [(
+            <GenericIcon
+                type='clock'
+                onClick={() => focusedEvent && showEventTime(focusedEvent)}
+            />
+        )],
+        [focusedEvent?.startTime || showTimeInToolbarForUntimedEvent ? (
             <DateTimePicker
                 mode='time'
                 minuteInterval={5}
-                value={textfieldDate}
+                value={focusedDate}
                 onChange={updateRecurringEventTimeWithChronologicalCheck}
             />
-        ) : undefined
-    }]];
+        ) : (
+            <View className='w-28 items-center'>
+                <GenericIcon
+                    type='clock'
+                    onClick={() => focusedEvent && showEventTime(focusedEvent)}
+                    platformColor="label"
+                />
+            </View>
+        )]
+    ];
 
     return {
         eventIds: recurringPlanner?.eventIds ?? [],

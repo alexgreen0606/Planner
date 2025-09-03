@@ -3,5 +3,5 @@
 export const reloadablePaths = [
     '/',
     '/planners',
-    '/countdowns'
+    '/planners/countdowns'
 ];

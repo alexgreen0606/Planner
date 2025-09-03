@@ -1,14 +1,14 @@
-import { IToolbarIconConfig } from '@/components/lists/components/ListToolbar';
 import { selectableColors } from '@/lib/constants/colors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, TouchableOpacity } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import ToggleFolderItemTypeIcon from '@/components/icon/ToggleFolderItemTypeIcon';
 import TransferFolderIcon from '@/components/icon/TransferFolderIcon';
 import useTextfieldItemAs from './useTextfieldItemAs';
+import GenericIcon from '@/components/icon';
 
 // ✅ 
 
@@ -65,6 +65,7 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     }
 
     function toggleFocusedItemType() {
+        if (!textfieldItem) return;
         onSetTextfieldItem((prev) => {
             if (!prev) return prev;
             return {
@@ -79,76 +80,72 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     // 3. Toolbar Config
     // ==================
 
-    const toolbarIconSet: IToolbarIconConfig<IFolderItem>[][] = !textfieldItem
-        ? []
-        : [
-            // Delete
-            [
-                {
-                    onClick: () => {
-                        onCloseTextfield();
+    const toolbarIconSet = [
+        [( // Delete Icon
+            <GenericIcon
+                type='trash'
+                platformColor='label'
+                onClick={() => {
+                    if (!textfieldItem) return;
 
-                        if (textfieldItem.value.trim() === '') return;
+                    onCloseTextfield();
 
-                        const title = `Delete ${textfieldItem.type}?`;
-                        const hasNestedItems = textfieldItem.itemIds.length > 0;
+                    if (textfieldItem.value.trim() === '') return;
 
-                        let message = "";
-                        if (hasNestedItems) {
-                            message += `This ${textfieldItem.type} has ${textfieldItem.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
-                        } else {
-                            message += `Would you like to delete this ${textfieldItem.type}?`;
-                        }
+                    const title = `Delete ${textfieldItem.type}?`;
+                    const hasNestedItems = textfieldItem.itemIds.length > 0;
 
-                        Alert.alert(title, message, [
-                            {
-                                text: "Cancel",
-                                style: "cancel",
+                    let message = "";
+                    if (hasNestedItems) {
+                        message += `This ${textfieldItem.type} has ${textfieldItem.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
+                    } else {
+                        message += `Would you like to delete this ${textfieldItem.type}?`;
+                    }
+
+                    Alert.alert(title, message, [
+                        {
+                            text: "Cancel",
+                            style: "cancel",
+                        },
+                        {
+                            text: hasNestedItems ? "Force Delete" : "Delete",
+                            style: "destructive",
+                            onPress: () => {
+                                onCloseTextfield();
+                                deleteFolderItemAndChildren(textfieldItem);
                             },
-                            {
-                                text: hasNestedItems ? "Force Delete" : "Delete",
-                                style: "destructive",
-                                onPress: () => {
-                                    onCloseTextfield();
-                                    deleteFolderItemAndChildren(textfieldItem);
-                                },
-                            },
-                        ]);
-                    },
-                    type: "trash",
-                },
-            ],
-
-            // Folder/List toggle
-            [
-                {
-                    customIcon: (
-                        <ToggleFolderItemTypeIcon disabled={textfieldItem.itemIds.length > 0} currentType={textfieldItem.type} />
-                    ),
-                    type: textfieldItem.type,
-                    onClick: textfieldItem.itemIds.length > 0 ? undefined : toggleFocusedItemType,
-
-                },
-            ],
-
-            // Transfer
-            [
-                {
-                    type: "transfer",
-                    onClick: textfieldItem.value.length === 0 ? undefined : beginFocusedItemTransfer,
-                    customIcon: (
-                        <TransferFolderIcon disabled={textfieldItem.value.length === 0} />
-                    )
-                },
-            ],
-
-            // Color selection
-            Object.values(selectableColors).map(color => ({
-                type: textfieldItem?.platformColor === color ? 'circleFilled' : 'circle',
-                platformColor: color,
-                onClick: () => changeFocusedItemColor(color),
-            })),
-        ];
+                        },
+                    ]);
+                }}
+            />
+        )],
+        [( // Type Toggle
+            <TouchableOpacity
+                onPress={toggleFocusedItemType}
+                activeOpacity={textfieldItem && textfieldItem.itemIds.length === 0 ? 0 : 1}
+            >
+                <ToggleFolderItemTypeIcon
+                    disabled={!!textfieldItem && textfieldItem.itemIds.length > 0}
+                    currentType={textfieldItem?.type ?? EFolderItemType.FOLDER}
+                />
+            </TouchableOpacity>
+        )],
+        [( // Transfer
+            <TouchableOpacity
+                onPress={beginFocusedItemTransfer}
+                activeOpacity={textfieldItem && textfieldItem.value.length === 0 ? 1 : 0}
+            >
+                <TransferFolderIcon disabled={!!textfieldItem && textfieldItem.value.length === 0} />
+            </TouchableOpacity>
+        )], // Color
+        Object.values(selectableColors).map(color => (
+            <GenericIcon
+                type={textfieldItem && textfieldItem?.platformColor === color ? 'circleFilled' : 'circle'}
+                platformColor={color}
+                onClick={() => changeFocusedItemColor(color)}
+            />
+        )),
+    ];
 
     return {
         item,

@@ -3,7 +3,6 @@ import useIsPlannerEventDeleting from '@/hooks/useIsPlannerEventDeleting';
 import usePlanner from '@/hooks/usePlanner';
 import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
-import { plannerToolbarIconConfig } from '@/lib/constants/plannerToolbar';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { WeatherForecast } from '@/utils/weatherUtils';
@@ -38,6 +37,7 @@ const PlannerCard = ({
         isEditingTitle,
         isPlannerFocused,
         isLoading,
+        toolbarIcons,
         onEditTitle,
         OverflowIcon,
         onCloseTextfield,
@@ -93,7 +93,7 @@ const PlannerCard = ({
                     label: 'No plans',
                     className: 'h-20 flex justify-center items-center'
                 }}
-                toolbarIconSet={plannerToolbarIconConfig}
+                toolbarIconSet={toolbarIcons}
                 onValueChange={onUpdatePlannerEventValueWithTimeParsing}
                 onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
                 onCreateItem={createPlannerEventInStorageAndFocusTextfield}
