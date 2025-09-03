@@ -1,5 +1,5 @@
 import GenericIcon from '@/components/icon';
-import useAppPlatformColors from '@/hooks/useColorTheme';
+import useAppPlatformColors from '@/hooks/useAppPlatformColors';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';

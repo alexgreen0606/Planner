@@ -1,4 +1,4 @@
-import useAppPlatformColors from "@/hooks/useColorTheme";
+import useAppPlatformColors from "@/hooks/useAppPlatformColors";
 import { PlatformColor, Text, View } from "react-native"
 
 // ✅ 

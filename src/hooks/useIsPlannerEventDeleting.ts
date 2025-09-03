@@ -9,8 +9,19 @@ const useIsPlannerEventDeleting = (item?: IPlannerEvent) => {
     const { onGetDeletingItemsByStorageIdCallback: onGetDeletingItems } = useDeleteSchedulerContext<IPlannerEvent>();
     return item
         ? onGetDeletingItems(EStorageId.PLANNER_EVENT).some((deleteItem) =>
-            (deleteItem.id === item.id || (deleteItem.calendarId && deleteItem.calendarId === item.calendarId)) &&
-            deleteItem.listId !== getTodayDatestamp()
+            (
+                // The deleting item's ID matches the item ID
+                deleteItem.id === item.id ||
+                ( // OR the deleting item's calendar ID mathces the item's ID
+                    deleteItem.calendarId &&
+                    deleteItem.calendarId === item.calendarId
+                )
+            ) && // AND
+            (   // The item is from today
+                item.listId === getTodayDatestamp() ||
+                // OR the deleting item is NOT from today
+                deleteItem.listId !== getTodayDatestamp()
+            )
         )
         : false;
 };

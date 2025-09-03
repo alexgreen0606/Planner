@@ -5,7 +5,7 @@ import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import ButtonText from './text/ButtonText';
-import useAppPlatformColors from '@/hooks/useColorTheme';
+import useAppPlatformColors from '@/hooks/useAppPlatformColors';
 
 // ✅ 
 
@@ -31,7 +31,7 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const { background } = useAppPlatformColors();
+    const { background, plannersNavbar: { indicator } } = useAppPlatformColors();
 
     // Determine the current tab's left position based on pathname.
     const currentTabLeft = useMemo(() => {
@@ -46,78 +46,73 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
     }
 
     return (
-        <View
-            className='flex-1'
-            style={{ backgroundColor: PlatformColor(background) }}
-        >
-            <ScrollContainerProvider
-                upperContentHeight={isCountdowns ? 0 : BAR_HEIGHT}
-                floatingBannerHeight={BAR_HEIGHT}
-                fixFloatingBannerOnOverscroll
-                floatingBanner={
-                    <View className='w-full flex items-center'>
-                        <View
-                            className='relative flex-row items-center overflow-hidden'
+        <ScrollContainerProvider
+            upperContentHeight={isCountdowns ? 0 : BAR_HEIGHT}
+            floatingBannerHeight={BAR_HEIGHT}
+            fixFloatingBannerOnOverscroll
+            floatingBanner={
+                <View className='w-full flex items-center'>
+                    <View
+                        className='relative flex-row items-center overflow-hidden'
+                        style={{
+                            height: BAR_HEIGHT,
+                            width: BAR_WIDTH,
+                            paddingHorizontal: HIGHLIGHT_GAP,
+                            borderRadius: BAR_HEIGHT / 2
+                        }}
+                    >
+
+                        {/* Blurred Background */}
+                        <BlurView
+                            tint='regular'
+                            intensity={90}
+                            className='absolute overflow-hidden'
                             style={{
-                                height: BAR_HEIGHT,
                                 width: BAR_WIDTH,
-                                paddingHorizontal: HIGHLIGHT_GAP,
-                                borderRadius: BAR_HEIGHT / 2
+                                height: BAR_HEIGHT
                             }}
-                        >
+                        />
 
-                            {/* Blurred Background */}
-                            <BlurView
-                                tint='default'
-                                intensity={90}
-                                className='absolute overflow-hidden'
-                                style={{
-                                    width: BAR_WIDTH,
-                                    height: BAR_HEIGHT
-                                }}
-                            />
+                        {/* Current Tab Highlight */}
+                        <MotiView
+                            className='absolute'
+                            animate={{
+                                left: currentTabLeft,
+                            }}
+                            transition={{
+                                type: 'timing',
+                                duration: 300
+                            }}
+                            style={{
+                                width: HIGHLIGHT_WIDTH,
+                                height: HIGHLIGHT_HEIGHT,
+                                borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                backgroundColor: PlatformColor(indicator)
+                            }}
+                        />
 
-                            {/* Current Tab Highlight */}
-                            <MotiView
-                                className='absolute'
-                                animate={{
-                                    left: currentTabLeft,
-                                }}
-                                transition={{
-                                    type: 'timing',
-                                    duration: 300
-                                }}
-                                style={{
-                                    width: HIGHLIGHT_WIDTH,
-                                    height: HIGHLIGHT_HEIGHT,
-                                    borderRadius: HIGHLIGHT_HEIGHT / 2,
-                                    backgroundColor: PlatformColor('systemGray4')
-                                }}
-                            />
-
-                            {/* Tab Options */}
-                            {tabs.map((tab) => (
-                                <View
-                                    key={`${tab.label}-floating-tab`}
-                                    className='flex items-center'
-                                    style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
+                        {/* Tab Options */}
+                        {tabs.map((tab) => (
+                            <View
+                                key={`${tab.label}-floating-tab`}
+                                className='flex items-center'
+                                style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
+                            >
+                                <ButtonText
+                                    textType='plannerTabLabel'
+                                    onClick={() => handleTabChange(tab)}
+                                    platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
                                 >
-                                    <ButtonText
-                                        textType='plannerTabLabel'
-                                        onClick={() => handleTabChange(tab)}
-                                        platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
-                                    >
-                                        {tab.label}
-                                    </ButtonText>
-                                </View>
-                            ))}
-                        </View>
+                                    {tab.label}
+                                </ButtonText>
+                            </View>
+                        ))}
                     </View>
-                }
-            >
-                {children}
-            </ScrollContainerProvider>
-        </View>
+                </View>
+            }
+        >
+            {children}
+        </ScrollContainerProvider>
     )
 };
 

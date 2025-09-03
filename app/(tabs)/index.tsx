@@ -6,7 +6,7 @@ import TodayPlanner from '@/components/lists/TodayPlanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import SlowFadeInView from '@/components/SlowFadeInView';
 import useCalendarData from '@/hooks/useCalendarData';
-import useAppPlatformColors from '@/hooks/useColorTheme';
+import useAppPlatformColors from '@/hooks/useAppPlatformColors';
 import usePlanner from '@/hooks/usePlanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';

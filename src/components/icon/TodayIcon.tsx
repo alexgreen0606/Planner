@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { PlatformColor, View } from "react-native";
 import GenericIcon from ".";
 import CustomText from "../text/CustomText";
-import useAppPlatformColors from "@/hooks/useColorTheme";
+import useAppPlatformColors from "@/hooks/useAppPlatformColors";
 
 // ✅ 
 

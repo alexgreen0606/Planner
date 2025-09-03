@@ -94,7 +94,6 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
     // ====================
 
     function updateRecurringEventTimeWithChronologicalCheck(event: DateTimePickerEvent) {
-        console.info(event)
         onSetFocusedEvent((prev) => {
             if (!prev || !recurringPlanner) return prev;
 
