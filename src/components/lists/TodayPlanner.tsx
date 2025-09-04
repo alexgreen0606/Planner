@@ -4,7 +4,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import { useAtomValue } from 'jotai';
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { MMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
@@ -13,7 +13,6 @@ import DragAndDropList from './components/DragAndDropList';
 type TTodayPlannerProps = {
     eventStorage: MMKV;
     visibleEventIds: string[];
-    toolbarIcons: ReactNode[][];
     onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void
     onUpdatePlannerEventValueWithTimeParsing: (userInput: string) => void
 }
@@ -21,7 +20,6 @@ type TTodayPlannerProps = {
 const TodayPlanner = ({
     visibleEventIds,
     eventStorage,
-    toolbarIcons,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onUpdatePlannerEventValueWithTimeParsing
 }: TTodayPlannerProps) => {
@@ -33,7 +31,6 @@ const TodayPlanner = ({
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}
             itemIds={visibleEventIds}
-            toolbarIconSet={toolbarIcons}
             emptyLabelConfig={{
                 label: 'All plans complete',
                 className: 'flex-1'

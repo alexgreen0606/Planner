@@ -1,10 +1,16 @@
+import { textfieldIdAtom } from '@/atoms/textfieldId';
 import GenericIcon from '@/components/icon';
-import useAppPlatformColors from '@/hooks/useAppPlatformColors';
+import CountdownEventToolbar from '@/components/toolbars/CountdownEventToolbar';
+import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
+import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
+import RecurringEventToolbar from '@/components/toolbars/RecurringEventToolbar';
+import useAppTheme from '@/hooks/useAppTheme';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
+import { useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
@@ -81,6 +87,7 @@ export const ScrollContainerProvider = ({
 }: TScrollContainerProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
+    const textfieldId = useAtomValue(textfieldIdAtom);
     const keyboard = useAnimatedKeyboard();
     const pathname = usePathname();
 
@@ -104,7 +111,7 @@ export const ScrollContainerProvider = ({
     const loadingAnimationTrigger = useSharedValue<ELoadingStatus>(ELoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
 
-    const { background } = useAppPlatformColors();
+    const { background } = useAppTheme();
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
@@ -386,11 +393,11 @@ export const ScrollContainerProvider = ({
                 <KeyboardAvoidingView
                     behavior='padding'
                     className='flex-1'
+                    keyboardVerticalOffset={TOOLBAR_HEIGHT}
                 >
                     {/* Hidden placeholder input to prevent keyboard flicker */}
                     <TextInput
                         ref={placeholderInputRef}
-                        inputAccessoryViewID='PLACEHOLDER'
                         returnKeyType='done'
                         style={{ position: 'absolute', left: -9999, width: 1, height: 1 }}
                         autoCorrect={false}
@@ -428,6 +435,12 @@ export const ScrollContainerProvider = ({
 
                     </ScrollContainer>
                 </KeyboardAvoidingView>
+
+                {/* List Toolbars */}
+                <PlannerEventToolbar />
+                <FolderItemToolbar />
+                <CountdownEventToolbar />
+                <RecurringEventToolbar />
 
                 {/* Top Blur Bar */}
                 <TopBlurBar />

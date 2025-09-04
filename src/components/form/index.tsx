@@ -2,7 +2,7 @@ import { Control, Controller } from "react-hook-form";
 import { PlatformColor, StyleSheet, View } from "react-native";
 import FormField from "./FormField";
 import { IFormField } from "@/lib/types/form/IFormField";
-import useAppPlatformColors from "@/hooks/useAppPlatformColors";
+import useAppTheme from "@/hooks/useAppTheme";
 
 // ✅ 
 
@@ -15,7 +15,7 @@ const Form = ({
     fields,
     control
 }: TFormProps) => {
-    const { modal: { inputField } } = useAppPlatformColors();
+    const { modal: { inputField } } = useAppTheme();
     return (
         <View className='gap-4'>
             {fields.map((row, i) =>

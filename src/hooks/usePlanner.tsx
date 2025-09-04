@@ -6,7 +6,7 @@ import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById } from "@/storage/plannerStorage";
 import { getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerStorage";
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, parseTimeValueFromText } from "@/utils/dateUtils";
-import { createEmptyPlanner, createPlannerEventTimeConfig, openPlannerTimeModal, updatePlannerEventIndexWithChronologicalCheck, upsertCalendarEventsIntoPlanner, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
+import { createEmptyPlanner, createPlannerEventTimeConfig, updatePlannerEventIndexWithChronologicalCheck, upsertCalendarEventsIntoPlanner, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
 import { MenuView } from "@react-native-menu/menu";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
@@ -292,15 +292,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
                 <GenericIcon size='l' type='more' platformColor='systemBlue' />
             </MenuView>
         )
-    }
-
-    const toolbarIcons = [[(
-        <GenericIcon
-            type='clock'
-            onClick={() => focusedEvent && openPlannerTimeModal(focusedEvent.id, focusedEvent.listId)}
-            platformColor="label"
-        />
-    )]];
+    };
 
     return {
         planner: planner ?? createEmptyPlanner(datestamp),
@@ -308,7 +300,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         isEditingTitle,
         isPlannerFocused,
         isLoading: isLoadingCalendarData,
-        toolbarIcons,
         OverflowIcon,
         onCloseTextfield: onCloseFocusedEvent,
         onEditTitle: handleEditTitle,

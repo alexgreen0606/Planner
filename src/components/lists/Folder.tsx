@@ -37,7 +37,6 @@ const SortedFolder = ({
         item: folder,
         itemIds,
         isTransferMode,
-        toolbarIconSet,
         transferingItem,
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
@@ -149,7 +148,6 @@ const SortedFolder = ({
             itemIds={itemIds}
             storage={folderItemStorage}
             storageId={EStorageId.FOLDER_ITEM}
-            toolbarIconSet={toolbarIconSet}
             onGetRowTextPlatformColor={getRowTextPlatformColor}
             onGetRightIcon={(item) => (
                 <CustomText

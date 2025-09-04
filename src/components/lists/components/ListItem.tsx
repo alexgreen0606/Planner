@@ -39,7 +39,6 @@ type TListItemProps<T extends TListItem> = {
         onDragStart: (rowId: string, initialIndex: number) => void;
         onDragEnd: (newValue: number, prev?: T) => void;
     },
-    toolbarIconSet?: ReactNode[][];
     storage: MMKV;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
@@ -75,7 +74,6 @@ const ListItem = <T extends TListItem>({
         onDragEnd
     },
     itemIndex,
-    toolbarIconSet,
     upperAutoScrollBound,
     lowerAutoScrollBound,
     onValueChange,
@@ -304,7 +302,6 @@ const ListItem = <T extends TListItem>({
                         {isEditable ? (
                             <ListItemTextfield<T>
                                 item={item}
-                                toolbarIconSet={toolbarIconSet}
                                 customStyle={valueStyles}
                                 onDeleteItem={onDeleteItem}
                                 onSetItemInStorage={setItem}

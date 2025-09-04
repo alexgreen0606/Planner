@@ -13,7 +13,7 @@ const SlowFadeInView = ({ children }: TFadeInViewProps) =>
         animate={{ opacity: 1 }}
         transition={{
             type: 'timing',
-            duration: 2000,
+            duration: 1600,
         }}
     >
         {children}

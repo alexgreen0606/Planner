@@ -19,7 +19,6 @@ const RecurringPlanner = ({ recurringPlannerId }: TSortedRecurringPlannerProps) 
 
     const {
         eventIds,
-        toolbarIcons,
         onUpdateRecurringEventIndexWithChronologicalCheck,
         onUpdateRecurringEventValueWithTimeParsing
     } = useRecurringPlanner(recurringPlannerId, recurringEventStorage);
@@ -33,7 +32,6 @@ const RecurringPlanner = ({ recurringPlannerId }: TSortedRecurringPlannerProps) 
             storage={recurringEventStorage}
             itemIds={eventIds}
             storageId={EStorageId.RECURRING_PLANNER_EVENT}
-            toolbarIconSet={toolbarIcons}
             emptyLabelConfig={{
                 label: `No recurring ${isWeekdayPlanner ? 'weekday' : recurringPlannerId} plans`,
                 className: 'flex-1'

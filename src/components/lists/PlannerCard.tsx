@@ -37,7 +37,6 @@ const PlannerCard = ({
         isEditingTitle,
         isPlannerFocused,
         isLoading,
-        toolbarIcons,
         onEditTitle,
         OverflowIcon,
         onCloseTextfield,
@@ -93,7 +92,6 @@ const PlannerCard = ({
                     label: 'No plans',
                     className: 'h-20 flex justify-center items-center'
                 }}
-                toolbarIconSet={toolbarIcons}
                 onValueChange={onUpdatePlannerEventValueWithTimeParsing}
                 onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
                 onCreateItem={createPlannerEventInStorageAndFocusTextfield}

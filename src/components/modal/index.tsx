@@ -5,7 +5,7 @@ import Animated, { Extrapolation, interpolate, useAnimatedRef, useAnimatedScroll
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ButtonText from '../text/ButtonText';
 import CustomText from '../text/CustomText';
-import useAppPlatformColors from "@/hooks/useAppPlatformColors";
+import useAppTheme from "@/hooks/useAppTheme";
 
 // ✅ 
 
@@ -47,7 +47,7 @@ const Modal = ({
 
     const scrollOffset = useSharedValue(0);
 
-    const {background } = useAppPlatformColors();
+    const {background } = useAppTheme();
 
     // Keep track of modal scroll position
     const scrollHandler = useAnimatedScrollHandler({

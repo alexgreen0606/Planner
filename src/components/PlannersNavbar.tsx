@@ -1,11 +1,11 @@
+import useAppTheme from '@/hooks/useAppTheme';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
-import { PlatformColor, View } from 'react-native';
+import { View } from 'react-native';
 import ButtonText from './text/ButtonText';
-import useAppPlatformColors from '@/hooks/useAppPlatformColors';
 
 // ✅ 
 
@@ -31,7 +31,7 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
-    const { background, plannersNavbar: { indicator } } = useAppPlatformColors();
+    const { plannersNavbar: { indicator, background } } = useAppTheme();
 
     // Determine the current tab's left position based on pathname.
     const currentTabLeft = useMemo(() => {
@@ -64,8 +64,8 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
 
                         {/* Blurred Background */}
                         <BlurView
-                            tint='regular'
-                            intensity={90}
+                            tint={background.color}
+                            intensity={background.intensity}
                             className='absolute overflow-hidden'
                             style={{
                                 width: BAR_WIDTH,
@@ -75,21 +75,31 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
 
                         {/* Current Tab Highlight */}
                         <MotiView
-                            className='absolute'
+                            className="absolute overflow-hidden"
                             animate={{
                                 left: currentTabLeft,
                             }}
                             transition={{
-                                type: 'timing',
-                                duration: 300
+                                type: "timing",
+                                duration: 300,
                             }}
                             style={{
                                 width: HIGHLIGHT_WIDTH,
                                 height: HIGHLIGHT_HEIGHT,
                                 borderRadius: HIGHLIGHT_HEIGHT / 2,
-                                backgroundColor: PlatformColor(indicator)
                             }}
-                        />
+                        >
+                            {/* Blur effect inside the animated container */}
+                            <BlurView
+                                tint={indicator.color}
+                                intensity={indicator.intensity}
+                                style={{
+                                    flex: 1,
+                                    borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                }}
+                            />
+                        </MotiView>
+
 
                         {/* Tab Options */}
                         {tabs.map((tab) => (

@@ -1,44 +1,62 @@
-import useAppPlatformColors from '@/hooks/useAppPlatformColors';
+import { textfieldIdAtom } from '@/atoms/textfieldId';
+import useAppTheme from '@/hooks/useAppTheme';
 import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
+import { useAtomValue } from 'jotai';
 import { ReactNode } from 'react';
-import { InputAccessoryView, PlatformColor, StyleSheet, View } from 'react-native';
+import { PlatformColor, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 // ✅ 
 
 type TListToolbarProps = {
+    hide: boolean;
     iconSet: ReactNode[][];
-    accessoryKey: string;
 };
 
-const ListToolbar = ({ iconSet: icons, accessoryKey }: TListToolbarProps) => {
-    const { toolbar: { background, border } } = useAppPlatformColors();
+const AnimatedContainer = Animated.createAnimatedComponent(View);
+
+const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
+    const { height: keyboardHeight } = useAnimatedKeyboard();
+
+    const textfieldId = useAtomValue(textfieldIdAtom);
+
+    const { toolbar: { background, border } } = useAppTheme();
+
+    const toolbarStyle = useAnimatedStyle(() => (
+        { bottom: keyboardHeight.value }
+    ));
+
+    if (!textfieldId || hide) return null;
+
     return (
-        <InputAccessoryView nativeID={accessoryKey}>
+        <AnimatedContainer
+            className='w-screen absolute'
+            style={toolbarStyle}
+        >
             <View
-                className='gap-4 w-screen flex-row justify-evenly'
+                className="flex-row justify-evenly flex-1 gap-4 overflow-hidden"
                 style={{
                     height: TOOLBAR_HEIGHT,
                     borderTopWidth: StyleSheet.hairlineWidth,
                     borderColor: PlatformColor(border),
-                    backgroundColor: PlatformColor(background)
-                }}>
-                {icons.map((iconSet, setIndex) => (
+                    backgroundColor: PlatformColor(background.color)
+                }}
+            >
+                {iconSet.map((iconCluster, clusterIndex) => (
                     <View
-                        key={`toolbar-icon-set-${setIndex}`}
+                        key={`toolbar-cluster-${clusterIndex}`}
                         className='flex-row gap-1 items-center'
                     >
-                        {iconSet.map((iconConfig, iconIndex) => (
-                            <View
-                                key={`${setIndex}-toolbar-set-${iconIndex}`}
-                            >
-                                {iconConfig}
+                        {iconCluster.map((icon, iconIndex) => (
+                            <View key={`toolbar-cluster-${clusterIndex}-icon-${iconIndex}`}>
+                                {icon}
                             </View>
                         ))}
                     </View>
                 ))}
             </View>
-        </InputAccessoryView>
-    );
+        </AnimatedContainer>
+    )
 }
 
 export default ListToolbar;

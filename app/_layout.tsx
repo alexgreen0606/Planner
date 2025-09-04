@@ -3,6 +3,7 @@ import { DeleteSchedulerProvider } from '@/providers/DeleteScheduler';
 import { createStore, Provider as JotaiProvider } from 'jotai';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../global.css';
+import { Host } from 'react-native-portalize';
 
 // ✅ 
 
@@ -12,7 +13,9 @@ const TabLayout = () =>
     <JotaiProvider store={jotaiStore}>
         <DeleteSchedulerProvider>
             <GestureHandlerRootView>
-                <AuthGuard />
+                <Host>
+                    <AuthGuard />
+                </Host>
             </GestureHandlerRootView>
         </DeleteSchedulerProvider>
     </JotaiProvider>;

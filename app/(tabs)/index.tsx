@@ -6,13 +6,14 @@ import TodayPlanner from '@/components/lists/TodayPlanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import SlowFadeInView from '@/components/SlowFadeInView';
 import useCalendarData from '@/hooks/useCalendarData';
-import useAppPlatformColors from '@/hooks/useAppPlatformColors';
+import useAppTheme from '@/hooks/useAppTheme';
 import usePlanner from '@/hooks/usePlanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { useMMKV } from 'react-native-mmkv';
+import ListToolbar from '@/components/lists/components/ListToolbar';
 
 // ✅ 
 
@@ -24,13 +25,12 @@ const Today = () => {
 
   const { calendarChips } = useCalendarData(todayDatestamp);
 
-  const { background } = useAppPlatformColors();
+  const { background } = useAppTheme();
 
   const {
     isEditingTitle,
     planner,
     visibleEventIds,
-    toolbarIcons,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onUpdatePlannerEventValueWithTimeParsing,
     onEditTitle,
@@ -66,7 +66,6 @@ const Today = () => {
       }
     >
       <TodayPlanner
-        toolbarIcons={toolbarIcons}
         eventStorage={eventStorage}
         visibleEventIds={visibleEventIds}
         onUpdatePlannerEventIndexWithChronologicalCheck={onUpdatePlannerEventIndexWithChronologicalCheck}

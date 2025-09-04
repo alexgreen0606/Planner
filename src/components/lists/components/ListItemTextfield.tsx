@@ -6,7 +6,6 @@ import { useAtom } from 'jotai';
 import debounce from 'lodash.debounce';
 import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
-import ListToolbar from './ListToolbar';
 
 // ✅ 
 
@@ -24,7 +23,6 @@ type TListItemTextfieldProps<T extends TListItem> = {
 const ListItemTextfield = <T extends TListItem>({
     item,
     customStyle,
-    toolbarIconSet,
     onSetItemInStorage,
     onDeleteItem,
     onValueChange,
@@ -44,7 +42,7 @@ const ListItemTextfield = <T extends TListItem>({
         []
     );
 
-    const { onFocusPlaceholder: handleFocusPlaceholder } = useScrollContainerContext();
+    const { onFocusPlaceholder } = useScrollContainerContext();
 
     // Handle the blur event.
     useEffect(() => {
@@ -70,7 +68,7 @@ const ListItemTextfield = <T extends TListItem>({
             return;
         }
 
-        handleFocusPlaceholder();
+        onFocusPlaceholder();
 
         onCreateChildTextfield();
     }
@@ -79,10 +77,9 @@ const ListItemTextfield = <T extends TListItem>({
         if (itemValue.current.trim() === '') {
             handleSaveToExternalStorageDebounce.cancel();
             onDeleteItem(item);
-            return;
+        } else {
+            handleSaveToExternalStorageDebounce.flush();
         }
-
-        handleSaveToExternalStorageDebounce.flush();
 
         setTextfieldId((prev) => prev === item.id ? null : prev);
     }
@@ -95,7 +92,6 @@ const ListItemTextfield = <T extends TListItem>({
                 onLayout={() => {
                     inputRef.current?.focus();
                 }}
-                inputAccessoryViewID={item.id}
                 submitBehavior='submit'
                 selectionColor={PlatformColor('systemBlue')}
                 returnKeyType='done'
@@ -113,7 +109,6 @@ const ListItemTextfield = <T extends TListItem>({
                 onChangeText={onValueChange ?? handleValueChange}
                 onSubmitEditing={handleSubmitTextfield}
             />
-            {toolbarIconSet && <ListToolbar iconSet={toolbarIconSet} accessoryKey={item.id} />}
         </View>
     )
 }

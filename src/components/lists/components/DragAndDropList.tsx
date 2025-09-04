@@ -14,14 +14,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
-import ListToolbar from './ListToolbar';
 
 // ✅ 
 
 type TDragAndDropListProps<T extends TListItem, S = T> = {
     itemIds: string[];
     listId: string;
-    toolbarIconSet?: ReactNode[][];
     emptyLabelConfig?: Omit<IEmptyLabelProps, 'onPress'>;
     storageId: EStorageId;
     isLoading?: boolean;
@@ -47,7 +45,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     isLoading,
     emptyLabelConfig,
     fillSpace,
-    toolbarIconSet,
     storage,
     onIndexChange,
     onCreateItem,
@@ -175,7 +172,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
                             key={`${id}-row`}
                             itemIndex={i}
                             listId={listId}
-                            toolbarIconSet={toolbarIconSet}
                             upperAutoScrollBound={upperAutoScrollBound}
                             lowerAutoScrollBound={lowerAutoScrollBound}
                             itemId={id}
@@ -221,11 +217,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
                         className='flex-1'
                         onPress={handleEmptySpaceClick}
                     />
-                )}
-
-                {/* Placeholder Toolbar (prevent flickering between textfields) */}
-                {toolbarIconSet && (
-                    <ListToolbar iconSet={toolbarIconSet} accessoryKey='PLACEHOLDER' />
                 )}
 
             </View>

@@ -3,6 +3,7 @@ import CustomText from '@/components/text/CustomText';
 import React from 'react';
 import { Pressable, View, ViewStyle } from 'react-native';
 import { PressableProps } from 'react-native-gesture-handler';
+import SlowFadeInView from './SlowFadeInView';
 
 // ✅ 
 
@@ -30,20 +31,22 @@ const EmptyLabel = ({
         style={style}
         className={`flex items-center justify-center ${className}`}
     >
-        <View className='flex-column gap-2 items-center'>
-            {iconConfig && (
-                <GenericIcon
-                    {...iconConfig}
-                    size='l'
-                />
-            )}
-            <CustomText
-                variant='emptyLabel'
-                customStyle={{ fontSize }}
-            >
-                {label}
-            </CustomText>
-        </View>
+        <SlowFadeInView>
+            <View className='flex-column gap-2 items-center'>
+                {iconConfig && (
+                    <GenericIcon
+                        {...iconConfig}
+                        size='l'
+                    />
+                )}
+                <CustomText
+                    variant='emptyLabel'
+                    customStyle={{ fontSize }}
+                >
+                    {label}
+                </CustomText>
+            </View>
+        </SlowFadeInView>
     </Pressable>;
 
 export default EmptyLabel;

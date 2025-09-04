@@ -21,7 +21,6 @@ const Countdowns = () => {
     const setTextfieldId = useSetAtom(textfieldIdAtom);
 
     const {
-        toolbarIcons,
         countdownEventIds,
         onCreateCountdownEventInStorageAndFocusTextfield,
         onUpdateCountdownEventIndexWithChronologicalCheck
@@ -34,7 +33,6 @@ const Countdowns = () => {
             itemIds={countdownEventIds}
             storageId={EStorageId.COUNTDOWN_EVENT}
             storage={countdownEventStorage}
-            toolbarIconSet={toolbarIcons}
             onGetLeftIcon={(item) => (
                 <TouchableOpacity onPress={() => setTextfieldId(item.id)} className='w-16'>
                     <DateValue concise isoTimestamp={item.startIso} />
