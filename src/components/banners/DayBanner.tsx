@@ -1,10 +1,9 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
-import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
+import { TPlannerChip } from '@/lib/types/calendar/TPlannerChip';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
-import { WeatherForecast } from '@/utils/weatherUtils';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
@@ -14,10 +13,9 @@ import EventChipSets from '../eventChip/EventChipSet';
 
 type TDayBannerProps = {
     planner: TPlanner;
-    forecast?: WeatherForecast;
     isEditingTitle: boolean;
     collapsed: boolean;
-    eventChipSets: TCalendarEventChip[][];
+    eventChipSets: TPlannerChip[][];
     onEditTitle: (title: string) => void;
     onToggleEditTitle: () => void;
     onToggleCollapsed: () => void;
@@ -25,7 +23,6 @@ type TDayBannerProps = {
 
 const DayBanner = ({
     planner,
-    forecast,
     isEditingTitle,
     collapsed,
     eventChipSets,
@@ -91,13 +88,10 @@ const DayBanner = ({
                 </View>
 
                 {/* Weather */}
-                {forecast && (
-                    <WeatherDisplay
-                        high={forecast.temperatureMax}
-                        low={forecast.temperatureMin}
-                        weatherCode={forecast.weatherCode}
-                    />
-                )}
+                <WeatherDisplay
+                    high={97}
+                    low={74}
+                />
 
             </View>
 

@@ -31,15 +31,27 @@ export const iconMap = {
     refreshComplete: 'checkmark.arrow.trianglehead.counterclockwise',
     turnDown: 'arrow.turn.right.down',
     turnUp: 'arrow.turn.left.up',
+
+    // TODO; choose which to use
+    sunny: "sun.max.fill",
+    sunnyWithClouds: "cloud.sun.fill",
+    cloudy: "cloud.fill",
+    foggy: "cloud.fog.fill",
+    rainyWithSun: "cloud.sun.rain.fill",
+    rain: "cloud.rain.fill",
+    snow: "snowflake",
+    thunderstorm: "cloud.bolt.rain.fill",
+
+
 };
 
 export type TIconType = keyof typeof iconMap;
 
 export const sizeMap = {
-    xs: 10,
-    ms: 12,
-    s: 14,
-    m: 16,
-    l: 18,
-    xl: 32
+    xs: 14,
+    ms: 16,
+    s: 18,
+    m: 20,
+    l: 22,
+    xl: 40
 };

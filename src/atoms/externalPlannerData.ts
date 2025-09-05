@@ -4,15 +4,16 @@ import { atomFamily } from 'jotai/utils';
 
 // ✅ 
 
-export const calendarEventDataAtom = atom<TCalendarData>({
-    chipsMap: {},
+export const externalPlannerDataAtom = atom<TCalendarData>({
+    currentWeatherChip: null,
+    eventChipsMap: {},
     plannersMap: {}
 });
 
 export const calendarChipsByDate = atomFamily((date: string) =>
-    atom((get) => get(calendarEventDataAtom).chipsMap[date] ?? null)
+    atom((get) => get(externalPlannerDataAtom).eventChipsMap[date] ?? null)
 );
 
 export const calendarPlannerByDate = atomFamily((date: string) =>
-    atom((get) => get(calendarEventDataAtom).plannersMap[date] ?? null)
+    atom((get) => get(externalPlannerDataAtom).plannersMap[date] ?? null)
 );

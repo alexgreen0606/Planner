@@ -1,7 +1,7 @@
-import { calendarEventDataAtom } from "@/atoms/calendarEvents";
+import { externalPlannerDataAtom } from "@/atoms/externalPlannerData";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
-import { TCalendarEventChip } from "@/lib/types/calendar/TCalendarEventChip";
+import { TPlannerChip } from "@/lib/types/calendar/TPlannerChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
@@ -21,16 +21,17 @@ import { textfieldIdAtom } from "@/atoms/textfieldId";
 // ====================
 
 /**
- * Merges new calendar data with current calendar data and sets it in the Jotai store.
+ * Merges new calendar data with current external planner data and sets it in the Jotai store.
  * 
  * @param newCalendarData - The calendar data to save.
  */
-async function saveCalendarDataToStore(newCalendarData: TCalendarData) {
-    const currentCalendarData = jotaiStore.get(calendarEventDataAtom);
-    jotaiStore.set(calendarEventDataAtom, {
-        chipsMap: {
-            ...currentCalendarData.chipsMap,
-            ...newCalendarData.chipsMap
+async function saveCalendarDataToStore(newCalendarData: Omit<TCalendarData, 'currentWeatherChip'>) {
+    const currentCalendarData = jotaiStore.get(externalPlannerDataAtom);
+    jotaiStore.set(externalPlannerDataAtom, {
+        ...currentCalendarData,
+        eventChipsMap: {
+            ...currentCalendarData.eventChipsMap,
+            ...newCalendarData.eventChipsMap
         },
         plannersMap: {
             ...currentCalendarData.plannersMap,
@@ -45,16 +46,16 @@ async function saveCalendarDataToStore(newCalendarData: TCalendarData) {
  * @param datestamps - The list of datestamp keys.
  * @returns An object representing empty calendar data for the given dates.
  */
-function generateEmptyCalendarData(datestamps: string[]): TCalendarData {
-    const chipsMap: Record<string, TCalendarEventChip[][]> = {};
+function generateEmptyCalendarData(datestamps: string[]): Omit<TCalendarData, 'currentWeatherChip'> {
+    const eventChipsMap: Record<string, TPlannerChip[][]> = {};
     const plannersMap: Record<string, CalendarEvent[]> = {};
 
     datestamps.forEach(datestamp => {
-        chipsMap[datestamp] = [];
+        eventChipsMap[datestamp] = [];
         plannersMap[datestamp] = [];
     });
 
-    return { chipsMap, plannersMap };
+    return { eventChipsMap, plannersMap };
 }
 
 /**
@@ -128,11 +129,12 @@ function isEventChip(event: Calendar.Event, datestamp: string): boolean {
  * @param datestamp - The key of the planner where the chip will reside.
  * @returns A planner event chip representing the calendar event.
  */
-function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar.Calendar, datestamp: string): TCalendarEventChip {
+function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar.Calendar, datestamp: string): TPlannerChip {
     const { title: calendarTitle, color } = calendar;
 
-    const calendarEventChip: TCalendarEventChip = {
-        event,
+    const calendarEventChip: TPlannerChip = {
+        title: event.title,
+        id: event.id,
         color,
         iconConfig: {
             type: calendarIconMap[calendarTitle] ?? 'calendar'
@@ -194,7 +196,7 @@ export async function loadCalendarDataToStore(datestamps: string[]) {
 
     datestamps.forEach((datestamp) => {
         // Use a temporary map to group chips by calendar for this datestamp
-        const calendarChipGroups: Record<string, TCalendarEventChip[]> = {};
+        const calendarChipGroups: Record<string, TPlannerChip[]> = {};
 
         calendarEvents.forEach((calEvent) => {
             if (isEventChip(calEvent, datestamp)) {
@@ -211,7 +213,7 @@ export async function loadCalendarDataToStore(datestamps: string[]) {
         });
 
         // Push grouped calendar chips into a 2D array
-        newCalendarData.chipsMap[datestamp] = Object.values(calendarChipGroups);
+        newCalendarData.eventChipsMap[datestamp] = Object.values(calendarChipGroups);
     });
 
     saveCalendarDataToStore(newCalendarData);

@@ -3,9 +3,7 @@ import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp } from '@/utils/dateUtils';
 import React from 'react';
 import { TextInput, View } from 'react-native';
-import ButtonText from '../text/ButtonText';
 import CustomText, { textStyles } from '../text/CustomText';
-import WeatherDisplay from '../weather';
 
 // ✅ 
 
@@ -13,6 +11,7 @@ type TTodayBannerProps = {
     datestamp: string; // YYYY-MM-DD
     today: TPlanner;
     isEditingTitle: boolean;
+    OverflowIcon: () => React.JSX.Element;
     onEditTitle: (title: string) => void;
     onToggleEditTitle: () => void;
 };
@@ -21,66 +20,52 @@ const TodayBanner = ({
     datestamp,
     today,
     isEditingTitle,
+    OverflowIcon,
     onEditTitle,
     onToggleEditTitle
-}: TTodayBannerProps) => {
+}: TTodayBannerProps) =>
+    <View
+        className='flex-row items-center justify-between w-full relative'
+        style={{ height: HEADER_HEIGHT }}
+    >
 
-    // TODO: load in weather data
-    const high = 47;
-    const low = 32;
-    const weatherCode = 0;
-    const currentTemp = 37;
-
-    return (
-        <View
-            className='flex-row items-center justify-between w-full relative'
-            style={{ height: HEADER_HEIGHT }}
-        >
-
-            {/* Date */}
-            <View className='relative flex-1'>
-                {isEditingTitle ? (
-                    <TextInput
-                        autoFocus
-                        autoCapitalize='words'
-                        value={today.title}
-                        onChangeText={onEditTitle}
-                        onBlur={onToggleEditTitle}
-                        style={[textStyles.pageLabel, {
-                            paddingRight: 14,
-                            height: PAGE_LABEL_HEIGHT
-                        }]}
-                    />
-                ) : (
-                    <ButtonText
-                        textType='pageLabel'
-                        platformColor='label'
-                        onPress={onToggleEditTitle}
-                        containerStyle={{ paddingRight: 14, height: PAGE_LABEL_HEIGHT }}
+        {/* Date */}
+        <View className='relative flex-1'>
+            {isEditingTitle ? (
+                <TextInput
+                    autoFocus
+                    autoCapitalize='words'
+                    value={today.title}
+                    onChangeText={onEditTitle}
+                    onBlur={onToggleEditTitle}
+                    className='pr-2'
+                    style={[textStyles.pageLabel, {
+                        height: PAGE_LABEL_HEIGHT
+                    }]}
+                />
+            ) : (
+                <View className='pr-2' style={{ height: PAGE_LABEL_HEIGHT }}>
+                    <CustomText
+                        variant='pageLabel'
+                        ellipsizeMode='tail'
+                        numberOfLines={1}
                     >
                         {today.title.trim() || "Today's Plans"}
-                    </ButtonText>
-                )}
-                <View className='absolute bottom-full translate-y-3 flex-row'>
-                    <CustomText variant='detail'>
-                        {getDayOfWeekFromDatestamp(datestamp)}{' '}
-                    </CustomText>
-                    <CustomText variant='softDetail'>
-                        {getMonthDateFromDatestamp(datestamp)}
                     </CustomText>
                 </View>
+            )}
+            <View className='absolute bottom-full translate-y-3 flex-row'>
+                <CustomText variant='detail'>
+                    {getDayOfWeekFromDatestamp(datestamp)}{' '}
+                </CustomText>
+                <CustomText variant='softDetail'>
+                    {getMonthDateFromDatestamp(datestamp)}
+                </CustomText>
             </View>
-
-            {/* Weather */}
-            <WeatherDisplay
-                low={low}
-                high={high}
-                currentTemp={currentTemp}
-                weatherCode={weatherCode}
-            />
-
         </View>
-    );
-};
+
+        <OverflowIcon />
+
+    </View>;
 
 export default TodayBanner;

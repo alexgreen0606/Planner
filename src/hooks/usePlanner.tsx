@@ -1,4 +1,4 @@
-import { calendarEventDataAtom } from "@/atoms/calendarEvents";
+import { externalPlannerDataAtom } from "@/atoms/externalPlannerData";
 import GenericIcon from "@/components/icon";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
@@ -28,7 +28,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     const recurringPlannerStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
     const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
 
-    const calendarEventData = useAtomValue(calendarEventDataAtom);
+    const calendarEventData = useAtomValue(externalPlannerDataAtom);
 
     const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
 

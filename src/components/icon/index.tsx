@@ -1,13 +1,14 @@
 import { iconMap, sizeMap, TIconType } from '@/lib/constants/icons';
 import { isValidPlatformColor } from '@/utils/colorUtils';
+import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
-import { SFSymbol } from 'react-native-sfsymbols';
 
 // ✅ 
 
 export interface GenericIconProps<T = void> {
     type: TIconType;
+    multicolor?: boolean;
     size?: 'xs' | 's' | 'm' | 'ms' | 'l' | 'xl';
     platformColor?: string;
     style?: ViewStyle;
@@ -20,6 +21,7 @@ const GenericIcon = <T,>({
     type,
     size = 'm',
     platformColor: color = 'secondaryLabel',
+    multicolor,
     style,
     className,
     hideRipple = false,
@@ -39,10 +41,12 @@ const GenericIcon = <T,>({
             }}
             className={className}
         >
-            <SFSymbol
-                name={iconMap[type]}
+            <SymbolView
+                type={multicolor ? 'multicolor' : 'monochrome'}
+                // @ts-ignore
+                name={iconMap[type] ?? type}
                 size={sizeMap[size]}
-                color={isValidPlatformColor(color) ? PlatformColor(color) : color}
+                tintColor={multicolor ? undefined : isValidPlatformColor(color) ? PlatformColor(color) : color}
             />
         </Wrapper>
     );

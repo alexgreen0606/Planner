@@ -1,10 +1,9 @@
-import { calendarEventDataAtom } from '@/atoms/calendarEvents';
+import { externalPlannerDataAtom } from '@/atoms/externalPlannerData';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import TodayBanner from '@/components/banners/TodayBanner';
 import EventChipSets from '@/components/eventChip/EventChipSet';
 import TodayPlanner from '@/components/lists/TodayPlanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import SlowFadeInView from '@/components/SlowFadeInView';
 import useCalendarData from '@/hooks/useCalendarData';
 import useAppTheme from '@/hooks/useAppTheme';
 import usePlanner from '@/hooks/usePlanner';
@@ -13,7 +12,6 @@ import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { useMMKV } from 'react-native-mmkv';
-import ListToolbar from '@/components/lists/components/ListToolbar';
 
 // ✅ 
 
@@ -21,7 +19,7 @@ const Today = () => {
   const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
   const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
-  const calendarEventData = useAtomValue(calendarEventDataAtom);
+  const calendarEventData = useAtomValue(externalPlannerDataAtom);
 
   const { calendarChips } = useCalendarData(todayDatestamp);
 
@@ -31,6 +29,7 @@ const Today = () => {
     isEditingTitle,
     planner,
     visibleEventIds,
+    OverflowIcon,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onUpdatePlannerEventValueWithTimeParsing,
     onEditTitle,
@@ -49,20 +48,19 @@ const Today = () => {
       header={
         <TodayBanner
           today={planner}
+          OverflowIcon={OverflowIcon}
           datestamp={todayDatestamp}
           isEditingTitle={isEditingTitle}
           onEditTitle={onEditTitle}
           onToggleEditTitle={onToggleEditTitle}
         />
       }
-      floatingBanner={calendarChips.length > 0 &&
-        <SlowFadeInView>
-          <EventChipSets
-            datestamp={todayDatestamp}
-            sets={calendarChips}
-            backgroundPlatformColor={background}
-          />
-        </SlowFadeInView>
+      floatingBanner={
+        <EventChipSets
+          datestamp={todayDatestamp}
+          sets={calendarChips}
+          backgroundPlatformColor={background}
+        />
       }
     >
       <TodayPlanner

@@ -1,5 +1,5 @@
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { TCalendarEventChip } from '@/lib/types/calendar/TCalendarEventChip';
+import { TPlannerChip } from '@/lib/types/calendar/TPlannerChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
@@ -13,7 +13,7 @@ import CustomText from '../text/CustomText';
 // ✅ 
 
 type TEventChipProps = {
-    chip: TCalendarEventChip;
+    chip: TPlannerChip;
     backgroundPlatformColor?: string;
     collapsed?: boolean;
     chipSetIndex: number;
@@ -27,25 +27,31 @@ const EXPANDED_CHIP_RIGHT_MARGIN = 6;
 const CHIP_SET_GAP = 24;
 
 const EventChip = ({
-    chip,
+    chip: {
+        title,
+        id,
+        iconConfig,
+        color,
+        onClick,
+        hasClickAccess
+    },
     backgroundPlatformColor = 'systemGray6',
     collapsed = false,
     chipSetIndex,
     shiftChipRight,
     onToggleCollapsed
 }: TEventChipProps) => {
-    const { event: { title, id }, iconConfig, color, onClick, hasClickAccess } = chip;
 
-    const { onGetDeletingItemsByStorageIdCallback: getDeletingItems } = useDeleteSchedulerContext<IPlannerEvent>();
+    const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const isPendingDelete = useMemo(() =>
-        getDeletingItems(EStorageId.PLANNER_EVENT).some(deleteItem =>
+        onGetDeletingItemsByStorageIdCallback(EStorageId.PLANNER_EVENT).some(deleteItem =>
             // This deleting item is the chip's event
             (deleteItem.id === id || (deleteItem.calendarId === id)) &&
             // This deleting item is not from today
             deleteItem.listId !== getTodayDatestamp()
         ),
-        [getDeletingItems]
+        [onGetDeletingItemsByStorageIdCallback]
     );
 
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;

@@ -31,25 +31,29 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
     }, [todayDatestamp]);
 
     return (
-        <View className='relative scale-[1.12]'>
+        <View className='relative'>
             <GenericIcon
                 type='note'
                 size='xl'
                 hideRipple
                 platformColor={platformColor}
             />
-            <View className='absolute w-full h-full items-center pt-[0.6px]'>
-                <CustomText variant='todayMonth' customStyle={{ color: PlatformColor(background) }}>
-                    {month}
-                </CustomText>
-                <CustomText
-                    variant='todayDate'
-                    customStyle={{
-                        color: PlatformColor(platformColor),
-                    }}
-                >
-                    {day}
-                </CustomText>
+            <View className='absolute w-full h-full'>
+                <View className='w-full items-center mt-1 ml-1'>
+                    <CustomText variant='todayMonth' customStyle={{ color: PlatformColor(background) }}>
+                        {month}
+                    </CustomText>
+                </View>
+                <View className='w-full items-center ml-1'>
+                    <CustomText
+                        variant='todayDate'
+                        customStyle={{
+                            color: PlatformColor(platformColor),
+                        }}
+                    >
+                        {day}
+                    </CustomText>
+                </View>
             </View>
         </View>
     )

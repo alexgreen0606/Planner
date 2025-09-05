@@ -1,4 +1,4 @@
-import { calendarEventDataAtom } from '@/atoms/calendarEvents';
+import { externalPlannerDataAtom } from '@/atoms/externalPlannerData';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { userAccessAtom } from '@/atoms/userAccess';
@@ -15,6 +15,7 @@ import { loadCalendarDataToStore } from '@/utils/calendarUtils';
 import { getAllCountdownEventsFromCalendar, upsertCalendarEventsIntoCountdownPlanner } from '@/utils/countdownUtils';
 import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { deleteAllPlannersInStorageBeforeYesterday } from '@/utils/plannerUtils';
+import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { usePathname, useRouter } from 'expo-router';
@@ -34,7 +35,7 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     const [mountedDatestamps, setMountedDatestamps] = useAtom(mountedDatestampsAtom);
-    const { plannersMap } = useAtomValue(calendarEventDataAtom);
+    const { plannersMap } = useAtomValue(externalPlannerDataAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
 
@@ -49,8 +50,10 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         }
     }, plannerSetStorage);
 
+    // Build the countdown planner when the app mounts.
     useEffect(() => {
         loadCountdownEventsAndUpdateStorage();
+        loadCurrentWeatherToStore();
     }, []);
 
     // Update the mounted datestamps atom when the selected planner set changes.
@@ -90,33 +93,30 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     // ====================
 
     async function handleReloadPage() {
-        try {
-            switch (pathname) {
-                case '/':
-                    // For home page, reload today's calendar data
-                    await updateCalendarAndContactPermissions();
-                    await loadCountdownEventsAndUpdateStorage();
-                    await loadCalendarDataToStore([mountedDatestamps.today]);
-                    break;
-                case '/planners':
-                    // For planners page, reload planner calendar data
+        switch (pathname) {
+            case '/':
+                // For home page, reload today's calendar data
+                await updateCalendarAndContactPermissions();
+                await loadCountdownEventsAndUpdateStorage();
+                await loadCalendarDataToStore([mountedDatestamps.today]);
+                await loadCurrentWeatherToStore();
+                break;
+            case '/planners':
+                // For planners page, reload planner calendar data
 
-                    // TODO: need to wait until atom updates?
+                // TODO: need to wait until atom updates?
 
-                    await updateCalendarAndContactPermissions();
-                    await loadCountdownEventsAndUpdateStorage();
-                    await loadCalendarDataToStore(mountedDatestamps.planner);
-                    break;
-                case '/planners/countdowns':
-                    await updateCalendarAndContactPermissions();
+                await updateCalendarAndContactPermissions();
+                await loadCountdownEventsAndUpdateStorage();
+                await loadCalendarDataToStore(mountedDatestamps.planner);
+                break;
+            case '/planners/countdowns':
+                await updateCalendarAndContactPermissions();
 
-                    // TODO: need to wait until atom updates?
+                // TODO: need to wait until atom updates?
 
-                    await loadCountdownEventsAndUpdateStorage();
-                    break;
-            }
-        } catch (error) {
-            console.error('Error during reload:', error);
+                await loadCountdownEventsAndUpdateStorage();
+                break;
         }
     }
 

@@ -74,7 +74,7 @@ export const textStyles = {
     // --- Event Chip ---
     eventChipLabel: {
         fontFamily: 'RoundRegular',
-        fontSize: 12
+        fontSize: 13
     },
     // --- Empty Label ---
     emptyLabel: {
@@ -175,7 +175,6 @@ export const textStyles = {
         fontSize: 8,
         fontFamily: 'RoundHeavy',
         color: PlatformColor('systemBackground'),
-        marginRight: 1
     },
     todayDate: {
         fontSize: 16,

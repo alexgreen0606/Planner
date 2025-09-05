@@ -1,4 +1,4 @@
-import { calendarChipsByDate, calendarPlannerByDate } from "@/atoms/calendarEvents";
+import { calendarChipsByDate, calendarPlannerByDate } from "@/atoms/externalPlannerData";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
 
