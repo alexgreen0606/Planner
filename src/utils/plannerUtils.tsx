@@ -387,8 +387,7 @@ export function createEmptyPlanner(datestamp: string): TPlanner {
         title: '',
         eventIds: [],
         deletedRecurringEventIds: [],
-        deletedCalendarEventIds: [],
-        hideRecurring: false
+        deletedCalendarEventIds: []
     }
 }
 

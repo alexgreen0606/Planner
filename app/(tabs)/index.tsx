@@ -4,8 +4,8 @@ import TodayBanner from '@/components/banners/TodayBanner';
 import EventChipSets from '@/components/eventChip/EventChipSet';
 import TodayPlanner from '@/components/lists/TodayPlanner';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import useCalendarData from '@/hooks/useCalendarData';
 import useAppTheme from '@/hooks/useAppTheme';
+import useCalendarData from '@/hooks/useCalendarData';
 import usePlanner from '@/hooks/usePlanner';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
@@ -28,7 +28,6 @@ const Today = () => {
   const {
     isEditingTitle,
     planner,
-    visibleEventIds,
     OverflowIcon,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onUpdatePlannerEventValueWithTimeParsing,
@@ -65,7 +64,7 @@ const Today = () => {
     >
       <TodayPlanner
         eventStorage={eventStorage}
-        visibleEventIds={visibleEventIds}
+        eventIds={planner.eventIds}
         onUpdatePlannerEventIndexWithChronologicalCheck={onUpdatePlannerEventIndexWithChronologicalCheck}
         onUpdatePlannerEventValueWithTimeParsing={onUpdatePlannerEventValueWithTimeParsing}
       />

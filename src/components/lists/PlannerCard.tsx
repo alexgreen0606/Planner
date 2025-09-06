@@ -5,7 +5,6 @@ import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { WeatherForecast } from '@/utils/weatherUtils';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
@@ -18,12 +17,10 @@ import DragAndDropList from './components/DragAndDropList';
 
 type TPlannerCardProps = {
     datestamp: string;
-    forecast?: WeatherForecast;
 };
 
 const PlannerCard = ({
-    datestamp,
-    forecast
+    datestamp
 }: TPlannerCardProps) => {
     const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
@@ -33,7 +30,6 @@ const PlannerCard = ({
 
     const {
         planner,
-        visibleEventIds,
         isEditingTitle,
         isPlannerFocused,
         isLoading,
@@ -66,7 +62,6 @@ const PlannerCard = ({
             header={
                 <DayBanner
                     planner={planner}
-                    forecast={forecast}
                     eventChipSets={calendarChips}
                     collapsed={collapsed}
                     isEditingTitle={isEditingTitle}
@@ -81,11 +76,11 @@ const PlannerCard = ({
                 </View>
             }
             collapsed={collapsed}
-            contentHeight={(visibleEventIds.length + 2) * LIST_ITEM_HEIGHT + 60}
+            contentHeight={(planner.eventIds.length + 2) * LIST_ITEM_HEIGHT + 60}
         >
             <DragAndDropList<IPlannerEvent>
                 listId={datestamp}
-                itemIds={visibleEventIds}
+                itemIds={planner.eventIds}
                 storageId={EStorageId.PLANNER_EVENT}
                 storage={eventStorage}
                 emptyLabelConfig={{

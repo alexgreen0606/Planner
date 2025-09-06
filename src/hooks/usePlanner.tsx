@@ -10,7 +10,6 @@ import { createEmptyPlanner, createPlannerEventTimeConfig, updatePlannerEventInd
 import { MenuView } from "@react-native-menu/menu";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
-import { Platform } from "react-native";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
 import useAppTheme from "./useAppTheme";
 import useCalendarData from "./useCalendarData";
@@ -20,7 +19,6 @@ import useTextfieldItemAs from "./useTextfieldItemAs";
 
 enum EPlannerEditAction {
     EDIT_TITLE = 'EDIT_TITLE',
-    TOGGLE_HIDE_RECURRING = 'TOGGLE_HIDE_RECURRING',
     RESET_RECURRING = 'RESET_RECURRING',
     DELETE_RECURRING = 'DELETE_RECURRING'
 }
@@ -46,23 +44,10 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         [calendarEventData]
     );
 
-    // TODO: separate into 2 functions so hideRecurring doesnt keep running (incorporate collapsed into this as well)
-    const visibleEventIds = useMemo(() => {
-        if (!planner) return [];
-
-        if (!planner.hideRecurring) return planner.eventIds;
-
-        return planner.eventIds.filter((id) => {
-            const event = getPlannerEventFromStorageById(id);
-            return !event.recurringId;
-        });
-    }, [planner?.eventIds, planner?.hideRecurring]);
-
     const { calendarEvents } = useCalendarData(datestamp);
 
     const { overflowText } = useAppTheme();
 
-    const isRecurringHidden = planner?.hideRecurring;
     const isPlannerFocused = planner && (focusedEvent?.listId === planner.datestamp);
     const hasTitle = planner?.title?.length;
 
@@ -91,13 +76,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
             });
         }
     }, recurringPlannerStorage);
-
-    // Reveal all recurring events when the planner is focused.
-    useEffect(() => {
-        if (isPlannerFocused && isRecurringHidden) {
-            toggleHideAllRecurring();
-        }
-    }, [focusedEvent?.listId, isRecurringHidden]);
 
     // =====================
     // 1. Exposed Functions
@@ -175,18 +153,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
             case EPlannerEditAction.RESET_RECURRING:
                 resetRecurringEvents();
                 break;
-            case EPlannerEditAction.TOGGLE_HIDE_RECURRING:
-                toggleHideAllRecurring();
-            default:
-                return;
         }
-    }
-
-    function toggleHideAllRecurring() {
-        setPlanner((prev) => {
-            const newPlanner = prev ?? createEmptyPlanner(datestamp);
-            return { ...newPlanner, hideRecurring: prev ? !prev.hideRecurring : true }
-        });
     }
 
     function resetRecurringEvents() {
@@ -194,8 +161,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
             const newPlanner = prev ?? createEmptyPlanner(datestamp);
             return upsertRecurringEventsIntoPlanner({
                 ...newPlanner,
-                deletedRecurringEventIds: [],
-                hideRecurring: false
+                deletedRecurringEventIds: []
             });
         });
     }
@@ -242,12 +208,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
             imageColor: overflowText,
             subactions: [
                 {
-                    id: EPlannerEditAction.TOGGLE_HIDE_RECURRING,
-                    title: `${isRecurringHidden ? 'Show' : 'Hide'} Recurring`,
-                    image: isRecurringHidden ? 'eye' : 'eye.slash',
-                    imageColor: overflowText
-                },
-                {
                     id: EPlannerEditAction.RESET_RECURRING,
                     title: 'Reset Recurring',
                     subtitle: 'Customized recurring events will be reset.',
@@ -284,7 +244,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
 
     return {
         planner: planner ?? createEmptyPlanner(datestamp),
-        visibleEventIds,
         isEditingTitle,
         isPlannerFocused,
         isLoading: isLoadingCalendarData,

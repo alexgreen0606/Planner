@@ -12,13 +12,13 @@ import DragAndDropList from './components/DragAndDropList';
 
 type TTodayPlannerProps = {
     eventStorage: MMKV;
-    visibleEventIds: string[];
+    eventIds: string[];
     onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void
     onUpdatePlannerEventValueWithTimeParsing: (userInput: string) => void
 }
 
 const TodayPlanner = ({
-    visibleEventIds,
+    eventIds,
     eventStorage,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onUpdatePlannerEventValueWithTimeParsing
@@ -30,7 +30,7 @@ const TodayPlanner = ({
             listId={todayDatestamp}
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}
-            itemIds={visibleEventIds}
+            itemIds={eventIds}
             emptyLabelConfig={{
                 label: 'All plans complete',
                 className: 'flex-1'
