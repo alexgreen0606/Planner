@@ -27,7 +27,8 @@ const useAppTheme = () => {
         },
         modal: {
             inputField: isLightMode ? 'systemBackground' : 'systemGray5'
-        }
+        },
+        overflowText: isLightMode ? 'rgb(20,20,20)' : 'rgb(240,240,240)'
     }
 }
 

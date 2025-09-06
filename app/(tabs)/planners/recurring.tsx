@@ -1,48 +1,8 @@
 import RecurringPlanner from '@/components/lists/RecurringPlanner';
-import ButtonText from '@/components/text/ButtonText';
-import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
-import { MenuAction, MenuView } from '@react-native-menu/menu';
-import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import React from 'react';
 
 // ✅ 
 
-const RecurringPlanners = () => {
-    const [selectedRecurring, setSelectedRecurring] = useState<ERecurringPlannerId>(ERecurringPlannerId.WEEKDAYS);
-
-    const recurringPlannerOptions = useMemo(() =>
-        Object.values(ERecurringPlannerId).map((title) => ({
-            id: title,
-            title,
-            titleColor: 'blue',
-            state: selectedRecurring === title ? 'on' : 'off',
-        })),
-        [selectedRecurring]
-    );
-
-    return (
-        <View className='flex-1'>
-
-            {/* Recurring Planner Selection */}
-            <View className='px-3 pt-3 flex-row'>
-                <MenuView
-                    onPressAction={({ nativeEvent }) => {
-                        setSelectedRecurring(nativeEvent.event as ERecurringPlannerId)
-                    }}
-                    actions={recurringPlannerOptions as MenuAction[]}
-                    shouldOpenOnLongPress={false}
-                >
-                    <ButtonText>
-                        {selectedRecurring}
-                    </ButtonText>
-                </MenuView>
-            </View>
-
-            {/* Recurring Planner Events */}
-            <RecurringPlanner recurringPlannerId={selectedRecurring} />
-
-        </View>
-    )
-};
+const RecurringPlanners = () => <RecurringPlanner />;
 
 export default RecurringPlanners;

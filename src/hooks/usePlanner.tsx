@@ -12,6 +12,7 @@ import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
+import useAppTheme from "./useAppTheme";
 import useCalendarData from "./useCalendarData";
 import useTextfieldItemAs from "./useTextfieldItemAs";
 
@@ -58,6 +59,8 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     }, [planner?.eventIds, planner?.hideRecurring]);
 
     const { calendarEvents } = useCalendarData(datestamp);
+
+    const { overflowText } = useAppTheme();
 
     const isRecurringHidden = planner?.hideRecurring;
     const isPlannerFocused = planner && (focusedEvent?.listId === planner.datestamp);
@@ -229,40 +232,27 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         {
             id: EPlannerEditAction.EDIT_TITLE,
             title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
-            titleColor: '#FFFFFF',
-            image: Platform.select({
-                ios: hasTitle ? 'pencil' : 'plus'
-            }),
-            imageColor: '#FFFFFF'
+            image: hasTitle ? 'pencil' : 'plus',
+            imageColor: overflowText
         },
         {
             id: 'recurring',
             title: 'Manage Recurring',
-            titleColor: '#FFFFFF',
-            subtitle: 'Hide, delete, and sync events.',
-            image: Platform.select({
-                ios: 'repeat'
-            }),
-            imageColor: '#FFFFFF',
+            image: 'repeat',
+            imageColor: overflowText,
             subactions: [
                 {
                     id: EPlannerEditAction.TOGGLE_HIDE_RECURRING,
                     title: `${isRecurringHidden ? 'Show' : 'Hide'} Recurring`,
-                    titleColor: 'rgba(250,180,100,0.5)',
-                    image: Platform.select({
-                        ios: isRecurringHidden ? 'eye' : 'eye.slash'
-                    }),
-                    imageColor: '#FFFFFF'
+                    image: isRecurringHidden ? 'eye' : 'eye.slash',
+                    imageColor: overflowText
                 },
                 {
                     id: EPlannerEditAction.RESET_RECURRING,
                     title: 'Reset Recurring',
                     subtitle: 'Customized recurring events will be reset.',
-                    titleColor: 'rgb(255,97,101)',
-                    image: Platform.select({
-                        ios: 'arrow.trianglehead.2.counterclockwise.rotate.90'
-                    }),
-                    imageColor: '#FFFFFF',
+                    image: 'arrow.trianglehead.2.clockwise',
+                    imageColor: overflowText
                 },
                 {
                     id: EPlannerEditAction.DELETE_RECURRING,
@@ -270,10 +260,8 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
                     attributes: {
                         destructive: true
                     },
-                    image: Platform.select({
-                        ios: 'trash'
-                    }),
-                    imageColor: 'rgb(255,66,69)'
+                    image: 'trash',
+                    imageColor: 'rgb(208,77,64)'
                 }
             ],
         }

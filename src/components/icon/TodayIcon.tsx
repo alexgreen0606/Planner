@@ -39,12 +39,12 @@ const TodayIcon = ({ platformColor }: TodayIconProps) => {
                 platformColor={platformColor}
             />
             <View className='absolute w-full h-full'>
-                <View className='w-full items-center mt-1 ml-1'>
+                <View className='w-full items-center mt-[0.275rem] ml-[0.275rem]'>
                     <CustomText variant='todayMonth' customStyle={{ color: PlatformColor(background) }}>
                         {month}
                     </CustomText>
                 </View>
-                <View className='w-full items-center ml-1'>
+                <View className='w-full items-center ml-[0.275rem]'>
                     <CustomText
                         variant='todayDate'
                         customStyle={{
