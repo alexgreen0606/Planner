@@ -12,6 +12,7 @@ import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIco
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
+import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 
 // ✅ 
 
@@ -32,7 +33,7 @@ const PlannerCard = ({
         planner,
         isEditingTitle,
         isPlannerFocused,
-        isLoading,
+        isLoadingCalendarData,
         onEditTitle,
         OverflowIcon,
         onCloseTextfield,
@@ -55,7 +56,7 @@ const PlannerCard = ({
         setCollapsed(curr => !curr);
     }
 
-    if (isLoading) return null;
+    if (isLoadingCalendarData) return null;
 
     return (
         <Card
@@ -71,12 +72,12 @@ const PlannerCard = ({
                 />
             }
             footer={
-                <View className='flex-row justify-end'>
+                <View className='flex-row justify-end h-6'>
                     <OverflowIcon />
                 </View>
             }
             collapsed={collapsed}
-            contentHeight={(planner.eventIds.length + 2) * LIST_ITEM_HEIGHT + 60}
+            contentHeight={planner.eventIds.length ? planner.eventIds.length * LIST_ITEM_HEIGHT + THIN_LINE_HEIGHT : 80}
         >
             <DragAndDropList<IPlannerEvent>
                 listId={datestamp}

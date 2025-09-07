@@ -1,114 +1,138 @@
+import { recurringTimeModalEventAtom } from "@/atoms/recurringTimeModalEvent";
+import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
+import { ERecurringPlannerId } from "@/lib/enums/ERecurringPlannerKey";
+import { EStorageId } from "@/lib/enums/EStorageId";
+import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
+import { getRecurringPlannerFromStorageById, saveRecurringEventToStorage, saveRecurringPlannerToStorage } from "@/storage/recurringPlannerStorage";
+import { getIsoFromNowTimeRoundedDown5Minutes } from "@/utils/dateUtils";
+import { updateRecurringEventIndexWithChronologicalCheck, upsertWeekdayEventToRecurringPlanners } from "@/utils/recurringPlannerUtils";
+import { useAtom } from "jotai";
+import { DateTime } from "luxon";
+import { useMemo } from "react";
 import { View } from "react-native";
+import { useMMKV } from "react-native-mmkv";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import GenericIcon from "../icon";
 import ListToolbar from "../lists/components/ListToolbar";
-import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
-import { updateRecurringEventIndexWithChronologicalCheck } from "@/utils/recurringPlannerUtils";
-import { useMemo, useState } from "react";
-import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
-import { useMMKV, useMMKVObject } from "react-native-mmkv";
-import { EStorageId } from "@/lib/enums/EStorageId";
-import { DateTime } from "luxon";
-import { getIsoFromNowTimeRoundedDown5Minutes } from "@/utils/dateUtils";
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
 
 // ✅ 
 
 const RecurringEventToolbar = () => {
-    const recurringPlannerStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
     const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
 
-    const [showTimeInToolbarForUntimedEvent, setShowTimeInToolbarForUntimedEvent] = useState(false);
+    const [recurringTimeModalEvent, setRecurringTimeModalEvent] = useAtom(recurringTimeModalEventAtom);
 
     const {
-        textfieldId: focusedEventId,
         textfieldItem: focusedEvent,
-        onSetTextfieldId: onSetFocusedEventId,
-        onSetTextfieldItem: onSetFocusedEvent
+        onSetTextfieldItem: onSetFocusedEvent,
+        onCloseTextfield: onCloseFocusedEvent
     } = useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
 
-    const [recurringPlanner, setRecurringPlanner] = useMMKVObject<TRecurringPlanner>(focusedEvent?.listId ?? 'EMPTY', recurringPlannerStorage);
-
     const focusedDate = useMemo(() => {
-        if (focusedEvent?.startTime) {
-            const [hour, minute] = focusedEvent.startTime.split(':').map(Number);
+        if (recurringTimeModalEvent?.startTime) {
+            const [hour, minute] = recurringTimeModalEvent.startTime.split(':').map(Number);
             const dateTime = DateTime.local().set({ hour, minute, second: 0, millisecond: 0 });
             return dateTime.toJSDate();
         } else {
             return DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes()).toJSDate();
         }
-    }, [focusedEvent?.startTime]);
+    }, [recurringTimeModalEvent?.startTime]);
 
     const iconSet = [
         [(
             <GenericIcon
-                type='clock'
-                onClick={() => focusedEvent && showEventTime(focusedEvent)}
+                type='deleteTime'
+                size="l"
+                platformColor={focusedEvent?.startTime ? 'label' : 'tertiaryLabel'}
+                hideRipple={!focusedEvent?.startTime}
+                onClick={deleteFocusedEventTime}
             />
         )],
-        [focusedEvent?.startTime || showTimeInToolbarForUntimedEvent ? (
-            <DateTimePicker
-                mode='time'
-                minuteInterval={5}
-                value={focusedDate}
-                onChange={updateRecurringEventTimeWithChronologicalCheck}
+        [(
+            <GenericIcon
+                type='recurringTime'
+                onClick={openTimeModal}
+                platformColor="label"
             />
-        ) : (
-            <View className='w-28 items-center'>
-                <GenericIcon
-                    type='clock'
-                    onClick={() => focusedEvent && showEventTime(focusedEvent)}
-                    platformColor="label"
-                />
-            </View>
         )]
     ];
 
-    function updateRecurringEventTimeWithChronologicalCheck(event: DateTimePickerEvent) {
+    function updateRecurringEventTimeWithChronologicalCheck(date: Date) {
+        if (!recurringTimeModalEvent) return;
+
+        const newEvent = { ...recurringTimeModalEvent };
+        const newPlanner = getRecurringPlannerFromStorageById(recurringTimeModalEvent.listId);
+
+        // If weekday recurring, delete the event so it can be customized.
+        if (newEvent.weekdayEventId) {
+            newPlanner.deletedWeekdayEventIds.push(newEvent.weekdayEventId);
+            delete newEvent.weekdayEventId;
+        }
+
+        // Set the new time in the event.
+        const selectedTime = DateTime.fromJSDate(date);
+        newEvent.startTime = selectedTime.toFormat('HH:mm');
+
+        const currentIndex = newPlanner.eventIds.indexOf(newEvent.id);
+        if (currentIndex < 0) {
+            closeTimeModal();
+            return;
+        }
+
+        // Save the planner and event to storage.
+        saveRecurringPlannerToStorage(
+            updateRecurringEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
+        );
+        saveRecurringEventToStorage(newEvent);
+
+        if (newEvent.listId === ERecurringPlannerId.WEEKDAYS) {
+            upsertWeekdayEventToRecurringPlanners(newEvent);
+        }
+
+        closeTimeModal();
+    }
+
+    function openTimeModal() {
+        if (!focusedEvent) return;
+        setRecurringTimeModalEvent(focusedEvent);
+    }
+
+    function closeTimeModal() {
+        setRecurringTimeModalEvent(null);
+    }
+
+    function deleteFocusedEventTime() {
         onSetFocusedEvent((prev) => {
-            if (!prev || !recurringPlanner) return prev;
+            if (!prev) return prev
 
             const newEvent = { ...prev };
-            const newPlanner = { ...recurringPlanner };
-
-            // If weekday recurring, delete the event so it can be customized.
-            if (newEvent.weekdayEventId) {
-                newPlanner.deletedWeekdayEventIds.push(newEvent.weekdayEventId);
-                delete newEvent.weekdayEventId;
-            }
-
-            // Set the new time in the event.
-            const selectedTime = DateTime.fromMillis(event.nativeEvent.timestamp);
-            newEvent.startTime = selectedTime.toFormat('HH:mm');
-
-            const currentIndex = newPlanner.eventIds.findIndex((e) => e === newEvent.id);
-            if (currentIndex === -1) {
-                throw new Error(`updateEventTimeWithChronologicalCheck: Item with ID ${newEvent.id} does not exist in recurring planner with ID ${newEvent.listId}`);
-            }
-
-            // Save the planner and event to storage.
-            setRecurringPlanner(
-                updateRecurringEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
-            );
-
+            delete newEvent.startTime;
             return newEvent;
         });
     }
 
-    function showEventTime(item: IRecurringEvent) {
-        if (focusedEventId !== item.id) {
-            // If this isn't the textfield, make it so.
-            onSetFocusedEventId(item.id);
-        }
-
-        setShowTimeInToolbarForUntimedEvent(true);
-    }
-
     return (
-        <ListToolbar
-            hide={focusedEvent?.storageId !== EStorageId.RECURRING_PLANNER_EVENT}
-            iconSet={iconSet}
-        />
+        <View>
+            <DateTimePickerModal
+                mode='time'
+                confirmTextIOS={`Schedule "${recurringTimeModalEvent?.value}"`}
+                isVisible={!!recurringTimeModalEvent}
+                minuteInterval={5}
+                date={focusedDate}
+                onLayout={onCloseFocusedEvent}
+                onCancel={closeTimeModal}
+                onConfirm={updateRecurringEventTimeWithChronologicalCheck}
+                pickerStyleIOS={{
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    display: 'flex'
+                }}
+            />
+            <ListToolbar
+                hide={focusedEvent?.storageId !== EStorageId.RECURRING_PLANNER_EVENT}
+                iconSet={iconSet}
+            />
+        </View>
     )
 };
 

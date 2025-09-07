@@ -1,6 +1,7 @@
 export const iconMap = {
     transfer: 'arrow.uturn.right',
     recurringCalendar: 'arrow.trianglehead.2.clockwise.rotate.90',
+    recurringTime: 'clock.arrow.trianglehead.2.counterclockwise.rotate.90',
     folder: 'folder.fill',
     folderThin: 'folder',
     openFolder: 'folder.fill',
@@ -31,6 +32,7 @@ export const iconMap = {
     refreshComplete: 'checkmark.arrow.trianglehead.counterclockwise',
     turnDown: 'arrow.turn.right.down',
     turnUp: 'arrow.turn.left.up',
+    deleteTime: 'clock.badge.xmark',
 
     // TODO; choose which to use
     sunny: "sun.max.fill",

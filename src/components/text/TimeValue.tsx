@@ -6,21 +6,25 @@ import CustomText from './CustomText';
 // ✅ 
 
 type TTimeValueProps = {
+    eventId?: string;
     timeValue?: string | null;
     isoTimestamp?: string | null;
     endEvent?: boolean;
     startEvent?: boolean;
     concise?: boolean;
     platformColor?: string;
+    disabled?: boolean;
 };
 
 const TimeValue = ({
+    eventId,
     timeValue,
     isoTimestamp,
     endEvent,
     startEvent,
     concise,
-    platformColor = 'systemTeal'
+    platformColor = 'systemTeal',
+    disabled
 }: TTimeValueProps) => {
     const [hour, setHour] = useState('');
     const [minute, setMinute] = useState('');
@@ -57,10 +61,10 @@ const TimeValue = ({
     if (concise) {
         return (
             <View className='flex-row relative'>
-                <CustomText variant='listTime' customStyle={{ color: PlatformColor(platformColor) }}>
+                <CustomText variant='listTime' customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}>
                     {hour}{minute}
                 </CustomText>
-                <CustomText variant='listPmAmIndicator'>
+                <CustomText variant='listPmAmIndicator' customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}>
                     {indicator}
                 </CustomText>
                 {(startEvent || endEvent) && (

@@ -109,7 +109,7 @@ export async function loadCurrentWeatherToStore() {
 
   const newChip = {
     id: `${todayDatestamp}-weather-chip`,
-    title: "  Madison  64°",
+    title: " Madison  64°",
     iconConfig: {
       type: randomWeather.icon as TIconType,
       multicolor: true

@@ -1,20 +1,28 @@
+import { recurringTimeModalEventAtom } from '@/atoms/recurringTimeModalEvent';
 import useListItemToggle from '@/hooks/useListItemToggle';
 import useRecurringPlanner from '@/hooks/useRecurringPlanner';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { createRecurringEventInStorageAndFocusTextfield, createRecurringEventTimeIcon, deleteRecurringEventsFromStorageHideWeekday, upsertWeekdayEventToRecurringPlanners } from '@/utils/recurringPlannerUtils';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
+import { createRecurringEventInStorageAndFocusTextfield, deleteRecurringEventsFromStorageHideWeekday, upsertWeekdayEventToRecurringPlanners } from '@/utils/recurringPlannerUtils';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
+import { useAtom } from 'jotai';
 import React, { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import ButtonText from '../text/ButtonText';
+import TimeValue from '../text/TimeValue';
 import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
 const RecurringPlanner = () => {
     const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
+
+    const [recurringTimeModalEvent, setRecurringTimeModalEvent] = useAtom(recurringTimeModalEventAtom);
+
+    const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext();
 
     const [recurringPlannerId, setRecurringPlannerId] = useState<ERecurringPlannerId>(ERecurringPlannerId.WEEKDAYS);
 
@@ -36,6 +44,17 @@ const RecurringPlanner = () => {
     } = useRecurringPlanner(recurringPlannerId, recurringEventStorage);
 
     const isWeekdayPlanner = recurringPlannerId === ERecurringPlannerId.WEEKDAYS;
+
+    function getRecurringEventPlatformColor(recurringEvent: IRecurringEvent) {
+        if (getIsRecurringEventDisabled(recurringEvent)) {
+            return "tertiaryLabel";
+        }
+        return "label";
+    }
+
+    function getIsRecurringEventDisabled(recurringEvent: IRecurringEvent) {
+        return onGetIsItemDeletingCallback(recurringEvent) || !!recurringTimeModalEvent && recurringTimeModalEvent.id !== recurringEvent.id;
+    }
 
     return (
         <View className='flex-1'>
@@ -63,13 +82,18 @@ const RecurringPlanner = () => {
                     label: `No recurring ${isWeekdayPlanner ? 'weekday' : recurringPlannerId} plans`,
                     className: 'flex-1'
                 }}
+                onGetRowTextPlatformColor={getRecurringEventPlatformColor}
                 onCreateItem={createRecurringEventInStorageAndFocusTextfield}
                 onIndexChange={onUpdateRecurringEventIndexWithChronologicalCheck}
                 onValueChange={onUpdateRecurringEventValueWithTimeParsing}
                 onSaveToExternalStorage={isWeekdayPlanner ? upsertWeekdayEventToRecurringPlanners : undefined}
                 onDeleteItem={(event) => deleteRecurringEventsFromStorageHideWeekday([event])}
-                onGetRightIcon={createRecurringEventTimeIcon}
-                onGetLeftIcon={useListItemToggle}
+                onGetRightIcon={(event) => event.startTime && (
+                    <TouchableOpacity onPress={() => setRecurringTimeModalEvent(event)}>
+                        <TimeValue disabled={getIsRecurringEventDisabled(event)} timeValue={event.startTime} concise />
+                    </TouchableOpacity>
+                )}
+                onGetLeftIcon={(event) => useListItemToggle(event, getIsRecurringEventDisabled(event))}
             />
         </View>
     )

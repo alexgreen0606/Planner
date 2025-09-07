@@ -9,11 +9,13 @@ type TDateValueProps = {
     isoTimestamp: string;
     concise?: boolean;
     platformColor?: string;
+    disabled?: boolean;
 };
 
 const DateValue = ({
     isoTimestamp,
     concise,
+    disabled,
     platformColor = 'systemTeal'
 }: TDateValueProps) => {
     const dayFormat = concise ? 'MMM d' : 'MMMM d';
@@ -34,12 +36,18 @@ const DateValue = ({
     if (concise) {
         return (
             <View className='relative flex-row w-fit'>
-                <CustomText variant='conciseDate' customStyle={{ color: PlatformColor(platformColor) }}>
+                <CustomText
+                    variant='conciseDate'
+                    customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}
+                >
                     {monthDay.toUpperCase()}
                 </CustomText>
                 {showYear && (
                     <View className='absolute top-[80%]'>
-                        <CustomText variant='conciseDateYear'>
+                        <CustomText
+                            variant='conciseDateYear'
+                            customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}
+                        >
                             {year}
                         </CustomText>
                     </View>

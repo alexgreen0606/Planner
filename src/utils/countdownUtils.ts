@@ -196,8 +196,9 @@ export function getCountdownEventIdFromStorageByCalendarId(calendarEventId: stri
  * Updates an event in the device calendar using the data within its countdown event.
  * 
  * @param countdownEvent - The countdown event with the updated data.
+ * @param prevDatestamp - The previous datestamp of the event.
  */
-export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: ICountdownEvent) {
+export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: ICountdownEvent, prevDatestamp?: string) {
     if (countdownEvent.value.trim() === '') return;
 
     const { value: title, startIso: startDate, calendarId } = countdownEvent;
@@ -221,11 +222,16 @@ export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: 
     }
 
     // Reload the calendar data if the event affects the current planners.
+    const datestampsToReload = [];
     const allVisibleDatestamps = getAllMountedDatestampsFromStore();
     const datestamp = isoToDatestamp(startDate);
     if (allVisibleDatestamps.includes(datestamp)) {
-        await loadCalendarDataToStore([datestamp]);
+        datestampsToReload.push(datestamp);
     }
+    if (prevDatestamp) {
+        datestampsToReload.push(prevDatestamp);
+    }
+    await loadCalendarDataToStore(datestampsToReload);
 }
 
 /**
@@ -286,7 +292,7 @@ export async function deleteCountdownAndReloadCalendar(countdownEvent: ICountdow
     const allVisibleDatestamps = getAllMountedDatestampsFromStore();
     const affectedDatestamps = [];
     for (const datestamp of allVisibleDatestamps) {
-        if (countdownEvent.listId === datestamp) {
+        if (isoToDatestamp(countdownEvent.startIso) === datestamp) {
             affectedDatestamps.push(datestamp);
         }
     }

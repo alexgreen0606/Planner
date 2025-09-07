@@ -40,15 +40,26 @@ const Card = ({
             <MotiView
                 className='overflow-hidden'
                 animate={{
-                    maxHeight: contentHeight ? (collapsed ? 0 : contentHeight) : undefined
+                    height: collapsed ? 0 : contentHeight
                 }}
                 transition={{
                     type: 'timing',
-                    duration: 300
+                    duration: 400
                 }}
                 onDidAnimate={runOnUI(onMeasureScrollContentHeight)}
             >
                 {children}
+            </MotiView>
+            <MotiView
+                className='overflow-hidden'
+                animate={{
+                    maxHeight: collapsed ? 0 : 60
+                }}
+                transition={{
+                    type: 'timing',
+                    duration: 400
+                }}
+            >
                 {footer && (
                     <View className='p-2'>
                         {footer}

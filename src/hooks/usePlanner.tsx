@@ -246,7 +246,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         planner: planner ?? createEmptyPlanner(datestamp),
         isEditingTitle,
         isPlannerFocused,
-        isLoading: isLoadingCalendarData,
+        isLoadingCalendarData,
         OverflowIcon,
         onCloseTextfield: onCloseFocusedEvent,
         onEditTitle: handleEditTitle,

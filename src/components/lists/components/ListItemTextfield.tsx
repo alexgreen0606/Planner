@@ -5,7 +5,7 @@ import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { useAtom } from 'jotai';
 import debounce from 'lodash.debounce';
 import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
-import { PlatformColor, TextInput, TextStyle, View } from 'react-native';
+import { PlatformColor, TextInput, TextStyle } from 'react-native';
 
 // ✅ 
 
@@ -85,31 +85,29 @@ const ListItemTextfield = <T extends TListItem>({
     }
 
     return (
-        <View>
-            <TextInput
-                ref={inputRef}
-                value={item.value}
-                onLayout={() => {
-                    inputRef.current?.focus();
-                }}
-                submitBehavior='submit'
-                selectionColor={PlatformColor('systemBlue')}
-                returnKeyType='done'
-                className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
-                style={[
-                    {
-                        height: LIST_ITEM_HEIGHT,
-                        paddingBottom: LIST_CONTENT_HEIGHT / 2 + 2,
-                        marginRight: LIST_ICON_SPACING / 2,
-                        color: PlatformColor('label'),
-                        fontFamily: 'Text',
-                    },
-                    customStyle
-                ]}
-                onChangeText={onValueChange ?? handleValueChange}
-                onSubmitEditing={handleSubmitTextfield}
-            />
-        </View>
+        <TextInput
+            ref={inputRef}
+            value={item.value}
+            onLayout={() => {
+                inputRef.current?.focus();
+            }}
+            submitBehavior='submit'
+            selectionColor={PlatformColor('systemBlue')}
+            returnKeyType='done'
+            className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
+            style={[
+                {
+                    height: LIST_ITEM_HEIGHT,
+                    paddingBottom: LIST_CONTENT_HEIGHT / 2 + 2,
+                    marginRight: LIST_ICON_SPACING / 2,
+                    color: PlatformColor('label'),
+                    fontFamily: 'Text',
+                },
+                customStyle
+            ]}
+            onChangeText={onValueChange ?? handleValueChange}
+            onSubmitEditing={handleSubmitTextfield}
+        />
     )
 }
 

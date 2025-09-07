@@ -3,9 +3,9 @@ import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { BlurView } from 'expo-blur';
 import { usePathname, useRouter } from 'expo-router';
 import { MotiView } from 'moti';
-import React, { useMemo } from 'react';
-import { View } from 'react-native';
-import ButtonText from './text/ButtonText';
+import React, { useMemo, useRef } from 'react';
+import { PlatformColor, TouchableOpacity, View } from 'react-native';
+import CustomText from './text/CustomText';
 
 // ✅ 
 
@@ -31,12 +31,16 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
     const pathname = usePathname();
     const router = useRouter();
 
+    const prevTabLeft = useRef(HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
+
     const { plannersNavbar: { indicator, background } } = useAppTheme();
 
     // Determine the current tab's left position based on pathname.
     const currentTabLeft = useMemo(() => {
         const currentTab = tabs.find(tab => tab.pathname === pathname);
-        return currentTab?.left ?? (HIGHLIGHT_GAP + HIGHLIGHT_WIDTH);
+        const newLeft = currentTab?.left ?? prevTabLeft.current;
+        prevTabLeft.current = newLeft;
+        return newLeft;
     }, [pathname]);
 
     const isCountdowns = pathname.includes('countdowns');
@@ -89,7 +93,6 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
                                 borderRadius: HIGHLIGHT_HEIGHT / 2,
                             }}
                         >
-                            {/* Blur effect inside the animated container */}
                             <BlurView
                                 tint={indicator.color}
                                 intensity={indicator.intensity}
@@ -103,19 +106,19 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
 
                         {/* Tab Options */}
                         {tabs.map((tab) => (
-                            <View
+                            <TouchableOpacity
                                 key={`${tab.label}-floating-tab`}
-                                className='flex items-center'
+                                className='flex items-center justify-center h-full'
                                 style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
+                                onPress={() => handleTabChange(tab)}
                             >
-                                <ButtonText
-                                    textType='plannerTabLabel'
-                                    onClick={() => handleTabChange(tab)}
-                                    platformColor={pathname === tab.pathname ? 'label' : 'secondaryLabel'}
+                                <CustomText
+                                    variant='plannerTabLabel'
+                                    style={{ color: PlatformColor(pathname === tab.pathname ? 'label' : 'secondaryLabel') }}
                                 >
                                     {tab.label}
-                                </ButtonText>
-                            </View>
+                                </CustomText>
+                            </TouchableOpacity>
                         ))}
                     </View>
                 </View>
