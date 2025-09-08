@@ -75,7 +75,6 @@ const CountdownEventToolbar = () => {
         if (!countdownDateModalEvent || !countdownPlanner) return;
 
         const selected = DateTime.fromJSDate(date).startOf('day');
-
         const newCountdown = {
             ...countdownDateModalEvent,
             startIso: selected.toUTC().toISO()!
@@ -100,7 +99,15 @@ const CountdownEventToolbar = () => {
 
     function openDateModal() {
         if (!focusedCountdown) return;
-        setCountdownDateModalEvent(focusedCountdown);
+
+        const modalEvent = { ...focusedCountdown };
+
+        if (modalEvent.value.trim() === '') {
+            modalEvent.value = 'New Countdown Event';
+        }
+
+        saveCountdownEventToStorage(modalEvent);
+        setCountdownDateModalEvent(modalEvent);
     }
 
     function closeDateModal() {

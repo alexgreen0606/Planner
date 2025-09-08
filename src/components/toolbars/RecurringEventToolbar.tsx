@@ -94,7 +94,15 @@ const RecurringEventToolbar = () => {
 
     function openTimeModal() {
         if (!focusedEvent) return;
-        setRecurringTimeModalEvent(focusedEvent);
+
+        const modalEvent = { ...focusedEvent };
+
+        if (modalEvent.value.trim() === '') {
+            modalEvent.value = 'New Recurring Event';
+        }
+
+        saveRecurringEventToStorage(modalEvent);
+        setRecurringTimeModalEvent(modalEvent);
     }
 
     function closeTimeModal() {
