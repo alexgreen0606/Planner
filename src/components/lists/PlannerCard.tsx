@@ -1,4 +1,3 @@
-import useCalendarData from '@/hooks/useCalendarData';
 import useIsPlannerEventDeleting from '@/hooks/useIsPlannerEventDeleting';
 import usePlanner from '@/hooks/usePlanner';
 import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
@@ -13,6 +12,7 @@ import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
 import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
+import usePlannerEventTimeParser from '@/hooks/usePlannerEventTimeParser';
 
 // ✅ 
 
@@ -27,8 +27,6 @@ const PlannerCard = ({
 
     const [collapsed, setCollapsed] = useState(true);
 
-    const { calendarChips } = useCalendarData(datestamp);
-
     const {
         planner,
         isEditingTitle,
@@ -38,9 +36,10 @@ const PlannerCard = ({
         OverflowIcon,
         onCloseTextfield,
         onToggleEditTitle,
-        onUpdatePlannerEventValueWithTimeParsing,
         onUpdatePlannerEventIndexWithChronologicalCheck
     } = usePlanner(datestamp, eventStorage);
+
+    const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(datestamp, eventStorage);
 
     useEffect(() => {
         if (isPlannerFocused && collapsed) {
@@ -63,7 +62,6 @@ const PlannerCard = ({
             header={
                 <DayBanner
                     planner={planner}
-                    eventChipSets={calendarChips}
                     collapsed={collapsed}
                     isEditingTitle={isEditingTitle}
                     onEditTitle={onEditTitle}

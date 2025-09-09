@@ -1,18 +1,15 @@
-import { externalPlannerDataAtom } from '@/atoms/externalPlannerData';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
-import { userAccessAtom } from '@/atoms/userAccess';
+import { TUserAccess, userAccessAtom } from '@/atoms/userAccess';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TAppMetaData } from '@/lib/types/TAppMetadata';
-import { getCountdownPlannerFromStorage, saveCountdownPlannerToStorage } from '@/storage/countdownStorage';
 import { getPlannerSetByTitle } from '@/storage/plannerSetsStorage';
 import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
-import { loadCalendarDataToStore } from '@/utils/calendarUtils';
-import { getAllCountdownEventsFromCalendar, upsertCalendarEventsIntoCountdownPlanner } from '@/utils/countdownUtils';
+import { loadExternalCalendarData } from '@/utils/calendarUtils';
 import { getDatestampRange, getNextEightDayDatestamps, getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { deleteAllPlannersInStorageBeforeYesterday } from '@/utils/plannerUtils';
 import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
@@ -20,14 +17,14 @@ import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 // ✅ 
 
-const CalendarContext = createContext({ onReloadPage: async () => { } });
+const ExternalDataContext = createContext({ onReloadPage: async () => { } });
 
-export function CalendarProvider({ children }: { children: React.ReactNode }) {
+export function ExternalDataProvider({ children }: { children: React.ReactNode }) {
     const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
     const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
     const appMetaDataStorage = useMMKV({ id: EStorageId.APP_METADATA_KEY });
@@ -35,9 +32,10 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     const [mountedDatestamps, setMountedDatestamps] = useAtom(mountedDatestampsAtom);
-    const { plannersMap } = useAtomValue(externalPlannerDataAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
+
+    const buildingDatestamps = useRef(true);
 
     const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
 
@@ -46,25 +44,21 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     // Update the mounted datestamps atom when the planner set data changes.
     useMMKVListener((key) => {
         if (key === plannerSetKey) {
-            updateMountedDatestamps()
+            updateMountedDatestamps();
         }
     }, plannerSetStorage);
-
-    // Build the countdown planner when the app mounts.
-    useEffect(() => {
-        loadCountdownEventsAndUpdateStorage();
-        loadCurrentWeatherToStore();
-    }, []);
 
     // Update the mounted datestamps atom when the selected planner set changes.
     useEffect(() => {
         updateMountedDatestamps();
+        buildingDatestamps.current = false;
     }, [plannerSetKey]);
 
     // Load the calendar data when the mounted datestamps changes.
     useEffect(() => {
-        loadMountedDatestampsCalendarData();
-    }, [mountedDatestamps]);
+        if (buildingDatestamps.current) return;
+        handleLoadPage();
+    }, [mountedDatestamps.all]);
 
     // Carryover yesterday's events to today if needed.
     useEffect(() => {
@@ -86,36 +80,39 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         }, msUntilMidnight);
 
         return () => clearTimeout(timeoutId);
-    }, [setMountedDatestamps]);
+    }, []);
 
     // ====================
     // 1. Exposed Function
     // ====================
 
-    async function handleReloadPage() {
+    async function handleLoadPage() {
         switch (pathname) {
             case '/':
-                // For home page, reload today's calendar data
                 await updateCalendarAndContactPermissions();
-                await loadCountdownEventsAndUpdateStorage();
-                await loadCalendarDataToStore([mountedDatestamps.today]);
-                await loadCurrentWeatherToStore();
+
+                // Lazy load in the weather data for today.
+                loadCurrentWeatherToStore();
+
+                // Load in the calendar data for today and build the new planner.
+                await loadExternalCalendarData([mountedDatestamps.today]);
+
                 break;
             case '/planners':
-                // For planners page, reload planner calendar data
-
-                // TODO: need to wait until atom updates?
-
                 await updateCalendarAndContactPermissions();
-                await loadCountdownEventsAndUpdateStorage();
-                await loadCalendarDataToStore(mountedDatestamps.planner);
+
+                // TODO: how to handle loading in the weather?
+
+                // Load in the calendar data for the mounted planners.
+                await loadExternalCalendarData(mountedDatestamps.all);
+
                 break;
             case '/planners/countdowns':
                 await updateCalendarAndContactPermissions();
 
-                // TODO: need to wait until atom updates?
+                // Load in the calendar data.
+                await loadExternalCalendarData([mountedDatestamps.today]);
 
-                await loadCountdownEventsAndUpdateStorage();
                 break;
         }
     }
@@ -124,20 +121,25 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     // 2. Utility Functions
     // =====================
 
-    async function updateCalendarAndContactPermissions() {
+    async function updateCalendarAndContactPermissions(): Promise<TUserAccess> {
+        let userAccess: TUserAccess;
         try {
             const calendarStatus = await Calendar.getCalendarPermissionsAsync();
             const contactsStatus = await Contacts.getPermissionsAsync();
-            setUserAccess(new Map([
+            userAccess = new Map([
                 [EAccess.CALENDAR, calendarStatus.status === 'granted'],
                 [EAccess.CONTACTS, contactsStatus.status === 'granted']
-            ]));
+            ]);
+            setUserAccess(userAccess);
         } catch (error) {
             console.error('Error checking permissions:', error);
-            setUserAccess(new Map([
+            userAccess = new Map([
                 [EAccess.CALENDAR, false],
                 [EAccess.CONTACTS, false]
-            ]));
+            ]);
+            setUserAccess(userAccess);
+        } finally {
+            return userAccess!;
         }
     }
 
@@ -185,22 +187,6 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
         });
     }
 
-    async function loadMountedDatestampsCalendarData() {
-        const todayIsLoading = !plannersMap[mountedDatestamps.today];
-        await loadCalendarDataToStore(todayIsLoading ? mountedDatestamps.all : mountedDatestamps.planner);
-    }
-
-    async function loadCountdownEventsAndUpdateStorage() {
-        const calendarEvents = await getAllCountdownEventsFromCalendar();
-        const currentCountdownPlanner = getCountdownPlannerFromStorage();
-        saveCountdownPlannerToStorage(
-            upsertCalendarEventsIntoCountdownPlanner(currentCountdownPlanner, calendarEvents)
-        );
-
-        // Re-build the mounted datestamps so any countdown chips have storage references.
-        await loadMountedDatestampsCalendarData();
-    }
-
     function carryoverYesterdayEvents() {
         const todayDatestamp = getTodayDatestamp();
         const lastLoadedTodayDatestamp = appMetaData?.lastLoadedTodayDatestamp ?? todayDatestamp;
@@ -243,16 +229,16 @@ export function CalendarProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <CalendarContext.Provider value={{ onReloadPage: handleReloadPage }}>
+        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage }}>
             {children}
-        </CalendarContext.Provider>
+        </ExternalDataContext.Provider>
     )
 }
 
-export function useCalendarContext() {
-    const context = useContext(CalendarContext);
+export function useExternalDataContext() {
+    const context = useContext(ExternalDataContext);
     if (!context) {
-        throw new Error('useCalendarContext must be used within a CalendarProvider.');
+        throw new Error('useExternalDataContext must be used within a CalendarProvider.');
     }
     return context;
 }

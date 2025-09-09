@@ -1,4 +1,5 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import usePlannerEventTimeParser from '@/hooks/usePlannerEventTimeParser';
 import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
@@ -13,17 +14,18 @@ import DragAndDropList from './components/DragAndDropList';
 type TTodayPlannerProps = {
     eventStorage: MMKV;
     eventIds: string[];
-    onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void
-    onUpdatePlannerEventValueWithTimeParsing: (userInput: string) => void
+    onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void;
 }
 
 const TodayPlanner = ({
     eventIds,
     eventStorage,
     onUpdatePlannerEventIndexWithChronologicalCheck,
-    onUpdatePlannerEventValueWithTimeParsing
 }: TTodayPlannerProps) => {
     const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
+
+    const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(todayDatestamp, eventStorage);
+
     return (
         <DragAndDropList<IPlannerEvent>
             fillSpace

@@ -3,7 +3,9 @@ import { atom } from "jotai";
 
 // ✅ 
 
-export const userAccessAtom = atom<Map<EAccess, boolean | undefined>>(
+export type TUserAccess = Map<EAccess, boolean | undefined>;
+
+export const userAccessAtom = atom<TUserAccess>(
     new Map([
         [EAccess.CALENDAR, undefined],
         [EAccess.CONTACTS, undefined]

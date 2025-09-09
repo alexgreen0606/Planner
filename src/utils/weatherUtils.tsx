@@ -1,9 +1,9 @@
-import { externalPlannerDataAtom } from "@/atoms/externalPlannerData";
 import { TIconType } from "@/lib/constants/icons";
-import { TPlannerChip } from "@/lib/types/calendar/TPlannerChip";
+import { TPlannerChip } from "@/lib/types/planner/TPlannerChip";
 import { jotaiStore } from "app/_layout";
 import { Linking } from "react-native";
 import { getTodayDatestamp } from "./dateUtils";
+import { currentWeatherChipAtom } from "@/atoms/currentWeatherChip";
 
 const weatherIconMap: Record<
   string,
@@ -77,11 +77,7 @@ const weatherIconMap: Record<
  * @param newChip - The chip representing the current weather.
  */
 async function saveWeatherDataToStore(newChip: TPlannerChip) {
-  const currentCalendarData = jotaiStore.get(externalPlannerDataAtom);
-  jotaiStore.set(externalPlannerDataAtom, {
-    ...currentCalendarData,
-    currentWeatherChip: newChip
-  });
+  jotaiStore.set(currentWeatherChipAtom, newChip);
 }
 
 // TODO: remove this once implemented

@@ -10,7 +10,7 @@ import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent, TDateRange } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
-import { getPrimaryCalendarId, loadCalendarDataToStore } from "@/utils/calendarUtils";
+import { getPrimaryCalendarId, loadExternalCalendarData } from "@/utils/calendarUtils";
 import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import { createPlannerEventInStorageAndFocusTextfield, deletePlannerEventsFromStorageAndCalendar, getAllMountedDatestampsLinkedToDateRanges, getPlannerEventFromStorageByCalendarId, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
@@ -620,7 +620,7 @@ const PlannerEventTimeModal = () => {
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → NON_CALENDAR
                 const { startPlannerEvent, endPlannerEvent } = initialState;
                 const { timeConfig } = endPlannerEvent;
-                const { startEventId, endEventId, startIso: prevStartIso } = timeConfig!;
+                const { startEventId, endEventId } = timeConfig!;
 
                 // Delete the event in the calendar.
                 await Calendar.deleteEventAsync(endPlannerEvent.calendarId!, { futureEvents: false });
@@ -846,7 +846,7 @@ const PlannerEventTimeModal = () => {
 
     async function reloadCalendarFromRanges(ranges: TDateRange[]) {
         const affectedDates = getAllMountedDatestampsLinkedToDateRanges(ranges);
-        await loadCalendarDataToStore(affectedDates);
+        await loadExternalCalendarData(affectedDates);
     }
 
     function getPlannerEventIndex(eventId: string): number {

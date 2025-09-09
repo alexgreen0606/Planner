@@ -1,5 +1,5 @@
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { TPlannerChip } from '@/lib/types/calendar/TPlannerChip';
+import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';

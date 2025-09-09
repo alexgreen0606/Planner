@@ -1,20 +1,22 @@
 import { MotiView } from "moti";
 import { ReactNode } from "react"
+import { ViewProps } from "react-native";
 
 // ✅ 
 
-type TFadeInViewProps = {
+interface IFadeInViewProps extends ViewProps {
     children: ReactNode;
 };
 
-const SlowFadeInView = ({ children }: TFadeInViewProps) =>
+const SlowFadeInView = ({ children, ...rest }: IFadeInViewProps) =>
     <MotiView
         from={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{
             type: 'timing',
-            duration: 1600,
+            duration: 1000,
         }}
+        {...rest}
     >
         {children}
     </MotiView>;

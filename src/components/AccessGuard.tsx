@@ -6,7 +6,7 @@ import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
-import { CalendarProvider } from "@/providers/CalendarProvider";
+import { ExternalDataProvider } from "@/providers/ExternalDataProvider";
 import { useCalendarPermissions } from "expo-calendar";
 import { getPermissionsAsync, requestPermissionsAsync } from 'expo-contacts';
 import { useFonts } from 'expo-font';
@@ -107,12 +107,8 @@ const AccessGuard = () => {
         }
     }
 
-    // ======
-    // 2. UI
-    // ======
-
     return appReady && (
-        <CalendarProvider>
+        <ExternalDataProvider>
             <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -124,7 +120,7 @@ const AccessGuard = () => {
                     options={{ presentation: 'modal', headerShown: false }}
                 />
             </Stack>
-        </CalendarProvider>
+        </ExternalDataProvider>
     )
 };
 

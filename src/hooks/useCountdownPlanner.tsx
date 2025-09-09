@@ -23,10 +23,7 @@ const useCountdownPlanner = (countdownEventStorage: MMKV) => {
 
     const todayMidnight = useMemo(() => datestampToMidnightJsDate(todayDatestamp), [todayDatestamp]);
 
-    const {
-        textfieldItem: focusedCountdown,
-        onSetTextfieldId
-    } = useTextfieldItemAs<ICountdownEvent>(countdownEventStorage);
+    const { onSetTextfieldId: onSetFocusedCountdownId } = useTextfieldItemAs<ICountdownEvent>(countdownEventStorage);
 
     function handleCreateCountdownEventInStorageAndFocusTextfield(index: number) {
         let startIso = DateTime.fromJSDate(todayMidnight).toISO()!;
@@ -43,7 +40,8 @@ const useCountdownPlanner = (countdownEventStorage: MMKV) => {
             value: '',
             listId: EStorageKey.COUNTDOWN_LIST_KEY,
             storageId: EStorageId.COUNTDOWN_EVENT,
-            startIso
+            startIso,
+            isRecurring: false
         };
         saveCountdownEventToStorage(newCountdownEvent);
 
@@ -54,7 +52,7 @@ const useCountdownPlanner = (countdownEventStorage: MMKV) => {
             return newCountdownPlanner;
         });
 
-        onSetTextfieldId(newCountdownEvent.id);
+        onSetFocusedCountdownId(newCountdownEvent.id);
     }
 
     function handleUpdateCountdownEventIndexWithChronologicalCheck(index: number, event: ICountdownEvent) {

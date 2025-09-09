@@ -15,7 +15,7 @@ import { uuid } from 'expo-modules-core';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
 import { TouchableOpacity } from 'react-native';
-import { loadCalendarDataToStore } from './calendarUtils';
+import { loadExternalCalendarData } from './calendarUtils';
 import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 
 // ✅ 
@@ -266,25 +266,23 @@ export function upsertRecurringEventsIntoPlanner(planner: TPlanner): TPlanner {
 // ============================
 
 /**
- * Upserts all device calendar events into a planner for its date. Upserted events will be saved to storage. The planner
- * will be returned and NOT saved to storage.
+ * Upserts all device calendar events into a planner. The device calendar has final say on the state of events.
  * 
- * @param planner - The planner to update.
+ * @param datestamp - The date of the planner to sync. (YYYY-MM-DD)
  * @param calendarEvents - The list of calendar events linked to the planner's date.
- * @returns A new planner synced with the calendar events.
  */
 export function upsertCalendarEventsIntoPlanner(
-    planner: TPlanner,
+    datestamp: string,
     calendarEvents: CalendarEvent[]
-): TPlanner {
-    const { datestamp, deletedCalendarEventIds } = planner;
+) {
+    let newPlanner = getPlannerFromStorageByDatestamp(datestamp);
 
     const existingCalendarIds = new Set<string>();
 
-    const originalEventIds = [...planner.eventIds];
+    const originalEventIds = [...newPlanner.eventIds];
 
     // Start with a fresh list.
-    planner.eventIds = [];
+    newPlanner.eventIds = [];
 
     // Parse the planner to delete old calendar events and update existing ones.
     originalEventIds.forEach((eventId) => {
@@ -292,7 +290,7 @@ export function upsertCalendarEventsIntoPlanner(
 
         // Keep non-calendar events.
         if (!planEvent.calendarId) {
-            planner.eventIds.push(planEvent.id);
+            newPlanner.eventIds.push(planEvent.id);
             return;
         }
 
@@ -310,7 +308,7 @@ export function upsertCalendarEventsIntoPlanner(
 
         // Update the event in storage and add it to its planner.
         savePlannerEventToStorage(updatedEvent);
-        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, updatedEvent);
+        newPlanner = updatePlannerEventIndexWithChronologicalCheck(newPlanner, newPlanner.eventIds.length, updatedEvent);
     }, []);
 
     // Parse the calendar to add new calendar events.
@@ -318,17 +316,17 @@ export function upsertCalendarEventsIntoPlanner(
         const isEventAdded = existingCalendarIds.has(calEvent.id);
         if (isEventAdded) return;
 
-        const isEventDeleted = deletedCalendarEventIds.includes(calEvent.id);
+        const isEventDeleted = newPlanner.deletedCalendarEventIds.includes(calEvent.id);
         if (isEventDeleted) return;
 
         const newEvent = mapCalendarEventToPlannerEvent(datestamp, calEvent);
 
         // Create the event in storage and add it to its planner.
         savePlannerEventToStorage(newEvent);
-        planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, newEvent);
+        newPlanner = updatePlannerEventIndexWithChronologicalCheck(newPlanner, newPlanner.eventIds.length, newEvent);
     });
 
-    return planner;
+    savePlannerToStorage(newPlanner);
 }
 
 // ===========================
@@ -605,7 +603,7 @@ export async function deletePlannerEventsFromStorageAndCalendar(
                     calendarIdsToHide.push(calendarId);
                 } else {
                     // Delete the event from the device calendar.
-                    calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId));
+                    calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId, { futureEvents: false }));
                     affectedCalendarRanges.push(event.timeConfig!);
                 }
             }
@@ -642,7 +640,7 @@ export async function deletePlannerEventsFromStorageAndCalendar(
     await Promise.all(calendarDeletePromises);
     if (!excludeCalendarRefresh && !excludeCalendarDelete && affectedCalendarRanges.length > 0) {
         const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(affectedCalendarRanges);
-        await loadCalendarDataToStore(datestampsToReload);
+        await loadExternalCalendarData(datestampsToReload);
     }
 }
 

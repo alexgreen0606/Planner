@@ -1,7 +1,6 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import WeatherDisplay from '@/components/weather';
-import { TPlannerChip } from '@/lib/types/calendar/TPlannerChip';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { useAtomValue } from 'jotai';
@@ -15,7 +14,6 @@ type TDayBannerProps = {
     planner: TPlanner;
     isEditingTitle: boolean;
     collapsed: boolean;
-    eventChipSets: TPlannerChip[][];
     onEditTitle: (title: string) => void;
     onToggleEditTitle: () => void;
     onToggleCollapsed: () => void;
@@ -25,7 +23,6 @@ const DayBanner = ({
     planner,
     isEditingTitle,
     collapsed,
-    eventChipSets,
     onEditTitle,
     onToggleEditTitle,
     onToggleCollapsed
@@ -97,7 +94,6 @@ const DayBanner = ({
 
             <EventChipSets
                 datestamp={planner.datestamp}
-                sets={eventChipSets}
                 collapsed={collapsed}
                 onToggleCollapsed={onToggleCollapsed}
             />

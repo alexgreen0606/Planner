@@ -14,6 +14,7 @@ import { useMMKV } from 'react-native-mmkv';
 import ButtonText from '../text/ButtonText';
 import TimeValue from '../text/TimeValue';
 import DragAndDropList from './components/DragAndDropList';
+import useRecurringEventTimeParser from '@/hooks/useRecurringEventTimeParser';
 
 // ✅ 
 
@@ -39,9 +40,10 @@ const RecurringPlanner = () => {
     const {
         eventIds,
         OverflowIcon,
-        onUpdateRecurringEventIndexWithChronologicalCheck,
-        onUpdateRecurringEventValueWithTimeParsing
+        onUpdateRecurringEventIndexWithChronologicalCheck
     } = useRecurringPlanner(recurringPlannerId, recurringEventStorage);
+
+    const { onUpdateRecurringEventValueWithTimeParsing } = useRecurringEventTimeParser(recurringPlannerId, recurringEventStorage);
 
     const isWeekdayPlanner = recurringPlannerId === ERecurringPlannerId.WEEKDAYS;
 

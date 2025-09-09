@@ -1,4 +1,3 @@
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import GenericIcon from '@/components/icon';
 import CountdownEventToolbar from '@/components/toolbars/CountdownEventToolbar';
 import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
@@ -10,7 +9,6 @@ import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/c
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
-import { useAtomValue } from 'jotai';
 import { MotiView } from 'moti';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
@@ -35,7 +33,7 @@ import Animated, {
     withTiming
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCalendarContext } from './CalendarProvider';
+import { useExternalDataContext } from './ExternalDataProvider';
 
 // ✅ 
 
@@ -87,11 +85,10 @@ export const ScrollContainerProvider = ({
 }: TScrollContainerProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
-    const textfieldId = useAtomValue(textfieldIdAtom);
     const keyboard = useAnimatedKeyboard();
     const pathname = usePathname();
 
-    const { onReloadPage } = useCalendarContext();
+    const { onReloadPage } = useExternalDataContext();
 
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
     const bottomScrollRef = useAnimatedRef<Animated.View>();

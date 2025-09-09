@@ -1,10 +1,9 @@
-import { externalPlannerDataAtom } from '@/atoms/externalPlannerData';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/icon';
 import PlannerCard from '@/components/lists/PlannerCard';
-import LoadingSpinner from '@/components/LoadingSpinner';
 import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
+import SlowFadeInView from '@/components/SlowFadeInView';
 import ButtonText from '@/components/text/ButtonText';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
@@ -12,7 +11,6 @@ import { getAllPlannerSetTitles } from '@/storage/plannerSetsStorage';
 import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
-import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 
@@ -24,7 +22,6 @@ const Planners = () => {
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
-    const calendarEventData = useAtomValue(externalPlannerDataAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
     const allPlannerSetTitles = getAllPlannerSetTitles(); // TODO: use MMKV to watch this
@@ -39,21 +36,7 @@ const Planners = () => {
         [allPlannerSetTitles]
     );
 
-    // Only 1 planner will be loading at midnight. In this case, don't show loading overlay on page.
-    const isLoadingEntirePlanner = useMemo(() =>
-        planner.reduce((acc, datestamp) => {
-            if (calendarEventData.plannersMap[datestamp] === undefined) {
-                acc++;
-                return acc;
-            }
-            return acc;
-        }, 0) > 1,
-        [planner, calendarEventData]
-    );
-
-    return isLoadingEntirePlanner ? (
-        <LoadingSpinner />
-    ) : (
+    return (
         <View className='flex-1'>
 
             {/* Planner Set Selection */}
@@ -88,15 +71,7 @@ const Planners = () => {
             </View>
 
             {/* Planner Set Display */}
-            <MotiView
-                className='p-4 gap-4'
-                from={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                    type: 'timing',
-                    duration: 800,
-                }}
-            >
+            <SlowFadeInView className='p-4 gap-4'>
                 {planner.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
@@ -104,7 +79,7 @@ const Planners = () => {
                     />
                 )}
                 <ScrollContainerAnchor />
-            </MotiView>
+            </SlowFadeInView>
 
         </View>
     )

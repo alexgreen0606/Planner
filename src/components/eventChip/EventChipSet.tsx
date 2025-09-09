@@ -1,18 +1,17 @@
-import { TPlannerChip } from '@/lib/types/calendar/TPlannerChip';
 import { MotiView } from 'moti';
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import EventChip from '.';
 import SlowFadeInView from '../SlowFadeInView';
-import { externalPlannerDataAtom } from '@/atoms/externalPlannerData';
 import { useAtomValue } from 'jotai';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import { currentWeatherChipAtom } from '@/atoms/currentWeatherChip';
+import { plannerChipsByDatestamp } from '@/atoms/plannerChips';
 
 // ✅ 
 
 type TEventChipSetsProps = {
     datestamp: string;
-    sets: TPlannerChip[][];
     collapsed?: boolean;
     backgroundPlatformColor?: string;
     onToggleCollapsed?: () => void;
@@ -22,17 +21,18 @@ const COLLAPSED_HEIGHT = 24;
 
 const EventChipSets = ({
     datestamp,
-    sets,
     collapsed = false,
     onToggleCollapsed,
     backgroundPlatformColor,
 }: TEventChipSetsProps) => {
-    const {currentWeatherChip} = useAtomValue(externalPlannerDataAtom);
+    const currentWeatherChip = useAtomValue(currentWeatherChipAtom);
     const { today } = useAtomValue(mountedDatestampsAtom);
 
     const contentRef = useRef(null);
 
     const [expandedHeight, setExpandedHeight] = useState<number | null>(null);
+
+    const sets = useAtomValue(plannerChipsByDatestamp(datestamp));
 
     // Include the current weather in today's planner's chip set.
     const allSets = datestamp === today && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;

@@ -1,18 +1,18 @@
-import { externalPlannerDataAtom } from "@/atoms/externalPlannerData";
+import { plannerChipsAtom } from "@/atoms/plannerChips";
+import { textfieldIdAtom } from "@/atoms/textfieldId";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
-import { TCalendarData } from "@/lib/types/calendar/TCalendarData";
-import { TPlannerChip } from "@/lib/types/calendar/TPlannerChip";
+import { TPlannerChipMap } from "@/lib/types/externalData/TPlannerChipMap";
+import { TPlannerChip } from "@/lib/types/planner/TPlannerChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
+import { router } from "expo-router";
 import { DateTime } from "luxon";
 import { hasCalendarAccess, hasContactsAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
+import { getCountdownEventIdFromStorageByCalendarId, upsertCalendarEventsIntoCountdownPlanner } from "./countdownUtils";
 import { datestampToMidnightJsDate } from "./dateUtils";
-import { openPlannerTimeModal } from "./plannerUtils";
-import { router } from "expo-router";
-import { getCountdownEventIdFromStorageByCalendarId } from "./countdownUtils";
-import { textfieldIdAtom } from "@/atoms/textfieldId";
+import { openPlannerTimeModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
 
 // ✅ 
 
@@ -21,41 +21,16 @@ import { textfieldIdAtom } from "@/atoms/textfieldId";
 // ====================
 
 /**
- * Merges new calendar data with current external planner data and sets it in the Jotai store.
+ * Merges new planner chip data with current data and sets it in the Jotai store.
  * 
- * @param newCalendarData - The calendar data to save.
+ * @param chipMap - The planner chip data to save.
  */
-async function saveCalendarDataToStore(newCalendarData: Omit<TCalendarData, 'currentWeatherChip'>) {
-    const currentCalendarData = jotaiStore.get(externalPlannerDataAtom);
-    jotaiStore.set(externalPlannerDataAtom, {
-        ...currentCalendarData,
-        eventChipsMap: {
-            ...currentCalendarData.eventChipsMap,
-            ...newCalendarData.eventChipsMap
-        },
-        plannersMap: {
-            ...currentCalendarData.plannersMap,
-            ...newCalendarData.plannersMap
-        }
+function savePlannerChipsToStore(chipMap: TPlannerChipMap) {
+    const prevChipMap = jotaiStore.get(plannerChipsAtom);
+    jotaiStore.set(plannerChipsAtom, {
+        ...prevChipMap,
+        ...chipMap
     });
-}
-
-/**
- * Generates empty calendar data for the given dates.
- * 
- * @param datestamps - The list of datestamp keys.
- * @returns An object representing empty calendar data for the given dates.
- */
-function generateEmptyCalendarData(datestamps: string[]): Omit<TCalendarData, 'currentWeatherChip'> {
-    const eventChipsMap: Record<string, TPlannerChip[][]> = {};
-    const plannersMap: Record<string, CalendarEvent[]> = {};
-
-    datestamps.forEach(datestamp => {
-        eventChipsMap[datestamp] = [];
-        plannersMap[datestamp] = [];
-    });
-
-    return { eventChipsMap, plannersMap };
 }
 
 /**
@@ -172,51 +147,67 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
 // ==========================
 
 /**
- * Loads in all calendar data for the given range of dates and saves it to the Jotai store.
+ * Loads in all calendar data for the given range of dates and saves it to the Jotai store. If the user has not granted
+ * calendar access, all calendar events will be removed from the planners.
  * 
- * @param range - range of dates to parse the calendar with
+ * @param range - The range of dates to parse the calendar with.
  */
-export async function loadCalendarDataToStore(datestamps: string[]) {
+export async function loadExternalCalendarData(datestamps: string[]) {
     if (datestamps.length === 0) return;
 
-    const newCalendarData = generateEmptyCalendarData(datestamps);
-
-    if (!hasCalendarAccess()) {
-        saveCalendarDataToStore(newCalendarData);
-        return;
-    }
-
-    const allCalendarsMap = await createCalendarIdToCalendarMap();
-
-    const allCalendarIds = Object.keys(allCalendarsMap);
-    const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
-    const endDate = DateTime.fromISO(datestamps[datestamps.length - 1]).endOf('day').toJSDate();
-
-    const calendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate);
-
-    datestamps.forEach((datestamp) => {
-        // Use a temporary map to group chips by calendar for this datestamp
-        const calendarChipGroups: Record<string, TPlannerChip[]> = {};
-
-        calendarEvents.forEach((calEvent) => {
-            if (isEventChip(calEvent, datestamp)) {
-                const calendarId = calEvent.calendarId;
-                if (!calendarChipGroups[calendarId]) {
-                    calendarChipGroups[calendarId] = [];
-                }
-                calendarChipGroups[calendarId].push(mapCalendarEventToPlannerChip(calEvent, allCalendarsMap[calendarId], datestamp));
-            }
-
-            if (isPlannerEvent(calEvent, datestamp)) {
-                newCalendarData.plannersMap[datestamp].push(calEvent);
-            }
-        });
-
-        // Push grouped calendar chips into a 2D array
-        newCalendarData.eventChipsMap[datestamp] = Object.values(calendarChipGroups);
+    const plannerChipMap: Record<string, TPlannerChip[][]> = {};
+    const calendarEventMap: Record<string, CalendarEvent[]> = {};
+    datestamps.forEach(datestamp => {
+        plannerChipMap[datestamp] = [];
+        calendarEventMap[datestamp] = [];
     });
 
-    saveCalendarDataToStore(newCalendarData);
+    if (hasCalendarAccess()) {
+
+        // Phase 1: Build and save the updated countdown planner.
+        // Must be done BEFORE building the planner chips, as these need to access the storage records of the Countdown Events.
+        await upsertCalendarEventsIntoCountdownPlanner();
+
+        const allCalendarsMap = await createCalendarIdToCalendarMap();
+        const allCalendarIds = Object.keys(allCalendarsMap);
+        const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
+        const endDate = DateTime.fromISO(datestamps[datestamps.length - 1]).endOf('day').toJSDate();
+        const calendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate);
+
+        // Phase 2: Organize the calendar events by datestamp.
+        datestamps.forEach((datestamp) => {
+            const calendarChipGroups: Record<string, TPlannerChip[]> = {};
+
+            calendarEvents.forEach((calendarEvent) => {
+
+                if (isEventChip(calendarEvent, datestamp)) {
+                    const calendarId = calendarEvent.calendarId;
+                    if (!calendarChipGroups[calendarId]) {
+                        calendarChipGroups[calendarId] = [];
+                    }
+                    calendarChipGroups[calendarId].push(mapCalendarEventToPlannerChip(calendarEvent, allCalendarsMap[calendarId], datestamp));
+                }
+
+                if (isPlannerEvent(calendarEvent, datestamp)) {
+                    calendarEventMap[datestamp].push(calendarEvent);
+                }
+
+            });
+
+            // Push grouped calendar chips into a 2D array
+            plannerChipMap[datestamp] = Object.values(calendarChipGroups);
+        });
+
+    }
+
+    // Phase 3: Save the planner chips to the store. (No storage records required).
+    savePlannerChipsToStore(plannerChipMap);
+
+    // Phase 4: Update all the planners linked to the calendar events.
+    datestamps.forEach((datestamp) => {
+        upsertCalendarEventsIntoPlanner(datestamp, calendarEventMap[datestamp]);
+    });
+
 }
 
 // ===================

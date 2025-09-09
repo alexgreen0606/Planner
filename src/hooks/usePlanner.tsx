@@ -1,18 +1,15 @@
-import { externalPlannerDataAtom } from "@/atoms/externalPlannerData";
 import GenericIcon from "@/components/icon";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById } from "@/storage/plannerStorage";
 import { getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerStorage";
-import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, parseTimeValueFromText } from "@/utils/dateUtils";
-import { createEmptyPlanner, createPlannerEventTimeConfig, updatePlannerEventIndexWithChronologicalCheck, upsertCalendarEventsIntoPlanner, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
+import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp } from "@/utils/dateUtils";
+import { createEmptyPlanner, updatePlannerEventIndexWithChronologicalCheck, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
 import { MenuView } from "@react-native-menu/menu";
-import { useAtomValue } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
 import useAppTheme from "./useAppTheme";
-import useCalendarData from "./useCalendarData";
 import useTextfieldItemAs from "./useTextfieldItemAs";
 
 // ✅ 
@@ -27,24 +24,16 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     const recurringPlannerStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
     const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
 
-    const calendarEventData = useAtomValue(externalPlannerDataAtom);
-
     const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
 
     const {
         textfieldItem: focusedEvent,
-        onSetTextfieldItem: onSetFocusedEvent,
         onCloseTextfield: onCloseFocusedEvent
     } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-    const isLoadingCalendarData = useMemo(
-        () => calendarEventData.plannersMap[datestamp] === undefined,
-        [calendarEventData]
-    );
-
-    const { calendarEvents } = useCalendarData(datestamp);
+    const isLoadingCalendarData = false;
 
     const { overflowText } = useAppTheme();
 
@@ -59,14 +48,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }, [datestamp]);
 
-    // Upsert the calendar events every time the date's calendar changes.
-    useEffect(() => {
-        setPlanner((prev) => {
-            let newPlanner = prev ?? createEmptyPlanner(datestamp);
-            return upsertCalendarEventsIntoPlanner(newPlanner, calendarEvents);
-        });
-    }, [calendarEvents]);
-
     // Upsert recurring events every time the day of week's recurring planner changes.
     useMMKVListener((key) => {
         if (key === getDayOfWeekFromDatestamp(datestamp)) {
@@ -80,45 +61,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     // =====================
     // 1. Exposed Functions
     // =====================
-
-    function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
-        onSetFocusedEvent((prev) => {
-            if (!prev || !planner) return prev;
-
-            const newEvent = { ...prev, value: userInput };
-            const newPlanner = { ...planner };
-
-            // Phase 1: If recurring, delete the event so it can be customized.
-            if (newEvent.recurringId) {
-                newPlanner.eventIds = newPlanner.eventIds.filter(id => id !== newEvent.id);
-                newPlanner.deletedRecurringEventIds.push(newEvent.recurringId);
-                delete newEvent.recurringId;
-            }
-
-            // Don't scan for time values if the event is already timed.
-            if (newEvent.timeConfig) return newEvent;
-
-            // Phase 2: Parse time from user input.
-            const { timeValue, updatedText } = parseTimeValueFromText(userInput);
-            if (!timeValue) return newEvent;
-
-            // Phase 3: Apply planner-specific time config.
-            newEvent.value = updatedText;
-            newEvent.timeConfig = createPlannerEventTimeConfig(newEvent.listId, timeValue);
-
-            // Phase 4: Check chronological order and update index if needed.
-            const currentIndex = newPlanner.eventIds.findIndex(e => e === newEvent.id);
-            if (currentIndex === -1) {
-                throw new Error(`handleUpdatePlannerEventValueWithTimeParsing: No event exists in planner ${newEvent.listId} with ID ${newEvent.id}`);
-            }
-
-            // Save the planner and the event to storage.
-            setPlanner(
-                updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
-            );
-            return newEvent;
-        });
-    }
 
     function handleEditTitle(title: string) {
         setPlanner((prev) => {
@@ -252,7 +194,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         onEditTitle: handleEditTitle,
         onToggleEditTitle: handleToggleEditTitle,
         onUpdatePlannerEventIndexWithChronologicalCheck: handleUpdatePlannerEventIndexWithChronologicalCheck,
-        onUpdatePlannerEventValueWithTimeParsing: handleUpdatePlannerEventValueWithTimeParsing,
     }
 };
 

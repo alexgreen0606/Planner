@@ -5,7 +5,7 @@ import { deleteCountdownEventFromStorageById, getCountdownEventFromStorageById, 
 import { getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import * as Calendar from 'expo-calendar';
 import { uuid } from "expo-modules-core";
-import { createCalendarIdToCalendarMap, loadCalendarDataToStore } from "./calendarUtils";
+import { createCalendarIdToCalendarMap, loadExternalCalendarData } from "./calendarUtils";
 import { getAllMountedDatestampsFromStore } from "./plannerUtils";
 
 // ✅ 
@@ -46,7 +46,8 @@ function mapCalendarEventToCountdown(calendarEvent: Calendar.Event, existingEven
         listId: EStorageKey.COUNTDOWN_LIST_KEY,
         startIso: calendarEvent.startDate as string,
         storageId: EStorageId.COUNTDOWN_EVENT,
-        calendarId: calendarEvent.id
+        calendarId: calendarEvent.id,
+        isRecurring: Boolean(calendarEvent.recurrenceRule)
     }
 }
 
@@ -104,29 +105,23 @@ function calculateChronologicalCountdownEventIndex(
 // ============================
 
 /**
- * Upserts all device countdown calendar events into the countdown planner. Upserted events will be saved to storage. The planner
- * will be returned and NOT saved to storage.
- * 
- * @param countdownEventIds - The planner to update.
- * @param calendarEvents - The list of calendar events linked to the Countdown Planner.
- * @returns A new countdown planner synced with the calendar events.
+ * Upserts all device countdown calendar events into the countdown planner. The device calendar has final say
+ * on the events.
  */
-export function upsertCalendarEventsIntoCountdownPlanner(
-    countdownEventIds: string[],
-    calendarEvents: Calendar.Event[]
-): string[] {
-    const existingCalendarIds = new Set<string>();
+export async function upsertCalendarEventsIntoCountdownPlanner() {
+    const calendarEvents = await getAllCountdownEventsFromCalendar();
+    const countdownEventIds = getCountdownPlannerFromStorage();
 
+    const existingCalendarIds = new Set<string>();
     let newCountdownPlanner: string[] = [];
 
     // Parse the planner to delete old calendar events and update existing ones.
     countdownEventIds.forEach((eventId) => {
         const countdownEvent = getCountdownEventFromStorageById(eventId);
-
         const calendarEvent = calendarEvents.find((e) => e.id === countdownEvent.calendarId);
 
         // Don't keep this storage event if its link no longer exists in the device calendar.
-        if (!calendarEvent) {
+        if (!calendarEvent || calendarEvent.isDetached) {
             deleteCountdownEventFromStorageById(countdownEvent.id);
             return;
         }
@@ -144,6 +139,10 @@ export function upsertCalendarEventsIntoCountdownPlanner(
 
     // Parse the calendar to add new calendar events.
     calendarEvents.forEach((calEvent) => {
+        console.info(calEvent)
+        // Recurring event that has been deleted.
+        if (calEvent.isDetached) return;
+
         const isEventAdded = existingCalendarIds.has(calEvent.id);
         if (isEventAdded) return;
 
@@ -156,7 +155,7 @@ export function upsertCalendarEventsIntoCountdownPlanner(
         newCountdownPlanner = updateCountdownEventIndexWithChronologicalCheck(countdownEventIds, countdownEventIds.length, newEvent);
     });
 
-    return newCountdownPlanner;
+    saveCountdownPlannerToStorage(newCountdownPlanner);
 }
 
 // =================
@@ -231,7 +230,7 @@ export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: 
     if (prevDatestamp) {
         datestampsToReload.push(prevDatestamp);
     }
-    await loadCalendarDataToStore(datestampsToReload);
+    await loadExternalCalendarData(datestampsToReload);
 }
 
 /**
@@ -276,7 +275,9 @@ export async function deleteCountdownAndReloadCalendar(countdownEvent: ICountdow
 
     // Phase 1: Delete the event from the calendar.
     if (countdownEvent.calendarId) {
-        await Calendar.deleteEventAsync(countdownEvent.calendarId);
+        const instanceStartDate = new Date(countdownEvent.startIso);
+        const recurringOptions = countdownEvent.isRecurring ? { futureEvents: false, instanceStartDate } : undefined;
+        await Calendar.deleteEventAsync(countdownEvent.calendarId, recurringOptions);
     }
 
     // Phase 2: Remove the event from its planner in storage.
@@ -290,11 +291,8 @@ export async function deleteCountdownAndReloadCalendar(countdownEvent: ICountdow
 
     // Phase 4: Reload the calendar data if the event affects the current planners.
     const allVisibleDatestamps = getAllMountedDatestampsFromStore();
-    const affectedDatestamps = [];
-    for (const datestamp of allVisibleDatestamps) {
-        if (isoToDatestamp(countdownEvent.startIso) === datestamp) {
-            affectedDatestamps.push(datestamp);
-        }
+    const countdownDatestamp = isoToDatestamp(countdownEvent.startIso);
+    if (allVisibleDatestamps.includes(countdownDatestamp)) {
+        await loadExternalCalendarData([countdownDatestamp]);
     }
-    await loadCalendarDataToStore(affectedDatestamps);
 }
