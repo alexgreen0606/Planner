@@ -1,6 +1,6 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
-import usePlannerEventTimeParser from '@/hooks/usePlannerEventTimeParser';
-import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
+import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
+import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';

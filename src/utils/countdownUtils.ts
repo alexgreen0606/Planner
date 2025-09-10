@@ -15,24 +15,6 @@ import { getAllMountedDatestampsFromStore } from "./plannerUtils";
 // ====================
 
 /**
- * Gets the device calendar ID for the Countdown Calendar. If no such calendar exists, it will be created.
- * 
- * @returns The ID of the Countdown Calendar.
- */
-async function getCountdownCalendarId(): Promise<string> {
-    const calendarMap = await createCalendarIdToCalendarMap();
-    const countdownCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Countdowns');
-
-    return countdownCalendar?.id ?? await Calendar.createCalendarAsync({
-        title: 'Countdowns',
-        color: 'rgb(255,56,60)',
-        entityType: Calendar.EntityTypes.EVENT,
-        name: 'Countdowns',
-        ownerAccount: 'PlannerApp'
-    });
-}
-
-/**
  * Converts a calendar event to a Countdown.
  * 
  * @param calendarEvent - The calendar event to convert.
@@ -118,10 +100,11 @@ export async function upsertCalendarEventsIntoCountdownPlanner() {
     // Parse the planner to delete old calendar events and update existing ones.
     countdownEventIds.forEach((eventId) => {
         const countdownEvent = getCountdownEventFromStorageById(eventId);
-        const calendarEvent = calendarEvents.find((e) => e.id === countdownEvent.calendarId);
+        if (countdownEvent.calendarId && existingCalendarIds.has(countdownEvent.calendarId)) return;
 
-        // Don't keep this storage event if its link no longer exists in the device calendar.
-        if (!calendarEvent || calendarEvent.isDetached) {
+        const calendarEvent = calendarEvents.find((e) => e.id === countdownEvent.calendarId && !e.isDetached);
+        if (!calendarEvent) {
+            // Don't keep this storage event if its link no longer exists in the device calendar.
             deleteCountdownEventFromStorageById(countdownEvent.id);
             return;
         }
@@ -138,21 +121,21 @@ export async function upsertCalendarEventsIntoCountdownPlanner() {
     }, []);
 
     // Parse the calendar to add new calendar events.
-    calendarEvents.forEach((calEvent) => {
-        console.info(calEvent)
-        // Recurring event that has been deleted.
-        if (calEvent.isDetached) return;
+    calendarEvents.forEach((calendarEvent) => {
+        if (calendarEvent.isDetached) return;
 
-        const isEventAdded = existingCalendarIds.has(calEvent.id);
+        const isEventAdded = existingCalendarIds.has(calendarEvent.id);
         if (isEventAdded) return;
 
-        const newEvent = mapCalendarEventToCountdown(calEvent);
+        existingCalendarIds.add(calendarEvent.id);
+
+        const newEvent = mapCalendarEventToCountdown(calendarEvent);
 
         newCountdownPlanner.push(newEvent.id);
 
         // Create the event in storage and add it to the countdown planner.
         saveCountdownEventToStorage(newEvent);
-        newCountdownPlanner = updateCountdownEventIndexWithChronologicalCheck(countdownEventIds, countdownEventIds.length, newEvent);
+        newCountdownPlanner = updateCountdownEventIndexWithChronologicalCheck(newCountdownPlanner, countdownEventIds.length, newEvent);
     });
 
     saveCountdownPlannerToStorage(newCountdownPlanner);
@@ -187,6 +170,24 @@ export function getCountdownEventIdFromStorageByCalendarId(calendarEventId: stri
     return storageEvents.find(e => e.calendarId === calendarEventId)?.id;
 }
 
+/**
+ * Gets the device calendar ID for the Countdown Calendar. If no such calendar exists, it will be created.
+ * 
+ * @returns The ID of the Countdown Calendar.
+ */
+export async function getCountdownCalendarId(): Promise<string> {
+    const calendarMap = await createCalendarIdToCalendarMap();
+    const countdownCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Countdowns');
+
+    return countdownCalendar?.id ?? await Calendar.createCalendarAsync({
+        title: 'Countdowns',
+        color: 'rgb(255,56,60)',
+        entityType: Calendar.EntityTypes.EVENT,
+        name: 'Countdowns',
+        ownerAccount: 'PlannerApp'
+    });
+}
+
 // ====================
 // 4. Update Functions
 // ====================
@@ -202,23 +203,12 @@ export async function updateDeviceCalendarEventByCountdownEvent(countdownEvent: 
 
     const { value: title, startIso: startDate, calendarId } = countdownEvent;
 
-    const eventDetails = {
+    await Calendar.updateEventAsync(calendarId, {
         title,
         startDate,
         endDate: startDate,
         allDay: true,
-    };
-
-    if (calendarId) {
-        await Calendar.updateEventAsync(calendarId, eventDetails, { futureEvents: false });
-    } else {
-        const newCalendarId = await Calendar.createEventAsync(
-            await getCountdownCalendarId(),
-            eventDetails
-        );
-        const newEvent = { ...countdownEvent, calendarId: newCalendarId };
-        saveCountdownEventToStorage(newEvent);
-    }
+    }, { futureEvents: true });
 
     // Reload the calendar data if the event affects the current planners.
     const datestampsToReload = [];
@@ -275,9 +265,7 @@ export async function deleteCountdownAndReloadCalendar(countdownEvent: ICountdow
 
     // Phase 1: Delete the event from the calendar.
     if (countdownEvent.calendarId) {
-        const instanceStartDate = new Date(countdownEvent.startIso);
-        const recurringOptions = countdownEvent.isRecurring ? { futureEvents: false, instanceStartDate } : undefined;
-        await Calendar.deleteEventAsync(countdownEvent.calendarId, recurringOptions);
+        await Calendar.deleteEventAsync(countdownEvent.calendarId, { futureEvents: true });
     }
 
     // Phase 2: Remove the event from its planner in storage.

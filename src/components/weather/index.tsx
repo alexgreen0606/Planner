@@ -10,6 +10,7 @@ import { SFSymbol } from 'react-native-sfsymbols';
 import CustomText from '../text/CustomText';
 import SlowFadeInView from '../SlowFadeInView';
 import { getRandomWeatherChip } from '@/utils/weatherUtils';
+import useAppTheme from '@/hooks/useAppTheme';
 
 // ✅ 
 
@@ -22,6 +23,8 @@ const WeatherDisplay = ({
     high = 79,
     low = 23,
 }: WeatherDisplayProps) => {
+
+    const { weatherBackground } = useAppTheme();
 
     function handleOpenWeatherApp() {
         try {
@@ -42,7 +45,9 @@ const WeatherDisplay = ({
                         }}
                     />
                     <CustomText variant="lowTemp">{Math.round(low)}°</CustomText>
-                    <View className="mx-4">
+                    <View className="px-4 w-10 h-10 rounded-3xl items-center justify-center" style={{
+                        backgroundColor: weatherBackground
+                    }}>
                         <SFSymbol
                             name={getRandomWeatherChip().icon}
                             size={20}

@@ -607,7 +607,7 @@ const PlannerEventTimeModal = () => {
                 const { calendarEvent } = initialState;
 
                 // Delete the existing event in the calendar.
-                await Calendar.deleteEventAsync(calendarEvent.id, { futureEvents: false });
+                await Calendar.deleteEventAsync(calendarEvent.id, { futureEvents: true });
 
                 // Mark the range of the calendar event to reload the calendar data.
                 affectedDateRanges.push({
@@ -623,7 +623,7 @@ const PlannerEventTimeModal = () => {
                 const { startEventId, endEventId } = timeConfig!;
 
                 // Delete the event in the calendar.
-                await Calendar.deleteEventAsync(endPlannerEvent.calendarId!, { futureEvents: false });
+                await Calendar.deleteEventAsync(endPlannerEvent.calendarId!, { futureEvents: true });
 
                 // Mark the range of the calendar event to reload the calendar data.
                 affectedDateRanges.push(endPlannerEvent.timeConfig!);
@@ -647,7 +647,7 @@ const PlannerEventTimeModal = () => {
                 const { timeConfig, id, listId: startDatestamp, calendarId } = plannerEvent;
 
                 // Event was in calendar. Delete it.
-                await Calendar.deleteEventAsync(calendarId!, { futureEvents: false });
+                await Calendar.deleteEventAsync(calendarId!, { futureEvents: true });
 
                 // Mark the range of the calendar event to reload the calendar data.
                 affectedDateRanges.push(timeConfig!);
@@ -834,9 +834,7 @@ const PlannerEventTimeModal = () => {
         eventDetails: Partial<Calendar.Event>
     ): Promise<string> {
         if (calendarId) {
-            await Calendar.updateEventAsync(calendarId, eventDetails, {
-                futureEvents: false,
-            });
+            await Calendar.updateEventAsync(calendarId, eventDetails, { futureEvents: true });
             return calendarId;
         } else {
             const primaryCalendarId = await getPrimaryCalendarId();

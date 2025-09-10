@@ -1,7 +1,9 @@
-import useIsPlannerEventDeleting from '@/hooks/useIsPlannerEventDeleting';
-import usePlanner from '@/hooks/usePlanner';
-import useGetPlannerEventToggle from '@/hooks/usePlannerEventToggle';
+import useIsPlannerEventDeleting from '@/hooks/planners/useIsPlannerEventDeleting';
+import usePlanner from '@/hooks/planners/usePlanner';
+import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
+import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
+import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import React, { useEffect, useState } from 'react';
@@ -11,8 +13,6 @@ import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIco
 import DayBanner from '../banners/DayBanner';
 import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
-import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
-import usePlannerEventTimeParser from '@/hooks/usePlannerEventTimeParser';
 
 // ✅ 
 
@@ -31,7 +31,6 @@ const PlannerCard = ({
         planner,
         isEditingTitle,
         isPlannerFocused,
-        isLoadingCalendarData,
         onEditTitle,
         OverflowIcon,
         onCloseTextfield,
@@ -54,8 +53,6 @@ const PlannerCard = ({
 
         setCollapsed(curr => !curr);
     }
-
-    if (isLoadingCalendarData) return null;
 
     return (
         <Card
@@ -96,7 +93,7 @@ const PlannerCard = ({
                 onGetIsItemDeletingCustom={useIsPlannerEventDeleting}
             />
         </Card>
-    );
-}
+    )
+};
 
 export default PlannerCard;

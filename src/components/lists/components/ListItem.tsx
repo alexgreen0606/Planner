@@ -185,7 +185,7 @@ const ListItem = <T extends TListItem>({
         });
 
     const longPressGesture = Gesture.LongPress()
-        .minDuration(500)
+        .minDuration(300)
         .onTouchesDown((_e, state) => {
             if (!item || isPendingDelete) {
                 state.fail();

@@ -491,7 +491,7 @@ export async function updateDeviceCalendarEventByPlannerEvent(event: IPlannerEve
         startDate: startIso,
         endDate: endIso,
         allDay,
-    }, { futureEvents: false });
+    }, { futureEvents: true });
 }
 
 /**
@@ -603,7 +603,7 @@ export async function deletePlannerEventsFromStorageAndCalendar(
                     calendarIdsToHide.push(calendarId);
                 } else {
                     // Delete the event from the device calendar.
-                    calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId, { futureEvents: false }));
+                    calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId, { futureEvents: true }));
                     affectedCalendarRanges.push(event.timeConfig!);
                 }
             }

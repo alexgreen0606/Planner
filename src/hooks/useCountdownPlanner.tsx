@@ -3,7 +3,7 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { ICountdownEvent } from "@/lib/types/listItems/ICountdownEvent";
 import { getCountdownEventFromStorageById, saveCountdownEventToStorage } from "@/storage/countdownStorage";
-import { updateCountdownEventIndexWithChronologicalCheck } from "@/utils/countdownUtils";
+import { getCountdownCalendarId, updateCountdownEventIndexWithChronologicalCheck } from "@/utils/countdownUtils";
 import { datestampToMidnightJsDate } from "@/utils/dateUtils";
 import { uuid } from "expo-modules-core";
 import { useAtomValue } from "jotai";
@@ -11,6 +11,7 @@ import { DateTime } from "luxon";
 import { useMemo } from "react";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
 import useTextfieldItemAs from "./useTextfieldItemAs";
+import * as Calendar from 'expo-calendar';
 
 // ✅ 
 
@@ -25,7 +26,7 @@ const useCountdownPlanner = (countdownEventStorage: MMKV) => {
 
     const { onSetTextfieldId: onSetFocusedCountdownId } = useTextfieldItemAs<ICountdownEvent>(countdownEventStorage);
 
-    function handleCreateCountdownEventInStorageAndFocusTextfield(index: number) {
+    async function handleCreateCountdownEventInStorageAndFocusTextfield(index: number) {
         let startIso = DateTime.fromJSDate(todayMidnight).toISO()!;
 
         // Set the item to have the same date as the event above it.
@@ -41,7 +42,16 @@ const useCountdownPlanner = (countdownEventStorage: MMKV) => {
             listId: EStorageKey.COUNTDOWN_LIST_KEY,
             storageId: EStorageId.COUNTDOWN_EVENT,
             startIso,
-            isRecurring: false
+            isRecurring: false,
+            calendarId: await Calendar.createEventAsync(
+                await getCountdownCalendarId(),
+                {
+                    title: '',
+                    startDate: startIso,
+                    endDate: startIso,
+                    allDay: true,
+                }
+            )
         };
         saveCountdownEventToStorage(newCountdownEvent);
 

@@ -131,8 +131,6 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
             const foundStorageId = getCountdownEventIdFromStorageByCalendarId(event.id);
             if (!foundStorageId) return;
 
-            console.info(foundStorageId, 'found')
-
             jotaiStore.set(textfieldIdAtom, foundStorageId);
             router.push('/planners/countdowns');
         };

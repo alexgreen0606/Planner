@@ -7,7 +7,7 @@ import { getRecurringEventFromStorageById, getRecurringPlannerFromStorageById } 
 import { createEmptyRecurringPlanner, deleteRecurringEventsFromStorageHideWeekday, updateRecurringEventIndexWithChronologicalCheck, upsertWeekdayEventsToRecurringPlanner } from "@/utils/recurringPlannerUtils";
 import { MenuView } from "@react-native-menu/menu";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
-import useAppTheme from "./useAppTheme";
+import useAppTheme from "../useAppTheme";
 
 // ✅ 
 
@@ -21,9 +21,6 @@ const useRecurringPlanner = (recurringPlannerId: string, recurringEventStorage: 
     const recurringStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
 
     const [recurringPlanner, setRecurringPlanner] = useMMKVObject<TRecurringPlanner>(recurringPlannerId, recurringStorage);
-
-    // recurringStorage.clearAll()
-    // recurringEventStorage.clearAll();
 
     const { overflowText } = useAppTheme();
 

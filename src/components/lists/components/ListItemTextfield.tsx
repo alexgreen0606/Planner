@@ -38,7 +38,7 @@ const ListItemTextfield = <T extends TListItem>({
         () =>
             debounce((latestItem: T) => {
                 onSaveToExternalStorage?.(latestItem);
-            }, 1500),
+            }, 1000),
         []
     );
 

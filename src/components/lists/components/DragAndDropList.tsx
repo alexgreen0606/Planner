@@ -76,13 +76,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
 
-    const placeholderItem: T = {
-        id: 'PLACEHOLDER',
-        listId: 'PLACEHOLDER',
-        value: 'PLACEHOLDER',
-        storageId
-    } as T;
-
     // Auto Scrolling.
     useAnimatedReaction(
         () => scrollOffset.value - dragInitialScrollOffset.value,

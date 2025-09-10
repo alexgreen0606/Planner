@@ -1,5 +1,5 @@
 import { BlurTint } from "expo-blur";
-import { useColorScheme } from "react-native";
+import { PlatformColor, useColorScheme } from "react-native";
 
 // ✅ 
 
@@ -28,7 +28,8 @@ const useAppTheme = () => {
         modal: {
             inputField: isLightMode ? 'systemBackground' : 'systemGray5'
         },
-        overflowText: isLightMode ? 'rgb(20,20,20)' : 'rgb(240,240,240)'
+        overflowText: isLightMode ? 'rgb(20,20,20)' : 'rgb(240,240,240)',
+        weatherBackground: isLightMode ? PlatformColor('systemGray') : undefined
     }
 }
 

@@ -44,7 +44,7 @@ const CountdownEventToolbar = () => {
                     onCloseFocusedCountdown();
                     Alert.alert(
                         `Delete "${focusedCountdown?.value}"?`,
-                        'The event in your calendar will also be deleted.',
+                        `${focusedCountdown?.isRecurring ? ' All future events' : 'The event'} in your calendar will also be deleted.`,
                         [
                             {
                                 text: 'Cancel',
@@ -66,6 +66,7 @@ const CountdownEventToolbar = () => {
         [(
             <GenericIcon
                 type='calendar'
+                platformColor="label"
                 onClick={openDateModal}
             />
         )]
@@ -125,10 +126,10 @@ const CountdownEventToolbar = () => {
                         ? DateTime.fromISO(countdownDateModalEvent.startIso).toJSDate()
                         : todayMidnight
                 }
+                onLayout={onCloseFocusedCountdown}
                 confirmTextIOS={`Schedule "${countdownDateModalEvent?.value}"`}
                 minimumDate={datestampToMidnightJsDate(getTodayDatestamp())}
                 maximumDate={datestampToMidnightJsDate(getDatestampThreeYearsFromToday())}
-                onLayout={onCloseFocusedCountdown}
                 onCancel={closeDateModal}
                 onConfirm={changeCountdownEventDate}
                 pickerStyleIOS={{

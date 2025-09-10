@@ -9,8 +9,8 @@ import { createEmptyPlanner, updatePlannerEventIndexWithChronologicalCheck, upse
 import { MenuView } from "@react-native-menu/menu";
 import { useEffect, useState } from "react";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
-import useAppTheme from "./useAppTheme";
-import useTextfieldItemAs from "./useTextfieldItemAs";
+import useAppTheme from "../useAppTheme";
+import useTextfieldItemAs from "../useTextfieldItemAs";
 
 // ✅ 
 
@@ -32,8 +32,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
-
-    const isLoadingCalendarData = false;
 
     const { overflowText } = useAppTheme();
 
@@ -188,7 +186,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         planner: planner ?? createEmptyPlanner(datestamp),
         isEditingTitle,
         isPlannerFocused,
-        isLoadingCalendarData,
         OverflowIcon,
         onCloseTextfield: onCloseFocusedEvent,
         onEditTitle: handleEditTitle,
