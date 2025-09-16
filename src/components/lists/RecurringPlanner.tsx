@@ -41,7 +41,7 @@ const RecurringPlanner = () => {
         eventIds,
         OverflowIcon,
         onUpdateRecurringEventIndexWithChronologicalCheck
-    } = useRecurringPlanner(recurringPlannerId, recurringEventStorage);
+    } = useRecurringPlanner(recurringPlannerId);
 
     const { onUpdateRecurringEventValueWithTimeParsing } = useRecurringEventTimeParser(recurringPlannerId, recurringEventStorage);
 

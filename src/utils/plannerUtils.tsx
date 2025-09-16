@@ -16,7 +16,7 @@ import { router } from 'expo-router';
 import { ReactNode } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { loadExternalCalendarData } from './calendarUtils';
-import { datestampToMidnightJsDate, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { datestampToMidnightJsDate, getDatestampThreeYearsAgo, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 
 // ✅ 
 
@@ -251,8 +251,6 @@ export function upsertRecurringEventsIntoPlanner(planner: TPlanner): TPlanner {
 
         const newPlannerEvent = mapRecurringEventToPlannerEvent(datestamp, recurringEvent);
 
-        // TODO: may want to add based on the index in the recurring planner?
-
         // Create event in storage and add it to the planner.
         savePlannerEventToStorage(newPlannerEvent);
         planner = updatePlannerEventIndexWithChronologicalCheck(planner, planner.eventIds.length, newPlannerEvent);
@@ -362,6 +360,7 @@ export function createPlannerEventInStorageAndFocusTextfield(datestamp: string, 
         listId: datestamp,
         storageId: EStorageId.PLANNER_EVENT
     };
+    console.info('creating', plannerEvent)
     savePlannerEventToStorage(plannerEvent);
 
     // Add the event to its planner.
@@ -527,24 +526,17 @@ export function updatePlannerEventIndexWithChronologicalCheck(
 // 8. Delete Functions
 // ====================
 
-type TPlannerEventDeleteOptions = {
-    excludeCalendarRefresh?: boolean;
-    excludeCalendarDelete?: boolean;
-}
-
 /**
  * Deletes a list of planner events from the calendar and storage. The calendar data will be reloaded 
  * by default after the deletions.
  * 
  * @param events - The list of events to delete.
- * @param options - Set of rules to control speicifc actions of the deletions.
+ * @param deleteTodayEvents - Deletes a today event from the calendar. Defaults to false.
  */
 export async function deletePlannerEventsFromStorageAndCalendar(
     events: IPlannerEvent[],
-    options: TPlannerEventDeleteOptions = {}
+    deleteTodayEvents: boolean = false
 ) {
-    const { excludeCalendarRefresh, excludeCalendarDelete } = options;
-
     const todayDatestamp = getTodayDatestamp();
 
     const plannersToUpdate: Record<string, TPlanner> = {};
@@ -597,15 +589,13 @@ export async function deletePlannerEventsFromStorageAndCalendar(
             }
 
             // Handle calendar deletions.
-            if (!excludeCalendarDelete) { // Excluding means the calendar ID will be reused for a new event. (see TimeModal)
-                if (isEventToday) {
-                    // Mock a calendar delete (event remains in calendar but stays hidden in planner).
-                    calendarIdsToHide.push(calendarId);
-                } else {
-                    // Delete the event from the device calendar.
-                    calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId, { futureEvents: true }));
-                    affectedCalendarRanges.push(event.timeConfig!);
-                }
+            if (isEventToday && !deleteTodayEvents) {
+                // Mock a calendar delete (event remains in calendar but stays hidden in planner).
+                calendarIdsToHide.push(calendarId);
+            } else {
+                // Delete the event from the device calendar.
+                calendarDeletePromises.push(Calendar.deleteEventAsync(calendarId, { futureEvents: true }));
+                affectedCalendarRanges.push(event.timeConfig!);
             }
 
         }
@@ -638,20 +628,20 @@ export async function deletePlannerEventsFromStorageAndCalendar(
 
     // Phase 4: Reload calendar if needed.
     await Promise.all(calendarDeletePromises);
-    if (!excludeCalendarRefresh && !excludeCalendarDelete && affectedCalendarRanges.length > 0) {
+    if (affectedCalendarRanges.length > 0) {
         const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(affectedCalendarRanges);
         await loadExternalCalendarData(datestampsToReload);
     }
 }
 
 /**
- * Deletes all planners and their events from storage that occurred before yesterday's date.
+ * Deletes all planners and their events from storage that are older than 3 years from today.
  */
-export function deleteAllPlannersInStorageBeforeYesterday() {
-    const yesterdayDatestamp = getYesterdayDatestamp();
+export function deleteAllPlannersInStorageOlderThan3Years() {
+    const threeYearsAgo = getDatestampThreeYearsAgo();
 
     getAllPlannerDatestampsFromStorage().forEach(datestamp => {
-        if (isTimeEarlier(datestamp, yesterdayDatestamp)) {
+        if (isTimeEarlier(datestamp, threeYearsAgo)) {
             const planner = getPlannerFromStorageByDatestamp(datestamp);
             planner.eventIds.forEach(deletePlannerEventFromStorageById);
             deletePlannerFromStorageByDatestamp(datestamp);

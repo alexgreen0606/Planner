@@ -31,7 +31,7 @@ const FolderScreen = () => {
 
     if (type === EFolderItemType.FOLDER) {
       router.push(`/lists/folder/${folder.value}/${folder.id}/${id}`);
-    } else if (type === EFolderItemType.LIST) {
+    } else if (type === EFolderItemType.CHECKLIST) {
       router.push(`/lists/checklist/${folder.value}/${folder.id}/${id}`);
     }
   }

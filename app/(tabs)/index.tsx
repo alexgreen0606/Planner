@@ -1,6 +1,6 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import TodayBanner from '@/components/banners/TodayBanner';
-import EventChipSets from '@/components/eventChip/EventChipSet';
+import PlannerChipSets from '@/components/eventChip/EventChipSet';
 import TodayPlanner from '@/components/lists/TodayPlanner';
 import usePlanner from '@/hooks/planners/usePlanner';
 import useAppTheme from '@/hooks/useAppTheme';
@@ -41,7 +41,7 @@ const Today = () => {
         />
       }
       floatingBanner={
-        <EventChipSets
+        <PlannerChipSets
           datestamp={todayDatestamp}
           backgroundPlatformColor={background}
         />

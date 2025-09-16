@@ -4,9 +4,10 @@ import WeatherDisplay from '@/components/weather';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { useAtomValue } from 'jotai';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import EventChipSets from '../eventChip/EventChipSet';
+import PlannerChipSets from '../eventChip/EventChipSet';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 // ✅ 
 
@@ -29,10 +30,12 @@ const DayBanner = ({
 }: TDayBannerProps) => {
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
 
-    // TODO: memoize
-    const dayOfWeek = getDayOfWeekFromDatestamp(planner.datestamp);
-    const monthDate = getMonthDateFromDatestamp(planner.datestamp);
-    const isTomorrow = planner.datestamp === getTomorrowDatestamp();
+    const { dayOfWeek, monthDate, isTomorrow } = useMemo(() => {
+        const dayOfWeek = getDayOfWeekFromDatestamp(planner.datestamp);
+        const monthDate = getMonthDateFromDatestamp(planner.datestamp);
+        const isTomorrow = planner.datestamp === getTomorrowDatestamp();
+        return { dayOfWeek, monthDate, isTomorrow };
+    }, [planner.datestamp]);
 
     const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
 
@@ -92,7 +95,8 @@ const DayBanner = ({
 
             </View>
 
-            <EventChipSets
+            {/* Planner Chips */}
+            <PlannerChipSets
                 datestamp={planner.datestamp}
                 collapsed={collapsed}
                 onToggleCollapsed={onToggleCollapsed}

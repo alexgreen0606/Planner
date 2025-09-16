@@ -14,6 +14,7 @@ export interface GenericIconProps<T = void> {
     style?: ViewStyle;
     className?: string;
     hideRipple?: boolean;
+    contrastBackground?: boolean;
     onClick?: (item?: T) => T | void | Promise<void>;
 }
 
@@ -28,18 +29,17 @@ const GenericIcon = <T,>({
     onClick
 }: GenericIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
+    const sizeNum = sizeMap[size];
     return (
         <Wrapper
             activeOpacity={hideRipple ? 1 : 0}
             onPress={() => onClick?.()}
             style={{
-                width: sizeMap[size],
-                height: sizeMap[size],
-                alignItems: 'center',
-                justifyContent: 'center',
+                width: sizeNum,
+                height: sizeNum,
                 ...style
             }}
-            className={className}
+            className={`${className} items-center justify-center rounded-xl`}
         >
             <SymbolView
                 type={multicolor ? 'multicolor' : 'monochrome'}

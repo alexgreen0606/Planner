@@ -6,13 +6,13 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
 import { deleteFolderItemAndChildren } from "@/utils/checklistUtils";
 import { useSetAtom } from "jotai";
+import { useEffect } from "react";
 import { Alert, TouchableOpacity } from "react-native";
 import { useMMKV } from "react-native-mmkv";
 import GenericIcon from "../icon";
 import ToggleFolderItemTypeIcon from "../icon/ToggleFolderItemTypeIcon";
 import TransferFolderIcon from "../icon/TransferFolderIcon";
 import ListToolbar from "../lists/components/ListToolbar";
-import { useEffect } from "react";
 
 // ✅ 
 
@@ -40,30 +40,24 @@ const FolderItemToolbar = () => {
 
                     if (focusedItem.value.trim() === '') return;
 
-                    const title = `Delete ${focusedItem.type}?`;
-                    const hasNestedItems = focusedItem.itemIds.length > 0;
+                    const hasChildren = focusedItem.itemIds.length > 0;
+                    const message = `Would you like to delete this ${focusedItem.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
 
-                    let message = "";
-                    if (hasNestedItems) {
-                        message += `This ${focusedItem.type} has ${focusedItem.itemIds.length} items. Deleting is irreversible and will lose all inner contents.`;
-                    } else {
-                        message += `Would you like to delete this ${focusedItem.type}?`;
-                    }
-
-                    Alert.alert(title, message, [
-                        {
-                            text: "Cancel",
-                            style: "cancel",
-                        },
-                        {
-                            text: hasNestedItems ? "Force Delete" : "Delete",
-                            style: "destructive",
-                            onPress: () => {
-                                onCloseFocusedItem();
-                                deleteFolderItemAndChildren(focusedItem);
+                    Alert.alert(
+                        `Delete "${focusedItem.value}"?`,
+                        message,
+                        [
+                            {
+                                text: "Cancel",
+                                style: "cancel",
                             },
-                        },
-                    ]);
+                            {
+                                text: hasChildren ? "Force Delete" : "Delete",
+                                style: "destructive",
+                                onPress: () => deleteFolderItemAndChildren(focusedItem, true)
+                            },
+                        ]
+                    );
                 }}
             />
         )],
@@ -123,7 +117,7 @@ const FolderItemToolbar = () => {
             return {
                 ...prev,
                 type:
-                    prev.type === EFolderItemType.FOLDER ? EFolderItemType.LIST : EFolderItemType.FOLDER
+                    prev.type === EFolderItemType.FOLDER ? EFolderItemType.CHECKLIST : EFolderItemType.FOLDER
             };
         });
     }

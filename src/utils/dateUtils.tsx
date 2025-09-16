@@ -123,7 +123,27 @@ export function getTomorrowDatestamp(): string {
  * @returns Datestamp for the date 3 years in the future. (YYYY-MM-DD)
  */
 export function getDatestampThreeYearsFromToday(): string {
-    return DateTime.utc().plus({ years: 3 }).toISODate();
+    return DateTime.local().plus({ years: 3 }).toISODate();
+}
+
+/**
+ * Gets the timestamp for the date 3 years into the past.
+ * 
+ * @returns Datestamp for the date 3 years ago. (YYYY-MM-DD)
+ */
+export function getDatestampThreeYearsAgo(): string {
+    return DateTime.local().minus({ years: 3 }).toISODate();
+}
+
+/**
+ * Gets the datestamp shifted by the given number of days.
+ *
+ * @param datestamp - The starting datestamp. (YYYY-MM-DD)
+ * @param days - Number of days to shift (negative for past, positive for future).
+ * @returns Datestamp shifted by the specified number of days. (YYYY-MM-DD)
+ */
+export function getDayShiftedDatestamp(datestamp: string, days: number): string {
+    return DateTime.fromISO(datestamp).plus({ days }).toISODate()!;
 }
 
 /**

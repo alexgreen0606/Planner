@@ -1,7 +1,7 @@
 import ButtonText from '@/components/text/ButtonText';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import useFolderItem from '@/hooks/useFolderItem';
-import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
+import { HEADER_HEIGHT, PAGE_LABEL_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -24,10 +24,11 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
     const router = useRouter();
 
     const {
-        item: folder,
+        item,
         isEditingValue,
         onToggleEditValue,
-        onValueChange
+        onValueChange,
+        OverflowIcon
     } = useFolderItem(itemId, itemStorage);
 
     return (
@@ -35,31 +36,6 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
             className='flex-row items-center justify-between w-full relative'
             style={{ height: HEADER_HEIGHT }}
         >
-
-            {/* Name */}
-            {isEditingValue ? (
-                <TextInput
-                    autoFocus
-                    value={folder?.value}
-                    onChangeText={onValueChange}
-                    cursorColor={PlatformColor('systemBlue')}
-                    onBlur={onToggleEditValue}
-                    className='w-full bg-transparent'
-                    style={[
-                        textStyles.pageLabel,
-                        { height: HEADER_HEIGHT }
-                    ]}
-                />
-            ) : (
-                <CustomText
-                    variant='pageLabel'
-                    onPress={onToggleEditValue}
-                    ellipsizeMode='tail'
-                    numberOfLines={1}
-                >
-                    {folder?.value}
-                </CustomText>
-            )}
 
             {/* Back Button */}
             {!backButtonConfig.hide && (
@@ -76,6 +52,39 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
                     </ButtonText>
                 </View>
             )}
+
+            {/* Name */}
+            <View className='relative flex-1'>
+                {isEditingValue ? (
+                    <TextInput
+                        autoFocus
+                        value={item?.value}
+                        onChangeText={onValueChange}
+                        cursorColor={PlatformColor('systemBlue')}
+                        onBlur={onToggleEditValue}
+                        autoCapitalize='words'
+                        className='bg-transparent pr-2'
+                        style={[
+                            textStyles.pageLabel,
+                            { height: HEADER_HEIGHT, color: PlatformColor(item?.platformColor ?? 'label') }
+                        ]}
+                    />
+                ) : (
+                    <View className='pr-2' style={{ height: PAGE_LABEL_HEIGHT }}>
+                        <CustomText
+                            variant='pageLabel'
+                            ellipsizeMode='tail'
+                            numberOfLines={1}
+                            customStyle={{ color: PlatformColor(item?.platformColor ?? 'label') }}
+                        >
+                            {item?.value}
+                        </CustomText>
+                    </View>
+                )}
+            </View>
+
+            {/* Overflow Actions */}
+            <OverflowIcon />
 
         </View>
     )

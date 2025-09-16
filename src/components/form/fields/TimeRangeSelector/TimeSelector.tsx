@@ -2,6 +2,7 @@ import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
 import DateValue from '@/components/text/DateValue';
 import TimeValue from '@/components/text/TimeValue';
 import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
+import { getDatestampThreeYearsAgo, getDatestampThreeYearsFromToday } from '@/utils/dateUtils';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { MotiView } from 'moti';
 import React from 'react';
@@ -108,7 +109,8 @@ const TimeSelector = ({
                     onChange={onChange}
                     mode='date'
                     display='inline'
-                    minimumDate={minimumDate}
+                    minimumDate={minimumDate ?? new Date(getDatestampThreeYearsAgo())}
+                    maximumDate={new Date(getDatestampThreeYearsFromToday())}
                 />
             </MotiView>
 
@@ -129,7 +131,8 @@ const TimeSelector = ({
                     mode='time'
                     display='spinner'
                     minuteInterval={5}
-                    minimumDate={minimumDate}
+                    minimumDate={minimumDate ?? new Date(getDatestampThreeYearsAgo())}
+                    maximumDate={new Date(getDatestampThreeYearsFromToday())}
                 />
             </MotiView>
 

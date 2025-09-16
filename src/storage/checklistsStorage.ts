@@ -25,7 +25,7 @@ export function saveChecklistItemToStorage(data: TListItem) {
 // ==================
 
 export function getListItemFromStorageById(itemId: string): TListItem {
-    const itemString = folderStorage.getString(itemId);
+    const itemString = itemStorage.getString(itemId);
     if (!itemString) {
         throw new Error(`getListItemFromStorageById: Checklist item not found with ID ${itemId}`);
     }

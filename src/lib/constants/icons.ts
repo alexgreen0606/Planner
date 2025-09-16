@@ -5,7 +5,7 @@ export const iconMap = {
     folder: 'folder.fill',
     folderThin: 'folder',
     openFolder: 'folder.fill',
-    list: 'list.bullet',
+    checklist: 'list.bullet',
     calendar: 'calendar',
     plannerStack: 'square.stack',
     lists: 'list.bullet.clipboard',

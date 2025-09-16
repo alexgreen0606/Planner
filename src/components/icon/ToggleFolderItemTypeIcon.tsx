@@ -34,7 +34,7 @@ const ToggleFolderItemTypeIcon = ({ currentType, disabled }: TToggleFolderItemTy
                 platformColor='tertiaryLabel'
             />
             <GenericIcon
-                type='list'
+                type='checklist'
                 size='s'
                 hideRipple
                 platformColor={disabled ? 'tertiaryLabel' : currentType === EFolderItemType.FOLDER ? 'tertiaryLabel' : 'label'}

@@ -55,71 +55,73 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
             floatingBannerHeight={BAR_HEIGHT}
             fixFloatingBannerOnOverscroll
             floatingBanner={
-                <View className='w-full flex items-center'>
-                    <View
-                        className='relative flex-row items-center overflow-hidden'
-                        style={{
-                            height: BAR_HEIGHT,
-                            width: BAR_WIDTH,
-                            paddingHorizontal: HIGHLIGHT_GAP,
-                            borderRadius: BAR_HEIGHT / 2
-                        }}
-                    >
-
-                        {/* Blurred Background */}
-                        <BlurView
-                            tint={background.color}
-                            intensity={background.intensity}
-                            className='absolute overflow-hidden'
+                <View style={{ flexDirection: 'row', width: '100%' }}>
+                    <View className='w-full flex items-center'>
+                        <View
+                            className='relative flex-row items-center overflow-hidden'
                             style={{
+                                height: BAR_HEIGHT,
                                 width: BAR_WIDTH,
-                                height: BAR_HEIGHT
-                            }}
-                        />
-
-                        {/* Current Tab Highlight */}
-                        <MotiView
-                            className="absolute overflow-hidden"
-                            animate={{
-                                left: currentTabLeft,
-                            }}
-                            transition={{
-                                type: "timing",
-                                duration: 300,
-                            }}
-                            style={{
-                                width: HIGHLIGHT_WIDTH,
-                                height: HIGHLIGHT_HEIGHT,
-                                borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                paddingHorizontal: HIGHLIGHT_GAP,
+                                borderRadius: BAR_HEIGHT / 2
                             }}
                         >
+
+                            {/* Blurred Background */}
                             <BlurView
-                                tint={indicator.color}
-                                intensity={indicator.intensity}
+                                tint={background.color}
+                                intensity={background.intensity}
+                                className='absolute overflow-hidden'
                                 style={{
-                                    flex: 1,
-                                    borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                    width: BAR_WIDTH,
+                                    height: BAR_HEIGHT
                                 }}
                             />
-                        </MotiView>
 
-
-                        {/* Tab Options */}
-                        {tabs.map((tab) => (
-                            <TouchableOpacity
-                                key={`${tab.label}-floating-tab`}
-                                className='flex items-center justify-center h-full'
-                                style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
-                                onPress={() => handleTabChange(tab)}
+                            {/* Current Tab Highlight */}
+                            <MotiView
+                                className="absolute overflow-hidden"
+                                animate={{
+                                    left: currentTabLeft,
+                                }}
+                                transition={{
+                                    type: "timing",
+                                    duration: 300,
+                                }}
+                                style={{
+                                    width: HIGHLIGHT_WIDTH,
+                                    height: HIGHLIGHT_HEIGHT,
+                                    borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                }}
                             >
-                                <CustomText
-                                    variant='plannerTabLabel'
-                                    style={{ color: PlatformColor(pathname === tab.pathname ? 'label' : 'secondaryLabel') }}
+                                <BlurView
+                                    tint={indicator.color}
+                                    intensity={indicator.intensity}
+                                    style={{
+                                        flex: 1,
+                                        borderRadius: HIGHLIGHT_HEIGHT / 2,
+                                    }}
+                                />
+                            </MotiView>
+
+
+                            {/* Tab Options */}
+                            {tabs.map((tab) => (
+                                <TouchableOpacity
+                                    key={`${tab.label}-floating-tab`}
+                                    className='flex items-center justify-center h-full'
+                                    style={{ width: (BAR_WIDTH - (HIGHLIGHT_GAP * 2)) / 3 }}
+                                    onPress={() => handleTabChange(tab)}
                                 >
-                                    {tab.label}
-                                </CustomText>
-                            </TouchableOpacity>
-                        ))}
+                                    <CustomText
+                                        variant='plannerTabLabel'
+                                        style={{ color: PlatformColor(pathname === tab.pathname ? 'label' : 'secondaryLabel') }}
+                                    >
+                                        {tab.label}
+                                    </CustomText>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                     </View>
                 </View>
             }

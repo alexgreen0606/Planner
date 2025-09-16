@@ -110,6 +110,7 @@ const SortedFolder = ({
             return;
         }
 
+        setTextfieldId(null);
         onOpenItem(item.id, item.type);
     }
 
@@ -125,7 +126,7 @@ const SortedFolder = ({
         if (getIsItemTransfering(item.id)) {
             return 'systemBlue';
         }
-        if (isTransferMode && item.type === EFolderItemType.LIST) {
+        if (isTransferMode && item.type === EFolderItemType.CHECKLIST) {
             return 'tertiaryLabel';
         }
         return item.platformColor;
@@ -135,7 +136,7 @@ const SortedFolder = ({
         if (getIsItemTransfering(item.id)) {
             return 'tertiaryLabel';
         }
-        if (isTransferMode && item.type === EFolderItemType.LIST) {
+        if (isTransferMode && item.type === EFolderItemType.CHECKLIST) {
             return 'tertiaryLabel';
         }
         return 'label';

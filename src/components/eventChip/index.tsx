@@ -9,6 +9,7 @@ import React, { useMemo } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
+import useAppTheme from '@/hooks/useAppTheme';
 
 // ✅ 
 
@@ -41,8 +42,9 @@ const EventChip = ({
     shiftChipRight,
     onToggleCollapsed
 }: TEventChipProps) => {
-
     const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
+
+    const { weatherChip } = useAppTheme();
 
     const isPendingDelete = useMemo(() =>
         onGetDeletingItemsByStorageIdCallback(EStorageId.PLANNER_EVENT).some(deleteItem =>
@@ -54,6 +56,7 @@ const EventChip = ({
         [onGetDeletingItemsByStorageIdCallback]
     );
 
+    const isWeatherChip = id.includes('weather-chip');
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
 
@@ -62,7 +65,7 @@ const EventChip = ({
             className='flex-row h-6 gap-1 min-w-6 items-center justify-center rounded-xl mt-2 border'
             style={{
                 borderColor: chipCssColor,
-                backgroundColor: PlatformColor(backgroundPlatformColor),
+                backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : PlatformColor(backgroundPlatformColor),
                 paddingHorizontal: collapsed ? 0 : 8
             }}
         >
@@ -77,7 +80,7 @@ const EventChip = ({
                     ellipsizeMode='tail'
                     numberOfLines={1}
                     customStyle={{
-                        color: chipCssColor,
+                        color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
                         textDecorationLine: isPendingDelete ? 'line-through' : undefined,
                     }}
                 >
@@ -100,14 +103,14 @@ const EventChip = ({
         >
             {onClick ? (
                 <TouchableOpacity
-                    activeOpacity={collapsed || hasClickAccess ? 0 : 1}
+                    activeOpacity={1}
                     onPress={collapsed ? onToggleCollapsed : onClick}
                 >
                     <ChipContent />
                 </TouchableOpacity>
             ) : (
                 <TouchableOpacity
-                    activeOpacity={collapsed ? 0 : 1}
+                    activeOpacity={1}
                     onPress={collapsed ? onToggleCollapsed : undefined}
                 >
                     <ChipContent />

@@ -11,7 +11,7 @@ import { DateTime } from "luxon";
 import { hasCalendarAccess, hasContactsAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
 import { getCountdownEventIdFromStorageByCalendarId, upsertCalendarEventsIntoCountdownPlanner } from "./countdownUtils";
-import { datestampToMidnightJsDate } from "./dateUtils";
+import { datestampToMidnightJsDate, getDayShiftedDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
 import { openPlannerTimeModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
 
 // ✅ 
@@ -34,26 +34,26 @@ function savePlannerChipsToStore(chipMap: TPlannerChipMap) {
 }
 
 /**
- * Validates if a calendar event should be displayed in the planner of the given datestamp.
- * 
- * @param event - The calendar event to analyze.
- * @param datestamp - The date to consider. (YYYY-MM-DD)
- * @returns True if the event should be in the given planner, else false.
- */
+* Validates if a calendar event should be displayed in the planner of the given datestamp.
+* 
+* @param event - The calendar event to analyze.
+* @param datestamp - The date to consider. (YYYY-MM-DD)
+* @returns True if the event should be in the given planner, else false.
+*/
 function isPlannerEvent(event: Calendar.Event, datestamp: string): boolean {
     if (event.allDay || !event.endDate) return false;
 
-    const dateStart = datestampToMidnightJsDate(datestamp);
-    const dateEnd = datestampToMidnightJsDate(datestamp, 1);
-    const eventStart = new Date(event.startDate);
-    const eventEnd = new Date(event.endDate);
+    const nextDayDatestamp = getDayShiftedDatestamp(datestamp, 1);
 
-    return (
-        eventStart >= dateStart && eventStart < dateEnd // Starts on this date OR
-    ) || (
-            eventEnd >= dateStart && eventEnd < dateEnd // Ends on this date
-        );
+    const eventStartsOnThisDay = isTimeEarlierOrEqual(datestamp, event.startDate as string) &&
+        isTimeEarlier(event.startDate as string, nextDayDatestamp);
+
+    const eventEndsOnThisDay = isTimeEarlierOrEqual(datestamp, event.endDate as string) &&
+        isTimeEarlier(event.endDate as string, nextDayDatestamp)
+
+    return (eventStartsOnThisDay || eventEndsOnThisDay);
 }
+
 
 /**
  * Determines if a calendar event should be displayed as an event chip for the given datestamp.
@@ -68,32 +68,23 @@ function isPlannerEvent(event: Calendar.Event, datestamp: string): boolean {
 function isEventChip(event: Calendar.Event, datestamp: string): boolean {
     if (!event.endDate || !event.startDate) return false;
 
-    const dateStart = datestampToMidnightJsDate(datestamp);
-    const dateEnd = datestampToMidnightJsDate(datestamp, 1);
-
-    const eventStart = new Date(event.startDate);
-    const eventEnd = new Date(event.endDate);
-
-    // TODO: USE LUXON
-
     if (event.allDay) {
-        // For all-day events, compare dates without time
-        const eventStartDate = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate());
-        const eventEndDate = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate());
-        const checkDate = new Date(dateStart.getFullYear(), dateStart.getMonth(), dateStart.getDate());
+        const eventStartDatestamp = isoToDatestamp(event.startDate as string);
+        const eventEndDatestamp = isoToDatestamp(event.endDate as string);
 
-        return eventStartDate <= checkDate && eventEndDate >= checkDate;
-    } else {
         return (
-            // Starts on this date
-            eventStart >= dateStart && eventStart < dateEnd &&
-            // Ends after it
-            eventEnd > dateEnd
-        ) || (
-                // Spans across this date
-                eventStart < dateStart && eventEnd > dateStart
-            );
+            isTimeEarlierOrEqual(eventStartDatestamp, datestamp) &&
+            isTimeEarlierOrEqual(datestamp, eventEndDatestamp)
+        )
+    } else {
+        const nextDayDatestamp = getDayShiftedDatestamp(datestamp, 1);
+
+        return (
+            isTimeEarlier(event.startDate as string, nextDayDatestamp) &&
+            isTimeEarlier(datestamp, event.endDate as string)
+        )
     }
+
 }
 
 /**

@@ -9,16 +9,16 @@ import { EStorageId } from "@/lib/enums/EStorageId";
 import { IFormField } from "@/lib/types/form/IFormField";
 import { IPlannerEvent, TDateRange } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
+import { deletePlannerEventFromStorageById, getDoesPlannerEventExist, getDoesPlannerExist, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
 import { getPrimaryCalendarId, loadExternalCalendarData } from "@/utils/calendarUtils";
-import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
+import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
 import { createPlannerEventInStorageAndFocusTextfield, deletePlannerEventsFromStorageAndCalendar, getAllMountedDatestampsLinkedToDateRanges, getPlannerEventFromStorageByCalendarId, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMMKV } from "react-native-mmkv";
 
@@ -34,12 +34,14 @@ type TEventState =
     | { eventType: EEventType.NON_CALENDAR; plannerEvent: IPlannerEvent }
     | { eventType: EEventType.CALENDAR_SINGLE_DAY; plannerEvent: IPlannerEvent }
     | { eventType: EEventType.CALENDAR_ALL_DAY; calendarEvent: Calendar.Event }
-    | { eventType: EEventType.CALENDAR_MULTI_DAY; startPlannerEvent: IPlannerEvent | null, endPlannerEvent: IPlannerEvent };
+    | { eventType: EEventType.CALENDAR_MULTI_DAY; startPlannerEvent: IPlannerEvent | null, endPlannerEvent: IPlannerEvent | null, calendarEvent: Calendar.Event };
 
 type TCarryoverEventMetadata = {
     id: string,
     index: number | null // null means the event has moved to a new planner
 };
+
+type TCarryoverEventMap = Partial<Record<ECarryoverEventType, TCarryoverEventMetadata>>;
 
 type TFormData = {
     title: string;
@@ -56,6 +58,11 @@ enum EEventType {
     CALENDAR_SINGLE_DAY = 'CALENDAR_SINGLE_DAY',
     CALENDAR_MULTI_DAY = 'CALENDAR_MULTI_DAY',
     CALENDAR_ALL_DAY = 'CALENDAR_ALL_DAY',
+}
+
+enum ECarryoverEventType {
+    START_EVENT = 'START_EVENT',
+    END_EVENT = 'END_EVENT'
 }
 
 const PlannerEventTimeModal = () => {
@@ -90,6 +97,22 @@ const PlannerEventTimeModal = () => {
 
     const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
+    const deleteButtonConfig = useMemo(() => {
+        const optionLabels = ['Delete Event', 'Unschedule Event'];
+        const optionHandlers = [() => handleDelete(true), handleSubmit(handleUnschedule)];
+
+        if (triggerDatestamp === getTodayDatestamp() && getDoesPlannerEventExist(eventId)) {
+            optionLabels.splice(1, 0, 'Mark Event Completed');
+            optionHandlers.splice(1, 0, () => handleDelete(false));
+        }
+
+        return {
+            label: 'Delete Event',
+            optionLabels,
+            optionHandlers
+        }
+    }, [initialEventState]);
+
     const title = watch('title');
     const isAllDay = watch('allDay');
     const isCalendarEvent = watch('isCalendarEvent');
@@ -121,18 +144,15 @@ const PlannerEventTimeModal = () => {
         }]
     ];
 
+    // Build metadata of the initial event state.
     useEffect(() => {
 
         const buildFormData = async () => {
-            let plannerEvent: IPlannerEvent | undefined;
+            const isEventInStorage = getDoesPlannerEventExist(eventId);
+            const storageEvent = isEventInStorage ? getPlannerEventFromStorageById(eventId) : null;
 
-            const plannerEventString = eventStorage.getString(eventId);
-            if (plannerEventString) {
-                plannerEvent = JSON.parse(plannerEventString);
-            }
-
-            if (!plannerEventString || !!plannerEvent?.timeConfig?.startEventId) { // CALENDAR_ALL_DAY or CALENDAR_MULTI_DAY
-                const calendarId = plannerEvent ? plannerEvent.calendarId! : eventId;
+            if (!storageEvent || storageEvent.timeConfig?.startEventId) { // CALENDAR_ALL_DAY or CALENDAR_MULTI_DAY
+                const calendarId = storageEvent ? storageEvent.calendarId! : eventId;
                 const calendarEvent = await Calendar.getEventAsync(calendarId);
 
                 if (calendarEvent.allDay) { // CALENDAR_ALL_DAY
@@ -142,15 +162,20 @@ const PlannerEventTimeModal = () => {
                     });
                 } else { // CALENDAR_MULTI_DAY
                     let startPlannerEvent: IPlannerEvent | null = null;
+                    let endPlannerEvent: IPlannerEvent | null = null;
                     const startDatestamp = isoToDatestamp(calendarEvent.startDate as string);
-                    if (getDoesPlannerStillExistInStorage(startDatestamp)) {
+                    if (getDoesPlannerExist(startDatestamp)) {
                         startPlannerEvent = getPlannerEventFromStorageByCalendarId(startDatestamp, calendarEvent.id);
                     }
-                    const endPlannerEvent = getPlannerEventFromStorageByCalendarId(isoToDatestamp(calendarEvent.endDate as string), calendarEvent.id);
+                    const endDatestamp = isoToDatestamp(calendarEvent.endDate as string);
+                    if (getDoesPlannerExist(endDatestamp)) {
+                        endPlannerEvent = getPlannerEventFromStorageByCalendarId(endDatestamp, calendarEvent.id);
+                    }
                     setInitialEventState({
                         eventType: EEventType.CALENDAR_MULTI_DAY,
                         startPlannerEvent,
-                        endPlannerEvent
+                        endPlannerEvent,
+                        calendarEvent
                     });
                 }
 
@@ -166,38 +191,40 @@ const PlannerEventTimeModal = () => {
 
                 setLoading(false);
                 return;
-            } else if (!plannerEvent) {
+            } else if (!storageEvent) {
                 throw new Error(`PlannerEventTimeModal: No event found in storage or the calendar with ID ${eventId}`);
             }
 
-            if (plannerEvent.calendarId) { // CALENDAR_SINGLE_DAY
+            if (storageEvent.calendarId) { // CALENDAR_SINGLE_DAY
                 setInitialEventState({
                     eventType: EEventType.CALENDAR_SINGLE_DAY,
-                    plannerEvent
+                    plannerEvent: storageEvent
                 });
             } else { // NON_CALENDAR
                 setInitialEventState({
                     eventType: EEventType.NON_CALENDAR,
-                    plannerEvent
+                    plannerEvent: storageEvent
                 });
             }
 
             reset({
-                title: plannerEvent.value,
+                title: storageEvent.value,
                 timeRange: {
-                    startIso: plannerEvent.timeConfig?.startIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp),
-                    endIso: plannerEvent.timeConfig?.endIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp)
+                    startIso: storageEvent.timeConfig?.startIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp),
+                    endIso: storageEvent.timeConfig?.endIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp)
                 },
-                isCalendarEvent: !!plannerEvent.calendarId,
+                isCalendarEvent: !!storageEvent.calendarId,
                 allDay: false
             });
 
             setLoading(false);
         }
 
+        onCloseTextfield();
         buildFormData();
     }, []);
 
+    // Set all-day field to false anytime the event is marked as non-calendar.
     useEffect(() => {
         if (!isCalendarEvent) {
             setValue('allDay', false);
@@ -231,8 +258,7 @@ const PlannerEventTimeModal = () => {
         if (!initialEventState) return;
 
         const { timeRange, title } = data;
-        const targetDatestamp = isoToDatestamp(timeRange.startIso);
-        const targetPlanner = getPlannerFromStorageByDatestamp(targetDatestamp);
+        const targetPlanner = getPlannerFromStorageByDatestamp(triggerDatestamp);
 
         // Extract carryover data and clean up any stale data.
         const { affectedDateRanges, carryoverEventMetadata } =
@@ -243,7 +269,7 @@ const PlannerEventTimeModal = () => {
             id: carryoverEventMetadata?.id ?? uuid.v4(),
             storageId: EStorageId.PLANNER_EVENT,
             value: title,
-            listId: targetDatestamp
+            listId: triggerDatestamp
         };
         savePlannerEventToStorage(newEvent);
 
@@ -254,27 +280,41 @@ const PlannerEventTimeModal = () => {
         await reloadCalendarFromRanges(affectedDateRanges);
 
         // Close the modal with a new textfield below the saved event.
-        closeModalNewTextfield(targetDatestamp, finalEventIndex + 1);
+        closeModalNewTextfield(triggerDatestamp, finalEventIndex + 1);
     }
 
-    async function handleDelete() {
+    async function handleDelete(deleteTodayEvents: boolean = false) {
         if (!initialEventState) return;
 
         setLoading(true);
 
-        let plannerEvent: IPlannerEvent;
+        let plannerEvent: IPlannerEvent | null = null;
 
         switch (initialEventState.eventType) {
             case EEventType.CALENDAR_ALL_DAY: {
                 const { calendarEvent } = initialEventState;
-                plannerEvent = getPlannerEventFromStorageByCalendarId(
-                    isoToDatestamp(calendarEvent.endDate as string),
-                    calendarEvent.id
-                );
+                await Calendar.deleteEventAsync(calendarEvent.id);
+                const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<TDateRange>([{
+                    startIso: calendarEvent.startDate as string,
+                    endIso: calendarEvent.endDate as string
+                }]);
+                await loadExternalCalendarData(datestampsToReload);
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: {
-                plannerEvent = initialEventState.endPlannerEvent;
+                plannerEvent = initialEventState.endPlannerEvent ?? initialEventState.startPlannerEvent;
+
+                if (!plannerEvent) {
+                    // No events exist in storage. 
+                    const { calendarEvent } = initialEventState;
+                    await Calendar.deleteEventAsync(calendarEvent.id);
+
+                    const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges([{
+                        startIso: calendarEvent.startDate as string,
+                        endIso: calendarEvent.endDate as string
+                    }]);
+                    await loadExternalCalendarData(datestampsToReload);
+                }
                 break;
             }
             case EEventType.NON_CALENDAR:
@@ -285,7 +325,7 @@ const PlannerEventTimeModal = () => {
         }
 
         if (plannerEvent) {
-            await deletePlannerEventsFromStorageAndCalendar([plannerEvent]);
+            await deletePlannerEventsFromStorageAndCalendar([plannerEvent], deleteTodayEvents);
         }
 
         closeModalBackNoTextfield();
@@ -304,7 +344,7 @@ const PlannerEventTimeModal = () => {
         // Phase 1: Handle the initial event, extracting carryover data and deleting stale data.
         const calendarEventDetails = buildCalendarEventDetails(data);
         const { calendarId, wasAllDayEvent, affectedDateRanges } =
-            await extractAllDayCalendarEventContext(initialEventState, timeRange);
+            extractAllDayCalendarEventContext(initialEventState, timeRange);
 
         // Edge Case: Ensure correct format for iOS all-day creation.
         if (!wasAllDayEvent) {
@@ -312,7 +352,7 @@ const PlannerEventTimeModal = () => {
         }
 
         // Phase 2: Update the device calendar and reload the calendar to the jotai store.
-        await upsertCalendarEventToDevice(calendarId, calendarEventDetails);
+        await upsertCalendarEventToDevice(calendarId, calendarEventDetails, wasAllDayEvent);
         await reloadCalendarFromRanges(affectedDateRanges);
 
         // Phase 3: Close the modal and try to navigate to a planner with the new event.
@@ -333,11 +373,12 @@ const PlannerEventTimeModal = () => {
         const {
             carryoverEventMetadata,
             calendarId,
-            affectedDateRanges
+            affectedDateRanges,
+            wasAllDayEvent
         } = extractSingleDayCalendarEventContext(initialEventState, timeRange);
 
         // Phase 2: Update the device calendar with the new event.
-        const finalCalendarId = await upsertCalendarEventToDevice(calendarId, eventDetails);
+        const finalCalendarId = await upsertCalendarEventToDevice(calendarId, eventDetails, wasAllDayEvent);
 
         // Phase 3: Create the event in storage.
         const newEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata?.id);
@@ -392,18 +433,19 @@ const PlannerEventTimeModal = () => {
 
         // Phase 1: Handle the initial event, extracting carryover data and deleting stale data.
         const {
-            previousEventMetadata,
+            carryoverEventMetadata,
             calendarId,
-            affectedDateRanges
+            affectedDateRanges,
+            wasAllDayEvent
         } = extractMultiDayEventContext(initialEventState, timeRange);
 
         // Phase 2: Update the device calendar with the new event.
         const eventDetails = buildCalendarEventDetails(data);
-        const finalCalendarId = await upsertCalendarEventToDevice(calendarId, eventDetails);
+        const finalCalendarId = await upsertCalendarEventToDevice(calendarId, eventDetails, wasAllDayEvent);
 
         // Phase 3: Create the start and end events and link them together.
-        const startEvent = upsertFormDataToPlannerEvent(data, previousEventMetadata[0]?.id);
-        const endEvent = upsertFormDataToPlannerEvent(data, previousEventMetadata[1]?.id);
+        const startEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata[ECarryoverEventType.START_EVENT]?.id);
+        const endEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata[ECarryoverEventType.END_EVENT]?.id);
 
         startEvent.timeConfig!.startEventId = startEvent.id;
         startEvent.timeConfig!.endEventId = endEvent.id;
@@ -421,8 +463,8 @@ const PlannerEventTimeModal = () => {
         savePlannerEventToStorage(endEvent);
 
         // Phase 4: Add the events to their planners.
-        addEventToPlanner(startEvent, targetStartPlanner, previousEventMetadata[0]);
-        addEventToPlanner(endEvent, targetEndPlanner, previousEventMetadata[1]);
+        addEventToPlanner(startEvent, targetStartPlanner, carryoverEventMetadata[ECarryoverEventType.START_EVENT]);
+        addEventToPlanner(endEvent, targetEndPlanner, carryoverEventMetadata[ECarryoverEventType.END_EVENT]);
 
         // Phase 5: Reload the calendar data to retrieve the up-to-date event.
         await reloadCalendarFromRanges(affectedDateRanges);
@@ -442,6 +484,8 @@ const PlannerEventTimeModal = () => {
             case EEventType.NON_CALENDAR: { // NON_CALENDAR → CALENDAR_ALL_DAY
                 const { plannerEvent } = initialState;
 
+                // ✅ 
+
                 // Delete the planner event from storage.
                 deletePlannerEventsFromStorageAndCalendar([plannerEvent]);
 
@@ -449,6 +493,8 @@ const PlannerEventTimeModal = () => {
             }
             case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → CALENDAR_ALL_DAY
                 const { calendarEvent } = initialState;
+
+                // ✅ 
 
                 wasAllDayEvent = true;
                 calendarId = calendarEvent.id;
@@ -462,39 +508,42 @@ const PlannerEventTimeModal = () => {
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_ALL_DAY
-                const { endPlannerEvent } = initialState;
+                const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
 
-                calendarId = endPlannerEvent.calendarId;
+                // ✅ 
+
+                calendarId = calendarEvent.id;
 
                 // // Add the range of the previous event to the calendar update ranges.
-                affectedDateRanges.push(endPlannerEvent.timeConfig!);
+                affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
                 // Delete the planner events from storage. 
-                // Exclude calendar refresh (will be handled within this modal).
-                // Exclude calendar delete (ID will be reused).
-                const eventsToDelete = [endPlannerEvent];
-                deletePlannerEventsFromStorageAndCalendar(eventsToDelete, {
-                    excludeCalendarDelete: true,
-                    excludeCalendarRefresh: true
-                });
+                if (startPlannerEvent) {
+                    removeEventIdFromPlannerInStorage(startPlannerEvent.id);
+                    deletePlannerEventFromStorageById(startPlannerEvent.id);
+                }
+                if (endPlannerEvent) {
+                    removeEventIdFromPlannerInStorage(endPlannerEvent.id);
+                    deletePlannerEventFromStorageById(endPlannerEvent.id);
+                }
 
                 break;
             }
             case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → CALENDAR_ALL_DAY
                 const { plannerEvent } = initialState;
 
+                // ✅ 
+
                 calendarId = plannerEvent.calendarId;
 
                 // Add the range of the previous event to the calendar update ranges.
                 affectedDateRanges.push(plannerEvent.timeConfig!);
 
-                // Delete the planner event from storage.
-                // Exclude calendar refresh (will be handled within this modal).
-                // Exclude calendar delete (ID will be reused if it exists).
-                deletePlannerEventsFromStorageAndCalendar([plannerEvent], {
-                    excludeCalendarDelete: true,
-                    excludeCalendarRefresh: true
-                });
+                // Delete the planner event from storage. 
+                if (plannerEvent) {
+                    removeEventIdFromPlannerInStorage(plannerEvent.id);
+                    deletePlannerEventFromStorageById(plannerEvent.id);
+                }
 
                 break;
             }
@@ -509,11 +558,14 @@ const PlannerEventTimeModal = () => {
         const affectedDateRanges: TDateRange[] = [newRange];
         let carryoverEventMetadata: TCarryoverEventMetadata | undefined;
         let calendarId: string | undefined;
+        let wasAllDayEvent = false;
 
         switch (initialState.eventType) {
             case EEventType.NON_CALENDAR: { // NON_CALENDAR → CALENDAR_SINGLE_DAY
                 const { plannerEvent } = initialState;
                 const { listId: startDatestamp, id } = plannerEvent;
+
+                // ✅ 
 
                 // If the event is recurring, mark it hidden in its planner so it is not overwritten.
                 if (plannerEvent.recurringId) {
@@ -529,6 +581,9 @@ const PlannerEventTimeModal = () => {
             case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → CALENDAR_SINGLE_DAY
                 const { calendarEvent } = initialState;
 
+                // ✅ 
+
+                wasAllDayEvent = true;
                 calendarId = calendarEvent.id;
 
                 // Mark the previous event ranges to reload the calendar.
@@ -540,30 +595,34 @@ const PlannerEventTimeModal = () => {
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_SINGLE_DAY
-                const { startPlannerEvent, endPlannerEvent } = initialState;
-                const { timeConfig } = endPlannerEvent;
-                const { startEventId, endEventId } = timeConfig!;
+                const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
 
-                calendarId = endPlannerEvent.calendarId;
+                // ✅ 
+
+                calendarId = calendarEvent.id;
 
                 // Mark the previous time range of the calendar event to reload the calendar.
-                affectedDateRanges.push(timeConfig!);
+                affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
                 // Delete the end event from storage and remove from its planner.
-                removeEventIdFromPlannerInStorage(endEventId!);
-                deletePlannerEventFromStorageById(endEventId!);
+                if (endPlannerEvent) {
+                    removeEventIdFromPlannerInStorage(endPlannerEvent.id);
+                    deletePlannerEventFromStorageById(endPlannerEvent.id);
+                }
 
-                if (!startPlannerEvent || !getDoesPlannerStillExistInStorage(startPlannerEvent.listId)) break;
-
-                // Re-use the position and ID of the existing start event.
-                const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
-                carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startEventId!, hasMovedPlanners);
+                // Try to re-use the position and ID of the existing start event.
+                if (startPlannerEvent) {
+                    const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
+                    carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startPlannerEvent.id, hasMovedPlanners);
+                }
 
                 break;
             }
             case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → CALENDAR_SINGLE_DAY
                 const { plannerEvent } = initialState;
                 const { timeConfig, listId: startDatestamp, id } = plannerEvent;
+
+                // ✅ 
 
                 calendarId = plannerEvent.calendarId;
 
@@ -578,7 +637,7 @@ const PlannerEventTimeModal = () => {
             }
         }
 
-        return { carryoverEventMetadata, calendarId, affectedDateRanges };
+        return { carryoverEventMetadata, calendarId, affectedDateRanges, wasAllDayEvent };
     }
 
     async function extractNonCalendarEventContext(initialState: TEventState, newRange: TDateRange) {
@@ -591,6 +650,8 @@ const PlannerEventTimeModal = () => {
             case EEventType.NON_CALENDAR: { // NON_CALENDAR → NON_CALENDAR
                 const { plannerEvent } = initialState;
                 const { listId: startDatestamp, id } = plannerEvent;
+
+                // ✅ 
 
                 // If the event is recurring, mark it hidden in its planner so it is not overwritten.
                 if (plannerEvent.recurringId) {
@@ -606,6 +667,8 @@ const PlannerEventTimeModal = () => {
             case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → NON_CALENDAR
                 const { calendarEvent } = initialState;
 
+                // ✅ 
+
                 // Delete the existing event in the calendar.
                 await Calendar.deleteEventAsync(calendarEvent.id, { futureEvents: true });
 
@@ -618,33 +681,35 @@ const PlannerEventTimeModal = () => {
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → NON_CALENDAR
-                const { startPlannerEvent, endPlannerEvent } = initialState;
-                const { timeConfig } = endPlannerEvent;
-                const { startEventId, endEventId } = timeConfig!;
+                const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
+
+                // ✅ 
 
                 // Delete the event in the calendar.
-                await Calendar.deleteEventAsync(endPlannerEvent.calendarId!, { futureEvents: true });
+                await Calendar.deleteEventAsync(calendarEvent.id, { futureEvents: true });
 
                 // Mark the range of the calendar event to reload the calendar data.
-                affectedDateRanges.push(endPlannerEvent.timeConfig!);
+                affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
-                // Delete the end event from storage.
-                // Start event may stay in storage to be updated.
-                deletePlannerEventFromStorageById(endEventId!);
+                // Delete the end event from storage and remove from its planner.
+                if (endPlannerEvent) {
+                    removeEventIdFromPlannerInStorage(endPlannerEvent.id);
+                    deletePlannerEventFromStorageById(endPlannerEvent.id);
+                }
 
-                // Exit early if the start event's planner no longer exists.
-                // Storage has no useful data to carry over.
-                if (!startPlannerEvent || !getDoesPlannerStillExistInStorage(startPlannerEvent.listId)) break;
-
-                // Carryover the start event's ID and index to reuse with the new event.
-                const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
-                carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startEventId!, hasMovedPlanners);
+                // Try to carryover the start event's ID and index to reuse with the new event.
+                if (startPlannerEvent) {
+                    const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
+                    carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startPlannerEvent.id, hasMovedPlanners);
+                }
 
                 break;
             }
             case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → NON_CALENDAR
                 const { plannerEvent } = initialState;
                 const { timeConfig, id, listId: startDatestamp, calendarId } = plannerEvent;
+
+                // ✅ 
 
                 // Event was in calendar. Delete it.
                 await Calendar.deleteEventAsync(calendarId!, { futureEvents: true });
@@ -667,13 +732,16 @@ const PlannerEventTimeModal = () => {
         const { startIso, endIso } = newRange;
 
         const affectedDateRanges: TDateRange[] = [newRange];
-        const previousEventMetadata: TCarryoverEventMetadata[] = [];
+        const carryoverEventMetadata: TCarryoverEventMap = {};
         let calendarId: string | undefined;
+        let wasAllDayEvent = false;
 
         switch (initialState.eventType) {
             case EEventType.NON_CALENDAR: { // NON_CALENDAR → CALENDAR_MULTI_DAY
                 const { plannerEvent } = initialState;
                 const { listId: startDatestamp, id } = plannerEvent;
+
+                // ✅ 
 
                 // If the event is recurring, mark it hidden in its planner so it is not overwritten.
                 if (plannerEvent.recurringId) {
@@ -682,14 +750,17 @@ const PlannerEventTimeModal = () => {
 
                 // Re-use the position and ID of the existing event.
                 const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-                previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners));
+                carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
 
                 break;
             }
             case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → CALENDAR_MULTI_DAY
                 const { calendarEvent } = initialState;
 
+                // ✅ 
+
                 calendarId = calendarEvent.id;
+                wasAllDayEvent = true;
 
                 // Mark the previous event ranges to reload the calendar.
                 affectedDateRanges.push({
@@ -700,32 +771,34 @@ const PlannerEventTimeModal = () => {
                 break;
             }
             case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_MULTI_DAY
-                const { startPlannerEvent, endPlannerEvent } = initialState;
-                const { listId: endDatestamp } = endPlannerEvent;
-                const { timeConfig } = endPlannerEvent;
+                const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
 
-                calendarId = endPlannerEvent.calendarId;
+                // ✅ 
+
+                calendarId = calendarEvent.id;
 
                 // Mark the previous time range of the calendar event to reload the calendar.
-                affectedDateRanges.push(timeConfig!);
+                affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
                 // Re-use the position and ID of the existing end event.
-                const hasEndMovedPlanners = getHasEventMovedPlanners(endDatestamp, endIso);
-                previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(endPlannerEvent.id, hasEndMovedPlanners));
-
-                // Exit early if the start event's planner no longer exists.
-                // Storage has no more useful data to carry over.
-                if (!startPlannerEvent || !getDoesPlannerStillExistInStorage(startPlannerEvent.listId)) break;
+                if (endPlannerEvent) {
+                    const hasEndMovedPlanners = getHasEventMovedPlanners(endPlannerEvent.listId, endIso);
+                    carryoverEventMetadata[ECarryoverEventType.END_EVENT] = getEventMetadataAndCleanPreviousPlanner(endPlannerEvent.id, hasEndMovedPlanners);
+                }
 
                 // Re-use the position and ID of the existing start event.
-                const hasStartMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
-                previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(startPlannerEvent!.id, hasStartMovedPlanners));
+                if (startPlannerEvent) {
+                    const hasStartMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
+                    carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getEventMetadataAndCleanPreviousPlanner(startPlannerEvent.id, hasStartMovedPlanners);
+                }
 
                 break;
             }
             case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → CALENDAR_MULTI_DAY
                 const { plannerEvent } = initialState;
                 const { listId: startDatestamp, timeConfig, id } = plannerEvent;
+
+                // ✅ 
 
                 calendarId = plannerEvent.calendarId;
 
@@ -734,13 +807,13 @@ const PlannerEventTimeModal = () => {
 
                 // Re-use the position and ID of the existing event.
                 const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-                previousEventMetadata.push(getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners));
+                carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
 
                 break;
             }
         }
 
-        return { previousEventMetadata, calendarId, affectedDateRanges };
+        return { carryoverEventMetadata, calendarId, affectedDateRanges, wasAllDayEvent };
     }
 
     // ---------- Builders ----------
@@ -751,7 +824,7 @@ const PlannerEventTimeModal = () => {
             title,
             startDate: startIso,
             endDate: endIso,
-            allDay,
+            allDay
         };
     }
 
@@ -771,14 +844,12 @@ const PlannerEventTimeModal = () => {
 
         if (mountedDatestamps.all.includes(startDatestamp)) {
             // Start of range is mounted.
-            onCloseTextfield();
             router.replace(startDatestamp === getTodayDatestamp() ? '/' : '/planners');
             return;
         }
 
         if (mountedDatestamps.all.includes(endDatestamp)) {
             // End of range is mounted.
-            onCloseTextfield();
             router.replace(endDatestamp === getTodayDatestamp() ? '/' : '/planners');
             return;
         }
@@ -796,7 +867,6 @@ const PlannerEventTimeModal = () => {
     }
 
     function closeModalBackNoTextfield() {
-        onCloseTextfield();
         router.back();
     }
 
@@ -831,9 +901,16 @@ const PlannerEventTimeModal = () => {
 
     async function upsertCalendarEventToDevice(
         calendarId: string | undefined,
-        eventDetails: Partial<Calendar.Event>
+        eventDetails: Partial<Calendar.Event>,
+        wasAllDayEvent: boolean
     ): Promise<string> {
         if (calendarId) {
+            if (wasAllDayEvent && !eventDetails.allDay) {
+                // Edge Case: Need to delete the all-day event and create a new event.
+                await Calendar.deleteEventAsync(calendarId);
+                const primaryCalendarId = await getPrimaryCalendarId();
+                return await Calendar.createEventAsync(primaryCalendarId, eventDetails);
+            }
             await Calendar.updateEventAsync(calendarId, eventDetails, { futureEvents: true });
             return calendarId;
         } else {
@@ -883,16 +960,19 @@ const PlannerEventTimeModal = () => {
         return prevDatestamp !== isoToDatestamp(newIso);
     }
 
-    function getDoesPlannerStillExistInStorage(datestamp: string): boolean {
-        return datestamp > getYesterdayDatestamp();
-    }
-
     function addEventToPlanner(event: IPlannerEvent, targetPlanner: TPlanner, previousEventMetadata?: TCarryoverEventMetadata): number {
         const targetIndex = previousEventMetadata?.index ?? targetPlanner.eventIds.length;
         const newPlanner = updatePlannerEventIndexWithChronologicalCheck(targetPlanner, targetIndex, event);
         const finalIndex = newPlanner.eventIds.indexOf(event.id);
         savePlannerToStorage(newPlanner);
         return finalIndex;
+    }
+
+    function getCalendarEventTimeRange(event: Calendar.Event) {
+        return {
+            startIso: event.startDate as string,
+            endIso: event.endDate as string
+        }
     }
 
     // ======
@@ -907,11 +987,7 @@ const PlannerEventTimeModal = () => {
                 onClick: handleSubmit(handleSaveFormData),
                 disabled: !isValid || loading
             }}
-            deleteButtonConfig={{
-                label: 'Unschedule',
-                optionLabels: ['Delete Event', 'Unschedule Event'],
-                optionHandlers: [handleDelete, handleSubmit(handleUnschedule)]
-            }}
+            deleteButtonConfig={deleteButtonConfig}
             onClose={() => router.back()}
         >
             <Form fields={formFields} control={control} />

@@ -10,7 +10,7 @@ import { plannerChipsByDatestamp } from '@/atoms/plannerChips';
 
 // ✅ 
 
-type TEventChipSetsProps = {
+type TPlannerChipSetsProps = {
     datestamp: string;
     collapsed?: boolean;
     backgroundPlatformColor?: string;
@@ -19,12 +19,11 @@ type TEventChipSetsProps = {
 
 const COLLAPSED_HEIGHT = 24;
 
-const EventChipSets = ({
+const PlannerChipSets = ({
     datestamp,
     collapsed = false,
-    onToggleCollapsed,
-    backgroundPlatformColor,
-}: TEventChipSetsProps) => {
+    ...rest
+}: TPlannerChipSetsProps) => {
     const currentWeatherChip = useAtomValue(currentWeatherChipAtom);
     const { today } = useAtomValue(mountedDatestampsAtom);
 
@@ -58,15 +57,14 @@ const EventChipSets = ({
                         set.map((chip, chipIndex) => (
                             <EventChip
                                 key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
+                                chipSetIndex={chipIndex}
                                 chip={chip}
                                 parentPlannerDatestamp={datestamp}
-                                chipSetIndex={chipIndex}
                                 shiftChipRight={
                                     chipIndex === 0 && setIndex !== 0 && collapsed
                                 }
                                 collapsed={collapsed}
-                                onToggleCollapsed={onToggleCollapsed}
-                                backgroundPlatformColor={backgroundPlatformColor}
+                                {...rest}
                             />
                         )))}
                 </View>
@@ -75,4 +73,4 @@ const EventChipSets = ({
     );
 };
 
-export default EventChipSets;
+export default PlannerChipSets;

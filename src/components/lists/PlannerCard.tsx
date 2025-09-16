@@ -42,12 +42,12 @@ const PlannerCard = ({
 
     useEffect(() => {
         if (isPlannerFocused && collapsed) {
-            handleToggleCollapsed();
+            handleToggleCollapsed(false);
         }
     }, [isPlannerFocused]);
 
-    function handleToggleCollapsed() {
-        if (isPlannerFocused) {
+    function handleToggleCollapsed(closeTextfield: boolean = true) {
+        if (isPlannerFocused && closeTextfield) {
             onCloseTextfield();
         }
 

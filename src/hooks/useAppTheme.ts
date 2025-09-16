@@ -28,8 +28,12 @@ const useAppTheme = () => {
         modal: {
             inputField: isLightMode ? 'systemBackground' : 'systemGray5'
         },
-        overflowText: isLightMode ? 'rgb(20,20,20)' : 'rgb(240,240,240)',
-        weatherBackground: isLightMode ? PlatformColor('systemGray') : undefined
+        overflowActionText: isLightMode ? 'rgb(40,40,40)' : 'rgb(240,240,240)',
+        weatherBackground: isLightMode ? PlatformColor('systemGray2') : undefined,
+        weatherChip: {
+            background: isLightMode ? 'systemGray' : 'systemBackground',
+            label: isLightMode ? 'systemGray6' : 'secondaryLabel'
+        }
     }
 }
 

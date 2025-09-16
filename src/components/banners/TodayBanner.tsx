@@ -25,12 +25,22 @@ const TodayBanner = ({
     onToggleEditTitle
 }: TTodayBannerProps) =>
     <View
-        className='flex-row items-center justify-between w-full relative'
+        className='flex-row items-center justify-between w-full'
         style={{ height: HEADER_HEIGHT }}
     >
-
-        {/* Date */}
         <View className='relative flex-1'>
+
+            {/* Date */}
+            <View className='absolute bottom-full translate-y-3 flex-row'>
+                <CustomText variant='detail'>
+                    {getDayOfWeekFromDatestamp(datestamp)}{' '}
+                </CustomText>
+                <CustomText variant='softDetail'>
+                    {getMonthDateFromDatestamp(datestamp)}
+                </CustomText>
+            </View>
+
+            {/* Title */}
             {isEditingTitle ? (
                 <TextInput
                     autoFocus
@@ -54,16 +64,10 @@ const TodayBanner = ({
                     </CustomText>
                 </View>
             )}
-            <View className='absolute bottom-full translate-y-3 flex-row'>
-                <CustomText variant='detail'>
-                    {getDayOfWeekFromDatestamp(datestamp)}{' '}
-                </CustomText>
-                <CustomText variant='softDetail'>
-                    {getMonthDateFromDatestamp(datestamp)}
-                </CustomText>
-            </View>
+
         </View>
 
+        {/* Overflow Actions */}
         <OverflowIcon />
 
     </View>;

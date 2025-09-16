@@ -9,7 +9,7 @@ import { createEmptyPlanner, updatePlannerEventIndexWithChronologicalCheck, upse
 import { MenuView } from "@react-native-menu/menu";
 import { useEffect, useState } from "react";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
-import useAppTheme from "../useAppTheme";
+import useOverflowActions from "../useOverflowActions";
 import useTextfieldItemAs from "../useTextfieldItemAs";
 
 // ✅ 
@@ -33,10 +33,14 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
 
     const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-    const { overflowText } = useAppTheme();
-
     const isPlannerFocused = planner && (focusedEvent?.listId === planner.datestamp);
+    const hasStaleRecurring = planner && planner.deletedRecurringEventIds.length;
     const hasTitle = planner?.title?.length;
+
+    const hasRecurring = !!planner?.eventIds.some((id) => {
+        const event = getPlannerEventFromStorageById(id);
+        return !!event.recurringId;
+    });
 
     // Build the initial planner with recurring data.
     useEffect(() => {
@@ -134,38 +138,38 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     // 3. Overflow Actions
     // ====================
 
-    const overflowActions = [
+    const overflowActions = useOverflowActions([
         {
             id: EPlannerEditAction.EDIT_TITLE,
             title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
             image: hasTitle ? 'pencil' : 'plus',
-            imageColor: overflowText
         },
         {
             id: 'recurring',
             title: 'Manage Recurring',
             image: 'repeat',
-            imageColor: overflowText,
             subactions: [
                 {
                     id: EPlannerEditAction.RESET_RECURRING,
                     title: 'Reset Recurring',
                     subtitle: 'Customized recurring events will be reset.',
                     image: 'arrow.trianglehead.2.clockwise',
-                    imageColor: overflowText
+                    attributes: {
+                        hidden: !hasStaleRecurring
+                    }
                 },
                 {
                     id: EPlannerEditAction.DELETE_RECURRING,
                     title: 'Delete Recurring',
                     attributes: {
-                        destructive: true
+                        destructive: true,
+                        hidden: !hasRecurring
                     },
                     image: 'trash',
-                    imageColor: 'rgb(208,77,64)'
                 }
             ],
         }
-    ];
+    ]);
 
     const OverflowIcon = () => {
         return (

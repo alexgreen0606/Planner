@@ -91,9 +91,7 @@ export function updateListItemIndex<T extends TListItem>(index: number, item: T)
  * 
  * @param items - The list of items to delete.
  */
-export async function deleteChecklistItems(
-    items: TListItem[]
-) {
+export async function deleteChecklistItems(items: TListItem[]) {
     const listsToUpdate: Record<string, IFolderItem> = {};
     const itemIdsToDelete = new Set<string>();
 
@@ -126,10 +124,20 @@ export async function deleteChecklistItems(
  * 
  * @param items - The list of items to delete.
  */
-export function deleteFolderItemAndChildren(item: IFolderItem) {
-
+export function deleteFolderItemAndChildren(item: IFolderItem, isForceDelete: boolean = false) {
     if (item.listId === NULL) {
         throw new Error('deleteFolderItemAndChildren: Cannot delete the root folder.');
+    }
+
+    if (!isForceDelete && item.itemIds.length > 0) {
+        // Item cannot be deleted. Give it a value and abort the delete.
+        if (item.value.trim() === '') {
+            saveFolderItemToStorage({
+                ...item,
+                value: item.type === EFolderItemType.FOLDER ? 'Folder' : 'Checklist'
+            });
+        }
+        return;
     }
 
     // Remove the item from its parent.

@@ -11,7 +11,7 @@ import { TAppMetaData } from '@/lib/types/TAppMetadata';
 import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
 import { loadExternalCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
-import { deleteAllPlannersInStorageBeforeYesterday } from '@/utils/plannerUtils';
+import { deleteAllPlannersInStorageOlderThan3Years as deleteAllPlannersInStorageOlderThanThreeYears } from '@/utils/plannerUtils';
 import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
@@ -68,34 +68,20 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     }, []);
 
     async function handleLoadPage() {
+        await updateCalendarAndContactPermissions();
+
         switch (pathname) {
             case '/':
-                await updateCalendarAndContactPermissions();
-
-                // Lazy load in the weather data for today.
                 loadCurrentWeatherToStore();
-
-                // Load in the calendar data for today and build the new planner.
-                await loadExternalCalendarData([mountedDatestamps.today]);
-
                 break;
             case '/planners':
-                await updateCalendarAndContactPermissions();
 
                 // TODO: how to handle loading in the weather for these planners?
 
-                // Load in the calendar data for the mounted planners.
-                await loadExternalCalendarData(mountedDatestamps.all);
-
-                break;
-            case '/planners/countdowns':
-                await updateCalendarAndContactPermissions();
-
-                // Load in the calendar data.
-                await loadExternalCalendarData([mountedDatestamps.today]);
-
                 break;
         }
+
+        await loadExternalCalendarData(mountedDatestamps.all);
     }
 
     async function updateCalendarAndContactPermissions(): Promise<TUserAccess> {
@@ -160,7 +146,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
             const yesterdayPlanner = getPlannerFromStorageByDatestamp(yesterdayDatestamp);
             const todayPlanner = getPlannerFromStorageByDatestamp(todayDatestamp);
 
-            deleteAllPlannersInStorageBeforeYesterday();
+            deleteAllPlannersInStorageOlderThanThreeYears();
 
             yesterdayPlanner.eventIds.reverse().forEach((id) => {
                 const event = getPlannerEventFromStorageById(id);

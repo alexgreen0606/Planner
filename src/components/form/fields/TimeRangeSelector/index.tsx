@@ -1,8 +1,6 @@
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import ThinLine from '@/components/ThinLine';
 import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
 import { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
 import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -30,14 +28,7 @@ const TimeRangeSelector = ({
     triggerOpenField,
     onChange
 }: TTimeRangeSelectorProps) => {
-    const { today } = useAtomValue(mountedDatestampsAtom);
-
     const [selectorMode, setSelectorMode] = useState<ETimeSelectorMode | null>(null);
-
-    const todayMidnight: Date = useMemo(
-        () => DateTime.local().startOf('day').toJSDate(),
-        [today]
-    );
 
     const startDate: Date = useMemo(
         () => DateTime.fromISO(startIso).toJSDate(),
@@ -199,7 +190,6 @@ const TimeRangeSelector = ({
                 currentSelectorMode={selectorMode}
                 onToggleMode={handleToggleSelectorMode}
                 onChange={handleChange}
-                minimumDate={todayMidnight}
             />
 
             {/* Separator */}

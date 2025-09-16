@@ -108,7 +108,8 @@ export async function loadCurrentWeatherToStore() {
     title: " Madison  64°",
     iconConfig: {
       type: randomWeather.icon as TIconType,
-      multicolor: true
+      multicolor: true,
+      contrastBackground: true
     },
     onClick: openWeatherApp,
     hasClickAccess: canOpenWeatherApp,

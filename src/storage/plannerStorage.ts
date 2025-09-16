@@ -43,6 +43,14 @@ export function getAllPlannerDatestampsFromStorage(): string[] {
     return plannerStorage.getAllKeys();
 }
 
+export function getDoesPlannerExist(datestamp: string) {
+    return plannerStorage.contains(datestamp);
+}
+
+export function getDoesPlannerEventExist(eventId: string) {
+    return eventStorage.contains(eventId);
+}
+
 // ====================
 // 3. Delete Functions
 // ====================

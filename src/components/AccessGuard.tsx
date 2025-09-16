@@ -21,8 +21,8 @@ const initialRootFolder: IFolderItem = {
     id: EStorageKey.ROOT_FOLDER_KEY,
     listId: NULL,
     itemIds: [],
-    value: 'Lists',
-    platformColor: 'systemBlue',
+    value: 'Checklists',
+    platformColor: 'label',
     type: EFolderItemType.FOLDER,
     storageId: EStorageId.FOLDER_ITEM
 };
