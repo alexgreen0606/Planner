@@ -6,11 +6,11 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SFSymbol } from 'react-native-sfsymbols';
 import CustomText from '../text/CustomText';
 import SlowFadeInView from '../SlowFadeInView';
 import { getRandomWeatherChip } from '@/utils/weatherUtils';
 import useAppTheme from '@/hooks/useAppTheme';
+import { SymbolView } from 'expo-symbols';
 
 // ✅ 
 
@@ -48,11 +48,11 @@ const WeatherDisplay = ({
                     <View className="px-4 w-10 h-10 rounded-3xl items-center justify-center" style={{
                         backgroundColor: weatherBackground
                     }}>
-                        <SFSymbol
+                        <SymbolView
+                            type='multicolor'
+                            // @ts-ignore
                             name={getRandomWeatherChip().icon}
                             size={20}
-                            multicolor
-                            resizeMode="center"
                         />
                     </View>
                 </View>

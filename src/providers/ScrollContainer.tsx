@@ -9,9 +9,8 @@ import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/c
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
-import { MotiView } from 'moti';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import Animated, {
     AnimatedRef,
@@ -34,6 +33,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from './ExternalDataProvider';
+import { CircularProgress, Host } from '@expo/ui/swift-ui';
 
 // ✅ 
 
@@ -84,7 +84,6 @@ export const ScrollContainerProvider = ({
     fixFloatingBannerOnOverscroll = false
 }: TScrollContainerProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const keyboard = useAnimatedKeyboard();
     const pathname = usePathname();
 
@@ -97,8 +96,6 @@ export const ScrollContainerProvider = ({
 
     const [floatingBannerHeight, setFloatingBannerHeight] = useState(fixedFloatingBannerHeight);
     const [loadingStatus, setLoadingStatus] = useState<ELoadingStatus>(ELoadingStatus.STATIC);
-    const [blurBottomNav, setBlurBottomNav] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
     const bottomAnchorAbsolutePosition = useSharedValue(0);
@@ -112,7 +109,6 @@ export const ScrollContainerProvider = ({
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
-    const VISIBLE_HEIGHT = SCREEN_HEIGHT - LOWER_CONTAINER_PADDING;
 
     // Blur the space behind floating banners
     // If no floating banner exists, blur for the default header height
@@ -132,7 +128,7 @@ export const ScrollContainerProvider = ({
                 [1, 0],
                 Extrapolation.CLAMP
             ),
-            transform: [{ rotate: `${loadingRotation.value}deg` }],
+            // transform: [{ rotate: `${loadingRotation.value}deg` }],
             top: baseTop,
         };
     });
@@ -224,31 +220,18 @@ export const ScrollContainerProvider = ({
     // ==============
 
     const scrollHandler = useAnimatedScrollHandler({
-        onBeginDrag: () => {
-            runOnJS(setIsDragging)(true);
-        },
         onScroll: (event) => {
             if (!disableNativeScroll.value) {
                 scrollOffset.value = event.contentOffset.y;
             }
         },
         onEndDrag: () => {
-            runOnJS(setIsDragging)(false);
             handleMeasureScrollContentHeight();
         },
         onMomentumEnd: () => {
-            runOnJS(setIsDragging)(false);
             handleMeasureScrollContentHeight();
         }
     });
-
-    // Blur the bottom navbar when content extends behind it.
-    useAnimatedReaction(
-        () => bottomAnchorAbsolutePosition.value > VISIBLE_HEIGHT,
-        (shouldBlur) => {
-            runOnJS(setBlurBottomNav)(shouldBlur);
-        }
-    );
 
     // Loading Spinner Animation
     useAnimatedReaction(
@@ -374,7 +357,7 @@ export const ScrollContainerProvider = ({
 
                 {/* Floating Banner */}
                 <FloatingBanner
-                    className="absolute z-[3] flex justify-center w-full px-2"
+                    className="absolute z-[3] flex justify-center w-full"
                     style={floatingBannerStyle}
                     onLayout={(event) => {
                         if (fixedFloatingBannerHeight) return;
@@ -390,7 +373,7 @@ export const ScrollContainerProvider = ({
                 <KeyboardAvoidingView
                     behavior='padding'
                     className='flex-1'
-                    keyboardVerticalOffset={TOOLBAR_HEIGHT}
+                    // keyboardVerticalOffset={TOOLBAR_HEIGHT}
                 >
                     {/* Hidden placeholder input to prevent keyboard flicker */}
                     <TextInput
@@ -442,33 +425,13 @@ export const ScrollContainerProvider = ({
                 {/* Top Blur Bar */}
                 <TopBlurBar />
 
-                {/* Bottom Blur Bar */}
-                <MotiView
-                    className="absolute bottom-0 w-screen"
-                    animate={{
-                        opacity: (blurBottomNav && !isDragging) ? 1 : 0
-                    }}
-                    transition={{
-                        type: 'timing',
-                        duration: 400
-                    }}
-                >
-                    <BlurView
-                        tint="systemUltraThinMaterial"
-                        intensity={100}
-                        className='w-screen'
-                        style={{ height: LOWER_CONTAINER_PADDING }}
-                    />
-                </MotiView>
-
-
                 {/* Loading Spinner */}
                 {canReloadPath && (
                     <LoadingSpinner
                         className='absolute z-[1] self-center'
                         style={loadingSpinnerStyle}
                     >
-                        <GenericIcon
+                        {/* <GenericIcon
                             size='l'
                             platformColor={loadingStatus === ELoadingStatus.COMPLETE ?
                                 'systemBlue' : 'secondaryLabel'
@@ -476,7 +439,10 @@ export const ScrollContainerProvider = ({
                             type={loadingStatus === ELoadingStatus.COMPLETE ?
                                 'refreshComplete' : 'refresh'
                             }
-                        />
+                        /> */}
+                        <Host matchContents>
+                            <CircularProgress />
+                        </Host>
                     </LoadingSpinner>
                 )}
 

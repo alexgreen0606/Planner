@@ -2,56 +2,52 @@ import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/icon';
 import PlannerCard from '@/components/lists/PlannerCard';
+import OverflowActions from '@/components/OverflowActions';
 import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
-import SlowFadeInView from '@/components/SlowFadeInView';
-import ButtonText from '@/components/text/ButtonText';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import { getAllPlannerSetTitles } from '@/storage/plannerSetsStorage';
-import { MenuAction, MenuView } from '@react-native-menu/menu';
+import { Button } from '@expo/ui/swift-ui';
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
+import { useMMKV, useMMKVListener } from 'react-native-mmkv';
 
 // ✅ 
 
-const defaultPlannerSet = 'Next 7 Days';
-
 const Planners = () => {
+    const plannerSetStorage = useMMKV({ id: EStorageId.PLANNER_SETS });
     const router = useRouter();
 
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
-    const allPlannerSetTitles = getAllPlannerSetTitles(); // TODO: use MMKV to watch this
+    function buildPlannerSetOptions() {
+        const allPlannerSetTitles = getAllPlannerSetTitles();
+        return ['Next 7 Days', ...allPlannerSetTitles].map((title) => (
+            <Button variant='bordered' onPress={() => setPlannerSetKey(title)}>
+                {title}
+            </Button>
+        ));
+    }
 
-    const plannerSetOptions = useMemo(() =>
-        [defaultPlannerSet, ...allPlannerSetTitles].map((title) => ({
-            id: title,
-            title,
-            titleColor: 'blue',
-            state: plannerSetKey === title ? 'on' : 'off',
-        })),
-        [allPlannerSetTitles]
-    );
+    const [plannerSetOptions, setPlannerSetOptions] = useState(buildPlannerSetOptions());
+
+    // Re-build the list of planner set options whenever they change in storage.
+    useMMKVListener(() => {
+        setPlannerSetOptions(buildPlannerSetOptions());
+    }, plannerSetStorage);
 
     return (
         <View className='flex-1'>
 
             {/* Planner Set Selection */}
             <View className='px-3 pt-3 flex-row justify-between items-center w-full'>
-                <MenuView
-                    onPressAction={({ nativeEvent }) => {
-                        setPlannerSetKey(nativeEvent.event)
-                    }}
-                    actions={plannerSetOptions as MenuAction[]}
-                    shouldOpenOnLongPress={false}
-                >
-                    <ButtonText>
-                        {plannerSetKey}
-                    </ButtonText>
-                </MenuView>
+                <OverflowActions label={plannerSetKey}>
+                    {plannerSetOptions}
+                </OverflowActions>
                 <View className='gap-2 flex-row'>
                     {plannerSetKey !== 'Next 7 Days' && (
                         <GenericIcon
@@ -71,7 +67,7 @@ const Planners = () => {
             </View>
 
             {/* Planner Set Display */}
-            <SlowFadeInView className='p-4 gap-4'>
+            <View className='p-4 gap-4'>
                 {planner.map((datestamp) =>
                     <PlannerCard
                         key={`${datestamp}-planner`}
@@ -79,7 +75,7 @@ const Planners = () => {
                     />
                 )}
                 <ScrollContainerAnchor />
-            </SlowFadeInView>
+            </View>
 
         </View>
     )

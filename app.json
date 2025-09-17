@@ -22,7 +22,8 @@
         "NSContactsUsageDescription": "This app requires access to contacts to send birthday messages",
         "LSApplicationQueriesSchemes": [
           "sms"
-        ]
+        ],
+        "NSCalendarsUsageDescription": "This app requires access to the calendar to schedule events."
       }
     },
     "android": {

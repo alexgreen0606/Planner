@@ -83,7 +83,6 @@ const FormField = ({
                     label={label ?? ''}
                     value={Boolean(value)}
                     onChange={onChange}
-                    disabled={disabled}
                 />
             );
         default:

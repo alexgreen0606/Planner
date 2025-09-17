@@ -3,21 +3,26 @@ import { DeleteSchedulerProvider } from '@/providers/DeleteScheduler';
 import { createStore, Provider as JotaiProvider } from 'jotai';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../global.css';
-import { Host } from 'react-native-portalize';
+import { PlatformColor, View } from 'react-native';
+import useAppTheme from '@/hooks/useAppTheme';
 
 // ✅ 
 
 export const jotaiStore = createStore();
 
-const TabLayout = () =>
-    <JotaiProvider store={jotaiStore}>
-        <DeleteSchedulerProvider>
-            <GestureHandlerRootView>
-                <Host>
-                    <AuthGuard />
-                </Host>
-            </GestureHandlerRootView>
-        </DeleteSchedulerProvider>
-    </JotaiProvider>;
+const TabLayout = () => {
+    const { background } = useAppTheme();
+    return (
+        <View className='flex-1' style={{ backgroundColor: PlatformColor(background) }}>
+            <JotaiProvider store={jotaiStore}>
+                <DeleteSchedulerProvider>
+                    <GestureHandlerRootView>
+                        <AuthGuard />
+                    </GestureHandlerRootView>
+                </DeleteSchedulerProvider>
+            </JotaiProvider>
+        </View>
+    )
+}
 
 export default TabLayout;

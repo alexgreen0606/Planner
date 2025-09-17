@@ -1,67 +1,22 @@
-import GenericIcon from '@/components/icon';
-import TodayIcon from '@/components/icon/TodayIcon';
-import { BOTTOM_NAVIGATION_HEIGHT } from '@/lib/constants/miscLayout';
-import { Tabs } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 
 // ✅ 
 
-const TabLayout = () => {
-    const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    return (
-        <Tabs
-            screenOptions={{
-                tabBarStyle: {
-                    backgroundColor: 'transparent',
-                    borderTopWidth: 0,
-                    position: 'absolute',
-                    height: BOTTOM_NAVIGATION_HEIGHT + BOTTOM_SPACER - 10
-                },
-                headerShown: false,
-                tabBarActiveTintColor: 'systemBlue',
-                tabBarInactiveTintColor: 'secondaryLabel',
-                tabBarLabel: () => null
-            }}
-            safeAreaInsets={{
-                bottom: 0
-            }}
-        >
-            <Tabs.Screen
-                name="lists"
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <GenericIcon
-                            type="lists"
-                            size="xl"
-                            hideRipple
-                            platformColor={color}
-                        />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="index"
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <TodayIcon platformColor={color} />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="planners"
-                options={{
-                    tabBarIcon: ({ color }) => (
-                        <GenericIcon
-                            type="calendar"
-                            size="xl"
-                            hideRipple
-                            platformColor={color}
-                        />
-                    ),
-                }}
-            />
-        </Tabs>
-    )
-};
+const TabLayout = () => (
+    <NativeTabs minimizeBehavior='onScrollDown'>
+        <NativeTabs.Trigger name="lists" disablePopToTop>
+            <Label hidden />
+            <Icon sf='list.bullet.clipboard' />
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="index">
+            <Label hidden />
+            <Icon sf='note' />
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name='planners'>
+            <Label hidden />
+            <Icon sf='calendar' />
+        </NativeTabs.Trigger>
+    </NativeTabs>
+);
 
 export default TabLayout;

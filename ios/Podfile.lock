@@ -1,7 +1,7 @@
 PODS:
-  - EXConstants (18.0.8):
+  - EXConstants (18.0.9):
     - ExpoModulesCore
-  - Expo (54.0.7):
+  - Expo (54.0.8):
     - ExpoModulesCore
     - hermes-engine
     - RCTRequired
@@ -38,14 +38,14 @@ PODS:
     - ExpoModulesCore
   - ExpoFont (14.0.8):
     - ExpoModulesCore
-  - ExpoHead (6.0.5):
+  - ExpoHead (6.0.6):
     - ExpoModulesCore
     - RNScreens
   - ExpoKeepAwake (15.0.7):
     - ExpoModulesCore
   - ExpoLinking (8.0.8):
     - ExpoModulesCore
-  - ExpoModulesCore (3.0.15):
+  - ExpoModulesCore (3.0.16):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -72,7 +72,7 @@ PODS:
     - ExpoModulesCore
   - ExpoSymbols (1.0.7):
     - ExpoModulesCore
-  - ExpoUI (0.2.0-canary-20250912-b5ce2a8):
+  - ExpoUI (0.2.0-beta.3):
     - ExpoModulesCore
   - FBLazyVector (0.81.4)
   - hermes-engine (0.81.4):
@@ -1381,7 +1381,7 @@ PODS:
     - Yoga
   - react-native-get-random-values (1.11.0):
     - React-Core
-  - react-native-menu (1.2.3):
+  - react-native-menu (1.2.4):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1403,7 +1403,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-mmkv (3.3.0):
+  - react-native-mmkv (3.3.1):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -1494,8 +1494,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - react-native-sfsymbols (1.2.2):
-    - React
   - React-NativeModulesApple (0.81.4):
     - hermes-engine
     - React-callinvoker
@@ -2080,7 +2078,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNVectorIcons (10.2.0):
+  - RNVectorIcons (10.3.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2232,7 +2230,6 @@ DEPENDENCIES:
   - "react-native-menu (from `../node_modules/@react-native-menu/menu`)"
   - react-native-mmkv (from `../node_modules/react-native-mmkv`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
-  - react-native-sfsymbols (from `../node_modules/react-native-sfsymbols`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -2387,8 +2384,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-mmkv"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
-  react-native-sfsymbols:
-    :path: "../node_modules/react-native-sfsymbols"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-oscompat:
@@ -2473,21 +2468,21 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  EXConstants: 7e4654405af367ff908c863fe77a8a22d60bd37d
-  Expo: 170291b86adbf5fe95d36bc7a90288203cec739e
+  EXConstants: a95804601ee4a6aa7800645f9b070d753b1142b3
+  Expo: 4875e1cc72ae1398e33bcd6632943a4e93926ecd
   ExpoAsset: 84810d6fed8179f04d4a7a4a6b37028bbd726e26
   ExpoBlur: 2dd8f64aa31f5d405652c21d3deb2d2588b1852f
   ExpoCalendar: 34fe3956dab6278057a8ad04c648fe43bd642ef5
   ExpoContacts: f39087ad6b85f388184a52f9858393b2800b0d2e
   ExpoFileSystem: 4fb06865906e781329eb67166bd64fc4749c3019
   ExpoFont: 86ceec09ffed1c99cfee36ceb79ba149074901b5
-  ExpoHead: bd65071c501ef18c54b68e5003d595154e04f896
+  ExpoHead: 78f14a8573ae5b882123b272c0af20a80bfa58f6
   ExpoKeepAwake: 1a2e820692e933c94a565ec3fbbe38ac31658ffe
   ExpoLinking: f051f28e50ea9269ff539317c166adec81d9342d
-  ExpoModulesCore: 9281d8f1cda9d0c37dbce34c26014212b22eb8c0
+  ExpoModulesCore: a28d1b4a5a9fbdacc41ca8d0c777a2d73496b022
   ExpoSMS: 10cd15976285c7e42f91790d6584eea53dc4e026
   ExpoSymbols: 1ae04ce686de719b9720453b988d8bc5bf776c68
-  ExpoUI: 469b070b2837be619c3e08645abac7dd839b5e08
+  ExpoUI: 68238da1f16a814f77bc64712a269440174ee898
   FBLazyVector: 9e0cd874afd81d9a4d36679daca991b58b260d42
   hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
   RCTDeprecation: 7487d6dda857ccd4cb3dd6ecfccdc3170e85dcbc
@@ -2525,10 +2520,9 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 76905804171d8ccbe69329fc84c57eb7934add7f
   react-native-geolocation: cfc39041210bd9f591ec2beb7d417291251da8e5
   react-native-get-random-values: d16467cf726c618e9c7a8c3c39c31faa2244bbba
-  react-native-menu: f3225661c8b154612a30810f0a4f5376840fda1d
-  react-native-mmkv: ccad38e9776071836a6f8d97dd42f0c579d15fca
+  react-native-menu: 9a71b1ec9494cae5481885f48868f32cee9d25b5
+  react-native-mmkv: 6ee361e2515d9eada636fc21c85612f27f20e0ef
   react-native-safe-area-context: 42a1b4f8774b577d03b53de7326e3d5757fe9513
-  react-native-sfsymbols: 3309f24c98d32705568c84b714268f3ec62017c7
   React-NativeModulesApple: a9464983ccc0f66f45e93558671f60fc7536e438
   React-oscompat: 73db7dbc80edef36a9d6ed3c6c4e1724ead4236d
   React-perflogger: 123272debf907cc423962adafcf4513320e43757
@@ -2567,10 +2561,10 @@ SPEC CHECKSUMS:
   RNReanimated: 8d3a14606ad49f022c17d9e12a2d339e9e5ad9b0
   RNScreens: d8d6f1792f6e7ac12b0190d33d8d390efc0c1845
   RNSVG: 31d6639663c249b7d5abc9728dde2041eb2a3c34
-  RNVectorIcons: 704d89d2f11886824e3bd5cbea34dd00aeade200
+  RNVectorIcons: 4351544f100d4f12cac156a7c13399e60bab3e26
   RNWorklets: 76fce72926e28e304afb44f0da23b2d24f2c1fa0
   Yoga: 051f086b5ccf465ff2ed38a2cf5a558ae01aaaa1
 
-PODFILE CHECKSUM: 3d4c9cbce98b2d479c847413df61c05d8949d95c
+PODFILE CHECKSUM: 57a22a71283b5f5c8bcc736035769b9bfd14d042
 
 COCOAPODS: 1.16.2

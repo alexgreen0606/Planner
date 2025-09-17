@@ -1,32 +1,31 @@
+import { Host, Switch } from "@expo/ui/swift-ui";
 import React from 'react';
+import { PlatformColor } from 'react-native';
 import ModalDisplayValue from '../../modal/ModalDisplayValue';
-import { PlatformColor, Switch } from 'react-native';
 
 // ✅ 
 
 type TModalCheckboxProps = {
     label: string;
     value: boolean;
-    disabled?: boolean;
     onChange: (newVal: boolean) => void;
 };
 
 const ModalCheckbox = ({
     label,
     value,
-    disabled,
     onChange
 }: TModalCheckboxProps) =>
     <ModalDisplayValue
         label={label}
         value={
-            <Switch
-                value={value}
-                disabled={disabled}
-                onValueChange={onChange}
-                trackColor={{ true: PlatformColor('systemBlue') }}
-                ios_backgroundColor={PlatformColor('secondaryLabel')}
-            />
+            <Host matchContents>
+                <Switch
+                    value={value}
+                    onValueChange={onChange}
+                    color={PlatformColor('systemBlue') as unknown as string}
+                />
+            </Host>
         }
     />;
 

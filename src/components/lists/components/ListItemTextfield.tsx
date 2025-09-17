@@ -1,5 +1,6 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
+import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { useAtom } from 'jotai';
@@ -97,8 +98,8 @@ const ListItemTextfield = <T extends TListItem>({
             className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
             style={[
                 {
-                    height: LIST_ITEM_HEIGHT,
-                    paddingBottom: LIST_CONTENT_HEIGHT / 2 + 2,
+                    height: LIST_ITEM_HEIGHT + TOOLBAR_HEIGHT,
+                    paddingBottom: LIST_CONTENT_HEIGHT / 2 + 2 + TOOLBAR_HEIGHT,
                     marginRight: LIST_ICON_SPACING / 2,
                     color: PlatformColor('label'),
                     fontFamily: 'Text',

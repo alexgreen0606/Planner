@@ -1,6 +1,8 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import useAppTheme from '@/hooks/useAppTheme';
 import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
+import { Host, HStack, VStack } from '@expo/ui/swift-ui';
+import { glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useAtomValue } from 'jotai';
 import { ReactNode } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
@@ -23,7 +25,7 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
     const { toolbar: { background, border } } = useAppTheme();
 
     const toolbarStyle = useAnimatedStyle(() => (
-        { bottom: keyboardHeight.value }
+        { bottom: keyboardHeight.value + 8 }
     ));
 
     if (!textfieldId || hide) return null;
@@ -33,28 +35,35 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
             className='w-screen absolute'
             style={toolbarStyle}
         >
-            <View
-                className="flex-row justify-evenly flex-1 gap-4 overflow-hidden"
-                style={{
-                    height: TOOLBAR_HEIGHT,
-                    borderTopWidth: StyleSheet.hairlineWidth,
-                    borderColor: PlatformColor(border),
-                    backgroundColor: PlatformColor(background.color)
-                }}
-            >
-                {iconSet.map((iconCluster, clusterIndex) => (
+            <Host>
+                <HStack modifiers={[
+                    glassEffect({
+                        glass: {
+                            variant: 'regular'
+                        }
+                    })
+                ]}>
                     <View
-                        key={`toolbar-cluster-${clusterIndex}`}
-                        className='flex-row gap-1 items-center'
+                        className="flex-row justify-evenly flex-1 gap-4 overflow-hidden"
+                        style={{
+                            height: TOOLBAR_HEIGHT - 8
+                        }}
                     >
-                        {iconCluster.map((icon, iconIndex) => (
-                            <View key={`toolbar-cluster-${clusterIndex}-icon-${iconIndex}`}>
-                                {icon}
+                        {iconSet.map((iconCluster, clusterIndex) => (
+                            <View
+                                key={`toolbar-cluster-${clusterIndex}`}
+                                className='flex-row gap-1 items-center'
+                            >
+                                {iconCluster.map((icon, iconIndex) => (
+                                    <View key={`toolbar-cluster-${clusterIndex}-icon-${iconIndex}`}>
+                                        {icon}
+                                    </View>
+                                ))}
                             </View>
                         ))}
                     </View>
-                ))}
-            </View>
+                </HStack>
+            </Host>
         </AnimatedContainer>
     )
 }
