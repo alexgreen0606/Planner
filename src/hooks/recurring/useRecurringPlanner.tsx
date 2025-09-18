@@ -1,13 +1,11 @@
-import GenericIcon from "@/components/icon";
+import OverflowActions, { EOverflowActionType } from "@/components/OverflowActions";
 import { ERecurringPlannerId } from "@/lib/enums/ERecurringPlannerKey";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
 import { getRecurringEventFromStorageById, getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerStorage";
 import { createEmptyRecurringPlanner, deleteRecurringEventsFromStorageHideWeekday, updateRecurringEventIndexWithChronologicalCheck, upsertWeekdayEventsToRecurringPlanner } from "@/utils/recurringPlannerUtils";
-import { MenuView } from "@react-native-menu/menu";
 import { useMMKV, useMMKVObject } from "react-native-mmkv";
-import useOverflowActions from "../useOverflowActions";
 
 // ✅ 
 
@@ -54,56 +52,48 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
         }
     }
 
-    // =================
-    // Overflow Actions
-    // =================
+    // ==================
+    //  Overflow Actions
+    // ==================
 
-    const overflowActions = useOverflowActions([
-        {
-            id: 'weekday',
-            title: 'Manage Weekday',
-            image: 'repeat',
-            subactions: [
-                {
-                    id: ERecurringPlannerEditAction.RESET_WEEKDAY,
-                    title: 'Reset Weekday',
-                    subtitle: 'Customized weekday events will be reset.',
-                    image: 'arrow.trianglehead.2.clockwise',
-                },
-                {
-                    id: ERecurringPlannerEditAction.DELETE_WEEKDAY,
-                    title: 'Delete All Weekday',
-                    attributes: { destructive: true },
-                    image: 'trash',
-                },
-            ],
-            attributes: {
-                hidden: recurringPlannerId === ERecurringPlannerId.WEEKDAYS
-            }
-        },
-        {
-            id: ERecurringPlannerEditAction.DELETE_ALL,
-            title: 'Delete All Events',
-            attributes: { destructive: true },
-            image: 'trash',
-        },
-    ]);
-
-    const OverflowIcon = () => (
-        <MenuView
-            title={recurringPlannerId}
-            onPressAction={({ nativeEvent }) => {
-                handleAction(nativeEvent.event as ERecurringPlannerEditAction);
-            }}
-            actions={overflowActions}
-        >
-            <GenericIcon size='l' type='more' platformColor='systemBlue' />
-        </MenuView>
+    const OverflowActionsIcon = () => (
+        <OverflowActions actions={[
+            {
+                type: EOverflowActionType.SUBMENU,
+                title: 'Manage Weekday',
+                systemImage: 'repeat',
+                hidden: recurringPlannerId === ERecurringPlannerId.WEEKDAYS,
+                items: [
+                    {
+                        type: EOverflowActionType.BUTTON,
+                        onPress: () => handleAction(ERecurringPlannerEditAction.RESET_WEEKDAY),
+                        title: 'Reset Weekday',
+                        // subtitle: 'Customized weekday events will be reset.',
+                        systemImage: 'arrow.trianglehead.2.clockwise',
+                    },
+                    {
+                        type: EOverflowActionType.BUTTON,
+                        onPress: () => handleAction(ERecurringPlannerEditAction.DELETE_WEEKDAY),
+                        title: 'Delete All Weekday',
+                        destructive: true,
+                        systemImage: 'trash',
+                    },
+                ]
+            },
+            {
+                type: EOverflowActionType.BUTTON,
+                onPress: () => handleAction(ERecurringPlannerEditAction.DELETE_ALL),
+                title: 'Delete All Events',
+                destructive: true,
+                hidden: recurringPlanner?.eventIds.length === 0,
+                systemImage: 'trash',
+            },
+        ]} />
     );
 
     return {
         eventIds: recurringPlanner?.eventIds ?? [],
-        OverflowIcon,
+        OverflowActionsIcon,
         onUpdateRecurringEventIndexWithChronologicalCheck: handleUpdateRecurringEventIndexWithChronologicalCheck
     }
 };

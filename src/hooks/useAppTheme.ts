@@ -18,13 +18,6 @@ const useAppTheme = () => {
                 intensity: isLightMode ? 16 : 40
             }
         },
-        toolbar: {
-            background: {
-                color: isLightMode ? 'systemGray5' : 'systemGray6',
-                intensity: isLightMode ? 60 : 60
-            },
-            border: isLightMode ? 'systemGray' : 'systemGray'
-        },
         modal: {
             inputField: isLightMode ? 'systemBackground' : 'systemGray5'
         },

@@ -1,11 +1,10 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
-import useAppTheme from '@/hooks/useAppTheme';
 import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
-import { Host, HStack, VStack } from '@expo/ui/swift-ui';
+import { Host, HStack } from '@expo/ui/swift-ui';
 import { glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useAtomValue } from 'jotai';
 import { ReactNode } from 'react';
-import { PlatformColor, StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 // ✅ 
@@ -22,8 +21,6 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
 
     const textfieldId = useAtomValue(textfieldIdAtom);
 
-    const { toolbar: { background, border } } = useAppTheme();
-
     const toolbarStyle = useAnimatedStyle(() => (
         { bottom: keyboardHeight.value + 8 }
     ));
@@ -39,7 +36,7 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
                 <HStack modifiers={[
                     glassEffect({
                         glass: {
-                            variant: 'regular'
+                            variant: 'clear'
                         }
                     })
                 ]}>

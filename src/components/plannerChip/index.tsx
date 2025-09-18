@@ -1,19 +1,19 @@
+import useAppTheme from '@/hooks/useAppTheme';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
-import { PlatformColor, TouchableOpacity, View } from 'react-native';
+import { PlatformColor, TouchableWithoutFeedback, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
-import useAppTheme from '@/hooks/useAppTheme';
 
 // ✅ 
 
-type TEventChipProps = {
+type TPlannerChipProps = {
     chip: TPlannerChip;
     backgroundPlatformColor?: string;
     collapsed?: boolean;
@@ -27,21 +27,20 @@ const COLLAPSED_CHIP_RIGHT_MARGIN = -18;
 const EXPANDED_CHIP_RIGHT_MARGIN = 6;
 const CHIP_SET_GAP = 24;
 
-const EventChip = ({
+const PlannerChip = ({
     chip: {
         title,
         id,
         iconConfig,
         color,
-        onClick,
-        hasClickAccess
+        onClick
     },
     backgroundPlatformColor = 'systemGray6',
     collapsed = false,
     chipSetIndex,
     shiftChipRight,
     onToggleCollapsed
-}: TEventChipProps) => {
+}: TPlannerChipProps) => {
     const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const { weatherChip } = useAppTheme();
@@ -69,24 +68,24 @@ const EventChip = ({
                 paddingHorizontal: collapsed ? 0 : 8
             }}
         >
-            <GenericIcon
-                {...iconConfig}
-                platformColor={chipColor}
-                size='xs'
-            />
-            {!collapsed && (
-                <CustomText
-                    variant='eventChipLabel'
-                    ellipsizeMode='tail'
-                    numberOfLines={1}
-                    customStyle={{
-                        color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
-                        textDecorationLine: isPendingDelete ? 'line-through' : undefined,
-                    }}
-                >
-                    {title}
-                </CustomText>
-            )}
+                    <GenericIcon
+                        {...iconConfig}
+                        platformColor={chipColor}
+                        size='xs'
+                    />
+                    {!collapsed && (
+                        <CustomText
+                            variant='eventChipLabel'
+                            ellipsizeMode='tail'
+                            numberOfLines={1}
+                            customStyle={{
+                                color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
+                                textDecorationLine: isPendingDelete ? 'line-through' : undefined,
+                            }}
+                        >
+                            {title}
+                        </CustomText>
+                    )}
         </View>
     )
 
@@ -101,23 +100,13 @@ const EventChip = ({
                 marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
             }}
         >
-            {onClick ? (
-                <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={collapsed ? onToggleCollapsed : onClick}
-                >
-                    <ChipContent />
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={collapsed ? onToggleCollapsed : undefined}
-                >
-                    <ChipContent />
-                </TouchableOpacity>
-            )}
+            <TouchableWithoutFeedback
+                onPress={collapsed ? onToggleCollapsed : onClick}
+            >
+                <ChipContent />
+            </TouchableWithoutFeedback>
         </MotiView>
     )
 };
 
-export default EventChip;
+export default PlannerChip;

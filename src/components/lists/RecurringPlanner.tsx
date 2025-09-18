@@ -7,14 +7,13 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { createRecurringEventInStorageAndFocusTextfield, deleteRecurringEventsFromStorageHideWeekday, upsertWeekdayEventToRecurringPlanners } from '@/utils/recurringPlannerUtils';
-import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useAtom } from 'jotai';
 import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import ButtonText from '../text/ButtonText';
 import TimeValue from '../text/TimeValue';
 import DragAndDropList from './components/DragAndDropList';
+import OverflowActions, { EOverflowActionType, TOverflowAction } from '../OverflowActions';
 
 // ✅ 
 
@@ -27,19 +26,19 @@ const RecurringPlanner = () => {
 
     const [recurringPlannerId, setRecurringPlannerId] = useState<ERecurringPlannerId>(ERecurringPlannerId.WEEKDAYS);
 
-    const recurringPlannerOptions = useMemo(() =>
+    const recurringPlannerActions: TOverflowAction[] = useMemo(() =>
         Object.values(ERecurringPlannerId).map((title) => ({
-            id: title,
+            type: EOverflowActionType.BUTTON,
             title,
-            titleColor: 'blue',
-            state: recurringPlannerId === title ? 'on' : 'off',
+            onPress: () => setRecurringPlannerId(title),
+            value: recurringPlannerId === title
         })),
-        [recurringPlannerId]
+        [recurringPlannerId, recurringPlannerId]
     );
 
     const {
         eventIds,
-        OverflowIcon,
+        OverflowActionsIcon,
         onUpdateRecurringEventIndexWithChronologicalCheck
     } = useRecurringPlanner(recurringPlannerId);
 
@@ -61,18 +60,8 @@ const RecurringPlanner = () => {
     return (
         <View className='flex-1'>
             <View className='px-3 pt-3 flex-row justify-between'>
-                <MenuView
-                    onPressAction={({ nativeEvent }) => {
-                        setRecurringPlannerId(nativeEvent.event as ERecurringPlannerId)
-                    }}
-                    actions={recurringPlannerOptions as MenuAction[]}
-                    shouldOpenOnLongPress={false}
-                >
-                    <ButtonText>
-                        {recurringPlannerId}
-                    </ButtonText>
-                </MenuView>
-                <OverflowIcon />
+                <OverflowActions label={recurringPlannerId} actions={recurringPlannerActions} />
+                <OverflowActionsIcon />
             </View>
             <DragAndDropList<IRecurringEvent>
                 listId={recurringPlannerId}

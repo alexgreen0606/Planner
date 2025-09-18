@@ -11,7 +11,7 @@ type TTodayBannerProps = {
     datestamp: string; // YYYY-MM-DD
     today: TPlanner;
     isEditingTitle: boolean;
-    OverflowIcon: () => React.JSX.Element;
+    OverflowActionsIcon: () => React.JSX.Element;
     onEditTitle: (title: string) => void;
     onToggleEditTitle: () => void;
 };
@@ -20,10 +20,10 @@ const TodayBanner = ({
     datestamp,
     today,
     isEditingTitle,
-    OverflowIcon,
+    OverflowActionsIcon,
     onEditTitle,
     onToggleEditTitle
-}: TTodayBannerProps) =>
+}: TTodayBannerProps) => (
     <View
         className='flex-row items-center justify-between w-full'
         style={{ height: HEADER_HEIGHT }}
@@ -68,8 +68,9 @@ const TodayBanner = ({
         </View>
 
         {/* Overflow Actions */}
-        <OverflowIcon />
+        <OverflowActionsIcon />
 
-    </View>;
+    </View>
+);
 
 export default TodayBanner;

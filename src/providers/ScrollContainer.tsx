@@ -1,12 +1,12 @@
-import GenericIcon from '@/components/icon';
 import CountdownEventToolbar from '@/components/toolbars/CountdownEventToolbar';
 import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import RecurringEventToolbar from '@/components/toolbars/RecurringEventToolbar';
 import useAppTheme from '@/hooks/useAppTheme';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
+import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
+import { CircularProgress, Host } from '@expo/ui/swift-ui';
 import { BlurView } from 'expo-blur';
 import { usePathname } from 'expo-router';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
@@ -33,7 +33,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from './ExternalDataProvider';
-import { CircularProgress, Host } from '@expo/ui/swift-ui';
 
 // ✅ 
 

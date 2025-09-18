@@ -1,6 +1,5 @@
 import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
-import GenericIcon from '@/components/icon';
-import useOverflowActions from '@/hooks/useOverflowActions';
+import OverflowActions, { EOverflowActionType } from '@/components/OverflowActions';
 import { platformToRgbMap, selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
@@ -8,22 +7,23 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { deleteFolderItemFromStorage, getFolderItemFromStorageById, getListItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { deleteChecklistItems, deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 import { isValidPlatformColor } from '@/utils/colorUtils';
-import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import useAppTheme from './useAppTheme';
 import useTextfieldItemAs from './useTextfieldItemAs';
+import { Host, VStack } from '@expo/ui/swift-ui';
+import { frame } from '@expo/ui/swift-ui/modifiers';
 
 // ✅ 
 
 enum EFolderAction {
     EDIT_TITLE = 'EDIT_TITLE',
-    SCATTER = 'SCATTER',
+    DELETE_AND_SCATTER = 'DELETE_AND_SCATTER',
     ERASE_CONTENTS = 'ERASE_CONTENTS',
-    DELETE = 'DELETE',
+    DELETE_ALL = 'DELETE_ALL'
 }
 
 const useFolderItem = (itemId: string, itemStorage: MMKV) => {
@@ -70,7 +70,7 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
             case EFolderAction.EDIT_TITLE:
                 handleToggleEditValue();
                 break;
-            case EFolderAction.DELETE:
+            case EFolderAction.DELETE_ALL:
                 const hasChildren = item.itemIds.length > 0;
                 message = `Would you like to delete this ${item.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
 
@@ -123,7 +123,7 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                 );
 
                 break;
-            case EFolderAction.SCATTER:
+            case EFolderAction.DELETE_AND_SCATTER:
                 const parentFolder = getFolderItemFromStorageById(item.listId);
                 item.itemIds.forEach((id) => {
                     const childItem = getFolderItemFromStorageById(id);
@@ -139,77 +139,61 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         }
     }
 
-    // =================
-    // Overflow Actions
-    // =================
+    // ==================
+    //  Overflow Actions
+    // ==================
 
-    const colorSubactions: MenuAction[] = selectableColors.map((color) => ({
-        id: color,
-        title: color === 'label' ? 'None' : color.replace('system', ''),
-        image: item?.platformColor === color ? 'inset.filled.circle' : 'circle',
-        imageColor: color === 'label' ? overflowActionText : platformToRgbMap[color],
-        state: item?.platformColor === color ? 'on' : 'off'
-    }));
-
-    const deleteSubactions = [
-        {
-            id: EFolderAction.SCATTER,
-            title: 'Delete And Scatter',
-            subtitle: 'All contents will be transfered upward.',
-            image: 'shippingbox.and.arrow.backward',
-            attributes: {
-                hidden: item?.type !== EFolderItemType.FOLDER || item?.listId === NULL || !item?.itemIds.length
-            }
-        },
-        {
-            id: EFolderAction.ERASE_CONTENTS,
-            title: 'Erase All Contents',
-            image: 'minus',
-            attributes: {
-                hidden: !item?.itemIds.length
-            }
-        },
-        {
-            id: EFolderAction.DELETE,
-            title: `Delete Entire ${item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : ""}`,
-            attributes: {
-                destructive: true,
-                hidden: item?.listId === NULL
+    const OverflowActionsIcon = () => (
+        <OverflowActions actions={[
+            {
+                onPress: () => handleAction(EFolderAction.EDIT_TITLE),
+                title: `Edit Title`,
+                systemImage: 'pencil',
+                type: EOverflowActionType.BUTTON
             },
-            image: 'trash'
-        }
-    ];
-
-    const overflowActions = useOverflowActions([
-        {
-            id: EFolderAction.EDIT_TITLE,
-            title: `Edit Title`,
-            image: 'pencil',
-        },
-        {
-            id: 'colors',
-            title: 'Change Color',
-            image: 'paintbrush',
-            subactions: colorSubactions,
-        },
-        {
-            id: 'delete',
-            title: 'Delete Options',
-            image: 'trash',
-            subactions: deleteSubactions,
-        },
-    ]);
-
-    const OverflowIcon = () => (
-        <MenuView
-            title={item?.value}
-            onPressAction={({ nativeEvent }) => {
-                handleAction(nativeEvent.event);
-            }}
-            actions={overflowActions}
-        >
-            <GenericIcon size='l' type='more' platformColor='systemBlue' />
-        </MenuView>
+            {
+                type: EOverflowActionType.SUBMENU,
+                title: 'Change Color',
+                systemImage: 'paintbrush',
+                items: selectableColors.map((color) => ({
+                    title: color === 'label' ? 'None' : color.replace('system', ''),
+                    type: EOverflowActionType.BUTTON,
+                    systemImage: item?.platformColor === color ? 'inset.filled.circle' : 'circle',
+                    imageColor: color === 'label' ? overflowActionText : platformToRgbMap[color],
+                    onPress: () => handleAction(color)
+                }))
+            },
+            {
+                type: EOverflowActionType.SUBMENU,
+                title: 'Delete Options',
+                systemImage: 'trash',
+                items: [
+                    {
+                        type: EOverflowActionType.BUTTON,
+                        onPress: () => handleAction(EFolderAction.DELETE_AND_SCATTER),
+                        title: 'Delete And Scatter',
+                        // subtitle: 'All contents will be transfered upward.',
+                        systemImage: 'shippingbox.and.arrow.backward',
+                        hidden: item?.type !== EFolderItemType.FOLDER || item?.listId === NULL || !item?.itemIds.length
+                    },
+                    {
+                        type: EOverflowActionType.BUTTON,
+                        onPress: () => handleAction(EFolderAction.ERASE_CONTENTS),
+                        title: 'Erase All Contents',
+                        systemImage: 'minus',
+                        hidden: !item?.itemIds.length
+                    },
+                    {
+                        type: EOverflowActionType.BUTTON,
+                        onPress: () => handleAction(EFolderAction.DELETE_ALL),
+                        title: `Delete Entire ${item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : ""}`,
+                        destructive: true,
+                        hidden: item?.listId === NULL,
+                        systemImage: 'trash'
+                    }
+                ]
+            }
+        ]} />
     );
 
     return {
@@ -219,7 +203,7 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         isTransferMode: !!transferingItem,
         textfieldItem,
         transferingItem,
-        OverflowIcon,
+        OverflowActionsIcon,
         onEndTransfer: handleEndItemTransfer,
         onValueChange: handleValueChange,
         onToggleEditValue: handleToggleEditValue,

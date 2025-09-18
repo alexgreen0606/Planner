@@ -6,7 +6,7 @@ import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp, getTomorrowDatest
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import PlannerChipSets from '../eventChip/EventChipSet';
+import PlannerChipSets from '../plannerChip/PlannerChipSets';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 // ✅ 

@@ -7,6 +7,5 @@ export type TPlannerChip = {
     title: string;
     color: string;
     iconConfig: GenericIconProps;
-    hasClickAccess?: boolean;
     onClick?: () => void;
 };

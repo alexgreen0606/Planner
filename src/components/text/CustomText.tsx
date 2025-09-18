@@ -36,12 +36,6 @@ export const textStyles = {
         fontFamily: 'RoundMedium',
     },
     // --- Modal ---
-    modalTitle: {
-        color: PlatformColor('label'),
-        fontSize: 20,
-        fontWeight: 400,
-        fontFamily: 'RoundRegular',
-    },
     inputLabel: {
         color: PlatformColor('secondaryLabel'),
         fontSize: 14,

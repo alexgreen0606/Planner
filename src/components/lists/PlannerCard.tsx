@@ -32,7 +32,7 @@ const PlannerCard = ({
         isEditingTitle,
         isPlannerFocused,
         onEditTitle,
-        OverflowIcon,
+        OverflowActionsIcon,
         onCloseTextfield,
         onToggleEditTitle,
         onUpdatePlannerEventIndexWithChronologicalCheck
@@ -68,7 +68,7 @@ const PlannerCard = ({
             }
             footer={
                 <View className='flex-row justify-end h-6'>
-                    <OverflowIcon />
+                    <OverflowActionsIcon />
                 </View>
             }
             collapsed={collapsed}

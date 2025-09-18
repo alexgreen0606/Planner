@@ -1,11 +1,12 @@
-import ButtonText from '@/components/text/ButtonText';
 import CustomText, { textStyles } from '@/components/text/CustomText';
 import useFolderItem from '@/hooks/useFolderItem';
 import { HEADER_HEIGHT, PAGE_LABEL_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { Button, Host, HStack } from '@expo/ui/swift-ui';
+import { frame, padding } from '@expo/ui/swift-ui/modifiers';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { PlatformColor, TextInput, View } from 'react-native';
+import { PlatformColor, TextInput, useWindowDimensions, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 
 // ✅ 
@@ -21,6 +22,7 @@ type TFolderItemBannerProps = {
 
 const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) => {
     const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const { width: SCREEN_WIDTH } = useWindowDimensions();
     const router = useRouter();
 
     const {
@@ -28,7 +30,7 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
         isEditingValue,
         onToggleEditValue,
         onValueChange,
-        OverflowIcon
+        OverflowActionsIcon
     } = useFolderItem(itemId, itemStorage);
 
     return (
@@ -39,18 +41,17 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
 
             {/* Back Button */}
             {!backButtonConfig.hide && (
-                <View className='absolute bottom-full translate-y-1'>
-                    <ButtonText
-                        onClick={() => backButtonConfig.onClick ? backButtonConfig.onClick() : router.back()}
-                        iconConfig={{
-                            type: 'chevronLeft',
-                            platformColor: 'systemBlue'
-                        }}
-                        className='w-screen pr-8'
-                    >
-                        {backButtonConfig.label}
-                    </ButtonText>
-                </View>
+                <Host style={{ position: 'absolute', bottom: '100%', left: 8, width: SCREEN_WIDTH - 16, transform: [{ translateY: -4 }] }}>
+                    <HStack modifiers={[frame({ alignment: 'leading', width: SCREEN_WIDTH }), padding({ horizontal: 16 })]}>
+                        <Button
+                            variant='borderless'
+                            onPress={() => backButtonConfig.onClick ? backButtonConfig.onClick() : router.back()}
+                            systemImage='chevron.left'
+                        >
+                            {backButtonConfig.label}
+                        </Button>
+                    </HStack>
+                </Host>
             )}
 
             {/* Name */}
@@ -84,7 +85,7 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
             </View>
 
             {/* Overflow Actions */}
-            <OverflowIcon />
+            <OverflowActionsIcon />
 
         </View>
     )

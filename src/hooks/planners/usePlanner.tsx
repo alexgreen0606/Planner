@@ -1,15 +1,13 @@
-import GenericIcon from "@/components/icon";
+import OverflowActions, { EOverflowActionType } from "@/components/OverflowActions";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById } from "@/storage/plannerStorage";
 import { getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerStorage";
-import { getDayOfWeekFromDatestamp, getMonthDateFromDatestamp } from "@/utils/dateUtils";
+import { getDayOfWeekFromDatestamp } from "@/utils/dateUtils";
 import { createEmptyPlanner, updatePlannerEventIndexWithChronologicalCheck, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
-import { MenuView } from "@react-native-menu/menu";
 import { useEffect, useState } from "react";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
-import useOverflowActions from "../useOverflowActions";
 import useTextfieldItemAs from "../useTextfieldItemAs";
 
 // ✅ 
@@ -37,7 +35,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     const hasStaleRecurring = planner && planner.deletedRecurringEventIds.length;
     const hasTitle = planner?.title?.length;
 
-    const hasRecurring = !!planner?.eventIds.some((id) => {
+    const hasRecurring = planner?.eventIds.some((id) => {
         const event = getPlannerEventFromStorageById(id);
         return !!event.recurringId;
     });
@@ -86,7 +84,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     // 2. Helper Functions
     // ====================
 
-    function triggerPlannerAction(action: EPlannerEditAction) {
+    function handleAction(action: EPlannerEditAction) {
         switch (action) {
             case EPlannerEditAction.EDIT_TITLE:
                 handleToggleEditTitle();
@@ -138,51 +136,39 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     // 3. Overflow Actions
     // ====================
 
-    const overflowActions = useOverflowActions([
-        {
-            id: EPlannerEditAction.EDIT_TITLE,
-            title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
-            image: hasTitle ? 'pencil' : 'plus',
-        },
-        {
-            id: 'recurring',
-            title: 'Manage Recurring',
-            image: 'repeat',
-            subactions: [
+    const OverflowActionsIcon = () => {
+        return (
+            <OverflowActions actions={[
                 {
-                    id: EPlannerEditAction.RESET_RECURRING,
-                    title: 'Reset Recurring',
-                    subtitle: 'Customized recurring events will be reset.',
-                    image: 'arrow.trianglehead.2.clockwise',
-                    attributes: {
-                        hidden: !hasStaleRecurring
-                    }
+                    type: EOverflowActionType.BUTTON,
+                    title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
+                    systemImage: hasTitle ? 'pencil' : 'plus',
+                    onPress: () => handleAction(EPlannerEditAction.EDIT_TITLE)
                 },
                 {
-                    id: EPlannerEditAction.DELETE_RECURRING,
-                    title: 'Delete Recurring',
-                    attributes: {
-                        destructive: true,
-                        hidden: !hasRecurring
-                    },
-                    image: 'trash',
+                    type: EOverflowActionType.SUBMENU,
+                    title: 'Manage Recurring',
+                    systemImage: 'repeat',
+                    items: [
+                        {
+                            type: EOverflowActionType.BUTTON,
+                            title: 'Reset Recurring',
+                            // subtitle: 'Customized recurring events will be reset.',
+                            systemImage: 'arrow.trianglehead.2.clockwise',
+                            hidden: !hasStaleRecurring,
+                            onPress: () => handleAction(EPlannerEditAction.RESET_RECURRING)
+                        },
+                        {
+                            type: EOverflowActionType.BUTTON,
+                            title: 'Delete Recurring',
+                            destructive: true,
+                            hidden: !hasRecurring,
+                            systemImage: 'trash',
+                            onPress: () => handleAction(EPlannerEditAction.DELETE_RECURRING)
+                        }
+                    ],
                 }
-            ],
-        }
-    ]);
-
-    const OverflowIcon = () => {
-        return (
-            <MenuView
-                title={`${getDayOfWeekFromDatestamp(datestamp)}, ${getMonthDateFromDatestamp(datestamp)}`}
-                onPressAction={({ nativeEvent }) => {
-                    triggerPlannerAction(nativeEvent.event as EPlannerEditAction);
-                }}
-                actions={overflowActions}
-                shouldOpenOnLongPress={false}
-            >
-                <GenericIcon size='l' type='more' platformColor='systemBlue' />
-            </MenuView>
+            ]} />
         )
     };
 
@@ -190,7 +176,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         planner: planner ?? createEmptyPlanner(datestamp),
         isEditingTitle,
         isPlannerFocused,
-        OverflowIcon,
+        OverflowActionsIcon,
         onCloseTextfield: onCloseFocusedEvent,
         onEditTitle: handleEditTitle,
         onToggleEditTitle: handleToggleEditTitle,

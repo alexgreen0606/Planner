@@ -1,6 +1,6 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import TodayBanner from '@/components/banners/TodayBanner';
-import PlannerChipSets from '@/components/eventChip/EventChipSet';
+import PlannerChipSets from '@/components/plannerChip/PlannerChipSets';
 import TodayPlanner from '@/components/lists/TodayPlanner';
 import usePlanner from '@/hooks/planners/usePlanner';
 import useAppTheme from '@/hooks/useAppTheme';
@@ -22,7 +22,7 @@ const Today = () => {
   const {
     isEditingTitle,
     planner,
-    OverflowIcon,
+    OverflowActionsIcon,
     onUpdatePlannerEventIndexWithChronologicalCheck,
     onEditTitle,
     onToggleEditTitle
@@ -33,7 +33,7 @@ const Today = () => {
       header={
         <TodayBanner
           today={planner}
-          OverflowIcon={OverflowIcon}
+          OverflowActionsIcon={OverflowActionsIcon}
           datestamp={todayDatestamp}
           isEditingTitle={isEditingTitle}
           onEditTitle={onEditTitle}

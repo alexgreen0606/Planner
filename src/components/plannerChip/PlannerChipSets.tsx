@@ -1,7 +1,7 @@
 import { MotiView } from 'moti';
 import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
-import EventChip from '.';
+import PlannerChip from '.';
 import SlowFadeInView from '../SlowFadeInView';
 import { useAtomValue } from 'jotai';
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
@@ -55,7 +55,7 @@ const PlannerChipSets = ({
                 >
                     {allSets.map((set, setIndex) =>
                         set.map((chip, chipIndex) => (
-                            <EventChip
+                            <PlannerChip
                                 key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
                                 chipSetIndex={chipIndex}
                                 chip={chip}
