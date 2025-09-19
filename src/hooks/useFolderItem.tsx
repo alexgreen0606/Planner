@@ -1,8 +1,9 @@
 import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
-import OverflowActions, { EOverflowActionType } from '@/components/OverflowActions';
+import PopupList from '@/components/OverflowActions';
 import { platformToRgbMap, selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { deleteFolderItemFromStorage, getFolderItemFromStorageById, getListItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { deleteChecklistItems, deleteFolderItemAndChildren } from '@/utils/checklistUtils';
@@ -10,12 +11,10 @@ import { isValidPlatformColor } from '@/utils/colorUtils';
 import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Alert, View } from 'react-native';
+import { Alert } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import useAppTheme from './useAppTheme';
 import useTextfieldItemAs from './useTextfieldItemAs';
-import { Host, VStack } from '@expo/ui/swift-ui';
-import { frame } from '@expo/ui/swift-ui/modifiers';
 
 // ✅ 
 
@@ -144,32 +143,32 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     // ==================
 
     const OverflowActionsIcon = () => (
-        <OverflowActions actions={[
+        <PopupList actions={[
             {
                 onPress: () => handleAction(EFolderAction.EDIT_TITLE),
                 title: `Edit Title`,
                 systemImage: 'pencil',
-                type: EOverflowActionType.BUTTON
+                type: EPopupActionType.BUTTON
             },
             {
-                type: EOverflowActionType.SUBMENU,
+                type: EPopupActionType.SUBMENU,
                 title: 'Change Color',
                 systemImage: 'paintbrush',
                 items: selectableColors.map((color) => ({
                     title: color === 'label' ? 'None' : color.replace('system', ''),
-                    type: EOverflowActionType.BUTTON,
+                    type: EPopupActionType.BUTTON,
                     systemImage: item?.platformColor === color ? 'inset.filled.circle' : 'circle',
                     imageColor: color === 'label' ? overflowActionText : platformToRgbMap[color],
                     onPress: () => handleAction(color)
                 }))
             },
             {
-                type: EOverflowActionType.SUBMENU,
+                type: EPopupActionType.SUBMENU,
                 title: 'Delete Options',
                 systemImage: 'trash',
                 items: [
                     {
-                        type: EOverflowActionType.BUTTON,
+                        type: EPopupActionType.BUTTON,
                         onPress: () => handleAction(EFolderAction.DELETE_AND_SCATTER),
                         title: 'Delete And Scatter',
                         // subtitle: 'All contents will be transfered upward.',
@@ -177,14 +176,14 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                         hidden: item?.type !== EFolderItemType.FOLDER || item?.listId === NULL || !item?.itemIds.length
                     },
                     {
-                        type: EOverflowActionType.BUTTON,
+                        type: EPopupActionType.BUTTON,
                         onPress: () => handleAction(EFolderAction.ERASE_CONTENTS),
                         title: 'Erase All Contents',
                         systemImage: 'minus',
                         hidden: !item?.itemIds.length
                     },
                     {
-                        type: EOverflowActionType.BUTTON,
+                        type: EPopupActionType.BUTTON,
                         onPress: () => handleAction(EFolderAction.DELETE_ALL),
                         title: `Delete Entire ${item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : ""}`,
                         destructive: true,

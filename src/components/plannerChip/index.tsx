@@ -7,7 +7,7 @@ import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
-import { PlatformColor, TouchableWithoutFeedback, View } from 'react-native';
+import { PlatformColor, Pressable, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
 
@@ -68,26 +68,62 @@ const PlannerChip = ({
                 paddingHorizontal: collapsed ? 0 : 8
             }}
         >
-                    <GenericIcon
-                        {...iconConfig}
-                        platformColor={chipColor}
-                        size='xs'
-                    />
-                    {!collapsed && (
-                        <CustomText
-                            variant='eventChipLabel'
-                            ellipsizeMode='tail'
-                            numberOfLines={1}
-                            customStyle={{
-                                color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
-                                textDecorationLine: isPendingDelete ? 'line-through' : undefined,
-                            }}
-                        >
-                            {title}
-                        </CustomText>
-                    )}
+            <GenericIcon
+                {...iconConfig}
+                platformColor={chipColor}
+                size='xs'
+            />
+            {!collapsed && (
+                <CustomText
+                    variant='eventChipLabel'
+                    ellipsizeMode='tail'
+                    numberOfLines={1}
+                    customStyle={{
+                        color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
+                        textDecorationLine: isPendingDelete ? 'line-through' : undefined,
+                    }}
+                >
+                    {title}
+                </CustomText>
+            )}
         </View>
     )
+
+    // const ChipContent = () => (
+    //     <View
+    //         className='flex-row h-6 gap-1 min-w-6 items-center justify-center rounded-xl mt-2 border relative'
+    //         style={{
+    //             borderColor: chipCssColor,
+    //             paddingHorizontal: collapsed ? 0 : 8
+    //         }}
+    //     >
+    //         <GenericIcon
+    //             {...iconConfig}
+    //             platformColor={chipColor}
+    //             size='xs'
+    //         />
+    //         {!collapsed && (
+    //             <CustomText
+    //                 variant='eventChipLabel'
+    //                 ellipsizeMode='tail'
+    //                 numberOfLines={1}
+    //                 customStyle={{
+    //                     color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
+    //                     textDecorationLine: isPendingDelete ? 'line-through' : undefined,
+    //                 }}
+    //             >
+    //                 {title}
+    //             </CustomText>
+    //         )}
+    //         <Host style={{ position: 'absolute', flex: 1, left: 0, top: 0 }}>
+    //             <HStack modifiers={[
+    //                 glassEffect({ glass: { variant: 'clear' } })
+    //             ]}>
+    //                 <View className='flex-1' />
+    //             </HStack>
+    //         </Host>
+    //     </View>
+    // )
 
     return (
         <MotiView
@@ -100,11 +136,11 @@ const PlannerChip = ({
                 marginLeft: shiftChipRight ? CHIP_SET_GAP : 0,
             }}
         >
-            <TouchableWithoutFeedback
+            <Pressable
                 onPress={collapsed ? onToggleCollapsed : onClick}
             >
                 <ChipContent />
-            </TouchableWithoutFeedback>
+            </Pressable>
         </MotiView>
     )
 };

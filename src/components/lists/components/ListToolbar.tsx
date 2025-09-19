@@ -36,7 +36,7 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
                 <HStack modifiers={[
                     glassEffect({
                         glass: {
-                            variant: 'clear'
+                            variant: 'regular'
                         }
                     })
                 ]}>

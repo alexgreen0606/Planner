@@ -1,5 +1,4 @@
-import { BlurTint } from "expo-blur";
-import { PlatformColor, useColorScheme } from "react-native";
+import { ColorValue, PlatformColor, useColorScheme } from "react-native";
 
 // ✅ 
 
@@ -8,16 +7,6 @@ const useAppTheme = () => {
     const isLightMode = colorScheme === 'light';
     return {
         background: isLightMode ? 'systemGray5' : 'systemBackground',
-        plannersNavbar: {
-            background: {
-                color: (isLightMode ? 'systemChromeMaterial' : 'systemChromeMaterial') as BlurTint,
-                intensity: isLightMode ? 60 : 100
-            },
-            indicator: {
-                color: (isLightMode ? 'systemUltraThinMaterialDark' : "systemThinMaterialLight") as BlurTint,
-                intensity: isLightMode ? 16 : 40
-            }
-        },
         modal: {
             inputField: isLightMode ? 'systemBackground' : 'systemGray5'
         },
@@ -26,7 +15,9 @@ const useAppTheme = () => {
         weatherChip: {
             background: isLightMode ? 'systemGray' : 'systemBackground',
             label: isLightMode ? 'systemGray6' : 'secondaryLabel'
-        }
+        },
+        upperFadeArray: (isLightMode ? ['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.8)', 'rgba(255,255,255,0.05)'] :
+            ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.05)']) as readonly [ColorValue, ColorValue, ...ColorValue[]]
     }
 }
 

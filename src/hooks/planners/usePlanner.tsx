@@ -1,4 +1,5 @@
-import OverflowActions, { EOverflowActionType } from "@/components/OverflowActions";
+import PopupList from "@/components/OverflowActions";
+import { EPopupActionType } from "@/lib/enums/EPopupActionType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
@@ -58,9 +59,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         }
     }, recurringPlannerStorage);
 
-    // =====================
-    // 1. Exposed Functions
-    // =====================
+    // ===================
+    //  Exposed Functions
+    // ===================
 
     function handleEditTitle(title: string) {
         setPlanner((prev) => {
@@ -80,9 +81,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }
 
-    // ====================
-    // 2. Helper Functions
-    // ====================
+    // ==================
+    //  Helper Functions
+    // ==================
 
     function handleAction(action: EPlannerEditAction) {
         switch (action) {
@@ -132,26 +133,26 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         });
     }
 
-    // ====================
-    // 3. Overflow Actions
-    // ====================
+    // ==================
+    //  Overflow Actions
+    // ==================
 
     const OverflowActionsIcon = () => {
         return (
-            <OverflowActions actions={[
+            <PopupList actions={[
                 {
-                    type: EOverflowActionType.BUTTON,
+                    type: EPopupActionType.BUTTON,
                     title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
                     systemImage: hasTitle ? 'pencil' : 'plus',
                     onPress: () => handleAction(EPlannerEditAction.EDIT_TITLE)
                 },
                 {
-                    type: EOverflowActionType.SUBMENU,
+                    type: EPopupActionType.SUBMENU,
                     title: 'Manage Recurring',
                     systemImage: 'repeat',
                     items: [
                         {
-                            type: EOverflowActionType.BUTTON,
+                            type: EPopupActionType.BUTTON,
                             title: 'Reset Recurring',
                             // subtitle: 'Customized recurring events will be reset.',
                             systemImage: 'arrow.trianglehead.2.clockwise',
@@ -159,7 +160,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
                             onPress: () => handleAction(EPlannerEditAction.RESET_RECURRING)
                         },
                         {
-                            type: EOverflowActionType.BUTTON,
+                            type: EPopupActionType.BUTTON,
                             title: 'Delete Recurring',
                             destructive: true,
                             hidden: !hasRecurring,

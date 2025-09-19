@@ -1,6 +1,6 @@
 import { ScrollContainerProvider } from '@/providers/ScrollContainer';
 import { Host, HStack, Picker } from '@expo/ui/swift-ui';
-import { frame } from '@expo/ui/swift-ui/modifiers';
+import { frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
@@ -42,7 +42,7 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
                                 setCurrentTabIndex(index);
                             }}
                             variant="segmented"
-                            modifiers={[frame({ width: BAR_WIDTH, height: BAR_HEIGHT })]}
+                            modifiers={[frame({ width: BAR_WIDTH, height: BAR_HEIGHT }), glassEffect({glass: {variant: 'regular'}})]}
                         />
                     </HStack>
                 </Host>

@@ -1,4 +1,5 @@
-import OverflowActions, { EOverflowActionType } from "@/components/OverflowActions";
+import PopupList from "@/components/OverflowActions";
+import { EPopupActionType } from "@/lib/enums/EPopupActionType";
 import { ERecurringPlannerId } from "@/lib/enums/ERecurringPlannerKey";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
@@ -57,22 +58,22 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
     // ==================
 
     const OverflowActionsIcon = () => (
-        <OverflowActions actions={[
+        <PopupList actions={[
             {
-                type: EOverflowActionType.SUBMENU,
+                type: EPopupActionType.SUBMENU,
                 title: 'Manage Weekday',
                 systemImage: 'repeat',
                 hidden: recurringPlannerId === ERecurringPlannerId.WEEKDAYS,
                 items: [
                     {
-                        type: EOverflowActionType.BUTTON,
+                        type: EPopupActionType.BUTTON,
                         onPress: () => handleAction(ERecurringPlannerEditAction.RESET_WEEKDAY),
                         title: 'Reset Weekday',
                         // subtitle: 'Customized weekday events will be reset.',
                         systemImage: 'arrow.trianglehead.2.clockwise',
                     },
                     {
-                        type: EOverflowActionType.BUTTON,
+                        type: EPopupActionType.BUTTON,
                         onPress: () => handleAction(ERecurringPlannerEditAction.DELETE_WEEKDAY),
                         title: 'Delete All Weekday',
                         destructive: true,
@@ -81,7 +82,7 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
                 ]
             },
             {
-                type: EOverflowActionType.BUTTON,
+                type: EPopupActionType.BUTTON,
                 onPress: () => handleAction(ERecurringPlannerEditAction.DELETE_ALL),
                 title: 'Delete All Events',
                 destructive: true,

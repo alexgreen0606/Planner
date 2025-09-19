@@ -7,7 +7,7 @@ import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { CircularProgress, Host } from '@expo/ui/swift-ui';
-import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { usePathname } from 'expo-router';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, View } from 'react-native';
@@ -104,7 +104,7 @@ export const ScrollContainerProvider = ({
     const loadingAnimationTrigger = useSharedValue<ELoadingStatus>(ELoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
 
-    const { background } = useAppTheme();
+    const { background, upperFadeArray } = useAppTheme();
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
@@ -162,9 +162,9 @@ export const ScrollContainerProvider = ({
         if (loadingStatus === ELoadingStatus.LOADING) executeReload();
     }, [loadingStatus]);
 
-    // =====================
-    // 1. Exposed Functions
-    // =====================
+    // ===================
+    //  Exposed Functions
+    // ===================
 
     function handleAutoScroll(displacement: number) {
         'worklet';
@@ -198,9 +198,9 @@ export const ScrollContainerProvider = ({
         placeholderInputRef.current?.focus();
     }
 
-    // ====================
-    // 2. Helper Functions
-    // ====================
+    // ==================
+    //  Helper Functions
+    // ==================
 
     function triggerHaptic() {
         ReactNativeHapticFeedback.trigger('impactMedium', {
@@ -214,9 +214,9 @@ export const ScrollContainerProvider = ({
         loadingAnimationTrigger.value = newStatus;
     }
 
-    // ==============
-    // 3. Animations
-    // ==============
+    // ============
+    //  Animations
+    // ============
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -289,59 +289,9 @@ export const ScrollContainerProvider = ({
         (keyboardHeight) => runOnJS(setIsKeyboardOpen)(keyboardHeight > 0)
     );
 
-    // ======
-    // 4. UI
-    // ======
-
-    // Creates a gradient blur effect that intensifies toward the top of the screen.
-    const TopBlurBar = () => {
-        const fadeViews = [];
-        const blurViews = [];
-        const INTENSITY = 5;
-        const NUM_VIEWS = 5;
-        const ADDITIONAL_BLUR_PADDING = 16;
-
-        for (let i = 1; i <= NUM_VIEWS; i++) {
-            blurViews.push(
-                <BlurView
-                    key={`${i}-blur`}
-                    intensity={INTENSITY}
-                    tint='systemUltraThinMaterialDark'
-                    className='absolute top-0 left-0 z-[1] w-screen'
-                    style={{
-                        height: (UPPER_FADE_HEIGHT / NUM_VIEWS) * i
-                    }}
-                />
-            )
-            fadeViews.push(
-                <View
-                    key={`${i}-fade`}
-                    className='absolute z-[1] top-0 left-0 opacity-[.1] w-screen'
-                    style={{
-                        height: ((UPPER_FADE_HEIGHT / NUM_VIEWS) * i),
-                        backgroundColor: PlatformColor(background)
-                    }} />
-            )
-        }
-
-        return (
-            <TopBlurBarContainer
-                className='absolute top-0 left-0 z-[2] w-screen'
-                style={topBlurBarStyle}
-            >
-                {fadeViews}
-                {blurViews}
-                <BlurView
-                    intensity={4}
-                    tint='systemUltraThinMaterialDark'
-                    className='absolute top-0 left-0 z-[1] w-screen'
-                    style={{
-                        height: UPPER_FADE_HEIGHT + ADDITIONAL_BLUR_PADDING
-                    }}
-                />
-            </TopBlurBarContainer>
-        );
-    };
+    // ================
+    //  User Interface
+    // ================
 
     return (
         <ScrollContainerContext.Provider value={{
@@ -353,6 +303,25 @@ export const ScrollContainerProvider = ({
             onMeasureScrollContentHeight: handleMeasureScrollContentHeight
         }}>
             <View className='flex-1' style={{ backgroundColor: PlatformColor(background) }}>
+
+                {/* Top Fade Bar */}
+                <TopBlurBarContainer
+                    className='absolute top-0 left-0 z-[2] w-screen'
+                    style={topBlurBarStyle}
+                >
+                    <LinearGradient
+                        colors={upperFadeArray}
+                        style={{
+                            width: '100%',
+                            height: UPPER_FADE_HEIGHT + 32,
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            zIndex: 6000
+                        }}
+                        dither={false}
+                    />
+                </TopBlurBarContainer>
 
                 {/* Floating Banner */}
                 <FloatingBanner
@@ -372,8 +341,9 @@ export const ScrollContainerProvider = ({
                 <KeyboardAvoidingView
                     behavior='padding'
                     className='flex-1'
-                    // keyboardVerticalOffset={TOOLBAR_HEIGHT}
+                // keyboardVerticalOffset={TOOLBAR_HEIGHT}
                 >
+
                     {/* Hidden placeholder input to prevent keyboard flicker */}
                     <TextInput
                         ref={placeholderInputRef}
@@ -420,9 +390,6 @@ export const ScrollContainerProvider = ({
                 <FolderItemToolbar />
                 <CountdownEventToolbar />
                 <RecurringEventToolbar />
-
-                {/* Top Blur Bar */}
-                <TopBlurBar />
 
                 {/* Loading Spinner */}
                 {canReloadPath && (

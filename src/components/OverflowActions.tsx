@@ -1,3 +1,5 @@
+import { EPopupActionType } from "@/lib/enums/EPopupActionType";
+import { TPopupAction } from "@/lib/types/TPopupAction";
 import {
     Button,
     ContextMenu,
@@ -6,62 +8,31 @@ import {
     Switch,
     VStack
 } from "@expo/ui/swift-ui";
+import { frame } from "@expo/ui/swift-ui/modifiers";
 import React, { ReactNode, useMemo } from "react";
 import GenericIcon from "./icon";
-import { frame } from "@expo/ui/swift-ui/modifiers";
 
-type TOverflowActionsProps = {
+// ✅ 
+
+type TPopupListProps = {
     label?: string;
-    actions: TOverflowAction[];
+    actions: TPopupAction[];
 };
 
-export enum EOverflowActionType {
-    BUTTON = "BUTTON",
-    SWITCH = "SWITCH",
-    SUBMENU = "SUBMENU",
-}
-
-type BaseOverflowAction = {
-    title: string;
-    systemImage?: string;
-    hidden?: boolean;
-};
-
-type ButtonAction = BaseOverflowAction & {
-    type: EOverflowActionType.BUTTON;
-    onPress: () => void;
-    destructive?: boolean;
-    value?: boolean;
-};
-
-type SwitchAction = BaseOverflowAction & {
-    type: EOverflowActionType.SWITCH;
-    value: boolean;
-    onPress: () => void;
-};
-
-type SubmenuAction = BaseOverflowAction & {
-    type: EOverflowActionType.SUBMENU;
-    items: TOverflowAction[];
-};
-
-export type TOverflowAction = ButtonAction | SwitchAction | SubmenuAction;
-
-
-const OverflowActions = ({ label, actions }: TOverflowActionsProps) => {
+const PopupList = ({ label, actions }: TPopupListProps) => {
 
     const renderMenuAction = (
-        option: TOverflowAction,
+        option: TPopupAction,
         index: number
     ): ReactNode | null => {
         if (option.hidden) return null;
 
         switch (option.type) {
-            case EOverflowActionType.BUTTON:
+            case EPopupActionType.BUTTON:
                 return (
                     <Button
                         key={index}
-                        systemImage={option.systemImage ?? option.value ? 'checkmark' : undefined}
+                        systemImage={option.systemImage ? option.systemImage : option.value ? 'checkmark' : undefined}
                         role={option.destructive ? "destructive" : undefined}
                         onPress={option.onPress}
                     >
@@ -69,7 +40,7 @@ const OverflowActions = ({ label, actions }: TOverflowActionsProps) => {
                     </Button>
                 );
 
-            case EOverflowActionType.SWITCH:
+            case EPopupActionType.SWITCH:
                 return (
                     <Switch
                         key={index}
@@ -80,7 +51,7 @@ const OverflowActions = ({ label, actions }: TOverflowActionsProps) => {
                     />
                 );
 
-            case EOverflowActionType.SUBMENU:
+            case EPopupActionType.SUBMENU:
                 if (option.items.some((item) => !item.hidden)) {
                     return (
                         <Submenu
@@ -154,4 +125,4 @@ const OverflowActions = ({ label, actions }: TOverflowActionsProps) => {
     );
 };
 
-export default OverflowActions;
+export default PopupList;

@@ -1,8 +1,7 @@
 import ThinLine from '@/components/ThinLine';
 import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
-import { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { DateTime } from 'luxon';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View } from 'react-native';
 import TimeSelector from './TimeSelector';
 
@@ -13,7 +12,6 @@ type TTimeRangeSelectorProps = {
     endIso: string;
     allDay?: boolean;
     multiDay?: boolean;
-    triggerOpenField?: ETimeSelectorMode;
     onChange: (
         start: string,
         end: string
@@ -25,55 +23,33 @@ const TimeRangeSelector = ({
     endIso,
     allDay,
     multiDay,
-    triggerOpenField,
     onChange
 }: TTimeRangeSelectorProps) => {
-    const [selectorMode, setSelectorMode] = useState<ETimeSelectorMode | null>(null);
-
     const startDate: Date = useMemo(
         () => DateTime.fromISO(startIso).toJSDate(),
         [startIso]
     );
-
     const endDate: Date = useMemo(
         () => DateTime.fromISO(endIso).toJSDate(),
         [endIso]
     );
 
-    const showEndTime = endIso && multiDay;
+    const showEndDate = endIso && multiDay;
     const showTimes = !allDay;
 
     // Reset the times to midnight when the events become all-day.
     useEffect(() => {
         if (allDay) {
             resetTimesToMidnight();
-            setSelectorMode(null);
         }
     }, [allDay]);
 
-    // Trigger a field focused by the parent component.
-    useEffect(() => {
-        if (triggerOpenField) {
-            setSelectorMode(triggerOpenField);
-        }
-    }, [triggerOpenField]);
+    // ===============
+    //  Event Handler
+    // ===============
 
-    // ==================
-    // 1. Event Handlers
-    // ==================
-
-    function handleToggleSelectorMode(newMode: ETimeSelectorMode) {
-        if (newMode === selectorMode) {
-            setSelectorMode(null);
-        } else {
-            setSelectorMode(newMode);
-        }
-    }
-
-    function handleChange(event: DateTimePickerEvent) {
-        const { timestamp } = event.nativeEvent;
-
-        const inputDate = DateTime.fromMillis(timestamp);
+    function handleChange(date: Date, selectorMode: ETimeSelectorMode) {
+        const inputDate = DateTime.fromJSDate(date);
         const currentStartDate = DateTime.fromISO(startIso);
         const currentEndDate = DateTime.fromISO(endIso);
 
@@ -81,68 +57,26 @@ const TimeRangeSelector = ({
         let newEndDate = currentEndDate;
 
         const enforceEndLaterThanStart = () => {
-            // If end date is earlier than start date, shift the end date to be on the same day as the start.
-            if (newEndDate.startOf('day') < newStartDate.startOf('day')) {
-                newEndDate = newStartDate.set({
-                    hour: currentEndDate.hour,
-                    minute: currentEndDate.minute,
-                    second: 0,
-                    millisecond: 0
-                });
-            }
-            // If the end date is still earlier than the start, set the times equal.
-            if (newEndDate < newStartDate) {
+            if (newEndDate.toMillis() < newStartDate.toMillis()) {
                 newEndDate = newStartDate;
+            }
+        };
+
+        const enforceStartEarlierThanEnd = () => {
+            if (newEndDate.toMillis() < newStartDate.toMillis()) {
+                newStartDate = newEndDate;
             }
         };
 
         switch (selectorMode) {
             case ETimeSelectorMode.START_DATE:
-                newStartDate = inputDate.set({
-                    hour: currentStartDate.hour,
-                    minute: currentStartDate.minute,
-                    second: 0,
-                    millisecond: 0
-                });
-                enforceEndLaterThanStart();
-
-                if (showTimes) {
-                    setSelectorMode(ETimeSelectorMode.START_TIME);
-                } else if (showEndTime) {
-                    setSelectorMode(ETimeSelectorMode.END_DATE);
-                }
-
-                break;
-            case ETimeSelectorMode.START_TIME:
-                newStartDate = currentStartDate.set({
-                    hour: inputDate.hour,
-                    minute: inputDate.minute,
-                    second: 0,
-                    millisecond: 0
-                });
+                newStartDate = inputDate;
                 enforceEndLaterThanStart();
                 break;
+
             case ETimeSelectorMode.END_DATE:
-                newEndDate = inputDate.set({
-                    hour: currentEndDate.hour,
-                    minute: currentEndDate.minute,
-                    second: 0,
-                    millisecond: 0
-                });
-                enforceEndLaterThanStart();
-
-                if (showTimes) {
-                    setSelectorMode(ETimeSelectorMode.END_TIME);
-                }
-
-                break;
-            case ETimeSelectorMode.END_TIME:
-                newEndDate = currentEndDate.set({
-                    hour: inputDate.hour,
-                    minute: inputDate.minute,
-                    second: 0,
-                    millisecond: 0
-                });
+                newEndDate = inputDate;
+                enforceStartEarlierThanEnd();
                 break;
         }
 
@@ -151,9 +85,9 @@ const TimeRangeSelector = ({
         onChange(newStartIso, newEndIso);
     }
 
-    // ===================
-    // 2. Helper Function
-    // ===================
+    // =================
+    //  Helper Function
+    // =================
 
     function resetTimesToMidnight() {
         const newStartDate = DateTime.fromISO(startIso)
@@ -176,37 +110,33 @@ const TimeRangeSelector = ({
         onChange(newStartIso, newEndIso);
     }
 
+    // ================
+    //  User Interface
+    // ================
+
     return (
         <View>
 
             {/* Start */}
             <TimeSelector
+                key={startDate.toISOString() + 'START'}
                 label='Start'
                 date={startDate}
-                isoTimestamp={startIso}
                 showTime={showTimes}
-                dateMode={ETimeSelectorMode.START_DATE}
-                timeMode={ETimeSelectorMode.START_TIME}
-                currentSelectorMode={selectorMode}
-                onToggleMode={handleToggleSelectorMode}
-                onChange={handleChange}
+                onChange={(date) => handleChange(date, ETimeSelectorMode.START_DATE)}
             />
 
             {/* Separator */}
-            {showEndTime && <ThinLine overflow />}
+            {showEndDate && <ThinLine overflow />}
 
             {/* End */}
-            {showEndTime && (
+            {showEndDate && (
                 <TimeSelector
+                    key={endDate.toISOString() + 'END'}
                     label='End'
                     date={endDate}
-                    isoTimestamp={endIso}
                     showTime={showTimes}
-                    dateMode={ETimeSelectorMode.END_DATE}
-                    timeMode={ETimeSelectorMode.END_TIME}
-                    currentSelectorMode={selectorMode}
-                    onToggleMode={handleToggleSelectorMode}
-                    onChange={handleChange}
+                    onChange={(date) => handleChange(date, ETimeSelectorMode.END_DATE)}
                     minimumDate={startDate}
                 />
             )}

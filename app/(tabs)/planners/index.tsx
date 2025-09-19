@@ -1,12 +1,14 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
-import OverflowActions, { EOverflowActionType, TOverflowAction } from '@/components/OverflowActions';
 import GenericIcon from '@/components/icon';
 import PlannerCard from '@/components/lists/PlannerCard';
+import PopupList from '@/components/OverflowActions';
 import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { TPopupAction } from '@/lib/types/TPopupAction';
 import { getAllPlannerSetTitles } from '@/storage/plannerSetsStorage';
 import { useRouter } from 'expo-router';
 import { useAtom, useAtomValue } from 'jotai';
@@ -23,17 +25,17 @@ const Planners = () => {
     const [plannerSetKey, setPlannerSetKey] = useAtom(plannerSetKeyAtom);
     const { planner } = useAtomValue(mountedDatestampsAtom);
 
-    function buildPlannerSetActions(): TOverflowAction[] {
+    function buildPlannerSetActions(): TPopupAction[] {
         const allPlannerSetTitles = getAllPlannerSetTitles();
         return ['Next 7 Days', ...allPlannerSetTitles].map((title) => ({
             title,
-            type: EOverflowActionType.BUTTON,
+            type: EPopupActionType.BUTTON,
             onPress: () => setPlannerSetKey(title),
             value: plannerSetKey === title
         }));
     }
 
-    const [plannerSetActions, setPlannerSetActions] = useState<TOverflowAction[]>(buildPlannerSetActions());
+    const [plannerSetActions, setPlannerSetActions] = useState<TPopupAction[]>(buildPlannerSetActions());
 
     // Re-build the list of planner set options whenever they change in storage.
     useMMKVListener(() => {
@@ -50,7 +52,7 @@ const Planners = () => {
 
             {/* Planner Set Selection */}
             <View className='px-3 pt-3 flex-row justify-between items-center w-full'>
-                <OverflowActions label={plannerSetKey} actions={plannerSetActions} />
+                <PopupList label={plannerSetKey} actions={plannerSetActions} />
                 <View className='gap-2 flex-row'>
                     {plannerSetKey !== 'Next 7 Days' && (
                         <GenericIcon
