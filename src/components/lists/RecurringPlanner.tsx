@@ -61,7 +61,7 @@ const RecurringPlanner = () => {
 
     return (
         <View className='flex-1'>
-            <View className='px-3 pt-3 flex-row justify-between'>
+            <View className='px-3 pt-3 flex-row justify-between items-center'>
                 <PopupList label={recurringPlannerId} actions={recurringPlannerActions} />
                 <OverflowActionsIcon />
             </View>

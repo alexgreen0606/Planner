@@ -13,7 +13,6 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Alert, PlatformColor } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
-import useAppTheme from './useAppTheme';
 import useTextfieldItemAs from './useTextfieldItemAs';
 
 // ✅ 
@@ -35,8 +34,6 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     const [item, setItem] = useMMKVObject<IFolderItem>(itemId, itemStorage);
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<IFolderItem>(itemStorage);
-
-    const { overflowActionText } = useAppTheme();
 
     function handleToggleEditValue() {
         setIsEditingValue(prev => !prev);

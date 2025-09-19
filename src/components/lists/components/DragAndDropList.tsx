@@ -13,8 +13,6 @@ import { cancelAnimation, runOnJS, useAnimatedReaction, useDerivedValue, useShar
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ListItem from './ListItem';
-import { Host, List } from '@expo/ui/swift-ui';
-import { frame } from '@expo/ui/swift-ui/modifiers';
 
 // ✅ 
 
@@ -23,10 +21,10 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     listId: string;
     emptyLabelConfig?: Omit<IEmptyLabelProps, 'onPress'>;
     storageId: EStorageId;
-    isLoading?: boolean;
     fillSpace?: boolean;
     storage: MMKV;
     defaultStorageObject?: S;
+    collapsed?: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
@@ -43,10 +41,10 @@ const DragAndDropList = <T extends TListItem, S = T>({
     itemIds,
     listId,
     storageId,
-    isLoading,
     emptyLabelConfig,
     fillSpace,
     storage,
+    collapsed,
     onIndexChange,
     onCreateItem,
     onDeleteItem,
@@ -142,68 +140,63 @@ const DragAndDropList = <T extends TListItem, S = T>({
     // ================
 
     return (
-        <MotiView
-            animate={{ opacity: isLoading ? 0 : 1 }}
-            style={{ flex: fillSpace ? 1 : 0 }}
-        >
-            <View style={{ flex: fillSpace ? 1 : 0 }}>
+        <View style={{ flex: fillSpace ? 1 : 0 }}>
 
-                {/* List Items */}
-                <View
-                    className='w-full'
-                    style={{
-                        height: itemIds.length * LIST_ITEM_HEIGHT
-                    }}
-                >
-                    {itemIds.map((id, i) =>
-                        <ListItem<T>
-                            key={`${id}-row`}
-                            itemIndex={i}
-                            listId={listId}
-                            upperAutoScrollBound={upperAutoScrollBound}
-                            lowerAutoScrollBound={lowerAutoScrollBound}
-                            itemId={id}
-                            storage={storage}
-                            dragConfig={{
-                                topMax: dragTopMax,
-                                isAutoScrolling: isAutoScrolling,
-                                draggingRowId: draggingRowId,
-                                initialTop: dragInitialTop,
-                                initialIndex: dragInitialIndex,
-                                top: dragTop,
-                                index: dragIndex,
-                                onDragEnd: handleDragEndWorklet,
-                                onDragStart: handleDragStartWorklet
-                            }}
-                            {...rest}
-                            onCreateItem={onCreateItem}
-                            onDeleteItem={onDeleteItem}
-                        />
-                    )}
-                </View>
-
-                {/* Lower List Line */}
-                {itemIds.length > 0 && (
-                    <Pressable onPress={handleEmptySpaceClick}>
-                        <ThinLine />
-                    </Pressable>
-                )}
-
-                {/* Empty Label or Click Area */}
-                {emptyLabelConfig && itemIds.length === 0 ? (
-                    <EmptyLabel
-                        {...emptyLabelConfig}
-                        onPress={handleEmptySpaceClick}
-                    />
-                ) : !isLoading && (
-                    <Pressable
-                        className='flex-1'
-                        onPress={handleEmptySpaceClick}
+            {/* List Items */}
+            <MotiView
+                className='w-full'
+                animate={{
+                    height: itemIds.length * LIST_ITEM_HEIGHT
+                }}
+            >
+                {itemIds.map((id, i) =>
+                    <ListItem<T>
+                        key={`${id}-row`}
+                        itemIndex={i}
+                        listId={listId}
+                        upperAutoScrollBound={upperAutoScrollBound}
+                        lowerAutoScrollBound={lowerAutoScrollBound}
+                        itemId={id}
+                        storage={storage}
+                        dragConfig={{
+                            topMax: dragTopMax,
+                            isAutoScrolling: isAutoScrolling,
+                            draggingRowId: draggingRowId,
+                            initialTop: dragInitialTop,
+                            initialIndex: dragInitialIndex,
+                            top: dragTop,
+                            index: dragIndex,
+                            onDragEnd: handleDragEndWorklet,
+                            onDragStart: handleDragStartWorklet
+                        }}
+                        {...rest}
+                        onCreateItem={onCreateItem}
+                        onDeleteItem={onDeleteItem}
                     />
                 )}
+            </MotiView>
 
-            </View>
-        </MotiView>
+            {/* Lower List Line */}
+            {itemIds.length > 0 && (
+                <Pressable onPress={handleEmptySpaceClick}>
+                    <ThinLine />
+                </Pressable>
+            )}
+
+            {/* Empty Label or Click Area */}
+            {emptyLabelConfig && itemIds.length === 0 ? (
+                <EmptyLabel
+                    {...emptyLabelConfig}
+                    onPress={handleEmptySpaceClick}
+                />
+            ) : (
+                <Pressable
+                    className='flex-1'
+                    onPress={handleEmptySpaceClick}
+                />
+            )}
+
+        </View>
     )
 };
 

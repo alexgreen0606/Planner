@@ -112,9 +112,9 @@ const ListItem = <T extends TListItem>({
 
     const isEditable = textfieldId === item?.id;
 
-    // ==================
-    // 1. Event Handlers
-    // ==================
+    // ================
+    //  Event Handlers
+    // ================
 
     function handleDrag(
         currentDragDisplacement: number,
@@ -166,9 +166,9 @@ const ListItem = <T extends TListItem>({
         onDragEnd(index.value, item);
     }
 
-    // ============
-    // 2. Gestures
-    // ============
+    // ==========
+    //  Gestures
+    // ==========
 
     const tapGesture = Gesture.Tap()
         .maxDuration(200)
@@ -232,9 +232,9 @@ const ListItem = <T extends TListItem>({
     const dragGesture = Gesture.Simultaneous(longPressGesture, panGesture);
     const contentGesture = Gesture.Race(tapGesture, dragGesture);
 
-    // ==============
-    // 3. Animations
-    // ==============
+    // ============
+    //  Animations
+    // ============
 
     const animatedRowStyle = useAnimatedStyle(() => {
         const isRowDragging = item && draggingRowId.value === item.id;
@@ -260,9 +260,9 @@ const ListItem = <T extends TListItem>({
         }
     });
 
-    // ======
-    // 4. UI
-    // ======
+    // ================
+    //  User Interface
+    // ================
 
     if (!item) return null;
 

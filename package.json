@@ -5,7 +5,7 @@
   "scripts": {
     "start": "expo start --dev-client",
     "ios": "expo prebuild && npx pod-install && expo run:ios",
-    "ios fast": "expo run:ios",
+    "ios_fast": "expo run:ios",
     "web": "expo start --web",
     "android": "expo run:android"
   },

@@ -9,10 +9,8 @@ import {
     Submenu,
     Switch
 } from "@expo/ui/swift-ui";
-import { frame, glassEffect, tint } from "@expo/ui/swift-ui/modifiers";
 import React, { ReactNode, useMemo } from "react";
 import GenericIcon from "./icon";
-import { PlatformColor } from "react-native";
 
 // ✅ 
 

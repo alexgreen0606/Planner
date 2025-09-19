@@ -50,7 +50,7 @@ const Planners = () => {
         <View className='flex-1'>
 
             {/* Planner Set Selection */}
-            <View className='px-3 pt-3 flex-row justify-between items-center w-full'>
+            <View className='px-3 pt-3 flex-row justify-between items-center'>
                 <PopupList label={plannerSetKey} actions={plannerSetActions} />
                 <View className='gap-2 flex-row'>
                     {plannerSetKey !== 'Next 7 Days' && (

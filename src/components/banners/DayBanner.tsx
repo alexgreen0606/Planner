@@ -7,7 +7,6 @@ import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import PlannerChipSets from '../plannerChip/PlannerChipSets';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 // ✅ 
 
@@ -40,7 +39,7 @@ const DayBanner = ({
     const prioritizeDayOfWeek = plannerSetKey === 'Next 7 Days';
 
     return (
-        <TouchableOpacity onPress={onToggleCollapsed}>
+        <TouchableOpacity activeOpacity={0.8} onPress={onToggleCollapsed} className='p-2'>
             <View className='flex-row justify-between items-center w-full'>
 
                 {/* Date */}

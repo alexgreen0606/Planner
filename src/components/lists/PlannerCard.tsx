@@ -6,12 +6,12 @@ import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { MotiView } from 'moti';
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { PlatformColor, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '../../utils/plannerUtils';
 import DayBanner from '../banners/DayBanner';
-import Card from '../Card';
 import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
@@ -54,45 +54,50 @@ const PlannerCard = ({
         setCollapsed(curr => !curr);
     }
 
+    const contentHeight = planner.eventIds.length ? planner.eventIds.length * LIST_ITEM_HEIGHT + THIN_LINE_HEIGHT : 70;
+
     return (
-        <Card
-            header={
-                <DayBanner
-                    planner={planner}
-                    collapsed={collapsed}
-                    isEditingTitle={isEditingTitle}
-                    onEditTitle={onEditTitle}
-                    onToggleEditTitle={onToggleEditTitle}
-                    onToggleCollapsed={handleToggleCollapsed}
+        <View
+            className='relative rounded-xl'
+            style={{ backgroundColor: PlatformColor('systemGray6') }}
+        >
+            <DayBanner
+                planner={planner}
+                collapsed={collapsed}
+                isEditingTitle={isEditingTitle}
+                onEditTitle={onEditTitle}
+                onToggleEditTitle={onToggleEditTitle}
+                onToggleCollapsed={handleToggleCollapsed}
+            />
+            <MotiView
+                className='overflow-hidden'
+                animate={{
+                    height: collapsed ? 0 : contentHeight + 36
+                }}
+            >
+                <DragAndDropList<IPlannerEvent>
+                    listId={datestamp}
+                    itemIds={planner.eventIds}
+                    storageId={EStorageId.PLANNER_EVENT}
+                    storage={eventStorage}
+                    emptyLabelConfig={{
+                        label: 'No plans',
+                        className: 'h-20 flex justify-center items-center'
+                    }}
+                    onValueChange={onUpdatePlannerEventValueWithTimeParsing}
+                    onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
+                    onCreateItem={createPlannerEventInStorageAndFocusTextfield}
+                    onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
+                    onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
+                    onGetRightIcon={createPlannerEventTimeIcon}
+                    onGetLeftIcon={useGetPlannerEventToggle}
+                    onGetIsItemDeletingCustom={useIsPlannerEventDeleting}
                 />
-            }
-            footer={
-                <View className='flex-row justify-end h-6'>
+                <View className='items-end h-6 p-2'>
                     <OverflowActionsIcon />
                 </View>
-            }
-            collapsed={collapsed}
-            contentHeight={planner.eventIds.length ? planner.eventIds.length * LIST_ITEM_HEIGHT + THIN_LINE_HEIGHT : 80}
-        >
-            <DragAndDropList<IPlannerEvent>
-                listId={datestamp}
-                itemIds={planner.eventIds}
-                storageId={EStorageId.PLANNER_EVENT}
-                storage={eventStorage}
-                emptyLabelConfig={{
-                    label: 'No plans',
-                    className: 'h-20 flex justify-center items-center'
-                }}
-                onValueChange={onUpdatePlannerEventValueWithTimeParsing}
-                onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
-                onCreateItem={createPlannerEventInStorageAndFocusTextfield}
-                onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
-                onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
-                onGetRightIcon={createPlannerEventTimeIcon}
-                onGetLeftIcon={useGetPlannerEventToggle}
-                onGetIsItemDeletingCustom={useIsPlannerEventDeleting}
-            />
-        </Card>
+            </MotiView>
+        </View >
     )
 };
 
