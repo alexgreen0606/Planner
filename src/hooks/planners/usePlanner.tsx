@@ -1,4 +1,4 @@
-import PopupList from "@/components/OverflowActions";
+import PopupList from "@/components/PopupList";
 import { EPopupActionType } from "@/lib/enums/EPopupActionType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";

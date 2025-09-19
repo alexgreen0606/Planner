@@ -7,24 +7,21 @@ import CustomText from './CustomText';
 
 type TDateValueProps = {
     isoTimestamp: string;
-    concise?: boolean;
     platformColor?: string;
     disabled?: boolean;
 };
 
 const DateValue = ({
     isoTimestamp,
-    concise,
     disabled,
     platformColor = 'systemTeal'
 }: TDateValueProps) => {
-    const dayFormat = concise ? 'MMM d' : 'MMMM d';
-    const yearFormat = concise ? 'yyyy' : 'yyyy';
+    const dayFormat = 'MMM d';
+    const yearFormat = 'yyyy';
 
     const date = DateTime.fromISO(isoTimestamp);
     const monthDay = date.toFormat(dayFormat);
     const year = date.toFormat(yearFormat);
-    const dayOfWeek = date.toFormat('ccc').toUpperCase();
 
     // Compute 11 months from now
     const elevenMonthsLater = DateTime.now().plus({ months: 11 });
@@ -32,50 +29,23 @@ const DateValue = ({
     // Only show year if date is more than 11 months away
     const showYear = date > elevenMonthsLater;
 
-    // ------------- Concise Date Layout -------------
-    if (concise) {
-        return (
-            <View className='relative flex-row w-fit'>
-                <CustomText
-                    variant='conciseDate'
-                    customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}
-                >
-                    {monthDay.toUpperCase()}
-                </CustomText>
-                {showYear && (
-                    <View className='absolute top-[80%]'>
-                        <CustomText
-                            variant='conciseDateYear'
-                            customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}
-                        >
-                            {year}
-                        </CustomText>
-                    </View>
-                )}
-            </View>
-        )
-    }
-
-    // ------------- Standard Date Layout -------------
     return (
-        <View className="relative">
+        <View className='relative flex-row w-fit'>
             <CustomText
-                className='-my-0.5'
-                variant='date'
-                customStyle={{
-                    marginRight: showYear ? 2 : 0,
-                    color: PlatformColor(platformColor)
-                }}
+                variant='conciseDate'
+                customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}
             >
-                {monthDay}
-            </CustomText>
-            <CustomText variant='weekday'>
-                {dayOfWeek}
+                {monthDay.toUpperCase()}
             </CustomText>
             {showYear && (
-                <CustomText variant='year'>
-                    {year}
-                </CustomText>
+                <View className='absolute top-[80%]'>
+                    <CustomText
+                        variant='conciseDateYear'
+                        customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}
+                    >
+                        {year}
+                    </CustomText>
+                </View>
             )}
         </View>
     )

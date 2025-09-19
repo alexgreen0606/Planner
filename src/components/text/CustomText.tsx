@@ -30,11 +30,6 @@ export const textStyles = {
         fontSize: 16,
         fontFamily: 'Text'
     },
-    // --- Button ---
-    button: {
-        fontSize: 18,
-        fontFamily: 'RoundMedium',
-    },
     // --- Modal ---
     inputLabel: {
         color: PlatformColor('secondaryLabel'),
@@ -69,17 +64,6 @@ export const textStyles = {
     eventChipLabel: {
         fontFamily: 'RoundRegular',
         fontSize: 13
-    },
-    // --- Empty Label ---
-    emptyLabel: {
-        fontFamily: 'RoundRegular',
-        fontSize: 12,
-        color: PlatformColor('tertiaryLabel')
-    },
-    // --- Planners Navbar ---
-    plannerTabLabel: {
-        fontSize: 14,
-        fontFamily: 'RoundMedium'
     },
     // --- Weather ---
     currentTemp: {
@@ -118,40 +102,6 @@ export const textStyles = {
         left: '50%',
         top: '100%',
         marginTop: -2
-    },
-    // --- Time ---
-    time: {
-        fontFamily: 'RoundHeavy',
-        fontSize: 16,
-        color: PlatformColor('systemTeal'),
-        marginRight: 1
-    },
-    pmAmIndicator: {
-        fontFamily: 'Text',
-        fontSize: 10,
-        color: PlatformColor('secondaryLabel'),
-        marginTop: 2,
-        marginLeft: 1
-    },
-    // --- Date ---
-    weekday: {
-        fontFamily: 'RoundMedium',
-        fontSize: 9,
-        color: PlatformColor('secondaryLabel'),
-        position: 'absolute',
-        top: '100%',
-        right: 0
-    },
-    date: {
-        fontFamily: 'RoundMedium',
-        fontSize: 16,
-        color: PlatformColor('systemTeal')
-    },
-    year: {
-        fontFamily: 'RoundHeavy',
-        fontSize: 11,
-        color: PlatformColor('secondaryLabel'),
-        marginRight: 2
     },
     // --- Concise Date ---
     conciseDate: {

@@ -1,5 +1,5 @@
 import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
-import PopupList from '@/components/OverflowActions';
+import PopupList from '@/components/PopupList';
 import { platformToRgbMap, selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';

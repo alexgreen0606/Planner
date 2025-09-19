@@ -41,17 +41,19 @@ const FolderItemBanner = ({ itemId, backButtonConfig }: TFolderItemBannerProps) 
 
             {/* Back Button */}
             {!backButtonConfig.hide && (
-                <Host style={{ position: 'absolute', bottom: '100%', left: 8, width: SCREEN_WIDTH - 16, transform: [{ translateY: -4 }] }}>
-                    <HStack modifiers={[frame({ alignment: 'leading', width: SCREEN_WIDTH }), padding({ horizontal: 16 })]}>
-                        <Button
-                            variant='borderless'
-                            onPress={() => backButtonConfig.onClick ? backButtonConfig.onClick() : router.back()}
-                            systemImage='chevron.left'
-                        >
-                            {backButtonConfig.label}
-                        </Button>
-                    </HStack>
-                </Host>
+                <View className='absolute -translate-y-1 left-0 bottom-full'>
+                    <Host matchContents>
+                        <HStack modifiers={[frame({ width: SCREEN_WIDTH - 16, height: 40, alignment: 'leading' })]}>
+                            <Button
+                                variant='borderless'
+                                onPress={() => backButtonConfig.onClick ? backButtonConfig.onClick() : router.back()}
+                                systemImage='chevron.left'
+                            >
+                                {backButtonConfig.label}
+                            </Button>
+                        </HStack>
+                    </Host>
+                </View>
             )}
 
             {/* Name */}

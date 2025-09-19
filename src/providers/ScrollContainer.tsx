@@ -2,23 +2,21 @@ import CountdownEventToolbar from '@/components/toolbars/CountdownEventToolbar';
 import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import RecurringEventToolbar from '@/components/toolbars/RecurringEventToolbar';
+import UpperFadeOutView from '@/components/UpperFadeOutView';
 import useAppTheme from '@/hooks/useAppTheme';
 import { LIST_ITEM_HEIGHT, OVERSCROLL_RELOAD_THRESHOLD, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { CircularProgress, Host } from '@expo/ui/swift-ui';
-import { LinearGradient } from 'expo-linear-gradient';
 import { usePathname } from 'expo-router';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, PlatformColor, ScrollView, TextInput, View } from 'react-native';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 import Animated, {
-    AnimatedRef,
     cancelAnimation,
     Easing,
     Extrapolation,
     interpolate,
-    measure,
     runOnJS,
     scrollTo,
     SharedValue,
@@ -41,7 +39,7 @@ type TScrollContainerProviderProps = {
     header?: React.ReactNode;
     floatingBanner?: React.ReactNode;
     floatingBannerHeight?: number;
-    fixFloatingBannerOnOverscroll?: boolean;
+    fixFloatingBannerToTop?: boolean;
 
     // Tracks the height of any content above the list container
     upperContentHeight?: number;
@@ -54,8 +52,6 @@ type TScrollContainerContextValue = {
 
     // --- Page Layout Variables ---
     floatingBannerHeight: number;
-    bottomScrollRef: AnimatedRef<Animated.View>;
-    onMeasureScrollContentHeight: () => void;
 
     // Placeholder Textfield (prevents keyboard flicker)
     onFocusPlaceholder: () => void;
@@ -67,7 +63,7 @@ export enum ELoadingStatus {
     COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
 }
 
-const TopBlurBarContainer = Animated.createAnimatedComponent(View);
+const UpperFadeOutContainer = Animated.createAnimatedComponent(View);
 const LoadingSpinner = Animated.createAnimatedComponent(View);
 const FloatingBanner = Animated.createAnimatedComponent(View);
 const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
@@ -80,7 +76,7 @@ export const ScrollContainerProvider = ({
     floatingBanner,
     upperContentHeight = 0,
     floatingBannerHeight: fixedFloatingBannerHeight = 0,
-    fixFloatingBannerOnOverscroll = false
+    fixFloatingBannerToTop = false
 }: TScrollContainerProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const keyboard = useAnimatedKeyboard();
@@ -89,7 +85,6 @@ export const ScrollContainerProvider = ({
     const { onReloadPage } = useExternalDataContext();
 
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
-    const bottomScrollRef = useAnimatedRef<Animated.View>();
 
     const placeholderInputRef = useRef<TextInput>(null);
 
@@ -97,26 +92,21 @@ export const ScrollContainerProvider = ({
     const [loadingStatus, setLoadingStatus] = useState<ELoadingStatus>(ELoadingStatus.STATIC);
     const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
-    const bottomAnchorAbsolutePosition = useSharedValue(0);
     const disableNativeScroll = useSharedValue(false);
     const scrollOffset = useSharedValue(0);
 
     const loadingAnimationTrigger = useSharedValue<ELoadingStatus>(ELoadingStatus.STATIC);
     const loadingRotation = useSharedValue(0);
 
-    const { background, upperFadeArray } = useAppTheme();
+    const { background } = useAppTheme();
 
     const UPPER_CONTAINER_PADDING = TOP_SPACER + (header ? HEADER_HEIGHT : 0) + floatingBannerHeight + upperContentHeight;
     const LOWER_CONTAINER_PADDING = BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT;
 
-    // Blur the space behind floating banners
-    // If no floating banner exists, blur for the default header height
-    const UPPER_FADE_HEIGHT = (floatingBannerHeight > 0 ? floatingBannerHeight : HEADER_HEIGHT) + TOP_SPACER;
-
     const canReloadPath = reloadablePaths.includes(pathname);
 
     const loadingSpinnerStyle = useAnimatedStyle(() => {
-        const baseTop = (fixFloatingBannerOnOverscroll ? floatingBannerHeight : 0)
+        const baseTop = floatingBannerHeight
             + TOP_SPACER
             + OVERSCROLL_RELOAD_THRESHOLD / 3;
 
@@ -134,22 +124,21 @@ export const ScrollContainerProvider = ({
 
     const floatingBannerStyle = useAnimatedStyle(() => {
         const baseOffset = (header ? HEADER_HEIGHT : 0) + TOP_SPACER;
-        const shouldFixPositionToTop = scrollOffset.value <= 0 && fixFloatingBannerOnOverscroll;
+        const shouldFixPositionToTop = scrollOffset.value <= 0 && fixFloatingBannerToTop;
         const calculatedTop = baseOffset - scrollOffset.value;
         return {
             top: shouldFixPositionToTop ? baseOffset : Math.max(TOP_SPACER, calculatedTop),
         };
     });
 
-    // Hides the upper fade while the scroll container is not scrolled
-    const topBlurBarStyle = useAnimatedStyle(() => ({
+    // Hides the upper fade when the scroll container is not scrolled
+    const upperFadeOutStyle = useAnimatedStyle(() => ({
         opacity: interpolate(
             scrollOffset.value,
             [0, HEADER_HEIGHT],
             [0, 1],
             Extrapolation.CLAMP
-        ),
-        height: UPPER_FADE_HEIGHT
+        )
     }));
 
     // Trigger a page reload on overscroll.
@@ -184,16 +173,6 @@ export const ScrollContainerProvider = ({
         )
     }
 
-    function handleMeasureScrollContentHeight() {
-        'worklet';
-        try {
-            const measured = measure(bottomScrollRef);
-            if (measured) {
-                bottomAnchorAbsolutePosition.value = UPPER_CONTAINER_PADDING + measured.y - scrollOffset.value;
-            }
-        } catch (e) { }
-    }
-
     function handleFocusPlaceholder() {
         placeholderInputRef.current?.focus();
     }
@@ -223,12 +202,6 @@ export const ScrollContainerProvider = ({
             if (!disableNativeScroll.value) {
                 scrollOffset.value = event.contentOffset.y;
             }
-        },
-        onEndDrag: () => {
-            handleMeasureScrollContentHeight();
-        },
-        onMomentumEnd: () => {
-            handleMeasureScrollContentHeight();
         }
     });
 
@@ -297,31 +270,18 @@ export const ScrollContainerProvider = ({
         <ScrollContainerContext.Provider value={{
             scrollOffset,
             floatingBannerHeight,
-            bottomScrollRef,
             onFocusPlaceholder: handleFocusPlaceholder,
-            onAutoScroll: handleAutoScroll,
-            onMeasureScrollContentHeight: handleMeasureScrollContentHeight
+            onAutoScroll: handleAutoScroll
         }}>
             <View className='flex-1' style={{ backgroundColor: PlatformColor(background) }}>
 
-                {/* Top Fade Bar */}
-                <TopBlurBarContainer
-                    className='absolute top-0 left-0 z-[2] w-screen'
-                    style={topBlurBarStyle}
+                {/* Upper Fade Out */}
+                <UpperFadeOutContainer
+                    className='absolute top-0 left-0 w-screen z-[2]'
+                    style={upperFadeOutStyle}
                 >
-                    <LinearGradient
-                        colors={upperFadeArray}
-                        style={{
-                            width: '100%',
-                            height: UPPER_FADE_HEIGHT + 32,
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            zIndex: 6000
-                        }}
-                        dither={false}
-                    />
-                </TopBlurBarContainer>
+                    <UpperFadeOutView floatingBannerHeight={floatingBannerHeight} />
+                </UpperFadeOutContainer>
 
                 {/* Floating Banner */}
                 <FloatingBanner

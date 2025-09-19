@@ -2,8 +2,7 @@ import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import GenericIcon from '@/components/icon';
 import PlannerCard from '@/components/lists/PlannerCard';
-import PopupList from '@/components/OverflowActions';
-import ScrollContainerAnchor from '@/components/ScrollContainerAnchor';
+import PopupList from '@/components/PopupList';
 import { NULL } from '@/lib/constants/generic';
 import { PLANNER_SET_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
@@ -79,7 +78,6 @@ const Planners = () => {
                         datestamp={datestamp}
                     />
                 )}
-                <ScrollContainerAnchor />
             </View>
 
         </View>

@@ -12,6 +12,7 @@ type TTimeSelectorProps = {
     onChange: (date: Date) => void;
 };
 
+// TODO: need to handle change of date (affects initialDate)
 const TimeSelector = ({
     label,
     date,
@@ -23,14 +24,12 @@ const TimeSelector = ({
         label={label}
         value={
             <Host matchContents>
-                <HStack spacing={4}>
-                    <DateTimePicker
-                        onDateSelected={onChange}
-                        displayedComponents={showTime ? 'dateAndTime' : 'date'}
-                        initialDate={date.toISOString()}
-                        variant='automatic'
-                    />
-                </HStack>
+                <DateTimePicker
+                    onDateSelected={onChange}
+                    displayedComponents={showTime ? 'dateAndTime' : 'date'}
+                    initialDate={date.toISOString()}
+                    variant='automatic'
+                />
             </Host>
         }
     />

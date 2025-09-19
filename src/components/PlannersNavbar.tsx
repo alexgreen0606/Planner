@@ -30,7 +30,7 @@ const PlannersNavbar = ({ children }: TTopNavbarProps) => {
         <ScrollContainerProvider
             upperContentHeight={currentTabIndex === 0 ? 0 : BAR_HEIGHT}
             floatingBannerHeight={BAR_HEIGHT}
-            fixFloatingBannerOnOverscroll
+            fixFloatingBannerToTop
             floatingBanner={
                 <Host matchContents>
                     <HStack modifiers={[frame({ width: SCREEN_WIDTH })]} alignment="center">

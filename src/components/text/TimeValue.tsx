@@ -6,23 +6,19 @@ import CustomText from './CustomText';
 // ✅ 
 
 type TTimeValueProps = {
-    eventId?: string;
     timeValue?: string | null;
     isoTimestamp?: string | null;
-    endEvent?: boolean;
-    startEvent?: boolean;
-    concise?: boolean;
+    isEndEvent?: boolean;
+    isStartEvent?: boolean;
     platformColor?: string;
     disabled?: boolean;
 };
 
 const TimeValue = ({
-    eventId,
     timeValue,
     isoTimestamp,
-    endEvent,
-    startEvent,
-    concise,
+    isEndEvent: endEvent,
+    isStartEvent: startEvent,
     platformColor = 'systemTeal',
     disabled
 }: TTimeValueProps) => {
@@ -57,37 +53,22 @@ const TimeValue = ({
         }
     }, [timeValue, isoTimestamp]);
 
-    // ------------- Concise Time Layout -------------
-    if (concise) {
-        return (
-            <View className='flex-row relative'>
-                <CustomText variant='listTime' customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}>
-                    {hour}{minute}
-                </CustomText>
-                <CustomText variant='listPmAmIndicator' customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}>
-                    {indicator}
-                </CustomText>
-                {(startEvent || endEvent) && (
-                    <CustomText
-                        variant='listMultiDayIndicator'
-                        className='-translate-x-1/2'
-                    >
-                        {startEvent ? 'START' : 'END'}
-                    </CustomText>
-                )}
-            </View>
-        )
-    }
-
-    // ------------- Standard Time Layout -------------
     return (
         <View className='flex-row relative'>
-            <CustomText variant='time' customStyle={{ color: PlatformColor(platformColor) }}>
+            <CustomText variant='listTime' customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}>
                 {hour}{minute}
             </CustomText>
-            <CustomText variant='pmAmIndicator'>
+            <CustomText variant='listPmAmIndicator' customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}>
                 {indicator}
             </CustomText>
+            {(startEvent || endEvent) && (
+                <CustomText
+                    variant='listMultiDayIndicator'
+                    className='-translate-x-1/2'
+                >
+                    {startEvent ? 'START' : 'END'}
+                </CustomText>
+            )}
         </View>
     )
 };

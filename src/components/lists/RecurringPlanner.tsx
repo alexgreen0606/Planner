@@ -13,7 +13,7 @@ import { useAtom } from 'jotai';
 import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import PopupList from '../OverflowActions';
+import PopupList from '../PopupList';
 import TimeValue from '../text/TimeValue';
 import DragAndDropList from './components/DragAndDropList';
 
@@ -83,7 +83,7 @@ const RecurringPlanner = () => {
                 onDeleteItem={(event) => deleteRecurringEventsFromStorageHideWeekday([event])}
                 onGetRightIcon={(event) => event.startTime && (
                     <TouchableOpacity onPress={() => setRecurringTimeModalEvent(event)}>
-                        <TimeValue disabled={getIsRecurringEventDisabled(event)} timeValue={event.startTime} concise />
+                        <TimeValue disabled={getIsRecurringEventDisabled(event)} timeValue={event.startTime} />
                     </TouchableOpacity>
                 )}
                 onGetLeftIcon={(event) => useListItemToggle(event, getIsRecurringEventDisabled(event))}

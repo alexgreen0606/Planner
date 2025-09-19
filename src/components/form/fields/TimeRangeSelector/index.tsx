@@ -119,7 +119,6 @@ const TimeRangeSelector = ({
 
             {/* Start */}
             <TimeSelector
-                key={startDate.toISOString() + 'START'}
                 label='Start'
                 date={startDate}
                 showTime={showTimes}
@@ -132,7 +131,6 @@ const TimeRangeSelector = ({
             {/* End */}
             {showEndDate && (
                 <TimeSelector
-                    key={endDate.toISOString() + 'END'}
                     label='End'
                     date={endDate}
                     showTime={showTimes}

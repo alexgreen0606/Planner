@@ -78,8 +78,6 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
         renderMenuAction(option, index)
     ), [actions]);
 
-    if (!actionTsx.some(Boolean)) return null; // TODO: disable this instead
-
     // ==========
     //  Dropdown
     // ==========
@@ -90,12 +88,10 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
                 <VStack modifiers={[frame({ width: 300, alignment: 'leading' })]}>
                     <ContextMenu>
                         <ContextMenu.Items>
-                            {actions.map((option, index) =>
-                                renderMenuAction(option, index)
-                            )}
+                            {actionTsx}
                         </ContextMenu.Items>
                         <ContextMenu.Trigger>
-                            <Button variant="glass" modifiers={[frame({ alignment: 'leading' })]}>
+                            <Button variant="glass">
                                 {label}
                             </Button>
                         </ContextMenu.Trigger>
@@ -113,13 +109,16 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
         <Host matchContents>
             <ContextMenu>
                 <ContextMenu.Items>
-                    {actions.map((option, index) =>
-                        renderMenuAction(option, index)
-                    )}
+                    {actionTsx}
                 </ContextMenu.Items>
-                <ContextMenu.Trigger>
-                    <GenericIcon size='l' type='more' platformColor='systemBlue' />
-                </ContextMenu.Trigger>
+                {actionTsx.some(Boolean) ? (
+                    <ContextMenu.Trigger>
+                        <GenericIcon size='l' type='more' platformColor='systemBlue' />
+                    </ContextMenu.Trigger>
+                ) : (
+                    // TODO: need to disable a trigger?
+                    <GenericIcon size='l' type='more' platformColor='tertiaryLabel' />
+                )}
             </ContextMenu>
         </Host>
     );

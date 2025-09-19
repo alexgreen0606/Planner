@@ -1,8 +1,6 @@
-import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { MotiView } from 'moti';
 import React, { ReactNode } from 'react';
 import { PlatformColor, View, ViewStyle } from 'react-native';
-import { runOnUI } from 'react-native-reanimated';
 
 // ✅ 
 
@@ -22,9 +20,7 @@ const Card = ({
     collapsed = false,
     contentHeight,
     children,
-}: TCardProps) => {
-    const { onMeasureScrollContentHeight } = useScrollContainerContext();
-    return (
+}: TCardProps) => (
         <View
             className='relative rounded-xl'
             style={[
@@ -46,7 +42,6 @@ const Card = ({
                     type: 'timing',
                     duration: 400
                 }}
-                onDidAnimate={runOnUI(onMeasureScrollContentHeight)}
             >
                 {children}
             </MotiView>
@@ -67,7 +62,6 @@ const Card = ({
                 )}
             </MotiView>
         </View>
-    )
-};
+    );
 
 export default Card;

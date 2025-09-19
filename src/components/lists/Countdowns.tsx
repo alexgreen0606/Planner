@@ -49,7 +49,7 @@ const Countdowns = () => {
             storage={countdownEventStorage}
             onGetLeftIcon={(event) => (
                 <TouchableOpacity onPress={() => setCountdownDateModalEvent(event)} className='w-16'>
-                    <DateValue disabled={getIsCountdownEventDisabled(event)} concise isoTimestamp={event.startIso} />
+                    <DateValue disabled={getIsCountdownEventDisabled(event)} isoTimestamp={event.startIso} />
                 </TouchableOpacity>
             )}
             onGetRightIcon={(countdown) => (

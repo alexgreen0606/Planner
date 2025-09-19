@@ -9,10 +9,9 @@ import { MotiView } from 'moti';
 import React, { ReactNode, useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import { cancelAnimation, runOnJS, runOnUI, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
+import { cancelAnimation, runOnJS, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
-import ScrollContainerAnchor from '../../ScrollContainerAnchor';
 import ListItem from './ListItem';
 
 // ✅ 
@@ -66,8 +65,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const {
         floatingBannerHeight,
-        scrollOffset,
-        onMeasureScrollContentHeight: onMeasureContentHeight
+        scrollOffset
     } = useScrollContainerContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
@@ -91,14 +89,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
         draggingRowId.value = null;
     }, [itemIds]);
 
-    // Evaluate the scroll container height every time the list length changes.
-    useEffect(() => {
-        runOnUI(onMeasureContentHeight)();
-    }, [itemIds.length]);
-
-    // ==================
-    // 1. Event Handlers
-    // ==================
+    // ================
+    //  Event Handlers
+    // ================
 
     function handleEmptySpaceClick() {
         if (!textfieldItem) {
@@ -142,9 +135,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
         runOnJS(setTimeout)(() => draggingRowId.value = null, 250);
     }
 
-    // ======
-    // 2. UI
-    // ======
+    // ================
+    //  User Interface
+    // ================
 
     return (
         <MotiView
@@ -192,11 +185,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
                     <Pressable onPress={handleEmptySpaceClick}>
                         <ThinLine />
                     </Pressable>
-                )}
-
-                {/* Track Position of List End */}
-                {fillSpace && (
-                    <ScrollContainerAnchor />
                 )}
 
                 {/* Empty Label or Click Area */}

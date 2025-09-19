@@ -399,10 +399,9 @@ export function createPlannerEventTimeIcon(event: IPlannerEvent): ReactNode {
     return itemTime && (
         <TouchableOpacity onPress={() => openPlannerTimeModal(event.id, event.listId)}>
             <TimeValue
-                endEvent={event.timeConfig?.endEventId === event.id}
-                startEvent={event.timeConfig?.startEventId === event.id}
+                isEndEvent={event.timeConfig?.endEventId === event.id}
+                isStartEvent={event.timeConfig?.startEventId === event.id}
                 isoTimestamp={itemTime}
-                concise
             />
         </TouchableOpacity>
     )
