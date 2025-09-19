@@ -13,6 +13,7 @@ type TButtonPopupAction = TBasePopupAction & {
     onPress: () => void;
     destructive?: boolean;
     value?: boolean;
+    color?: string;
 };
 
 type TSwitchPopupAction = TBasePopupAction & {

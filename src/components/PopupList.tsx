@@ -4,13 +4,15 @@ import {
     Button,
     ContextMenu,
     Host,
+    HStack,
+    Spacer,
     Submenu,
-    Switch,
-    VStack
+    Switch
 } from "@expo/ui/swift-ui";
-import { frame } from "@expo/ui/swift-ui/modifiers";
+import { frame, glassEffect, tint } from "@expo/ui/swift-ui/modifiers";
 import React, { ReactNode, useMemo } from "react";
 import GenericIcon from "./icon";
+import { PlatformColor } from "react-native";
 
 // ✅ 
 
@@ -35,6 +37,7 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
                         systemImage={option.systemImage ? option.systemImage : option.value ? 'checkmark' : undefined}
                         role={option.destructive ? "destructive" : undefined}
                         onPress={option.onPress}
+                        color={option.color}
                     >
                         {option.title}
                     </Button>
@@ -84,8 +87,8 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
 
     if (label) {
         return (
-            <Host matchContents>
-                <VStack modifiers={[frame({ width: 300, alignment: 'leading' })]}>
+            <Host style={{ flex: 1 }}>
+                <HStack>
                     <ContextMenu>
                         <ContextMenu.Items>
                             {actionTsx}
@@ -96,7 +99,8 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
                             </Button>
                         </ContextMenu.Trigger>
                     </ContextMenu>
-                </VStack>
+                    <Spacer />
+                </HStack>
             </Host>
         )
     }
@@ -105,20 +109,21 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
     //  Actions
     // =========
 
+    if (!actionTsx.some(Boolean)) {
+        return (
+            <GenericIcon size='l' type='more' platformColor='tertiaryLabel' />
+        )
+    }
+
     return (
         <Host matchContents>
             <ContextMenu>
                 <ContextMenu.Items>
                     {actionTsx}
                 </ContextMenu.Items>
-                {actionTsx.some(Boolean) ? (
-                    <ContextMenu.Trigger>
-                        <GenericIcon size='l' type='more' platformColor='systemBlue' />
-                    </ContextMenu.Trigger>
-                ) : (
-                    // TODO: need to disable a trigger?
-                    <GenericIcon size='l' type='more' platformColor='tertiaryLabel' />
-                )}
+                <ContextMenu.Trigger>
+                    <GenericIcon size='l' type='more' platformColor='systemBlue' />
+                </ContextMenu.Trigger>
             </ContextMenu>
         </Host>
     );

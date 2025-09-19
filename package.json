@@ -4,9 +4,10 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start --dev-client",
-    "android": "expo run:android",
     "ios": "expo prebuild && npx pod-install && expo run:ios",
-    "web": "expo start --web"
+    "ios fast": "expo run:ios",
+    "web": "expo start --web",
+    "android": "expo run:android"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",

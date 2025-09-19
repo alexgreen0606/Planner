@@ -1,6 +1,6 @@
 import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
 import PopupList from '@/components/PopupList';
-import { platformToRgbMap, selectableColors } from '@/lib/constants/colors';
+import { selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
@@ -11,7 +11,7 @@ import { isValidPlatformColor } from '@/utils/colorUtils';
 import { useRouter } from 'expo-router';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, PlatformColor } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import useAppTheme from './useAppTheme';
 import useTextfieldItemAs from './useTextfieldItemAs';
@@ -158,8 +158,8 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
                     title: color === 'label' ? 'None' : color.replace('system', ''),
                     type: EPopupActionType.BUTTON,
                     systemImage: item?.platformColor === color ? 'inset.filled.circle' : 'circle',
-                    imageColor: color === 'label' ? overflowActionText : platformToRgbMap[color],
-                    onPress: () => handleAction(color)
+                    color: PlatformColor(color) as unknown as string,
+                    onPress: () => handleAction(color),
                 }))
             },
             {
