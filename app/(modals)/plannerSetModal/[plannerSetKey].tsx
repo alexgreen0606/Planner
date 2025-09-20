@@ -2,17 +2,18 @@ import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import Form from '@/components/form';
 import Modal from '@/components/modal';
 import { NULL } from '@/lib/constants/generic';
+import { EDateFieldType } from '@/lib/enums/EDateFieldType';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { TPlannerSet } from '@/lib/types/planner/TPlannerSet';
+import { deletePlannerSet, upsertPlannerSet } from '@/storage/plannerSetsStorage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import { DateTime } from 'luxon';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import { deletePlannerSet, upsertPlannerSet } from '../../../src/storage/plannerSetsStorage';
 
 // ✅ 
 
@@ -43,6 +44,8 @@ const PlannerSetModal = () => {
         control,
         handleSubmit: onSubmit,
         reset,
+        watch,
+        setValue,
         formState: { isValid }
     } = useForm<TPendingPlannerSet>({
         defaultValues: {
@@ -53,6 +56,9 @@ const PlannerSetModal = () => {
         },
         mode: 'onChange'
     });
+
+    const start = watch('start');
+    const end = watch('end');
 
     const isEditMode = plannerSetKey !== NULL;
 
@@ -71,12 +77,16 @@ const PlannerSetModal = () => {
         [{
             name: 'start',
             label: 'Start',
-            type: EFormFieldType.DATE
+            type: EFormFieldType.DATE,
+            onHandleSideEffects: (newStart: DateTime) =>
+                enforceEndLaterThanStart(newStart, EDateFieldType.START_DATE)
         },
         {
             name: 'end',
             label: 'End',
-            type: EFormFieldType.DATE
+            type: EFormFieldType.DATE,
+            onHandleSideEffects: (newEnd: DateTime) =>
+                enforceEndLaterThanStart(newEnd, EDateFieldType.END_DATE)
         }]
     ];
 
@@ -115,6 +125,23 @@ const PlannerSetModal = () => {
         }
 
         router.back();
+    }
+
+    // ======================
+    //  Side Effect Function
+    // ======================
+
+    function enforceEndLaterThanStart(date: DateTime, selectorMode: EDateFieldType) {
+        if (selectorMode === EDateFieldType.START_DATE) {
+            if (end.toMillis() < date.toMillis()) {
+                setValue('end', date);
+            }
+
+        } else {
+            if (date.toMillis() < start.toMillis()) {
+                setValue('start', date);
+            }
+        }
     }
 
     // ================
