@@ -1,24 +1,25 @@
 import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
 import CustomText from '@/components/text/CustomText';
 import { LIST_CONTENT_HEIGHT } from '@/lib/constants/listConstants';
+import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import React, { useEffect, useState } from 'react';
 import { PlatformColor, TextInput, TouchableOpacity } from 'react-native';
 
 // ✅ 
 
-type ModalTextfieldProps = {
-    value: string;
-    focusTrigger: boolean;
-    autoCapitalizeWords: boolean;
-    onChange: (newVal: string) => void;
+export type TTextModalFieldProps = {
+    label: string;
+    focusTrigger?: boolean;
+    autoCapitalizeWords?: boolean;
 };
 
-const ModalTextfield = ({
+const TextModalField = ({
     value,
+    label = '',
     autoCapitalizeWords,
     focusTrigger,
     onChange
-}: ModalTextfieldProps) => {
+}: TTextModalFieldProps & TFormFieldControl<string>) => {
     const [focused, setFocused] = useState(focusTrigger);
 
     // Manually focus the text input.
@@ -30,7 +31,7 @@ const ModalTextfield = ({
 
     return (
         <ModalDisplayValue
-            label='Title'
+            label={label}
             value={
                 focused ? (
                     <TextInput
@@ -65,4 +66,4 @@ const ModalTextfield = ({
     );
 };
 
-export default ModalTextfield;
+export default TextModalField;

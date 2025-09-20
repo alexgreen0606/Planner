@@ -20,9 +20,9 @@ import { datestampToMidnightJsDate, getDatestampThreeYearsAgo, getDayOfWeekFromD
 
 // ✅ 
 
-// ====================
-// 1. Helper Functions
-// ====================
+// ==================
+//  Helper Functions
+// ==================
 
 /**
  * Calculates a valid index for a planner event that maintains chronological ordering within its planner.

@@ -1,55 +1,73 @@
+import useAppTheme from "@/hooks/useAppTheme";
+import { MODAL_INPUT_HEIGHT } from "@/lib/constants/miscLayout";
+import { TFormField } from "@/lib/types/form/TFormField";
 import { Control, Controller } from "react-hook-form";
 import { PlatformColor, StyleSheet, View } from "react-native";
 import FormField from "./FormField";
-import { IFormField } from "@/lib/types/form/IFormField";
-import useAppTheme from "@/hooks/useAppTheme";
+import { MotiView } from "moti";
 
 // ✅ 
 
 type TFormProps = {
-    fields: IFormField[][];
+    fieldSets: TFormField[][];
     control: Control<any>;
 };
 
-const Form = ({
-    fields,
-    control
-}: TFormProps) => {
+const Form = ({ fieldSets, control }: TFormProps) => {
     const { modal: { inputField } } = useAppTheme();
     return (
         <View className='gap-4'>
-            {fields.map((row, i) =>
-                <View key={`form-row-${i}`} className='rounded-xl overflow-hidden'>
-                    {row.map(({ name, type, defaultValue, rules, hide, ...rest }, i) => !hide &&
-                        <View
-                            key={name}
-                            className='p-3'
-                            style={{
-                                backgroundColor: PlatformColor(inputField),
-                                borderTopWidth: i !== 0 ? StyleSheet.hairlineWidth : 0,
-                                borderColor: PlatformColor('systemGray')
-                            }}
-                        >
-                            <Controller
-                                name={name}
-                                control={control}
-                                defaultValue={defaultValue}
-                                rules={rules}
-                                render={({ field: { onChange, value } }) => (
-                                    <FormField
-                                        type={type}
-                                        value={value}
-                                        onChange={onChange}
-                                        {...rest}
+            {fieldSets.map((fieldSet, fieldSetIndex) =>
+                <View key={`field-set-${fieldSetIndex}`} className='rounded-xl overflow-hidden'>
+                    {fieldSet.map((field, fieldIndex) => {
+                        const upperItem = fieldSet[fieldIndex - 1];
+                        const lowerItem = fieldSet[fieldIndex + 1];
+                        const isTopEdgeRounded = !upperItem || upperItem.invisible;
+                        const isBottomEdgeRounded = !lowerItem || lowerItem.invisible;
+
+                        const topEdgeRadius = isTopEdgeRounded ? MODAL_INPUT_HEIGHT / 4 : 0;
+                        const bottomEdgeRadius = isBottomEdgeRounded ? MODAL_INPUT_HEIGHT / 4 : 0;
+
+                        return (
+                            <View
+                                key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
+                                className='w-full'
+                                style={{ height: MODAL_INPUT_HEIGHT }}
+                            >
+                                <MotiView
+                                    animate={{
+                                        opacity: field.invisible ? 0 : 1,
+                                        borderTopLeftRadius: topEdgeRadius,
+                                        borderTopRightRadius: topEdgeRadius,
+                                        borderBottomLeftRadius: bottomEdgeRadius,
+                                        borderBottomRightRadius: bottomEdgeRadius,
+                                    }}
+                                    className='items-center' style={{
+                                        backgroundColor: PlatformColor(inputField),
+                                        borderTopWidth: !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
+                                        borderColor: PlatformColor('systemGray'),
+                                        paddingHorizontal: 9,
+                                        pointerEvents: field.invisible ? 'none' : undefined
+                                    }}
+                                >
+                                    <Controller
+                                        name={field.name}
+                                        control={control}
+                                        rules={field.rules}
+                                        render={({ field: { onChange, value } }) => <FormField {...field} value={value} onChange={(val) => {
+                                            onChange(val);
+                                            field.onHandleSideEffects?.(val);
+                                        }} />}
                                     />
-                                )}
-                            />
-                        </View>
+                                </MotiView>
+                            </View>
+                        )
+                    }
                     )}
                 </View>
             )}
         </View>
     )
-}
+};
 
 export default Form;

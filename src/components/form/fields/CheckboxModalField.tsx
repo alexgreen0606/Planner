@@ -1,3 +1,4 @@
+import { TFormFieldControl } from "@/lib/types/form/TFormField";
 import { Host, Switch } from "@expo/ui/swift-ui";
 import React from 'react';
 import { PlatformColor } from 'react-native';
@@ -5,17 +6,15 @@ import ModalDisplayValue from '../../modal/ModalDisplayValue';
 
 // ✅ 
 
-type TModalCheckboxProps = {
+export type TCheckboxModalFieldProps = {
     label: string;
-    value: boolean;
-    onChange: (newVal: boolean) => void;
 };
 
-const ModalCheckbox = ({
-    label,
+const CheckboxModalField = ({
+    label = '',
     value,
     onChange
-}: TModalCheckboxProps) =>
+}: TCheckboxModalFieldProps & TFormFieldControl<boolean>) =>
     <ModalDisplayValue
         label={label}
         value={
@@ -30,4 +29,4 @@ const ModalCheckbox = ({
     />;
 
 
-export default ModalCheckbox;
+export default CheckboxModalField;

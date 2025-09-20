@@ -1,6 +1,6 @@
 import useAppTheme from "@/hooks/useAppTheme";
 import { TOOLBAR_HEIGHT } from "@/lib/constants/miscLayout";
-import { Button, Host, HStack, Label, Spacer } from "@expo/ui/swift-ui";
+import { Button, Host, HStack, Label, Spacer, VStack } from "@expo/ui/swift-ui";
 import { frame, glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
 import React, { ReactNode } from 'react';
 import { ActionSheetIOS, PlatformColor, ScrollView, useWindowDimensions, View, ViewStyle } from 'react-native';
@@ -88,21 +88,19 @@ const Modal = ({
 
                 {children}
 
-                <View className='flex-1' />
-
                 {/* Delete Button */}
                 {!deleteButtonConfig?.hidden && (
-                    <Host style={{ width: SCREEN_WIDTH - (MODAL_PADDING * 2) }}>
-                        <Button
-                            variant="borderless"
-                            onPress={handleDeleteButtonClick}
-                            color={PlatformColor('systemRed') as unknown as string}
-                            modifiers={[
-                                padding({ top: BOTTOM_SPACER, bottom: BOTTOM_SPACER * 2 })
-                            ]}
-                        >
-                            {deleteButtonConfig?.label}
-                        </Button>
+                    <Host style={{ flex: 1 }}>
+                        <VStack modifiers={[frame({ width: SCREEN_WIDTH - (MODAL_PADDING * 2) })]}>
+                            <Spacer />
+                            <Button
+                                variant="borderless"
+                                onPress={handleDeleteButtonClick}
+                                color={PlatformColor('systemRed') as unknown as string}
+                            >
+                                {deleteButtonConfig?.label}
+                            </Button>
+                        </VStack>
                     </Host>
                 )}
 

@@ -1,33 +1,33 @@
 import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
+import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import { DateTimePicker, Host } from '@expo/ui/swift-ui';
+import { DateTime } from 'luxon';
 import React from 'react';
 
 // ✅ 
 
-type TTimeSelectorProps = {
+export type TDateModalFieldProps = {
     label: string;
-    date: Date;
-    showTime: boolean;
+    showTime?: boolean;
     minimumDate?: Date;
-    onChange: (date: Date) => void;
 };
 
 // TODO: need to handle change of date (affects initialDate)
-const TimeSelector = ({
-    label,
-    date,
+const DateModalField = ({
+    label = '',
+    value,
     showTime,
     minimumDate,
     onChange
-}: TTimeSelectorProps) => (
+}: TDateModalFieldProps & TFormFieldControl<DateTime>) => (
     <ModalDisplayValue
         label={label}
         value={
             <Host matchContents>
                 <DateTimePicker
-                    onDateSelected={onChange}
+                    onDateSelected={(newDate) => onChange(DateTime.fromJSDate(newDate))}
                     displayedComponents={showTime ? 'dateAndTime' : 'date'}
-                    initialDate={date.toISOString()}
+                    initialDate={value.toISO()}
                     variant='automatic'
                 />
             </Host>
@@ -35,4 +35,4 @@ const TimeSelector = ({
     />
 );
 
-export default TimeSelector;
+export default DateModalField;

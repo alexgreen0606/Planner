@@ -30,12 +30,6 @@ export const textStyles = {
         fontSize: 16,
         fontFamily: 'Text'
     },
-    // --- Modal ---
-    inputLabel: {
-        color: PlatformColor('secondaryLabel'),
-        fontSize: 14,
-        fontFamily: 'RoundeMedium'
-    },
     // --- Planner Card ---
     plannerCardHeader: {
         color: PlatformColor('label'),

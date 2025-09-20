@@ -1,6 +1,6 @@
 // ✅ 
 
-export const MODAL_INPUT_HEIGHT = 32;
+export const MODAL_INPUT_HEIGHT = 50;
 
 export const TOOLBAR_HEIGHT = 50;
 

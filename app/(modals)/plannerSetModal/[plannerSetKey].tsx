@@ -4,12 +4,11 @@ import Modal from '@/components/modal';
 import { NULL } from '@/lib/constants/generic';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { ETimeSelectorMode } from '@/lib/enums/ETimeSelectorMode';
-import { IFormField } from '@/lib/types/form/IFormField';
+import { TFormField } from '@/lib/types/form/TFormField';
 import { TPlannerSet } from '@/lib/types/planner/TPlannerSet';
-import { getTodayDatestamp } from '@/utils/dateUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
+import { DateTime } from 'luxon';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
@@ -19,18 +18,16 @@ import { deletePlannerSet, upsertPlannerSet } from '../../../src/storage/planner
 
 type TPendingPlannerSet = {
     title: string;
-    dates: {
-        startDatestamp: string,
-        endDatestamp: string
-    }
+    start: DateTime;
+    end: DateTime;
 };
+
+const todayDate = DateTime.local().startOf('day');
 
 const emptyFormData: TPendingPlannerSet = {
     title: '',
-    dates: {
-        startDatestamp: getTodayDatestamp(),
-        endDatestamp: getTodayDatestamp()
-    }
+    start: todayDate,
+    end: todayDate
 };
 
 const PlannerSetModal = () => {
@@ -51,21 +48,20 @@ const PlannerSetModal = () => {
         defaultValues: {
             ...emptyFormData,
             ...plannerSet,
-            dates: {
-                startDatestamp: plannerSet?.startDatestamp ?? getTodayDatestamp(),
-                endDatestamp: plannerSet?.endDatestamp ?? getTodayDatestamp()
-            }
+            start: plannerSet?.startDatestamp ?? todayDate,
+            end: plannerSet?.endDatestamp ?? todayDate
         },
         mode: 'onChange'
     });
 
     const isEditMode = plannerSetKey !== NULL;
 
-    const formFields: IFormField[][] = [
+    const formFields: TFormField[][] = [
         [{
             name: 'title',
+            label: 'Title',
             type: EFormFieldType.TEXT,
-            trigger: !isEditMode,
+            focusTrigger: !isEditMode,
             autoCapitalizeWords: true,
             rules: {
                 required: 'Title is required.',
@@ -73,37 +69,39 @@ const PlannerSetModal = () => {
             }
         }],
         [{
-            name: 'dates',
-            type: EFormFieldType.DATE_RANGE,
-            trigger: ETimeSelectorMode.START_DATE
+            name: 'start',
+            label: 'Start',
+            type: EFormFieldType.DATE
+        },
+        {
+            name: 'end',
+            label: 'End',
+            type: EFormFieldType.DATE
         }]
     ];
 
     // Populate the form in edit mode
     useEffect(() => {
-        const defaultDatestamp = getTodayDatestamp();
         reset({
             ...emptyFormData,
             ...plannerSet,
-            dates: {
-                startDatestamp: plannerSet?.startDatestamp ?? defaultDatestamp,
-                endDatestamp: plannerSet?.endDatestamp ?? defaultDatestamp
-            }
+            start: plannerSet?.startDatestamp ?? todayDate,
+            end: plannerSet?.endDatestamp ?? todayDate
         });
     }, [plannerSet, reset]);
 
-    // ==================
-    // 1. Event Handlers
-    // ==================
+    // ================
+    //  Event Handlers
+    // ================
 
     function handleSubmit(data: TPendingPlannerSet) {
-        const { startDatestamp, endDatestamp } = data.dates;
-        const newTitle = data.title.trim();
+        const { start, end, title } = data;
+        const newTitle = title.trim();
 
         upsertPlannerSet({
             title: newTitle,
-            startDatestamp,
-            endDatestamp
+            startDatestamp: start.toISODate()!,
+            endDatestamp: end.toISODate()!
         });
 
         setPlannerSetKey(newTitle);
@@ -115,13 +113,13 @@ const PlannerSetModal = () => {
             deletePlannerSet(plannerSet);
             setPlannerSetKey('Next 7 Days');
         }
-        
+
         router.back();
     }
 
-    // ======
-    // 2. UI
-    // ======
+    // ================
+    //  User Interface
+    // ================
 
     return (
         <Modal
@@ -141,7 +139,7 @@ const PlannerSetModal = () => {
             onClose={() => router.back()}
         >
             <Form
-                fields={formFields}
+                fieldSets={formFields}
                 control={control}
             />
         </Modal>
