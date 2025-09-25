@@ -1,6 +1,6 @@
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { View } from "react-native";
-import GenericIcon from ".";
+import GenericIcon from "../";
 
 // ✅ 
 

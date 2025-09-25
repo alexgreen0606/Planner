@@ -7,14 +7,13 @@ import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById } fro
 import { getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerStorage";
 import { getDayOfWeekFromDatestamp } from "@/utils/dateUtils";
 import { createEmptyPlanner, updatePlannerEventIndexWithChronologicalCheck, upsertRecurringEventsIntoPlanner } from "@/utils/plannerUtils";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from "react-native-mmkv";
 import useTextfieldItemAs from "../useTextfieldItemAs";
 
 // ✅ 
 
 enum EPlannerEditAction {
-    EDIT_TITLE = 'EDIT_TITLE',
     RESET_RECURRING = 'RESET_RECURRING',
     DELETE_RECURRING = 'DELETE_RECURRING'
 }
@@ -30,11 +29,8 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         onCloseTextfield: onCloseFocusedEvent
     } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
-    const [isEditingTitle, setIsEditingTitle] = useState(false);
-
     const isPlannerFocused = planner && (focusedEvent?.listId === planner.datestamp);
     const hasStaleRecurring = planner && planner.deletedRecurringEventIds.length;
-    const hasTitle = planner?.title?.length;
 
     const hasRecurring = planner?.eventIds.some((id) => {
         const event = getPlannerEventFromStorageById(id);
@@ -63,17 +59,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
     //  Exposed Functions
     // ===================
 
-    function handleEditTitle(title: string) {
-        setPlanner((prev) => {
-            let newPlanner = prev ?? createEmptyPlanner(datestamp);
-            return { ...newPlanner, title }
-        });
-    }
-
-    function handleToggleEditTitle() {
-        setIsEditingTitle(prev => !prev);
-    }
-
     function handleUpdatePlannerEventIndexWithChronologicalCheck(index: number, event: IPlannerEvent) {
         setPlanner((prev) => {
             const newPlanner = prev ?? createEmptyPlanner(datestamp);
@@ -87,9 +72,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
 
     function handleAction(action: EPlannerEditAction) {
         switch (action) {
-            case EPlannerEditAction.EDIT_TITLE:
-                handleToggleEditTitle();
-                break;
             case EPlannerEditAction.DELETE_RECURRING:
                 deleteAllRecurringEvents();
                 break;
@@ -141,12 +123,6 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
         return (
             <PopupList actions={[
                 {
-                    type: EPopupActionType.BUTTON,
-                    title: `${hasTitle ? 'Edit' : 'Add'} Planner Title`,
-                    systemImage: hasTitle ? 'pencil' : 'plus',
-                    onPress: () => handleAction(EPlannerEditAction.EDIT_TITLE)
-                },
-                {
                     type: EPopupActionType.SUBMENU,
                     title: 'Manage Recurring',
                     systemImage: 'repeat',
@@ -156,7 +132,7 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
                             title: 'Reset Recurring',
                             // subtitle: 'Customized recurring events will be reset.',
                             systemImage: 'arrow.trianglehead.2.clockwise',
-                            hidden: !hasStaleRecurring,
+                            hidden: !hasStaleRecurring, // todo: not working
                             onPress: () => handleAction(EPlannerEditAction.RESET_RECURRING)
                         },
                         {
@@ -175,12 +151,9 @@ const usePlanner = (datestamp: string, eventStorage: MMKV) => {
 
     return {
         planner: planner ?? createEmptyPlanner(datestamp),
-        isEditingTitle,
         isPlannerFocused,
         OverflowActionsIcon,
         onCloseTextfield: onCloseFocusedEvent,
-        onEditTitle: handleEditTitle,
-        onToggleEditTitle: handleToggleEditTitle,
         onUpdatePlannerEventIndexWithChronologicalCheck: handleUpdatePlannerEventIndexWithChronologicalCheck,
     }
 };

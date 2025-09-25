@@ -1,12 +1,12 @@
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IRecurringEvent } from "@/lib/types/listItems/IRecurringEvent";
 import { TRecurringPlanner } from "@/lib/types/planner/TRecurringPlanner";
-import { useScrollContainerContext } from "@/providers/ScrollContainer";
 import { getRecurringPlannerFromStorageById } from "@/storage/recurringPlannerStorage";
 import { parseTimeValueFromText } from "@/utils/dateUtils";
 import { updateRecurringEventIndexWithChronologicalCheck } from "@/utils/recurringPlannerUtils";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
 import useTextfieldItemAs from "../useTextfieldItemAs";
+import { usePageContext } from "@/providers/PageProvider";
 
 // ✅ 
 
@@ -19,7 +19,7 @@ const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventS
         onSetTextfieldItem: onSetFocusedEvent
     } = useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
 
-    const { onFocusPlaceholder } = useScrollContainerContext();
+    const { onFocusPlaceholder } = usePageContext();
 
     // Scan user input for an initial event time.
     // Delete weekday event and clone if needed.

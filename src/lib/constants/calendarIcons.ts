@@ -1,4 +1,4 @@
-import { TIconType } from "@/components/icon";
+import { TIconType } from "./icons";
 
 // ✅ 
 

@@ -4,8 +4,8 @@ import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useScrollContainerContext } from '@/providers/ScrollContainer';
-import { MotiView } from 'moti';
+import { usePageContext } from '@/providers/PageProvider';
+import { useScrollContext } from '@/providers/ScrollProvider';
 import React, { ReactNode, useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
@@ -63,14 +63,12 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
-    const {
-        floatingBannerHeight,
-        scrollOffset
-    } = useScrollContainerContext();
+    const { floatingHeaderHeight } = usePageContext();
+    const { scrollOffset } = useScrollContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingBannerHeight;
+    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingHeaderHeight;
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
 
@@ -143,9 +141,9 @@ const DragAndDropList = <T extends TListItem, S = T>({
         <View style={{ flex: fillSpace ? 1 : 0 }}>
 
             {/* List Items */}
-            <MotiView
+            <View
                 className='w-full'
-                animate={{
+                style={{
                     height: itemIds.length * LIST_ITEM_HEIGHT
                 }}
             >
@@ -174,7 +172,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
                         onDeleteItem={onDeleteItem}
                     />
                 )}
-            </MotiView>
+            </View>
 
             {/* Lower List Line */}
             {itemIds.length > 0 && (

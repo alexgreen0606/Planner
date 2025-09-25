@@ -6,7 +6,7 @@ import { TextProps as NativeTextProps, PlatformColor, StyleSheet, Text, TextStyl
 export const textStyles = {
     // --- Standard Text ---
     pageLabel: {
-        fontSize: 30,
+        fontSize: 20,
         color: PlatformColor('label'),
         fontFamily: 'RoundMedium'
     },
@@ -110,14 +110,13 @@ export const textStyles = {
     },
     // --- Today Icon ---
     todayMonth: {
-        fontSize: 8,
+        fontSize: 9,
         fontFamily: 'RoundHeavy',
         color: PlatformColor('systemBackground'),
+        letterSpacing: 1.2
     },
     todayDate: {
         fontSize: 16,
-        paddingLeft: 1.5,
-        marginTop: -1,
         fontFamily: 'RoundHeavy'
     }
 } satisfies Record<string, TextStyle>;

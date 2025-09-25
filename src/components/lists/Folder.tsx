@@ -4,7 +4,6 @@ import useFolderItem from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { useScrollContainerContext } from '@/providers/ScrollContainer';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -13,8 +12,9 @@ import React, { useEffect } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import AnimatedIcon from '../icon/AnimatedIcon';
-import TransferFolderIcon from '../icon/TransferFolderIcon';
 import DragAndDropList from './components/DragAndDropList';
+import { usePageContext } from '@/providers/PageProvider';
+import TransferFolderIcon from '../icon/custom/TransferFolderIcon';
 
 // ✅ 
 
@@ -41,7 +41,7 @@ const SortedFolder = ({
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
 
-    const { onFocusPlaceholder } = useScrollContainerContext();
+    const { onFocusPlaceholder } = usePageContext();
 
     const getLeftIconConfig = (item: IFolderItem) => {
         return getIsItemTransfering(item.id) ? (

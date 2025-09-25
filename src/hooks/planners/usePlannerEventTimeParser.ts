@@ -1,7 +1,7 @@
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
-import { useScrollContainerContext } from "@/providers/ScrollContainer";
+import { usePageContext } from "@/providers/PageProvider";
 import { parseTimeValueFromText } from "@/utils/dateUtils";
 import { createPlannerEventTimeConfig, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
@@ -16,7 +16,7 @@ const usePlannerEventTimeParser = (datestamp: string, eventStorage: MMKV) => {
 
     const { onSetTextfieldItem: onSetFocusedEvent } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
-    const { onFocusPlaceholder } = useScrollContainerContext();
+    const { onFocusPlaceholder } = usePageContext();
 
     function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
         onSetFocusedEvent((prev) => {

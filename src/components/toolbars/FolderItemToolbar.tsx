@@ -10,8 +10,8 @@ import { useEffect } from "react";
 import { Alert, TouchableOpacity } from "react-native";
 import { useMMKV } from "react-native-mmkv";
 import GenericIcon from "../icon";
-import ToggleFolderItemTypeIcon from "../icon/ToggleFolderItemTypeIcon";
-import TransferFolderIcon from "../icon/TransferFolderIcon";
+import ToggleFolderItemTypeIcon from "../icon/custom/ToggleFolderItemTypeIcon";
+import TransferFolderIcon from "../icon/custom/TransferFolderIcon";
 import ListToolbar from "../lists/components/ListToolbar";
 
 // ✅ 

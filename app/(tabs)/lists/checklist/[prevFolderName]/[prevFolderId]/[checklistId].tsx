@@ -1,6 +1,6 @@
-import FolderItemBanner from '@/components/banners/FolderItemBanner';
+import FolderItemBanner from '@/components/banner/FolderItemBanner';
 import Checklist from '@/components/lists/Checklist';
-import { ScrollContainerProvider } from '@/providers/ScrollContainer';
+import { PageProvider } from '@/providers/PageProvider';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
@@ -14,7 +14,7 @@ type TChecklistParams = {
 const ChecklistScreen = () => {
     const { checklistId, prevFolderName } = useLocalSearchParams<TChecklistParams>();
     return (
-        <ScrollContainerProvider header={
+        <PageProvider floatingHeader={
             <FolderItemBanner
                 itemId={checklistId}
                 backButtonConfig={{
@@ -23,7 +23,7 @@ const ChecklistScreen = () => {
             />
         }>
             <Checklist />
-        </ScrollContainerProvider>
+        </PageProvider>
     )
 };
 

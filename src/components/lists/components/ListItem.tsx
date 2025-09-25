@@ -4,7 +4,6 @@ import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
-import { useScrollContainerContext } from "@/providers/ScrollContainer";
 import { useAtom } from "jotai";
 import React, { ReactNode, useMemo } from "react";
 import { PlatformColor, TextStyle, View } from "react-native";
@@ -19,6 +18,8 @@ import Animated, {
     withSpring
 } from "react-native-reanimated";
 import ListItemTextfield from "./ListItemTextfield";
+import { useScrollContext } from "@/providers/ScrollProvider";
+import { usePageContext } from "@/providers/PageProvider";
 
 // ✅ 
 
@@ -92,9 +93,10 @@ const ListItem = <T extends TListItem>({
 
     const {
         scrollOffset,
-        onAutoScroll: onAutoScroll,
-        onFocusPlaceholder: handleFocusPlaceholder
-    } = useScrollContainerContext();
+        onAutoScroll,
+    } = useScrollContext();
+
+    const { onFocusPlaceholder } = usePageContext();
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
@@ -176,7 +178,7 @@ const ListItem = <T extends TListItem>({
             if (!item || isPendingDelete) return;
 
             if (!onContentClick) {
-                runOnJS(handleFocusPlaceholder)();
+                runOnJS(onFocusPlaceholder)();
                 runOnJS(setTextfieldId)(itemId);
                 return;
             }

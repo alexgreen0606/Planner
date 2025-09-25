@@ -360,7 +360,6 @@ export function createPlannerEventInStorageAndFocusTextfield(datestamp: string, 
         listId: datestamp,
         storageId: EStorageId.PLANNER_EVENT
     };
-    console.info('creating', plannerEvent)
     savePlannerEventToStorage(plannerEvent);
 
     // Add the event to its planner.
@@ -381,7 +380,6 @@ export function createPlannerEventInStorageAndFocusTextfield(datestamp: string, 
 export function createEmptyPlanner(datestamp: string): TPlanner {
     return {
         datestamp,
-        title: '',
         eventIds: [],
         deletedRecurringEventIds: [],
         deletedCalendarEventIds: []

@@ -1,35 +1,32 @@
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
 import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
-import { useAtomValue } from 'jotai';
 import React from 'react';
 import { MMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
-type TTodayPlannerProps = {
+type TPlannerProps = {
+    datestamp: string;
     eventStorage: MMKV;
     eventIds: string[];
     onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void;
 }
 
-const TodayPlanner = ({
+const Planner = ({
+    datestamp,
     eventIds,
     eventStorage,
     onUpdatePlannerEventIndexWithChronologicalCheck,
-}: TTodayPlannerProps) => {
-    const { today: todayDatestamp } = useAtomValue(mountedDatestampsAtom);
-
-    const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(todayDatestamp, eventStorage);
-
+}: TPlannerProps) => {
+    const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(datestamp, eventStorage);
     return (
         <DragAndDropList<IPlannerEvent>
             fillSpace
-            listId={todayDatestamp}
+            listId={datestamp}
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}
             itemIds={eventIds}
@@ -48,4 +45,4 @@ const TodayPlanner = ({
     )
 };
 
-export default TodayPlanner;
+export default Planner;

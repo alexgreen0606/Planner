@@ -1,35 +1,25 @@
-import { MotiView } from 'moti';
-import React, { useRef, useState } from 'react';
+import { currentWeatherChipAtom } from '@/atoms/currentWeatherChip';
+import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import { plannerChipsByDatestamp } from '@/atoms/plannerChips';
+import { useAtomValue } from 'jotai';
+import React from 'react';
 import { View } from 'react-native';
 import PlannerChip from '.';
 import SlowFadeInView from '../SlowFadeInView';
-import { useAtomValue } from 'jotai';
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
-import { currentWeatherChipAtom } from '@/atoms/currentWeatherChip';
-import { plannerChipsByDatestamp } from '@/atoms/plannerChips';
 
 // ✅ 
 
 type TPlannerChipSetsProps = {
     datestamp: string;
-    collapsed?: boolean;
     backgroundPlatformColor?: string;
-    onToggleCollapsed?: () => void;
 };
-
-const COLLAPSED_HEIGHT = 24;
 
 const PlannerChipSets = ({
     datestamp,
-    collapsed = false,
     ...rest
 }: TPlannerChipSetsProps) => {
     const currentWeatherChip = useAtomValue(currentWeatherChipAtom);
     const { today } = useAtomValue(mountedDatestampsAtom);
-
-    const contentRef = useRef(null);
-
-    const [expandedHeight, setExpandedHeight] = useState<number | null>(null);
 
     const sets = useAtomValue(plannerChipsByDatestamp(datestamp));
 
@@ -38,37 +28,16 @@ const PlannerChipSets = ({
 
     return (
         <SlowFadeInView>
-            <MotiView
-                animate={{
-                    minHeight: collapsed ? COLLAPSED_HEIGHT : expandedHeight,
-                }}
-                className="w-full overflow-hidden"
-                transition={{ type: 'timing', duration: 300 }}
-            >
-                <View
-                    ref={contentRef}
-                    onLayout={(event) => {
-                        const height = event.nativeEvent.layout.height;
-                        setExpandedHeight(height);
-                    }}
-                    className="flex-row flex-wrap"
-                >
-                    {allSets.map((set, setIndex) =>
-                        set.map((chip, chipIndex) => (
-                            <PlannerChip
-                                key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
-                                chipSetIndex={chipIndex}
-                                chip={chip}
-                                parentPlannerDatestamp={datestamp}
-                                shiftChipRight={
-                                    chipIndex === 0 && setIndex !== 0 && collapsed
-                                }
-                                collapsed={collapsed}
-                                {...rest}
-                            />
-                        )))}
-                </View>
-            </MotiView>
+            <View className="flex-row flex-wrap gap-2">
+                {allSets.map((set, setIndex) =>
+                    set.map((chip, chipIndex) => (
+                        <PlannerChip
+                            key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
+                            chip={chip}
+                            {...rest}
+                        />
+                    )))}
+            </View>
         </SlowFadeInView>
     );
 };

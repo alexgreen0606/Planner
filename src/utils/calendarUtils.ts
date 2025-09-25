@@ -109,12 +109,10 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
 
     if (calendar.title === 'Birthdays') {
         calendarEventChip.onClick = () => openMessageForContact(extractNameFromBirthdayText(event.title), 'Happy Birthday!');
-        calendarEventChip.hasClickAccess = hasContactsAccess();
     }
 
     if (calendar.isPrimary || calendar.title === 'Calendar') {
         calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
-        calendarEventChip.hasClickAccess = true;
     }
 
     if (calendar.title === 'Countdowns') {
@@ -125,7 +123,6 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
             jotaiStore.set(textfieldIdAtom, foundStorageId);
             router.push('/planners/countdowns');
         };
-        calendarEventChip.hasClickAccess = true;
     }
 
     return calendarEventChip;

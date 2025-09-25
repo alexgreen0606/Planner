@@ -5,12 +5,15 @@ import {
     ContextMenu,
     Host,
     HStack,
+    Image,
     Spacer,
     Submenu,
     Switch
 } from "@expo/ui/swift-ui";
 import React, { ReactNode, useMemo } from "react";
 import GenericIcon from "./icon";
+import GlassIconButton from "./icon/GlassButtonIcon";
+import { View } from "react-native";
 
 // ✅ 
 
@@ -109,7 +112,7 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
 
     if (!actionTsx.some(Boolean)) {
         return (
-            <GenericIcon size='l' type='more' platformColor='tertiaryLabel' />
+            <GlassIconButton disabled systemImage='ellipsis' />
         )
     }
 
@@ -120,7 +123,7 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
                     {actionTsx}
                 </ContextMenu.Items>
                 <ContextMenu.Trigger>
-                    <GenericIcon size='l' type='more' platformColor='systemBlue' />
+                    <GlassIconButton systemImage='ellipsis' />
                 </ContextMenu.Trigger>
             </ContextMenu>
         </Host>

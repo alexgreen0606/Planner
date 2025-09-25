@@ -12,9 +12,13 @@ const TabLayout = () => (
             <Label hidden />
             <Icon sf='note' />
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name='planners'>
+        <NativeTabs.Trigger name='recurring'>
             <Label hidden />
-            <Icon sf='calendar' />
+            <Icon sf='repeat' />
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name='countdowns'>
+            <Label hidden />
+            <Icon sf='calendar.badge.exclamationmark' />
         </NativeTabs.Trigger>
     </NativeTabs>
 );

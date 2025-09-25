@@ -1,10 +1,10 @@
-import FolderItemBanner from '@/components/banners/FolderItemBanner';
+import FolderItemBanner from '@/components/banner/FolderItemBanner';
 import SortedFolder from '@/components/lists/Folder';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { ScrollContainerProvider } from '@/providers/ScrollContainer';
+import { PageProvider } from '@/providers/PageProvider';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
@@ -12,9 +12,9 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 // ✅ 
 
 type TFolderParams = {
-  folderId: string,
-  prevFolderName: string,
-  prevFolderId: string
+  folderId: string;
+  prevFolderName: string;
+  prevFolderId: string;
 };
 
 const FolderScreen = () => {
@@ -37,7 +37,7 @@ const FolderScreen = () => {
   }
 
   return (
-    <ScrollContainerProvider header={
+    <PageProvider floatingHeader={
       <FolderItemBanner
         itemId={folderId}
         backButtonConfig={{
@@ -51,7 +51,7 @@ const FolderScreen = () => {
         onOpenItem={handleOpenItem}
         parentClickTrigger={parentClickTrigger}
       />
-    </ScrollContainerProvider>
+    </PageProvider>
   );
 };
 

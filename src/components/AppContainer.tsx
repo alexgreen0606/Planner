@@ -30,7 +30,7 @@ const initialRootFolder: IFolderItem = {
 /**
  * Handles setup of app, including access requests and initializing storage objects.
  */
-const AccessGuard = () => {
+const AppContainer = () => {
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
 
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
@@ -124,4 +124,4 @@ const AccessGuard = () => {
     )
 };
 
-export default AccessGuard;
+export default AppContainer;
