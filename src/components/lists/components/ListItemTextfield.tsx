@@ -2,7 +2,7 @@ import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { usePageContext } from '@/providers/PageProvider';
+import { useScrollPageContext } from '@/providers/ScrollPageProvider';
 import { useAtom } from 'jotai';
 import debounce from 'lodash.debounce';
 import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
@@ -43,7 +43,7 @@ const ListItemTextfield = <T extends TListItem>({
         []
     );
 
-    const { onFocusPlaceholder } = usePageContext();
+    const { onFocusPlaceholder } = useScrollPageContext();
 
     // Handle the blur event.
     useEffect(() => {

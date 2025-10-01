@@ -4,7 +4,7 @@ import { frame } from '@expo/ui/swift-ui/modifiers';
 import React from 'react';
 import { PlatformColor, Pressable, useWindowDimensions, View } from 'react-native';
 import { PressableProps } from 'react-native-gesture-handler';
-import SlowFadeInView from './SlowFadeInView';
+import SlowFadeInView from './views/SlowFadeInView';
 
 // ✅ 
 

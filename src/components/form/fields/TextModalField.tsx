@@ -1,4 +1,4 @@
-import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
+import ModalDisplayValue from '@/components/Modal/ModalDisplayValue';
 import CustomText from '@/components/text/CustomText';
 import { LIST_CONTENT_HEIGHT } from '@/lib/constants/listConstants';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';

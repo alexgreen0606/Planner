@@ -4,7 +4,6 @@ import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
 
-// ✅ 
 
 export interface GenericIconProps<T = void> {
     type: TIconType;

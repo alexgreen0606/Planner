@@ -1,32 +1,27 @@
-import { currentPlannerDatestamp } from "@/atoms/currentPlannerDatestamp";
 import useAppTheme from "@/hooks/useAppTheme";
-import { PLANNER_CAROUSEL_ICON_WIDTH, PLANNER_CAROUSEL_ITEM_WIDTH } from "@/lib/constants/miscLayout";
-import { useAtomValue } from "jotai";
+import { PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE, PLANNER_CAROUSEL_HEIGHT, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
+import { Host, Text } from "@expo/ui/swift-ui";
 import { DateTime } from "luxon";
+import { MotiView } from "moti";
 import { useMemo } from "react";
 import { PlatformColor, Pressable, useWindowDimensions, View } from "react-native";
 import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import GenericIcon from "../icon";
 import CustomText from "../text/CustomText";
-import { Host, Text } from "@expo/ui/swift-ui";
-import { MotiView } from "moti";
 
 // ✅ 
 
 type TPlannerDateIconProps = {
     datestamp: string;
+    isCurrentDatestamp: boolean;
     scrollX: SharedValue<number>;
     isScrolling: boolean;
     index: number;
     onPress: () => void;
 };
 
-const DAY_OF_WEEK_SIZE = 9;
-
-const PlannerDateIcon = ({ datestamp, scrollX, isScrolling, index, onPress }: TPlannerDateIconProps) => {
+const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, index, onPress }: TPlannerDateIconProps) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
-
-    const currentDatestamp = useAtomValue(currentPlannerDatestamp);
 
     const { background } = useAppTheme();
 
@@ -39,37 +34,39 @@ const PlannerDateIcon = ({ datestamp, scrollX, isScrolling, index, onPress }: TP
         }
     }, [datestamp]);
 
-    const isCurrentDatestamp = datestamp === currentDatestamp;
+    const PLANNER_CAROUSEL_ITEM_WIDTH = SCREEN_WIDTH / 8;
+
     const focusedScrollX = index * PLANNER_CAROUSEL_ITEM_WIDTH;
 
     const animatedContainerStyle = useAnimatedStyle(() => {
         const distance = Math.abs(scrollX.value - focusedScrollX);
-        const ranges = [0, SCREEN_WIDTH * 0.7, SCREEN_WIDTH * .9, SCREEN_WIDTH];
+        const ranges = [0, SCREEN_WIDTH * (4 / 6), SCREEN_WIDTH * (5 / 6), SCREEN_WIDTH];
 
         const scale = interpolate(
             distance,
             ranges,
-            [1, 0.6, 0.2, 0],
+            [1, .5, .2, 0],
             Extrapolation.CLAMP
         );
 
         const opacity = interpolate(
             distance,
             ranges,
-            [1, 0.6, 0.2, 0],
+            [1, .5, .2, 0],
             Extrapolation.CLAMP
         );
 
         return {
-            transform: [{ scale }],
             opacity,
-        };
+            transform: [{ scale }],
+        }
     });
 
     return (
         <Animated.View style={[{
-            width: PLANNER_CAROUSEL_ICON_WIDTH, 
-            height: PLANNER_CAROUSEL_ICON_WIDTH + DAY_OF_WEEK_SIZE
+            width: PLANNER_CAROUSEL_ICON_WIDTH,
+            height: PLANNER_CAROUSEL_HEIGHT,
+            justifyContent: 'center'
         }, animatedContainerStyle]}>
             <Pressable
                 onPress={onPress}
@@ -81,7 +78,7 @@ const PlannerDateIcon = ({ datestamp, scrollX, isScrolling, index, onPress }: TP
                     type='note'
                     size='xl'
                     hideRipple
-                    platformColor={isCurrentDatestamp ? 'systemBlue' : 'tertiaryLabel'}
+                    platformColor={isCurrentDatestamp ? 'systemBlue' : 'secondaryLabel'}
                 />
 
                 {/* Date Info */}
@@ -95,7 +92,7 @@ const PlannerDateIcon = ({ datestamp, scrollX, isScrolling, index, onPress }: TP
                         <CustomText
                             variant='todayDate'
                             customStyle={{
-                                color: PlatformColor(isCurrentDatestamp ? 'label' : 'tertiaryLabel'),
+                                color: PlatformColor(isCurrentDatestamp ? 'label' : 'secondaryLabel')
                             }}
                         >
                             {day}
@@ -106,12 +103,12 @@ const PlannerDateIcon = ({ datestamp, scrollX, isScrolling, index, onPress }: TP
                 {/* Day of Week Indicator */}
                 <MotiView
                     animate={{ opacity: isScrolling ? 1 : 0 }}
-                    className='absolute w-full top-full'
+                    className='absolute w-full bottom-full'
                 >
                     <Host style={{ width: '100%' }}>
                         <Text
                             design='rounded'
-                            size={DAY_OF_WEEK_SIZE}
+                            size={PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE}
                             color={PlatformColor('secondaryLabel') as unknown as string}
                             weight="bold"
                         >

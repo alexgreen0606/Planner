@@ -2,6 +2,7 @@ import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { TUserAccess, userAccessAtom } from '@/atoms/userAccess';
+import useAppInitialization from '@/hooks/useAppInitialization';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
@@ -37,18 +38,23 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
 
     const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
 
+    const appReady = useAppInitialization();
     const { textfieldItem, onSetTextfieldItem } = useTextfieldItemAs<IPlannerEvent>(plannerEventStorage);
 
     // Load the external data when the mounted datestamps changes.
     useEffect(() => {
+        if (!appReady) return;
+
         if (mountedDatestamps.planner.length === 0) return;
         handleLoadPage();
-    }, [mountedDatestamps.all]);
+    }, [mountedDatestamps.all, appReady]);
 
     // Carryover yesterday's events to today. (Runs once per day).
     useEffect(() => {
+        if (!appReady) return;
+
         carryoverYesterdayEvents();
-    }, [mountedDatestamps.today]);
+    }, [mountedDatestamps.today, appReady]);
 
     // Update the mounted datestamps atom at midnight.
     useEffect(() => {
@@ -176,6 +182,8 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
             lastLoadedTodayDatestamp: todayDatestamp
         });
     }
+
+    if (!appReady) return null;
 
     return (
         <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage }}>

@@ -3,15 +3,17 @@ import useListItemToggle from '@/hooks/useListItemToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { createNewChecklistItemAndSaveToStorage, deleteChecklistItems, updateListItemIndex } from '@/utils/checklistUtils';
-import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
 
 // ✅ 
 
-const Checklist = () => {
-    const { checklistId } = useLocalSearchParams<{ checklistId: string }>();
+type TChecklistProps = {
+    checklistId: string;
+}
+
+const Checklist = ({ checklistId }: TChecklistProps) => {
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
 

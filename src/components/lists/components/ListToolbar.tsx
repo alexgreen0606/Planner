@@ -14,8 +14,6 @@ type TListToolbarProps = {
     iconSet: ReactNode[][];
 };
 
-const AnimatedContainer = Animated.createAnimatedComponent(View);
-
 const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
     const { height: keyboardHeight } = useAnimatedKeyboard();
 
@@ -28,8 +26,8 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
     if (!textfieldId || hide) return null;
 
     return (
-        <AnimatedContainer
-            className='w-screen absolute'
+        <Animated.View
+            className='w-screen absolute z-[1000]'
             style={toolbarStyle}
         >
             <Host>
@@ -61,7 +59,7 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
                     </View>
                 </HStack>
             </Host>
-        </AnimatedContainer>
+        </Animated.View>
     )
 }
 

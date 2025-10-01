@@ -9,7 +9,7 @@ import { glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
-import PlannerChipSets from './PlannerChip/PlannerChipSets';
+import PlannerChipSets from '../components/PlannerChip/PlannerChipSets';
 
 // ✅ 
 

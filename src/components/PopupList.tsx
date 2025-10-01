@@ -4,25 +4,22 @@ import {
     Button,
     ContextMenu,
     Host,
-    HStack,
     Image,
-    Spacer,
     Submenu,
     Switch
 } from "@expo/ui/swift-ui";
 import React, { ReactNode, useMemo } from "react";
-import GenericIcon from "./icon";
+import { PlatformColor } from "react-native";
 import GlassIconButton from "./icon/GlassButtonIcon";
-import { View } from "react-native";
 
 // ✅ 
 
 type TPopupListProps = {
-    label?: string;
     actions: TPopupAction[];
+    wrapButton?: boolean;
 };
 
-const PopupList = ({ label, actions }: TPopupListProps) => {
+const PopupList = ({ actions, wrapButton }: TPopupListProps) => {
 
     const renderMenuAction = (
         option: TPopupAction,
@@ -82,52 +79,34 @@ const PopupList = ({ label, actions }: TPopupListProps) => {
         renderMenuAction(option, index)
     ), [actions]);
 
-    // ==========
-    //  Dropdown
-    // ==========
-
-    if (label) {
-        return (
-            <Host style={{ flex: 1 }}>
-                <HStack>
-                    <ContextMenu>
-                        <ContextMenu.Items>
-                            {actionTsx}
-                        </ContextMenu.Items>
-                        <ContextMenu.Trigger>
-                            <Button variant="glass">
-                                {label}
-                            </Button>
-                        </ContextMenu.Trigger>
-                    </ContextMenu>
-                    <Spacer />
-                </HStack>
+    if (!actionTsx.some(Boolean)) {
+        return wrapButton ? (
+            <GlassIconButton systemImage="ellipsis" disabled />
+        ) : (
+            <Host style={{ width: 35, height: 35 }}>
+                <Image systemName="ellipsis" color={PlatformColor('tertiaryLabel') as unknown as string} />
             </Host>
         )
     }
 
-    // =========
-    //  Actions
-    // =========
-
-    if (!actionTsx.some(Boolean)) {
-        return (
-            <GlassIconButton disabled systemImage='ellipsis' />
-        )
-    }
-
     return (
-        <Host matchContents>
+        <Host>
             <ContextMenu>
                 <ContextMenu.Items>
                     {actionTsx}
                 </ContextMenu.Items>
                 <ContextMenu.Trigger>
-                    <GlassIconButton systemImage='ellipsis' />
+                    {wrapButton ? (
+                        <GlassIconButton systemImage="ellipsis" disabled />
+                    ) : (
+                        <Host style={{ width: 35, height: 35 }}>
+                            <Image systemName="ellipsis" color={PlatformColor('label') as unknown as string} />
+                        </Host>
+                    )}
                 </ContextMenu.Trigger>
             </ContextMenu>
         </Host>
-    );
+    )
 };
 
 export default PopupList;

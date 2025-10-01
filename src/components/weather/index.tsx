@@ -7,7 +7,7 @@ import {
     View,
 } from 'react-native';
 import CustomText from '../text/CustomText';
-import SlowFadeInView from '../SlowFadeInView';
+import SlowFadeInView from '../views/SlowFadeInView';
 import { getRandomWeatherChip } from '@/utils/weatherUtils';
 import useAppTheme from '@/hooks/useAppTheme';
 import { SymbolView } from 'expo-symbols';

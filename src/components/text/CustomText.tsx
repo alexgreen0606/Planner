@@ -6,7 +6,7 @@ import { TextProps as NativeTextProps, PlatformColor, StyleSheet, Text, TextStyl
 export const textStyles = {
     // --- Standard Text ---
     pageLabel: {
-        fontSize: 20,
+        fontSize: 24,
         color: PlatformColor('label'),
         fontFamily: 'RoundMedium'
     },

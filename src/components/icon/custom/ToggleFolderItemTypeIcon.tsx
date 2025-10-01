@@ -9,7 +9,7 @@ type TToggleFolderItemTypeIconProps = {
     disabled: boolean;
 };
 
-const ToggleFolderItemTypeIcon = ({ currentType, disabled }: TToggleFolderItemTypeIconProps) =>
+const ToggleFolderItemTypeIcon = ({ currentType, disabled }: TToggleFolderItemTypeIconProps) => (
     <View className='gap-1 scale-[0.8]'>
         <View className='flex-row gap-1'>
             <GenericIcon
@@ -41,6 +41,7 @@ const ToggleFolderItemTypeIcon = ({ currentType, disabled }: TToggleFolderItemTy
             />
 
         </View>
-    </View>;
+    </View>
+);
 
 export default ToggleFolderItemTypeIcon;

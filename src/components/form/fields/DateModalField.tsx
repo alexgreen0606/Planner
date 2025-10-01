@@ -1,4 +1,4 @@
-import ModalDisplayValue from '@/components/modal/ModalDisplayValue';
+import ModalDisplayValue from '@/components/Modal/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import { DateTimePicker, Host } from '@expo/ui/swift-ui';
 import { DateTime } from 'luxon';

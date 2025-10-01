@@ -12,7 +12,7 @@ export const DELETE_ITEMS_DELAY_MS = 3000;
 
 export const LIST_SPRING_CONFIG = {
     overshootClamping: true,
-    mass: .5
+    mass: 3,
 };
 
 export const LIST_ITEM_HEIGHT = 40;

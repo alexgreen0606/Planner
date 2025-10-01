@@ -6,28 +6,23 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import AnimatedIcon from '../icon/AnimatedIcon';
-import DragAndDropList from './components/DragAndDropList';
-import { usePageContext } from '@/providers/PageProvider';
 import TransferFolderIcon from '../icon/custom/TransferFolderIcon';
+import DragAndDropList from './components/DragAndDropList';
+import { useScrollPageContext } from '@/providers/ScrollPageProvider';
 
 // ✅ 
 
-type ISortedFolderProps = {
-    parentClickTrigger: number;
-    onOpenItem: (id: string, type: EFolderItemType) => void;
-};
+type TFolderProps = {
+    folderId: string;
+}
 
-const SortedFolder = ({
-    parentClickTrigger,
-    onOpenItem,
-}: ISortedFolderProps) => {
-    const { folderId } = useLocalSearchParams<{ folderId: string }>();
+const FolderContentsList = ({ folderId }: TFolderProps) => {
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const router = useRouter();
 
@@ -41,7 +36,7 @@ const SortedFolder = ({
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
 
-    const { onFocusPlaceholder } = usePageContext();
+    const { onFocusPlaceholder } = useScrollPageContext();
 
     const getLeftIconConfig = (item: IFolderItem) => {
         return getIsItemTransfering(item.id) ? (
@@ -61,37 +56,14 @@ const SortedFolder = ({
         )
     }
 
-    // Handle clicking of the parent folder.
-    useEffect(() => {
-        if (!folder || parentClickTrigger === 0) return;
-
-        if (isTransferMode) {
-            handleTransferToParent();
-            return;
-        }
-
-        router.back();
-    }, [parentClickTrigger]);
-
     // ==================
     // 1. Event Handlers
     // ==================
 
-    function handleTransferToParent() {
-        if (!folder || !transferingItem) return;
-
-        const parentFolder = getFolderItemFromStorageById(folder.listId);
-        parentFolder.itemIds.push(transferingItem.id);
-        saveFolderItemToStorage(parentFolder);
-
-        saveFolderItemToStorage({ ...folder, itemIds: folder.itemIds.filter((id) => id !== transferingItem.id) });
-        saveFolderItemToStorage({ ...transferingItem, listId: folder.listId });
-
-        onEndTransfer();
-    }
-
     function handleTransferToChild(destinationItem: IFolderItem) {
         if (!folder || !transferingItem) return;
+
+        // TODO: dont allow transfer into self
 
         const childFolder = getFolderItemFromStorageById(destinationItem.id);
         childFolder.itemIds.push(transferingItem.id);
@@ -111,7 +83,12 @@ const SortedFolder = ({
         }
 
         setTextfieldId(null);
-        onOpenItem(item.id, item.type);
+
+        if (item.type === EFolderItemType.FOLDER) {
+            router.push(`checklists/folder/${item.id}`);
+        } else if (item.type === EFolderItemType.CHECKLIST) {
+            router.push(`checklists/checklist/${item.id}`);
+        }
     }
 
     // ====================
@@ -173,4 +150,4 @@ const SortedFolder = ({
     )
 };
 
-export default SortedFolder;
+export default FolderContentsList;

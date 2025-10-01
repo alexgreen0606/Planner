@@ -5,9 +5,9 @@ import GenericIcon from "../";
 
 type TTransferFolderIconProps = {
     disabled: boolean;
-}
+};
 
-const TransferFolderIcon = ({ disabled }: TTransferFolderIconProps) =>
+const TransferFolderIcon = ({ disabled }: TTransferFolderIconProps) => (
     <View className='relative scale-[0.8]'>
         <GenericIcon
             type='transfer'
@@ -30,6 +30,7 @@ const TransferFolderIcon = ({ disabled }: TTransferFolderIconProps) =>
             className='-top-1 -right-3 absolute'
             platformColor={disabled ? 'tertiaryLabel' : 'label'}
         />
-    </View>;
+    </View>
+);
 
 export default TransferFolderIcon;

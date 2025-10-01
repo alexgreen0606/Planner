@@ -1,21 +1,16 @@
 import { userAccessAtom } from "@/atoms/userAccess";
 import { NULL } from "@/lib/constants/generic";
-import { PLANNER_SET_MODAL_PATHNAME, TIME_MODAL_PATHNAME } from "@/lib/constants/pathnames";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
-import { ExternalDataProvider } from "@/providers/ExternalDataProvider";
 import { useCalendarPermissions } from "expo-calendar";
-import { getPermissionsAsync, requestPermissionsAsync } from 'expo-contacts';
-import { useFonts } from 'expo-font';
-import { Stack } from "expo-router";
+import { getPermissionsAsync, requestPermissionsAsync } from "expo-contacts";
+import { useFonts } from "expo-font";
 import { useAtom } from "jotai";
 import { useEffect } from "react";
 import { useMMKV, useMMKVObject } from "react-native-mmkv";
-
-// ✅ 
 
 const initialRootFolder: IFolderItem = {
     id: EStorageKey.ROOT_FOLDER_KEY,
@@ -27,10 +22,7 @@ const initialRootFolder: IFolderItem = {
     storageId: EStorageId.FOLDER_ITEM
 };
 
-/**
- * Handles setup of app, including access requests and initializing storage objects.
- */
-const AppContainer = () => {
+const useAppInitialization = () => {
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
 
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
@@ -107,21 +99,7 @@ const AppContainer = () => {
         }
     }
 
-    return appReady && (
-        <ExternalDataProvider>
-            <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                    name={`${TIME_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
-                    options={{ presentation: 'modal', headerShown: false }}
-                />
-                <Stack.Screen
-                    name={`${PLANNER_SET_MODAL_PATHNAME}/[plannerSetKey]`}
-                    options={{ presentation: 'modal', headerShown: false }}
-                />
-            </Stack>
-        </ExternalDataProvider>
-    )
+    return appReady;
 };
 
-export default AppContainer;
+export default useAppInitialization;

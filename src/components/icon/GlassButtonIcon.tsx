@@ -1,20 +1,38 @@
-import { Button, Host, VStack } from "@expo/ui/swift-ui";
-import { frame, glassEffect } from "@expo/ui/swift-ui/modifiers";
+import { Button, Host, Image, Label } from "@expo/ui/swift-ui";
+import { frame } from "@expo/ui/swift-ui/modifiers";
+import { SFSymbol } from "expo-symbols";
 import { PlatformColor } from "react-native";
 
+// ✅ 
+
 type TGlassIconButtonProps = {
-    systemImage: string;
+    systemImage: SFSymbol;
     disabled?: boolean;
+    label?: string;
     onPress?: () => void;
+    width?: number;
 }
 
-const GlassIconButton = ({ systemImage, disabled, onPress }: TGlassIconButtonProps) => {
+const GlassIconButton = ({
+    systemImage,
+    disabled,
+    label,
+    width = 45,
+    onPress
+}: TGlassIconButtonProps) => {
     return (
         <Host matchContents>
-            <Button onPress={onPress} variant="glass" modifiers={[glassEffect({ glass: { variant: 'clear' } })]}>
-                <VStack modifiers={[frame({ width: 20, height: 28, alignment: 'center' })]}>
-                    <Button onPress={onPress} systemImage={systemImage} color={PlatformColor(disabled ? 'tertiaryLabel' : 'label') as unknown as string} />
-                </VStack>
+            <Button modifiers={[frame({ height: 45, width })]} variant='glass' onPress={onPress}>
+                <Host style={{ height: 45, width }}>
+                    {label ? (
+                        <Label systemImage='chevron.left' title={label} />
+                    ) : (
+                        <Image
+                            systemName={systemImage}
+                            color={(disabled ? PlatformColor('tertiaryLabel') : PlatformColor('label')) as unknown as string}
+                        />
+                    )}
+                </Host>
             </Button>
         </Host>
     )

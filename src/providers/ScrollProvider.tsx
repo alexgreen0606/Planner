@@ -40,11 +40,13 @@ export const ScrollProvider = ({ scrollOffset, ...scrollProps }: TScrollProvider
         }
     });
 
-    // Manual scroll.
+    // Scroll the container during auto-scroll.
     useAnimatedReaction(
-        () => scrollOffset.value,
-        (current) => {
-            scrollTo(scrollRef, 0, current, false);
+        () => ({ scroll: scrollOffset.value, active: disableNativeScroll.value }),
+        ({ scroll, active }) => {
+            if (active) {
+                scrollTo(scrollRef, 0, scroll, false);
+            }
         }
     );
 
@@ -72,7 +74,10 @@ export const ScrollProvider = ({ scrollOffset, ...scrollProps }: TScrollProvider
             onAutoScroll: handleAutoScroll
         }}>
             <ScrollContainer
+                contentInsetAdjustmentBehavior="automatic"
                 ref={scrollRef}
+                alwaysBounceVertical
+                bounces
                 scrollEventThrottle={SCROLL_THROTTLE}
                 onScroll={scrollHandler}
                 keyboardShouldPersistTaps='always'

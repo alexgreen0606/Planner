@@ -1,6 +1,6 @@
 import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import Form from '@/components/form';
-import Modal from '@/components/modal';
+import Modal from '@/components/Modal';
 import { NULL } from '@/lib/constants/generic';
 import { EDateFieldType } from '@/lib/enums/EDateFieldType';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';

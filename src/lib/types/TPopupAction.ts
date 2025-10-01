@@ -1,10 +1,11 @@
+import { SFSymbol } from "expo-symbols";
 import { EPopupActionType } from "../enums/EPopupActionType";
 
 // ✅ 
 
 type TBasePopupAction = {
     title: string;
-    systemImage?: string;
+    systemImage?: SFSymbol;
     hidden?: boolean;
 };
 

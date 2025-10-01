@@ -4,7 +4,6 @@ import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { usePageContext } from '@/providers/PageProvider';
 import { useScrollContext } from '@/providers/ScrollProvider';
 import React, { ReactNode, useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
@@ -13,6 +12,7 @@ import { cancelAnimation, runOnJS, useAnimatedReaction, useDerivedValue, useShar
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ListItem from './ListItem';
+import { useScrollPageContext } from '@/providers/ScrollPageProvider';
 
 // ✅ 
 
@@ -63,7 +63,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
-    const { floatingHeaderHeight } = usePageContext();
+    const { floatingHeaderHeight } = useScrollPageContext();
     const { scrollOffset } = useScrollContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);

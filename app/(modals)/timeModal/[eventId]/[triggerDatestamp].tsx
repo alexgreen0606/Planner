@@ -1,7 +1,7 @@
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
-import Modal from "@/components/modal";
+import Modal from "@/components/Modal";
 import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EDateFieldType } from "@/lib/enums/EDateFieldType";

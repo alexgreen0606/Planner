@@ -5,7 +5,7 @@ import { useAtomValue } from 'jotai';
 import React from 'react';
 import { View } from 'react-native';
 import PlannerChip from '.';
-import SlowFadeInView from '../SlowFadeInView';
+import SlowFadeInView from '../views/SlowFadeInView';
 
 // ✅ 
 

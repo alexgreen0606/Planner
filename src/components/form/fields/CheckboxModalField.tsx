@@ -2,7 +2,7 @@ import { TFormFieldControl } from "@/lib/types/form/TFormField";
 import { Host, Switch } from "@expo/ui/swift-ui";
 import React from 'react';
 import { PlatformColor } from 'react-native';
-import ModalDisplayValue from '../../modal/ModalDisplayValue';
+import ModalDisplayValue from '../../Modal/ModalDisplayValue';
 
 // ✅ 
 

@@ -19,7 +19,7 @@ import Animated, {
 } from "react-native-reanimated";
 import ListItemTextfield from "./ListItemTextfield";
 import { useScrollContext } from "@/providers/ScrollProvider";
-import { usePageContext } from "@/providers/PageProvider";
+import { useScrollPageContext } from "@/providers/ScrollPageProvider";
 
 // ✅ 
 
@@ -96,7 +96,7 @@ const ListItem = <T extends TListItem>({
         onAutoScroll,
     } = useScrollContext();
 
-    const { onFocusPlaceholder } = usePageContext();
+    const { onFocusPlaceholder } = useScrollPageContext();
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 

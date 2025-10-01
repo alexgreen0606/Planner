@@ -3,7 +3,7 @@ import GenericIcon from "..";
 
 // ✅ 
 
-const OpenCalendarIconButton = (props: Omit<PressableProps, 'className'>) =>
+const OpenCalendarIconButton = (props: Omit<PressableProps, 'className'>) => (
     <Pressable {...props} className='flex-row items-center'>
         <GenericIcon
             type='calendar'
@@ -17,6 +17,7 @@ const OpenCalendarIconButton = (props: Omit<PressableProps, 'className'>) =>
             hideRipple
             platformColor="label"
         />
-    </Pressable>;
+    </Pressable>
+);
 
 export default OpenCalendarIconButton;

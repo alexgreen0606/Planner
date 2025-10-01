@@ -2,26 +2,22 @@ import CountdownEventToolbar from '@/components/toolbars/CountdownEventToolbar';
 import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import RecurringEventToolbar from '@/components/toolbars/RecurringEventToolbar';
-import UpperFadeOutView from '@/components/UpperFadeOutView';
+import UpperFadeOutView from '@/components/views/UpperFadeOutView';
 import useAppTheme from '@/hooks/useAppTheme';
 import { OVERSCROLL_RELOAD_THRESHOLD } from '@/lib/constants/listConstants';
-import { BOTTOM_NAVIGATION_HEIGHT } from '@/lib/constants/miscLayout';
+import { BOTTOM_NAVIGATION_HEIGHT, TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { CircularProgress, Host } from '@expo/ui/swift-ui';
 import { usePathname } from 'expo-router';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Easing, KeyboardAvoidingView, PlatformColor, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, PlatformColor, TextInput, View } from 'react-native';
 import Animated, {
-    cancelAnimation,
     Extrapolation,
     interpolate,
     runOnJS,
-    useAnimatedKeyboard,
     useAnimatedReaction,
     useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withTiming
+    useSharedValue
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from './ExternalDataProvider';
@@ -32,6 +28,7 @@ import { ScrollProvider } from './ScrollProvider';
 type TPageProviderProps = {
     children: React.ReactNode;
     floatingHeader?: React.ReactNode;
+    fadeOutHeader?: boolean;
 };
 
 type TPageProviderContextValue = {
@@ -47,23 +44,20 @@ export enum ELoadingStatus {
     COMPLETE = 'COMPLETE' // list has rebuilt, still overscrolled
 }
 
-const LoadingSpinner = Animated.createAnimatedComponent(View);
-
 const PageContext = createContext<TPageProviderContextValue | null>(null);
 
 export const PageProvider = ({
     floatingHeader,
+    fadeOutHeader,
     children
 }: TPageProviderProps) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    const keyboard = useAnimatedKeyboard();
     const pathname = usePathname();
 
     const { onReloadPage } = useExternalDataContext();
 
     const placeholderInputRef = useRef<TextInput>(null);
 
-    const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
     const [loadingStatus, setLoadingStatus] = useState<ELoadingStatus>(ELoadingStatus.STATIC);
     const [floatingHeaderHeight, setFloatingHeaderHeight] = useState(0);
 
@@ -101,12 +95,6 @@ export const PageProvider = ({
         if (loadingStatus === ELoadingStatus.LOADING) executeReload();
     }, [loadingStatus]);
 
-    // Track if the keyboard is open.
-    useAnimatedReaction(
-        () => keyboard.height.value,
-        (keyboardHeight) => runOnJS(setIsKeyboardOpen)(keyboardHeight > 0)
-    );
-
     // Overscroll check.
     useAnimatedReaction(
         () => scrollOffset.value,
@@ -129,32 +117,32 @@ export const PageProvider = ({
     );
 
     // Loading Spinner Animation
-    useAnimatedReaction(
-        () => ({
-            status: loadingAnimationTrigger.value,
-            overscroll: Math.min(0, scrollOffset.value),
-            rotation: loadingRotation.value
-        }),
-        (curr, prev) => {
-            if (curr.status === ELoadingStatus.STATIC) return;
-            if (curr.status === ELoadingStatus.LOADING && prev?.status !== ELoadingStatus.LOADING) {
-                // Begin Spinning Animation
-                runOnJS(triggerHaptic)();
-                loadingRotation.value = withRepeat(
-                    withTiming(loadingRotation.value - 360, {
-                        duration: 500,
-                        easing: Easing.linear
-                    }),
-                    -1,
-                    false,
-                );
-            } else if (curr.status === ELoadingStatus.COMPLETE) {
-                if (curr.rotation % 360 >= -1) {
-                    cancelAnimation(loadingRotation);
-                }
-            }
-        }
-    );
+    // useAnimatedReaction(
+    //     () => ({
+    //         status: loadingAnimationTrigger.value,
+    //         overscroll: Math.min(0, scrollOffset.value),
+    //         rotation: loadingRotation.value
+    //     }),
+    //     (curr, prev) => {
+    //         if (curr.status === ELoadingStatus.STATIC) return;
+    //         if (curr.status === ELoadingStatus.LOADING && prev?.status !== ELoadingStatus.LOADING) {
+    //             // Begin Spinning Animation
+    //             runOnJS(triggerHaptic)();
+    //             loadingRotation.value = withRepeat(
+    //                 withTiming(loadingRotation.value - 360, {
+    //                     duration: 500,
+    //                     easing: Easing.linear
+    //                 }),
+    //                 -1,
+    //                 false,
+    //             );
+    //         } else if (curr.status === ELoadingStatus.COMPLETE) {
+    //             if (curr.rotation % 360 >= -1) {
+    //                 cancelAnimation(loadingRotation);
+    //             }
+    //         }
+    //     }
+    // );
 
     function triggerHaptic() {
         // ReactNativeHapticFeedback.trigger('impactMedium', {
@@ -180,20 +168,22 @@ export const PageProvider = ({
             <View className='flex-1' style={{ backgroundColor: PlatformColor(background) }}>
 
                 {/* Upper Fade Out */}
-                <View className='absolute top-0 left-0 w-screen z-[2]'>
-                    <UpperFadeOutView floatingHeaderHeight={floatingHeaderHeight} />
-                </View>
+                {fadeOutHeader && (
+                    <View className='absolute top-0 left-0 w-screen z-[2]'>
+                        <UpperFadeOutView totalHeight={floatingHeaderHeight} />
+                    </View>
+                )}
 
                 {/* Loading Spinner */}
                 {canReloadPath && (
-                    <LoadingSpinner
+                    <Animated.View
                         className='absolute z-[1] self-center'
                         style={loadingSpinnerStyle}
                     >
                         <Host matchContents>
                             <CircularProgress />
                         </Host>
-                    </LoadingSpinner>
+                    </Animated.View>
                 )}
 
                 {/* Floating Header */}
@@ -216,7 +206,7 @@ export const PageProvider = ({
                         scrollOffset={scrollOffset}
                         contentContainerStyle={{
                             paddingTop: TOP_SPACER,
-                            paddingBottom: isKeyboardOpen ? 0 : BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT,
+                            paddingBottom: TOOLBAR_HEIGHT + BOTTOM_SPACER + BOTTOM_NAVIGATION_HEIGHT,
                             flexGrow: 1
                         }}
                     >
