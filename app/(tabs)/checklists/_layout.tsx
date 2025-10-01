@@ -1,9 +1,12 @@
 import FolderItemActions from '@/components/actions/FolderItemActions';
+import GlassIconButton from '@/components/icon/GlassButtonIcon';
 import useAppTheme from '@/hooks/useAppTheme';
+import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPageParams';
 import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
-import { Stack } from 'expo-router';
+import { Host, Image } from '@expo/ui/swift-ui';
+import { router, Stack } from 'expo-router';
 import { PlatformColor } from 'react-native';
 
 // ✅ 
@@ -26,29 +29,41 @@ const ChecklistsLayout = () => {
     //     setItemInTransfer(null);
     // }
 
-    function getFolderItemTitle({ checklistId, folderId }: TChecklistsPageParams) {
-        const folderItemId = checklistId ?? folderId ?? EStorageKey.ROOT_FOLDER_KEY;
+    function getFolderItemId(params: TChecklistsPageParams) {
+        return params.checklistId ?? params.folderId ?? EStorageKey.ROOT_FOLDER_KEY;
+    }
+
+    function getFolderItemTitle(params: TChecklistsPageParams) {
+        const folderItemId = getFolderItemId(params);
         const folderItem = getFolderItemFromStorageById(folderItemId);
         return folderItem.value;
     }
 
-    function getFolderItemPlatformColor({ checklistId, folderId }: TChecklistsPageParams) {
-        const folderItemId = checklistId ?? folderId ?? EStorageKey.ROOT_FOLDER_KEY;
+    function getFolderItemPlatformColor(params: TChecklistsPageParams) {
+        const folderItemId = getFolderItemId(params);
         const folderItem = getFolderItemFromStorageById(folderItemId);
         return folderItem.platformColor;
     }
 
     return (
         <Stack
-            screenOptions={({ route }) => ({
+            screenOptions={({ route: { params } }) => ({
                 animation: 'ios_from_right',
                 contentStyle: { backgroundColor: PlatformColor(background) },
                 headerTransparent: true,
                 headerLargeTitle: true,
                 headerBackButtonDisplayMode: 'minimal',
-                headerTitleStyle: { color: PlatformColor(getFolderItemPlatformColor(route.params ?? {})) as unknown as string },
-                headerTitle: getFolderItemTitle(route.params ?? {}),
-                headerRight: () => <FolderItemActions {...route.params} />,
+                headerTitleStyle: { color: PlatformColor(getFolderItemPlatformColor(params ?? {})) as unknown as string },
+                headerTitle: getFolderItemTitle(params ?? {}),
+                headerRight: () => (
+                    <Host style={{ height: 35, width: 35 }}>
+                        <Image
+                            onPress={() => router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${getFolderItemId(params ?? {})}`)}
+                            systemName='pencil'
+                            color={PlatformColor('label') as unknown as string}
+                        />
+                    </Host>
+                )
             })}
         >
             <Stack.Screen name='index' />

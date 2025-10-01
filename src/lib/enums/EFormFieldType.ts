@@ -3,5 +3,7 @@
 export enum EFormFieldType {
     TEXT = 'TEXT',
     DATE = 'DATE',
-    CHECKBOX = 'CHECKBOX'
+    CHECKBOX = 'CHECKBOX',
+    PICKER = 'PICKER',
+    COLOR_PICKER = 'COLOR_PICKER'
 }

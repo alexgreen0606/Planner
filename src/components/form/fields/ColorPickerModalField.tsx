@@ -1,0 +1,32 @@
+import GenericIcon from '@/components/icon';
+import { selectableColors } from '@/lib/constants/colors';
+import { TFormFieldControl } from '@/lib/types/form/TFormField';
+import React from 'react';
+import { View } from 'react-native';
+
+// ✅ 
+
+export type TColorPickerModalFieldProps = {
+    label: string;
+};
+
+const ColorPickerModalField = ({
+    value,
+    onChange
+}: TColorPickerModalFieldProps & TFormFieldControl<string>) => {
+    return (
+        <View className='flex-row w-full justify-between items-center px-2 py-3'>
+            {Object.values(selectableColors).map((color) => (
+                <GenericIcon
+                    key={color}
+                    size='l'
+                    type={value === color ? 'circleFilled' : 'circle'}
+                    platformColor={color}
+                    onClick={() => onChange(color)}
+                />
+            ))}
+        </View>
+    );
+};
+
+export default ColorPickerModalField;

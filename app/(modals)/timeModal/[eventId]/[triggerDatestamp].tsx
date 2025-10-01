@@ -34,6 +34,7 @@ type TModalParams = {
 };
 
 type TFormData = {
+    test: string;
     title: string;
     start: DateTime;
     end: DateTime;
@@ -55,6 +56,7 @@ const PlannerEventTimeModal = () => {
         setValue
     } = useForm<TFormData>({
         defaultValues: {
+            test: 'Folder',
             title: '',
             start: DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
             end: DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
@@ -94,6 +96,12 @@ const PlannerEventTimeModal = () => {
     const end = watch('end');
 
     const formFields: TFormField[][] = [
+        [{
+            name: "test",
+            floating: true,
+            type: EFormFieldType.PICKER,
+            options: ['Folder', 'Checklist']
+        }],
         [{
             name: 'title',
             type: EFormFieldType.TEXT,
