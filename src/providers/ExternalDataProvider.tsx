@@ -18,12 +18,15 @@ import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { usePathname, useRouter } from 'expo-router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 // ✅ 
 
-const ExternalDataContext = createContext({ onReloadPage: async () => { } });
+const ExternalDataContext = createContext({ 
+    onReloadPage: async () => { },
+    loading: false
+});
 
 export function ExternalDataProvider({ children }: { children: React.ReactNode }) {
     const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
@@ -35,6 +38,8 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     const setTodayDatestamp = useSetAtom(todayDatestampAtom);
     const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
+
+    const [loading, setLoading] = useState(false);
 
     const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
 
@@ -74,6 +79,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     }, []);
 
     async function handleLoadPage() {
+        setLoading(true);
         await updateCalendarAndContactPermissions();
 
         switch (pathname) {
@@ -88,6 +94,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
         }
 
         await loadExternalCalendarData(mountedDatestamps.all);
+        setLoading(false);
     }
 
     async function updateCalendarAndContactPermissions(): Promise<TUserAccess> {
@@ -186,7 +193,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     if (!appReady) return null;
 
     return (
-        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage }}>
+        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage, loading }}>
             {children}
         </ExternalDataContext.Provider>
     )

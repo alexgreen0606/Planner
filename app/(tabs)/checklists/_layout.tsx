@@ -1,5 +1,3 @@
-import FolderItemActions from '@/components/actions/FolderItemActions';
-import GlassIconButton from '@/components/icon/GlassButtonIcon';
 import useAppTheme from '@/hooks/useAppTheme';
 import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageKey } from '@/lib/enums/EStorageKey';

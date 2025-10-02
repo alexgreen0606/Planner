@@ -1,6 +1,6 @@
 import FolderContentsList from '@/components/lists/FolderContentsList';
 import { NULL } from '@/lib/constants/generic';
-import { ScrollPageProvider } from '@/providers/ScrollPageProvider';
+import { PageProvider } from '@/providers/PageProvider';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
@@ -13,9 +13,9 @@ type TFolderParams = {
 const FolderPage = () => {
   const { folderId } = useLocalSearchParams<TFolderParams>();
   return (
-    <ScrollPageProvider>
+    <PageProvider>
       <FolderContentsList folderId={folderId ?? NULL} />
-    </ScrollPageProvider>
+    </PageProvider>
   )
 };
 

@@ -14,6 +14,7 @@
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ui": "^0.2.0-beta.4",
     "@react-navigation/core": "^7.3.1",
+    "@react-navigation/elements": "^2.6.4",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.1",
     "expo": "^54.0.10",

@@ -4,7 +4,7 @@ import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
-import { useScrollPageContext } from "@/providers/ScrollPageProvider";
+import { usePageContext } from "@/providers/PageProvider";
 import { useScrollContext } from "@/providers/ScrollProvider";
 import { useAtom } from "jotai";
 import React, { ReactNode, useMemo } from "react";
@@ -96,7 +96,7 @@ const ListItem = <T extends TListItem>({
         onAutoScroll,
     } = useScrollContext();
 
-    const { onFocusPlaceholder } = useScrollPageContext();
+    const { onFocusPlaceholder } = usePageContext();
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 

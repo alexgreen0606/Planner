@@ -12,7 +12,7 @@ import { cancelAnimation, runOnJS, useAnimatedReaction, useDerivedValue, useShar
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ListItem from './ListItem';
-import { useScrollPageContext } from '@/providers/ScrollPageProvider';
+import { usePageContext } from '@/providers/PageProvider';
 
 // ✅ 
 
@@ -63,7 +63,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
-    const { floatingHeaderHeight } = useScrollPageContext();
+    const { floatingHeaderHeight } = usePageContext();
     const { scrollOffset } = useScrollContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);

@@ -1,5 +1,5 @@
 import Countdowns from '@/components/lists/Countdowns';
-import { PageProvider } from '@/providers/PageProvider';
+import { PageProvider } from '@/_deprecated/DeprecatedPageProvider';
 
 // ✅ 
 

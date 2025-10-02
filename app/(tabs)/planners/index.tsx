@@ -3,10 +3,8 @@ import { Redirect } from "expo-router";
 
 // ✅ 
 
-const RerouteToTodayPlanner = () => {
-    return (
-        <Redirect href={`/planners/${getTodayDatestamp()}`} />
-    )
-};
+const RerouteToTodayPlanner = () => (
+    <Redirect href={`/planners/${getTodayDatestamp()}`} />
+);
 
 export default RerouteToTodayPlanner;

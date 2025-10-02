@@ -30,7 +30,9 @@ import { useMMKV } from "react-native-mmkv";
 
 type TModalParams = {
     eventId: string;
-    triggerDatestamp: string; // Planner key that triggered the modal open.
+
+    // Planner key that triggered the modal open.
+    triggerDatestamp: string;
 };
 
 type TFormData = {

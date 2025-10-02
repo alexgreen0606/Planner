@@ -14,7 +14,7 @@ import { useMMKV } from 'react-native-mmkv';
 import AnimatedIcon from '../icon/AnimatedIcon';
 import TransferFolderIcon from '../icon/custom/TransferFolderIcon';
 import DragAndDropList from './components/DragAndDropList';
-import { useScrollPageContext } from '@/providers/ScrollPageProvider';
+import { usePageContext } from '@/providers/PageProvider';
 
 // ✅ 
 
@@ -36,7 +36,7 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
 
-    const { onFocusPlaceholder } = useScrollPageContext();
+    const { onFocusPlaceholder } = usePageContext();
 
     const getLeftIconConfig = (item: IFolderItem) => {
         return getIsItemTransfering(item.id) ? (

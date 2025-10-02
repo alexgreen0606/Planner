@@ -1,6 +1,6 @@
 import Checklist from '@/components/lists/Checklist';
 import { NULL } from '@/lib/constants/generic';
-import { ScrollPageProvider } from '@/providers/ScrollPageProvider';
+import { PageProvider } from '@/providers/PageProvider';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
@@ -13,9 +13,9 @@ type TChecklistParams = {
 const ChecklistPage = () => {
     const { checklistId } = useLocalSearchParams<TChecklistParams>();
     return (
-        <ScrollPageProvider>
+        <PageProvider>
             <Checklist checklistId={checklistId ?? NULL} />
-        </ScrollPageProvider>
+        </PageProvider>
     )
 };
 

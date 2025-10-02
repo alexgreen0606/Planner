@@ -6,7 +6,7 @@ import { parseTimeValueFromText } from "@/utils/dateUtils";
 import { updateRecurringEventIndexWithChronologicalCheck } from "@/utils/recurringPlannerUtils";
 import { MMKV, useMMKV, useMMKVObject } from "react-native-mmkv";
 import useTextfieldItemAs from "../useTextfieldItemAs";
-import { useScrollPageContext } from "@/providers/ScrollPageProvider";
+import { usePageContext } from "@/providers/PageProvider";
 
 // ✅ 
 
@@ -19,7 +19,7 @@ const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventS
         onSetTextfieldItem: onSetFocusedEvent
     } = useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
 
-    const { onFocusPlaceholder } = useScrollPageContext();
+    const { onFocusPlaceholder } = usePageContext();
 
     // Scan user input for an initial event time.
     // Delete weekday event and clone if needed.

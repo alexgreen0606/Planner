@@ -11,6 +11,7 @@ import Animated, {
     useSharedValue,
     withTiming
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from './ExternalDataProvider';
 
 // ✅ 
@@ -18,6 +19,7 @@ import { useExternalDataContext } from './ExternalDataProvider';
 type TScrollProviderProps = ScrollViewProps & {
     scrollOffset: SharedValue<number>;
     shouldReloadPage?: boolean;
+    additionalHeaderHeight?: number;
 };
 
 type TScrollContext = {
@@ -27,28 +29,33 @@ type TScrollContext = {
 
 const ScrollContext = createContext<TScrollContext | null>(null);
 
-export const ScrollProvider = ({ scrollOffset, shouldReloadPage, ...scrollProps }: TScrollProviderProps) => {
+export const ScrollProvider = ({
+    scrollOffset,
+    shouldReloadPage,
+    additionalHeaderHeight = 0,
+    ...scrollProps
+}: TScrollProviderProps) => {
+    const { top: TOP_SPACER } = useSafeAreaInsets();
+
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
-    const disableNativeScroll = useSharedValue(false);
+    const isAutoScrolling = useSharedValue(false);
 
-    const { onReloadPage } = useExternalDataContext();
+    const { onReloadPage, loading } = useExternalDataContext();
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
-            if (!disableNativeScroll.value) {
-                scrollOffset.value = event.contentOffset.y;
-            }
+            if (isAutoScrolling.value) return;
+            scrollOffset.value = event.contentOffset.y;
         }
     });
 
     // Scroll the container during auto-scroll.
     useAnimatedReaction(
-        () => ({ scroll: scrollOffset.value, active: disableNativeScroll.value }),
-        ({ scroll, active }) => {
-            if (active) {
-                scrollTo(scrollRef, 0, scroll, false);
-            }
+        () => ({ offset: scrollOffset.value, autoScrolling: isAutoScrolling.value }),
+        ({ offset, autoScrolling }) => {
+            if (!autoScrolling) return;
+            scrollTo(scrollRef, 0, offset, false);
         }
     );
 
@@ -60,12 +67,12 @@ export const ScrollProvider = ({ scrollOffset, shouldReloadPage, ...scrollProps 
         const durationMs = Math.abs(
             (displacement / LIST_ITEM_HEIGHT) * SECONDS_PER_ITEM * 1000
         );
-        disableNativeScroll.value = true;
+        isAutoScrolling.value = true;
         scrollOffset.value = withTiming(
             newOffset,
             { duration: durationMs, easing: Easing.linear },
             () => {
-                disableNativeScroll.value = false;
+                isAutoScrolling.value = false;
             }
         )
     }
@@ -80,10 +87,13 @@ export const ScrollProvider = ({ scrollOffset, shouldReloadPage, ...scrollProps 
                 ref={scrollRef}
                 alwaysBounceVertical
                 bounces
-                refreshControl={shouldReloadPage ? <RefreshControl size={20} onRefresh={onReloadPage} refreshing={true} /> : undefined}
+                refreshControl={shouldReloadPage ? <RefreshControl onRefresh={onReloadPage} refreshing={loading} /> : undefined}
                 scrollEventThrottle={SCROLL_THROTTLE}
                 onScroll={scrollHandler}
                 keyboardShouldPersistTaps='always'
+                contentInset={{ top: additionalHeaderHeight }}
+                contentOffset={{ y: -additionalHeaderHeight - TOP_SPACER, x: 0 }}
+                scrollIndicatorInsets={{ top: additionalHeaderHeight }}
                 {...scrollProps}
             />
         </ScrollContext.Provider>

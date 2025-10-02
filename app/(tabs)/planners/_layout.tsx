@@ -27,7 +27,7 @@ const Layout = () => {
                 headerBackground: () => (
                     <UpperFadeOutView
                         colors={upperFadeArray}
-                        solidHeight={PLANNER_CAROUSEL_HEIGHT + TOP_SPACER}
+                        solidHeight={PLANNER_CAROUSEL_HEIGHT + TOP_SPACER} // TODO: have a more fixed height of the planner banner
                         totalHeight={PLANNER_CAROUSEL_HEIGHT + HEADER_HEIGHT + HEADER_HEIGHT + TOP_SPACER}
                     />
                 )

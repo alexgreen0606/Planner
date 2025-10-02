@@ -1,14 +1,14 @@
 import FolderContentsList from '@/components/lists/FolderContentsList';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
-import { ScrollPageProvider } from '@/providers/ScrollPageProvider';
+import { PageProvider } from '@/providers/PageProvider';
 import React from 'react';
 
 // ✅ 
 
 const RootFolderPage = () => (
-    <ScrollPageProvider>
+    <PageProvider>
         <FolderContentsList folderId={EStorageKey.ROOT_FOLDER_KEY} />
-    </ScrollPageProvider>
+    </PageProvider>
 );
 
 export default RootFolderPage;
