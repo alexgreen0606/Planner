@@ -6,11 +6,14 @@ import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { Stack } from 'expo-router';
 import { PlatformColor } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ✅ 
 
 const Layout = () => {
-    const { background } = useAppTheme();
+    const { top: TOP_SPACER } = useSafeAreaInsets();
+
+    const { background, upperFadeArray } = useAppTheme();
 
     return (
         <Stack
@@ -23,8 +26,9 @@ const Layout = () => {
                 ),
                 headerBackground: () => (
                     <UpperFadeOutView
-                        solidHeight={PLANNER_CAROUSEL_HEIGHT}
-                        totalHeight={PLANNER_CAROUSEL_HEIGHT + HEADER_HEIGHT + HEADER_HEIGHT}
+                        colors={upperFadeArray}
+                        solidHeight={PLANNER_CAROUSEL_HEIGHT + TOP_SPACER}
+                        totalHeight={PLANNER_CAROUSEL_HEIGHT + HEADER_HEIGHT + HEADER_HEIGHT + TOP_SPACER}
                     />
                 )
             })}

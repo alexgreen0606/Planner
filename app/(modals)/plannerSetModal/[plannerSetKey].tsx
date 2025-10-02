@@ -152,7 +152,6 @@ const PlannerSetModal = () => {
         <Modal
             title={isEditMode ? 'Edit Planner Set' : 'Create Planner Set'}
             primaryButtonConfig={{
-                label: 'Save',
                 onClick: onSubmit(handleSubmit),
                 disabled: !isValid
             }}

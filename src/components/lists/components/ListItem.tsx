@@ -4,10 +4,12 @@ import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT, LIST_SPRING_CONFIG } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
+import { useScrollPageContext } from "@/providers/ScrollPageProvider";
+import { useScrollContext } from "@/providers/ScrollProvider";
 import { useAtom } from "jotai";
 import React, { ReactNode, useMemo } from "react";
 import { PlatformColor, TextStyle, View } from "react-native";
-import { Gesture, GestureDetector, Pressable } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
 import Animated, {
     cancelAnimation,
@@ -18,8 +20,6 @@ import Animated, {
     withSpring
 } from "react-native-reanimated";
 import ListItemTextfield from "./ListItemTextfield";
-import { useScrollContext } from "@/providers/ScrollProvider";
-import { useScrollPageContext } from "@/providers/ScrollPageProvider";
 
 // ✅ 
 
@@ -172,67 +172,75 @@ const ListItem = <T extends TListItem>({
     //  Gestures
     // ==========
 
-    const tapGesture = Gesture.Tap()
-        .maxDuration(200)
-        .onEnd(() => {
-            if (!item || isPendingDelete) return;
+    const createItemGesture = (onTap: () => void) => {
+        const tapGesture = Gesture.Tap()
+            .maxDuration(200)
+            .onEnd(() => {
+                if (!item || isPendingDelete) return;
+                runOnJS(onTap)();
+            });
 
-            if (!onContentClick) {
-                runOnJS(onFocusPlaceholder)();
-                runOnJS(setTextfieldId)(itemId);
-                return;
-            }
+        const longPressGesture = Gesture.LongPress()
+            .minDuration(300)
+            .onTouchesDown((_e, state) => {
+                if (!item || isPendingDelete) {
+                    state.fail();
+                }
+            })
+            .onStart(() => {
+                if (!item || isPendingDelete) return
+                onDragStart(item.id, itemIndex);
+            });
 
-            runOnJS(onContentClick)(item);
-        });
+        const panGesture = Gesture.Pan()
+            .manualActivation(true)
+            .onTouchesDown((_e, state) => {
+                if (!item || isPendingDelete) {
+                    state.fail();
+                }
+            })
+            .onTouchesMove((_e, state) => {
+                if (!item || isPendingDelete) {
+                    state.fail();
+                    return;
+                }
 
-    const longPressGesture = Gesture.LongPress()
-        .minDuration(300)
-        .onTouchesDown((_e, state) => {
-            if (!item || isPendingDelete) {
-                state.fail();
-            }
-        })
-        .onStart(() => {
-            if (!item || isPendingDelete) return
-            onDragStart(item.id, itemIndex);
-        });
+                if (draggingRowId.value === item.id) {
+                    state.activate();
+                } else {
+                    state.fail();
+                }
+            })
+            .onUpdate((event) => {
+                handleDrag(
+                    event.translationY,
+                    event.absoluteY
+                );
+            })
+            .onFinalize(() => {
+                if (!item) return;
 
-    const panGesture = Gesture.Pan()
-        .manualActivation(true)
-        .onTouchesDown((_e, state) => {
-            if (!item || isPendingDelete) {
-                state.fail();
-            }
-        })
-        .onTouchesMove((_e, state) => {
-            if (!item || isPendingDelete) {
-                state.fail();
-                return;
-            }
+                if (draggingRowId.value !== item.id) return;
 
-            if (draggingRowId.value === item.id) {
-                state.activate();
-            } else {
-                state.fail();
-            }
-        })
-        .onUpdate((event) => {
-            handleDrag(
-                event.translationY,
-                event.absoluteY
-            );
-        })
-        .onFinalize(() => {
-            if (!item) return;
+                runOnJS(handleEndDrag)();
+            });
 
-            if (draggingRowId.value !== item.id) return;
+        const dragGesture = Gesture.Simultaneous(longPressGesture, panGesture);
+        return Gesture.Race(tapGesture, dragGesture);
+    };
 
-            runOnJS(handleEndDrag)();
-        });
+    const separatorGesture = createItemGesture(() => {
+        onCreateItem(listId, itemIndex);
+    });
 
-    const dragGesture = Gesture.Simultaneous(longPressGesture, panGesture);
-    const contentGesture = Gesture.Race(tapGesture, dragGesture);
+    const contentGesture = createItemGesture(() => {
+        if (!onContentClick) {
+            onFocusPlaceholder();
+            setTextfieldId(itemId);
+            return;
+        }
+        onContentClick(item!);
+    });
 
     // ============
     //  Animations
@@ -278,12 +286,14 @@ const ListItem = <T extends TListItem>({
         >
 
             {/* Separator Line */}
-            <Pressable onPress={() => onCreateItem(listId, itemIndex)}>
-                <ThinLine />
-            </Pressable>
+            <GestureDetector gesture={separatorGesture}>
+                <View>
+                    <ThinLine />
+                </View>
+            </GestureDetector>
 
             <View
-                className="flex-row  justify-center items-center gap-2 pr-2"
+                className="flex-row  justify-center items-center gap-4 pr-2"
                 style={{
                     height: LIST_CONTENT_HEIGHT,
                     marginLeft: LIST_ICON_SPACING
@@ -327,6 +337,8 @@ const ListItem = <T extends TListItem>({
                                         valueStyles
                                     ]
                                 }
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
                             >
                                 {item.value}
                             </CustomText>

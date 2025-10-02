@@ -19,7 +19,7 @@ const ColorPickerModalField = ({
             {Object.values(selectableColors).map((color) => (
                 <GenericIcon
                     key={color}
-                    size='l'
+                    size='ml'
                     type={value === color ? 'circleFilled' : 'circle'}
                     platformColor={color}
                     onClick={() => onChange(color)}

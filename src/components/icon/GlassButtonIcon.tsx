@@ -1,5 +1,5 @@
 import { Button, Host, Image, Label } from "@expo/ui/swift-ui";
-import { frame } from "@expo/ui/swift-ui/modifiers";
+import { frame, tint } from "@expo/ui/swift-ui/modifiers";
 import { SFSymbol } from "expo-symbols";
 import { PlatformColor } from "react-native";
 
@@ -9,8 +9,10 @@ type TGlassIconButtonProps = {
     systemImage: SFSymbol;
     disabled?: boolean;
     label?: string;
-    onPress?: () => void;
+    isPrimary?: boolean;
     width?: number;
+    iconColor?: string;
+    onPress?: () => void;
 }
 
 const GlassIconButton = ({
@@ -18,18 +20,20 @@ const GlassIconButton = ({
     disabled,
     label,
     width = 45,
+    isPrimary,
+    iconColor,
     onPress
 }: TGlassIconButtonProps) => {
     return (
         <Host matchContents>
-            <Button modifiers={[frame({ height: 45, width })]} variant='glass' onPress={onPress}>
+            <Button disabled={disabled} modifiers={[frame({ height: 45, width })]} variant={isPrimary ? 'glassProminent' : 'glass'} onPress={onPress}>
                 <Host style={{ height: 45, width }}>
                     {label ? (
-                        <Label systemImage='chevron.left' title={label} />
+                        <Label color={PlatformColor(iconColor ?? 'label') as unknown as string} systemImage='chevron.left' title={label} />
                     ) : (
                         <Image
                             systemName={systemImage}
-                            color={(disabled ? PlatformColor('tertiaryLabel') : PlatformColor('label')) as unknown as string}
+                            color={PlatformColor(iconColor ?? 'label') as unknown as string}
                         />
                     )}
                 </Host>

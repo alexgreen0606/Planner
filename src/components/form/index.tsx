@@ -48,38 +48,34 @@ const Form = ({ fieldSets, control }: TFormProps) => {
                         const bottomEdgeRadius = isBottomEdgeRounded ? MODAL_INPUT_HEIGHT / 4 : 0;
 
                         return (
-                            <View
+                            <MotiView
                                 key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
-                                className='w-full'
-                                style={{ height: MODAL_INPUT_HEIGHT }}
+                                animate={{
+                                    height: field.invisible ? 0 : MODAL_INPUT_HEIGHT,
+                                    overflow: 'hidden',
+                                }}
+                                className='items-center w-full' style={{
+                                    backgroundColor: PlatformColor(inputField),
+                                    borderTopWidth: !field.invisible && !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
+                                    borderColor: PlatformColor('systemGray'),
+                                    paddingHorizontal: 9,
+                                    pointerEvents: field.invisible ? 'none' : undefined,
+                                    borderTopLeftRadius: topEdgeRadius,
+                                    borderTopRightRadius: topEdgeRadius,
+                                    borderBottomLeftRadius: bottomEdgeRadius,
+                                    borderBottomRightRadius: bottomEdgeRadius,
+                                }}
                             >
-                                <MotiView
-                                    animate={{
-                                        opacity: field.invisible ? 0 : 1,
-                                        borderTopLeftRadius: topEdgeRadius,
-                                        borderTopRightRadius: topEdgeRadius,
-                                        borderBottomLeftRadius: bottomEdgeRadius,
-                                        borderBottomRightRadius: bottomEdgeRadius,
-                                    }}
-                                    className='items-center' style={{
-                                        backgroundColor: PlatformColor(inputField),
-                                        borderTopWidth: !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
-                                        borderColor: PlatformColor('systemGray'),
-                                        paddingHorizontal: 9,
-                                        pointerEvents: field.invisible ? 'none' : undefined
-                                    }}
-                                >
-                                    <Controller
-                                        name={field.name}
-                                        control={control}
-                                        rules={field.rules}
-                                        render={({ field: { onChange, value } }) => <FormField {...field} value={value} onChange={(val) => {
-                                            onChange(val);
-                                            field.onHandleSideEffects?.(val);
-                                        }} />}
-                                    />
-                                </MotiView>
-                            </View>
+                                <Controller
+                                    name={field.name}
+                                    control={control}
+                                    rules={field.rules}
+                                    render={({ field: { onChange, value } }) => <FormField {...field} value={value} onChange={(val) => {
+                                        onChange(val);
+                                        field.onHandleSideEffects?.(val);
+                                    }} />}
+                                />
+                            </MotiView>
                         )
                     }
                     )}

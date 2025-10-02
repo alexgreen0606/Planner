@@ -8,7 +8,7 @@ import { PlatformColor, TouchableOpacity, View, ViewStyle } from 'react-native';
 export interface GenericIconProps<T = void> {
     type: TIconType;
     multicolor?: boolean;
-    size?: 'xs' | 's' | 'm' | 'ms' | 'l' | 'xl';
+    size?: 'xs' | 's' | 'm' | 'ms' | 'l' | 'ml' | 'xl' | number;
     platformColor?: string;
     style?: ViewStyle;
     className?: string;
@@ -28,7 +28,7 @@ const GenericIcon = <T,>({
     onClick
 }: GenericIconProps<T>) => {
     const Wrapper = onClick ? TouchableOpacity : View;
-    const sizeNum = sizeMap[size];
+    const sizeNum = typeof (size) === 'number' ? size : sizeMap[size];
     return (
         <Wrapper
             activeOpacity={hideRipple ? 1 : 0}
@@ -44,7 +44,7 @@ const GenericIcon = <T,>({
                 type={multicolor ? 'multicolor' : 'monochrome'}
                 // @ts-ignore
                 name={iconMap[type] ?? type}
-                size={sizeMap[size]}
+                size={sizeNum}
                 tintColor={multicolor ? undefined : isValidPlatformColor(color) ? PlatformColor(color) : color}
             />
         </Wrapper>

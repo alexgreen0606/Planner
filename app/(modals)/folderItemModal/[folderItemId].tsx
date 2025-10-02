@@ -128,7 +128,6 @@ const FolderItemModal = () => {
         <Modal
             title=''
             primaryButtonConfig={{
-                label: 'Save',
                 onClick: onSubmit(handleSubmit),
                 disabled: !isValid
             }}

@@ -97,15 +97,9 @@ const PlannerEventTimeModal = () => {
 
     const formFields: TFormField[][] = [
         [{
-            name: "test",
-            floating: true,
-            type: EFormFieldType.PICKER,
-            options: ['Folder', 'Checklist']
-        }],
-        [{
             name: 'title',
             type: EFormFieldType.TEXT,
-            label: 'Title',
+            label: 'Event Title',
             rules: { required: true },
             focusTrigger: loading ? false : title.length === 0
         }],
@@ -621,9 +615,8 @@ const PlannerEventTimeModal = () => {
 
     return (
         <Modal
-            title='Schedule Event'
+            title=''
             primaryButtonConfig={{
-                label: 'Schedule',
                 onClick: handleSubmit(handleSaveFormData),
                 disabled: !isValid || loading
             }}

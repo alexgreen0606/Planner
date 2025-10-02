@@ -12,6 +12,7 @@ const useListItemToggle = <T extends TListItem>(item: T, disabled?: boolean) => 
             type={isDeleting ? 'circleFilled' : 'circle'}
             platformColor={disabled || isDeleting ? 'tertiaryLabel' : 'secondaryLabel'}
             onClick={() => onToggleScheduleItemDeleteCallback(item)}
+            size={22}
         />
     )
 };

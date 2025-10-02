@@ -55,5 +55,6 @@ export const sizeMap = {
     s: 18,
     m: 20,
     l: 22,
+    ml: 30,
     xl: 46
 };

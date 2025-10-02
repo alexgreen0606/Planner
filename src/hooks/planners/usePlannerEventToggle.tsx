@@ -13,6 +13,7 @@ const useGetPlannerEventToggle = (item: IPlannerEvent) => {
             type={isDeleting ? 'circleFilled' : 'circle'}
             platformColor={isDeleting ? 'tertiaryLabel' : 'secondaryLabel'}
             onClick={() => onToggleScheduleItemDelete(item)}
+            size={22}
         />
     )
 };

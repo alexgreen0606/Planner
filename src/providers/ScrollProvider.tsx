@@ -1,6 +1,6 @@
 import { LIST_ITEM_HEIGHT, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import React, { createContext, useContext } from 'react';
-import { ScrollView, ScrollViewProps } from 'react-native';
+import { RefreshControl, ScrollViewProps } from 'react-native';
 import Animated, {
     Easing,
     scrollTo,
@@ -11,11 +11,13 @@ import Animated, {
     useSharedValue,
     withTiming
 } from 'react-native-reanimated';
+import { useExternalDataContext } from './ExternalDataProvider';
 
 // ✅ 
 
 type TScrollProviderProps = ScrollViewProps & {
     scrollOffset: SharedValue<number>;
+    shouldReloadPage?: boolean;
 };
 
 type TScrollContext = {
@@ -23,14 +25,14 @@ type TScrollContext = {
     onAutoScroll: (newOffset: number) => void;
 };
 
-const ScrollContainer = Animated.createAnimatedComponent(ScrollView);
-
 const ScrollContext = createContext<TScrollContext | null>(null);
 
-export const ScrollProvider = ({ scrollOffset, ...scrollProps }: TScrollProviderProps) => {
+export const ScrollProvider = ({ scrollOffset, shouldReloadPage, ...scrollProps }: TScrollProviderProps) => {
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
     const disableNativeScroll = useSharedValue(false);
+
+    const { onReloadPage } = useExternalDataContext();
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -73,11 +75,12 @@ export const ScrollProvider = ({ scrollOffset, ...scrollProps }: TScrollProvider
             scrollOffset,
             onAutoScroll: handleAutoScroll
         }}>
-            <ScrollContainer
+            <Animated.ScrollView
                 contentInsetAdjustmentBehavior="automatic"
                 ref={scrollRef}
                 alwaysBounceVertical
                 bounces
+                refreshControl={shouldReloadPage ? <RefreshControl size={20} onRefresh={onReloadPage} refreshing={true} /> : undefined}
                 scrollEventThrottle={SCROLL_THROTTLE}
                 onScroll={scrollHandler}
                 keyboardShouldPersistTaps='always'
