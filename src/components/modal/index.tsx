@@ -1,9 +1,10 @@
 import useAppTheme from "@/hooks/useAppTheme";
 import { Host, Text } from "@expo/ui/swift-ui";
 import React, { ReactNode } from 'react';
-import { ActionSheetIOS, PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
+import { PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GlassIconButton from "../icon/GlassButtonIcon";
+import PopupList, { TPopupListProps } from "../PopupList";
 import UpperFadeOutView from "../views/UpperFadeOutView";
 
 // ✅ 
@@ -15,13 +16,7 @@ type TModalProps = {
         disabled?: boolean;
         onClick: () => void;
     };
-    deleteButtonConfig?: {
-        label: string;
-        optionLabels: string[];
-        message?: string;
-        hidden?: boolean;
-        optionHandlers: (() => void)[];
-    };
+    deleteButtonConfig?: TPopupListProps;
     customStyle?: ViewStyle;
     children: ReactNode;
     onClose: () => void;
@@ -42,28 +37,28 @@ const Modal = ({
 
     const { background, modalUpperFadeArray } = useAppTheme();
 
-    function handleDeleteButtonClick() {
-        if (!deleteButtonConfig) return;
+    // function handleDeleteButtonClick() {
+    //     if (!deleteButtonConfig) return;
 
-        const { optionLabels, optionHandlers, message } = deleteButtonConfig;
-        const handlers = [
-            () => null,
-            ...optionHandlers
-        ];
-        ActionSheetIOS.showActionSheetWithOptions(
-            {
-                options: ['Cancel', ...optionLabels],
-                destructiveButtonIndex: 1,
-                cancelButtonIndex: 0,
-                message
-            },
-            buttonIndex => {
-                if (buttonIndex === 0) return;
+    //     const { optionLabels, optionHandlers, message } = deleteButtonConfig;
+    //     const handlers = [
+    //         () => null,
+    //         ...optionHandlers
+    //     ];
+    //     ActionSheetIOS.showActionSheetWithOptions(
+    //         {
+    //             options: ['Cancel', ...optionLabels],
+    //             destructiveButtonIndex: 1,
+    //             cancelButtonIndex: 0,
+    //             message
+    //         },
+    //         buttonIndex => {
+    //             if (buttonIndex === 0) return;
 
-                handlers[buttonIndex]?.();
-            }
-        );
-    }
+    //             handlers[buttonIndex]?.();
+    //         }
+    //     );
+    // }
 
     return (
         <View
@@ -73,20 +68,6 @@ const Modal = ({
                 { backgroundColor: PlatformColor(background) }
             ]}
         >
-
-            {/* Modal Contents */}
-            <ScrollView
-                contentContainerStyle={{
-                    paddingTop: TOP_GLASS_BAR_HEIGHT,
-                    paddingBottom: BOTTOM_SPACER,
-                    paddingHorizontal: MODAL_PADDING,
-                    flexGrow: 1
-                }}
-            >
-
-                {children}
-
-            </ScrollView>
 
             {/* Top Bar with Fade */}
             <View style={{
@@ -116,16 +97,29 @@ const Modal = ({
                 </View>
             </View>
 
-            {/* Bottom Delete Button */}
-            {!deleteButtonConfig?.hidden && (
+            {/* Modal Contents */}
+            <ScrollView
+                contentContainerStyle={{
+                    paddingTop: TOP_GLASS_BAR_HEIGHT,
+                    paddingBottom: BOTTOM_SPACER,
+                    paddingHorizontal: MODAL_PADDING,
+                    flexGrow: 1
+                }}
+            >
+                {children}
+            </ScrollView>
+
+            {/* Delete Actions */}
+            {deleteButtonConfig && (
                 <View className='p-4 absolute' style={{
                     bottom: BOTTOM_SPACER,
                     left: BOTTOM_SPACER,
                 }}>
-                    <GlassIconButton
+                    <PopupList
+                        {...deleteButtonConfig}
+                        wrapButton
                         systemImage="trash"
-                        iconColor="systemRed"
-                        onPress={handleDeleteButtonClick}
+                        platformColor="systemRed"
                     />
                 </View>
             )}

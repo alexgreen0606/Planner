@@ -7,7 +7,7 @@ import {
     View,
 } from 'react-native';
 import CustomText from '../text/CustomText';
-import SlowFadeInView from '../views/SlowFadeInView';
+import FadeInView from '../views/FadeInView';
 import { getRandomWeatherChip } from '@/utils/weatherUtils';
 import useAppTheme from '@/hooks/useAppTheme';
 import { SymbolView } from 'expo-symbols';
@@ -33,7 +33,7 @@ const WeatherDisplay = ({
     }
 
     return (
-        <SlowFadeInView>
+        <FadeInView>
             <TouchableOpacity activeOpacity={1} onPress={handleOpenWeatherApp}>
                 <View className="flex-row gap-1.5 items-center">
                     <CustomText variant="highTemp">{Math.round(high)}°</CustomText>
@@ -57,7 +57,7 @@ const WeatherDisplay = ({
                     </View>
                 </View>
             </TouchableOpacity>
-        </SlowFadeInView>
+        </FadeInView>
     )
 };
 

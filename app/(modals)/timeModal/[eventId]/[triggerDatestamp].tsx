@@ -2,16 +2,19 @@ import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
 import Modal from "@/components/Modal";
+import { TPopupListProps } from "@/components/PopupList";
 import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EDateFieldType } from "@/lib/enums/EDateFieldType";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
+import { EPopupActionType } from "@/lib/enums/EPopupActionType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { ECarryoverEventType, EEventType } from "@/lib/enums/plannerEventModalEnums";
 import { TCarryoverEventMetadata, TInitialEventMetadata } from "@/lib/types/form/plannerEventMetadata";
 import { TFormField } from "@/lib/types/form/TFormField";
 import { IPlannerEvent, TDateRange } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
+import { TPopupAction } from "@/lib/types/TPopupAction";
 import { getDoesPlannerEventExist, getDoesPlannerExist, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
 import { getPrimaryCalendarId, loadExternalCalendarData } from "@/utils/calendarUtils";
 import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp, isTimeEarlierOrEqual } from "@/utils/dateUtils";
@@ -67,7 +70,6 @@ const PlannerEventTimeModal = () => {
         }
     });
 
-    const mountedDatestamps = useAtomValue(mountedDatestampsAtom);
     const userAccess = useAtomValue(userAccessAtom);
 
     const [loading, setLoading] = useState(true);
@@ -75,20 +77,34 @@ const PlannerEventTimeModal = () => {
 
     const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
-    const deleteButtonConfig = useMemo(() => {
-        const optionLabels = ['Delete Event', 'Unschedule Event'];
-        const optionHandlers = [() => handleDelete(true), handleSubmit(handleUnschedule)];
+    const deleteActions = useMemo(() => {
+        const actions: TPopupAction[] = [
+            {
+                type: EPopupActionType.BUTTON,
+                title: 'Delete Event',
+                systemImage: 'trash',
+                destructive: true,
+                onPress: () => handleDelete(true)
+            }
+        ];
 
         if (triggerDatestamp === getTodayDatestamp() && getDoesPlannerEventExist(eventId)) {
-            optionLabels.splice(1, 0, 'Mark Event Completed');
-            optionHandlers.splice(1, 0, () => handleDelete(false));
+            actions.push({
+                type: EPopupActionType.BUTTON,
+                title: 'Mark Event Completed',
+                systemImage: 'circle.inset.filled',
+                onPress: () => handleDelete(false)
+            });
         }
 
-        return {
-            label: 'Delete Event',
-            optionLabels,
-            optionHandlers
-        }
+        actions.push({
+            type: EPopupActionType.BUTTON,
+            title: 'Unschedule Event',
+            systemImage: 'clock.badge.xmark',
+            onPress: handleSubmit(handleUnschedule)
+        });
+
+        return actions;
     }, [initialEventState]);
 
     const title = watch('title');
@@ -258,13 +274,13 @@ const PlannerEventTimeModal = () => {
         savePlannerEventToStorage(newEvent);
 
         // Add the event to its planner.
-        const finalEventIndex = addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
+        addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
 
         // Reload the calendar data to retrieve the up-to-date events.
         await reloadCalendarFromRanges(affectedDateRanges);
 
-        // Close the modal with a new textfield below the saved event.
-        closeModalNewTextfield(triggerDatestamp, finalEventIndex + 1);
+        // Close the modal and open the target start planner.
+        closeModalOpenPlanner(isoToDatestamp(timeRange.startIso));
     }
 
     async function handleDelete(deleteTodayEvents: boolean = false) {
@@ -312,7 +328,7 @@ const PlannerEventTimeModal = () => {
             await deletePlannerEventsFromStorageAndCalendar([plannerEvent], deleteTodayEvents);
         }
 
-        closeModalBackNoTextfield();
+        router.back();
     }
 
     // =======================
@@ -370,8 +386,8 @@ const PlannerEventTimeModal = () => {
         await upsertCalendarEventToDevice(calendarId, calendarEventDetails, wasAllDayEvent);
         await reloadCalendarFromRanges(affectedDateRanges);
 
-        // Phase 3: Close the modal and try to navigate to a planner with the new event.
-        closeModalMountedDateOrBack(timeRange.startIso, timeRange.endIso);
+        // Phase 3: Close the modal and open the target start planner.
+        closeModalOpenPlanner(isoToDatestamp(timeRange.startIso));
     }
 
     async function saveSingleDayCalendarEvent(data: TFormData) {
@@ -407,8 +423,8 @@ const PlannerEventTimeModal = () => {
         // Phase 5: Reload the calendar data to retrieve the up-to-date event.
         await reloadCalendarFromRanges(affectedDateRanges);
 
-        // Phase 6: Close modal with a new textfield below the event.
-        closeModalNewTextfield(targetDatestamp, finalEventIndex + 1);
+        // Phase 6: Close the modal and open the target start planner.
+        closeModalOpenPlanner(targetDatestamp);
     }
 
     async function saveNonCalendarEvent(data: TFormData) {
@@ -433,8 +449,8 @@ const PlannerEventTimeModal = () => {
         // Reload the calendar data to retrieve the up-to-date events.
         await reloadCalendarFromRanges(affectedDateRanges);
 
-        // Close the modal with a new textfield below the saved event.
-        closeModalNewTextfield(targetDatestamp, finalEventIndex + 1);
+        // Close the modal and open the target start planner.
+        closeModalOpenPlanner(targetDatestamp);
     }
 
     async function saveMultiDayCalendarEvent(data: TFormData) {
@@ -487,53 +503,15 @@ const PlannerEventTimeModal = () => {
         // Phase 5: Reload the calendar data to retrieve the up-to-date event.
         await reloadCalendarFromRanges(affectedDateRanges);
 
-        // Phase 6: Close the modal and try to open a planner with the event.
-        closeModalMountedDateOrBack(timeRange.startIso, timeRange.endIso);
-    }
-
-    // ---------- Modal Closers ----------
-
-    function closeModalMountedDateOrBack(startIso: string, endIso: string) {
-        const startDatestamp = isoToDatestamp(startIso);
-        const endDatestamp = isoToDatestamp(endIso);
-
-        if (
-            isTimeEarlierOrEqual(startDatestamp, triggerDatestamp) &&
-            isTimeEarlierOrEqual(triggerDatestamp, endDatestamp)
-        ) { // Trigger datestamp is within range.
-            closeModalBackNoTextfield();
-            return;
-        }
-
-        if (mountedDatestamps.all.includes(startDatestamp)) {
-            // Start of range is mounted.
-            router.replace(startDatestamp === getTodayDatestamp() ? '/' : '/planners');
-            return;
-        }
-
-        if (mountedDatestamps.all.includes(endDatestamp)) {
-            // End of range is mounted.
-            router.replace(endDatestamp === getTodayDatestamp() ? '/' : '/planners');
-            return;
-        }
-
-        closeModalBackNoTextfield();
-    }
-
-    function closeModalNewTextfield(targetDatestamp: string, targetIndex: number) {
-        if (mountedDatestamps.all.includes(targetDatestamp)) {
-            createPlannerEventInStorageAndFocusTextfield(targetDatestamp, targetIndex);
-            router.replace(targetDatestamp === getTodayDatestamp() ? '/' : '/planners');
-        } else {
-            closeModalBackNoTextfield();
-        }
-    }
-
-    function closeModalBackNoTextfield() {
-        router.back();
+        // Phase 6: Close the modal and open the target start planner.
+        closeModalOpenPlanner(targetStartDatestamp);
     }
 
     // ---------- Miscellaneous Helpers ----------
+
+    function closeModalOpenPlanner(targetDatestamp: string) {
+        router.replace(`/planners/${targetDatestamp}`);
+    }
 
     function buildCalendarEventDetails(data: TFormData): Partial<Calendar.Event> {
         const { title, allDay, start, end } = data;
@@ -622,7 +600,7 @@ const PlannerEventTimeModal = () => {
                 onClick: handleSubmit(handleSaveFormData),
                 disabled: !isValid || loading
             }}
-            deleteButtonConfig={deleteButtonConfig}
+            deleteButtonConfig={{ actions: deleteActions }}
             onClose={() => router.back()}
         >
             <Form fieldSets={formFields} control={control} />

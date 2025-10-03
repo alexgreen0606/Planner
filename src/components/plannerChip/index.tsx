@@ -5,18 +5,19 @@ import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
+import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
-import { PlatformColor, Pressable, View } from 'react-native';
+import { PlatformColor, Pressable, useWindowDimensions, View } from 'react-native';
 import GenericIcon from '../icon';
 import CustomText from '../text/CustomText';
-import { Button, Host, Label, Spacer, Text } from '@expo/ui/swift-ui';
-import { frame, glassEffect, padding, tint } from '@expo/ui/swift-ui/modifiers';
+import Animated, { FadeIn, Layout, LinearTransition, SequencedTransition, ZoomIn } from 'react-native-reanimated';
 
 // ✅ 
 
 type TPlannerChipProps = {
     chip: TPlannerChip;
     backgroundPlatformColor?: string;
+    index: number;
 };
 
 const PlannerChip = ({
@@ -27,8 +28,11 @@ const PlannerChip = ({
         color,
         onClick
     },
-    backgroundPlatformColor = 'systemGray6'
+    backgroundPlatformColor = 'systemGray6',
+    index
 }: TPlannerChipProps) => {
+    const { width: SCREEN_WIDTH } = useWindowDimensions();
+
     const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const { weatherChip } = useAppTheme();
@@ -49,14 +53,21 @@ const PlannerChip = ({
 
     return (
         <Pressable onPress={onClick}>
-            <View
-                className='flex-row h-6 gap-1 min-w-6 items-center justify-center rounded-xl border'
+            <Animated.View
+                layout={LinearTransition.duration(5000)}
+                // entering={ZoomIn.duration(400)}
+                // TODO: do better
+                // exiting={SequencedTransition.duration(5000)}
+                className='flex-row gap-1 h-6 rounded-xl min-w-6 items-center border justify-center relative overflow-hidden'
                 style={{
                     borderColor: chipCssColor,
-                    backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : PlatformColor(backgroundPlatformColor),
-                    paddingHorizontal: 8
+                    paddingHorizontal: 6
                 }}
             >
+                <View
+                    className='absolute opacity-80 right-0 top-0 left-0 bottom-0'
+                    style={{ backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : PlatformColor(backgroundPlatformColor) }}
+                />
                 <GenericIcon
                     {...iconConfig}
                     platformColor={chipColor}
@@ -73,7 +84,7 @@ const PlannerChip = ({
                 >
                     {title}
                 </CustomText>
-            </View>
+            </Animated.View>
         </Pressable>
     )
 };

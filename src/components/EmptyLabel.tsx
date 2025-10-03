@@ -4,7 +4,7 @@ import { frame } from '@expo/ui/swift-ui/modifiers';
 import React from 'react';
 import { PlatformColor, Pressable, useWindowDimensions, View } from 'react-native';
 import { PressableProps } from 'react-native-gesture-handler';
-import SlowFadeInView from './views/SlowFadeInView';
+import FadeInView from './views/FadeInView';
 
 // ✅ 
 
@@ -31,7 +31,7 @@ const EmptyLabel = ({
             onPress={onPress}
             className={`flex items-center justify-center ${className}`}
         >
-            <SlowFadeInView>
+            <FadeInView>
                 <View className='flex-column gap-2 items-center'>
                     {iconConfig && (
                         <GenericIcon
@@ -47,7 +47,7 @@ const EmptyLabel = ({
                         </VStack>
                     </Host>
                 </View>
-            </SlowFadeInView>
+            </FadeInView>
         </Pressable>
     )
 };

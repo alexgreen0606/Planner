@@ -27,7 +27,7 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
 
     return (
         <Animated.View
-            className='w-screen absolute z-[1000]'
+            className='w-screen absolute z-[1000] px-4'
             style={toolbarStyle}
         >
             <Host>

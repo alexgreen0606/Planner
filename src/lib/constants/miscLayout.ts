@@ -10,7 +10,7 @@ export const THIN_LINE_HEIGHT = 15;
 
 export const HEADER_HEIGHT = 46;
 
-export const BOTTOM_NAVIGATION_HEIGHT = 60;
+export const BOTTOM_NAVIGATION_HEIGHT = 100;
 
 export const PAGE_LABEL_HEIGHT = 40;
 

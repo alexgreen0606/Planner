@@ -18,7 +18,7 @@ const useAppTheme = () => {
         modalUpperFadeArray: (isLightMode ? ["rgba(255,255,255,0.85)", "rgba(255,255,255,0.85)", "rgba(255,255,255,0)"] :
             ['rgba(28,28,30,0.85)', 'rgba(28,28,30,.85)', 'rgba(28,28,30,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]],
         upperFadeArray: (isLightMode ? ["rgba(255,255,255,0.85)", "rgba(255,255,255,0.85)", "rgba(255,255,255,0)"] :
-            ['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.85)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]],
+            ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]],
         shadowColor: isLightMode ? 'rgb(229,229,234)' : 'black'
     }
 }

@@ -50,7 +50,7 @@ export const iconMap = {
 export type TIconType = keyof typeof iconMap;
 
 export const sizeMap = {
-    xs: 14,
+    xs: 16,
     ms: 16,
     s: 18,
     m: 20,

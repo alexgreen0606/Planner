@@ -7,7 +7,6 @@ import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIco
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 import DragAndDropList from './components/DragAndDropList';
-import { usePathname } from 'expo-router';
 
 // ✅ 
 

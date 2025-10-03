@@ -11,7 +11,7 @@ type TGlassIconButtonProps = {
     label?: string;
     isPrimary?: boolean;
     width?: number;
-    iconColor?: string;
+    platformColor?: string;
     onPress?: () => void;
 }
 
@@ -21,7 +21,7 @@ const GlassIconButton = ({
     label,
     width = 45,
     isPrimary,
-    iconColor,
+    platformColor = 'label',
     onPress
 }: TGlassIconButtonProps) => {
     return (
@@ -29,11 +29,11 @@ const GlassIconButton = ({
             <Button disabled={disabled} modifiers={[frame({ height: 45, width })]} variant={isPrimary ? 'glassProminent' : 'glass'} onPress={onPress}>
                 <Host style={{ height: 45, width }}>
                     {label ? (
-                        <Label color={PlatformColor(iconColor ?? 'label') as unknown as string} systemImage='chevron.left' title={label} />
+                        <Label color={PlatformColor(platformColor) as unknown as string} systemImage='chevron.left' title={label} />
                     ) : (
                         <Image
                             systemName={systemImage}
-                            color={PlatformColor(iconColor ?? 'label') as unknown as string}
+                            color={PlatformColor(platformColor) as unknown as string}
                         />
                     )}
                 </Host>

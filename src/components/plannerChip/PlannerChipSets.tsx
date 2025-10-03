@@ -5,7 +5,8 @@ import { useAtomValue } from 'jotai';
 import React from 'react';
 import { View } from 'react-native';
 import PlannerChip from '.';
-import SlowFadeInView from '../views/SlowFadeInView';
+import FadeInView from '../views/FadeInView';
+import Animated, { SequencedTransition } from 'react-native-reanimated';
 
 // ✅ 
 
@@ -27,18 +28,17 @@ const PlannerChipSets = ({
     const allSets = datestamp === today && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;
 
     return (
-        <SlowFadeInView>
-            <View className="flex-row flex-wrap gap-2">
-                {allSets.map((set, setIndex) =>
-                    set.map((chip, chipIndex) => (
-                        <PlannerChip
-                            key={`${datestamp}-chips-set-${setIndex}-chip-${chipIndex}`}
-                            chip={chip}
-                            {...rest}
-                        />
-                    )))}
-            </View>
-        </SlowFadeInView>
+        <Animated.View layout={SequencedTransition.duration(3000)} className="flex-row flex-wrap gap-2">
+            {allSets.map((set, setIndex) =>
+                set.map((chip, chipIndex) => (
+                    <PlannerChip
+                        index={chipIndex}
+                        key={`${datestamp}-${chip.title}`}
+                        chip={chip}
+                        {...rest}
+                    />
+                )))}
+        </Animated.View>
     );
 };
 

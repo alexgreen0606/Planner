@@ -1,6 +1,6 @@
 import { LIST_ITEM_HEIGHT, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import React, { createContext, useContext } from 'react';
-import { RefreshControl, ScrollViewProps } from 'react-native';
+import { ScrollViewProps } from 'react-native';
 import Animated, {
     Easing,
     scrollTo,
@@ -11,15 +11,11 @@ import Animated, {
     useSharedValue,
     withTiming
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useExternalDataContext } from './ExternalDataProvider';
 
 // ✅ 
 
 type TScrollProviderProps = ScrollViewProps & {
     scrollOffset: SharedValue<number>;
-    shouldReloadPage?: boolean;
-    additionalHeaderHeight?: number;
 };
 
 type TScrollContext = {
@@ -31,17 +27,11 @@ const ScrollContext = createContext<TScrollContext | null>(null);
 
 export const ScrollProvider = ({
     scrollOffset,
-    shouldReloadPage,
-    additionalHeaderHeight = 0,
     ...scrollProps
 }: TScrollProviderProps) => {
-    const { top: TOP_SPACER } = useSafeAreaInsets();
-
     const scrollRef = useAnimatedRef<Animated.ScrollView>();
 
     const isAutoScrolling = useSharedValue(false);
-
-    const { onReloadPage, loading } = useExternalDataContext();
 
     const scrollHandler = useAnimatedScrollHandler({
         onScroll: (event) => {
@@ -83,17 +73,12 @@ export const ScrollProvider = ({
             onAutoScroll: handleAutoScroll
         }}>
             <Animated.ScrollView
-                contentInsetAdjustmentBehavior="automatic"
+                onScroll={scrollHandler}
                 ref={scrollRef}
+                scrollEventThrottle={SCROLL_THROTTLE}
+                keyboardShouldPersistTaps='always'
                 alwaysBounceVertical
                 bounces
-                refreshControl={shouldReloadPage ? <RefreshControl onRefresh={onReloadPage} refreshing={loading} /> : undefined}
-                scrollEventThrottle={SCROLL_THROTTLE}
-                onScroll={scrollHandler}
-                keyboardShouldPersistTaps='always'
-                contentInset={{ top: additionalHeaderHeight }}
-                contentOffset={{ y: -additionalHeaderHeight - TOP_SPACER, x: 0 }}
-                scrollIndicatorInsets={{ top: additionalHeaderHeight }}
                 {...scrollProps}
             />
         </ScrollContext.Provider>

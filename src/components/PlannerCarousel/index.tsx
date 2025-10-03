@@ -1,5 +1,6 @@
+import useAppTheme from "@/hooks/useAppTheme";
 import { SCROLL_THROTTLE } from "@/lib/constants/listConstants";
-import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE, PLANNER_CAROUSEL_HEIGHT } from "@/lib/constants/miscLayout";
+import { PLANNER_BANNER_PADDING } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange, getDayShiftedDatestamp } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
@@ -12,7 +13,7 @@ import PlannerDateIcon from "./PlannerDateIcon";
 
 // ✅ 
 
-const CAROUSEL_RADIUS = 40;
+const CAROUSEL_RADIUS = 20;
 
 const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
     const router = useRouter();
@@ -31,6 +32,8 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
     const scrollX = useSharedValue(CAROUSEL_CENTER_SCROLL_X);
     const isSnappingToCenter = useSharedValue(false);
+
+    const { background } = useAppTheme();
 
     const scrollHandler = useAnimatedScrollHandler({
         onBeginDrag: () => {
@@ -102,7 +105,10 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
     }, [currentDatestamp]);
 
     return (
-        <View className='flex-row w-full relative z-[1000]'>
+        <View
+            className='flex-row w-full relative z-[1000]'
+            style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}
+        >
 
             {/* Scroll Wheel */}
             <Animated.FlatList

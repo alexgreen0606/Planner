@@ -4,6 +4,7 @@ import Modal from '@/components/Modal';
 import { NULL } from '@/lib/constants/generic';
 import { EDateFieldType } from '@/lib/enums/EDateFieldType';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
+import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { TPlannerSet } from '@/lib/types/planner/TPlannerSet';
@@ -155,12 +156,16 @@ const PlannerSetModal = () => {
                 onClick: onSubmit(handleSubmit),
                 disabled: !isValid
             }}
-            deleteButtonConfig={{
-                label: 'Delete Planner',
-                hidden: !isEditMode,
-                optionLabels: ['Delete Planner'],
-                optionHandlers: [handleDelete],
-                message: 'Events in the planner will not be deleted.'
+            deleteButtonConfig={!isEditMode ? undefined : {
+                actions: [
+                    {
+                        type: EPopupActionType.BUTTON,
+                        title: 'Delete Planner',
+                        systemImage: 'trash',
+                        destructive: true,
+                        onPress: handleDelete
+                    }
+                ]
             }}
             onClose={() => router.back()}
         >

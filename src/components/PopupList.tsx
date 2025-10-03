@@ -11,15 +11,23 @@ import {
 import React, { ReactNode, useMemo } from "react";
 import { PlatformColor } from "react-native";
 import GlassIconButton from "./icon/GlassButtonIcon";
+import { SFSymbol } from "expo-symbols";
 
 // ✅ 
 
-type TPopupListProps = {
+export type TPopupListProps = {
     actions: TPopupAction[];
     wrapButton?: boolean;
+    systemImage?: SFSymbol;
+    platformColor?: string;
 };
 
-const PopupList = ({ actions, wrapButton }: TPopupListProps) => {
+const PopupList = ({ 
+    actions, 
+    wrapButton,
+    systemImage = 'ellipsis',
+    platformColor = 'label'
+}: TPopupListProps) => {
 
     const renderMenuAction = (
         option: TPopupAction,
@@ -81,10 +89,10 @@ const PopupList = ({ actions, wrapButton }: TPopupListProps) => {
 
     if (!actionTsx.some(Boolean)) {
         return wrapButton ? (
-            <GlassIconButton systemImage="ellipsis" disabled />
+            <GlassIconButton systemImage={systemImage} disabled />
         ) : (
             <Host style={{ width: 35, height: 35 }}>
-                <Image systemName="ellipsis" color={PlatformColor('tertiaryLabel') as unknown as string} />
+                <Image systemName={systemImage} color={PlatformColor('tertiaryLabel') as unknown as string} />
             </Host>
         )
     }
@@ -97,10 +105,10 @@ const PopupList = ({ actions, wrapButton }: TPopupListProps) => {
                 </ContextMenu.Items>
                 <ContextMenu.Trigger>
                     {wrapButton ? (
-                        <GlassIconButton systemImage="ellipsis" disabled />
+                        <GlassIconButton systemImage={systemImage} disabled platformColor={platformColor} />
                     ) : (
                         <Host style={{ width: 35, height: 35 }}>
-                            <Image systemName="ellipsis" color={PlatformColor('label') as unknown as string} />
+                            <Image systemName={systemImage} color={PlatformColor(platformColor) as unknown as string} />
                         </Host>
                     )}
                 </ContextMenu.Trigger>

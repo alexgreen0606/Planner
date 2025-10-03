@@ -1,23 +1,64 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { ColorValue } from "react-native";
+import { ColorValue, ViewProps, LayoutChangeEvent } from "react-native";
+import { useState } from "react";
 
 // ✅ 
 
-type TUpperFadeOutViewProps = {
+type TUpperFadeOutViewProps = ViewProps & {
     colors: readonly [ColorValue, ColorValue, ...ColorValue[]];
-    totalHeight: number;
+    totalHeight?: number;
     solidHeight?: number;
 };
 
-const UpperFadeOutView = ({ colors, totalHeight, solidHeight = 0 }: TUpperFadeOutViewProps) => {
+const UpperFadeOutView = ({
+    colors,
+    totalHeight,
+    solidHeight = 0,
+    style,
+    onLayout: onLayoutProp,
+    ...restProps
+}: TUpperFadeOutViewProps) => {
+    const [measuredHeight, setMeasuredHeight] = useState<number>(0);
+
+    const effectiveHeight = totalHeight ?? measuredHeight;
+    const locations = computeLocations();
+
+    function handleLayout(event: LayoutChangeEvent) {
+        if (totalHeight === undefined) {
+            const { height } = event.nativeEvent.layout;
+            setMeasuredHeight(height);
+        }
+        onLayoutProp?.(event);
+    }
+
+    function computeLocations(): [number, number, number] {
+        if (effectiveHeight === 0) {
+            return [0, 0, 1];
+        }
+
+        const solidRatio = solidHeight / effectiveHeight;
+
+        // If solidHeight >= effectiveHeight, fallback to 0 for middle location.
+        if (solidRatio >= 1) {
+            return [0, 0, 1];
+        }
+
+        return [0, solidRatio, 1];
+    }
+
     return (
         <LinearGradient
+            {...restProps}
             colors={colors}
-            locations={[0, solidHeight / totalHeight, 1]}
-            style={{
-                width: "100%",
-                height: totalHeight
-            }}
+            locations={locations}
+            style={[
+                {
+                    width: "100%",
+                    ...(totalHeight !== undefined && { height: totalHeight })
+                },
+                style
+            ]}
+            onLayout={handleLayout}
         />
     );
 };

@@ -1,25 +1,21 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import useAppTheme from '@/hooks/useAppTheme';
-import { PLANNER_BANNER_PADDING, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
+import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_HEIGHT, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { getDayOfWeekFromDatestamp, getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PlannerActions from '../actions/PlannerActions';
-import PlannerCarousel from '../PlannerCarousel';
 import PlannerChipSets from '../PlannerChip/PlannerChipSets';
-import ShadowView from '../views/ShadowView';
 import CustomText from '../text/CustomText';
+import ShadowView from '../views/ShadowView';
+import UpperFadeOutView from '../views/UpperFadeOutView';
+import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 
 // ✅ 
 
-type TPlannerHeaderProps = {
-    datestamp: string;
-    isSpacer?: boolean;
-};
-
-const PlannerHeader = ({ datestamp, isSpacer }: TPlannerHeaderProps) => {
+const PlannerHeader = ({ datestamp }: TPlannerPageParams) => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
 
     const { today } = useAtomValue(mountedDatestampsAtom);
@@ -43,21 +39,17 @@ const PlannerHeader = ({ datestamp, isSpacer }: TPlannerHeaderProps) => {
         return { label, dayOfWeek: getDayOfWeekFromDatestamp(datestamp) };
     }, [today, datestamp]);
 
-    const { background } = useAppTheme();
+    const { background, upperFadeArray } = useAppTheme();
 
     return (
-        <View
+        <UpperFadeOutView
+            colors={upperFadeArray}
+            solidHeight={PLANNER_CAROUSEL_HEIGHT + TOP_SPACER} // TODO: have a more fixed height of the planner banner
             className='w-full'
             style={{
                 paddingHorizontal: PLANNER_BANNER_PADDING,
-                paddingTop: isSpacer ? 0 : TOP_SPACER,
-                pointerEvents: isSpacer ? 'none' : undefined,
-                opacity: isSpacer ? 0 : 1,
             }}
         >
-
-            {/* Planner Icon Carousel */}
-            <PlannerCarousel datestamp={datestamp} />
 
             {/* Planner Date Details */}
             <View className='flex-row justify-between items-center mb-3 px-2'>
@@ -78,7 +70,7 @@ const PlannerHeader = ({ datestamp, isSpacer }: TPlannerHeaderProps) => {
                 backgroundPlatformColor={background}
             />
 
-        </View>
+        </UpperFadeOutView>
     )
 };
 

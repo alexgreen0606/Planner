@@ -12,21 +12,6 @@ import { PlatformColor } from 'react-native';
 const ChecklistsLayout = () => {
     const { background } = useAppTheme();
 
-    // function handleTransferToParent() {
-    //     if (!itemInTransfer) return;
-
-    //     const currentFolder = getFolderItemFromStorageById(folderItemId);
-
-    //     const parentFolder = getFolderItemFromStorageById(currentFolder.listId);
-    //     parentFolder.itemIds.push(itemInTransfer.id);
-    //     saveFolderItemToStorage(parentFolder);
-
-    //     saveFolderItemToStorage({ ...currentFolder, itemIds: currentFolder.itemIds.filter((id) => id !== itemInTransfer.id) });
-    //     saveFolderItemToStorage({ ...itemInTransfer, listId: currentFolder.listId });
-
-    //     setItemInTransfer(null);
-    // }
-
     function getFolderItemId(params: TChecklistsPageParams) {
         return params.checklistId ?? params.folderId ?? EStorageKey.ROOT_FOLDER_KEY;
     }
@@ -42,6 +27,21 @@ const ChecklistsLayout = () => {
         const folderItem = getFolderItemFromStorageById(folderItemId);
         return folderItem.platformColor;
     }
+
+    // function handleTransferToParent() {
+    //     if (!itemInTransfer) return;
+
+    //     const currentFolder = getFolderItemFromStorageById(folderItemId);
+
+    //     const parentFolder = getFolderItemFromStorageById(currentFolder.listId);
+    //     parentFolder.itemIds.push(itemInTransfer.id);
+    //     saveFolderItemToStorage(parentFolder);
+
+    //     saveFolderItemToStorage({ ...currentFolder, itemIds: currentFolder.itemIds.filter((id) => id !== itemInTransfer.id) });
+    //     saveFolderItemToStorage({ ...itemInTransfer, listId: currentFolder.listId });
+
+    //     setItemInTransfer(null);
+    // }
 
     return (
         <Stack

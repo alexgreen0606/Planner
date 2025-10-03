@@ -14,29 +14,18 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 // ✅ 
 
-type TPendingFolderItem = {
+type TFormData = {
     title: string;
     type: string;
     color: string;
 };
 
-const emptyFormData: TPendingFolderItem = {
-    title: '',
-    type: 'Folder',
-    color: 'systemBrown'
-};
-
-// Map enum values to display strings
-const folderTypeOptions = ['Folder', 'Checklist'];
-
-// Helper functions to convert between display strings and enum values
-const typeToDisplay = (type: EFolderItemType): string => {
-    return type === EFolderItemType.FOLDER ? 'Folder' : 'Checklist';
-};
-
-const displayToType = (display: string): EFolderItemType => {
-    return display === 'Folder' ? EFolderItemType.FOLDER : EFolderItemType.CHECKLIST;
-};
+const folderTypeBiMap: Record<string, string> = {
+    [EFolderItemType.FOLDER]: "Folder",
+    [EFolderItemType.CHECKLIST]: "Checklist",
+    Folder: EFolderItemType.FOLDER,
+    Checklist: EFolderItemType.CHECKLIST
+} as const;
 
 const FolderItemModal = () => {
     const { folderItemId } = useLocalSearchParams<{ folderItemId: string }>();
@@ -49,11 +38,10 @@ const FolderItemModal = () => {
         control,
         handleSubmit: onSubmit,
         formState: { isValid }
-    } = useForm<TPendingFolderItem>({
+    } = useForm<TFormData>({
         defaultValues: {
-            ...emptyFormData,
             title: folderItem?.value ?? '',
-            type: folderItem ? typeToDisplay(folderItem.type) : 'Folder',
+            type: folderItem ? folderTypeBiMap[folderItem.type] ?? 'Folder' : 'Folder',
             color: folderItem?.platformColor ?? 'systemBrown'
         },
         mode: 'onChange'
@@ -83,10 +71,10 @@ const FolderItemModal = () => {
         [{
             name: 'type',
             type: EFormFieldType.PICKER,
-            options: folderTypeOptions,
+            options: ['Folder', 'Checklist'],
             floating: true,
             invisible: hasChildren,
-            width: 200
+            width: 300
         }],
     ];
 
@@ -94,12 +82,12 @@ const FolderItemModal = () => {
     //  Event Handlers
     // ================
 
-    function handleSubmit(data: TPendingFolderItem) {
+    function handleSubmit(data: TFormData) {
         if (!folderItem) return;
 
         const { title, type } = data;
         const newTitle = title.trim();
-        const folderItemType = displayToType(type);
+        const folderItemType = (folderTypeBiMap[type] ?? EFolderItemType.FOLDER) as EFolderItemType;
 
         setFolderItem((prev) => {
             if (!prev) return prev;
