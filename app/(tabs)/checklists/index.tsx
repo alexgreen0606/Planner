@@ -6,7 +6,7 @@ import React from 'react';
 // ✅ 
 
 const RootFolderPage = () => (
-    <PageProvider>
+    <PageProvider emptyPageLabelProps={{label: 'Empty folder'}}>
         <FolderContentsList folderId={EStorageKey.ROOT_FOLDER_KEY} />
     </PageProvider>
 );

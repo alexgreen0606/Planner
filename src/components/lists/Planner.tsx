@@ -31,10 +31,6 @@ const Planner = ({ datestamp }: TPlannerProps) => {
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}
             itemIds={eventIds}
-            emptyLabelConfig={{
-                label: 'All plans complete',
-                className: 'flex-1'
-            }}
             onCreateItem={createPlannerEventInStorageAndFocusTextfield}
             onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
             onValueChange={onUpdatePlannerEventValueWithTimeParsing}

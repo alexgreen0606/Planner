@@ -3,12 +3,14 @@ import Modal from '@/components/Modal';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
+import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { TPopupAction } from '@/lib/types/TPopupAction';
 import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
@@ -79,6 +81,20 @@ const FolderItemModal = () => {
     ];
 
     // ================
+    //  Delete Actions
+    // ================
+
+    const deleteActions = useMemo<TPopupAction[]>(() => [
+        {
+            type: EPopupActionType.BUTTON,
+            title: hasChildren ? 'Force Delete' : 'Delete',
+            systemImage: 'trash',
+            destructive: true,
+            onPress: handleDelete
+        }
+    ], [hasChildren, folderItem]);
+
+    // ================
     //  Event Handlers
     // ================
 
@@ -119,13 +135,7 @@ const FolderItemModal = () => {
                 onClick: onSubmit(handleSubmit),
                 disabled: !isValid
             }}
-            deleteButtonConfig={{
-                label: `Delete ${folderItem?.type ?? 'Item'}`,
-                hidden: !isEditMode,
-                optionLabels: [hasChildren ? 'Force Delete' : 'Delete'],
-                optionHandlers: [handleDelete],
-                message: hasChildren ? 'All inner contents will be lost.' : undefined
-            }}
+            deleteButtonConfig={{ actions: deleteActions }}
             onClose={() => router.back()}
         >
             <Form

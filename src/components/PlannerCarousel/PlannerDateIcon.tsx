@@ -6,8 +6,9 @@ import { MotiView } from "moti";
 import { useMemo } from "react";
 import { PlatformColor, Pressable, useWindowDimensions, View } from "react-native";
 import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
-import GenericIcon from "../icon";
+import IconButton from "../icons/Icon";
 import CustomText from "../text/CustomText";
+import Icon from "../icons/Icon";
 
 // ✅ 
 
@@ -74,11 +75,10 @@ const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, 
             >
 
                 {/* Note Icon */}
-                <GenericIcon
-                    type='note'
-                    size='xl'
-                    hideRipple
-                    platformColor={isCurrentDatestamp ? 'systemBlue' : 'secondaryLabel'}
+                <Icon
+                    name='note'
+                    size={PLANNER_CAROUSEL_ICON_WIDTH}
+                    color={isCurrentDatestamp ? 'systemBlue' : 'secondaryLabel'}
                 />
 
                 {/* Date Info */}

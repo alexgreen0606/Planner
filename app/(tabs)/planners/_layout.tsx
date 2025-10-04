@@ -1,3 +1,4 @@
+import EmptyPageLabel from '@/components/EmptyLabel';
 import PlannerCarousel from '@/components/PlannerCarousel';
 import useAppTheme from '@/hooks/useAppTheme';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';

@@ -1,9 +1,11 @@
 import PopupList from '@/components/PopupList';
 import { selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
+import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPageParams';
 import { deleteFolderItemFromStorage, getFolderItemFromStorageById, getListItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
@@ -13,18 +15,20 @@ import { useRouter } from 'expo-router';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
+// ✅ 
+
 enum EFolderAction {
-    EDIT_TITLE = 'EDIT_TITLE',
     DELETE_AND_SCATTER = 'DELETE_AND_SCATTER',
     ERASE_CONTENTS = 'ERASE_CONTENTS',
-    DELETE_ALL = 'DELETE_ALL'
+    DELETE_ALL = 'DELETE_ALL',
+    EDIT = 'EDIT'
 }
 
 const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => {
-    const folderItemId = folderId ?? checklistId ?? NULL;
-
-    const router = useRouter();
     const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+    const router = useRouter();
+
+    const folderItemId = folderId ?? checklistId ?? EStorageKey.ROOT_FOLDER_KEY;
 
     const [item, setItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage);
 
@@ -40,10 +44,8 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
 
         let message = '';
         switch (action) {
-            case EFolderAction.EDIT_TITLE:
-                // TODO: Implement edit title functionality
-                // You may want to navigate to an edit screen or use an atom to trigger edit mode
-                console.log('Edit title clicked');
+            case EFolderAction.EDIT:
+                router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${folderItemId}`);
                 break;
             case EFolderAction.DELETE_ALL:
                 const hasChildren = item.itemIds.length > 0;
@@ -112,13 +114,17 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
         }
     }
 
+    const itemTypeName = item?.type
+        ? item.type.charAt(0).toUpperCase() + item.type.slice(1)
+        : 'Item';
+
     return (
         <PopupList actions={[
             {
-                onPress: () => handleAction(EFolderAction.EDIT_TITLE),
-                title: `Edit Title`,
+                type: EPopupActionType.BUTTON,
+                title: `Edit ${itemTypeName}`,
                 systemImage: 'pencil',
-                type: EPopupActionType.BUTTON
+                onPress: () => handleAction(EFolderAction.EDIT),
             },
             {
                 type: EPopupActionType.SUBMENU,
@@ -154,7 +160,7 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
                     {
                         type: EPopupActionType.BUTTON,
                         onPress: () => handleAction(EFolderAction.DELETE_ALL),
-                        title: `Delete Entire ${item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : ""}`,
+                        title: `Delete Entire ${itemTypeName}`,
                         destructive: true,
                         hidden: item?.listId === NULL,
                         systemImage: 'trash'

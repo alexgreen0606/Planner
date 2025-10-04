@@ -9,13 +9,14 @@ import { useMemo } from "react";
 import { Alert, View } from "react-native";
 import { useMMKV, useMMKVObject } from "react-native-mmkv";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import GenericIcon from "../icon";
+import GenericIcon from "../icons/Icon";
 
 import { countdownDateModalEventAtom } from "@/atoms/countdownDateModalEvent";
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { saveCountdownEventToStorage, saveCountdownPlannerToStorage } from "@/storage/countdownStorage";
 import ListToolbar from "../lists/components/ListToolbar";
+import IconButton from "../icons/IconButton";
 
 // ✅ 
 
@@ -37,9 +38,9 @@ const CountdownEventToolbar = () => {
 
     const iconSet = [
         [(
-            <GenericIcon
-                type='trash'
-                platformColor="label"
+            <IconButton
+                name='trash'
+                color="label"
                 onClick={() => {
                     onCloseFocusedCountdown();
                     Alert.alert(
@@ -64,9 +65,9 @@ const CountdownEventToolbar = () => {
             />
         )],
         [(
-            <GenericIcon
-                type='calendar'
-                platformColor="label"
+            <IconButton
+                name='calendar'
+                color="label"
                 onClick={openDateModal}
             />
         )]

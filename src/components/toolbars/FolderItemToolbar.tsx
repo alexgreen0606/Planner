@@ -7,11 +7,11 @@ import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
 import { deleteFolderItemAndChildren } from "@/utils/checklistUtils";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
-import { Alert, TouchableOpacity } from "react-native";
+import { Alert } from "react-native";
 import { useMMKV } from "react-native-mmkv";
-import GenericIcon from "../icon";
-import ToggleFolderItemTypeIcon from "../icon/custom/ToggleFolderItemTypeIcon";
-import TransferFolderIcon from "../icon/custom/TransferFolderIcon";
+import IconButton from "../icons/IconButton";
+import ToggleFolderItemTypeButton from "../icons/customButtons/ToggleFolderItemTypeButton";
+import TransferFolderIcon from "../icons/customButtons/TransferFolderButton";
 import ListToolbar from "../lists/components/ListToolbar";
 
 // ✅ 
@@ -30,9 +30,10 @@ const FolderItemToolbar = () => {
 
     const iconSet = [
         [( // Delete Icon
-            <GenericIcon
-                type='trash'
-                platformColor='label'
+            <IconButton
+                name='trash'
+                color='label'
+                size={22}
                 onClick={() => {
                     if (!focusedItem) return;
 
@@ -62,28 +63,20 @@ const FolderItemToolbar = () => {
             />
         )],
         [( // Type Toggle
-            <TouchableOpacity
-                onPress={toggleFocusedItemType}
-                activeOpacity={focusedItem && focusedItem.itemIds.length === 0 ? 0 : 1}
-            >
-                <ToggleFolderItemTypeIcon
-                    disabled={!!focusedItem && focusedItem.itemIds.length > 0}
-                    currentType={focusedItem?.type ?? EFolderItemType.FOLDER}
-                />
-            </TouchableOpacity>
+            <ToggleFolderItemTypeButton
+                disabled={!!focusedItem && focusedItem.itemIds.length > 0}
+                currentType={focusedItem?.type ?? EFolderItemType.FOLDER}
+                onClick={toggleFocusedItemType}
+            />
         )],
         [( // Transfer
-            <TouchableOpacity
-                onPress={beginFocusedItemTransfer}
-                activeOpacity={focusedItem && focusedItem.value.length === 0 ? 1 : 0}
-            >
-                <TransferFolderIcon disabled={!!focusedItem && focusedItem.value.length === 0} />
-            </TouchableOpacity>
+            <TransferFolderIcon onClick={beginFocusedItemTransfer} disabled={!!focusedItem && focusedItem.value.length === 0} />
         )], // Color
         Object.values(selectableColors).map(color => (
-            <GenericIcon
-                type={focusedItem && focusedItem?.platformColor === color ? 'circleFilled' : 'circle'}
-                platformColor={color}
+            <IconButton
+                name={focusedItem && focusedItem?.platformColor === color ? 'circle.inset.filled' : 'circle'}
+                color={color}
+                size={20}
                 onClick={() => changeFocusedItemColor(color)}
             />
         )),

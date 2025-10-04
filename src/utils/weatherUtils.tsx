@@ -1,4 +1,3 @@
-import { TIconType } from "@/lib/constants/icons";
 import { TPlannerChip } from "@/lib/types/planner/TPlannerChip";
 import { jotaiStore } from "app/_layout";
 import { Linking } from "react-native";
@@ -107,9 +106,8 @@ export async function loadCurrentWeatherToStore() {
     id: `${todayDatestamp}-weather-chip`,
     title: " Madison  64°",
     iconConfig: {
-      type: randomWeather.icon as TIconType,
-      multicolor: true,
-      contrastBackground: true
+      name: randomWeather.icon,
+      multicolor: true
     },
     onClick: openWeatherApp,
     hasClickAccess: canOpenWeatherApp,

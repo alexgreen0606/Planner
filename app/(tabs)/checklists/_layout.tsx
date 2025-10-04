@@ -1,10 +1,9 @@
+import FolderItemActions from '@/components/actions/FolderItemActions';
 import useAppTheme from '@/hooks/useAppTheme';
-import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPageParams';
 import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
-import { Host, Image } from '@expo/ui/swift-ui';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { PlatformColor } from 'react-native';
 
 // ✅ 
@@ -53,15 +52,7 @@ const ChecklistsLayout = () => {
                 headerBackButtonDisplayMode: 'minimal',
                 headerTitleStyle: { color: PlatformColor(getFolderItemPlatformColor(params ?? {})) as unknown as string },
                 headerTitle: getFolderItemTitle(params ?? {}),
-                headerRight: () => (
-                    <Host style={{ height: 35, width: 35 }}>
-                        <Image
-                            onPress={() => router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${getFolderItemId(params ?? {})}`)}
-                            systemName='pencil'
-                            color={PlatformColor('label') as unknown as string}
-                        />
-                    </Host>
-                )
+                headerRight: () => <FolderItemActions {...params} />
             })}
         >
             <Stack.Screen name='index' />

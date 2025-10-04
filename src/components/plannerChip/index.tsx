@@ -5,12 +5,11 @@ import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { MotiView } from 'moti';
 import React, { useMemo } from 'react';
 import { PlatformColor, Pressable, useWindowDimensions, View } from 'react-native';
-import GenericIcon from '../icon';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import CustomText from '../text/CustomText';
-import Animated, { FadeIn, Layout, LinearTransition, SequencedTransition, ZoomIn } from 'react-native-reanimated';
+import Icon from '../icons/Icon';
 
 // ✅ 
 
@@ -68,10 +67,10 @@ const PlannerChip = ({
                     className='absolute opacity-80 right-0 top-0 left-0 bottom-0'
                     style={{ backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : PlatformColor(backgroundPlatformColor) }}
                 />
-                <GenericIcon
+                <Icon
                     {...iconConfig}
-                    platformColor={chipColor}
-                    size='xs'
+                    color={chipColor}
+                    size={14}
                 />
                 <CustomText
                     variant='eventChipLabel'

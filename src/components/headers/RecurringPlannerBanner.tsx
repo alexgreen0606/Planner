@@ -3,8 +3,8 @@ import { HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { useAtom } from 'jotai';
 import React from 'react';
 import { View } from 'react-native';
-import GenericIcon from '../icon';
-import GlassIconButton from '../icon/GlassButtonIcon';
+import GenericIcon from '../icons/Icon';
+import GlassIconButton from '../icons/customButtons/GlassIconButton';
 import CustomText from '../text/CustomText';
 
 // ✅ 
@@ -20,7 +20,6 @@ const RecurringPlannerBanner = () => {
             <GlassIconButton systemImage='chevron.left' onPress={() => null} />
 
             <View className='flex-row w-40 gap-1 items-center'>
-                <GenericIcon type='recurringTime' size='xl' />
                 <CustomText variant='pageLabel'>
                     {recurringPlannerId}
                 </CustomText>

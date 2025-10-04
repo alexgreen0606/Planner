@@ -4,17 +4,16 @@ import useFolderItem from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { usePageContext } from '@/providers/PageProvider';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
 import { useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React from 'react';
-import { PlatformColor, TouchableOpacity, View } from 'react-native';
+import { PlatformColor } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import AnimatedIcon from '../icon/AnimatedIcon';
-import TransferFolderIcon from '../icon/custom/TransferFolderIcon';
+import FolderItemButton from '../icons/customButtons/FolderItemButton';
 import DragAndDropList from './components/DragAndDropList';
-import { usePageContext } from '@/providers/PageProvider';
 
 // ✅ 
 
@@ -38,23 +37,16 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
 
     const { onFocusPlaceholder } = usePageContext();
 
-    const getLeftIconConfig = (item: IFolderItem) => {
-        return getIsItemTransfering(item.id) ? (
-            <View className='scale-[0.8] pr-2'>
-                <TransferFolderIcon disabled={false} />
-            </View>
-        ) : (
-            <TouchableOpacity onPress={() => {
+    const getLeftIcon = (item: IFolderItem) => (
+        <FolderItemButton
+            item={item}
+            disabled={getIsItemTransfering(item.id) || isTransferMode && item.type === EFolderItemType.CHECKLIST}
+            onClick={() => {
                 onFocusPlaceholder();
                 setTextfieldId(item.id);
-            }} >
-                <AnimatedIcon
-                    type={item.type}
-                    platformColor={getIconPlatformColor(item)}
-                />
-            </TouchableOpacity>
-        )
-    }
+            }}
+        />
+    );
 
     // ==================
     // 1. Event Handlers
@@ -99,16 +91,6 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
         return isTransferMode && transferingItem?.id === itemId;
     }
 
-    function getIconPlatformColor(item: IFolderItem) {
-        if (getIsItemTransfering(item.id)) {
-            return 'systemBlue';
-        }
-        if (isTransferMode && item.type === EFolderItemType.CHECKLIST) {
-            return 'tertiaryLabel';
-        }
-        return item.platformColor;
-    }
-
     function getRowTextPlatformColor(item: IFolderItem) {
         if (getIsItemTransfering(item.id)) {
             return 'tertiaryLabel';
@@ -137,11 +119,7 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
                     {item.itemIds.length}
                 </CustomText>
             )}
-            onGetLeftIcon={getLeftIconConfig}
-            emptyLabelConfig={{
-                label: "It's a ghost town in here",
-                className: 'flex-1'
-            }}
+            onGetLeftIcon={getLeftIcon}
             onDeleteItem={deleteFolderItemAndChildren}
             onCreateItem={createNewFolderItemAndSaveToStorage}
             onContentClick={handleItemClick}

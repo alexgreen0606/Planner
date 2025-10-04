@@ -10,7 +10,7 @@ import {
 } from "@expo/ui/swift-ui";
 import React, { ReactNode, useMemo } from "react";
 import { PlatformColor } from "react-native";
-import GlassIconButton from "./icon/GlassButtonIcon";
+import GlassIconButton from "./icons/customButtons/GlassIconButton";
 import { SFSymbol } from "expo-symbols";
 
 // ✅ 

@@ -4,22 +4,20 @@ import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
 import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { usePageContext } from '@/providers/PageProvider';
 import { useScrollContext } from '@/providers/ScrollProvider';
 import React, { ReactNode, useEffect } from 'react';
 import { Pressable, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import { cancelAnimation, runOnJS, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import EmptyLabel, { IEmptyLabelProps } from '../../EmptyLabel';
 import ListItem from './ListItem';
-import { usePageContext } from '@/providers/PageProvider';
 
 // ✅ 
 
 type TDragAndDropListProps<T extends TListItem, S = T> = {
     itemIds: string[];
     listId: string;
-    emptyLabelConfig?: Omit<IEmptyLabelProps, 'onPress'>;
     storageId: EStorageId;
     fillSpace?: boolean;
     storage: MMKV;
@@ -41,7 +39,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     itemIds,
     listId,
     storageId,
-    emptyLabelConfig,
     fillSpace,
     storage,
     collapsed,
@@ -63,7 +60,7 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
-    const { floatingHeaderHeight } = usePageContext();
+    const { floatingHeaderHeight, onSetIsPageEmpty } = usePageContext();
     const { scrollOffset } = useScrollContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
@@ -86,6 +83,11 @@ const DragAndDropList = <T extends TListItem, S = T>({
     useEffect(() => {
         draggingRowId.value = null;
     }, [itemIds]);
+
+    // Show the empty page label whenever the list length is 0.
+    useEffect(() => {
+        onSetIsPageEmpty(itemIds.length === 0);
+    }, [itemIds.length]);
 
     // ================
     //  Event Handlers
@@ -181,18 +183,11 @@ const DragAndDropList = <T extends TListItem, S = T>({
                 </Pressable>
             )}
 
-            {/* Empty Label or Click Area */}
-            {emptyLabelConfig && itemIds.length === 0 ? (
-                <EmptyLabel
-                    {...emptyLabelConfig}
-                    onPress={handleEmptySpaceClick}
-                />
-            ) : (
-                <Pressable
-                    className='flex-1'
-                    onPress={handleEmptySpaceClick}
-                />
-            )}
+            {/* Empty Click Area */}
+            <Pressable
+                className='flex-1'
+                onPress={handleEmptySpaceClick}
+            />
 
         </View>
     )

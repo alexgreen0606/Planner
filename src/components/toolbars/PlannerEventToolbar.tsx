@@ -1,10 +1,10 @@
-import GenericIcon from "@/components/icon";
-import { openPlannerTimeModal } from "@/utils/plannerUtils";
-import useTextfieldItemAs from "../../hooks/useTextfieldItemAs";
-import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { useMMKV } from "react-native-mmkv";
-import { EStorageId } from "@/lib/enums/EStorageId";
 import ListToolbar from "@/components/lists/components/ListToolbar";
+import { EStorageId } from "@/lib/enums/EStorageId";
+import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
+import { openPlannerTimeModal } from "@/utils/plannerUtils";
+import { useMMKV } from "react-native-mmkv";
+import useTextfieldItemAs from "../../hooks/useTextfieldItemAs";
+import IconButton from "../icons/IconButton";
 
 // ✅ 
 
@@ -16,10 +16,10 @@ const PlannerEventToolbar = () => {
     } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
     const iconSet = [[(
-        <GenericIcon
-            type='clock'
+        <IconButton
+            name='clock'
             onClick={() => focusedEvent && openPlannerTimeModal(focusedEvent.id, focusedEvent.listId)}
-            platformColor="label"
+            color="label"
         />
     )]];
 

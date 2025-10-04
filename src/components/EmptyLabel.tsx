@@ -1,55 +1,36 @@
-import GenericIcon, { GenericIconProps } from '@/components/icon';
 import { Host, Text, VStack } from '@expo/ui/swift-ui';
 import { frame } from '@expo/ui/swift-ui/modifiers';
 import React from 'react';
-import { PlatformColor, Pressable, useWindowDimensions, View } from 'react-native';
-import { PressableProps } from 'react-native-gesture-handler';
+import { PlatformColor, useWindowDimensions } from 'react-native';
+import Icon, { TIconProps } from './icons/Icon';
 import FadeInView from './views/FadeInView';
 
 // ✅ 
 
-export interface IEmptyLabelProps extends PressableProps {
+export type TEmptyPageLabelProps = {
     label: string;
-    iconConfig?: GenericIconProps;
-    className?: string;
-    onPress?: () => void;
-    centerOnPage?: boolean;
+    iconProps?: TIconProps;
 };
 
-const EmptyLabel = ({
+const EmptyPageLabel = ({
     label,
-    iconConfig,
-    className,
-    onLayout,
-    onPress,
-    centerOnPage
-}: IEmptyLabelProps) => {
+    iconProps
+}: TEmptyPageLabelProps) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
     return (
-        <Pressable
-            onLayout={onLayout}
-            onPress={onPress}
-            className={`flex items-center justify-center ${className}`}
-        >
-            <FadeInView>
-                <View className='flex-column gap-2 items-center'>
-                    {iconConfig && (
-                        <GenericIcon
-                            {...iconConfig}
-                            size='l'
-                        />
-                    )}
-                    <Host matchContents>
-                        <VStack modifiers={[frame({ width: SCREEN_WIDTH })]}>
-                            <Text design='rounded' size={14} color={PlatformColor('tertiaryLabel') as unknown as string}>
-                                {label}
-                            </Text>
-                        </VStack>
-                    </Host>
-                </View>
-            </FadeInView>
-        </Pressable>
+        <FadeInView className='absolute top-1/2 -translate-y-1/2 pointer-events-none flex-column gap-2'>
+            {iconProps && (
+                <Icon {...iconProps} />
+            )}
+            <Host matchContents>
+                <VStack modifiers={[frame({ width: SCREEN_WIDTH })]}>
+                    <Text design='rounded' weight='semibold' size={16} color={PlatformColor('tertiaryLabel') as unknown as string}>
+                        {label}
+                    </Text>
+                </VStack>
+            </Host>
+        </FadeInView>
     )
 };
 
-export default EmptyLabel;
+export default EmptyPageLabel;

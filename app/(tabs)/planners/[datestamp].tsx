@@ -9,7 +9,7 @@ import React from 'react';
 const PlannerPage = () => {
     const { datestamp } = useLocalSearchParams<{ datestamp: string }>();
     return (
-        <PageProvider hasStickyHeader>
+        <PageProvider hasStickyHeader emptyPageLabelProps={{ label: 'No plans' }}>
             <PlannerHeader datestamp={datestamp} />
             <Planner datestamp={datestamp} />
         </PageProvider>

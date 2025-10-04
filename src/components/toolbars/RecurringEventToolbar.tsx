@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { View } from "react-native";
 import { useMMKV } from "react-native-mmkv";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import GenericIcon from "../icon";
+import IconButton from "../icons/IconButton";
 import ListToolbar from "../lists/components/ListToolbar";
 
 // ✅ 
@@ -40,19 +40,20 @@ const RecurringEventToolbar = () => {
 
     const iconSet = [
         [(
-            <GenericIcon
-                type='deleteTime'
-                size="l"
-                platformColor={focusedEvent?.startTime ? 'label' : 'tertiaryLabel'}
-                hideRipple={!focusedEvent?.startTime}
+            <IconButton
+                name='clock.badge.xmark'
+                size={22}
+                disabled={!focusedEvent?.startTime}
+                color='label'
                 onClick={deleteFocusedEventTime}
             />
         )],
         [(
-            <GenericIcon
-                type='recurringTime'
+            <IconButton
+                name='clock.arrow.trianglehead.2.counterclockwise.rotate.90'
                 onClick={openTimeModal}
-                platformColor="label"
+                color="label"
+                size={22}
             />
         )]
     ];

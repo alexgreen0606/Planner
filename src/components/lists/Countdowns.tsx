@@ -64,10 +64,6 @@ const Countdowns = () => {
                     </CustomText>
                 </View>
             )}
-            emptyLabelConfig={{
-                label: 'No countdowns',
-                className: 'flex-1'
-            }}
             onGetRowTextPlatformColor={getCountdownEventPlatformColor}
             onCreateItem={(_, index) => onCreateCountdownEventInStorageAndFocusTextfield(index)}
             onSaveToExternalStorage={updateDeviceCalendarEventByCountdownEvent}

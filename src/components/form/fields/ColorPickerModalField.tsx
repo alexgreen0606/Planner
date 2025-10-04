@@ -1,4 +1,4 @@
-import GenericIcon from '@/components/icon';
+import IconButton from '@/components/icons/IconButton';
 import { selectableColors } from '@/lib/constants/colors';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import React from 'react';
@@ -17,11 +17,11 @@ const ColorPickerModalField = ({
     return (
         <View className='flex-row w-full justify-between items-center px-2 py-3'>
             {Object.values(selectableColors).map((color) => (
-                <GenericIcon
+                <IconButton
                     key={color}
-                    size='ml'
-                    type={value === color ? 'circleFilled' : 'circle'}
-                    platformColor={color}
+                    size={30}
+                    name={value === color ? 'circle.inset.filled' : 'circle'}
+                    color={color}
                     onClick={() => onChange(color)}
                 />
             ))}

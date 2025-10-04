@@ -3,7 +3,7 @@ import { Host, Text } from "@expo/ui/swift-ui";
 import React, { ReactNode } from 'react';
 import { PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import GlassIconButton from "../icon/GlassButtonIcon";
+import GlassIconButton from "../icons/customButtons/GlassIconButton";
 import PopupList, { TPopupListProps } from "../PopupList";
 import UpperFadeOutView from "../views/UpperFadeOutView";
 
@@ -37,29 +37,6 @@ const Modal = ({
 
     const { background, modalUpperFadeArray } = useAppTheme();
 
-    // function handleDeleteButtonClick() {
-    //     if (!deleteButtonConfig) return;
-
-    //     const { optionLabels, optionHandlers, message } = deleteButtonConfig;
-    //     const handlers = [
-    //         () => null,
-    //         ...optionHandlers
-    //     ];
-    //     ActionSheetIOS.showActionSheetWithOptions(
-    //         {
-    //             options: ['Cancel', ...optionLabels],
-    //             destructiveButtonIndex: 1,
-    //             cancelButtonIndex: 0,
-    //             message
-    //         },
-    //         buttonIndex => {
-    //             if (buttonIndex === 0) return;
-
-    //             handlers[buttonIndex]?.();
-    //         }
-    //     );
-    // }
-
     return (
         <View
             className='flex-1'
@@ -75,7 +52,8 @@ const Modal = ({
                 top: 0,
                 left: 0,
                 right: 0,
-                height: TOP_GLASS_BAR_HEIGHT
+                height: TOP_GLASS_BAR_HEIGHT,
+                zIndex: 10000
             }}>
                 <UpperFadeOutView colors={modalUpperFadeArray} totalHeight={TOP_GLASS_BAR_HEIGHT} solidHeight={TOP_GLASS_BAR_HEIGHT / 2} />
                 <View className='px-4 w-full h-full absolute flex-row items-center justify-between'>

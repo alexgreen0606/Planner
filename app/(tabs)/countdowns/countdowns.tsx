@@ -21,7 +21,7 @@ const CountdownPermissionsWrapper = () => {
                         onPress={() => {
                             Linking.openSettings();
                         }}
-                        iconConfig={{
+                        iconProps={{
                             type: 'alert',
                             platformColor: 'tertiaryLabel'
                         }}

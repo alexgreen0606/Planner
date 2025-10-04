@@ -1,7 +1,5 @@
 // ✅ 
 
-import { sizeMap } from "./icons";
-
 export const MODAL_INPUT_HEIGHT = 50;
 
 export const TOOLBAR_HEIGHT = 50;
@@ -16,7 +14,7 @@ export const PAGE_LABEL_HEIGHT = 40;
 
 export const PLANNER_CARD_HEADER_HEIGHT = 60;
 
-export const PLANNER_CAROUSEL_ICON_WIDTH = sizeMap['xl'];
+export const PLANNER_CAROUSEL_ICON_WIDTH = 46;
 
 export const PLANNER_BANNER_PADDING = 6;
 

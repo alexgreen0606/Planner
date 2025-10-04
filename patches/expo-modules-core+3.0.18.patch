@@ -1,0 +1,47 @@
+diff --git a/node_modules/expo-modules-core/ios/Core/Views/SwiftUI/SwiftUIHostingView.swift b/node_modules/expo-modules-core/ios/Core/Views/SwiftUI/SwiftUIHostingView.swift
+index e814b2f..c2fa3d8 100644
+--- a/node_modules/expo-modules-core/ios/Core/Views/SwiftUI/SwiftUIHostingView.swift
++++ b/node_modules/expo-modules-core/ios/Core/Views/SwiftUI/SwiftUIHostingView.swift
+@@ -136,6 +136,12 @@ extension ExpoSwiftUI {
+       return true
+     }
+ 
++    public override func layoutSubviews() {
++      super.layoutSubviews()
++      // TODO: Use updateLayoutMetrics from RN. Add support in ExpoFabricView.
++      setupHostingViewConstraints()
++    }
++
+ #if RCT_NEW_ARCH_ENABLED
+     /**
+      Fabric calls this function when mounting (attaching) a child component view.
+@@ -178,7 +184,6 @@ extension ExpoSwiftUI {
+       }
+     }
+ #endif // RCT_NEW_ARCH_ENABLED
+-
+     /**
+      Setups layout constraints of the hosting controller view to match the layout set by React.
+      */
+@@ -187,14 +192,13 @@ extension ExpoSwiftUI {
+       guard let view = hostingController.view as UIView? else {
+         return
+       }
+-      view.translatesAutoresizingMaskIntoConstraints = false
+-
+-      NSLayoutConstraint.activate([
+-        view.topAnchor.constraint(equalTo: topAnchor),
+-        view.bottomAnchor.constraint(equalTo: bottomAnchor),
+-        view.leftAnchor.constraint(equalTo: leftAnchor),
+-        view.rightAnchor.constraint(equalTo: rightAnchor)
+-      ])
++      let frame = self.bounds;
++      view.frame = frame;
++        #if os(iOS) || os(tvOS)
++        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
++        #elseif os(macOS)
++        view.autoresizingMask = [.width, .height]
++        #endif
+     }
+ 
+     // MARK: - UIView lifecycle

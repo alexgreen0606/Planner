@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { runOnJS, runOnUI } from "react-native-worklets";
-import OpenCalendarIconButton from "../icon/custom/OpenCalendarIconButton";
+import OpenCalendarButton from "../icons/customButtons/OpenCalendarIconButton";
 import PlannerDateIcon from "./PlannerDateIcon";
 
 // ✅ 
@@ -149,7 +149,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
             {/* Calendar Button */}
             <View className='absolute right-0 justify-center h-full'>
-                <OpenCalendarIconButton onPress={() => console.log('Open Calendar')} />
+                <OpenCalendarButton onPress={() => console.log('Open Calendar')} />
             </View>
 
         </View>

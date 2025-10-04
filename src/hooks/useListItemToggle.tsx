@@ -1,4 +1,4 @@
-import GenericIcon from "@/components/icon";
+import IconButton from "@/components/icons/IconButton";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
 
@@ -8,9 +8,10 @@ const useListItemToggle = <T extends TListItem>(item: T, disabled?: boolean) => 
     const isDeleting = onGetIsItemDeletingCallback(item);
 
     return (
-        <GenericIcon
-            type={isDeleting ? 'circleFilled' : 'circle'}
-            platformColor={disabled || isDeleting ? 'tertiaryLabel' : 'secondaryLabel'}
+        <IconButton
+            name={isDeleting ? 'circle.inset.filled' : 'circle'}
+            disabled={disabled || isDeleting}
+            color='secondaryLabel'
             onClick={() => onToggleScheduleItemDeleteCallback(item)}
             size={22}
         />

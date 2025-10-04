@@ -1,10 +1,10 @@
-import { TIconType } from "./icons";
+import { SFSymbol } from "expo-symbols";
 
 // ✅ 
 
 // Maps calendar names to icon types.
-export const calendarIconMap: Record<string, TIconType> = {
+export const calendarIconMap: Record<string, SFSymbol> = {
     'US Holidays': 'globe',
-    'Birthdays': 'birthday',
-    'Countdowns': 'alert'
+    'Birthdays': 'birthday.cake',
+    'Countdowns': 'exclamationmark.triangle'
 };

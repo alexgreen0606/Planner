@@ -13,7 +13,6 @@ import { useAtom } from 'jotai';
 import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import PopupList from '../PopupList';
 import TimeValue from '../text/TimeValue';
 import DragAndDropList from './components/DragAndDropList';
 
@@ -62,7 +61,7 @@ const RecurringPlanner = () => {
     return (
         <View className='flex-1'>
             <View className='px-3 pt-3 flex-row justify-between items-center'>
-                <PopupList label={recurringPlannerId} actions={recurringPlannerActions} />
+                {/* <PopupList label={recurringPlannerId} actions={recurringPlannerActions} /> */}
                 <OverflowActionsIcon />
             </View>
             <DragAndDropList<IRecurringEvent>
@@ -71,10 +70,6 @@ const RecurringPlanner = () => {
                 storage={recurringEventStorage}
                 itemIds={eventIds}
                 storageId={EStorageId.RECURRING_PLANNER_EVENT}
-                emptyLabelConfig={{
-                    label: `No recurring ${isWeekdayPlanner ? 'weekday' : recurringPlannerId} plans`,
-                    className: 'flex-1'
-                }}
                 onGetRowTextPlatformColor={getRecurringEventPlatformColor}
                 onCreateItem={createRecurringEventInStorageAndFocusTextfield}
                 onIndexChange={onUpdateRecurringEventIndexWithChronologicalCheck}

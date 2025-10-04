@@ -26,10 +26,6 @@ const Checklist = ({ checklistId }: TChecklistProps) => {
             storage={itemStorage}
             storageId={EStorageId.CHECKLIST_ITEM}
             itemIds={itemIds}
-            emptyLabelConfig={{
-                label: "It's a ghost town in here",
-                className: 'flex-1'
-            }}
             onCreateItem={createNewChecklistItemAndSaveToStorage}
             onDeleteItem={(item) => deleteChecklistItems([item])}
             onIndexChange={updateListItemIndex}
