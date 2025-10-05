@@ -28,12 +28,12 @@ const PlannerChipSets = ({
     const allSets = datestamp === today && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;
 
     return (
-        <Animated.View layout={SequencedTransition.duration(3000)} className="flex-row flex-wrap gap-2">
+        <Animated.View className="flex-row flex-wrap gap-2">
             {allSets.map((set, setIndex) =>
                 set.map((chip, chipIndex) => (
                     <PlannerChip
                         index={chipIndex}
-                        key={`${datestamp}-${chip.title}`}
+                        key={`${datestamp}-${chip.title}-${setIndex}`}
                         chip={chip}
                         {...rest}
                     />

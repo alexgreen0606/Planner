@@ -60,12 +60,12 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
-    const { floatingHeaderHeight, onSetIsPageEmpty } = usePageContext();
+    const { onSetIsPageEmpty } = usePageContext();
     const { scrollOffset } = useScrollContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + floatingHeaderHeight;
+    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + 20; // TODO: use header height instead of 20
     const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
 

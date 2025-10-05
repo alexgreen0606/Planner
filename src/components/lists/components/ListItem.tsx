@@ -7,15 +7,17 @@ import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
 import { usePageContext } from "@/providers/PageProvider";
 import { useScrollContext } from "@/providers/ScrollProvider";
 import { useAtom } from "jotai";
-import React, { ReactNode, useMemo } from "react";
+import React, { ReactNode, useMemo, useState } from "react";
 import { PlatformColor, TextStyle, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
 import Animated, {
     cancelAnimation,
     DerivedValue,
+    LinearTransition,
     runOnJS,
     SharedValue,
+    useAnimatedReaction,
     useAnimatedStyle,
     withSpring
 } from "react-native-reanimated";
@@ -51,8 +53,6 @@ type TListItemProps<T extends TListItem> = {
     onGetRightIcon?: (item: T) => ReactNode;
     onGetIsItemDeletingCustom?: (item: T) => boolean;
 };
-
-const Row = Animated.createAnimatedComponent(View);
 
 enum AutoScrollDirection {
     UP = 'UP',
@@ -100,6 +100,8 @@ const ListItem = <T extends TListItem>({
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
+    const [isRowDragging, setIsRowDragging] = useState(false);
+
     const textPlatformColor = useMemo(() => item ? onGetRowTextPlatformColor?.(item) : 'label', [item, onGetRowTextPlatformColor]);
 
     const isPendingDelete = item ? (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item)) : false;
@@ -113,6 +115,14 @@ const ListItem = <T extends TListItem>({
     };
 
     const isEditable = textfieldId === item?.id;
+
+    // Track through state when the row is dragging.
+    useAnimatedReaction(
+        () => draggingRowId.value,
+        (dragId) => {
+            runOnJS(setIsRowDragging)(dragId === item?.id);
+        }
+    );
 
     // ================
     //  Event Handlers
@@ -247,26 +257,30 @@ const ListItem = <T extends TListItem>({
     // ============
 
     const animatedRowStyle = useAnimatedStyle(() => {
-        const isRowDragging = item && draggingRowId.value === item.id;
-        const basePos = itemIndex * LIST_ITEM_HEIGHT;
+        if (!item || draggingRowId.value === null) return {};
 
-        let rowOffset = 0;
+        if (draggingRowId.value !== item.id) {
 
-        // Offset the row if the dragged item has shifted it.
-        if (draggingRowId.value && !isRowDragging) {
-            if (itemIndex > initialIndex.value && itemIndex <= index.value) {
-                rowOffset = -LIST_ITEM_HEIGHT;
-            } else if (itemIndex < initialIndex.value && itemIndex >= index.value) {
-                rowOffset = LIST_ITEM_HEIGHT;
+            // Shift the row downward if the dragging item is above it.
+            let rowShift = 0;
+            if (index.value <= itemIndex - 1) {
+                rowShift = LIST_ITEM_HEIGHT;
             }
-        }
+
+            return {
+                transform: [
+                    { translateY: withSpring(rowShift, LIST_SPRING_CONFIG) }
+                ],
+            }
+        };
 
         return {
-            top: isRowDragging ? top.value : withSpring(basePos + rowOffset, LIST_SPRING_CONFIG),
+            top: top.value,
             transform: [
-                { translateY: withSpring(isRowDragging ? -6 : 0, LIST_SPRING_CONFIG) }
+                { translateY: withSpring(-6, LIST_SPRING_CONFIG) }
             ],
-            opacity: withSpring(isRowDragging ? 0.6 : 1, LIST_SPRING_CONFIG)
+            position: 'absolute',
+            opacity: withSpring(0.6, LIST_SPRING_CONFIG)
         }
     });
 
@@ -277,8 +291,9 @@ const ListItem = <T extends TListItem>({
     if (!item) return null;
 
     return (
-        <Row
-            className="w-full absolute"
+        <Animated.View
+            layout={isRowDragging ? undefined : LinearTransition}
+            className="w-full"
             style={[
                 animatedRowStyle,
                 { height: LIST_ITEM_HEIGHT }
@@ -350,7 +365,7 @@ const ListItem = <T extends TListItem>({
                 {onGetRightIcon?.(item)}
 
             </View >
-        </Row >
+        </Animated.View>
     )
 };
 
