@@ -1,10 +1,10 @@
 import Countdowns from '@/components/lists/Countdowns';
-import { PageProvider } from '@/_deprecated/DeprecatedPageProvider';
+import { PageProvider } from '@/providers/PageProvider';
 
 // ✅ 
 
 const PlannersLayout = () => (
-    <PageProvider>
+    <PageProvider emptyPageLabelProps={{label: 'No countdowns'}}>
         <Countdowns />
     </PageProvider>
 );

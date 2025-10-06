@@ -1,4 +1,3 @@
-import useAppTheme from "@/hooks/useAppTheme";
 import { SCROLL_THROTTLE } from "@/lib/constants/listConstants";
 import { PLANNER_BANNER_PADDING } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
@@ -32,8 +31,6 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
     const scrollX = useSharedValue(CAROUSEL_CENTER_SCROLL_X);
     const isSnappingToCenter = useSharedValue(false);
-
-    const { background } = useAppTheme();
 
     const scrollHandler = useAnimatedScrollHandler({
         onBeginDrag: () => {
@@ -149,7 +146,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
             {/* Calendar Button */}
             <View className='absolute right-0 justify-center h-full'>
-                <OpenCalendarButton onPress={() => console.log('Open Calendar')} />
+                <OpenCalendarButton />
             </View>
 
         </View>

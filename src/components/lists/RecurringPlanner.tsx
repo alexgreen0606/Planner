@@ -81,7 +81,7 @@ const RecurringPlanner = () => {
                         <TimeValue disabled={getIsRecurringEventDisabled(event)} timeValue={event.startTime} />
                     </TouchableOpacity>
                 )}
-                onGetLeftIcon={(event) => useListItemToggle(event, getIsRecurringEventDisabled(event))}
+                onGetLeftIcon={(event) => useListItemToggle(event)}
             />
         </View>
     )

@@ -5,7 +5,7 @@ import { PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GlassIconButton from "../icons/customButtons/GlassIconButton";
 import PopupList, { TPopupListProps } from "../PopupList";
-import UpperFadeOutView from "../views/UpperFadeOutView";
+import ColorFadeView from "../views/ColorFadeView";
 
 // ✅ 
 
@@ -35,7 +35,7 @@ const Modal = ({
 }: TModalProps) => {
     const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
-    const { background, modalUpperFadeArray } = useAppTheme();
+    const { background, ColorArray: { Modal: { upper } } } = useAppTheme();
 
     return (
         <View
@@ -55,7 +55,7 @@ const Modal = ({
                 height: TOP_GLASS_BAR_HEIGHT,
                 zIndex: 10000
             }}>
-                <UpperFadeOutView colors={modalUpperFadeArray} totalHeight={TOP_GLASS_BAR_HEIGHT} solidHeight={TOP_GLASS_BAR_HEIGHT / 2} />
+                <ColorFadeView colors={upper} totalHeight={TOP_GLASS_BAR_HEIGHT} solidHeight={TOP_GLASS_BAR_HEIGHT / 2} />
                 <View className='px-4 w-full h-full absolute flex-row items-center justify-between'>
                     <GlassIconButton
                         systemImage="xmark"

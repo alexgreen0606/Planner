@@ -14,8 +14,12 @@ import { MMKV, useMMKVObject } from "react-native-mmkv";
 import Animated, {
     cancelAnimation,
     DerivedValue,
+    FadeInDown,
+    FadeInUp,
+    FadeOutUp,
     LinearTransition,
     runOnJS,
+    SequencedTransition,
     SharedValue,
     useAnimatedReaction,
     useAnimatedStyle,
@@ -259,20 +263,10 @@ const ListItem = <T extends TListItem>({
     const animatedRowStyle = useAnimatedStyle(() => {
         if (!item || draggingRowId.value === null) return {};
 
-        if (draggingRowId.value !== item.id) {
-
-            // Shift the row downward if the dragging item is above it.
-            let rowShift = 0;
-            if (index.value <= itemIndex - 1) {
-                rowShift = LIST_ITEM_HEIGHT;
-            }
-
-            return {
-                transform: [
-                    { translateY: withSpring(rowShift, LIST_SPRING_CONFIG) }
-                ],
-            }
-        };
+        const isDragging = draggingRowId.value === item.id;
+        if (!isDragging && index.value === itemIndex - 1) {
+            return { marginTop: LIST_ITEM_HEIGHT };
+        } else if (!isRowDragging) return { marginTop: 0 };
 
         return {
             top: top.value,
@@ -293,6 +287,8 @@ const ListItem = <T extends TListItem>({
     return (
         <Animated.View
             layout={isRowDragging ? undefined : LinearTransition}
+            exiting={FadeOutUp}
+            entering={FadeInDown}
             className="w-full"
             style={[
                 animatedRowStyle,

@@ -4,20 +4,20 @@ import { useState } from "react";
 
 // ✅ 
 
-type TUpperFadeOutViewProps = ViewProps & {
+type TColorFadeViewProps = ViewProps & {
     colors: readonly [ColorValue, ColorValue, ...ColorValue[]];
     totalHeight?: number;
     solidHeight?: number;
 };
 
-const UpperFadeOutView = ({
+const ColorFadeView = ({
     colors,
     totalHeight,
     solidHeight = 0,
     style,
     onLayout: onLayoutProp,
     ...restProps
-}: TUpperFadeOutViewProps) => {
+}: TColorFadeViewProps) => {
     const [measuredHeight, setMeasuredHeight] = useState<number>(0);
 
     const effectiveHeight = totalHeight ?? measuredHeight;
@@ -31,7 +31,12 @@ const UpperFadeOutView = ({
         onLayoutProp?.(event);
     }
 
-    function computeLocations(): [number, number, number] {
+    function computeLocations(): readonly [number, number, ...number[]] {
+        if (colors.length === 2) {
+            // Simple 2-color fade: [0, 1]
+            return [0, 1];
+        }
+
         if (effectiveHeight === 0) {
             return [0, 0, 1];
         }
@@ -63,4 +68,4 @@ const UpperFadeOutView = ({
     );
 };
 
-export default UpperFadeOutView;
+export default ColorFadeView;

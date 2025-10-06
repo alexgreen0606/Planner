@@ -1,6 +1,7 @@
 import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import useAppTheme from '@/hooks/useAppTheme';
 import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_HEIGHT, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
+import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { getDayOfWeekFromDatestamp, getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
@@ -9,9 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PlannerActions from '../actions/PlannerActions';
 import PlannerChipSets from '../PlannerChip/PlannerChipSets';
 import CustomText from '../text/CustomText';
+import ColorFadeView from '../views/ColorFadeView';
 import ShadowView from '../views/ShadowView';
-import UpperFadeOutView from '../views/UpperFadeOutView';
-import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 
 // ✅ 
 
@@ -39,11 +39,11 @@ const PlannerHeader = ({ datestamp }: TPlannerPageParams) => {
         return { label, dayOfWeek: getDayOfWeekFromDatestamp(datestamp) };
     }, [today, datestamp]);
 
-    const { background, upperFadeArray } = useAppTheme();
+    const { background, ColorArray: { Screen: { upper } } } = useAppTheme();
 
     return (
-        <UpperFadeOutView
-            colors={upperFadeArray}
+        <ColorFadeView
+            colors={upper}
             solidHeight={PLANNER_CAROUSEL_HEIGHT + TOP_SPACER} // TODO: have a more fixed height of the planner banner
             className='w-full'
             style={{
@@ -70,7 +70,7 @@ const PlannerHeader = ({ datestamp }: TPlannerPageParams) => {
                 backgroundPlatformColor={background}
             />
 
-        </UpperFadeOutView>
+        </ColorFadeView>
     )
 };
 
