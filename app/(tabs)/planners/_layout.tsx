@@ -1,4 +1,3 @@
-import EmptyPageLabel from '@/components/EmptyLabel';
 import PlannerCarousel from '@/components/PlannerCarousel';
 import useAppTheme from '@/hooks/useAppTheme';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
@@ -10,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ✅ 
 
-const PlannerLayout = () => {
+const PlannersLayout = () => {
     const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
     const { top: TOP_SPACER } = useSafeAreaInsets();
 
@@ -36,4 +35,4 @@ const PlannerLayout = () => {
     );
 };
 
-export default PlannerLayout;
+export default PlannersLayout;
