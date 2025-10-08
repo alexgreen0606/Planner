@@ -12,7 +12,7 @@ type TChecklistParams = {
 const ChecklistPage = () => {
     const { checklistId } = useLocalSearchParams<TChecklistParams>();
     return (
-        <PageProvider emptyPageLabelProps={{label: 'All items complete'}}>
+        <PageProvider emptyPageLabelProps={{ label: 'All items complete' }}>
             <Checklist checklistId={checklistId} />
         </PageProvider>
     )

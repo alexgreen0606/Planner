@@ -9,14 +9,13 @@ import { useMemo } from "react";
 import { Alert, View } from "react-native";
 import { useMMKV, useMMKVObject } from "react-native-mmkv";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import GenericIcon from "../icons/Icon";
 
 import { countdownDateModalEventAtom } from "@/atoms/countdownDateModalEvent";
 import { mountedDatestampsAtom } from "@/atoms/mountedDatestamps";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { saveCountdownEventToStorage, saveCountdownPlannerToStorage } from "@/storage/countdownStorage";
-import ListToolbar from "../lists/components/ListToolbar";
 import IconButton from "../icons/IconButton";
+import ListToolbar from "../lists/components/ListToolbar";
 
 // ✅ 
 
@@ -35,43 +34,6 @@ const CountdownEventToolbar = () => {
         textfieldItem: focusedCountdown,
         onCloseTextfield: onCloseFocusedCountdown
     } = useTextfieldItemAs<ICountdownEvent>(countdownEventStorage);
-
-    const iconSet = [
-        [(
-            <IconButton
-                name='trash'
-                color="label"
-                onClick={() => {
-                    onCloseFocusedCountdown();
-                    Alert.alert(
-                        `Delete "${focusedCountdown?.value}"?`,
-                        `${focusedCountdown?.isRecurring ? ' All future events' : 'The event'} in your calendar will also be deleted.`,
-                        [
-                            {
-                                text: 'Cancel',
-                                style: 'cancel'
-                            },
-                            {
-                                text: 'Delete',
-                                style: 'destructive',
-                                onPress: async () => {
-                                    if (!focusedCountdown) return;
-                                    await deleteCountdownAndReloadCalendar(focusedCountdown);
-                                }
-                            }
-                        ]
-                    );
-                }}
-            />
-        )],
-        [(
-            <IconButton
-                name='calendar'
-                color="label"
-                onClick={openDateModal}
-            />
-        )]
-    ];
 
     function changeCountdownEventDate(date: Date) {
         if (!countdownDateModalEvent || !countdownPlanner) return;
@@ -139,9 +101,42 @@ const CountdownEventToolbar = () => {
                     display: 'flex'
                 }}
             />
-            <ListToolbar
-                hide={focusedCountdown?.storageId !== EStorageId.COUNTDOWN_EVENT}
-                iconSet={iconSet}
+            <ListToolbar iconSet={[
+                [(
+                    <IconButton
+                        name='trash'
+                        color="label"
+                        onClick={() => {
+                            onCloseFocusedCountdown();
+                            Alert.alert(
+                                `Delete "${focusedCountdown?.value}"?`,
+                                `${focusedCountdown?.isRecurring ? ' All future events' : 'The event'} in your calendar will also be deleted.`,
+                                [
+                                    {
+                                        text: 'Cancel',
+                                        style: 'cancel'
+                                    },
+                                    {
+                                        text: 'Delete',
+                                        style: 'destructive',
+                                        onPress: async () => {
+                                            if (!focusedCountdown) return;
+                                            await deleteCountdownAndReloadCalendar(focusedCountdown);
+                                        }
+                                    }
+                                ]
+                            );
+                        }}
+                    />
+                )],
+                [(
+                    <IconButton
+                        name='calendar'
+                        color="label"
+                        onClick={openDateModal}
+                    />
+                )]
+            ]}
             />
         </View>
     )

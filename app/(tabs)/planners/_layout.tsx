@@ -4,7 +4,7 @@ import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import { Stack, useGlobalSearchParams } from 'expo-router';
 import React from 'react';
-import { PlatformColor, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ✅ 
@@ -13,13 +13,13 @@ const PlannersLayout = () => {
     const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
     const { top: TOP_SPACER } = useSafeAreaInsets();
 
-    const { background } = useAppTheme();
+    const { CssColor: { background } } = useAppTheme();
 
     return (
         <View
             className='flex-1'
             style={{
-                backgroundColor: PlatformColor(background),
+                backgroundColor: background,
                 paddingTop: TOP_SPACER
             }}
         >
@@ -28,7 +28,7 @@ const PlannersLayout = () => {
                 animation: 'fade',
                 headerShown: false,
                 contentStyle: {
-                    backgroundColor: PlatformColor(background)
+                    backgroundColor: background
                 }
             }} />
         </View>

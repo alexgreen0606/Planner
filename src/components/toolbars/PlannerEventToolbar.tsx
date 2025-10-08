@@ -15,19 +15,14 @@ const PlannerEventToolbar = () => {
         textfieldItem: focusedEvent,
     } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
-    const iconSet = [[(
-        <IconButton
-            name='clock'
-            onClick={() => focusedEvent && openPlannerTimeModal(focusedEvent.id, focusedEvent.listId)}
-            color="label"
-        />
-    )]];
-
     return (
-        <ListToolbar
-            hide={focusedEvent?.storageId !== EStorageId.PLANNER_EVENT}
-            iconSet={iconSet}
-        />
+        <ListToolbar iconSet={[[(
+            <IconButton
+                name='clock'
+                onClick={() => focusedEvent && openPlannerTimeModal(focusedEvent.id, focusedEvent.listId)}
+                color="label"
+            />
+        )]]} />
     )
 };
 

@@ -4,11 +4,12 @@ import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange, getDayShiftedDatestamp } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { PlatformColor, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { runOnJS, runOnUI } from "react-native-worklets";
 import OpenCalendarButton from "../icons/customButtons/OpenCalendarIconButton";
 import PlannerDateIcon from "./PlannerDateIcon";
+import useAppTheme from "@/hooks/useAppTheme";
 
 // ✅ 
 
@@ -31,6 +32,8 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
     const scrollX = useSharedValue(CAROUSEL_CENTER_SCROLL_X);
     const isSnappingToCenter = useSharedValue(false);
+
+    const { isLightMode } = useAppTheme();
 
     const scrollHandler = useAnimatedScrollHandler({
         onBeginDrag: () => {
@@ -103,7 +106,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
     return (
         <View
-            className='flex-row w-full relative z-[1000]'
+            className='w-full relative'
             style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}
         >
 

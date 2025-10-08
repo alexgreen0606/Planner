@@ -37,7 +37,7 @@ export const textStyles = {
         fontFamily: 'RoundRegular',
     },
     plannerCardDetail: {
-        color: PlatformColor('systemTeal'),
+        color: PlatformColor('systemBlue'),
         fontFamily: 'Text',
         fontSize: 12
     },
@@ -79,7 +79,7 @@ export const textStyles = {
     listTime: {
         fontFamily: 'RoundHeavy',
         fontSize: 15,
-        color: PlatformColor('systemTeal'),
+        color: PlatformColor('systemBlue'),
         marginRight: 1
     },
     listPmAmIndicator: {
@@ -101,7 +101,7 @@ export const textStyles = {
     conciseDate: {
         fontFamily: 'RoundMedium',
         fontSize: 16,
-        color: PlatformColor('systemTeal')
+        color: PlatformColor('systemBlue')
     },
     conciseDateYear: {
         fontFamily: 'RoundRegular',

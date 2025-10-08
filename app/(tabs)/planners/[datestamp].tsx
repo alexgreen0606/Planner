@@ -1,5 +1,6 @@
 import PlannerHeader from '@/components/headers/PlannerHeader';
 import Planner from '@/components/lists/Planner';
+import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import { PLANNER_CAROUSEL_HEIGHT } from '@/lib/constants/miscLayout';
 import { PageProvider } from '@/providers/PageProvider';
 import { useLocalSearchParams } from 'expo-router';
@@ -16,6 +17,7 @@ const PlannerPage = () => {
             hasStickyHeader
             scrollContentAbsoluteTop={TOP_SPACER + PLANNER_CAROUSEL_HEIGHT}
             emptyPageLabelProps={{ label: 'No plans' }}
+            toolbar={<PlannerEventToolbar />}
         >
             <PlannerHeader datestamp={datestamp} />
             <Planner datestamp={datestamp} />

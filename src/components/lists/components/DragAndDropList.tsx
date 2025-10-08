@@ -1,7 +1,6 @@
 import ThinLine from '@/components/ThinLine';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
-import { BOTTOM_NAVIGATION_HEIGHT, HEADER_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { usePageContext } from '@/providers/PageProvider';
@@ -47,8 +46,8 @@ const DragAndDropList = <T extends TListItem, S = T>({
     onDeleteItem,
     ...rest
 }: TDragAndDropListProps<T, S>) => {
-    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
-    const { height: SCREEN_HEIGHT } = useWindowDimensions();
+    const { onSetIsPageEmpty, contentBounds: { upper, lower } } = usePageContext();
+    const { scrollOffset } = useScrollContext();
 
     const draggingRowId = useSharedValue<string | null>(null);
     const isAutoScrolling = useSharedValue(false);
@@ -60,13 +59,8 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
     const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
 
-    const { onSetIsPageEmpty } = usePageContext();
-    const { scrollOffset } = useScrollContext();
-
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-    const upperAutoScrollBound = HEADER_HEIGHT + TOP_SPACER + 20; // TODO: use header height instead of 20
-    const lowerAutoScrollBound = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAVIGATION_HEIGHT - LIST_ITEM_HEIGHT;
     const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
 
     // Auto Scrolling.
@@ -143,38 +137,31 @@ const DragAndDropList = <T extends TListItem, S = T>({
         <View style={{ flex: fillSpace ? 1 : 0 }}>
 
             {/* List Items */}
-            <View
-                className='w-full'
-                style={{
-                    height: itemIds.length * LIST_ITEM_HEIGHT
-                }}
-            >
-                {itemIds.map((id, i) =>
-                    <ListItem<T>
-                        key={`${id}-row`}
-                        itemIndex={i}
-                        listId={listId}
-                        upperAutoScrollBound={upperAutoScrollBound}
-                        lowerAutoScrollBound={lowerAutoScrollBound}
-                        itemId={id}
-                        storage={storage}
-                        dragConfig={{
-                            topMax: dragTopMax,
-                            isAutoScrolling: isAutoScrolling,
-                            draggingRowId: draggingRowId,
-                            initialTop: dragInitialTop,
-                            initialIndex: dragInitialIndex,
-                            top: dragTop,
-                            index: dragIndex,
-                            onDragEnd: handleDragEndWorklet,
-                            onDragStart: handleDragStartWorklet
-                        }}
-                        {...rest}
-                        onCreateItem={onCreateItem}
-                        onDeleteItem={onDeleteItem}
-                    />
-                )}
-            </View>
+            {itemIds.map((id, i) =>
+                <ListItem<T>
+                    key={`${id}-row`}
+                    itemIndex={i}
+                    listId={listId}
+                    upperAutoScrollBound={upper}
+                    lowerAutoScrollBound={lower}
+                    itemId={id}
+                    storage={storage}
+                    dragConfig={{
+                        topMax: dragTopMax,
+                        isAutoScrolling: isAutoScrolling,
+                        draggingRowId: draggingRowId,
+                        initialTop: dragInitialTop,
+                        initialIndex: dragInitialIndex,
+                        top: dragTop,
+                        index: dragIndex,
+                        onDragEnd: handleDragEndWorklet,
+                        onDragStart: handleDragStartWorklet
+                    }}
+                    {...rest}
+                    onCreateItem={onCreateItem}
+                    onDeleteItem={onDeleteItem}
+                />
+            )}
 
             {/* Lower List Line */}
             {itemIds.length > 0 && (

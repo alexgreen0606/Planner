@@ -24,7 +24,7 @@ type TPlannerDateIconProps = {
 const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, index, onPress }: TPlannerDateIconProps) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
 
-    const { background } = useAppTheme();
+    const { CssColor: { background } } = useAppTheme();
 
     const { month, day, dayOfWeek } = useMemo(() => {
         const date = DateTime.fromISO(datestamp);
@@ -84,7 +84,7 @@ const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, 
                 {/* Date Info */}
                 <View className='absolute w-full h-full'>
                     <View className='w-full items-center mt-[0.3rem]'>
-                        <CustomText variant='todayMonth' customStyle={{ color: PlatformColor(background) }}>
+                        <CustomText variant='todayMonth' customStyle={{ color: background }}>
                             {month}
                         </CustomText>
                     </View>

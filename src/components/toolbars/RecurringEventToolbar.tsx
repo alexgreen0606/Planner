@@ -38,26 +38,6 @@ const RecurringEventToolbar = () => {
         }
     }, [recurringTimeModalEvent?.startTime]);
 
-    const iconSet = [
-        [(
-            <IconButton
-                name='clock.badge.xmark'
-                size={22}
-                disabled={!focusedEvent?.startTime}
-                color='label'
-                onClick={deleteFocusedEventTime}
-            />
-        )],
-        [(
-            <IconButton
-                name='clock.arrow.trianglehead.2.counterclockwise.rotate.90'
-                onClick={openTimeModal}
-                color="label"
-                size={22}
-            />
-        )]
-    ];
-
     function updateRecurringEventTimeWithChronologicalCheck(date: Date) {
         if (!recurringTimeModalEvent) return;
 
@@ -137,9 +117,25 @@ const RecurringEventToolbar = () => {
                     display: 'flex'
                 }}
             />
-            <ListToolbar
-                hide={focusedEvent?.storageId !== EStorageId.RECURRING_PLANNER_EVENT}
-                iconSet={iconSet}
+            <ListToolbar iconSet={[
+                [(
+                    <IconButton
+                        name='clock.badge.xmark'
+                        size={22}
+                        disabled={!focusedEvent?.startTime}
+                        color='label'
+                        onClick={deleteFocusedEventTime}
+                    />
+                )],
+                [(
+                    <IconButton
+                        name='clock.arrow.trianglehead.2.counterclockwise.rotate.90'
+                        onClick={openTimeModal}
+                        color="label"
+                        size={22}
+                    />
+                )]
+            ]}
             />
         </View>
     )

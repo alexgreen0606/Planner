@@ -1,8 +1,6 @@
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
 import { Host, HStack } from '@expo/ui/swift-ui';
 import { glassEffect } from '@expo/ui/swift-ui/modifiers';
-import { useAtomValue } from 'jotai';
 import { ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
@@ -10,24 +8,19 @@ import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-re
 // ✅ 
 
 type TListToolbarProps = {
-    hide: boolean;
     iconSet: ReactNode[][];
 };
 
-const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
+const ListToolbar = ({ iconSet }: TListToolbarProps) => {
     const { height: keyboardHeight } = useAnimatedKeyboard();
 
-    const textfieldId = useAtomValue(textfieldIdAtom);
-
-    const toolbarStyle = useAnimatedStyle(() => (
-        { bottom: keyboardHeight.value + 8 }
-    ));
-
-    if (!textfieldId || hide) return null;
+    const toolbarStyle = useAnimatedStyle(() => ({
+        bottom: keyboardHeight.value + 8
+    }));
 
     return (
         <Animated.View
-            className='w-screen absolute z-[1000] px-4'
+            className='w-screen absolute px-4'
             style={toolbarStyle}
         >
             <Host>
@@ -41,7 +34,7 @@ const ListToolbar = ({ iconSet, hide }: TListToolbarProps) => {
                     <View
                         className="flex-row justify-evenly flex-1 gap-4 overflow-hidden"
                         style={{
-                            height: TOOLBAR_HEIGHT - 8
+                            height: TOOLBAR_HEIGHT
                         }}
                     >
                         {iconSet.map((iconCluster, clusterIndex) => (

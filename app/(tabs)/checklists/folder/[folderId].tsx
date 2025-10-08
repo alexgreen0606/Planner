@@ -1,4 +1,5 @@
 import FolderContentsList from '@/components/lists/FolderContentsList';
+import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import { PageProvider } from '@/providers/PageProvider';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -12,7 +13,10 @@ type TFolderParams = {
 const FolderPage = () => {
   const { folderId } = useLocalSearchParams<TFolderParams>();
   return (
-    <PageProvider emptyPageLabelProps={{label: 'Empty folder'}}>
+    <PageProvider
+      emptyPageLabelProps={{ label: 'Empty folder' }}
+      toolbar={<FolderItemToolbar />}
+    >
       <FolderContentsList folderId={folderId} />
     </PageProvider>
   )

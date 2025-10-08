@@ -1,5 +1,4 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
-import CustomText from '@/components/text/CustomText';
 import useFolderItem from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
@@ -7,6 +6,7 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { usePageContext } from '@/providers/PageProvider';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
+import { Host, Text } from '@expo/ui/swift-ui';
 import { useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React from 'react';
@@ -40,7 +40,7 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
     const getLeftIcon = (item: IFolderItem) => (
         <FolderItemButton
             item={item}
-            disabled={getIsItemTransfering(item.id) || isTransferMode && item.type === EFolderItemType.CHECKLIST}
+            disabled={getIsItemTransfering(item.id) || (isTransferMode && item.type === EFolderItemType.CHECKLIST)}
             onClick={() => {
                 onFocusPlaceholder();
                 setTextfieldId(item.id);
@@ -88,7 +88,7 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
     // ====================
 
     function getIsItemTransfering(itemId: string) {
-        return isTransferMode && transferingItem?.id === itemId;
+        return transferingItem?.id === itemId;
     }
 
     function getRowTextPlatformColor(item: IFolderItem) {
@@ -110,14 +110,11 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
             storageId={EStorageId.FOLDER_ITEM}
             onGetRowTextPlatformColor={getRowTextPlatformColor}
             onGetRightIcon={(item) => (
-                <CustomText
-                    variant='microDetail'
-                    customStyle={{
-                        color: PlatformColor(getRowTextPlatformColor(item))
-                    }}
-                >
-                    {item.itemIds.length}
-                </CustomText>
+                <Host style={{ minWidth: 40 }}>
+                    <Text design='rounded' weight='semibold' size={10} color={PlatformColor(getRowTextPlatformColor(item)) as unknown as string}>
+                        {String(item.itemIds.length)}
+                    </Text>
+                </Host>
             )}
             onGetLeftIcon={getLeftIcon}
             onDeleteItem={deleteFolderItemAndChildren}

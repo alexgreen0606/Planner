@@ -39,7 +39,7 @@ const PlannerHeader = ({ datestamp }: TPlannerPageParams) => {
         return { label, dayOfWeek: getDayOfWeekFromDatestamp(datestamp) };
     }, [today, datestamp]);
 
-    const { background, ColorArray: { Screen: { upper } } } = useAppTheme();
+    const { PlatformColor: { background }, ColorArray: { Screen: { upper } } } = useAppTheme();
 
     return (
         <ColorFadeView

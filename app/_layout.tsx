@@ -1,11 +1,11 @@
 import { FOLDER_ITEM_MODAL_PATHNAME, PLANNER_SELECT_MODAL_PATHNAME, PLANNER_SET_MODAL_PATHNAME, TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { DeleteSchedulerProvider } from '@/providers/DeleteScheduler';
 import { ExternalDataProvider } from '@/providers/ExternalDataProvider';
+import { useTheme } from '@react-navigation/core';
 import { Stack } from 'expo-router';
 import { createStore, Provider as JotaiProvider } from 'jotai';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../global.css';
-import { useTheme } from '@react-navigation/core';
 
 // ✅ 
 
@@ -19,7 +19,7 @@ const TabLayout = () => {
             <DeleteSchedulerProvider>
                 <GestureHandlerRootView>
                     <ExternalDataProvider>
-                        <Stack screenOptions={{ presentation: 'transparentModal', animation: 'none', headerShown: false }}>
+                        <Stack screenOptions={{ headerShown: false, presentation: 'transparentModal' }}>
                             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                             <Stack.Screen
                                 name={`${TIME_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
@@ -48,9 +48,6 @@ const TabLayout = () => {
                                     presentation: 'transparentModal',
                                     animation: 'none',
                                     headerShown: false,
-                                    contentStyle: {
-                                        backgroundColor: "transparent"
-                                    }
                                 }}
                             />
                         </Stack>

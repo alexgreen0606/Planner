@@ -38,7 +38,7 @@ const PlannerSelectModal = () => {
             <BlurView intensity={40} style={StyleSheet.absoluteFillObject} />
 
             {/* Upper Fade Out */}
-            <View className='absolute top-0, left-0 z-[1000] w-full pointer-events-none'>
+            <View className='absolute top-0, left-0 z-[1] w-full pointer-events-none'>
                 <ColorFadeView solidHeight={TOP_SPACER} totalHeight={TOP_SPACER * 2} colors={upper} />
             </View>
 
@@ -46,7 +46,7 @@ const PlannerSelectModal = () => {
             <Animated.ScrollView
                 entering={SlideInRight}
                 exiting={SlideOutRight}
-                contentContainerClassName='gap-6 justify-center items-center flex-1 pt-80'
+                contentContainerClassName='gap-6 justify-center items-center flex-1 pt-80 z-[0]'
             >
 
                 {/* Pressable Background Close Trigger */}
@@ -73,7 +73,7 @@ const PlannerSelectModal = () => {
             </Animated.ScrollView>
 
             {/* Lower Fade Out */}
-            <View className='absolute bottom-0 left-0 z-[1000] w-full pointer-events-none'>
+            <View className='absolute bottom-0 left-0 z-[1] w-full pointer-events-none'>
                 <ColorFadeView totalHeight={TOP_SPACER} colors={lower} />
             </View>
 

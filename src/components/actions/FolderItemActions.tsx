@@ -1,3 +1,4 @@
+import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
 import PopupList from '@/components/PopupList';
 import { selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
@@ -11,7 +12,10 @@ import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPagePar
 import { deleteFolderItemFromStorage, getFolderItemFromStorageById, getListItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { deleteChecklistItems, deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 import { isValidPlatformColor } from '@/utils/colorUtils';
+import { Button, Host, VStack } from '@expo/ui/swift-ui';
+import { frame } from '@expo/ui/swift-ui/modifiers';
 import { useRouter } from 'expo-router';
+import { useAtom } from 'jotai';
 import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
@@ -28,9 +32,15 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
     const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const router = useRouter();
 
+    const [itemInTransfer, setItemInTransfer] = useAtom(transferingFolderItemAtom);
+
     const folderItemId = folderId ?? checklistId ?? EStorageKey.ROOT_FOLDER_KEY;
 
     const [item, setItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage);
+
+    const itemTypeName = item?.type
+        ? item.type.charAt(0).toUpperCase() + item.type.slice(1)
+        : 'Item';
 
     function handleAction(action: string) {
         if (!item) return;
@@ -114,9 +124,38 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
         }
     }
 
-    const itemTypeName = item?.type
-        ? item.type.charAt(0).toUpperCase() + item.type.slice(1)
-        : 'Item';
+    function handleTransferToParent() {
+        if (!itemInTransfer) return;
+
+        const currentFolder = getFolderItemFromStorageById(folderItemId);
+
+        const parentFolder = getFolderItemFromStorageById(currentFolder.listId);
+        parentFolder.itemIds.push(itemInTransfer.id);
+        saveFolderItemToStorage(parentFolder);
+
+        saveFolderItemToStorage({ ...currentFolder, itemIds: currentFolder.itemIds.filter((id) => id !== itemInTransfer.id) });
+        saveFolderItemToStorage({ ...itemInTransfer, listId: currentFolder.listId });
+
+        setItemInTransfer(null);
+    }
+
+    // If there's an item in transfer, show the transfer button instead.
+    if (itemInTransfer) {
+        const canTransferToParent = folderItemId !== EStorageKey.ROOT_FOLDER_KEY;
+        return canTransferToParent ? (
+            <Host matchContents>
+                <VStack modifiers={[frame({ width: 190 })]}>
+                    <Button
+                        systemImage='arrow.uturn.left'
+                        color={PlatformColor('label') as unknown as string}
+                        onPress={handleTransferToParent}
+                    >
+                        Transfer to parent
+                    </Button>
+                </VStack>
+            </Host>
+        ) : null;
+    }
 
     return (
         <PopupList actions={[

@@ -35,25 +35,20 @@ const Modal = ({
 }: TModalProps) => {
     const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
 
-    const { background, ColorArray: { Modal: { upper } } } = useAppTheme();
+    const { CssColor: { background }, ColorArray: { Modal: { upper } } } = useAppTheme();
 
     return (
         <View
             className='flex-1'
             style={[
                 customStyle,
-                { backgroundColor: PlatformColor(background) }
+                { backgroundColor: background }
             ]}
         >
 
             {/* Top Bar with Fade */}
-            <View style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: TOP_GLASS_BAR_HEIGHT,
-                zIndex: 10000
+            <View className='absolute top-0 left-0 right-0 z-[1]' style={{
+                height: TOP_GLASS_BAR_HEIGHT
             }}>
                 <ColorFadeView colors={upper} totalHeight={TOP_GLASS_BAR_HEIGHT} solidHeight={TOP_GLASS_BAR_HEIGHT / 2} />
                 <View className='px-4 w-full h-full absolute flex-row items-center justify-between'>
@@ -77,11 +72,11 @@ const Modal = ({
 
             {/* Modal Contents */}
             <ScrollView
+                contentContainerClassName="z-[0] flex-1"
                 contentContainerStyle={{
                     paddingTop: TOP_GLASS_BAR_HEIGHT,
                     paddingBottom: BOTTOM_SPACER,
                     paddingHorizontal: MODAL_PADDING,
-                    flexGrow: 1
                 }}
             >
                 {children}

@@ -1,6 +1,6 @@
 import useAppTheme from '@/hooks/useAppTheme';
-import React, { useState, useCallback } from 'react';
-import { View, ViewProps, LayoutChangeEvent, StyleSheet, PlatformColor } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { LayoutChangeEvent, StyleSheet, View, ViewProps } from 'react-native';
 import Svg, { Defs, RadialGradient, Rect, Stop, LinearGradient as SvgLinearGradient } from 'react-native-svg';
 
 type TShadowViewProps = ViewProps & {
@@ -46,10 +46,10 @@ const ShadowView = ({
     const totalHeight = height + edges.top + edges.bottom;
 
     return (
-        <View style={[styles.container, style]} {...props}>
+        <View className='relative self-start' style={style} {...props}>
             {/* SVG gradient layer */}
             {width > 0 && height > 0 && (
-                <View style={[styles.gradientContainer, {
+                <View className='absolute' style={[{
                     width: totalWidth,
                     height: totalHeight,
                     top: -edges.top,
@@ -186,24 +186,11 @@ const ShadowView = ({
             )}
 
             {/* Children content layer */}
-            <View onLayout={handleLayout} style={styles.childrenContainer}>
+            <View onLayout={handleLayout}>
                 {children}
             </View>
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        position: 'relative',
-        alignSelf: 'flex-start',
-    },
-    gradientContainer: {
-        position: 'absolute',
-    },
-    childrenContainer: {
-        zIndex: 1,
-    },
-});
 
 export default ShadowView;

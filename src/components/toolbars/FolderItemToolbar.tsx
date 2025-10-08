@@ -28,60 +28,6 @@ const FolderItemToolbar = () => {
         onCloseTextfield: onCloseFocusedItem
     } = useTextfieldItemAs<IFolderItem>(itemStorage);
 
-    const iconSet = [
-        [( // Delete Icon
-            <IconButton
-                name='trash'
-                color='label'
-                size={22}
-                onClick={() => {
-                    if (!focusedItem) return;
-
-                    onCloseFocusedItem();
-
-                    if (focusedItem.value.trim() === '') return;
-
-                    const hasChildren = focusedItem.itemIds.length > 0;
-                    const message = `Would you like to delete this ${focusedItem.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
-
-                    Alert.alert(
-                        `Delete "${focusedItem.value}"?`,
-                        message,
-                        [
-                            {
-                                text: "Cancel",
-                                style: "cancel",
-                            },
-                            {
-                                text: hasChildren ? "Force Delete" : "Delete",
-                                style: "destructive",
-                                onPress: () => deleteFolderItemAndChildren(focusedItem, true)
-                            },
-                        ]
-                    );
-                }}
-            />
-        )],
-        [( // Type Toggle
-            <ToggleFolderItemTypeButton
-                disabled={!!focusedItem && focusedItem.itemIds.length > 0}
-                currentType={focusedItem?.type ?? EFolderItemType.FOLDER}
-                onClick={toggleFocusedItemType}
-            />
-        )],
-        [( // Transfer
-            <TransferFolderIcon onClick={beginFocusedItemTransfer} disabled={!!focusedItem && focusedItem.value.length === 0} />
-        )], // Color
-        Object.values(selectableColors).map(color => (
-            <IconButton
-                name={focusedItem && focusedItem?.platformColor === color ? 'circle.inset.filled' : 'circle'}
-                color={color}
-                size={20}
-                onClick={() => changeFocusedItemColor(color)}
-            />
-        )),
-    ];
-
     // Clear the transfering item if a new item begins editing.
     useEffect(() => {
         if (focusedItemId) {
@@ -116,9 +62,59 @@ const FolderItemToolbar = () => {
     }
 
     return (
-        <ListToolbar
-            hide={focusedItem?.storageId !== EStorageId.FOLDER_ITEM}
-            iconSet={iconSet}
+        <ListToolbar iconSet={[
+            [( // Delete Icon
+                <IconButton
+                    name='trash'
+                    color='label'
+                    size={22}
+                    onClick={() => {
+                        if (!focusedItem) return;
+
+                        onCloseFocusedItem();
+
+                        if (focusedItem.value.trim() === '') return;
+
+                        const hasChildren = focusedItem.itemIds.length > 0;
+                        const message = `Would you like to delete this ${focusedItem.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
+
+                        Alert.alert(
+                            `Delete "${focusedItem.value}"?`,
+                            message,
+                            [
+                                {
+                                    text: "Cancel",
+                                    style: "cancel",
+                                },
+                                {
+                                    text: hasChildren ? "Force Delete" : "Delete",
+                                    style: "destructive",
+                                    onPress: () => deleteFolderItemAndChildren(focusedItem, true)
+                                },
+                            ]
+                        );
+                    }}
+                />
+            )],
+            [( // Type Toggle
+                <ToggleFolderItemTypeButton
+                    disabled={!!focusedItem && focusedItem.itemIds.length > 0}
+                    currentType={focusedItem?.type ?? EFolderItemType.FOLDER}
+                    onClick={toggleFocusedItemType}
+                />
+            )],
+            [( // Transfer
+                <TransferFolderIcon onClick={beginFocusedItemTransfer} disabled={!!focusedItem && focusedItem.value.length === 0} />
+            )], // Color
+            Object.values(selectableColors).map(color => (
+                <IconButton
+                    name={focusedItem && focusedItem?.platformColor === color ? 'circle.inset.filled' : 'circle'}
+                    color={color}
+                    size={20}
+                    onClick={() => changeFocusedItemColor(color)}
+                />
+            )),
+        ]}
         />
     )
 };

@@ -16,7 +16,7 @@ export function isValidPlatformColor(color: string) {
         'secondaryLabel',
         'systemBlue',
         'systemBrown',
-        'systemTeal',
+        'systemBlue',
         'systemCyan',
         'systemIndigo',
         'tertiaryLabel'

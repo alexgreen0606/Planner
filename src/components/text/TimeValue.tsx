@@ -19,7 +19,7 @@ const TimeValue = ({
     isoTimestamp,
     isEndEvent: endEvent,
     isStartEvent: startEvent,
-    platformColor = 'systemTeal',
+    platformColor = 'systemBlue',
     disabled
 }: TTimeValueProps) => {
     const [hour, setHour] = useState('');

@@ -31,19 +31,19 @@ const FolderItemButton = ({
         const timeout = setTimeout(() => setBounceTrigger(false), 0);
 
         return () => clearTimeout(timeout);
-    }, [item.type, item.platformColor]);
+    }, [item.type, item.platformColor, item.itemIds]);
 
     return (
         <TouchableOpacity disabled={disabled} onPress={onClick}>
             <SymbolView
                 name={item.type === EFolderItemType.FOLDER ? 'folder.fill' : 'list.bullet'}
-                type='palette'
+                type='monochrome'
                 animationSpec={bounceTrigger ? {
                     effect: { type: 'bounce' },
                     repeating: false
                 } : undefined}
                 size={24}
-                tintColor={PlatformColor(disabled ? 'tertiaryColor' : item.platformColor)}
+                tintColor={PlatformColor(disabled ? 'tertiaryLabel' : item.platformColor)}
             />
         </TouchableOpacity>
     );

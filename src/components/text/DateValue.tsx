@@ -14,7 +14,7 @@ type TDateValueProps = {
 const DateValue = ({
     isoTimestamp,
     disabled,
-    platformColor = 'systemTeal'
+    platformColor = 'systemBlue'
 }: TDateValueProps) => {
     const dayFormat = 'MMM d';
     const yearFormat = 'yyyy';

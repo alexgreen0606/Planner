@@ -266,7 +266,7 @@ const ListItem = <T extends TListItem>({
         const isDragging = draggingRowId.value === item.id;
         if (!isDragging && index.value === itemIndex - 1) {
             return { marginTop: LIST_ITEM_HEIGHT };
-        } else if (!isRowDragging) return { marginTop: 0 };
+        } else if (!isDragging) return { marginTop: 0 };
 
         return {
             top: top.value,
