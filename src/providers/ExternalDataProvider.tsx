@@ -23,7 +23,7 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 // ✅ 
 
-const ExternalDataContext = createContext({ 
+const ExternalDataContext = createContext({
     onReloadPage: async () => { },
     loading: false
 });

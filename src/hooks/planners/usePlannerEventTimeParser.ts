@@ -16,7 +16,7 @@ const usePlannerEventTimeParser = (datestamp: string, eventStorage: MMKV) => {
 
     const { onSetTextfieldItem: onSetFocusedEvent } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
-    const { onFocusPlaceholder } = usePageContext();
+    // const { onFocusPlaceholder } = usePageContext();
 
     function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
         onSetFocusedEvent((prev) => {
@@ -50,7 +50,8 @@ const usePlannerEventTimeParser = (datestamp: string, eventStorage: MMKV) => {
             }
 
             // Save the planner and the event to storage.
-            onFocusPlaceholder();
+            // onFocusPlaceholder();
+            // TODO: focus placeholder
             setPlanner(
                 updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
             );

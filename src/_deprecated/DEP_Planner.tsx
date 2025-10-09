@@ -6,7 +6,7 @@ import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
-import DragAndDropList from './components/DragAndDropList';
+import DragAndDropList from './DEP_DragAndDropList';
 
 // ✅ 
 
@@ -26,7 +26,6 @@ const Planner = ({ datestamp }: TPlannerProps) => {
 
     return (
         <DragAndDropList<IPlannerEvent>
-            fillSpace
             listId={datestamp}
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}

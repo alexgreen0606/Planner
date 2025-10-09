@@ -373,7 +373,6 @@ import ThinLine from "@/components/ThinLine";
 import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
-import { usePageContext } from "@/providers/PageProvider";
 import { useAtom } from "jotai";
 import { MotiView } from "moti";
 import React, { ReactNode, useMemo } from "react";
@@ -421,7 +420,6 @@ const ListItem = <T extends TListItem>({
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
     const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>();
-    const { onFocusPlaceholder } = usePageContext();
 
     const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
@@ -458,7 +456,8 @@ const ListItem = <T extends TListItem>({
         if (!item || isPendingDelete || isDragging) return;
 
         if (!onContentClick) {
-            onFocusPlaceholder();
+
+            // TODO: focus placeholder here
             setTextfieldId(itemId);
             return;
         }

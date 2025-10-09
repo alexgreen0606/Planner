@@ -11,7 +11,7 @@ import DraggableFlatList, {
 } from 'react-native-draggable-flatlist';
 import { MMKV } from 'react-native-mmkv';
 import { FadeOut } from 'react-native-reanimated';
-import ListItem from './ListItem';
+import ListItem from '../components/lists/components/ListItem';
 
 // ✅ 
 

@@ -5,7 +5,7 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { createNewChecklistItemAndSaveToStorage, deleteChecklistItems, updateListItemIndex } from '@/utils/checklistUtils';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
-import DragAndDropList from './components/DragAndDropList';
+import DragAndDropList from '../../_deprecated/DEP_DragAndDropList';
 
 // ✅ 
 

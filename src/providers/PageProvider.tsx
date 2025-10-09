@@ -1,27 +1,50 @@
 import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
+import ListItem from '@/components/lists/components/ListItem';
+import ThinLine from '@/components/ThinLine';
 import useAppTheme from '@/hooks/useAppTheme';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
+import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
-import React, { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { PlatformColor, RefreshControl, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PlatformColor, Pressable, RefreshControl, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
+import { MMKV } from 'react-native-mmkv';
 import {
+    FadeOut,
     runOnJS,
     useAnimatedReaction,
     useSharedValue
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from './ExternalDataProvider';
-import { ScrollProvider } from './ScrollProvider';
 
 // ✅ 
 
-type TPageProviderProps = {
-    children: ReactNode;
+type TListPageProps<T extends TListItem, S> = {
     emptyPageLabelProps: TEmptyPageLabelProps;
     toolbar?: ReactNode;
-    hasStickyHeader?: boolean;
+    stickyHeader?: ReactElement;
     scrollContentAbsoluteTop?: number;
+    itemIds: string[];
+    listId: string;
+    storageId: EStorageId;
+    storage: MMKV;
+    defaultStorageObject?: S;
+    collapsed?: boolean;
+    onCreateItem: (listId: string, index: number) => void;
+    onDeleteItem: (item: T) => void;
+    onValueChange?: (newValue: string) => void;
+    onIndexChange?: (newIndex: number, prev: T) => void;
+    onSaveToExternalStorage?: (item: T) => void;
+    onContentClick?: (item: T) => void;
+    onGetRowTextPlatformColor?: (item: T) => string;
+    onGetIsItemDeletingCustom?: (item: T) => boolean;
+    onGetLeftIcon?: (item: T) => ReactNode;
+    onGetRightIcon?: (item: T) => ReactNode;
 };
 
 type TContentBounds = {
@@ -29,22 +52,21 @@ type TContentBounds = {
     lower: number;
 };
 
-type TPageProviderContextValue = {
-    contentBounds: TContentBounds;
-    onSetIsPageEmpty: (val: boolean) => void;
-    // Focuses Placeholder Textfield (prevents keyboard flicker)
-    onFocusPlaceholder: () => void;
-}
-
-const ScrollPageContext = createContext<TPageProviderContextValue | null>(null);
-
-export const PageProvider = ({
-    children,
+const ListPage = <T extends TListItem, S>({
+    itemIds,
+    listId,
+    storageId,
+    storage,
+    collapsed,
     emptyPageLabelProps,
     toolbar,
-    hasStickyHeader,
+    stickyHeader,
     scrollContentAbsoluteTop = 0,
-}: TPageProviderProps) => {
+    onIndexChange,
+    onCreateItem,
+    onDeleteItem,
+    ...listItemProps
+}: TListPageProps<T, S>) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const headerHeight = useHeaderHeight();
@@ -56,7 +78,7 @@ export const PageProvider = ({
 
     const [maxHeaderHeight, setMaxHeaderHeight] = useState(headerHeight);
     const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
-    const [isPageEmpty, setIsPageEmpty] = useState(false);
+    const [draggingItemInitialIndex, setDraggingItemIndex] = useState<number | null>(null);
 
     const scrollOffset = useSharedValue(0);
 
@@ -64,26 +86,28 @@ export const PageProvider = ({
     const BOTTOM_NAV_HEIGHT = TOP_SPACER + BOTTOM_SPACER;
 
     const minContentHeight = useMemo(() => {
-
-        if (hasStickyHeader) {
+        if (stickyHeader) {
             return SCREEN_HEIGHT - scrollContentAbsoluteTop - BOTTOM_NAV_HEIGHT;
         }
         return SCREEN_HEIGHT - maxHeaderHeight - BOTTOM_NAV_HEIGHT;
-    }, [hasStickyHeader, scrollContentAbsoluteTop, maxHeaderHeight]);
+    }, [stickyHeader, scrollContentAbsoluteTop, maxHeaderHeight]);
 
     const contentBounds: TContentBounds = useMemo(() => {
-        const upper = hasStickyHeader
+        const upper = stickyHeader
             ? scrollContentAbsoluteTop
             : headerHeight;
 
         const lower = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAV_HEIGHT;
 
         return { upper, lower };
-    }, [hasStickyHeader, scrollContentAbsoluteTop, headerHeight]);
+    }, [stickyHeader, scrollContentAbsoluteTop, headerHeight]);
+
+    const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
+    const { isLightMode } = useAppTheme();
 
     const canReloadPath = reloadablePaths.some(p => pathname.includes(p));
-
-    const { isLightMode } = useAppTheme();
+    const isDraggingItem = Boolean(draggingItemInitialIndex);
+    const isPageEmpty = itemIds.length === 0;
 
     // Track the maximum height of the page's header.
     useEffect(() => {
@@ -100,6 +124,10 @@ export const PageProvider = ({
         }
     );
 
+    // ================
+    //  Event Handlers
+    // ================
+
     function handleFocusPlaceholder() {
         placeholderInputRef.current?.focus();
     }
@@ -109,42 +137,115 @@ export const PageProvider = ({
         onReloadPage();
     }
 
-    return (
-        <ScrollPageContext.Provider value={{
-            contentBounds,
-            onFocusPlaceholder: handleFocusPlaceholder,
-            onSetIsPageEmpty: setIsPageEmpty
-        }}>
+    function handleEmptySpaceClick() {
+        if (!textfieldItem) {
+            // Open a textfield at the bottom of the list.
+            onCreateItem(listId, itemIds.length);
+            return;
+        }
 
-            {/* Page Contents */}
-            {/* <ScrollProvider
-                scrollOffset={scrollOffset}
+        onCloseTextfield();
+
+        if (textfieldItem.value.trim() === '') {
+            onDeleteItem(textfieldItem);
+        }
+    }
+
+    const handleDragRelease = useCallback((index: number) => {
+        if (!draggingItemInitialIndex) return;
+
+        if (index !== draggingItemInitialIndex && onIndexChange) {
+            const itemId = itemIds[draggingItemInitialIndex];
+            const item = storage.getString(itemId);
+            if (item) {
+                const parsedItem = JSON.parse(item) as T;
+                onIndexChange(index, parsedItem);
+            }
+        }
+
+        setDraggingItemIndex(null);
+    }, [itemIds, onIndexChange, storage]);
+
+    const handleDragBegin = useCallback((index: number) => {
+        setDraggingItemIndex(index);
+        onCloseTextfield();
+    }, [onCloseTextfield]);
+
+    const renderItem = useCallback(({ item: itemId, drag, isActive, getIndex }: RenderItemParams<string>) => (
+        <ListItem<T>
+            itemIndex={getIndex() ?? 0}
+            listId={listId}
+            itemId={itemId}
+            storage={storage}
+            isActive={isActive}
+            isDragging={isDraggingItem}
+            onLongPress={drag}
+            onCreateItem={onCreateItem}
+            onDeleteItem={onDeleteItem}
+            {...listItemProps}
+        />
+    ), [listId, storage, draggingItemInitialIndex, onCreateItem, onDeleteItem, listItemProps]);
+
+    const renderFooter = useCallback(() => (
+        <>
+            {/* Lower List Line */}
+            {itemIds.length > 0 && (
+                <Pressable onPress={handleEmptySpaceClick}>
+                    <ThinLine />
+                </Pressable>
+            )}
+
+            {/* Empty Click Area */}
+            <Pressable
+                className='flex-1 min-h-10'
+                onPress={handleEmptySpaceClick}
+            />
+        </>
+    ), [itemIds.length, handleEmptySpaceClick]);
+
+    return (
+        <>
+
+            {/* List Contents */}
+            <DraggableFlatList
+                data={itemIds}
+                itemExitingAnimation={FadeOut}
+                keyExtractor={(itemId) => `${itemId}-row`}
+                contentInsetAdjustmentBehavior='automatic'
+                scrollEventThrottle={SCROLL_THROTTLE}
+                scrollEnabled={!isDraggingItem}
+                renderItem={renderItem}
+                onRelease={handleDragRelease}
+                onDragBegin={handleDragBegin}
+                ListHeaderComponent={stickyHeader}
+                ListFooterComponent={renderFooter}
+                containerStyle={{ flex: 1 }}
+                refreshControl={canReloadPath ? (
+                    <RefreshControl
+                        refreshing={showLoadingSymbol || loading}
+                        onRefresh={handleReloadPage}
+                    />
+                ) : undefined}
                 contentContainerStyle={{
                     minHeight: minContentHeight
                 }}
-                refreshControl={canReloadPath ? (
-                    <RefreshControl onRefresh={handleReloadPage} refreshing={showLoadingSymbol || loading} />
-                ) : undefined}
-                contentInsetAdjustmentBehavior="automatic"
+                stickyHeaderIndices={stickyHeader ? [0] : undefined}
                 automaticallyAdjustKeyboardInsets
                 showsVerticalScrollIndicator
-                stickyHeaderIndices={hasStickyHeader ? [0] : undefined}
-            > */}
-                {children}
+                dragItemOverflow
+            />
 
-
-                {/* Red Looseleaf Line */}
-                {isLightMode && !isPageEmpty && (
-                    <View
-                        className='absolute left-50 top-0 translate-x-12'
-                        style={{
-                            width: StyleSheet.hairlineWidth,
-                            backgroundColor: PlatformColor('systemRed'),
-                            height: SCREEN_HEIGHT
-                        }}
-                    />
-                )}
-            {/* </ScrollProvider> */}
+            {/* Red Looseleaf Line */}
+            {isLightMode && !isPageEmpty && (
+                <View
+                    className='absolute left-50 top-0 translate-x-12'
+                    style={{
+                        width: StyleSheet.hairlineWidth,
+                        backgroundColor: PlatformColor('systemRed'),
+                        height: SCREEN_HEIGHT
+                    }}
+                />
+            )}
 
             {/* Empty Page Label */}
             {isPageEmpty && <EmptyPageLabel {...emptyPageLabelProps} />}
@@ -160,15 +261,8 @@ export const PageProvider = ({
                 autoCorrect={false}
             />
 
-        </ScrollPageContext.Provider>
+        </>
     )
 };
 
-
-export const usePageContext = () => {
-    const context = useContext(ScrollPageContext);
-    if (!context) {
-        throw new Error("usePageContext must be used within a PageProvider");
-    }
-    return context;
-};
+export default ListPage;

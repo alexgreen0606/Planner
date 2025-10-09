@@ -12,7 +12,7 @@ import { useAtom } from 'jotai';
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import DragAndDropList from './components/DragAndDropList';
+import DragAndDropList from '../../_deprecated/DEP_DragAndDropList';
 
 // ✅ 
 

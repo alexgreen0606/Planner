@@ -13,7 +13,7 @@ import React from 'react';
 import { PlatformColor } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import FolderItemButton from '../icons/customButtons/FolderItemButton';
-import DragAndDropList from './components/DragAndDropList';
+import DragAndDropList from '../../_deprecated/DEP_DragAndDropList';
 
 // ✅ 
 
