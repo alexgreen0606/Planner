@@ -3,7 +3,7 @@ import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { usePageContext } from '@/providers/PageProvider';
+import { usePageContext } from '@/components/ListPage';
 import React, { ReactNode, useCallback, useEffect, useState } from 'react';
 import { Pressable } from 'react-native';
 import DraggableFlatList, {

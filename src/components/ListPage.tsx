@@ -3,7 +3,7 @@ import ListItem from '@/components/lists/components/ListItem';
 import ThinLine from '@/components/ThinLine';
 import useAppTheme from '@/hooks/useAppTheme';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
-import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import { LIST_ITEM_HEIGHT, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
@@ -11,7 +11,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PlatformColor, Pressable, RefreshControl, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
-import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
+import DraggableFlatList, { DragEndParams, RenderItemParams } from 'react-native-draggable-flatlist';
 import { MMKV } from 'react-native-mmkv';
 import {
     FadeOut,
@@ -20,7 +20,7 @@ import {
     useSharedValue
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useExternalDataContext } from './ExternalDataProvider';
+import { useExternalDataContext } from '../providers/ExternalDataProvider';
 
 // ✅ 
 
@@ -151,20 +151,21 @@ const ListPage = <T extends TListItem, S>({
         }
     }
 
-    const handleDragRelease = useCallback((index: number) => {
-        if (!draggingItemInitialIndex) return;
+    const handleDragEnd = useCallback(({ from, to }: DragEndParams<string>) => {
+        setDraggingItemIndex(null);
 
-        if (index !== draggingItemInitialIndex && onIndexChange) {
-            const itemId = itemIds[draggingItemInitialIndex];
-            const item = storage.getString(itemId);
-            if (item) {
-                const parsedItem = JSON.parse(item) as T;
-                onIndexChange(index, parsedItem);
-            }
+        const draggedItemId = itemIds[from];
+        if (!draggedItemId) return;
+
+        const itemString = storage.getString(draggedItemId);
+        if (!itemString) return;
+
+        const draggedItem = JSON.parse(itemString) as T;
+        if (from !== to && onIndexChange) {
+            onIndexChange(to, draggedItem);
         }
 
-        setDraggingItemIndex(null);
-    }, [itemIds, onIndexChange, storage]);
+    }, [listId, draggingItemInitialIndex, onIndexChange, setDraggingItemIndex]);
 
     const handleDragBegin = useCallback((index: number) => {
         setDraggingItemIndex(index);
@@ -179,6 +180,7 @@ const ListPage = <T extends TListItem, S>({
             storage={storage}
             isActive={isActive}
             isDragging={isDraggingItem}
+            onFocusPlaceholderTextfield={handleFocusPlaceholder}
             onLongPress={drag}
             onCreateItem={onCreateItem}
             onDeleteItem={onDeleteItem}
@@ -187,8 +189,8 @@ const ListPage = <T extends TListItem, S>({
     ), [listId, storage, draggingItemInitialIndex, onCreateItem, onDeleteItem, listItemProps]);
 
     const renderFooter = useCallback(() => (
-        <>
-            {/* Lower List Line */}
+        // TODO: subtract the height of the header
+        <View style={{ minHeight: minContentHeight - (LIST_ITEM_HEIGHT * itemIds.length) }}>
             {itemIds.length > 0 && (
                 <Pressable onPress={handleEmptySpaceClick}>
                     <ThinLine />
@@ -197,14 +199,14 @@ const ListPage = <T extends TListItem, S>({
 
             {/* Empty Click Area */}
             <Pressable
-                className='flex-1 min-h-10'
+                className='flex-1'
                 onPress={handleEmptySpaceClick}
             />
-        </>
-    ), [itemIds.length, handleEmptySpaceClick]);
+        </View>
+    ), [itemIds.length, handleEmptySpaceClick, minContentHeight]);
 
     return (
-        <>
+        <View className='flex-1'>
 
             {/* List Contents */}
             <DraggableFlatList
@@ -215,11 +217,10 @@ const ListPage = <T extends TListItem, S>({
                 scrollEventThrottle={SCROLL_THROTTLE}
                 scrollEnabled={!isDraggingItem}
                 renderItem={renderItem}
-                onRelease={handleDragRelease}
                 onDragBegin={handleDragBegin}
+                onDragEnd={handleDragEnd}
                 ListHeaderComponent={stickyHeader}
                 ListFooterComponent={renderFooter}
-                containerStyle={{ flex: 1 }}
                 refreshControl={canReloadPath ? (
                     <RefreshControl
                         refreshing={showLoadingSymbol || loading}
@@ -232,7 +233,6 @@ const ListPage = <T extends TListItem, S>({
                 stickyHeaderIndices={stickyHeader ? [0] : undefined}
                 automaticallyAdjustKeyboardInsets
                 showsVerticalScrollIndicator
-                dragItemOverflow
             />
 
             {/* Red Looseleaf Line */}
@@ -261,7 +261,7 @@ const ListPage = <T extends TListItem, S>({
                 autoCorrect={false}
             />
 
-        </>
+        </View>
     )
 };
 

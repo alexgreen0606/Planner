@@ -21,7 +21,6 @@ const Checklist = ({ checklistId }: TChecklistProps) => {
 
     return (
         <DragAndDropList<TListItem>
-            fillSpace
             listId={checklistId}
             storage={itemStorage}
             storageId={EStorageId.CHECKLIST_ITEM}

@@ -2,7 +2,7 @@ import Checklist from '@/components/lists/Checklist';
 import useFolderItem from '@/hooks/useFolderItem';
 import useListItemToggle from '@/hooks/useListItemToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import ListPage from '@/providers/PageProvider';
+import ListPage from '@/components/ListPage';
 import { createNewChecklistItemAndSaveToStorage, deleteChecklistItems, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';

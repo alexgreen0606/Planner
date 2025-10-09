@@ -13,6 +13,7 @@ type TListItemTextfieldProps<T extends TListItem> = {
     item: T;
     toolbarIconSet?: ReactNode[][];
     customStyle: TextStyle;
+    onFocusPlaceholderTextfield: () => void;
     onSetItemInStorage: (value: T | ((prevValue: T | undefined) => T | undefined) | undefined) => void;
     onCreateChildTextfield: () => void;
     onDeleteItem: (item: T) => void;
@@ -23,6 +24,7 @@ type TListItemTextfieldProps<T extends TListItem> = {
 const ListItemTextfield = <T extends TListItem>({
     item,
     customStyle,
+    onFocusPlaceholderTextfield,
     onSetItemInStorage,
     onDeleteItem,
     onValueChange,
@@ -66,8 +68,7 @@ const ListItemTextfield = <T extends TListItem>({
             return;
         }
 
-        // TODO: focus placeholder here
-
+        onFocusPlaceholderTextfield();
         onCreateChildTextfield();
     }
 

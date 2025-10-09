@@ -15,7 +15,6 @@ const Icon = ({
     disabled,
     ...symbolViewProps
 }: TIconProps) => {
-
     const colorToUse = disabled ? 'tertiaryLabel' : (color || 'label');
 
     const iconColor = isValidPlatformColor(colorToUse)

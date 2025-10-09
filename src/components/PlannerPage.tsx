@@ -1,27 +1,28 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
+import FolderItemButton from '@/components/icons/customButtons/FolderItemButton';
+import FolderContentsList from '@/components/lists/FolderContentsList';
+import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import useFolderItem from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { usePageContext } from '@/components/ListPage';
+import ListPage from '@/components/ListPage';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
 import { Host, Text } from '@expo/ui/swift-ui';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React from 'react';
 import { PlatformColor } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import FolderItemButton from '../icons/customButtons/FolderItemButton';
-import DragAndDropList from '../../_deprecated/DEP_DragAndDropList';
 
 // ✅ 
 
-type TFolderProps = {
+type TFolderPageProps = {
     folderId: string;
-}
+};
 
-const FolderContentsList = ({ folderId }: TFolderProps) => {
+const FolderPage = ({ folderId }: TFolderPageProps) => {
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const router = useRouter();
 
@@ -35,14 +36,12 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
         onEndTransfer,
     } = useFolderItem(folderId, folderItemStorage);
 
-    const { onFocusPlaceholder } = usePageContext();
-
     const getLeftIcon = (item: IFolderItem) => (
         <FolderItemButton
             item={item}
             disabled={getIsItemTransfering(item.id) || (isTransferMode && item.type === EFolderItemType.CHECKLIST)}
             onClick={() => {
-                onFocusPlaceholder();
+                // TODO: focus placeholder
                 setTextfieldId(item.id);
             }}
         />
@@ -102,7 +101,9 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
     }
 
     return (
-        <DragAndDropList<IFolderItem>
+        <ListPage
+            emptyPageLabelProps={{ label: 'Empty folder' }}
+            toolbar={<FolderItemToolbar />}
             listId={folderId}
             itemIds={itemIds}
             storage={folderItemStorage}
@@ -124,4 +125,4 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
     )
 };
 
-export default FolderContentsList;
+export default FolderPage;

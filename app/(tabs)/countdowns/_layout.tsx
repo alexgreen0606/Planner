@@ -1,6 +1,6 @@
 import Countdowns from '@/components/lists/Countdowns';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
-import { ListPage } from '@/providers/PageProvider';
+import { ListPage } from '@/components/ListPage';
 
 // ✅ 
 

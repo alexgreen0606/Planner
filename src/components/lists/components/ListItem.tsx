@@ -388,6 +388,7 @@ type TListItemProps<T extends TListItem> = {
     isDragging: boolean;
     storage: MMKV;
     onLongPress: () => void;
+    onFocusPlaceholderTextfield: () => void;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
@@ -407,6 +408,7 @@ const ListItem = <T extends TListItem>({
     isActive,
     isDragging,
     onLongPress,
+    onFocusPlaceholderTextfield,
     onValueChange,
     onCreateItem,
     onDeleteItem,
@@ -457,7 +459,7 @@ const ListItem = <T extends TListItem>({
 
         if (!onContentClick) {
 
-            // TODO: focus placeholder here
+            onFocusPlaceholderTextfield();
             setTextfieldId(itemId);
             return;
         }
@@ -509,6 +511,7 @@ const ListItem = <T extends TListItem>({
                         <ListItemTextfield<T>
                             item={item}
                             customStyle={valueStyles}
+                            onFocusPlaceholderTextfield={onFocusPlaceholderTextfield}
                             onDeleteItem={onDeleteItem}
                             onSetItemInStorage={setItem}
                             onValueChange={onValueChange}
