@@ -117,7 +117,7 @@ export const PageProvider = ({
         }}>
 
             {/* Page Contents */}
-            <ScrollProvider
+            {/* <ScrollProvider
                 scrollOffset={scrollOffset}
                 contentContainerStyle={{
                     minHeight: minContentHeight
@@ -129,7 +129,7 @@ export const PageProvider = ({
                 automaticallyAdjustKeyboardInsets
                 showsVerticalScrollIndicator
                 stickyHeaderIndices={hasStickyHeader ? [0] : undefined}
-            >
+            > */}
                 {children}
 
 
@@ -144,7 +144,7 @@ export const PageProvider = ({
                         }}
                     />
                 )}
-            </ScrollProvider>
+            {/* </ScrollProvider> */}
 
             {/* Empty Page Label */}
             {isPageEmpty && <EmptyPageLabel {...emptyPageLabelProps} />}

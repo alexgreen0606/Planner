@@ -1,15 +1,16 @@
 import ThinLine from '@/components/ThinLine';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
-import { LIST_ITEM_HEIGHT } from '@/lib/constants/listConstants';
+import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { usePageContext } from '@/providers/PageProvider';
-import { useScrollContext } from '@/providers/ScrollProvider';
-import React, { ReactNode, useEffect } from 'react';
-import { Pressable, useWindowDimensions, View } from 'react-native';
+import React, { ReactNode, useCallback, useEffect, useState } from 'react';
+import { Pressable } from 'react-native';
+import DraggableFlatList, {
+    RenderItemParams
+} from 'react-native-draggable-flatlist';
 import { MMKV } from 'react-native-mmkv';
-import { cancelAnimation, runOnJS, useAnimatedReaction, useDerivedValue, useSharedValue } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FadeOut } from 'react-native-reanimated';
 import ListItem from './ListItem';
 
 // ✅ 
@@ -18,7 +19,6 @@ type TDragAndDropListProps<T extends TListItem, S = T> = {
     itemIds: string[];
     listId: string;
     storageId: EStorageId;
-    fillSpace?: boolean;
     storage: MMKV;
     defaultStorageObject?: S;
     collapsed?: boolean;
@@ -38,7 +38,6 @@ const DragAndDropList = <T extends TListItem, S = T>({
     itemIds,
     listId,
     storageId,
-    fillSpace,
     storage,
     collapsed,
     onIndexChange,
@@ -46,37 +45,13 @@ const DragAndDropList = <T extends TListItem, S = T>({
     onDeleteItem,
     ...rest
 }: TDragAndDropListProps<T, S>) => {
-    const { onSetIsPageEmpty, contentBounds: { upper, lower } } = usePageContext();
-    const { scrollOffset } = useScrollContext();
+    const { onSetIsPageEmpty } = usePageContext();
 
-    const draggingRowId = useSharedValue<string | null>(null);
-    const isAutoScrolling = useSharedValue(false);
-
-    const dragInitialScrollOffset = useSharedValue(0);
-    const dragInitialIndex = useSharedValue(0);
-    const dragInitialTop = useSharedValue(0);
-    const dragTop = useSharedValue(0);
-
-    const dragIndex = useDerivedValue(() => Math.floor(dragTop.value / LIST_ITEM_HEIGHT));
+    const [draggingItemInitialIndex, setDraggingItemIndex] = useState<number | null>(null);
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-    const dragTopMax = Math.max(0, LIST_ITEM_HEIGHT * (itemIds.length - 1));
-
-    // Auto Scrolling.
-    useAnimatedReaction(
-        () => scrollOffset.value - dragInitialScrollOffset.value,
-        (displacement) => {
-            dragTop.value += displacement;
-            dragInitialTop.value += displacement;
-            dragInitialScrollOffset.value = scrollOffset.value;
-        }
-    );
-
-    // Clear any pending drag once the result is officially saved.
-    useEffect(() => {
-        draggingRowId.value = null;
-    }, [itemIds]);
+    const isDraggingItem = Boolean(draggingItemInitialIndex);
 
     // Show the empty page label whenever the list length is 0.
     useEffect(() => {
@@ -101,68 +76,43 @@ const DragAndDropList = <T extends TListItem, S = T>({
         }
     }
 
-    function handleDragStartWorklet(rowId: string, initialIndex: number) {
-        "worklet";
-        const initialTop = initialIndex * LIST_ITEM_HEIGHT;
+    const handleDragRelease = useCallback((index: number) => {
+        if (!draggingItemInitialIndex) return;
 
-        dragInitialScrollOffset.value = scrollOffset.value;
-        dragInitialIndex.value = initialIndex;
-        dragInitialTop.value = initialTop;
-
-        dragTop.value = initialTop;
-        draggingRowId.value = rowId;
-
-        runOnJS(onCloseTextfield)();
-    }
-
-    function handleDragEndWorklet(newIndex: number, item?: T) {
-        "worklet";
-
-        cancelAnimation(scrollOffset);
-        isAutoScrolling.value = false;
-
-        if (onIndexChange && item) {
-            runOnJS(onIndexChange)(newIndex, item);
+        if (index !== draggingItemInitialIndex && onIndexChange) {
+            const itemId = itemIds[draggingItemInitialIndex];
+            const item = storage.getString(itemId);
+            if (item) {
+                const parsedItem = JSON.parse(item) as T;
+                onIndexChange(index, parsedItem);
+            }
         }
 
-        // Ensure the drag is cancelled in cases where the drag result was denied.
-        runOnJS(setTimeout)(() => draggingRowId.value = null, 250);
-    }
+        setDraggingItemIndex(null);
+    }, [itemIds, onIndexChange, storage]);
 
-    // ================
-    //  User Interface
-    // ================
+    const handleDragBegin = useCallback((index: number) => {
+        setDraggingItemIndex(index);
+        onCloseTextfield();
+    }, [onCloseTextfield]);
 
-    return (
-        <View style={{ flex: fillSpace ? 1 : 0 }}>
+    const renderItem = useCallback(({ item: itemId, drag, isActive, getIndex }: RenderItemParams<string>) => (
+        <ListItem<T>
+            itemIndex={getIndex() ?? 0}
+            listId={listId}
+            itemId={itemId}
+            storage={storage}
+            isActive={isActive}
+            isDragging={isDraggingItem}
+            onLongPress={drag}
+            onCreateItem={onCreateItem}
+            onDeleteItem={onDeleteItem}
+            {...rest}
+        />
+    ), [listId, storage, draggingItemInitialIndex, onCreateItem, onDeleteItem, rest]);
 
-            {/* List Items */}
-            {itemIds.map((id, i) =>
-                <ListItem<T>
-                    key={`${id}-row`}
-                    itemIndex={i}
-                    listId={listId}
-                    upperAutoScrollBound={upper}
-                    lowerAutoScrollBound={lower}
-                    itemId={id}
-                    storage={storage}
-                    dragConfig={{
-                        topMax: dragTopMax,
-                        isAutoScrolling: isAutoScrolling,
-                        draggingRowId: draggingRowId,
-                        initialTop: dragInitialTop,
-                        initialIndex: dragInitialIndex,
-                        top: dragTop,
-                        index: dragIndex,
-                        onDragEnd: handleDragEndWorklet,
-                        onDragStart: handleDragStartWorklet
-                    }}
-                    {...rest}
-                    onCreateItem={onCreateItem}
-                    onDeleteItem={onDeleteItem}
-                />
-            )}
-
+    const renderFooter = useCallback(() => (
+        <>
             {/* Lower List Line */}
             {itemIds.length > 0 && (
                 <Pressable onPress={handleEmptySpaceClick}>
@@ -172,12 +122,33 @@ const DragAndDropList = <T extends TListItem, S = T>({
 
             {/* Empty Click Area */}
             <Pressable
-                className='flex-1'
+                className='flex-1 min-h-10'
                 onPress={handleEmptySpaceClick}
             />
+        </>
+    ), [itemIds.length, handleEmptySpaceClick]);
 
-        </View>
-    )
+    // ================
+    //  User Interface
+    // ================
+
+    return (
+        <DraggableFlatList
+            data={itemIds}
+            itemExitingAnimation={FadeOut}
+            keyExtractor={(itemId) => `${itemId}-row`}
+            contentInsetAdjustmentBehavior='automatic'
+            scrollEventThrottle={SCROLL_THROTTLE}
+            scrollEnabled={!isDraggingItem}
+            renderItem={renderItem}
+            onRelease={handleDragRelease}
+            onDragBegin={handleDragBegin}
+            ListFooterComponent={renderFooter}
+            containerStyle={{ flex: 1 }}
+            automaticallyAdjustKeyboardInsets
+            dragItemOverflow
+        />
+    );
 };
 
 export default DragAndDropList;

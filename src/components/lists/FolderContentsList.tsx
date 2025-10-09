@@ -103,7 +103,6 @@ const FolderContentsList = ({ folderId }: TFolderProps) => {
 
     return (
         <DragAndDropList<IFolderItem>
-            fillSpace
             listId={folderId}
             itemIds={itemIds}
             storage={folderItemStorage}
