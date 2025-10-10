@@ -1,5 +1,4 @@
 import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
-import ListItem from '@/components/lists/components/ListItem';
 import ThinLine from '@/components/ThinLine';
 import useAppTheme from '@/hooks/useAppTheme';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
@@ -21,10 +20,11 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
+import ListItem from './lists/ListItem';
 
 // ✅ 
 
-type TListPageProps<T extends TListItem, S> = {
+type TDraggableListPageProps<T extends TListItem, S> = {
     emptyPageLabelProps: TEmptyPageLabelProps;
     toolbar?: ReactNode;
     stickyHeader?: ReactElement;
@@ -52,7 +52,7 @@ type TContentBounds = {
     lower: number;
 };
 
-const ListPage = <T extends TListItem, S>({
+const DraggableListPage = <T extends TListItem, S>({
     itemIds,
     listId,
     storageId,
@@ -66,7 +66,7 @@ const ListPage = <T extends TListItem, S>({
     onCreateItem,
     onDeleteItem,
     ...listItemProps
-}: TListPageProps<T, S>) => {
+}: TDraggableListPageProps<T, S>) => {
     const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const headerHeight = useHeaderHeight();
@@ -227,6 +227,7 @@ const ListPage = <T extends TListItem, S>({
                         onRefresh={handleReloadPage}
                     />
                 ) : undefined}
+                containerStyle={{ flex: 1 }}
                 contentContainerStyle={{
                     minHeight: minContentHeight
                 }}
@@ -265,4 +266,4 @@ const ListPage = <T extends TListItem, S>({
     )
 };
 
-export default ListPage;
+export default DraggableListPage;

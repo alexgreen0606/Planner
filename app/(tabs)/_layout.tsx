@@ -15,11 +15,11 @@ const TabLayout = () => (
         {/* <NativeTabs.Trigger name='recurring'>
             <Label hidden />
             <Icon sf='repeat' />
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger name='countdowns'>
+        </NativeTabs.Trigger> */}
+        <NativeTabs.Trigger name='upcomingDates'>
             <Label hidden />
             <Icon sf='calendar.badge.exclamationmark' />
-        </NativeTabs.Trigger> */}
+        </NativeTabs.Trigger>
     </NativeTabs>
 );
 

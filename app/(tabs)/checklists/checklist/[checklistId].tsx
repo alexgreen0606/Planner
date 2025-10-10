@@ -1,8 +1,7 @@
-import Checklist from '@/components/lists/Checklist';
 import useFolderItem from '@/hooks/useFolderItem';
 import useListItemToggle from '@/hooks/useListItemToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import ListPage from '@/components/ListPage';
+import DraggableListPage from '@/components/DraggableListPage';
 import { createNewChecklistItemAndSaveToStorage, deleteChecklistItems, updateListItemIndex } from '@/utils/checklistUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -21,7 +20,7 @@ const ChecklistPage = () => {
 
     const { itemIds } = useFolderItem(checklistId, folderItemStorage);
     return (
-        <ListPage
+        <DraggableListPage
             emptyPageLabelProps={{ label: 'All items complete' }}
             listId={checklistId}
             storage={itemStorage}

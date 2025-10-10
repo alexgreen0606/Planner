@@ -30,11 +30,7 @@ const PlannerChip = ({
     backgroundPlatformColor = 'systemGray6',
     index
 }: TPlannerChipProps) => {
-    const { width: SCREEN_WIDTH } = useWindowDimensions();
-
     const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
-
-    const { weatherChip } = useAppTheme();
 
     const isPendingDelete = useMemo(() =>
         onGetDeletingItemsByStorageIdCallback(EStorageId.PLANNER_EVENT).some(deleteItem =>
@@ -46,6 +42,8 @@ const PlannerChip = ({
         [onGetDeletingItemsByStorageIdCallback]
     );
 
+    const { weatherChip } = useAppTheme();
+
     const isWeatherChip = id.includes('weather-chip');
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
@@ -54,9 +52,6 @@ const PlannerChip = ({
         <Pressable onPress={onClick}>
             <Animated.View
                 layout={LinearTransition.duration(5000)}
-                // entering={ZoomIn.duration(400)}
-                // TODO: do better
-                // exiting={SequencedTransition.duration(5000)}
                 className='flex-row gap-1 h-6 rounded-xl min-w-6 items-center border justify-center relative overflow-hidden'
                 style={{
                     borderColor: chipCssColor,

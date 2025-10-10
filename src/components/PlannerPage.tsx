@@ -1,16 +1,15 @@
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import FolderItemButton from '@/components/icons/customButtons/FolderItemButton';
-import FolderContentsList from '@/components/lists/FolderContentsList';
+import DraggableListPage from '@/components/DraggableListPage';
 import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import useFolderItem from '@/hooks/useFolderItem';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import ListPage from '@/components/ListPage';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { createNewFolderItemAndSaveToStorage, deleteFolderItemAndChildren, updateListItemIndex } from '@/utils/checklistUtils';
 import { Host, Text } from '@expo/ui/swift-ui';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSetAtom } from 'jotai';
 import React from 'react';
 import { PlatformColor } from 'react-native';
@@ -101,7 +100,7 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
     }
 
     return (
-        <ListPage
+        <DraggableListPage
             emptyPageLabelProps={{ label: 'Empty folder' }}
             toolbar={<FolderItemToolbar />}
             listId={folderId}

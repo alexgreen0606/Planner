@@ -1,12 +1,11 @@
 import PlannerHeader from '@/components/headers/PlannerHeader';
-import Planner from '@/_deprecated/DEP_Planner';
+import DraggableListPage from '@/components/DraggableListPage';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import usePlanner from '@/hooks/planners/usePlanner';
 import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
 import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
 import { PLANNER_CAROUSEL_HEIGHT } from '@/lib/constants/miscLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import ListPage from '@/components/ListPage';
 import { createPlannerEventInStorageAndFocusTextfield, createPlannerEventTimeIcon, deletePlannerEventsFromStorageAndCalendar, updateDeviceCalendarEventByPlannerEvent } from '@/utils/plannerUtils';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -28,7 +27,7 @@ const PlannerPage = () => {
     } = usePlanner(datestamp);
 
     return (
-        <ListPage
+        <DraggableListPage
             scrollContentAbsoluteTop={TOP_SPACER + PLANNER_CAROUSEL_HEIGHT}
             emptyPageLabelProps={{ label: 'No plans' }}
             toolbar={<PlannerEventToolbar />}

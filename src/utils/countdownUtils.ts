@@ -7,6 +7,7 @@ import * as Calendar from 'expo-calendar';
 import { uuid } from "expo-modules-core";
 import { createCalendarIdToCalendarMap, loadExternalCalendarData } from "./calendarUtils";
 import { getAllMountedDatestampsFromStore } from "./plannerUtils";
+import { hasCalendarAccess } from "./accessUtils";
 
 // ✅ 
 
@@ -18,10 +19,15 @@ import { getAllMountedDatestampsFromStore } from "./plannerUtils";
  * Converts a calendar event to a Countdown.
  * 
  * @param calendarEvent - The calendar event to convert.
+ * @param calendarColor - The color of the calendar that contains this event.
  * @param existingEventId - An ID to use for the event. If not provided, a new ID will be generated.
  * @returns A Countdown Event with the data from the calendar event.
  */
-function mapCalendarEventToCountdown(calendarEvent: Calendar.Event, existingEventId?: string): ICountdownEvent {
+function mapCalendarEventToCountdown(
+    calendarEvent: Calendar.Event,
+    calendarColor: string,
+    existingEventId?: string
+): ICountdownEvent {
     return {
         id: existingEventId ?? uuid.v4(),
         value: calendarEvent.title,
@@ -29,7 +35,8 @@ function mapCalendarEventToCountdown(calendarEvent: Calendar.Event, existingEven
         startIso: calendarEvent.startDate as string,
         storageId: EStorageId.COUNTDOWN_EVENT,
         calendarId: calendarEvent.id,
-        isRecurring: Boolean(calendarEvent.recurrenceRule)
+        isRecurring: Boolean(calendarEvent.recurrenceRule),
+        color: calendarColor
     }
 }
 
@@ -82,6 +89,35 @@ function calculateChronologicalCountdownEventIndex(
     return 0;
 }
 
+
+/**
+ * Fetches all future and current all-day events from ALL calendars on the device.
+ * 
+ * @returns All all-day calendar events from all device calendars from today until 3 years from now.
+ */
+async function getAllCountdownEventsFromCalendar(): Promise<Calendar.Event[]> {
+    // Check calendar access first
+    if (!hasCalendarAccess()) {
+        return [];
+    }
+
+    // Set date range from today to 3 years from now
+    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
+    const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
+
+    // Get all calendar IDs
+    const allCalendarsMap = await createCalendarIdToCalendarMap();
+    const allCalendarIds = Object.keys(allCalendarsMap);
+
+    // Fetch all events from all calendars
+    const allCalendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate);
+
+    // Filter to only include all-day events
+    const allDayEvents = allCalendarEvents.filter(event => event.allDay === true);
+
+    return allDayEvents;
+}
+
 // ============================
 // 2. Calendar Synchronization
 // ============================
@@ -93,6 +129,8 @@ function calculateChronologicalCountdownEventIndex(
 export async function upsertCalendarEventsIntoCountdownPlanner() {
     const calendarEvents = await getAllCountdownEventsFromCalendar();
     const countdownEventIds = getCountdownPlannerFromStorage();
+
+    const allCalendarsMap = await createCalendarIdToCalendarMap();
 
     const existingCalendarIds = new Set<string>();
     let newCountdownPlanner: string[] = [];
@@ -111,7 +149,11 @@ export async function upsertCalendarEventsIntoCountdownPlanner() {
 
         existingCalendarIds.add(calendarEvent.id);
 
-        const updatedEvent = mapCalendarEventToCountdown(calendarEvent, eventId);
+        // Get the calendar color from the map
+        const calendar = allCalendarsMap[calendarEvent.calendarId];
+        const calendarColor = calendar?.color || 'rgb(125,125,125)';
+
+        const updatedEvent = mapCalendarEventToCountdown(calendarEvent, calendarColor, eventId);
 
         newCountdownPlanner.push(updatedEvent.id);
 
@@ -129,7 +171,11 @@ export async function upsertCalendarEventsIntoCountdownPlanner() {
 
         existingCalendarIds.add(calendarEvent.id);
 
-        const newEvent = mapCalendarEventToCountdown(calendarEvent);
+        // Get the calendar color from the map
+        const calendar = allCalendarsMap[calendarEvent.calendarId];
+        const calendarColor = calendar?.color || 'rgb(125,125,125)';
+
+        const newEvent = mapCalendarEventToCountdown(calendarEvent, calendarColor);
 
         newCountdownPlanner.push(newEvent.id);
 
@@ -144,19 +190,6 @@ export async function upsertCalendarEventsIntoCountdownPlanner() {
 // =================
 // 3. Read Function
 // =================
-
-/**
- * Fetches all future and current events from the Countdown Calendar.
- * 
- * @returns All countdown events from the device calendar from today and later in the future.
- */
-export async function getAllCountdownEventsFromCalendar(): Promise<Calendar.Event[]> {
-    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
-    const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
-
-    const id = await getCountdownCalendarId();
-    return await Calendar.getEventsAsync([id], startDate, endDate);
-}
 
 /**
  * Fetches a countdown event from storage by its calendar event ID.

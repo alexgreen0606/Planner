@@ -12,7 +12,7 @@ import { useMMKV } from "react-native-mmkv";
 import IconButton from "../icons/IconButton";
 import ToggleFolderItemTypeButton from "../icons/customButtons/ToggleFolderItemTypeButton";
 import TransferFolderIcon from "../icons/customButtons/TransferFolderButton";
-import ListToolbar from "../lists/components/ListToolbar";
+import ListToolbar from "../lists/ListToolbar";
 
 // ✅ 
 

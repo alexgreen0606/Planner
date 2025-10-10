@@ -1,4 +1,4 @@
-import PlannerCard from '@/_deprecated/DepPlannerCard';
+import PlannerCard from '@/components/PlannerCard';
 import ColorFadeView from '@/components/views/ColorFadeView';
 import FadeInView from '@/components/views/FadeInView';
 import useAppTheme from '@/hooks/useAppTheme';

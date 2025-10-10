@@ -1,4 +1,4 @@
-import ListToolbar from "@/components/lists/components/ListToolbar";
+import ListToolbar from "@/components/lists/ListToolbar";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
 import { openPlannerTimeModal } from "@/utils/plannerUtils";

@@ -103,7 +103,7 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
         id: event.id,
         color,
         iconConfig: {
-            type: calendarIconMap[calendarTitle] ?? 'calendar'
+            name: calendarIconMap[calendarTitle] ?? 'calendar'
         }
     };
 

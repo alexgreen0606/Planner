@@ -33,7 +33,7 @@ const DateValue = ({
         <View className='relative flex-row w-fit'>
             <CustomText
                 variant='conciseDate'
-                customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}
+                customStyle={{ color: disabled ? PlatformColor('tertiaryLabel') : platformColor }}
             >
                 {monthDay.toUpperCase()}
             </CustomText>
