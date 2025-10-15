@@ -2,7 +2,7 @@ import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
 import ThinLine from '@/components/ThinLine';
 import useAppTheme from '@/hooks/useAppTheme';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
-import { LIST_ITEM_HEIGHT, SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import {SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
@@ -35,6 +35,7 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     storage: MMKV;
     defaultStorageObject?: S;
     collapsed?: boolean;
+    minRowHeight?: number;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
@@ -45,6 +46,7 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     onGetIsItemDeletingCustom?: (item: T) => boolean;
     onGetLeftIcon?: (item: T) => ReactNode;
     onGetRightIcon?: (item: T) => ReactNode;
+    onGetIsEditable?: (item: T) => boolean;
 };
 
 type TContentBounds = {
@@ -62,6 +64,7 @@ const DraggableListPage = <T extends TListItem, S>({
     toolbar,
     stickyHeader,
     scrollContentAbsoluteTop = 0,
+    minRowHeight,
     onIndexChange,
     onCreateItem,
     onDeleteItem,
@@ -103,7 +106,6 @@ const DraggableListPage = <T extends TListItem, S>({
     }, [stickyHeader, scrollContentAbsoluteTop, headerHeight]);
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
-    const { isLightMode } = useAppTheme();
 
     const canReloadPath = reloadablePaths.some(p => pathname.includes(p));
     const isDraggingItem = Boolean(draggingItemInitialIndex);
@@ -180,8 +182,9 @@ const DraggableListPage = <T extends TListItem, S>({
             storage={storage}
             isActive={isActive}
             isDragging={isDraggingItem}
+            minHeight={minRowHeight}
             onFocusPlaceholderTextfield={handleFocusPlaceholder}
-            onLongPress={drag}
+            onLongPress={onIndexChange ? drag : undefined}
             onCreateItem={onCreateItem}
             onDeleteItem={onDeleteItem}
             {...listItemProps}
@@ -190,7 +193,7 @@ const DraggableListPage = <T extends TListItem, S>({
 
     const renderFooter = useCallback(() => (
         // TODO: subtract the height of the header
-        <View style={{ minHeight: minContentHeight - (LIST_ITEM_HEIGHT * itemIds.length) }}>
+        <View style={{ minHeight: minContentHeight }}>
             {itemIds.length > 0 && (
                 <Pressable onPress={handleEmptySpaceClick}>
                     <ThinLine />
@@ -211,6 +214,7 @@ const DraggableListPage = <T extends TListItem, S>({
             {/* List Contents */}
             <DraggableFlatList
                 data={itemIds}
+                
                 itemExitingAnimation={FadeOut}
                 keyExtractor={(itemId) => `${itemId}-row`}
                 contentInsetAdjustmentBehavior='automatic'
@@ -235,18 +239,6 @@ const DraggableListPage = <T extends TListItem, S>({
                 automaticallyAdjustKeyboardInsets
                 showsVerticalScrollIndicator
             />
-
-            {/* Red Looseleaf Line */}
-            {isLightMode && !isPageEmpty && (
-                <View
-                    className='absolute left-50 top-0 translate-x-12'
-                    style={{
-                        width: StyleSheet.hairlineWidth,
-                        backgroundColor: PlatformColor('systemRed'),
-                        height: SCREEN_HEIGHT
-                    }}
-                />
-            )}
 
             {/* Empty Page Label */}
             {isPageEmpty && <EmptyPageLabel {...emptyPageLabelProps} />}

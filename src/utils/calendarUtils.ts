@@ -8,11 +8,11 @@ import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { router } from "expo-router";
 import { DateTime } from "luxon";
-import { hasCalendarAccess, hasContactsAccess } from "./accessUtils";
+import { hasCalendarAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
-import { getCountdownEventIdFromStorageByCalendarId, upsertCalendarEventsIntoCountdownPlanner } from "./countdownUtils";
-import { datestampToMidnightJsDate, getDayShiftedDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
+import { getDayShiftedDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
 import { openPlannerTimeModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
+import { getUpcomingDateIdFromStorageByCalendarId, upsertCalendarEventsIntoUpcomingDatePlanner } from "./upcomingDateUtils";
 
 // ✅ 
 
@@ -115,13 +115,13 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
         calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
     }
 
-    if (calendar.title === 'Countdowns') {
+    if (calendar.title === 'UpcomingDates') {
         calendarEventChip.onClick = () => {
-            const foundStorageId = getCountdownEventIdFromStorageByCalendarId(event.id);
+            const foundStorageId = getUpcomingDateIdFromStorageByCalendarId(event.id);
             if (!foundStorageId) return;
 
             jotaiStore.set(textfieldIdAtom, foundStorageId);
-            router.push('/planners/countdowns');
+            router.push('/planners/upcomingDates');
         };
     }
 
@@ -150,11 +150,11 @@ export async function loadExternalCalendarData(datestamps: string[]) {
 
     if (hasCalendarAccess()) {
 
-        // Phase 1: Build and save the updated countdown planner.
-        // Must be done BEFORE building the planner chips, as these need to access the storage records of the Countdown Events.
-        await upsertCalendarEventsIntoCountdownPlanner();
+        // Phase 1: Build and save the updated upcomingDate planner.
+        // Must be done BEFORE building the planner chips, as these need to access the storage records of the Upcoming Date Events.
+        await upsertCalendarEventsIntoUpcomingDatePlanner();
 
-        const allCalendarsMap = await createCalendarIdToCalendarMap();
+        const allCalendarsMap = await getCalendarIdToCalendarMap();
         const allCalendarIds = Object.keys(allCalendarsMap);
         const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
         const endDate = DateTime.fromISO(datestamps[datestamps.length - 1]).endOf('day').toJSDate();
@@ -196,16 +196,25 @@ export async function loadExternalCalendarData(datestamps: string[]) {
 
 }
 
-// ===================
-// 3. Create Function
-// ===================
+// =================
+// 4. Read Function
+// =================
+
+/**
+ * Gets the device's primary calendar.
+ * 
+ * @returns The primary calendar object.
+ */
+export async function getPrimaryCalendar(): Promise<Calendar.Calendar> {
+    return await Calendar.getDefaultCalendarAsync();
+}
 
 /**
  * Generates a map of the device's calendar IDs to calendars.
  * 
  * @returns A map of calendar IDs to Calendar objects.
  */
-export async function createCalendarIdToCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
+export async function getCalendarIdToCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
     const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
     const calendarMap = allCalendars.reduce((acc, cal) => {
         acc[cal.id] = cal;
@@ -214,16 +223,12 @@ export async function createCalendarIdToCalendarMap(): Promise<Record<string, Ca
     return calendarMap;
 }
 
-// =================
-// 4. Read Function
-// =================
-
 /**
  * Gets the device calendar ID for the primary calendar.
  * 
  * @returns The ID of the primary calendar.
  */
 export async function getPrimaryCalendarId(): Promise<string> {
-    const primaryCalendar = await Calendar.getDefaultCalendarAsync();
+    const primaryCalendar = await getPrimaryCalendar();
     return primaryCalendar.id;
 }

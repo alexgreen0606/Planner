@@ -4,12 +4,11 @@ import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange, getDayShiftedDatestamp } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { PlatformColor, StyleSheet, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { runOnJS, runOnUI } from "react-native-worklets";
-import OpenCalendarButton from "../icons/customButtons/OpenCalendarIconButton";
+import OpenPlannerButton from "../icons/customButtons/OpenCalendarIconButton";
 import PlannerDateIcon from "./PlannerDateIcon";
-import useAppTheme from "@/hooks/useAppTheme";
 
 // ✅ 
 
@@ -32,8 +31,6 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
     const scrollX = useSharedValue(CAROUSEL_CENTER_SCROLL_X);
     const isSnappingToCenter = useSharedValue(false);
-
-    const { isLightMode } = useAppTheme();
 
     const scrollHandler = useAnimatedScrollHandler({
         onBeginDrag: () => {
@@ -148,8 +145,8 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
             />
 
             {/* Calendar Button */}
-            <View className='absolute right-0 justify-center h-full'>
-                <OpenCalendarButton />
+            <View className='absolute right-0 h-full'>
+                <OpenPlannerButton onOpenPlanner={() => null} />
             </View>
 
         </View>

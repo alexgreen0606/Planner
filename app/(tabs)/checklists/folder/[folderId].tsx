@@ -11,7 +11,7 @@ type TFolderParams = {
 const ChildFolderPage = () => {
   const { folderId } = useLocalSearchParams<TFolderParams>();
   return (
-    <FolderPage folderId={folderId}/>
+    <FolderPage folderId={folderId} />
   )
 };
 

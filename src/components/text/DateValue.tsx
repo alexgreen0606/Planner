@@ -23,11 +23,8 @@ const DateValue = ({
     const monthDay = date.toFormat(dayFormat);
     const year = date.toFormat(yearFormat);
 
-    // Compute 11 months from now
-    const elevenMonthsLater = DateTime.now().plus({ months: 11 });
-
-    // Only show year if date is more than 11 months away
-    const showYear = date > elevenMonthsLater;
+    // Show year only if it's different from the current year
+    const showYear = date.year !== DateTime.now().year;
 
     return (
         <View className='relative flex-row w-fit'>

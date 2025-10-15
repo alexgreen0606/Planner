@@ -8,6 +8,10 @@ const TabLayout = () => (
             <Label hidden />
             <Icon sf='note' />
         </NativeTabs.Trigger>
+        <NativeTabs.Trigger name='upcomingDates'>
+            <Label hidden />
+            <Icon sf='calendar.badge.exclamationmark' />
+        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="checklists">
             <Label hidden />
             <Icon sf='list.bullet.clipboard' />
@@ -16,10 +20,6 @@ const TabLayout = () => (
             <Label hidden />
             <Icon sf='repeat' />
         </NativeTabs.Trigger> */}
-        <NativeTabs.Trigger name='upcomingDates'>
-            <Label hidden />
-            <Icon sf='calendar.badge.exclamationmark' />
-        </NativeTabs.Trigger>
     </NativeTabs>
 );
 

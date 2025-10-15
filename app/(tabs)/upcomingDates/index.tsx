@@ -1,18 +1,18 @@
-import { countdownDateModalEventAtom } from '@/atoms/countdownDateModalEvent';
+import { upcomingDateDateModalEventAtom } from '@/atoms/upcomingDateDateModalEventAtom';
 import { userAccessAtom } from '@/atoms/userAccess';
-import EmptyLabel from '@/components/EmptyLabel';
 import DraggableListPage from '@/components/DraggableListPage';
+import EmptyLabel from '@/components/EmptyLabel';
 import CustomText from '@/components/text/CustomText';
 import DateValue from '@/components/text/DateValue';
-import CountdownEventToolbar from '@/components/toolbars/CountdownEventToolbar';
-import useCountdownPlanner from '@/hooks/useCountdownPlanner';
+import UpcomingDateToolbar from '@/components/toolbars/UpcomingDateToolbar';
+import useUpcomingEvents from '@/hooks/useUpcomingEvents';
 import { EAccess } from '@/lib/enums/EAccess';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
-import { ICountdownEvent } from '@/lib/types/listItems/ICountdownEvent';
+import { IUpcomingDate } from '@/lib/types/listItems/IUpcomingDate';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
-import { deleteCountdownAndReloadCalendar, updateDeviceCalendarEventByCountdownEvent } from '@/utils/countdownUtils';
 import { getDaysUntilIso } from '@/utils/dateUtils';
+import { deleteUpcomingDateAndReloadCalendar, updateDeviceCalendarEventByUpcomingDateEvent } from '@/utils/upcomingDateUtils';
 import { useAtom, useAtomValue } from 'jotai';
 import React from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
@@ -21,61 +21,65 @@ import { useMMKV } from 'react-native-mmkv';
 // ✅ 
 
 const UpcomingDatesPage = () => {
-    const countdownEventStorage = useMMKV({ id: EStorageId.COUNTDOWN_EVENT });
+    const upcomingDateEventStorage = useMMKV({ id: EStorageId.UPCOMING_DATE_EVENT });
 
     const userAccess = useAtomValue(userAccessAtom);
-    const [countdownDateModalEvent, setCountdownDateModalEvent] = useAtom(countdownDateModalEventAtom);
+    const [upcomingDateDateModalEvent, setUpcomingDateDateModalEvent] = useAtom(upcomingDateDateModalEventAtom);
 
     const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext();
 
     const {
-        countdownEventIds,
-        onCreateCountdownEventInStorageAndFocusTextfield,
-        onUpdateCountdownEventIndexWithChronologicalCheck
-    } = useCountdownPlanner(countdownEventStorage);
+        upcomingDateEventIds,
+        onCreateUpcomingDateEventInStorageAndFocusTextfield
+    } = useUpcomingEvents(upcomingDateEventStorage);
 
-    function getCountdownEventPlatformColor(countdownEvent: ICountdownEvent) {
-        if (getIsCountdownEventDisabled(countdownEvent)) {
+    function getUpcomingDateEventPlatformColor(upcomingDateEvent: IUpcomingDate) {
+        if (getIsUpcomingDateEventDisabled(upcomingDateEvent)) {
             return "tertiaryLabel";
         }
         return "label";
     }
 
-    function getIsCountdownEventDisabled(countdownEvent: ICountdownEvent) {
-        return onGetIsItemDeletingCallback(countdownEvent) || !!countdownDateModalEvent && countdownDateModalEvent.id !== countdownEvent.id;
+    function getIsUpcomingDateEventDisabled(upcomingDateEvent: IUpcomingDate) {
+        return onGetIsItemDeletingCallback(upcomingDateEvent) || !!upcomingDateDateModalEvent && upcomingDateDateModalEvent.id !== upcomingDateEvent.id;
     }
     return (
         <View className='flex-1'>
             {userAccess.get(EAccess.CALENDAR) ? (
                 <DraggableListPage
-                    toolbar={<CountdownEventToolbar />}
+                    toolbar={<UpcomingDateToolbar />}
                     emptyPageLabelProps={{ label: 'No upcoming dates' }}
-                    listId={EStorageKey.COUNTDOWN_LIST_KEY}
-                    itemIds={countdownEventIds}
-                    storageId={EStorageId.COUNTDOWN_EVENT}
-                    storage={countdownEventStorage}
+                    listId={EStorageKey.UPCOMING_DATE_LIST_KEY}
+                    itemIds={upcomingDateEventIds}
+                    storageId={EStorageId.UPCOMING_DATE_EVENT}
+                    storage={upcomingDateEventStorage}
                     onGetLeftIcon={(event) => (
-                        <TouchableOpacity onPress={() => setCountdownDateModalEvent(event)} className='w-16'>
-                            <DateValue platformColor={event.color} disabled={getIsCountdownEventDisabled(event)} isoTimestamp={event.startIso} />
+                        <TouchableOpacity
+                            activeOpacity={event.editable ? 0.8 : 1}
+                            onPress={() => event.editable && setUpcomingDateDateModalEvent(event)}
+                            style={{ width: 57 }}
+                            className='items-center'
+                        >
+                            <DateValue platformColor={event.color} disabled={getIsUpcomingDateEventDisabled(event)} isoTimestamp={event.startIso} />
                         </TouchableOpacity>
                     )}
-                    onGetRightIcon={(countdown) => (
+                    onGetRightIcon={(upcomingDate) => (
                         <View className="w-16 items-end">
                             <CustomText
                                 adjustsFontSizeToFit
                                 numberOfLines={1}
                                 variant='microDetail'
-                                customStyle={getIsCountdownEventDisabled(countdown) ? { color: PlatformColor('tertiaryLabel') } : undefined}
+                                customStyle={getIsUpcomingDateEventDisabled(upcomingDate) ? { color: PlatformColor('tertiaryLabel') } : undefined}
                             >
-                                {getDaysUntilIso(countdown.startIso)} days
+                                {getDaysUntilIso(upcomingDate.startIso)} days
                             </CustomText>
                         </View>
                     )}
-                    onGetRowTextPlatformColor={getCountdownEventPlatformColor}
-                    onCreateItem={(_, index) => onCreateCountdownEventInStorageAndFocusTextfield(index)}
-                    onSaveToExternalStorage={updateDeviceCalendarEventByCountdownEvent}
-                    onDeleteItem={deleteCountdownAndReloadCalendar}
-                    onIndexChange={onUpdateCountdownEventIndexWithChronologicalCheck}
+                    onGetRowTextPlatformColor={getUpcomingDateEventPlatformColor}
+                    onCreateItem={(_, index) => onCreateUpcomingDateEventInStorageAndFocusTextfield(index)}
+                    onSaveToExternalStorage={updateDeviceCalendarEventByUpcomingDateEvent}
+                    onDeleteItem={deleteUpcomingDateAndReloadCalendar}
+                    onGetIsEditable={(item) => item.editable}
                 />
             ) : (
                 <View className='flex-1 items-center justify-center'>

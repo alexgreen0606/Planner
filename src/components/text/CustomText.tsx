@@ -30,6 +30,12 @@ export const textStyles = {
         fontSize: 16,
         fontFamily: 'Text'
     },
+    // --- List Rows ---
+    listRow: {
+        fontSize: 16,
+        fontFamily: 'Text',
+        color: PlatformColor('label'),
+    },
     // --- Planner Card ---
     plannerCardHeader: {
         color: PlatformColor('label'),
@@ -99,7 +105,7 @@ export const textStyles = {
     },
     // --- Concise Date ---
     conciseDate: {
-        fontFamily: 'RoundMedium',
+        fontFamily: 'RoundHeavy',
         fontSize: 16,
         color: PlatformColor('systemBlue')
     },
@@ -118,6 +124,12 @@ export const textStyles = {
     todayDate: {
         fontSize: 16,
         fontFamily: 'RoundHeavy'
+    },
+    // --- Calendar Filter ---
+    calendarFilter: {
+        fontSize: 14,
+        fontWeight: '500',
+        fontFamily: 'RoundMedium'
     }
 } satisfies Record<string, TextStyle>;
 

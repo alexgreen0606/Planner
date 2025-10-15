@@ -6,5 +6,6 @@ import { SFSymbol } from "expo-symbols";
 export const calendarIconMap: Record<string, SFSymbol> = {
     'US Holidays': 'globe',
     'Birthdays': 'birthday.cake',
-    'Countdowns': 'exclamationmark.triangle'
+    'Important': 'flag',
+    'Calendar': 'calendar',
 };

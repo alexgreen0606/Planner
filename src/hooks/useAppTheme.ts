@@ -31,7 +31,7 @@ const useAppTheme = () => {
         ColorArray: {
             TransparentModal: {
                 upper: (isLightMode ? ["rgba(229,229,234,0.7)", "rgba(229,229,234,0.7)", "rgba(229,229,234,0)"] :
-                    ['rgba(0,0,0,0)', 'rgba(0,0,0,.7)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]],
+                    ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]],
 
                 lower: (isLightMode ? ["rgba(229,229,234,0)", "rgba(229,229,234,0.7)"] :
                     ['rgba(0,0,0,0)', 'rgba(0,0,0,0.7)']) as readonly [ColorValue, ColorValue, ...ColorValue[]]

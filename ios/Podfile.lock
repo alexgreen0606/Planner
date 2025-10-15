@@ -1800,7 +1800,7 @@ PODS:
     - React-utils (= 0.81.4)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.81.4)
-  - RNDateTimePicker (8.4.4):
+  - RNDateTimePicker (8.4.5):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2497,7 +2497,7 @@ SPEC CHECKSUMS:
   ReactCodegen: a15ad48730e9fb2a51a4c9f61fe1ed253dfcf10f
   ReactCommon: 149b6c05126f2e99f2ed0d3c63539369546f8cae
   ReactNativeDependencies: ed6d1e64802b150399f04f1d5728ec16b437251e
-  RNDateTimePicker: be0e44bcb9ed0607c7c5f47dbedd88cf091f6791
+  RNDateTimePicker: 7dda2673bd2a6022ea8888fe669d735b2eac0b2d
   RNGestureHandler: 2914750df066d89bf9d8f48a10ad5f0051108ac3
   RNReactNativeHapticFeedback: d7bc1bcfe68bb139c9919ea81d11d7c6e866e870
   RNReanimated: 8d3a14606ad49f022c17d9e12a2d339e9e5ad9b0

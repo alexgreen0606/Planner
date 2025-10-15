@@ -1,15 +1,16 @@
 import { textfieldIdAtom } from "@/atoms/textfieldId";
 import CustomText from "@/components/text/CustomText";
 import ThinLine from "@/components/ThinLine";
-import { LIST_CONTENT_HEIGHT, LIST_ICON_SPACING, LIST_ITEM_HEIGHT } from "@/lib/constants/listConstants";
 import { TListItem } from "@/lib/types/listItems/core/TListItem";
 import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
 import { useAtom } from "jotai";
 import { MotiView } from "moti";
 import React, { ReactNode, useMemo } from "react";
-import { PlatformColor, Pressable, TextStyle, View } from "react-native";
+import { PlatformColor, Pressable, StyleSheet, TextStyle, View } from "react-native";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
 import ListItemTextfield from "./ListItemTextfield";
+import useAppTheme from "@/hooks/useAppTheme";
+import { THIN_LINE_HEIGHT } from "@/lib/constants/miscLayout";
 
 // ✅ 
 
@@ -20,7 +21,8 @@ type TListItemProps<T extends TListItem> = {
     isActive: boolean;
     isDragging: boolean;
     storage: MMKV;
-    onLongPress: () => void;
+    minHeight?: number;
+    onLongPress?: () => void;
     onFocusPlaceholderTextfield: () => void;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
@@ -31,6 +33,7 @@ type TListItemProps<T extends TListItem> = {
     onGetLeftIcon?: (item: T) => ReactNode;
     onGetRightIcon?: (item: T) => ReactNode;
     onGetIsItemDeletingCustom?: (item: T) => boolean;
+    onGetIsEditable?: (item: T) => boolean;
 };
 
 const ListItem = <T extends TListItem>({
@@ -40,6 +43,7 @@ const ListItem = <T extends TListItem>({
     itemIndex,
     isActive,
     isDragging,
+    minHeight = 28,
     onLongPress,
     onFocusPlaceholderTextfield,
     onValueChange,
@@ -50,6 +54,7 @@ const ListItem = <T extends TListItem>({
     onGetRightIcon,
     onGetRowTextPlatformColor,
     onGetLeftIcon,
+    onGetIsEditable,
     onGetIsItemDeletingCustom
 }: TListItemProps<T>) => {
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
@@ -63,6 +68,13 @@ const ListItem = <T extends TListItem>({
         [item, onGetRowTextPlatformColor]
     );
 
+    const isItemEditable = useMemo(() =>
+        item ? (onGetIsEditable?.(item) ?? true) : true,
+        [item]
+    );
+
+    const { isLightMode } = useAppTheme();
+
     const isPendingDelete = item ?
         (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item)) :
         false;
@@ -75,20 +87,20 @@ const ListItem = <T extends TListItem>({
         textDecorationLine: isPendingDelete ? 'line-through' : undefined
     };
 
-    const isEditable = textfieldId === item?.id;
+    const isEditing = textfieldId === item?.id;
 
     // ================
     //  Event Handlers
     // ================
 
-    const handleSeparatorPress = () => {
+    function handleSeparatorPress() {
         if (!isDragging) {
             onCreateItem(listId, itemIndex);
         }
-    };
+    }
 
-    const handleContentPress = () => {
-        if (!item || isPendingDelete || isDragging) return;
+    function handleContentPress() {
+        if (!item || isPendingDelete || isDragging || !isItemEditable) return;
 
         if (!onContentClick) {
 
@@ -97,12 +109,12 @@ const ListItem = <T extends TListItem>({
             return;
         }
         onContentClick(item);
-    };
+    }
 
-    const handleContentLongPress = () => {
+    function handleContentLongPress() {
         if (!item || isPendingDelete) return;
-        onLongPress();
-    };
+        onLongPress?.();
+    }
 
     // ================
     //  User Interface
@@ -116,31 +128,39 @@ const ListItem = <T extends TListItem>({
                 opacity: isActive ? 0.8 : 1,
                 translateY: isActive ? -6 : 0,
             }}
-            className='w-full'
-            style={{ height: LIST_ITEM_HEIGHT }}
+            className='w-full relative'
         >
             {/* Separator Line */}
             <Pressable onPress={handleSeparatorPress}>
                 <ThinLine />
             </Pressable>
 
-            <View
-                className="flex-row justify-center items-center gap-4 pr-2"
-                style={{
-                    height: LIST_CONTENT_HEIGHT,
-                    marginLeft: LIST_ICON_SPACING
-                }}
-            >
+            <View className="flex-row items-center gap-3 px-3">
+
                 {/* Left Icon */}
                 {onGetLeftIcon?.(item)}
+
+                {/* Red Looseleaf Line */}
+                {isLightMode && (
+                    <View
+                        className='self-stretch'
+                        style={{
+                            width: StyleSheet.hairlineWidth,
+                            backgroundColor: PlatformColor('systemRed'),
+                            marginTop: -THIN_LINE_HEIGHT / 2,
+                            marginBottom: -THIN_LINE_HEIGHT / 2
+                        }}
+                    />
+                )}
 
                 {/* Content */}
                 <Pressable
                     onPress={handleContentPress}
                     onLongPress={handleContentLongPress}
-                    style={{ flex: 1, height: LIST_CONTENT_HEIGHT }}
+                    className='flex-1 justify-center'
+                    style={{ minHeight }}
                 >
-                    {isEditable ? (
+                    {isEditing ? (
                         <ListItemTextfield<T>
                             item={item}
                             customStyle={valueStyles}
@@ -153,20 +173,8 @@ const ListItem = <T extends TListItem>({
                         />
                     ) : (
                         <CustomText
-                            variant='standard'
-                            className='flex-1 bg-transparent text-[16px] w-full absolute pr-2'
-                            style={[
-                                {
-                                    height: LIST_ITEM_HEIGHT,
-                                    paddingTop: LIST_CONTENT_HEIGHT / 8,
-                                    marginRight: LIST_ICON_SPACING / 2,
-                                    color: PlatformColor('label'),
-                                    fontFamily: 'Text',
-                                },
-                                valueStyles
-                            ]}
-                            numberOfLines={1}
-                            ellipsizeMode="tail"
+                            variant='listRow'
+                            customStyle={valueStyles}
                         >
                             {item.value}
                         </CustomText>
@@ -175,9 +183,10 @@ const ListItem = <T extends TListItem>({
 
                 {/* Right Icon */}
                 {onGetRightIcon?.(item)}
+
             </View>
         </MotiView>
-    );
+    )
 };
 
 export default ListItem;

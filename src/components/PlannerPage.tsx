@@ -101,7 +101,7 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
 
     return (
         <DraggableListPage
-            emptyPageLabelProps={{ label: 'Empty folder' }}
+            emptyPageLabelProps={{ label: 'No contents' }}
             toolbar={<FolderItemToolbar />}
             listId={folderId}
             itemIds={itemIds}
@@ -115,6 +115,7 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
                     </Text>
                 </Host>
             )}
+            minRowHeight={36}
             onGetLeftIcon={getLeftIcon}
             onDeleteItem={deleteFolderItemAndChildren}
             onCreateItem={createNewFolderItemAndSaveToStorage}
