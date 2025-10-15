@@ -9,6 +9,7 @@ import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useShared
 import { runOnJS, runOnUI } from "react-native-worklets";
 import OpenPlannerButton from "../icons/customButtons/OpenCalendarIconButton";
 import PlannerDateIcon from "./PlannerDateIcon";
+import { DateTime } from "luxon";
 
 // ✅ 
 
@@ -79,6 +80,20 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
         scrollTo(scrollRef, newScrollX, 0, animated);
     }
 
+    function handleOpenPlanner(date: Date) {
+        const newDatestamp = DateTime.fromJSDate(date).toISODate()!;
+
+        // Check if the new datestamp is within the current range
+        const newDatestampIndex = datestampOptions.indexOf(newDatestamp);
+
+        if (newDatestampIndex !== -1) {
+            // Date is in range, just scroll to it
+            scrollToDatestamp(newDatestamp);
+        }
+
+        router.push(`/planners/${newDatestamp}`);
+    }
+
     // Rebuild the scroll options when the selected datestamp approaches the end of the wheel.
     useEffect(() => {
         const currentDatestampIndex = datestampOptions.indexOf(currentDatestamp);
@@ -146,7 +161,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
             {/* Calendar Button */}
             <View className='absolute right-0 h-full'>
-                <OpenPlannerButton onOpenPlanner={() => null} />
+                <OpenPlannerButton currentDatestamp={currentDatestamp} onOpenPlanner={handleOpenPlanner} />
             </View>
 
         </View>

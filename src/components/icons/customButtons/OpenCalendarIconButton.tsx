@@ -9,19 +9,12 @@ import Icon from "../Icon";
 // ✅ 
 
 type TOpenPlannerButtonProps = {
-    onOpenPlanner: (datestamp: string) => void;
+    currentDatestamp: string;
+    onOpenPlanner: (date: Date) => void;
 }
 
-const OpenPlannerButton = ({ onOpenPlanner }: TOpenPlannerButtonProps) => {
-    const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
-
+const OpenPlannerButton = ({ currentDatestamp, onOpenPlanner }: TOpenPlannerButtonProps) => {
     const { CssColor: { background } } = useAppTheme();
-
-    function handleOpenPlanner(date: Date) {
-        const newDatestamp = DateTime.fromJSDate(date).toISODate()!;
-        onOpenPlanner(newDatestamp);
-    }
-
     return (
         <View className='relative h-full'>
 
@@ -38,13 +31,15 @@ const OpenPlannerButton = ({ onOpenPlanner }: TOpenPlannerButtonProps) => {
             </View>
 
             {/* Date Picker */}
-            <View className="absolute left-0">
+            <View
+                key={`${currentDatestamp}-selector`}
+                className="absolute left-0"
+            >
                 <Host matchContents>
                     <DateTimePicker
-                        key={`${datestamp}-selector`}
-                        onDateSelected={handleOpenPlanner}
+                        onDateSelected={onOpenPlanner}
                         displayedComponents='date'
-                        initialDate={datestamp}
+                        initialDate={currentDatestamp}
                         variant='automatic'
                     />
                 </Host>
