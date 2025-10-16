@@ -5,7 +5,7 @@ import { getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp, isT
 import * as Calendar from 'expo-calendar';
 import { uuid } from "expo-modules-core";
 import { hasCalendarAccess } from "./accessUtils";
-import { getCalendarIdToCalendarMap, loadExternalCalendarData } from "./calendarUtils";
+import { getCalendarMap, loadExternalCalendarData } from "./calendarUtils";
 import { getAllMountedDatestampsFromStore } from "./plannerUtils";
 import { getUpcomingDateEventFromStorageById, getUpcomingDatePlannerFromStorage, deleteUpcomingDateEventFromStorageById, saveUpcomingDateEventToStorage, saveUpcomingDatePlannerToStorage } from "@/storage/upcomingDateStorage";
 
@@ -107,7 +107,7 @@ async function getAllUpcomingDateEventsFromCalendar(): Promise<Calendar.Event[]>
     const endDate = new Date(`${getDatestampThreeYearsFromToday()}T23:59:59`);
 
     // Get all calendar IDs
-    const allCalendarsMap = await getCalendarIdToCalendarMap();
+    const allCalendarsMap = await getCalendarMap();
     const allCalendarIds = Object.keys(allCalendarsMap);
 
     // Fetch all events from all calendars
@@ -131,7 +131,7 @@ export async function upsertCalendarEventsIntoUpcomingDatePlanner() {
     const calendarEvents = await getAllUpcomingDateEventsFromCalendar();
     const upcomingDateEventIds = getUpcomingDatePlannerFromStorage();
 
-    const allCalendarsMap = await getCalendarIdToCalendarMap();
+    const allCalendarsMap = await getCalendarMap();
 
     const existingCalendarIds = new Set<string>();
     let newUpcomingDatePlanner: string[] = [];

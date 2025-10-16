@@ -6,9 +6,8 @@ import { MotiView } from "moti";
 import { useMemo } from "react";
 import { PlatformColor, Pressable, useWindowDimensions, View } from "react-native";
 import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
-import IconButton from "../icons/Icon";
-import CustomText from "../text/CustomText";
 import Icon from "../icons/Icon";
+import CustomText from "../text/CustomText";
 
 // ✅ 
 
@@ -41,19 +40,19 @@ const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, 
 
     const animatedContainerStyle = useAnimatedStyle(() => {
         const distance = Math.abs(scrollX.value - focusedScrollX);
-        const ranges = [0, SCREEN_WIDTH * (4 / 6), SCREEN_WIDTH * (5 / 6), SCREEN_WIDTH];
+        const ranges = [0, SCREEN_WIDTH / 2];
 
         const scale = interpolate(
             distance,
             ranges,
-            [1, .5, .2, 0],
+            [1, 0.7],
             Extrapolation.CLAMP
         );
 
         const opacity = interpolate(
             distance,
             ranges,
-            [1, .5, .2, 0],
+            [1, 0.1],
             Extrapolation.CLAMP
         );
 

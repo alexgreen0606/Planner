@@ -1,5 +1,6 @@
 import { upcomingDateDateModalEventAtom } from '@/atoms/upcomingDateDateModalEventAtom';
 import { userAccessAtom } from '@/atoms/userAccess';
+import CalendarFilters from '@/components/CalendarFilters';
 import DraggableListPage from '@/components/DraggableListPage';
 import EmptyLabel from '@/components/EmptyLabel';
 import CustomText from '@/components/text/CustomText';
@@ -14,7 +15,7 @@ import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { getDaysUntilIso } from '@/utils/dateUtils';
 import { deleteUpcomingDateAndReloadCalendar, updateDeviceCalendarEventByUpcomingDateEvent } from '@/utils/upcomingDateUtils';
 import { useAtom, useAtomValue } from 'jotai';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { PlatformColor, TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 
@@ -43,6 +44,7 @@ const UpcomingDatesPage = () => {
     function getIsUpcomingDateEventDisabled(upcomingDateEvent: IUpcomingDate) {
         return onGetIsItemDeletingCallback(upcomingDateEvent) || !!upcomingDateDateModalEvent && upcomingDateDateModalEvent.id !== upcomingDateEvent.id;
     }
+
     return (
         <View className='flex-1'>
             {userAccess.get(EAccess.CALENDAR) ? (

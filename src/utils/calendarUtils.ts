@@ -154,7 +154,7 @@ export async function loadExternalCalendarData(datestamps: string[]) {
         // Must be done BEFORE building the planner chips, as these need to access the storage records of the Upcoming Date Events.
         await upsertCalendarEventsIntoUpcomingDatePlanner();
 
-        const allCalendarsMap = await getCalendarIdToCalendarMap();
+        const allCalendarsMap = await getCalendarMap();
         const allCalendarIds = Object.keys(allCalendarsMap);
         const startDate = DateTime.fromISO(datestamps[0]).startOf('day').toJSDate();
         const endDate = DateTime.fromISO(datestamps[datestamps.length - 1]).endOf('day').toJSDate();
@@ -210,14 +210,16 @@ export async function getPrimaryCalendar(): Promise<Calendar.Calendar> {
 }
 
 /**
- * Generates a map of the device's calendar IDs to calendars.
+ * Generates a map of the device's calendar IDs and titles to calendars.
+ * Each calendar can be accessed by both its ID and its title.
  * 
- * @returns A map of calendar IDs to Calendar objects.
+ * @returns A map of calendar IDs and titles to Calendar objects.
  */
-export async function getCalendarIdToCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
+export async function getCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
     const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
     const calendarMap = allCalendars.reduce((acc, cal) => {
         acc[cal.id] = cal;
+        acc[cal.title] = cal;
         return acc;
     }, {} as Record<string, Calendar.Calendar>);
     return calendarMap;

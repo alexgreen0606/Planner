@@ -4,7 +4,7 @@ import * as Calendar from 'expo-calendar';
 // Main atom for active calendar filters
 export const activeCalendarFiltersAtom = atom<Set<string>>(new Set<string>());
 
-export const calendarIdMapAtom = atom<Record<string, Calendar.Calendar> | null>(null);
+export const calendarMapAtom = atom<Record<string, Calendar.Calendar>>({});
 
 export const primaryCalendarAtom = atom<Calendar.Calendar | null>(null);
 export const importantCalendarAtom = atom<Calendar.Calendar | null>(null);

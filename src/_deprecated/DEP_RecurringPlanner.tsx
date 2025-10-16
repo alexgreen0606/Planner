@@ -13,7 +13,7 @@ import { useAtom } from 'jotai';
 import React, { useMemo, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
-import TimeValue from '../text/TimeValue';
+import TimeValue from '../components/text/TimeValue';
 import DragAndDropList from '../../_deprecated/DEP_DragAndDropList';
 
 // ✅ 

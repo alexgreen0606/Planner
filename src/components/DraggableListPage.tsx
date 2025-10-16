@@ -1,15 +1,14 @@
 import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
 import ThinLine from '@/components/ThinLine';
-import useAppTheme from '@/hooks/useAppTheme';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
-import {SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PlatformColor, Pressable, RefreshControl, StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent, Pressable, RefreshControl, TextInput, useWindowDimensions, View } from 'react-native';
 import DraggableFlatList, { DragEndParams, RenderItemParams } from 'react-native-draggable-flatlist';
 import { MMKV } from 'react-native-mmkv';
 import {
@@ -214,7 +213,6 @@ const DraggableListPage = <T extends TListItem, S>({
             {/* List Contents */}
             <DraggableFlatList
                 data={itemIds}
-                
                 itemExitingAnimation={FadeOut}
                 keyExtractor={(itemId) => `${itemId}-row`}
                 contentInsetAdjustmentBehavior='automatic'

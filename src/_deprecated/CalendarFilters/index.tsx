@@ -1,15 +1,15 @@
-import { useAtom } from 'jotai';
+import { calendarMapAtom } from '@/atoms/calendarAtoms';
+import { useAtomValue } from 'jotai';
 import React from 'react';
 import { View } from 'react-native';
 import CalendarFilter from './CalendarFilter';
-import { calendarIdMapAtom } from '@/atoms/calendarAtoms';
 
 // ✅ 
 
 const CalendarFilters = () => {
-    const [calendarIdMap] = useAtom(calendarIdMapAtom);
+    const calendarMap = useAtomValue(calendarMapAtom);
 
-    const calendars = Object.values(calendarIdMap ?? {});
+    const calendars = Object.values(calendarMap ?? {});
 
     return (
         <View className="px-4">

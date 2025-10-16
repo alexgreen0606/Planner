@@ -3,13 +3,14 @@ import { PLANNER_BANNER_PADDING } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange, getDayShiftedDatestamp } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
+import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { runOnJS, runOnUI } from "react-native-worklets";
-import OpenPlannerButton from "../icons/customButtons/OpenCalendarIconButton";
 import PlannerDateIcon from "./PlannerDateIcon";
-import { DateTime } from "luxon";
+import { DateTimePicker, Host } from "@expo/ui/swift-ui";
+import useAppTheme from "@/hooks/useAppTheme";
 
 // ✅ 
 
@@ -18,6 +19,8 @@ const CAROUSEL_RADIUS = 20;
 const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
     const router = useRouter();
     const { width: SCREEN_WIDTH } = useWindowDimensions();
+
+    const { CssColor: { background } } = useAppTheme();
 
     const scrollRef = useAnimatedRef<Animated.FlatList>();
 
@@ -28,6 +31,8 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
     ) : []);
 
     const PLANNER_CAROUSEL_ITEM_WIDTH = SCREEN_WIDTH / 8;
+    const CONTENT_WIDTH = SCREEN_WIDTH - (PLANNER_BANNER_PADDING * 2);
+    const SIDE_PADDING = (CONTENT_WIDTH - PLANNER_CAROUSEL_ITEM_WIDTH) / 2;
     const CAROUSEL_CENTER_SCROLL_X = PLANNER_CAROUSEL_ITEM_WIDTH * CAROUSEL_RADIUS;
 
     const scrollX = useSharedValue(CAROUSEL_CENTER_SCROLL_X);
@@ -43,8 +48,9 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
         onEndDrag: (event) => {
             if (event.velocity && event.velocity.x === 0) {
                 runOnJS(setIsScrolling)(false);
+
                 const snappedIndex = Math.round(scrollX.value / PLANNER_CAROUSEL_ITEM_WIDTH);
-                runOnJS(syncDatestampWithScrollPosition)(snappedIndex);
+                runOnJS(handleOpenPlanner)(snappedIndex);
             }
         },
         onMomentumEnd: () => {
@@ -55,56 +61,42 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
 
             runOnJS(setIsScrolling)(false);
             const snappedIndex = Math.round(scrollX.value / PLANNER_CAROUSEL_ITEM_WIDTH);
-            runOnJS(syncDatestampWithScrollPosition)(snappedIndex);
+            runOnJS(handleOpenPlanner)(snappedIndex);
         },
     });
 
-    function syncDatestampWithScrollPosition(newDatestampIndex: number) {
-        const newDatestamp = datestampOptions[newDatestampIndex];
-        if (!newDatestamp) return;
+    // Takes in an index, Date, or datestamp.
+    function handleOpenPlanner(target: Date | string | number) {
+        const isDatestamp = typeof (target) === 'string';
+        const isIndex = typeof (target) === 'number';
 
-        if (newDatestamp === currentDatestamp) return;
+        let datestamp = isDatestamp ? target : isIndex ? datestampOptions[target] : DateTime.fromJSDate(target).toISODate()!;
+        if (!datestamp) return;
 
-        router.push(`/planners/${newDatestamp}`);
+        router.push(`/planners/${datestamp}`);
     }
 
-    function scrollToDatestamp(newDatestamp: string) {
-        const index = datestampOptions.indexOf(newDatestamp);
-        if (index !== -1) {
-            runOnUI(scrollWorklet)(index * PLANNER_CAROUSEL_ITEM_WIDTH, true);
-        }
+    function handleScrollToIndex(index: number) {
+        runOnUI(handleScrollWorklet)(index * PLANNER_CAROUSEL_ITEM_WIDTH, true);
     }
 
-    function scrollWorklet(newScrollX: number, animated: boolean) {
+    function handleScrollWorklet(newScrollX: number, animated: boolean) {
         'worklet';
         scrollTo(scrollRef, newScrollX, 0, animated);
     }
 
-    function handleOpenPlanner(date: Date) {
-        const newDatestamp = DateTime.fromJSDate(date).toISODate()!;
-
-        // Check if the new datestamp is within the current range
-        const newDatestampIndex = datestampOptions.indexOf(newDatestamp);
-
-        if (newDatestampIndex !== -1) {
-            // Date is in range, just scroll to it
-            scrollToDatestamp(newDatestamp);
-        }
-
-        router.push(`/planners/${newDatestamp}`);
-    }
-
-    // Rebuild the scroll options when the selected datestamp approaches the end of the wheel.
+    // Synchronize the datestamp with the scroll offset.
     useEffect(() => {
         const currentDatestampIndex = datestampOptions.indexOf(currentDatestamp);
 
         if (
             datestampOptions.length === 0 ||
-            currentDatestampIndex <= 8 ||
-            currentDatestampIndex >= datestampOptions.length - 8
+            currentDatestampIndex === 0 ||
+            currentDatestampIndex === datestampOptions.length - 1
         ) {
+            // Datestamp is at the edge of the carousel. Rebuild the scroll items and snap to middle.
             isSnappingToCenter.value = true;
-            runOnUI(scrollWorklet)(
+            runOnUI(handleScrollWorklet)(
                 CAROUSEL_CENTER_SCROLL_X,
                 false
             );
@@ -113,7 +105,15 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                 getDayShiftedDatestamp(currentDatestamp, -CAROUSEL_RADIUS),
                 getDayShiftedDatestamp(currentDatestamp, CAROUSEL_RADIUS)
             ));
+            return;
         }
+
+        // Exit if the datestamp is centered.
+        if (scrollX.value === currentDatestampIndex * PLANNER_CAROUSEL_ITEM_WIDTH) return;
+
+        // Scroll to the datestamp icon.
+        handleScrollToIndex(currentDatestampIndex);
+
     }, [currentDatestamp]);
 
     return (
@@ -122,18 +122,40 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
             style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}
         >
 
+            {/* Date Picker */}
+            <View
+                className="absolute items-center justify-center h-full w-full"
+                style={{
+                    left: PLANNER_BANNER_PADDING + SIDE_PADDING,
+                    width: PLANNER_CAROUSEL_ITEM_WIDTH,
+                }}
+            >
+                <Host matchContents>
+                    <DateTimePicker
+                        onDateSelected={handleOpenPlanner}
+                        displayedComponents='date'
+                        initialDate={currentDatestamp}
+                        variant='automatic'
+                    />
+                </Host>
+            </View>
+
             {/* Scroll Wheel */}
             <Animated.FlatList
                 data={datestampOptions}
                 renderItem={({ item: datestamp, index }) => (
-                    <View style={{ width: PLANNER_CAROUSEL_ITEM_WIDTH, justifyContent: 'flex-end' }}>
+                    <View
+                        pointerEvents={datestamp === currentDatestamp ? 'none' : 'auto'}
+                        className="items-center"
+                        style={{ width: PLANNER_CAROUSEL_ITEM_WIDTH }}
+                    >
                         <PlannerDateIcon
                             isCurrentDatestamp={datestamp === currentDatestamp}
                             datestamp={datestamp}
                             scrollX={scrollX}
                             isScrolling={isScrolling}
                             index={index}
-                            onPress={() => scrollToDatestamp(datestamp)}
+                            onPress={() => handleOpenPlanner(datestamp)}
                         />
                     </View>
                 )}
@@ -145,24 +167,22 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                     index,
                 })}
                 contentContainerStyle={{
-                    paddingRight: SCREEN_WIDTH - PLANNER_CAROUSEL_ITEM_WIDTH - (PLANNER_BANNER_PADDING * 2),
+                    paddingLeft: SIDE_PADDING,
+                    paddingRight: SIDE_PADDING,
+                    backgroundColor: background
                 }}
+                style={{ pointerEvents: 'none' }}
                 bounces={false}
                 showsHorizontalScrollIndicator={false}
                 onScroll={scrollHandler}
                 scrollEventThrottle={SCROLL_THROTTLE}
                 snapToInterval={PLANNER_CAROUSEL_ITEM_WIDTH}
                 ref={scrollRef}
-                initialNumToRender={7}
-                maxToRenderPerBatch={7}
-                windowSize={3}
+                initialNumToRender={9}
+                maxToRenderPerBatch={9}
+                windowSize={5}
                 removeClippedSubviews
             />
-
-            {/* Calendar Button */}
-            <View className='absolute right-0 h-full'>
-                <OpenPlannerButton currentDatestamp={currentDatestamp} onOpenPlanner={handleOpenPlanner} />
-            </View>
 
         </View>
     )

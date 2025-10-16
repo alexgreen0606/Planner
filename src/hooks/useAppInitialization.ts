@@ -1,4 +1,4 @@
-import { calendarIdMapAtom, importantCalendarAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
+import { calendarMapAtom, importantCalendarAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
 import { userAccessAtom } from "@/atoms/userAccess";
 import { NULL } from "@/lib/constants/generic";
 import { EAccess } from "@/lib/enums/EAccess";
@@ -6,7 +6,7 @@ import { EFolderItemType } from "@/lib/enums/EFolderItemType";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { EStorageKey } from "@/lib/enums/EStorageKey";
 import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
-import { getCalendarIdToCalendarMap, getPrimaryCalendar } from "@/utils/calendarUtils";
+import { getCalendarMap, getPrimaryCalendar } from "@/utils/calendarUtils";
 import { useCalendarPermissions } from "expo-calendar";
 import { getPermissionsAsync, requestPermissionsAsync } from "expo-contacts";
 import { useFonts } from "expo-font";
@@ -31,7 +31,7 @@ const useAppInitialization = () => {
     const [userAccess, setUserAccess] = useAtom(userAccessAtom);
     const [primaryCalendar, setPrimaryCalendar] = useAtom(primaryCalendarAtom);
     const [importantCalendar, setImportantCalendar] = useAtom(importantCalendarAtom);
-    const [calendarIdMap, setCalendarIdMap] = useAtom(calendarIdMapAtom);
+    const [calendarMap, setCalendarMap] = useAtom(calendarMapAtom);
 
     const [fontsLoaded] = useFonts({
         'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
@@ -45,7 +45,7 @@ const useAppInitialization = () => {
     const [calendarStatus, requestCalendarPermissions] = useCalendarPermissions();
 
     const areCalendarsReady = userAccess.get(EAccess.CALENDAR) === false || (
-        primaryCalendar && importantCalendar && calendarIdMap
+        primaryCalendar && importantCalendar && calendarMap
     );
 
     const appReady =
@@ -83,8 +83,8 @@ const useAppInitialization = () => {
 
     async function loadCalendars() {
         const primaryCalendar = await getPrimaryCalendar();
-        let calendarIdMap = await getCalendarIdToCalendarMap();
-        let importantCalendar = Object.values(calendarIdMap).find(calendar => calendar.title === 'Important');
+        let calendarMap = await getCalendarMap();
+        let importantCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Important');
 
         if (!importantCalendar) {
             await Calendar.createCalendarAsync({
@@ -94,13 +94,13 @@ const useAppInitialization = () => {
                 name: 'Important',
                 ownerAccount: 'PlannerApp'
             });
-            calendarIdMap = await getCalendarIdToCalendarMap();
-            importantCalendar = Object.values(calendarIdMap).find(calendar => calendar.title === 'Important')!;
+            calendarMap = await getCalendarMap();
+            importantCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Important')!;
         }
 
         setPrimaryCalendar(primaryCalendar);
         setImportantCalendar(importantCalendar);
-        setCalendarIdMap(calendarIdMap);
+        setCalendarMap(calendarMap);
     }
 
     async function checkContactsPermissions() {
