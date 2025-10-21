@@ -9,11 +9,11 @@ import { PlatformColor } from 'react-native';
 // ✅ 
 
 const UpcomingDatesLayout = () => {
-    const { CssColor: { background } } = useAppTheme();
-
-    const calendarMap = useAtomValue(calendarMapAtom);
     const activeCalendarFilters = useAtomValue(activeCalendarFiltersAtom);
     const toggleCalendarFilter = useSetAtom(toggleCalendarFilterAtom);
+    const calendarMap = useAtomValue(calendarMapAtom);
+
+    const { CssColor: { background } } = useAppTheme();
 
     return (
         <Stack

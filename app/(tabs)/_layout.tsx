@@ -16,7 +16,7 @@ const TabLayout = () => {
         </NativeTabs.Trigger>
         <NativeTabs.Trigger hidden={!userAccess.get(EAccess.CALENDAR)} name='upcomingDates'>
             <Label hidden />
-            <Icon sf='calendar.badge.exclamationmark' />
+            <Icon sf='calendar' />
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="checklists">
             <Label hidden />

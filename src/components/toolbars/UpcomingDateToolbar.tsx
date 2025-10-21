@@ -1,7 +1,7 @@
 import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IUpcomingDate } from "@/lib/types/listItems/IUpcomingDate";
-import { datestampToMidnightJsDate, getDatestampThreeYearsFromToday, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
+import { datestampToMidnightJsDate, getDatestampOneYearFromToday, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { useAtom, useAtomValue } from "jotai";
 import { DateTime } from "luxon";
 import { useEffect, useMemo, useRef } from "react";
@@ -164,7 +164,7 @@ const UpcomingDateToolbar = () => {
                 onLayout={onCloseFocusedUpcomingDate}
                 confirmTextIOS={`Schedule "${upcomingDateDateModalEvent?.value}"`}
                 minimumDate={datestampToMidnightJsDate(getTodayDatestamp())}
-                maximumDate={datestampToMidnightJsDate(getDatestampThreeYearsFromToday())}
+                maximumDate={datestampToMidnightJsDate(getDatestampOneYearFromToday())}
                 onCancel={closeDateModal}
                 onConfirm={changeUpcomingDateEventDate}
                 pickerStyleIOS={{

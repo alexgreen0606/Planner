@@ -8,6 +8,7 @@ import { PlatformColor, Pressable, useWindowDimensions, View } from "react-nativ
 import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 import Icon from "../icons/Icon";
 import CustomText from "../text/CustomText";
+import { SymbolView } from "expo-symbols";
 
 // ✅ 
 

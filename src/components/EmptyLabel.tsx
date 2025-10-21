@@ -16,14 +16,17 @@ const EmptyPageLabel = ({
     label,
     iconProps
 }: TEmptyPageLabelProps) => {
-    const { width: SCREEN_WIDTH } = useWindowDimensions();
+    const { width, height } = useWindowDimensions();
     return (
-        <FadeInView className='absolute top-1/2 -translate-y-1/2 pointer-events-none flex-column gap-2'>
+        <FadeInView
+            className='flex-1 absolute bottom-0 left-0 pointer-events-none items-center justify-center gap-2'
+            style={{ width, height }}
+        >
             {iconProps && (
                 <Icon {...iconProps} />
             )}
             <Host matchContents>
-                <VStack modifiers={[frame({ width: SCREEN_WIDTH })]}>
+                <VStack modifiers={[frame({ width })]}>
                     <Text design='rounded' weight='semibold' size={16} color={PlatformColor('tertiaryLabel') as unknown as string}>
                         {label}
                     </Text>

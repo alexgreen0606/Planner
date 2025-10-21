@@ -14,7 +14,7 @@ type TDateValueProps = {
 const DateValue = ({
     isoTimestamp,
     disabled,
-    platformColor = 'systemBlue'
+    platformColor = 'label'
 }: TDateValueProps) => {
     const dayFormat = 'MMM d';
     const yearFormat = 'yyyy';
@@ -30,7 +30,7 @@ const DateValue = ({
         <View className='relative flex-row w-fit'>
             <CustomText
                 variant='conciseDate'
-                customStyle={{ color: disabled ? PlatformColor('tertiaryLabel') : platformColor }}
+                customStyle={{ color: disabled ? PlatformColor('tertiaryLabel') : PlatformColor(platformColor) }}
             >
                 {monthDay.toUpperCase()}
             </CustomText>

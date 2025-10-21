@@ -1,36 +1,45 @@
-import { atom } from "jotai";
 import * as Calendar from 'expo-calendar';
-
-// Main atom for active calendar filters
-export const activeCalendarFiltersAtom = atom<Set<string>>(new Set<string>());
+import { atom } from "jotai";
 
 export const calendarMapAtom = atom<Record<string, Calendar.Calendar>>({});
+export const upcomingDatesMapAtom = atom<Record<string, Calendar.Event[]>>({});
+
+export const activeCalendarFiltersAtom = atom<Set<string>>(new Set<string>());
 
 export const primaryCalendarAtom = atom<Calendar.Calendar | null>(null);
 export const importantCalendarAtom = atom<Calendar.Calendar | null>(null);
 
-// Setter atom for toggling calendar filters
+// Stores the dates to be rendered in the Upcoming Dates page.
+export const filteredUpcomingDatesMapAtom = atom((get) => {
+    const activeCalendarFilters = get(activeCalendarFiltersAtom);
+    const upcomingDatesMap = get(upcomingDatesMapAtom);
+
+    // If no filters are active, show all events.
+    if (activeCalendarFilters.size === 0) {
+        return upcomingDatesMap;
+    }
+
+    const filteredMap: Record<string, Calendar.Event[]> = {};
+    Object.entries(upcomingDatesMap).forEach(([dateKey, events]) => {
+        const filteredEvents = events.filter(event =>
+            activeCalendarFilters.has(event.calendarId)
+        );
+
+        if (filteredEvents.length > 0) {
+            filteredMap[dateKey] = filteredEvents;
+        }
+    });
+
+    return filteredMap;
+});
+
+// Toggles calendar IDs in and out of the calendar filters atom.
 export const toggleCalendarFilterAtom = atom(
     null,
     (get, set, calendarId: string) => {
         const current = get(activeCalendarFiltersAtom);
 
-        // If currently ALL, switch to just this calendar
-        if (current.size === 0) {
-            set(activeCalendarFiltersAtom, new Set([calendarId]));
-            return;
-        }
-
-        // Current is a Set
         const newSet = new Set(current);
-
-        // If this is the ONLY active filter, set to ALL
-        if (newSet.size === 1 && newSet.has(calendarId)) {
-            set(activeCalendarFiltersAtom, new Set<string>());
-            return;
-        }
-
-        // Otherwise toggle it on or off
         if (newSet.has(calendarId)) {
             newSet.delete(calendarId);
         } else {

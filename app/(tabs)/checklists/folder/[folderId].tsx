@@ -1,4 +1,4 @@
-import FolderPage from '@/components/PlannerPage';
+import FolderPage from '@/components/FolderPage';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 

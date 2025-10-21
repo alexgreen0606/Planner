@@ -1,25 +1,16 @@
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
-import { plannerSetKeyAtom } from '@/atoms/plannerSetKey';
 import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { TUserAccess, userAccessAtom } from '@/atoms/userAccess';
 import useAppInitialization from '@/hooks/useAppInitialization';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { EAccess } from '@/lib/enums/EAccess';
-import { EStorageId } from '@/lib/enums/EStorageId';
-import { EStorageKey } from '@/lib/enums/EStorageKey';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { TAppMetaData } from '@/lib/types/TAppMetadata';
-import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
-import { loadExternalCalendarData } from '@/utils/calendarUtils';
-import { getTodayDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
-import { deleteAllPlannersInStorageOlderThan3Years as deleteAllPlannersInStorageOlderThanThreeYears } from '@/utils/plannerUtils';
+import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
+import { loadAllDayEventsToStore, loadExternalCalendarData } from '@/utils/calendarUtils';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
-import { usePathname, useRouter } from 'expo-router';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { useGlobalSearchParams, usePathname } from 'expo-router';
+import { useSetAtom } from 'jotai';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 // ✅ 
 
@@ -29,37 +20,23 @@ const ExternalDataContext = createContext({
 });
 
 export function ExternalDataProvider({ children }: { children: React.ReactNode }) {
-    const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
-    const appMetaDataStorage = useMMKV({ id: EStorageId.APP_METADATA_KEY });
+    const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
     const pathname = usePathname();
-    const router = useRouter();
 
-    const [mountedDatestamps, setMountedDatestamps] = useAtom(mountedDatestampsAtom);
+    const appReady = useAppInitialization();
+
     const setTodayDatestamp = useSetAtom(todayDatestampAtom);
-    const plannerSetKey = useAtomValue(plannerSetKeyAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
+
+    const loadedPathnames = useRef<Set<string>>(new Set());
 
     const [loading, setLoading] = useState(false);
 
-    const [appMetaData, setAppMetaData] = useMMKVObject<TAppMetaData>(EStorageKey.APP_META_DATA_KEY, appMetaDataStorage);
-
-    const appReady = useAppInitialization();
-    const { textfieldItem, onSetTextfieldItem } = useTextfieldItemAs<IPlannerEvent>(plannerEventStorage);
-
-    // Load the external data when the mounted datestamps changes.
+    // Handle initial loading of data for newly-mounted pathnames.
     useEffect(() => {
-        if (!appReady) return;
-
-        if (mountedDatestamps.planner.length === 0) return;
+        if (!appReady || loadedPathnames.current.has(pathname)) return;
         handleLoadPage();
-    }, [mountedDatestamps.all, appReady]);
-
-    // Carryover yesterday's events to today. (Runs once per day).
-    useEffect(() => {
-        if (!appReady) return;
-
-        carryoverYesterdayEvents();
-    }, [mountedDatestamps.today, appReady]);
+    }, [pathname, appReady]);
 
     // Update the mounted datestamps atom at midnight.
     useEffect(() => {
@@ -82,18 +59,14 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
         setLoading(true);
         await updateCalendarAndContactPermissions();
 
-        switch (pathname) {
-            case '/':
-                loadCurrentWeatherToStore();
-                break;
-            case '/planners':
-
-                // TODO: how to handle loading in the weather for these planners?
-
-                break;
+        if (pathname.includes('planners')) {
+            // TODO: pass datestamp to weather getter
+            loadCurrentWeatherToStore();
+            await loadExternalCalendarData([datestamp]);
+        } else if (pathname.includes('upcomingDates')) {
+            await loadAllDayEventsToStore();
         }
 
-        await loadExternalCalendarData(mountedDatestamps.all);
         setLoading(false);
     }
 
@@ -121,73 +94,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
 
     function handleMidnightDatestampUpdate() {
         const todayDatestamp = getTodayDatestamp();
-
-        // Ensure the textfield remains visible if one exists during the midnight update.
-        if (textfieldItem) {
-            const yesterdayDatestamp = getYesterdayDatestamp();
-
-            // If textfield item was from yesterday, carry it to today.
-            if (textfieldItem.listId === yesterdayDatestamp) {
-                const newTextfieldItem = { ...textfieldItem };
-                delete textfieldItem.calendarId;
-                delete textfieldItem.timeConfig;
-                delete textfieldItem.recurringId;
-                onSetTextfieldItem(newTextfieldItem);
-            }
-
-            // If textfield item is now for today and we're on planners page with Next 7 Days view,
-            // navigate to the today planner.
-            else if (
-                textfieldItem.listId === todayDatestamp &&
-                pathname === '/planners' &&
-                plannerSetKey === 'Next 7 Days'
-            ) {
-                router.push('/');
-            }
-        }
-
         setTodayDatestamp(todayDatestamp);
-    }
-
-    function carryoverYesterdayEvents() {
-        const todayDatestamp = getTodayDatestamp();
-        const lastLoadedTodayDatestamp = appMetaData?.lastLoadedTodayDatestamp ?? todayDatestamp;
-
-        if (lastLoadedTodayDatestamp !== todayDatestamp) {
-            const yesterdayDatestamp = getYesterdayDatestamp();
-
-            const yesterdayPlanner = getPlannerFromStorageByDatestamp(yesterdayDatestamp);
-            const todayPlanner = getPlannerFromStorageByDatestamp(todayDatestamp);
-
-            deleteAllPlannersInStorageOlderThanThreeYears();
-
-            yesterdayPlanner.eventIds.reverse().forEach((id) => {
-                const event = getPlannerEventFromStorageById(id);
-
-                // Skip recurring and calendar events
-                if (event.recurringId || event.calendarId) {
-                    deletePlannerEventFromStorageById(event.id);
-                    return;
-                }
-
-                // Link the event to today.
-                event.listId = todayDatestamp;
-
-                // Remove timeConfig.
-                delete event.timeConfig;
-
-                savePlannerEventToStorage(event);
-
-                todayPlanner.eventIds.unshift(event.id);
-            });
-
-            deletePlannerFromStorageByDatestamp(yesterdayDatestamp);
-            savePlannerToStorage(todayPlanner);
-        }
-
-        setAppMetaData({
-            lastLoadedTodayDatestamp: todayDatestamp
-        });
     }
 
     if (!appReady) return null;

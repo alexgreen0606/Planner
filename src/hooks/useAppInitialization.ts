@@ -55,7 +55,7 @@ const useAppInitialization = () => {
         userAccess.get(EAccess.CONTACTS) !== undefined &&
         rootFolder;
 
-    // Calendar permissions check.
+    // Calendar permissions.
     useEffect(() => {
         if (!calendarStatus || calendarStatus.status === 'undetermined') {
             requestCalendarPermissions();
@@ -68,7 +68,7 @@ const useAppInitialization = () => {
         }
     }, [calendarStatus]);
 
-    // Contacts permission check and root folder check.
+    // Contacts permission and root folder check.
     useEffect(() => {
         checkContactsPermissions();
         checkRootFolderExistence();

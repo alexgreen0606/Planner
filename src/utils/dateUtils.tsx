@@ -118,12 +118,12 @@ export function getTomorrowDatestamp(): string {
 }
 
 /**
- * Gets the timestamp for the date 3 years into the future.
+ * Gets the timestamp for the date 1 year into the future.
  * 
- * @returns Datestamp for the date 3 years in the future. (YYYY-MM-DD)
+ * @returns Datestamp for the date 1 year in the future. (YYYY-MM-DD)
  */
-export function getDatestampThreeYearsFromToday(): string {
-    return DateTime.local().plus({ years: 3 }).toISODate();
+export function getDatestampOneYearFromToday(): string {
+    return DateTime.local().plus({ years: 1 }).toISODate();
 }
 
 /**

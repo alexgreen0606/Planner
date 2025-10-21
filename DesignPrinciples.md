@@ -13,15 +13,22 @@ When declaring, follow this order (exported after local):
 2. `external hooks`
 1. `atoms`
 2. `context`
+6. `custom hooks`
+
 4. `useRef`
-4. `useMMKVObject`
+4. `useAnimatedRef`
+
 3. `useState`
 5. `useMemo`
+4. `useMMKVObject`
+
 4. `animated variables`
-6. `custom hooks`
 6. `constants`
-5. `useMMKVListener`
+
 5. `useEffect`
+5. `useMMKVListener`
+5. `useAnimatedReaction`
+
 4. `event handlers`
 1. `helper functions`
 7. `UI`
@@ -37,12 +44,12 @@ When declaring, follow this order (exported after local):
 6. `Validation Functions`
 
 ## Function Names
-- Event handlers: 'handle'. 
+- Declarations in components: 'handle'. 
 - Props: 'on'. 
-All else just state what it does.
+- Declarations in utils: action itself (ex: "saveToStorage"). 
 
 ## Props  
-- Always define props using `interface`.
+- Always define props using `type`.
 
 ## Functions
 - All functions **must** explicitly show their return type if it exists.

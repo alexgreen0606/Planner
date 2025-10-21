@@ -10,9 +10,9 @@ import { router } from "expo-router";
 import { DateTime } from "luxon";
 import { hasCalendarAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
-import { getDayShiftedDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
+import { getDatestampOneYearFromToday, getDayShiftedDatestamp, getTodayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
 import { openPlannerTimeModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
-import { getUpcomingDateIdFromStorageByCalendarId, upsertCalendarEventsIntoUpcomingDatePlanner } from "./upcomingDateUtils";
+import { upcomingDatesMapAtom, calendarMapAtom } from "@/atoms/calendarAtoms";
 
 // ✅ 
 
@@ -115,12 +115,10 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
         calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
     }
 
-    if (calendar.title === 'UpcomingDates') {
+    if (false && calendar.title === 'UpcomingDates') {
         calendarEventChip.onClick = () => {
-            const foundStorageId = getUpcomingDateIdFromStorageByCalendarId(event.id);
-            if (!foundStorageId) return;
 
-            jotaiStore.set(textfieldIdAtom, foundStorageId);
+            // TODO: change this to just open a modal if possible.
             router.push('/planners/upcomingDates');
         };
     }
@@ -128,9 +126,31 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
     return calendarEventChip;
 }
 
-// ==========================
-// 2. Calendar Load Function
-// ==========================
+/**
+ * Fetches all future and current all-day events from all calendars on the device.
+ * 
+ * @returns All all-day calendar events from all device calendars from today until 1 year from now.
+ */
+async function getAllDayEventsFromCalendarsForNextYear(): Promise<Calendar.Event[]> {
+    if (!hasCalendarAccess()) {
+        return [];
+    }
+
+    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`);
+    const endDate = new Date(`${getDatestampOneYearFromToday()}T23:59:59`);
+
+    const allCalendarsMap = await getCalendarMap();
+    const allCalendarIds = Object.keys(allCalendarsMap);
+
+    const allCalendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate);
+    const allDayEvents = allCalendarEvents.filter(event => event.allDay === true);
+
+    return allDayEvents;
+}
+
+// ===========================
+// 2. Calendar Load Functions
+// ===========================
 
 /**
  * Loads in all calendar data for the given range of dates and saves it to the Jotai store. If the user has not granted
@@ -149,10 +169,6 @@ export async function loadExternalCalendarData(datestamps: string[]) {
     });
 
     if (hasCalendarAccess()) {
-
-        // Phase 1: Build and save the updated upcomingDate planner.
-        // Must be done BEFORE building the planner chips, as these need to access the storage records of the Upcoming Date Events.
-        await upsertCalendarEventsIntoUpcomingDatePlanner();
 
         const allCalendarsMap = await getCalendarMap();
         const allCalendarIds = Object.keys(allCalendarsMap);
@@ -194,6 +210,56 @@ export async function loadExternalCalendarData(datestamps: string[]) {
         upsertCalendarEventsIntoPlanner(datestamp, calendarEventMap[datestamp]);
     });
 
+}
+
+/**
+ * Loads all upcoming all-day events from the calendar and organizes them by date into the store.
+ * Also ensures the calendarMapAtom is populated with all calendars.
+ */
+export async function loadAllDayEventsToStore(): Promise<void> {
+    try {
+        // First, ensure calendar map is populated
+        const calendarMap = await getCalendarMap();
+        jotaiStore.set(calendarMapAtom, calendarMap);
+
+        // Get all upcoming all-day events
+        const allDayEvents = await getAllDayEventsFromCalendarsForNextYear();
+
+        // Group events by datestamp (YYYY-MM-DD)
+        const eventsByDate: Record<string, Calendar.Event[]> = {};
+
+        for (const event of allDayEvents) {
+            // Extract date from event's startDate
+            // startDate is in ISO format, so we extract the date part
+            const eventDate = new Date(event.startDate);
+            const datestamp = eventDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+            if (!eventsByDate[datestamp]) {
+                eventsByDate[datestamp] = [];
+            }
+            eventsByDate[datestamp].push(event);
+        }
+
+        // Sort events within each date by title or start time for consistent ordering
+        Object.keys(eventsByDate).forEach(date => {
+            eventsByDate[date].sort((a, b) => {
+                // First sort by time if they have different times (unlikely for all-day events)
+                const timeCompare = new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+                if (timeCompare !== 0) return timeCompare;
+
+                // Then sort alphabetically by title
+                return (a.title || '').localeCompare(b.title || '');
+            });
+        });
+
+        // Update the atom with the grouped events
+        jotaiStore.set(upcomingDatesMapAtom, eventsByDate);
+
+    } catch (error) {
+        console.error('Error loading all-day events to store:', error);
+        // Set empty object on error
+        jotaiStore.set(upcomingDatesMapAtom, {});
+    }
 }
 
 // =================

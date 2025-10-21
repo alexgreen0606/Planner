@@ -1,4 +1,4 @@
-import FolderPage from '@/components/PlannerPage';
+import FolderPage from '@/components/FolderPage';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import React from 'react';
 

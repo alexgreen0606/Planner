@@ -116,13 +116,13 @@ export const textStyles = {
     },
     // --- Today Icon ---
     todayMonth: {
-        fontSize: 9,
+        fontSize: 8,
         fontFamily: 'RoundHeavy',
         color: PlatformColor('systemBackground'),
         letterSpacing: 1.2
     },
     todayDate: {
-        fontSize: 16,
+        fontSize: 15,
         fontFamily: 'RoundHeavy'
     },
     // --- Calendar Filter ---
