@@ -1,12 +1,10 @@
 import { currentWeatherChipAtom } from '@/atoms/currentWeatherChip';
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { plannerChipsByDatestamp } from '@/atoms/plannerChips';
+import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { useAtomValue } from 'jotai';
 import React from 'react';
-import { View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import PlannerChip from '.';
-import FadeInView from '../views/FadeInView';
-import Animated, { SequencedTransition } from 'react-native-reanimated';
 
 // ✅ 
 
@@ -20,12 +18,12 @@ const PlannerChipSets = ({
     ...rest
 }: TPlannerChipSetsProps) => {
     const currentWeatherChip = useAtomValue(currentWeatherChipAtom);
-    const { today } = useAtomValue(mountedDatestampsAtom);
+    const todayDatestamp = useAtomValue(todayDatestampAtom);
 
     const sets = useAtomValue(plannerChipsByDatestamp(datestamp));
 
     // Include the current weather in today's planner's chip set.
-    const allSets = datestamp === today && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;
+    const allSets = datestamp === todayDatestamp && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;
 
     return (
         <Animated.View className="flex-row flex-wrap gap-2">

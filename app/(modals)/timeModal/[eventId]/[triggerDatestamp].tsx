@@ -1,4 +1,5 @@
 import { importantCalendarAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
+import { untrackLoadedDatestampsAtom } from "@/atoms/loadedDatestampsAtom";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
 import Modal from "@/components/Modal";
@@ -15,14 +16,13 @@ import { IPlannerEvent, TDateRange } from "@/lib/types/listItems/IPlannerEvent";
 import { TPlanner } from "@/lib/types/planner/TPlanner";
 import { TPopupAction } from "@/lib/types/TPopupAction";
 import { getDoesPlannerEventExist, getDoesPlannerExist, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from "@/storage/plannerStorage";
-import { loadExternalCalendarData } from "@/utils/calendarUtils";
 import { getIsoFromNowTimeRoundedDown5Minutes, getTodayDatestamp, isoToDatestamp } from "@/utils/dateUtils";
 import { getCalendarEventTimeRange, transitionToAllDayCalendarEvent, transitionToMultiDayCalendarEvent, transitionToNonCalendarEvent, transitionToSingleDayCalendarEvent } from "@/utils/plannerEventTransitionUtils";
-import { deletePlannerEventsFromStorageAndCalendar, getAllMountedDatestampsLinkedToDateRanges, getPlannerEventFromStorageByCalendarId, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
+import { deletePlannerEventsFromStorageAndCalendar, getPlannerEventFromStorageByCalendarId, updatePlannerEventIndexWithChronologicalCheck } from "@/utils/plannerUtils";
 import * as Calendar from "expo-calendar";
 import { uuid } from "expo-modules-core";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -71,6 +71,7 @@ const PlannerEventTimeModal = () => {
         }
     });
 
+    const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom);
     const importantCalendar = useAtomValue(importantCalendarAtom);
     const primaryCalendar = useAtomValue(primaryCalendarAtom);
     const userAccess = useAtomValue(userAccessAtom);
@@ -294,8 +295,8 @@ const PlannerEventTimeModal = () => {
         savePlannerEventToStorage(newEvent);
         addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
 
-        // Phase 3: Reload the calendar data to retrieve the up-to-date events.
-        await reloadCalendarFromRanges(affectedDateRanges);
+        // Phase 3: Untrack the affected datestamps to allow for re-loads on mount.
+        untrackLoadedDatestamps(affectedDateRanges);
 
         // Phase 4: Close the modal and open the target start planner.
         closeModalOpenPlanner(isoToDatestamp(timeRange.startIso));
@@ -314,8 +315,7 @@ const PlannerEventTimeModal = () => {
                 const { calendarEvent } = initialEventState;
 
                 await Calendar.deleteEventAsync(calendarEvent.id);
-                const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<TDateRange>([getCalendarEventTimeRange(calendarEvent)]);
-                await loadExternalCalendarData(datestampsToReload);
+                untrackLoadedDatestamps([getCalendarEventTimeRange(calendarEvent)]);
 
                 break;
             }
@@ -327,8 +327,7 @@ const PlannerEventTimeModal = () => {
                     const { calendarEvent } = initialEventState;
                     await Calendar.deleteEventAsync(calendarEvent.id);
 
-                    const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges([getCalendarEventTimeRange(calendarEvent)]);
-                    await loadExternalCalendarData(datestampsToReload);
+                    untrackLoadedDatestamps([getCalendarEventTimeRange(calendarEvent)]);
                 }
 
                 break;
@@ -408,9 +407,11 @@ const PlannerEventTimeModal = () => {
 
         // Phase 2: Update the device calendar and reload the calendar to the jotai store.
         await upsertCalendarEventToDevice(calendarEventId, calendarEventDetails, wasAllDayEvent, calendarId);
-        await reloadCalendarFromRanges(affectedDateRanges);
 
-        // Phase 3: Close the modal and open the target start planner.
+        // Phase 3: Untrack the affected datestamps to allow for re-loads on mount.
+        untrackLoadedDatestamps(affectedDateRanges);
+
+        // Phase 4: Close the modal and open the target start planner.
         closeModalOpenPlanner(isoToDatestamp(timeRange.startIso));
     }
 
@@ -443,8 +444,8 @@ const PlannerEventTimeModal = () => {
         savePlannerEventToStorage(newEvent);
         addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
 
-        // Phase 4: Reload the calendar data to retrieve the up-to-date event.
-        await reloadCalendarFromRanges(affectedDateRanges);
+        // Phase 4: Untrack the affected datestamps to allow for re-loads on mount.
+        untrackLoadedDatestamps(affectedDateRanges);
 
         // Phase 5: Close the modal and open the target start planner.
         closeModalOpenPlanner(targetDatestamp);
@@ -467,8 +468,8 @@ const PlannerEventTimeModal = () => {
         savePlannerEventToStorage(newEvent);
         addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
 
-        // Phase 3: Reload the calendar data to retrieve the up-to-date events.
-        await reloadCalendarFromRanges(affectedDateRanges);
+        // Phase 3: Untrack the affected datestamps to allow for re-loads on mount.
+        untrackLoadedDatestamps(affectedDateRanges);
 
         // Phase 4: Close the modal and open the target start planner.
         closeModalOpenPlanner(targetDatestamp);
@@ -519,8 +520,8 @@ const PlannerEventTimeModal = () => {
         addEventToPlanner(startEvent, targetStartPlanner, carryoverEventMetadata[ECarryoverEventType.START_EVENT]);
         addEventToPlanner(endEvent, targetEndPlanner, carryoverEventMetadata[ECarryoverEventType.END_EVENT]);
 
-        // Phase 4: Reload the calendar data to retrieve the up-to-date event.
-        await reloadCalendarFromRanges(affectedDateRanges);
+        // Phase 4: Untrack the affected datestamps to allow for re-loads on mount.
+        untrackLoadedDatestamps(affectedDateRanges);
 
         // Phase 5: Close the modal and open the target start planner.
         closeModalOpenPlanner(targetStartDatestamp);
@@ -589,11 +590,6 @@ const PlannerEventTimeModal = () => {
         } else {
             return await Calendar.createEventAsync(calendarId, eventDetails);
         }
-    }
-
-    async function reloadCalendarFromRanges(ranges: TDateRange[]) {
-        const affectedDates = getAllMountedDatestampsLinkedToDateRanges(ranges);
-        await loadExternalCalendarData(affectedDates);
     }
 
     function getDateRangeFromValues(startDate: DateTime, endDate: DateTime) {

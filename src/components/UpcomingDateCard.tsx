@@ -1,5 +1,4 @@
 import { calendarMapAtom } from '@/atoms/calendarAtoms';
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
 import { calendarIconMap } from '@/lib/constants/calendarIcons';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import * as Calendar from 'expo-calendar';
@@ -10,6 +9,7 @@ import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from './icons/Icon';
 import CustomText from './text/CustomText';
 import DateValue from './text/DateValue';
+import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 
 type TUpcomingDateCardProps = {
     datestamp: string;
@@ -20,7 +20,7 @@ type TUpcomingDateCardProps = {
 const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) => {
     const router = useRouter();
 
-    const { today } = useAtomValue(mountedDatestampsAtom);
+    const todayDatestamp = useAtomValue(todayDatestampAtom);
     const calendarMap = useAtomValue(calendarMapAtom);
 
     const countdownLabel = useMemo(() => {
@@ -37,7 +37,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
         }
 
         return countdownLabel;
-    }, [today, datestamp]);
+    }, [todayDatestamp, datestamp]);
 
     function handleOpenPlanner() {
         router.push(`/planners/${datestamp}`);

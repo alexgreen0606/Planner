@@ -1,3 +1,4 @@
+import { trackLoadedDatestampAtom } from '@/atoms/loadedDatestampsAtom';
 import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { TUserAccess, userAccessAtom } from '@/atoms/userAccess';
 import useAppInitialization from '@/hooks/useAppInitialization';
@@ -23,10 +24,11 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
     const pathname = usePathname();
 
-    const appReady = useAppInitialization();
-
+    const trackLoadedDatestamp = useSetAtom(trackLoadedDatestampAtom);
     const setTodayDatestamp = useSetAtom(todayDatestampAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
+
+    const appReady = useAppInitialization();
 
     const loadedPathnames = useRef<Set<string>>(new Set());
 
@@ -63,6 +65,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
             // TODO: pass datestamp to weather getter
             loadCurrentWeatherToStore();
             await loadExternalCalendarData([datestamp]);
+            trackLoadedDatestamp(datestamp);
         } else if (pathname.includes('upcomingDates')) {
             await loadAllDayEventsToStore();
         }

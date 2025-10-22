@@ -1,18 +1,16 @@
+import { calendarMapAtom, upcomingDatesMapAtom } from "@/atoms/calendarAtoms";
 import { plannerChipsAtom } from "@/atoms/plannerChips";
-import { textfieldIdAtom } from "@/atoms/textfieldId";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
 import { TPlannerChipMap } from "@/lib/types/externalData/TPlannerChipMap";
 import { TPlannerChip } from "@/lib/types/planner/TPlannerChip";
 import { jotaiStore } from "app/_layout";
 import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
-import { router } from "expo-router";
 import { DateTime } from "luxon";
 import { hasCalendarAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
 import { getDatestampOneYearFromToday, getDayShiftedDatestamp, getTodayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
 import { openPlannerTimeModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
-import { upcomingDatesMapAtom, calendarMapAtom } from "@/atoms/calendarAtoms";
 
 // ✅ 
 

@@ -1,4 +1,4 @@
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import useAppTheme from '@/hooks/useAppTheme';
 import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_HEIGHT, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
@@ -18,7 +18,7 @@ import ShadowView from '../views/ShadowView';
 const PlannerHeader = ({ datestamp }: TPlannerPageParams) => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
 
-    const { today } = useAtomValue(mountedDatestampsAtom);
+    const todayDatestamp = useAtomValue(todayDatestampAtom);
 
     const { label, dayOfWeek } = useMemo(() => {
         let label = '';
@@ -37,7 +37,7 @@ const PlannerHeader = ({ datestamp }: TPlannerPageParams) => {
         }
 
         return { label, dayOfWeek: getDayOfWeekFromDatestamp(datestamp) };
-    }, [today, datestamp]);
+    }, [todayDatestamp, datestamp]);
 
     const { PlatformColor: { background }, ColorArray: { Screen: { upper } } } = useAppTheme();
 

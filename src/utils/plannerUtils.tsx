@@ -1,9 +1,9 @@
-import { mountedDatestampsAtom } from '@/atoms/mountedDatestamps';
+import { untrackLoadedDatestampsAtom } from '@/atoms/loadedDatestampsAtom';
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import TimeValue from '@/components/text/TimeValue';
 import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { IPlannerEvent, ITimeConfig, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
+import { IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
 import { deletePlannerEventFromStorageById, deletePlannerFromStorageByDatestamp, getAllPlannerDatestampsFromStorage, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerEventToStorage, savePlannerToStorage } from '@/storage/plannerStorage';
@@ -15,8 +15,7 @@ import { uuid } from 'expo-modules-core';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
 import { TouchableOpacity } from 'react-native';
-import { loadExternalCalendarData } from './calendarUtils';
-import { datestampToMidnightJsDate, getDatestampOneYearAgo, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { getDatestampOneYearAgo, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
 
 // ✅ 
 
@@ -427,38 +426,6 @@ export function createPlannerEventTimeConfig(datestamp: string, timeValue: strin
 // ==================
 
 /**
- * Gets a list of all planner datestamps that are currently mounted throughout the app.
- * 
- * @returns A list of planner datestamps. (YYYY-MM-DD)
- */
-export function getAllMountedDatestampsFromStore(): string[] {
-    return jotaiStore.get(mountedDatestampsAtom).all;
-}
-
-/**
- * Gets a list of all mounted datestamps that fall within a list of date ranges.
- * 
- * @param ranges - The list of ranges to weigh against the mounted datestamps.
- * @returns A unique list of datestamps. (YYYY-MM-DD)
- */
-export function getAllMountedDatestampsLinkedToDateRanges<T extends TDateRange>(ranges: T[]): string[] {
-    const allMountedDatestamps = getAllMountedDatestampsFromStore();
-
-    const affectedDatestamps = [];
-    for (const mountedStart of allMountedDatestamps) {
-        const nextDatestamp = datestampToMidnightJsDate(mountedStart, 1).toISOString();
-        if (ranges.some((range) =>
-            isTimeEarlier(range.startIso, nextDatestamp) &&
-            isTimeEarlierOrEqual(mountedStart, range.endIso)
-        )) {
-            affectedDatestamps.push(mountedStart);
-        }
-    }
-
-    return affectedDatestamps;
-}
-
-/**
  * Fetches a planner event from storage by its calendar event ID.
  * 
  * @param datestamp - The date of the planner. (YYYY-MM-DD)
@@ -625,15 +592,12 @@ export async function deletePlannerEventsFromStorageAndCalendar(
         deletePlannerEventFromStorageById(eventId);
     }
 
-    // Phase 4: Reload calendar if needed.
+    // Phase 4: Untrack the loaded calendars to allow for reloads on mount.
     await Promise.all(calendarDeletePromises);
-    if (affectedCalendarRanges.length > 0) {
-        const datestampsToReload = getAllMountedDatestampsLinkedToDateRanges<ITimeConfig>(affectedCalendarRanges);
-        await loadExternalCalendarData(datestampsToReload);
-    }
+    jotaiStore.set(untrackLoadedDatestampsAtom, affectedCalendarRanges);
 }
 
-// TODO: call this function in the external provider once a day
+// TODO: call this function in the external provider once a day vvv
 
 /**
  * Deletes all planners and their events from storage that are older than 3 years from today.
