@@ -127,12 +127,12 @@ export function getDatestampOneYearFromToday(): string {
 }
 
 /**
- * Gets the timestamp for the date 3 years into the past.
+ * Gets the timestamp for the date 1 year into the past.
  * 
- * @returns Datestamp for the date 3 years ago. (YYYY-MM-DD)
+ * @returns Datestamp for the date 1 year ago. (YYYY-MM-DD)
  */
-export function getDatestampThreeYearsAgo(): string {
-    return DateTime.local().minus({ years: 3 }).toISODate();
+export function getDatestampOneYearAgo(): string {
+    return DateTime.local().minus({ years: 1 }).toISODate();
 }
 
 /**

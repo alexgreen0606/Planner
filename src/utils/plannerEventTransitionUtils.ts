@@ -57,13 +57,33 @@ function getCalendarEventTimeRange(event: Calendar.Event) {
     }
 }
 
+async function getCanUseCalendarIdElseCleanCalendar(
+    previousCalendarId?: string,
+    previousCalendarEventId?: string,
+    newCalendarId?: string
+): Promise<boolean> {
+    if (!previousCalendarId || !previousCalendarEventId) return false;
+
+    if (previousCalendarId !== newCalendarId) {
+        try {
+            await Calendar.deleteEventAsync(previousCalendarEventId);
+        } catch (err) {
+            console.warn('Failed to delete stale calendar event:', err);
+        } finally {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // ======================
 //  Transition Functions
 // ======================
 
-export function transitionToAllDayCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange) {
+export async function transitionToAllDayCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange, newCalendarId: string) {
     const affectedDateRanges: TDateRange[] = [newRange];
-    let calendarId: string | undefined;
+    let calendarEventId: string | undefined;
     let wasAllDayEvent: boolean = false;
 
     switch (initialState.eventType) {
@@ -83,7 +103,10 @@ export function transitionToAllDayCalendarEvent(initialState: TInitialEventMetad
             // ✅ 
 
             wasAllDayEvent = true;
-            calendarId = calendarEvent.id;
+
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
 
             // Add the range of the previous event to the calendar update ranges.
             affectedDateRanges.push({
@@ -98,7 +121,9 @@ export function transitionToAllDayCalendarEvent(initialState: TInitialEventMetad
 
             // ✅ 
 
-            calendarId = calendarEvent.id;
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
 
             // // Add the range of the previous event to the calendar update ranges.
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
@@ -120,7 +145,9 @@ export function transitionToAllDayCalendarEvent(initialState: TInitialEventMetad
 
             // ✅ 
 
-            calendarId = plannerEvent.calendarId;
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(plannerEvent.timeConfig?.calendarId, plannerEvent.calendarEventId, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = plannerEvent.calendarEventId;
 
             // Add the range of the previous event to the calendar update ranges.
             affectedDateRanges.push(plannerEvent.timeConfig!);
@@ -135,15 +162,15 @@ export function transitionToAllDayCalendarEvent(initialState: TInitialEventMetad
         }
     }
 
-    return { calendarId, wasAllDayEvent, affectedDateRanges };
+    return { calendarEventId, wasAllDayEvent, affectedDateRanges };
 }
 
-export function transitionToSingleDayCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange) {
+export async function transitionToSingleDayCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange, newCalendarId: string) {
     const { startIso } = newRange;
 
     const affectedDateRanges: TDateRange[] = [newRange];
     let carryoverEventMetadata: TCarryoverEventMetadata | undefined;
-    let calendarId: string | undefined;
+    let calendarEventId: string | undefined;
     let wasAllDayEvent = false;
 
     switch (initialState.eventType) {
@@ -170,7 +197,10 @@ export function transitionToSingleDayCalendarEvent(initialState: TInitialEventMe
             // ✅ 
 
             wasAllDayEvent = true;
-            calendarId = calendarEvent.id;
+
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
 
             // Mark the previous event ranges to reload the calendar.
             affectedDateRanges.push({
@@ -185,7 +215,9 @@ export function transitionToSingleDayCalendarEvent(initialState: TInitialEventMe
 
             // ✅ 
 
-            calendarId = calendarEvent.id;
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
 
             // Mark the previous time range of the calendar event to reload the calendar.
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
@@ -210,7 +242,9 @@ export function transitionToSingleDayCalendarEvent(initialState: TInitialEventMe
 
             // ✅ 
 
-            calendarId = plannerEvent.calendarId;
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(plannerEvent.timeConfig?.calendarId, plannerEvent.calendarEventId, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = plannerEvent.calendarEventId;
 
             // Mark the previous time range to reload the calendar.
             affectedDateRanges.push(timeConfig!);
@@ -223,15 +257,15 @@ export function transitionToSingleDayCalendarEvent(initialState: TInitialEventMe
         }
     }
 
-    return { carryoverEventMetadata, calendarId, affectedDateRanges, wasAllDayEvent };
+    return { carryoverEventMetadata, calendarEventId, affectedDateRanges, wasAllDayEvent };
 }
 
-export function transitionToMultiDayCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange) {
+export async function transitionToMultiDayCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange, newCalendarId: string) {
     const { startIso, endIso } = newRange;
 
     const affectedDateRanges: TDateRange[] = [newRange];
     const carryoverEventMetadata: TCarryoverEventMap = {};
-    let calendarId: string | undefined;
+    let calendarEventId: string | undefined;
     let wasAllDayEvent = false;
 
     switch (initialState.eventType) {
@@ -257,8 +291,11 @@ export function transitionToMultiDayCalendarEvent(initialState: TInitialEventMet
 
             // ✅ 
 
-            calendarId = calendarEvent.id;
             wasAllDayEvent = true;
+
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
 
             // Mark the previous event ranges to reload the calendar.
             affectedDateRanges.push({
@@ -273,7 +310,9 @@ export function transitionToMultiDayCalendarEvent(initialState: TInitialEventMet
 
             // ✅ 
 
-            calendarId = calendarEvent.id;
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
 
             // Mark the previous time range of the calendar event to reload the calendar.
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
@@ -298,7 +337,9 @@ export function transitionToMultiDayCalendarEvent(initialState: TInitialEventMet
 
             // ✅ 
 
-            calendarId = plannerEvent.calendarId;
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(plannerEvent.timeConfig?.calendarId, plannerEvent.calendarEventId, newCalendarId);
+            if (canReuseCalendarEventId) calendarEventId = plannerEvent.calendarEventId;
 
             // Mark the previous time range of the calendar event to reload the calendar.
             affectedDateRanges.push(timeConfig!);
@@ -311,7 +352,7 @@ export function transitionToMultiDayCalendarEvent(initialState: TInitialEventMet
         }
     }
 
-    return { carryoverEventMetadata, calendarId, affectedDateRanges, wasAllDayEvent };
+    return { carryoverEventMetadata, calendarEventId, affectedDateRanges, wasAllDayEvent };
 }
 
 export async function transitionToNonCalendarEvent(initialState: TInitialEventMetadata, newRange: TDateRange) {
@@ -381,12 +422,12 @@ export async function transitionToNonCalendarEvent(initialState: TInitialEventMe
         }
         case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → NON_CALENDAR
             const { plannerEvent } = initialState;
-            const { timeConfig, id, listId: startDatestamp, calendarId } = plannerEvent;
+            const { timeConfig, id, listId: startDatestamp, calendarEventId } = plannerEvent;
 
             // ✅ 
 
             // Event was in calendar. Delete it.
-            await Calendar.deleteEventAsync(calendarId!, { futureEvents: true });
+            await Calendar.deleteEventAsync(calendarEventId!, { futureEvents: true });
 
             // Mark the range of the calendar event to reload the calendar data.
             affectedDateRanges.push(timeConfig!);

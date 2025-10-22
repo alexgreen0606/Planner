@@ -35,7 +35,7 @@ const PlannerChip = ({
     const isPendingDelete = useMemo(() =>
         onGetDeletingItemsByStorageIdCallback(EStorageId.PLANNER_EVENT).some(deleteItem =>
             // This deleting item is the chip's event
-            (deleteItem.id === id || (deleteItem.calendarId === id)) &&
+            (deleteItem.id === id || (deleteItem.calendarEventId === id)) &&
             // This deleting item is not from today
             deleteItem.listId !== getTodayDatestamp()
         ),

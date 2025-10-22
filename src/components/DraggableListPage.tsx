@@ -225,7 +225,7 @@ const DraggableListPage = <T extends TListItem, S>({
                 ) : undefined}
                 stickyHeaderIndices={stickyHeader ? [0] : undefined}
                 contentContainerStyle={{
-                    paddingBottom: minContentHeight,
+                    minHeight: minContentHeight,
                 }}
                 className='flex-grow'
             />
@@ -238,7 +238,7 @@ const DraggableListPage = <T extends TListItem, S>({
             {/* Add Button */}
             <View
                 style={{ bottom: BOTTOM_NAV_HEIGHT + BUTTON_MARGIN }}
-                className='absolute right-4'
+                className='absolute left-8'
             >
                 <GlassIconButton
                     systemImage='plus'

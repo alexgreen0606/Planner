@@ -59,7 +59,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
         setLoading(true);
         await updateCalendarAndContactPermissions();
 
-        if (pathname.includes('planners')) {
+        if (pathname.includes('planners') && datestamp) {
             // TODO: pass datestamp to weather getter
             loadCurrentWeatherToStore();
             await loadExternalCalendarData([datestamp]);

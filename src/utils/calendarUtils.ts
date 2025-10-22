@@ -111,16 +111,8 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
         calendarEventChip.onClick = () => openMessageForContact(extractNameFromBirthdayText(event.title), 'Happy Birthday!');
     }
 
-    if (calendar.isPrimary || calendar.title === 'Calendar') {
+    if (calendar.isPrimary || ['Calendar', 'Important'].includes(calendar.title)) {
         calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
-    }
-
-    if (false && calendar.title === 'UpcomingDates') {
-        calendarEventChip.onClick = () => {
-
-            // TODO: change this to just open a modal if possible.
-            router.push('/planners/upcomingDates');
-        };
     }
 
     return calendarEventChip;

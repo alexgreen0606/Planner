@@ -13,8 +13,8 @@ const useIsPlannerEventDeleting = (item?: IPlannerEvent) => {
                 // The deleting item's ID matches the item ID
                 deleteItem.id === item.id ||
                 ( // OR the deleting item's calendar ID mathces the item's ID
-                    deleteItem.calendarId &&
-                    deleteItem.calendarId === item.calendarId
+                    deleteItem.calendarEventId &&
+                    deleteItem.calendarEventId === item.calendarEventId
                 )
             ) && // AND
             (   // The item is from today

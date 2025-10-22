@@ -10,6 +10,7 @@ export type TDateRange = {
 
 export interface ITimeConfig extends TDateRange {
     allDay: boolean;
+    calendarId?: string;
 
     // Links multi-day start and end events together.
     startEventId?: string;
@@ -18,7 +19,7 @@ export interface ITimeConfig extends TDateRange {
 
 export interface IPlannerEvent extends TListItem {
     timeConfig?: ITimeConfig;
-    calendarId?: string;
+    calendarEventId?: string;
     recurringId?: string;
     storageId: EStorageId.PLANNER_EVENT;
 }
