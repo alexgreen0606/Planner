@@ -1,7 +1,8 @@
 import { ECarryoverEventType, EEventType } from "@/lib/enums/plannerEventModalEnums";
 import { TCarryoverEventMetadata, TInitialEventMetadata } from "@/lib/types/form/plannerEventMetadata";
-import { TDateRange } from "@/lib/types/listItems/IPlannerEvent";
-import { deletePlannerEventFromStorageById, getPlannerEventFromStorageById, getPlannerFromStorageByDatestamp, savePlannerToStorage } from "@/storage/plannerStorage";
+import { IPlannerEvent, TDateRange } from "@/lib/types/listItems/IPlannerEvent";
+import { TPlanner } from "@/lib/types/planner/TPlanner";
+import { deletePlannerEventFromStorageById, savePlannerToStorage } from "@/storage/plannerStorage";
 import * as Calendar from "expo-calendar";
 import { isoToDatestamp } from "./dateUtils";
 import { deletePlannerEventsFromStorageAndCalendar } from "./plannerUtils";
@@ -14,20 +15,61 @@ type TCarryoverEventMap = Partial<Record<ECarryoverEventType, TCarryoverEventMet
 //  Helper Functions
 // ==================
 
-function removeRecurringEventFromPlannerInStorage(eventId: string) {
-    const event = getPlannerEventFromStorageById(eventId);
-    const planner = getPlannerFromStorageByDatestamp(event.listId);
-    planner.deletedRecurringEventIds.push(eventId);
-    savePlannerToStorage(planner);
+// ---- Carryover Getters ----
+
+async function getCarryoverCalendarEventIdByCalendarEvent(
+    previousCalendarEvent: Calendar.Event | undefined,
+    newCalendarId: string
+): Promise<string | undefined> {
+    if (!previousCalendarEvent) return;
+
+    const canReuse = await getCanReuseCalendarEventIdElseDeleteEventFromCalendar(
+        previousCalendarEvent.calendarId,
+        previousCalendarEvent.id,
+        newCalendarId
+    );
+
+    return canReuse ? previousCalendarEvent.id : undefined;
 }
 
-function getEventMetadataAndCleanPreviousPlanner(eventId: string, hasMovedPlanners: boolean): TCarryoverEventMetadata {
-    if (hasMovedPlanners) {
-        removeEventIdFromPlannerInStorage(eventId);
-    }
+async function getCarryoverCalendarEventIdByPlannerEvent(
+    previousPlannerEvent: IPlannerEvent | undefined,
+    newCalendarId: string
+): Promise<string | undefined> {
+    if (!previousPlannerEvent || !previousPlannerEvent.timeConfig) return;
+
+    const canReuse = await getCanReuseCalendarEventIdElseDeleteEventFromCalendar(
+        previousPlannerEvent.timeConfig.calendarId,
+        previousPlannerEvent.calendarEventId,
+        newCalendarId
+    );
+
+    return canReuse ? previousPlannerEvent.calendarEventId : undefined;
+}
+
+function getCarryoverEventMetadata(
+    targetIso: string,
+    plannerEvent: IPlannerEvent | null,
+    planner: TPlanner | null
+): TCarryoverEventMetadata | undefined {
+    if (!plannerEvent || !planner) return;
+
+    const hasMovedPlanners = getHasEventMovedPlanners(plannerEvent.listId, targetIso);
+    return getEventMetadataAndRemoveStaleEventFromPlanner(plannerEvent, planner, hasMovedPlanners);
+}
+
+// ---- Getters ----
+
+function getEventMetadataAndRemoveStaleEventFromPlanner(
+    plannerEvent: IPlannerEvent,
+    planner: TPlanner,
+    removeFromPlanner: boolean
+): TCarryoverEventMetadata {
+    if (removeFromPlanner) removeEventFromPlannerInStorage(plannerEvent, planner);
+
     return {
-        id: eventId,
-        index: hasMovedPlanners ? null : getPlannerEventIndex(eventId)
+        id: plannerEvent.id,
+        index: removeFromPlanner ? null : getPlannerEventIndex(plannerEvent, planner)
     }
 }
 
@@ -35,29 +77,11 @@ function getHasEventMovedPlanners(prevDatestamp: string, newIso: string): boolea
     return prevDatestamp !== isoToDatestamp(newIso);
 }
 
-function getPlannerEventIndex(eventId: string): number {
-    const event = getPlannerEventFromStorageById(eventId);
-    const planner = getPlannerFromStorageByDatestamp(event.listId);
-    return planner.eventIds.findIndex((id) => id === eventId);
+function getPlannerEventIndex(plannerEvent: IPlannerEvent, planner: TPlanner): number {
+    return planner.eventIds.findIndex((id) => id === plannerEvent.id);
 }
 
-function removeEventIdFromPlannerInStorage(eventId: string) {
-    const event = getPlannerEventFromStorageById(eventId);
-    const planner = getPlannerFromStorageByDatestamp(event.listId);
-    savePlannerToStorage({
-        ...planner,
-        eventIds: planner.eventIds.filter((id) => id !== eventId)
-    });
-}
-
-function getCalendarEventTimeRange(event: Calendar.Event) {
-    return {
-        startIso: event.startDate as string,
-        endIso: event.endDate as string
-    }
-}
-
-async function getCanUseCalendarIdElseCleanCalendar(
+async function getCanReuseCalendarEventIdElseDeleteEventFromCalendar(
     previousCalendarId?: string,
     previousCalendarEventId?: string,
     newCalendarId?: string
@@ -77,6 +101,38 @@ async function getCanUseCalendarIdElseCleanCalendar(
     return true;
 }
 
+export function getCalendarEventTimeRange(event: Calendar.Event) {
+    return {
+        startIso: event.startDate as string,
+        endIso: event.endDate as string
+    }
+}
+
+// ---- Deleters / Hiders ----
+
+function hideRecurringEventForPlannerInStorage(plannerEvent: IPlannerEvent, planner: TPlanner) {
+    if (!plannerEvent.recurringId) return;
+
+    savePlannerToStorage({
+        ...planner,
+        deletedRecurringEventIds: [...planner.deletedRecurringEventIds, plannerEvent.recurringId]
+    });
+}
+
+function removeEventFromPlannerInStorage(plannerEvent: IPlannerEvent, planner: TPlanner) {
+    savePlannerToStorage({
+        ...planner,
+        eventIds: planner.eventIds.filter((id) => id !== plannerEvent.id)
+    });
+}
+
+function hardDeleteEventFromStorage(plannerEvent: IPlannerEvent | null, planner: TPlanner | null) {
+    if (!plannerEvent || !planner) return;
+
+    removeEventFromPlannerInStorage(plannerEvent, planner);
+    deletePlannerEventFromStorageById(plannerEvent.id);
+}
+
 // ======================
 //  Transition Functions
 // ======================
@@ -90,8 +146,6 @@ export async function transitionToAllDayCalendarEvent(initialState: TInitialEven
         case EEventType.NON_CALENDAR: { // NON_CALENDAR → CALENDAR_ALL_DAY
             const { plannerEvent } = initialState;
 
-            // ✅ 
-
             // Delete the planner event from storage.
             deletePlannerEventsFromStorageAndCalendar([plannerEvent]);
 
@@ -100,63 +154,42 @@ export async function transitionToAllDayCalendarEvent(initialState: TInitialEven
         case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → CALENDAR_ALL_DAY
             const { calendarEvent } = initialState;
 
-            // ✅ 
-
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            calendarEventId = await getCarryoverCalendarEventIdByCalendarEvent(calendarEvent, newCalendarId);
             wasAllDayEvent = true;
 
-            // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
-
             // Add the range of the previous event to the calendar update ranges.
-            affectedDateRanges.push({
-                startIso: calendarEvent.startDate as string,
-                endIso: calendarEvent.endDate as string,
-            });
+            affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             break;
         }
         case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_ALL_DAY
-            const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
-
-            // ✅ 
+            const { startPlannerEvent, endPlannerEvent, startPlanner, endPlanner, calendarEvent } = initialState;
 
             // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
+            calendarEventId = await getCarryoverCalendarEventIdByCalendarEvent(calendarEvent, newCalendarId);
 
             // // Add the range of the previous event to the calendar update ranges.
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             // Delete the planner events from storage. 
-            if (startPlannerEvent) {
-                removeEventIdFromPlannerInStorage(startPlannerEvent.id);
-                deletePlannerEventFromStorageById(startPlannerEvent.id);
-            }
-            if (endPlannerEvent) {
-                removeEventIdFromPlannerInStorage(endPlannerEvent.id);
-                deletePlannerEventFromStorageById(endPlannerEvent.id);
-            }
+            hardDeleteEventFromStorage(startPlannerEvent, startPlanner);
+            hardDeleteEventFromStorage(endPlannerEvent, endPlanner);
 
             break;
         }
         case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → CALENDAR_ALL_DAY
-            const { plannerEvent } = initialState;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
+            const { timeConfig } = plannerEvent;
 
             // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(plannerEvent.timeConfig?.calendarId, plannerEvent.calendarEventId, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = plannerEvent.calendarEventId;
+            calendarEventId = await getCarryoverCalendarEventIdByPlannerEvent(plannerEvent, newCalendarId);
 
             // Add the range of the previous event to the calendar update ranges.
-            affectedDateRanges.push(plannerEvent.timeConfig!);
+            affectedDateRanges.push(timeConfig!);
 
             // Delete the planner event from storage. 
-            if (plannerEvent) {
-                removeEventIdFromPlannerInStorage(plannerEvent.id);
-                deletePlannerEventFromStorageById(plannerEvent.id);
-            }
+            hardDeleteEventFromStorage(plannerEvent, planner);
 
             break;
         }
@@ -175,83 +208,57 @@ export async function transitionToSingleDayCalendarEvent(initialState: TInitialE
 
     switch (initialState.eventType) {
         case EEventType.NON_CALENDAR: { // NON_CALENDAR → CALENDAR_SINGLE_DAY
-            const { plannerEvent } = initialState;
-            const { listId: startDatestamp, id } = plannerEvent;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
 
             // If the event is recurring, mark it hidden in its planner so it is not overwritten.
-            if (plannerEvent.recurringId) {
-                removeRecurringEventFromPlannerInStorage(id);
-            }
+            hideRecurringEventForPlannerInStorage(plannerEvent, planner);
 
             // Re-use the position and ID of the existing event.
-            const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-            carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
+            carryoverEventMetadata = getCarryoverEventMetadata(startIso, plannerEvent, planner);
 
             break;
         }
         case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → CALENDAR_SINGLE_DAY
             const { calendarEvent } = initialState;
 
-            // ✅ 
-
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            calendarEventId = await getCarryoverCalendarEventIdByCalendarEvent(calendarEvent, newCalendarId);
             wasAllDayEvent = true;
 
-            // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
-
             // Mark the previous event ranges to reload the calendar.
-            affectedDateRanges.push({
-                startIso: calendarEvent.startDate as string,
-                endIso: calendarEvent.endDate as string,
-            });
+            affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             break;
         }
         case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_SINGLE_DAY
-            const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
-
-            // ✅ 
+            const { startPlannerEvent, endPlannerEvent, startPlanner, endPlanner, calendarEvent } = initialState;
 
             // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
+            calendarEventId = await getCarryoverCalendarEventIdByCalendarEvent(calendarEvent, newCalendarId);
 
             // Mark the previous time range of the calendar event to reload the calendar.
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             // Delete the end event from storage and remove from its planner.
-            if (endPlannerEvent) {
-                removeEventIdFromPlannerInStorage(endPlannerEvent.id);
-                deletePlannerEventFromStorageById(endPlannerEvent.id);
-            }
+            hardDeleteEventFromStorage(endPlannerEvent, endPlanner);
 
             // Try to re-use the position and ID of the existing start event.
-            if (startPlannerEvent) {
-                const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
-                carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startPlannerEvent.id, hasMovedPlanners);
-            }
+            carryoverEventMetadata = getCarryoverEventMetadata(startIso, startPlannerEvent, startPlanner);
 
             break;
         }
         case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → CALENDAR_SINGLE_DAY
-            const { plannerEvent } = initialState;
-            const { timeConfig, listId: startDatestamp, id } = plannerEvent;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
+            const { timeConfig } = plannerEvent;
 
             // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(plannerEvent.timeConfig?.calendarId, plannerEvent.calendarEventId, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = plannerEvent.calendarEventId;
+            calendarEventId = await getCarryoverCalendarEventIdByPlannerEvent(plannerEvent, newCalendarId);
 
             // Mark the previous time range to reload the calendar.
             affectedDateRanges.push(timeConfig!);
 
             // Re-use the position and ID of the existing event.
-            const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-            carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
+            carryoverEventMetadata = getCarryoverEventMetadata(startIso, plannerEvent, planner);
 
             break;
         }
@@ -270,83 +277,57 @@ export async function transitionToMultiDayCalendarEvent(initialState: TInitialEv
 
     switch (initialState.eventType) {
         case EEventType.NON_CALENDAR: { // NON_CALENDAR → CALENDAR_MULTI_DAY
-            const { plannerEvent } = initialState;
-            const { listId: startDatestamp, id } = plannerEvent;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
 
             // If the event is recurring, mark it hidden in its planner so it is not overwritten.
-            if (plannerEvent.recurringId) {
-                removeRecurringEventFromPlannerInStorage(id);
-            }
+            hideRecurringEventForPlannerInStorage(plannerEvent, planner);
 
             // Re-use the position and ID of the existing event.
-            const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-            carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
+            carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getCarryoverEventMetadata(startIso, plannerEvent, planner);
 
             break;
         }
         case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → CALENDAR_MULTI_DAY
             const { calendarEvent } = initialState;
 
-            // ✅ 
-
+            // Grab the event's ID from the calendar if it is not moving to a new calendar.
+            calendarEventId = await getCarryoverCalendarEventIdByCalendarEvent(calendarEvent, newCalendarId);
             wasAllDayEvent = true;
 
-            // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
-
             // Mark the previous event ranges to reload the calendar.
-            affectedDateRanges.push({
-                startIso: calendarEvent.startDate as string,
-                endIso: calendarEvent.endDate as string,
-            });
+            affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             break;
         }
         case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → CALENDAR_MULTI_DAY
-            const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
-
-            // ✅ 
+            const { startPlannerEvent, endPlannerEvent, startPlanner, endPlanner, calendarEvent } = initialState;
 
             // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(calendarEvent.calendarId, calendarEvent.id, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = calendarEvent.id;
+            calendarEventId = await getCarryoverCalendarEventIdByCalendarEvent(calendarEvent, newCalendarId);
 
             // Mark the previous time range of the calendar event to reload the calendar.
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             // Re-use the position and ID of the existing end event.
-            if (endPlannerEvent) {
-                const hasEndMovedPlanners = getHasEventMovedPlanners(endPlannerEvent.listId, endIso);
-                carryoverEventMetadata[ECarryoverEventType.END_EVENT] = getEventMetadataAndCleanPreviousPlanner(endPlannerEvent.id, hasEndMovedPlanners);
-            }
+            carryoverEventMetadata[ECarryoverEventType.END_EVENT] = getCarryoverEventMetadata(endIso, endPlannerEvent, endPlanner);
 
             // Re-use the position and ID of the existing start event.
-            if (startPlannerEvent) {
-                const hasStartMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
-                carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getEventMetadataAndCleanPreviousPlanner(startPlannerEvent.id, hasStartMovedPlanners);
-            }
+            carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getCarryoverEventMetadata(startIso, startPlannerEvent, startPlanner);
 
             break;
         }
         case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → CALENDAR_MULTI_DAY
-            const { plannerEvent } = initialState;
-            const { listId: startDatestamp, timeConfig, id } = plannerEvent;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
+            const { timeConfig } = plannerEvent;
 
             // Grab the event's ID from the calendar if it is not moving to a new calendar.
-            const canReuseCalendarEventId = await getCanUseCalendarIdElseCleanCalendar(plannerEvent.timeConfig?.calendarId, plannerEvent.calendarEventId, newCalendarId);
-            if (canReuseCalendarEventId) calendarEventId = plannerEvent.calendarEventId;
+            calendarEventId = await getCarryoverCalendarEventIdByPlannerEvent(plannerEvent, newCalendarId);
 
             // Mark the previous time range of the calendar event to reload the calendar.
             affectedDateRanges.push(timeConfig!);
 
             // Re-use the position and ID of the existing event.
-            const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-            carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
+            carryoverEventMetadata[ECarryoverEventType.START_EVENT] = getCarryoverEventMetadata(startIso, plannerEvent, planner);
 
             break;
         }
@@ -363,26 +344,18 @@ export async function transitionToNonCalendarEvent(initialState: TInitialEventMe
 
     switch (initialState.eventType) {
         case EEventType.NON_CALENDAR: { // NON_CALENDAR → NON_CALENDAR
-            const { plannerEvent } = initialState;
-            const { listId: startDatestamp, id } = plannerEvent;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
 
             // If the event is recurring, mark it hidden in its planner so it is not overwritten.
-            if (plannerEvent.recurringId) {
-                removeRecurringEventFromPlannerInStorage(id);
-            }
+            hideRecurringEventForPlannerInStorage(plannerEvent, planner);
 
             // Re-use the position and ID of the existing event.
-            const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-            carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
+            carryoverEventMetadata = getCarryoverEventMetadata(startIso, plannerEvent, planner);
 
             break;
         }
         case EEventType.CALENDAR_ALL_DAY: { // CALENDAR_ALL_DAY → NON_CALENDAR
             const { calendarEvent } = initialState;
-
-            // ✅ 
 
             // Delete the existing event in the calendar.
             await Calendar.deleteEventAsync(calendarEvent.id, { futureEvents: true });
@@ -396,9 +369,7 @@ export async function transitionToNonCalendarEvent(initialState: TInitialEventMe
             break;
         }
         case EEventType.CALENDAR_MULTI_DAY: { // CALENDAR_MULTI_DAY → NON_CALENDAR
-            const { startPlannerEvent, endPlannerEvent, calendarEvent } = initialState;
-
-            // ✅ 
+            const { startPlannerEvent, endPlannerEvent, startPlanner, endPlanner, calendarEvent } = initialState;
 
             // Delete the event in the calendar.
             await Calendar.deleteEventAsync(calendarEvent.id, { futureEvents: true });
@@ -407,24 +378,16 @@ export async function transitionToNonCalendarEvent(initialState: TInitialEventMe
             affectedDateRanges.push(getCalendarEventTimeRange(calendarEvent));
 
             // Delete the end event from storage and remove from its planner.
-            if (endPlannerEvent) {
-                removeEventIdFromPlannerInStorage(endPlannerEvent.id);
-                deletePlannerEventFromStorageById(endPlannerEvent.id);
-            }
+            hardDeleteEventFromStorage(endPlannerEvent, endPlanner);
 
             // Try to carryover the start event's ID and index to reuse with the new event.
-            if (startPlannerEvent) {
-                const hasMovedPlanners = getHasEventMovedPlanners(startPlannerEvent.listId, startIso);
-                carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(startPlannerEvent.id, hasMovedPlanners);
-            }
+            carryoverEventMetadata = getCarryoverEventMetadata(startIso, startPlannerEvent, startPlanner);
 
             break;
         }
         case EEventType.CALENDAR_SINGLE_DAY: { // CALENDAR_SINGLE_DAY → NON_CALENDAR
-            const { plannerEvent } = initialState;
-            const { timeConfig, id, listId: startDatestamp, calendarEventId } = plannerEvent;
-
-            // ✅ 
+            const { plannerEvent, planner } = initialState;
+            const { timeConfig, calendarEventId } = plannerEvent;
 
             // Event was in calendar. Delete it.
             await Calendar.deleteEventAsync(calendarEventId!, { futureEvents: true });
@@ -432,9 +395,8 @@ export async function transitionToNonCalendarEvent(initialState: TInitialEventMe
             // Mark the range of the calendar event to reload the calendar data.
             affectedDateRanges.push(timeConfig!);
 
-            // Carryover the event's ID and index to reuse with the new event.
-            const hasMovedPlanners = getHasEventMovedPlanners(startDatestamp, startIso);
-            carryoverEventMetadata = getEventMetadataAndCleanPreviousPlanner(id, hasMovedPlanners);
+            // Re-use the position and ID of the existing event.
+            carryoverEventMetadata = getCarryoverEventMetadata(startIso, plannerEvent, planner);
 
             break;
         }
