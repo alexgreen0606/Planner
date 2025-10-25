@@ -1,7 +1,7 @@
 import ListToolbar from "@/components/lists/ListToolbar";
 import { EStorageId } from "@/lib/enums/EStorageId";
 import { IPlannerEvent } from "@/lib/types/listItems/IPlannerEvent";
-import { openPlannerTimeModal } from "@/utils/plannerUtils";
+import { openEditEventModal } from "@/utils/plannerUtils";
 import { useMMKV } from "react-native-mmkv";
 import useTextfieldItemAs from "../../hooks/useTextfieldItemAs";
 import IconButton from "../icons/IconButton";
@@ -19,7 +19,7 @@ const PlannerEventToolbar = () => {
         <ListToolbar iconSet={[[(
             <IconButton
                 name='clock'
-                onClick={() => focusedEvent && openPlannerTimeModal(focusedEvent.id, focusedEvent.listId)}
+                onClick={() => focusedEvent && openEditEventModal(focusedEvent.id, focusedEvent.listId)}
                 color="label"
             />
         )]]} />

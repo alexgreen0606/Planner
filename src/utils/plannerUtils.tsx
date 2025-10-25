@@ -1,7 +1,6 @@
 import { untrackLoadedDatestampsAtom } from '@/atoms/loadedDatestampsAtom';
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import TimeValue from '@/components/text/TimeValue';
-import { TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
@@ -16,6 +15,8 @@ import { router } from 'expo-router';
 import { ReactNode } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { getDatestampOneYearAgo, getDayOfWeekFromDatestamp, getTodayDatestamp, getYesterdayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual, timeValueToIso } from './dateUtils';
+import { EDIT_EVENT_MODAL_PATHNAME, VIEW_EVENT_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { NULL } from '@/lib/constants/generic';
 
 // ✅ 
 
@@ -328,18 +329,28 @@ export function upsertCalendarEventsIntoPlanner(
     savePlannerToStorage(newPlanner);
 }
 
-// ===========================
-// 4. Open Planner Time Modal
-// ===========================
+// ====================
+// 4. Open Event Modal
+// ====================
 
 /**
- * Opens the time modal for an event.
+ * Opens the edit modal for an event.
  *
- * @param eventId - The ID of the event to update within the modal.
+ * @param eventId - The ID of the event to update within the modal. May be the storage ID or calendar ID.
  * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
  */
-export function openPlannerTimeModal(eventId: string, triggerDatestamp: string) {
-    router.push(`${TIME_MODAL_PATHNAME}/${eventId}/${triggerDatestamp}`);
+export function openEditEventModal(eventId: string, triggerDatestamp: string) {
+    router.push(`${EDIT_EVENT_MODAL_PATHNAME}/${eventId}/${triggerDatestamp}`);
+}
+
+/**
+ * Opens the view modal for an event.
+ *
+ * @param eventId - The ID of the event to update within the modal. May be the storage ID or calendar ID.
+ * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
+ */
+export function openViewEventModal(eventId: string) {
+    router.push(`${VIEW_EVENT_MODAL_PATHNAME}/${eventId}/${NULL}`);
 }
 
 // ====================
@@ -396,7 +407,7 @@ export function createEmptyPlanner(datestamp: string): TPlanner {
 export function createPlannerEventTimeIcon(event: IPlannerEvent): ReactNode {
     const itemTime = getPlannerEventTime(event);
     return itemTime && (
-        <TouchableOpacity onPress={() => openPlannerTimeModal(event.id, event.listId)}>
+        <TouchableOpacity onPress={() => openEditEventModal(event.id, event.listId)}>
             <TimeValue
                 isEndEvent={event.timeConfig?.endEventId === event.id}
                 isStartEvent={event.timeConfig?.startEventId === event.id}

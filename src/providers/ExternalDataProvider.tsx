@@ -1,4 +1,4 @@
-import { trackLoadedDatestampAtom } from '@/atoms/loadedDatestampsAtom';
+import { loadedDatestampsAtom, trackLoadedDatestampAtom } from '@/atoms/loadedDatestampsAtom';
 import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { TUserAccess, userAccessAtom } from '@/atoms/userAccess';
 import useAppInitialization from '@/hooks/useAppInitialization';
@@ -10,14 +10,15 @@ import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { useGlobalSearchParams, usePathname } from 'expo-router';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 // ✅ 
 
 const ExternalDataContext = createContext({
     onReloadPage: async () => { },
-    loading: false
+    loading: false,
+    loadingPathname: null
 });
 
 export function ExternalDataProvider({ children }: { children: React.ReactNode }) {
@@ -25,20 +26,25 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     const pathname = usePathname();
 
     const trackLoadedDatestamp = useSetAtom(trackLoadedDatestampAtom);
+    const loadedDatestamps = useAtomValue(loadedDatestampsAtom);
     const setTodayDatestamp = useSetAtom(todayDatestampAtom);
     const setUserAccess = useSetAtom(userAccessAtom);
 
     const appReady = useAppInitialization();
 
-    const loadedPathnames = useRef<Set<string>>(new Set());
-
-    const [loading, setLoading] = useState(false);
+    const [loadingPathname, setLoadingPathname] = useState<string | null>(null);
 
     // Handle initial loading of data for newly-mounted pathnames.
     useEffect(() => {
-        if (!appReady || loadedPathnames.current.has(pathname)) return;
+
+        // Exit if app isn't ready.
+        if (!appReady) return;
+
+        // Exit if the current datestamp has already been loaded.
+        if (pathname.includes('planners') && datestamp && loadedDatestamps.has(datestamp)) return;
+
         handleLoadPage();
-    }, [pathname, appReady]);
+    }, [pathname, appReady, loadedDatestamps]);
 
     // Update the mounted datestamps atom at midnight.
     useEffect(() => {
@@ -58,7 +64,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     }, []);
 
     async function handleLoadPage() {
-        setLoading(true);
+        setLoadingPathname(pathname);
         await updateCalendarAndContactPermissions();
 
         if (pathname.includes('planners') && datestamp) {
@@ -70,7 +76,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
             await loadAllDayEventsToStore();
         }
 
-        setLoading(false);
+        setLoadingPathname(null);
     }
 
     async function updateCalendarAndContactPermissions(): Promise<TUserAccess> {
@@ -103,7 +109,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     if (!appReady) return null;
 
     return (
-        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage, loading }}>
+        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage, loading: !loadingPathname, loadingPathname }}>
             {children}
         </ExternalDataContext.Provider>
     )

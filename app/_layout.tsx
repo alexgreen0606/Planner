@@ -1,4 +1,5 @@
-import { FOLDER_ITEM_MODAL_PATHNAME, PLANNER_SET_MODAL_PATHNAME, TIME_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import useAppTheme from '@/hooks/useAppTheme';
+import { EDIT_EVENT_MODAL_PATHNAME, FOLDER_ITEM_MODAL_PATHNAME, VIEW_EVENT_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { DeleteSchedulerProvider } from '@/providers/DeleteScheduler';
 import { ExternalDataProvider } from '@/providers/ExternalDataProvider';
 import { Stack } from 'expo-router';
@@ -10,39 +11,48 @@ import '../global.css';
 
 export const jotaiStore = createStore();
 
-const TabLayout = () => (
-    <JotaiProvider store={jotaiStore}>
-        <DeleteSchedulerProvider>
-            <GestureHandlerRootView>
-                <ExternalDataProvider>
-                    <Stack>
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        <Stack.Screen
-                            name={`${TIME_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
-                            options={{
-                                presentation: 'modal',
-                                headerShown: false
-                            }}
-                        />
-                        <Stack.Screen
-                            name={`${PLANNER_SET_MODAL_PATHNAME}/[plannerSetKey]`}
-                            options={{
-                                presentation: 'modal',
-                                headerShown: false
-                            }}
-                        />
-                        <Stack.Screen
-                            name={`${FOLDER_ITEM_MODAL_PATHNAME}/[folderItemId]`}
-                            options={{
-                                presentation: 'modal',
-                                headerShown: false
-                            }}
-                        />
-                    </Stack>
-                </ExternalDataProvider>
-            </GestureHandlerRootView>
-        </DeleteSchedulerProvider>
-    </JotaiProvider>
-);
+const TabLayout = () => {
+    const { CssColor: { modalBackground } } = useAppTheme();
+    return (
+        <JotaiProvider store={jotaiStore}>
+            <DeleteSchedulerProvider>
+                <GestureHandlerRootView>
+                    <ExternalDataProvider>
+                        <Stack>
+                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            <Stack.Screen
+                                name={`${EDIT_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
+                                options={{
+                                    presentation: 'formSheet',
+                                    headerShown: false,
+                                    contentStyle: { backgroundColor: 'transparent' },
+                                    sheetAllowedDetents: 'fitToContents',
+                                }}
+                            />
+                            <Stack.Screen
+                                name={`${VIEW_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
+                                options={{
+                                    presentation: 'formSheet',
+                                    headerShown: false,
+                                    sheetAllowedDetents: 'fitToContents',
+                                    contentStyle: { backgroundColor: 'transparent' }
+                                }}
+                            />
+                            <Stack.Screen
+                                name={`${FOLDER_ITEM_MODAL_PATHNAME}/[folderItemId]`}
+                                options={{
+                                    presentation: 'formSheet',
+                                    headerShown: false,
+                                    contentStyle: { backgroundColor: 'transparent' },
+                                    sheetAllowedDetents: 'fitToContents',
+                                }}
+                            />
+                        </Stack>
+                    </ExternalDataProvider>
+                </GestureHandlerRootView>
+            </DeleteSchedulerProvider>
+        </JotaiProvider>
+    )
+};
 
 export default TabLayout;

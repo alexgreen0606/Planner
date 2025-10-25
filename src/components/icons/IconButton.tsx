@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import Icon, { TIconProps } from './Icon';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 // ✅ 
 
@@ -15,7 +16,7 @@ const IconButton = ({
     ...iconProps
 }: TIconButtonProps) => (
     <TouchableOpacity
-        activeOpacity={hideRipple ? 1 : 0.8}
+        activeOpacity={hideRipple ? 1 : PRESSABLE_OPACITY}
         onPress={onClick}
     >
         <Icon {...iconProps} />

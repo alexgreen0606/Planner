@@ -139,7 +139,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
         >
 
             {/* Date Picker */}
-            <View
+            {/* <View
                 className="absolute z-[0] top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2"
                 style={{ translateY: PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE }}
             >
@@ -151,7 +151,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                         variant="automatic"
                     />
                 </Host>
-            </View>
+            </View> */}
 
             {/* Scroll Wheel */}
             <Animated.FlatList

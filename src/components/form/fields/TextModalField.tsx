@@ -1,12 +1,17 @@
+import Icon from '@/components/icons/Icon';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
+import { SFSymbol } from 'expo-symbols';
 import React, { useEffect, useRef } from 'react';
-import { PlatformColor, TextInput } from 'react-native';
+import { PlatformColor, TextInput, View } from 'react-native';
 
 // ✅ 
 
 export type TTextModalFieldProps = {
     label: string;
     focusTrigger?: boolean;
+    disabled?: boolean;
+    iconName?: SFSymbol;
+    iconColor?: string;
     autoCapitalizeWords?: boolean;
 };
 
@@ -15,6 +20,9 @@ const TextModalField = ({
     label = '',
     autoCapitalizeWords,
     focusTrigger,
+    disabled,
+    iconName,
+    iconColor,
     onChange
 }: TTextModalFieldProps & TFormFieldControl<string>) => {
     const inputRef = useRef<TextInput>(null);
@@ -27,21 +35,27 @@ const TextModalField = ({
     }, [focusTrigger]);
 
     return (
-        <TextInput
-            ref={inputRef}
-            value={value}
-            placeholder={label}
-            onChangeText={onChange}
-            clearButtonMode='while-editing'
-            autoCapitalize={autoCapitalizeWords ? 'words' : undefined}
-            selectionColor={PlatformColor('systemBlue')}
-            textAlign='center'
-            className='text-[16px] bg-transparent px-4 w-full h-full'
-            style={{
-                color: PlatformColor('label'),
-                fontFamily: 'Text',
-            }}
-        />
+        <View className='flex-row flex-1 items-center justify-center'>
+            {iconName && (
+                <Icon name={iconName} color={iconColor} />
+            )}
+            <TextInput
+                ref={inputRef}
+                value={value}
+                placeholder={label}
+                editable={!disabled}
+                onChangeText={onChange}
+                clearButtonMode='while-editing'
+                autoCapitalize={autoCapitalizeWords ? 'words' : undefined}
+                selectionColor={PlatformColor('systemBlue')}
+                textAlign='center'
+                className='text-[16px] px-4 flex-1 h-full'
+                style={{
+                    color: PlatformColor('label'),
+                    fontFamily: 'Text'
+                }}
+            />
+        </View>
     );
 };
 

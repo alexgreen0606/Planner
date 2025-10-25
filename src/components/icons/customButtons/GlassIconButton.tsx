@@ -1,5 +1,6 @@
-import { Button, Host, Image, Label } from "@expo/ui/swift-ui";
-import { frame, tint } from "@expo/ui/swift-ui/modifiers";
+import { getValidCssColor } from "@/utils/colorUtils";
+import { Button, Host, Image } from "@expo/ui/swift-ui";
+import { frame } from "@expo/ui/swift-ui/modifiers";
 import { SFSymbol } from "expo-symbols";
 import { PlatformColor } from "react-native";
 
@@ -8,38 +9,36 @@ import { PlatformColor } from "react-native";
 type TGlassIconButtonProps = {
     systemImage: SFSymbol;
     disabled?: boolean;
-    label?: string;
     isPrimary?: boolean;
-    width?: number;
-    platformColor?: string;
+    color?: string;
+    iconPlatformColor?: string;
     onPress?: () => void;
 }
 
 const GlassIconButton = ({
     systemImage,
     disabled,
-    label,
-    width = 45,
     isPrimary,
-    platformColor = 'label',
+    color,
+    iconPlatformColor = 'label',
     onPress
-}: TGlassIconButtonProps) => {
-    return (
-        <Host matchContents>
-            <Button disabled={disabled} modifiers={[frame({ height: 45, width })]} variant={isPrimary ? 'glassProminent' : 'glass'} onPress={onPress}>
-                <Host style={{ height: 45, width }}>
-                    {label ? (
-                        <Label color={PlatformColor(platformColor) as unknown as string} systemImage='chevron.left' title={label} />
-                    ) : (
-                        <Image
-                            systemName={systemImage}
-                            color={PlatformColor(platformColor) as unknown as string}
-                        />
-                    )}
-                </Host>
-            </Button>
-        </Host>
-    )
-};
+}: TGlassIconButtonProps) => (
+    <Host matchContents>
+        <Button
+            onPress={onPress}
+            color={getValidCssColor(color)}
+            variant={isPrimary ? 'glassProminent' : 'glass'}
+            disabled={disabled}
+            modifiers={[frame({ height: 45, width: 45 })]}
+        >
+            <Host style={{ height: 45, width: 45 }}>
+                <Image
+                    systemName={systemImage}
+                    color={PlatformColor(disabled ? 'tertiaryLabel' : iconPlatformColor) as unknown as string}
+                />
+            </Host>
+        </Button>
+    </Host>
+);
 
 export default GlassIconButton;

@@ -1,9 +1,11 @@
-import { importantCalendarAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
+import { calendarMapAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
 import { untrackLoadedDatestampsAtom } from "@/atoms/loadedDatestampsAtom";
 import { userAccessAtom } from "@/atoms/userAccess";
 import Form from "@/components/form";
 import Modal from "@/components/Modal";
 import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
+import { calendarIconMap } from "@/lib/constants/calendarIcons";
+import { NULL } from "@/lib/constants/generic";
 import { EAccess } from "@/lib/enums/EAccess";
 import { EDateFieldType } from "@/lib/enums/EDateFieldType";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
@@ -26,14 +28,19 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { View } from "react-native";
 import { useMMKV } from "react-native-mmkv";
 
 // ✅ 
 
-type TModalParams = {
+type TEventModalProps = {
+    isViewMode?: boolean;
+}
+
+type TEventModalParams = {
     eventId: string;
 
-    // Planner key that triggered the modal open.
+    // Planner key that triggered the modal open. Not needed for view-mode
     triggerDatestamp: string;
 };
 
@@ -44,11 +51,11 @@ type TFormData = {
     end: DateTime;
     isCalendarEvent: boolean;
     isAllDay: boolean;
-    isImportant: boolean;
+    calendarType: string;
 };
 
-const PlannerEventTimeModal = () => {
-    const { eventId, triggerDatestamp } = useLocalSearchParams<TModalParams>();
+const EventModal = ({ isViewMode }: TEventModalProps) => {
+    const { eventId, triggerDatestamp } = useLocalSearchParams<TEventModalParams>();
     const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
     const router = useRouter();
 
@@ -67,19 +74,41 @@ const PlannerEventTimeModal = () => {
             end: DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
             isCalendarEvent: false,
             isAllDay: false,
-            isImportant: false
+            calendarType: 'Standard'
         }
     });
 
     const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom);
-    const importantCalendar = useAtomValue(importantCalendarAtom);
     const primaryCalendar = useAtomValue(primaryCalendarAtom);
+    const calendarMap = useAtomValue(calendarMapAtom);
     const userAccess = useAtomValue(userAccessAtom);
 
     const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
     const [initialEventState, setInitialEventState] = useState<TInitialEventMetadata | null>(null);
     const [loading, setLoading] = useState(true);
+    const [buildingForm, setBuildingForm] = useState(true);
+
+    const calendarOptions = useMemo(() => {
+        const titles = Array.from(
+            new Set(
+                Object.values(calendarMap).reduce<string[]>((acc, cal) => {
+                    if (cal.allowsModifications) {
+                        acc.push(cal.title === "Calendar" ? "Standard" : cal.title);
+                    }
+                    return acc;
+                }, [])
+            )
+        );
+
+        const standardIndex = titles.indexOf("Standard");
+        if (standardIndex > 0) {
+            titles.splice(standardIndex, 1);
+            titles.unshift("Standard");
+        }
+
+        return titles;
+    }, [calendarMap]);
 
     const deleteActions = useMemo(() => {
         const actions: TPopupAction[] = [
@@ -114,14 +143,23 @@ const PlannerEventTimeModal = () => {
     const title = watch('title');
     const isAllDay = watch('isAllDay');
     const isCalendarEvent = watch('isCalendarEvent');
+    const calendarType = watch('calendarType');
     const start = watch('start');
     const end = watch('end');
+
+    const modalColor = calendarMap[calendarType]?.color ?? 'systemBlue';
+    const modalIcon = calendarIconMap[calendarType] ?? 'calendar';
+
+    const hideEnd = isViewMode && isAllDay && start.toISODate() === end.toISODate();
 
     const formFields: TFormField[][] = [
         [{
             name: 'title',
             type: EFormFieldType.TEXT,
             label: 'Event Title',
+            disabled: isViewMode,
+            iconName: modalIcon,
+            iconColor: modalColor,
             rules: { required: true },
             focusTrigger: loading ? false : title.length === 0
         }],
@@ -130,37 +168,49 @@ const PlannerEventTimeModal = () => {
             label: 'Start',
             type: EFormFieldType.DATE,
             showTime: !isAllDay,
+            color: modalColor,
             onHandleSideEffects: (newStart: DateTime) =>
-                handleDateRangeChange(newStart, EDateFieldType.START_DATE)
+                handleDateRangeChange(newStart, EDateFieldType.START_DATE),
+            disabled: isViewMode
         },
         {
             name: 'end',
             label: 'End',
             type: EFormFieldType.DATE,
             showTime: !isAllDay,
-            invisible: !isCalendarEvent,
+            color: modalColor,
+            invisible: !isCalendarEvent || hideEnd,
             onHandleSideEffects: (newEnd: DateTime) =>
-                handleDateRangeChange(newEnd, EDateFieldType.END_DATE)
+                handleDateRangeChange(newEnd, EDateFieldType.END_DATE),
+            disabled: isViewMode
         }],
         [{
             name: 'isCalendarEvent',
             type: EFormFieldType.CHECKBOX,
-            label: 'Add to Calendar',
-            invisible: !userAccess.get(EAccess.CALENDAR) || !primaryCalendar,
-            onHandleSideEffects: handleCalendarEventChange
+            label: 'Calendar',
+            color: modalColor,
+            invisible: !userAccess.get(EAccess.CALENDAR) || !primaryCalendar || isViewMode,
+            onHandleSideEffects: handleCalendarEventChange,
+            iconName: 'calendar'
         },
         {
             name: 'isAllDay',
             type: EFormFieldType.CHECKBOX,
             label: 'All Day',
-            invisible: !isCalendarEvent,
-            onHandleSideEffects: handleAllDayChange
-        },
-        {
-            name: 'isImportant',
-            type: EFormFieldType.CHECKBOX,
-            label: 'Important',
-            invisible: !isAllDay || !importantCalendar
+            color: modalColor,
+            invisible: !isCalendarEvent || isViewMode,
+            onHandleSideEffects: handleAllDayChange,
+            iconName: 'note'
+        }],
+        [{
+            name: 'calendarType',
+            label: 'Type',
+            type: EFormFieldType.PICKER,
+            options: calendarOptions,
+            color: modalColor,
+            invisible: isViewMode || !isCalendarEvent,
+            floating: calendarOptions.length <= 3,
+            width: 360
         }]
     ];
 
@@ -211,10 +261,11 @@ const PlannerEventTimeModal = () => {
                     end: DateTime.fromISO(calendarEvent.endDate as string)!,
                     isCalendarEvent: true,
                     isAllDay: calendarEvent.allDay,
-                    isImportant: calendarEvent.calendarId === importantCalendar?.id
+                    calendarType: calendarEvent.calendarId === primaryCalendar?.id ? 'Standard' : calendarMap[calendarEvent.calendarId]?.title ?? 'Standard'
                 });
 
                 setLoading(false);
+                setBuildingForm(false);
                 return;
             } else if (!storageEvent) {
                 throw new Error(`PlannerEventTimeModal: No event found in storage or the calendar with ID ${eventId}`);
@@ -245,6 +296,7 @@ const PlannerEventTimeModal = () => {
             });
 
             setLoading(false);
+            setBuildingForm(false);
         }
 
         onCloseTextfield();
@@ -275,7 +327,7 @@ const PlannerEventTimeModal = () => {
     }
 
     async function handleUnschedule(data: TFormData) {
-        if (!initialEventState) return;
+        if (!initialEventState || triggerDatestamp === NULL) return;
 
         const { start, end, title } = data;
         const timeRange = getDateRangeFromValues(start, end);
@@ -366,10 +418,7 @@ const PlannerEventTimeModal = () => {
     }
 
     function handleAllDayChange(newAllDay: boolean) {
-        if (!newAllDay) {
-            // No important events that are non-all-day.
-            setValue('isImportant', false);
-        };
+        if (!newAllDay) return;
 
         // Start and end at midnight for all-day events.
         setValue("start", start.startOf("day"));
@@ -602,8 +651,8 @@ const PlannerEventTimeModal = () => {
         savePlannerToStorage(newPlanner);
     }
 
-    function getNewCalendarId(formData: TFormData) {
-        return formData.isImportant ? importantCalendar!.id : primaryCalendar!.id
+    function getNewCalendarId(formData: TFormData): string {
+        return calendarMap[formData.calendarType].id ?? primaryCalendar!.id
     }
 
     // ================
@@ -615,14 +664,21 @@ const PlannerEventTimeModal = () => {
             title=''
             primaryButtonConfig={{
                 onClick: handleSubmit(handleSaveFormData),
-                disabled: !isValid || loading
+                disabled: !isValid || loading,
+                color: modalColor
             }}
             deleteButtonConfig={{ actions: deleteActions }}
             onClose={() => router.back()}
+            isViewMode={isViewMode}
         >
-            <Form fieldSets={formFields} control={control} />
+            <View style={{ minHeight: isViewMode ? undefined : 400 }}>
+                {!buildingForm && (
+                    <Form fieldSets={formFields} control={control} />
+                )}
+
+            </View>
         </Modal>
     )
 };
 
-export default PlannerEventTimeModal;
+export default EventModal;

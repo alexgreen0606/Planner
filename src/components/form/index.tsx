@@ -22,9 +22,12 @@ const Form = ({ fieldSets, control }: TFormProps) => {
                     {fieldSet.map((field, fieldIndex) => {
                         if (field.floating) {
                             return (
-                                <View
+                                <MotiView
                                     key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
-                                    className='w-full items-center'
+                                    className='w-full items-center overflow-hidden'
+                                    animate={{
+                                        height: field.invisible ? 0 : MODAL_INPUT_HEIGHT
+                                    }}
                                 >
                                     <Controller
                                         name={field.name}
@@ -35,7 +38,7 @@ const Form = ({ fieldSets, control }: TFormProps) => {
                                             field.onHandleSideEffects?.(val);
                                         }} />}
                                     />
-                                </View>
+                                </MotiView>
                             );
                         }
 
@@ -51,10 +54,9 @@ const Form = ({ fieldSets, control }: TFormProps) => {
                             <MotiView
                                 key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
                                 animate={{
-                                    height: field.invisible ? 0 : MODAL_INPUT_HEIGHT,
-                                    overflow: 'hidden',
+                                    height: field.invisible ? 0 : MODAL_INPUT_HEIGHT
                                 }}
-                                className='items-center w-full' style={{
+                                className='items-center w-full overflow-hidden' style={{
                                     backgroundColor: PlatformColor(inputField),
                                     borderTopWidth: !field.invisible && !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
                                     borderColor: PlatformColor('systemGray'),

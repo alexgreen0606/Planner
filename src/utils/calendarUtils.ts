@@ -10,7 +10,7 @@ import { DateTime } from "luxon";
 import { hasCalendarAccess } from "./accessUtils";
 import { extractNameFromBirthdayText, openMessageForContact } from "./birthdayUtils";
 import { getDatestampOneYearFromToday, getDayShiftedDatestamp, getTodayDatestamp, isoToDatestamp, isTimeEarlier, isTimeEarlierOrEqual } from "./dateUtils";
-import { openPlannerTimeModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
+import { openEditEventModal, openViewEventModal, upsertCalendarEventsIntoPlanner } from "./plannerUtils";
 
 // ✅ 
 
@@ -109,8 +109,10 @@ function mapCalendarEventToPlannerChip(event: Calendar.Event, calendar: Calendar
         calendarEventChip.onClick = () => openMessageForContact(extractNameFromBirthdayText(event.title), 'Happy Birthday!');
     }
 
-    if (calendar.isPrimary || ['Calendar', 'Important'].includes(calendar.title)) {
-        calendarEventChip.onClick = () => openPlannerTimeModal(event.id, datestamp);
+    if (calendar.allowsModifications) {
+        calendarEventChip.onClick = () => openEditEventModal(event.id, datestamp);
+    } else {
+        calendarEventChip.onClick = () => openViewEventModal(event.id);
     }
 
     return calendarEventChip;
@@ -276,6 +278,10 @@ export async function getCalendarMap(): Promise<Record<string, Calendar.Calendar
     const calendarMap = allCalendars.reduce((acc, cal) => {
         acc[cal.id] = cal;
         acc[cal.title] = cal;
+        if (cal.isPrimary) {
+            // Within event modals, primary will be identified by 'Standard' title
+            acc['Standard'] = cal;
+        }
         return acc;
     }, {} as Record<string, Calendar.Calendar>);
     return calendarMap;

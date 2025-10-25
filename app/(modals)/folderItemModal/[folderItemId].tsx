@@ -35,7 +35,6 @@ const FolderItemModal = () => {
     const router = useRouter();
 
     const [folderItem, setFolderItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage);
-
     const {
         control,
         handleSubmit: onSubmit,
@@ -49,8 +48,18 @@ const FolderItemModal = () => {
         mode: 'onChange'
     });
 
-    const isEditMode = folderItemId !== NULL;
     const hasChildren = (folderItem?.itemIds.length ?? 0) > 0;
+    const deleteActions = useMemo<TPopupAction[]>(() => [
+        {
+            type: EPopupActionType.BUTTON,
+            title: hasChildren ? 'Force Delete' : 'Delete',
+            systemImage: 'trash',
+            destructive: true,
+            onPress: handleDelete
+        }
+    ], [hasChildren, folderItem]);
+
+    const isEditMode = folderItemId !== NULL;
 
     const formFields: TFormField[][] = [
         [{
@@ -81,38 +90,22 @@ const FolderItemModal = () => {
     ];
 
     // ================
-    //  Delete Actions
-    // ================
-
-    const deleteActions = useMemo<TPopupAction[]>(() => [
-        {
-            type: EPopupActionType.BUTTON,
-            title: hasChildren ? 'Force Delete' : 'Delete',
-            systemImage: 'trash',
-            destructive: true,
-            onPress: handleDelete
-        }
-    ], [hasChildren, folderItem]);
-
-    // ================
     //  Event Handlers
     // ================
 
     function handleSubmit(data: TFormData) {
         if (!folderItem) return;
 
-        const { title, type } = data;
+        const { title, type, color } = data;
         const newTitle = title.trim();
         const folderItemType = (folderTypeBiMap[type] ?? EFolderItemType.FOLDER) as EFolderItemType;
 
-        setFolderItem((prev) => {
-            if (!prev) return prev;
-            return {
-                ...prev,
-                value: newTitle,
-                type: folderItemType
-            };
-        });
+        setFolderItem((prev) => prev ? ({
+            ...prev,
+            value: newTitle,
+            type: folderItemType,
+            platformColor: color
+        }) : prev);
 
         router.back();
     }
@@ -137,6 +130,7 @@ const FolderItemModal = () => {
             }}
             deleteButtonConfig={{ actions: deleteActions }}
             onClose={() => router.back()}
+            isShortMode
         >
             <Form
                 fieldSets={formFields}

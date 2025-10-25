@@ -1,6 +1,8 @@
 import ModalDisplayValue from '@/components/Modal/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
+import { getValidCssColor } from '@/utils/colorUtils';
 import { DateTimePicker, Host } from '@expo/ui/swift-ui';
+import { SFSymbol } from 'expo-symbols';
 import { DateTime } from 'luxon';
 import React from 'react';
 
@@ -10,6 +12,9 @@ export type TDateModalFieldProps = {
     label: string;
     showTime?: boolean;
     minimumDate?: Date;
+    disabled?: boolean;
+    iconName?: SFSymbol;
+    color?: string;
 };
 
 // TODO: need to handle change of date (affects initialDate)
@@ -18,6 +23,9 @@ const DateModalField = ({
     value,
     showTime,
     minimumDate,
+    iconName,
+    disabled,
+    color,
     onChange
 }: TDateModalFieldProps & TFormFieldControl<DateTime>) => (
     <ModalDisplayValue
@@ -29,9 +37,12 @@ const DateModalField = ({
                     displayedComponents={showTime ? 'dateAndTime' : 'date'}
                     initialDate={value.toISO()}
                     variant='automatic'
+                    color={getValidCssColor(color)}
                 />
             </Host>
         }
+        disabled={disabled}
+        iconName={iconName}
     />
 );
 

@@ -1,6 +1,9 @@
 import { calendarMapAtom } from '@/atoms/calendarAtoms';
+import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { calendarIconMap } from '@/lib/constants/calendarIcons';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
+import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 import * as Calendar from 'expo-calendar';
 import { useRouter } from 'expo-router';
 import { useAtomValue } from 'jotai';
@@ -9,7 +12,6 @@ import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from './icons/Icon';
 import CustomText from './text/CustomText';
 import DateValue from './text/DateValue';
-import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 
 type TUpcomingDateCardProps = {
     datestamp: string;
@@ -43,6 +45,14 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
         router.push(`/planners/${datestamp}`);
     }
 
+    function handleOpenEventModal(event: Calendar.Event, calendar: Calendar.Calendar) {
+        if (calendar.allowsModifications) {
+            openEditEventModal(event.id, datestamp);
+        } else {
+            openViewEventModal(event.id);
+        }
+    }
+
     return (
         <View className="flex-row p-4 gap-2" style={{
             borderBottomWidth: StyleSheet.hairlineWidth,
@@ -52,7 +62,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
             {/* Date */}
             <TouchableOpacity
                 onPress={handleOpenPlanner}
-                activeOpacity={0.7}
+                activeOpacity={PRESSABLE_OPACITY}
                 style={{ width: 60 }}
             >
                 <DateValue isoTimestamp={datestamp} platformColor='secondaryLabel' />
@@ -67,7 +77,12 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
                     const color = calendar?.color || '#000000';
 
                     return (
-                        <View key={`${event.id}-upcoming-event`} className="flex-row items-center gap-2">
+                        <TouchableOpacity
+                            onPress={() => handleOpenEventModal(event, calendar)}
+                            activeOpacity={PRESSABLE_OPACITY}
+                            className="flex-row items-center gap-2"
+                            key={`${event.id}-upcoming-event`}
+                        >
                             <Icon
                                 name={iconName}
                                 color={color}
@@ -84,13 +99,13 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
                             >
                                 {event.title}
                             </CustomText>
-                        </View>
+                        </TouchableOpacity>
                     );
                 })}
             </View>
 
             {/* Countdown */}
-            <View className="w-20 items-end">
+            <View className="w-22 items-end">
                 <CustomText
                     variant='microDetail'
                 >

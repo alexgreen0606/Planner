@@ -6,10 +6,11 @@ import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import React, { useMemo } from 'react';
-import { PlatformColor, Pressable, useWindowDimensions, View } from 'react-native';
+import { PlatformColor, Pressable, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import CustomText from '../text/CustomText';
 import Icon from '../icons/Icon';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 // ✅ 
 
@@ -49,7 +50,7 @@ const PlannerChip = ({
     const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
 
     return (
-        <Pressable onPress={onClick}>
+        <TouchableOpacity activeOpacity={onClick ? PRESSABLE_OPACITY : 1} onPress={onClick}>
             <Animated.View
                 layout={LinearTransition.duration(5000)}
                 className='flex-row gap-1 h-6 rounded-xl min-w-6 items-center border justify-center relative overflow-hidden'
@@ -79,7 +80,7 @@ const PlannerChip = ({
                     {title}
                 </CustomText>
             </Animated.View>
-        </Pressable>
+        </TouchableOpacity>
     )
 };
 

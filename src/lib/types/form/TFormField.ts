@@ -4,6 +4,7 @@ import { TDateModalFieldProps } from "@/components/form/fields/DateModalField";
 import { TPickerModalFieldProps } from "@/components/form/fields/PickerModalField";
 import { TTextModalFieldProps } from "@/components/form/fields/TextModalField";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
+import { SFSymbol } from "expo-symbols";
 import { RegisterOptions } from "react-hook-form";
 
 // ✅ 

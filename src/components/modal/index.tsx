@@ -1,104 +1,90 @@
-import useAppTheme from "@/hooks/useAppTheme";
-import { Host, Text } from "@expo/ui/swift-ui";
+import { GlassEffectContainer, Host, Text, VStack } from "@expo/ui/swift-ui";
 import React, { ReactNode } from 'react';
-import { PlatformColor, ScrollView, View, ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 import GlassIconButton from "../icons/customButtons/GlassIconButton";
 import PopupList, { TPopupListProps } from "../PopupList";
-import ColorFadeView from "../views/ColorFadeView";
 
 // ✅ 
 
 type TModalProps = {
     title: string;
     primaryButtonConfig: {
-        platformColor?: string;
+        color?: string;
         disabled?: boolean;
         onClick: () => void;
     };
     deleteButtonConfig?: TPopupListProps;
-    customStyle?: ViewStyle;
+    isViewMode?: boolean;
     children: ReactNode;
     onClose: () => void;
 };
 
 const TOP_GLASS_BAR_HEIGHT = 69;
-const MODAL_PADDING = 16;
 
 const Modal = ({
     title,
     primaryButtonConfig,
     deleteButtonConfig,
-    customStyle,
     children,
+    isViewMode,
     onClose,
-}: TModalProps) => {
-    const { bottom: BOTTOM_SPACER } = useSafeAreaInsets();
+}: TModalProps) => (
+    <Host style={{ flex: 1 }}>
+        <GlassEffectContainer>
+            <VStack>
+                <View>
 
-    const { CssColor: { background }, ColorArray: { Modal: { upper } } } = useAppTheme();
+                    {/* Top Bar with Fade */}
+                    {!isViewMode && (
+                        <View className='absolute top-0 left-0 right-0 z-[1]' style={{
+                            height: TOP_GLASS_BAR_HEIGHT
+                        }}>
+                            <View className='px-4 w-full h-full absolute flex-row items-center justify-between'>
+                                <GlassIconButton
+                                    systemImage="xmark"
+                                    onPress={onClose}
+                                />
+                                <Host style={{ flex: 1 }}>
+                                    <Text design="rounded" size={20} weight="semibold">
+                                        {title}
+                                    </Text>
+                                </Host>
+                                <GlassIconButton
+                                    systemImage="checkmark"
+                                    isPrimary
+                                    color={primaryButtonConfig.color}
+                                    disabled={primaryButtonConfig.disabled}
+                                    onPress={primaryButtonConfig.onClick}
+                                />
+                            </View>
+                        </View>
+                    )}
 
-    return (
-        <View
-            className='flex-1'
-            style={[
-                customStyle,
-                { backgroundColor: background }
-            ]}
-        >
+                    <View
+                        style={[{
+                            paddingHorizontal: 26,
+                            paddingTop: !isViewMode ? TOP_GLASS_BAR_HEIGHT : 26
+                        }]}
+                        className="flex-1 z-[0]"
+                    >
+                        {children}
 
-            {/* Top Bar with Fade */}
-            <View className='absolute top-0 left-0 right-0 z-[1]' style={{
-                height: TOP_GLASS_BAR_HEIGHT
-            }}>
-                <ColorFadeView colors={upper} totalHeight={TOP_GLASS_BAR_HEIGHT} solidHeight={TOP_GLASS_BAR_HEIGHT / 2} />
-                <View className='px-4 w-full h-full absolute flex-row items-center justify-between'>
-                    <GlassIconButton
-                        systemImage="xmark"
-                        onPress={onClose}
-                    />
-                    <Host style={{ flex: 1 }}>
-                        <Text design="rounded" size={20} weight="semibold">
-                            {title}
-                        </Text>
-                    </Host>
-                    <GlassIconButton
-                        systemImage="checkmark"
-                        isPrimary
-                        disabled={primaryButtonConfig.disabled}
-                        onPress={primaryButtonConfig.onClick}
-                    />
+                        {/* Delete Actions */}
+                        {!isViewMode && deleteButtonConfig && (
+                            <View className='px-4 w-full items-start'>
+                                <PopupList
+                                    {...deleteButtonConfig}
+                                    wrapButton
+                                    systemImage="trash"
+                                    iconPlatformColor="systemRed"
+                                />
+                            </View>
+                        )}
+                    </View>
                 </View>
-            </View>
-
-            {/* Modal Contents */}
-            <ScrollView
-                contentContainerClassName="z-[0] flex-1"
-                contentContainerStyle={{
-                    paddingTop: TOP_GLASS_BAR_HEIGHT,
-                    paddingBottom: BOTTOM_SPACER,
-                    paddingHorizontal: MODAL_PADDING,
-                }}
-            >
-                {children}
-            </ScrollView>
-
-            {/* Delete Actions */}
-            {deleteButtonConfig && (
-                <View className='p-4 absolute' style={{
-                    bottom: BOTTOM_SPACER,
-                    left: BOTTOM_SPACER,
-                }}>
-                    <PopupList
-                        {...deleteButtonConfig}
-                        wrapButton
-                        systemImage="trash"
-                        platformColor="systemRed"
-                    />
-                </View>
-            )}
-
-        </View>
-    )
-};
+            </VStack>
+        </GlassEffectContainer>
+    </Host>
+);
 
 export default Modal;

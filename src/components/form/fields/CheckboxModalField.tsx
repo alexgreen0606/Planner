@@ -1,18 +1,23 @@
 import { TFormFieldControl } from "@/lib/types/form/TFormField";
 import { Host, Switch } from "@expo/ui/swift-ui";
 import React from 'react';
-import { PlatformColor } from 'react-native';
 import ModalDisplayValue from '../../Modal/ModalDisplayValue';
+import { SFSymbol } from "expo-symbols";
+import { getValidCssColor } from "@/utils/colorUtils";
 
 // ✅ 
 
 export type TCheckboxModalFieldProps = {
     label: string;
+    iconName?: SFSymbol;
+    color?: string;
 };
 
 const CheckboxModalField = ({
     label = '',
     value,
+    iconName,
+    color = 'systemBlue',
     onChange
 }: TCheckboxModalFieldProps & TFormFieldControl<boolean>) =>
     <ModalDisplayValue
@@ -22,10 +27,11 @@ const CheckboxModalField = ({
                 <Switch
                     value={value}
                     onValueChange={onChange}
-                    color={PlatformColor('systemBlue') as unknown as string}
+                    color={getValidCssColor(color)}
                 />
             </Host>
         }
+        iconName={iconName}
     />;
 
 

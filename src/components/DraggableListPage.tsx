@@ -78,7 +78,7 @@ const DraggableListPage = <T extends TListItem, S>({
     const headerHeight = useHeaderHeight();
     const pathname = usePathname();
 
-    const { onReloadPage, loading } = useExternalDataContext();
+    const { onReloadPage, loadingPathname } = useExternalDataContext();
 
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
@@ -214,18 +214,19 @@ const DraggableListPage = <T extends TListItem, S>({
                 onDragBegin={beginDragCallback}
                 onDragEnd={endDragCallback}
                 ListFooterComponent={renderFooterCallback}
-                showsVerticalScrollIndicator
+                showsVerticalScrollIndicator={false}
                 ListHeaderComponent={stickyHeader}
                 automaticallyAdjustKeyboardInsets
                 refreshControl={canReloadPath ? (
                     <RefreshControl
-                        refreshing={showLoadingSymbol || loading}
+                        refreshing={showLoadingSymbol || loadingPathname?.includes(listId)}
                         onRefresh={handleReloadPage}
                     />
                 ) : undefined}
                 stickyHeaderIndices={stickyHeader ? [0] : undefined}
                 contentContainerStyle={{
                     minHeight: minContentHeight,
+                    paddingBottom: BUTTON_SIZE + BUTTON_MARGIN
                 }}
                 className='flex-grow'
             />

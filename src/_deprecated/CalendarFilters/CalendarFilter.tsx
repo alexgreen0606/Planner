@@ -7,6 +7,7 @@ import { LayoutChangeEvent, TouchableOpacity, View } from 'react-native';
 import Icon from '../icons/Icon';
 import CustomText from '../text/CustomText';
 import { activeCalendarFiltersAtom, toggleCalendarFilterAtom } from '@/atoms/calendarAtoms';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 // ✅ 
 
@@ -32,7 +33,7 @@ const CalendarFilter = ({ calendar }: TCalendarFilterProps) => {
 
     return (
         <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={PRESSABLE_OPACITY}
             onPress={handlePress}
             className='items-center gap-0.5'
         >
