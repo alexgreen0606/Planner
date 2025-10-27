@@ -1,4 +1,5 @@
 import Icon from '@/components/icons/Icon';
+import useBounceTrigger from '@/hooks/useBounceTrigger';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import { SFSymbol } from 'expo-symbols';
 import React, { useEffect, useRef } from 'react';
@@ -25,6 +26,8 @@ const TextModalField = ({
     iconColor,
     onChange
 }: TTextModalFieldProps & TFormFieldControl<string>) => {
+    const bounceTrigger = useBounceTrigger([iconName, iconColor]);
+
     const inputRef = useRef<TextInput>(null);
 
     // Manually focus the text input.
@@ -37,7 +40,14 @@ const TextModalField = ({
     return (
         <View className='flex-row flex-1 items-center justify-center'>
             {iconName && (
-                <Icon name={iconName} color={iconColor} />
+                <Icon
+                    name={iconName}
+                    color={iconColor}
+                    animationSpec={bounceTrigger ? {
+                        effect: { type: 'bounce' },
+                        repeating: false
+                    } : undefined}
+                />
             )}
             <TextInput
                 ref={inputRef}

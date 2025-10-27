@@ -8,7 +8,7 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, RefreshControl, TextInput, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, RefreshControl, TextInput, useWindowDimensions, View } from 'react-native';
 import DraggableFlatList, { DragEndParams, RenderItemParams } from 'react-native-draggable-flatlist';
 import { MMKV } from 'react-native-mmkv';
 import {
@@ -36,6 +36,7 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     defaultStorageObject?: S;
     collapsed?: boolean;
     minRowHeight?: number;
+    addButtonColor?: string;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
@@ -68,6 +69,7 @@ const DraggableListPage = <T extends TListItem, S>({
     stickyHeader,
     scrollContentAbsoluteTop = 0,
     minRowHeight,
+    addButtonColor = 'systemBlue',
     onIndexChange,
     onCreateItem,
     onDeleteItem,
@@ -91,23 +93,24 @@ const DraggableListPage = <T extends TListItem, S>({
     const scrollOffset = useSharedValue(0);
 
     // TODO: calculate this correctly in the future.
-    const BOTTOM_NAV_HEIGHT = TOP_SPACER * 1.2;
-    const minContentHeight = useMemo(() => {
-        if (stickyHeader) {
-            return SCREEN_HEIGHT - scrollContentAbsoluteTop - BOTTOM_NAV_HEIGHT - BUTTON_SIZE - BUTTON_MARGIN * 2;
-        }
-        return SCREEN_HEIGHT - maxHeaderHeight - BOTTOM_NAV_HEIGHT;
-    }, [stickyHeader, scrollContentAbsoluteTop, maxHeaderHeight]);
+    const BOTTOM_NAV_HEIGHT = 86;
 
-    const contentBounds: TContentBounds = useMemo(() => {
-        const upper = stickyHeader
-            ? scrollContentAbsoluteTop
-            : headerHeight;
+    // const minContentHeight = useMemo(() => {
+    //     if (stickyHeader) {
+    //         return SCREEN_HEIGHT - scrollContentAbsoluteTop - BOTTOM_NAV_HEIGHT - BUTTON_SIZE - BUTTON_MARGIN * 2;
+    //     }
+    //     return SCREEN_HEIGHT - maxHeaderHeight - BOTTOM_NAV_HEIGHT;
+    // }, [stickyHeader, scrollContentAbsoluteTop, maxHeaderHeight]);
 
-        const lower = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAV_HEIGHT;
+    // const contentBounds: TContentBounds = useMemo(() => {
+    //     const upper = stickyHeader
+    //         ? scrollContentAbsoluteTop
+    //         : headerHeight;
 
-        return { upper, lower };
-    }, [stickyHeader, scrollContentAbsoluteTop, headerHeight]);
+    //     const lower = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAV_HEIGHT;
+
+    //     return { upper, lower };
+    // }, [stickyHeader, scrollContentAbsoluteTop, headerHeight]);
 
     const canReloadPath = reloadablePaths.some(p => pathname.includes(p));
     const isDraggingItem = Boolean(draggingItemInitialIndex);
@@ -203,33 +206,38 @@ const DraggableListPage = <T extends TListItem, S>({
         <View className='flex-1'>
 
             {/* List Contents */}
-            <DraggableFlatList
-                data={itemIds}
-                itemExitingAnimation={FadeOut}
-                keyExtractor={(itemId) => `${itemId}-row`}
-                contentInsetAdjustmentBehavior='automatic'
-                scrollEventThrottle={SCROLL_THROTTLE}
-                scrollEnabled={!isDraggingItem}
-                renderItem={renderItemCallback}
-                onDragBegin={beginDragCallback}
-                onDragEnd={endDragCallback}
-                ListFooterComponent={renderFooterCallback}
-                showsVerticalScrollIndicator={false}
-                ListHeaderComponent={stickyHeader}
-                automaticallyAdjustKeyboardInsets
-                refreshControl={canReloadPath ? (
-                    <RefreshControl
-                        refreshing={showLoadingSymbol || loadingPathname?.includes(listId)}
-                        onRefresh={handleReloadPage}
-                    />
-                ) : undefined}
-                stickyHeaderIndices={stickyHeader ? [0] : undefined}
-                contentContainerStyle={{
-                    minHeight: minContentHeight,
-                    paddingBottom: BUTTON_SIZE + BUTTON_MARGIN
-                }}
-                className='flex-grow'
-            />
+            <KeyboardAvoidingView className='flex-1' behavior='padding'>
+                <DraggableFlatList
+                    data={itemIds}
+                    itemExitingAnimation={FadeOut}
+                    keyExtractor={(itemId) => `${itemId}-row`}
+                    contentInsetAdjustmentBehavior='automatic'
+                    scrollEventThrottle={SCROLL_THROTTLE}
+                    scrollEnabled={!isDraggingItem}
+                    renderItem={renderItemCallback}
+                    onDragBegin={beginDragCallback}
+                    onDragEnd={endDragCallback}
+                    ListFooterComponent={renderFooterCallback}
+                    showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={stickyHeader}
+                    refreshControl={canReloadPath ? (
+                        <RefreshControl
+                            refreshing={showLoadingSymbol || loadingPathname?.includes(listId)}
+                            onRefresh={handleReloadPage}
+                        />
+                    ) : undefined}
+
+                    // TODO: dont do this when there is content that goes beyond the bounds of the screen
+                    // contentInset={!stickyHeader ? { bottom: -maxHeaderHeight } : undefined}
+
+                    stickyHeaderIndices={stickyHeader ? [0] : undefined}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        paddingBottom: BOTTOM_NAV_HEIGHT + BUTTON_SIZE + BUTTON_MARGIN * 2
+                    }}
+                    containerStyle={{ flexGrow: 1 }}
+                />
+            </KeyboardAvoidingView>
 
             {/* Empty Label */}
             {isPageEmpty && (
@@ -244,6 +252,7 @@ const DraggableListPage = <T extends TListItem, S>({
                 <GlassIconButton
                     systemImage='plus'
                     isPrimary
+                    color={addButtonColor}
                     onPress={handleEmptySpaceClick}
                 />
             </View>

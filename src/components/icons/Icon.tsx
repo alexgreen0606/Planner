@@ -16,11 +16,9 @@ const Icon = ({
     ...symbolViewProps
 }: TIconProps) => {
     const colorToUse = disabled ? 'tertiaryLabel' : (color || 'label');
-
     const iconColor = isValidPlatformColor(colorToUse)
         ? PlatformColor(colorToUse)
         : colorToUse;
-
     return (
         <SymbolView
             tintColor={symbolViewProps.type === 'multicolor' ? undefined : iconColor}

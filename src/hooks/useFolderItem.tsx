@@ -38,6 +38,7 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
         isTransferMode: !!transferingItem,
         textfieldItem,
         transferingItem,
+        platformColor: item?.platformColor,
         onEndTransfer: handleEndItemTransfer,
         onValueChange: handleValueChange,
         onToggleEditValue: handleToggleEditValue,

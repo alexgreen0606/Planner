@@ -14,11 +14,12 @@ type TChecklistParams = {
 };
 
 const ChecklistPage = () => {
-    const { checklistId } = useLocalSearchParams<TChecklistParams>();
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
     const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
+    const { checklistId } = useLocalSearchParams<TChecklistParams>();
 
-    const { itemIds } = useFolderItem(checklistId, folderItemStorage);
+    const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage);
+
     return (
         <DraggableListPage
             emptyPageLabelProps={{ label: 'All items complete' }}
@@ -26,6 +27,7 @@ const ChecklistPage = () => {
             storage={itemStorage}
             storageId={EStorageId.CHECKLIST_ITEM}
             itemIds={itemIds}
+            addButtonColor={platformColor}
             onCreateItem={createNewChecklistItemAndSaveToStorage}
             onDeleteItem={(item) => deleteChecklistItems([item])}
             onIndexChange={updateListItemIndex}

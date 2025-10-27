@@ -1,7 +1,8 @@
+import useBounceTrigger from '@/hooks/useBounceTrigger';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { SymbolView } from 'expo-symbols';
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { PlatformColor, TouchableOpacity } from 'react-native';
 
 // ✅ 
@@ -17,22 +18,7 @@ const FolderItemButton = ({
     disabled,
     onClick
 }: TFolderItemButtonProps) => {
-    const isInitialMount = useRef(true);
-    const [bounceTrigger, setBounceTrigger] = useState(false);
-
-    // Trigger the bounce animation whenever the color or type changes.
-    useEffect(() => {
-        if (isInitialMount.current) {
-            isInitialMount.current = false;
-            return;
-        }
-
-        setBounceTrigger(true);
-        const timeout = setTimeout(() => setBounceTrigger(false), 0);
-
-        return () => clearTimeout(timeout);
-    }, [item.type, item.platformColor, item.itemIds]);
-
+    const bounceTrigger = useBounceTrigger([item.type, item.platformColor, item.itemIds]);
     return (
         <TouchableOpacity disabled={disabled} onPress={onClick}>
             <SymbolView

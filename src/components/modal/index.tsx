@@ -1,4 +1,4 @@
-import { GlassEffectContainer, Host, Text, VStack } from "@expo/ui/swift-ui";
+import { GlassEffectContainer, Host, VStack } from "@expo/ui/swift-ui";
 import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 import GlassIconButton from "../icons/customButtons/GlassIconButton";
@@ -7,7 +7,6 @@ import PopupList, { TPopupListProps } from "../PopupList";
 // ✅ 
 
 type TModalProps = {
-    title: string;
     primaryButtonConfig: {
         color?: string;
         disabled?: boolean;
@@ -22,7 +21,6 @@ type TModalProps = {
 const TOP_GLASS_BAR_HEIGHT = 69;
 
 const Modal = ({
-    title,
     primaryButtonConfig,
     deleteButtonConfig,
     children,
@@ -44,11 +42,6 @@ const Modal = ({
                                     systemImage="xmark"
                                     onPress={onClose}
                                 />
-                                <Host style={{ flex: 1 }}>
-                                    <Text design="rounded" size={20} weight="semibold">
-                                        {title}
-                                    </Text>
-                                </Host>
                                 <GlassIconButton
                                     systemImage="checkmark"
                                     isPrimary

@@ -27,8 +27,6 @@ const useAppTheme = () => {
             thinLine: PlatformColor(isLightMode ? 'systemBlue' : 'systemGray'),
 
             background: PlatformColor(isLightMode ? 'systemGray5' : 'systemBackground'),
-
-            modalBackground: PlatformColor(isLightMode ? 'systemGray5' : 'systemGray6')
         },
         ColorArray: {
             TransparentModal: {

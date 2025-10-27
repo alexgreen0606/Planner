@@ -114,16 +114,22 @@ export const textStyles = {
         fontSize: 10,
         color: PlatformColor('secondaryLabel')
     },
-    // --- Today Icon ---
-    todayMonth: {
+    // --- Planner Carousel ---
+    month: {
+        fontSize: 16,
+        fontFamily: 'RoundHeavy',
+        color: PlatformColor('label')
+    },
+    dayOfWeek: {
         fontSize: 8,
         fontFamily: 'RoundHeavy',
-        color: PlatformColor('systemBackground'),
-        letterSpacing: 1.2
+        letterSpacing: 1.2,
+        paddingLeft: 1
     },
-    todayDate: {
+    dayOfMonth: {
         fontSize: 15,
-        fontFamily: 'RoundHeavy'
+        fontFamily: 'RoundHeavy',
+        color: PlatformColor('label')
     },
     // --- Calendar Filter ---
     calendarFilter: {

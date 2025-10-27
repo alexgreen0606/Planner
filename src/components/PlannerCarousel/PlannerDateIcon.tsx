@@ -1,14 +1,9 @@
-import useAppTheme from "@/hooks/useAppTheme";
-import { PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE, PLANNER_CAROUSEL_HEIGHT, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
-import { Host, Text } from "@expo/ui/swift-ui";
+import { PLANNER_CAROUSEL_HEIGHT, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
 import { DateTime } from "luxon";
-import { MotiView } from "moti";
 import { useMemo } from "react";
-import { PlatformColor, Pressable, useWindowDimensions, View } from "react-native";
+import { PlatformColor, Pressable, useWindowDimensions } from "react-native";
 import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
-import Icon from "../icons/Icon";
 import CustomText from "../text/CustomText";
-import { SymbolView } from "expo-symbols";
 
 // ✅ 
 
@@ -21,22 +16,26 @@ type TPlannerDateIconProps = {
     onPress: () => void;
 };
 
-const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, index, onPress }: TPlannerDateIconProps) => {
+const PlannerDateIcon = ({ 
+    datestamp, 
+    scrollX, 
+    isCurrentDatestamp, 
+    isScrolling, 
+    index, 
+    onPress 
+}: TPlannerDateIconProps) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
 
-    const { CssColor: { background } } = useAppTheme();
-
-    const { month, day, dayOfWeek } = useMemo(() => {
+    const { day, dayOfWeek, month } = useMemo(() => {
         const date = DateTime.fromISO(datestamp);
         return {
             month: date.toFormat('MMM').toUpperCase(),
-            day: date.toFormat('d').toUpperCase(),
+            day: date.toFormat('d'),
             dayOfWeek: date.toFormat('ccc').toUpperCase()
         }
     }, [datestamp]);
 
     const PLANNER_CAROUSEL_ITEM_WIDTH = SCREEN_WIDTH / 8;
-
     const focusedScrollX = index * PLANNER_CAROUSEL_ITEM_WIDTH;
 
     const animatedContainerStyle = useAnimatedStyle(() => {
@@ -71,52 +70,18 @@ const PlannerDateIcon = ({ datestamp, scrollX, isCurrentDatestamp, isScrolling, 
         }, animatedContainerStyle]}>
             <Pressable
                 onPress={onPress}
-                className='relative'
+                style={{ width: PLANNER_CAROUSEL_ICON_WIDTH, height: PLANNER_CAROUSEL_ICON_WIDTH }}
+                className='w-full h-full items-center pt-[0.3rem]'
             >
-
-                {/* Note Icon */}
-                <Icon
-                    name='note'
-                    size={PLANNER_CAROUSEL_ICON_WIDTH}
-                    color={isCurrentDatestamp ? 'systemBlue' : 'secondaryLabel'}
-                />
-
-                {/* Date Info */}
-                <View className='absolute w-full h-full'>
-                    <View className='w-full items-center mt-[0.3rem]'>
-                        <CustomText variant='todayMonth' customStyle={{ color: background }}>
-                            {month}
-                        </CustomText>
-                    </View>
-                    <View className='w-full items-center'>
-                        <CustomText
-                            variant='todayDate'
-                            customStyle={{
-                                color: PlatformColor(isCurrentDatestamp ? 'label' : 'secondaryLabel')
-                            }}
-                        >
-                            {day}
-                        </CustomText>
-                    </View>
-                </View>
-
-                {/* Day of Week Indicator */}
-                <MotiView
-                    animate={{ opacity: isScrolling ? 1 : 0 }}
-                    className='absolute w-full bottom-full'
+                <CustomText
+                    variant='dayOfWeek'
+                    customStyle={{ color: PlatformColor(isCurrentDatestamp && !isScrolling ? 'systemBackground' : 'label') }}
                 >
-                    <Host style={{ width: '100%' }}>
-                        <Text
-                            design='rounded'
-                            size={PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE}
-                            color={PlatformColor('secondaryLabel') as unknown as string}
-                            weight="bold"
-                        >
-                            {dayOfWeek}
-                        </Text>
-                    </Host>
-                </MotiView>
-
+                    {dayOfWeek}
+                </CustomText>
+                <CustomText variant='dayOfMonth'>
+                    {day}
+                </CustomText>
             </Pressable>
         </Animated.View>
     )

@@ -26,7 +26,10 @@ const PlannersLayout = () => {
             <PlannerCarousel datestamp={datestamp ?? getTodayDatestamp()} />
             <Stack screenOptions={{
                 animation: 'fade',
+                headerTitle: '',
+                headerBackVisible: false,
                 headerShown: false,
+                headerTransparent: true,
                 contentStyle: {
                     backgroundColor: background
                 }

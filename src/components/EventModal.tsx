@@ -45,7 +45,6 @@ type TEventModalParams = {
 };
 
 type TFormData = {
-    test: string;
     title: string;
     start: DateTime;
     end: DateTime;
@@ -68,7 +67,6 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         setValue
     } = useForm<TFormData>({
         defaultValues: {
-            test: 'Folder',
             title: '',
             start: DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
             end: DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
@@ -86,10 +84,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
     const [initialEventState, setInitialEventState] = useState<TInitialEventMetadata | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [buildingForm, setBuildingForm] = useState(true);
+    const [isInitializingForm, setIsInitializingForm] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const calendarOptions = useMemo(() => {
+    const calendarTypeOptions = useMemo(() => {
         const titles = Array.from(
             new Set(
                 Object.values(calendarMap).reduce<string[]>((acc, cal) => {
@@ -149,8 +147,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
 
     const modalColor = calendarMap[calendarType]?.color ?? 'systemBlue';
     const modalIcon = calendarIconMap[calendarType] ?? 'calendar';
-
-    const hideEnd = isViewMode && isAllDay && start.toISODate() === end.toISODate();
+    const hideEndDateField = isViewMode && isAllDay && start.toISODate() === end.toISODate();
 
     const formFields: TFormField[][] = [
         [{
@@ -161,7 +158,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             iconName: modalIcon,
             iconColor: modalColor,
             rules: { required: true },
-            focusTrigger: loading ? false : title.length === 0
+            focusTrigger: isLoading ? false : title.length === 0
         }],
         [{
             name: 'start',
@@ -179,7 +176,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             type: EFormFieldType.DATE,
             showTime: !isAllDay,
             color: modalColor,
-            invisible: !isCalendarEvent || hideEnd,
+            invisible: !isCalendarEvent || hideEndDateField,
             onHandleSideEffects: (newEnd: DateTime) =>
                 handleDateRangeChange(newEnd, EDateFieldType.END_DATE),
             disabled: isViewMode
@@ -206,15 +203,15 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             name: 'calendarType',
             label: 'Type',
             type: EFormFieldType.PICKER,
-            options: calendarOptions,
+            options: calendarTypeOptions,
             color: modalColor,
             invisible: isViewMode || !isCalendarEvent,
-            floating: calendarOptions.length <= 3,
+            floating: calendarTypeOptions.length <= 3,
             width: 360
         }]
     ];
 
-    // Build metadata of the initial event state.
+    // Get the initial event state.
     useEffect(() => {
 
         const buildFormData = async () => {
@@ -264,8 +261,8 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
                     calendarType: calendarEvent.calendarId === primaryCalendar?.id ? 'Standard' : calendarMap[calendarEvent.calendarId]?.title ?? 'Standard'
                 });
 
-                setLoading(false);
-                setBuildingForm(false);
+                setIsLoading(false);
+                setIsInitializingForm(false);
                 return;
             } else if (!storageEvent) {
                 throw new Error(`PlannerEventTimeModal: No event found in storage or the calendar with ID ${eventId}`);
@@ -295,8 +292,8 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
                 isAllDay: false
             });
 
-            setLoading(false);
-            setBuildingForm(false);
+            setIsLoading(false);
+            setIsInitializingForm(false);
         }
 
         onCloseTextfield();
@@ -307,30 +304,30 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     //  Event Handlers
     // ================
 
-    async function handleSaveFormData(data: TFormData) {
+    async function handleSaveFormData(formData: TFormData) {
         if (!initialEventState) return;
 
-        setLoading(true);
+        setIsLoading(true);
 
-        const { isAllDay, isCalendarEvent, start, end } = data;
+        const { isAllDay, isCalendarEvent } = formData;
         if (isAllDay) {
-            await saveAllDayCalendarEvent(data);
+            await saveAllDayCalendarEvent(formData);
         } else if (isCalendarEvent) {
-            if (getIsRangeMultiDay(getDateRangeFromValues(start, end))) {
-                await saveMultiDayCalendarEvent(data);
+            if (getIsRangeMultiDay(getDateRangeFormData(formData))) {
+                await saveMultiDayCalendarEvent(formData);
             } else {
-                await saveSingleDayCalendarEvent(data);
+                await saveSingleDayCalendarEvent(formData);
             }
         } else {
-            await saveNonCalendarEvent(data);
+            await saveNonCalendarEvent(formData);
         }
     }
 
-    async function handleUnschedule(data: TFormData) {
+    async function handleUnschedule(formData: TFormData) {
         if (!initialEventState || triggerDatestamp === NULL) return;
 
-        const { start, end, title } = data;
-        const timeRange = getDateRangeFromValues(start, end);
+        const { title } = formData;
+        const timeRange = getDateRangeFormData(formData);
         const targetPlanner = getPlannerFromStorageByDatestamp(triggerDatestamp);
 
         // Phase 1: Extract carryover data and clean up any stale data.
@@ -357,7 +354,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     async function handleDelete(deleteTodayEvents: boolean = false) {
         if (!initialEventState) return;
 
-        setLoading(true);
+        setIsLoading(true);
 
         let plannerEvent: IPlannerEvent | null = null;
 
@@ -436,16 +433,15 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     //  Helper Functions
     // ==================
 
-    async function saveAllDayCalendarEvent(data: TFormData) {
+    async function saveAllDayCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
-        const { start, end } = data;
-        const timeRange = getDateRangeFromValues(start, end);
-        const calendarId = getNewCalendarId(data);
+        const timeRange = getDateRangeFormData(formData);
+        const calendarId = getCalendarIdFromFormData(formData);
         const { endIso } = timeRange;
 
         // Phase 1: Handle the initial event, extracting carryover data and deleting stale data.
-        const calendarEventDetails = buildCalendarEventDetails(data);
+        const calendarEventDetails = getCalendarEventDetailsFromFormData(formData);
         const { calendarEventId, wasAllDayEvent, affectedDateRanges } =
             await transitionToAllDayCalendarEvent(initialEventState, timeRange, calendarId);
 
@@ -464,17 +460,16 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         closeModalOpenPlanner(isoToDatestamp(timeRange.startIso));
     }
 
-    async function saveSingleDayCalendarEvent(data: TFormData) {
+    async function saveSingleDayCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
-        const { start, end } = data;
-        const timeRange = getDateRangeFromValues(start, end);
-        const calendarId = getNewCalendarId(data);
+        const timeRange = getDateRangeFormData(formData);
+        const calendarId = getCalendarIdFromFormData(formData);
         const { startIso } = timeRange;
 
         const targetDatestamp = isoToDatestamp(startIso);
         const targetPlanner = getPlannerFromStorageByDatestamp(targetDatestamp);
-        const eventDetails = buildCalendarEventDetails(data);
+        const eventDetails = getCalendarEventDetailsFromFormData(formData);
 
         // Phase 1: Handle the initial event, extracting carryover data and deleting stale data.
         const {
@@ -488,7 +483,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         const finalCalendarId = await upsertCalendarEventToDevice(calendarEventId, eventDetails, wasAllDayEvent, calendarId);
 
         // Phase 3: Create the event in storage.
-        const newEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata?.id);
+        const newEvent = upsertFormDataToPlannerEvent(formData, carryoverEventMetadata?.id);
         newEvent.calendarEventId = finalCalendarId;
         savePlannerEventToStorage(newEvent);
         addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
@@ -500,11 +495,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         closeModalOpenPlanner(targetDatestamp);
     }
 
-    async function saveNonCalendarEvent(data: TFormData) {
+    async function saveNonCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
-        const { start, end } = data;
-        const timeRange = getDateRangeFromValues(start, end);
+        const timeRange = getDateRangeFormData(formData);
         const targetDatestamp = isoToDatestamp(timeRange.startIso);
         const targetPlanner = getPlannerFromStorageByDatestamp(targetDatestamp);
 
@@ -513,7 +507,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             await transitionToNonCalendarEvent(initialEventState, timeRange);
 
         // Phase 2: Create the event in storage.
-        const newEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata?.id);
+        const newEvent = upsertFormDataToPlannerEvent(formData, carryoverEventMetadata?.id);
         savePlannerEventToStorage(newEvent);
         addEventToPlanner(newEvent, targetPlanner, carryoverEventMetadata);
 
@@ -524,12 +518,11 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         closeModalOpenPlanner(targetDatestamp);
     }
 
-    async function saveMultiDayCalendarEvent(data: TFormData) {
+    async function saveMultiDayCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
-        const { start, end } = data;
-        const timeRange = getDateRangeFromValues(start, end);
-        const calendarId = getNewCalendarId(data);
+        const timeRange = getDateRangeFormData(formData);
+        const calendarId = getCalendarIdFromFormData(formData);
         const { startIso, endIso } = timeRange;
 
         const targetStartDatestamp = isoToDatestamp(startIso);
@@ -546,12 +539,12 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         } = await transitionToMultiDayCalendarEvent(initialEventState, timeRange, calendarId);
 
         // Phase 2: Update the device calendar with the new event.
-        const eventDetails = buildCalendarEventDetails(data);
+        const eventDetails = getCalendarEventDetailsFromFormData(formData);
         const finalCalendarId = await upsertCalendarEventToDevice(calendarEventId, eventDetails, wasAllDayEvent, calendarId);
 
         // Phase 3: Create the start and end events and link them together.
-        const startEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata[ECarryoverEventType.START_EVENT]?.id);
-        const endEvent = upsertFormDataToPlannerEvent(data, carryoverEventMetadata[ECarryoverEventType.END_EVENT]?.id);
+        const startEvent = upsertFormDataToPlannerEvent(formData, carryoverEventMetadata[ECarryoverEventType.START_EVENT]?.id);
+        const endEvent = upsertFormDataToPlannerEvent(formData, carryoverEventMetadata[ECarryoverEventType.END_EVENT]?.id);
 
         startEvent.timeConfig!.startEventId = startEvent.id;
         startEvent.timeConfig!.endEventId = endEvent.id;
@@ -576,15 +569,11 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         closeModalOpenPlanner(targetStartDatestamp);
     }
 
-    // ---------- Miscellaneous Helpers ----------
+    // ----------Form Data Getters ----------
 
-    function closeModalOpenPlanner(targetDatestamp: string) {
-        router.replace(`/planners/${targetDatestamp}`);
-    }
-
-    function buildCalendarEventDetails(data: TFormData): Partial<Calendar.Event> {
-        const { title, isAllDay, start, end } = data;
-        const { startIso, endIso } = getDateRangeFromValues(start, end);
+    function getCalendarEventDetailsFromFormData(formData: TFormData): Partial<Calendar.Event> {
+        const { title, isAllDay } = formData;
+        const { startIso, endIso } = getDateRangeFormData(formData);
         return {
             title,
             startDate: startIso,
@@ -593,9 +582,23 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         };
     }
 
+    function getDateRangeFormData(formData: TFormData) {
+        return { startIso: formData.start.toUTC().toISO()!, endIso: formData.end.toUTC().toISO()! };
+    }
+
+    function getCalendarIdFromFormData(formData: TFormData): string {
+        return calendarMap[formData.calendarType].id ?? primaryCalendar!.id
+    }
+
+    // ---------- Miscellaneous Helpers ----------
+
+    function closeModalOpenPlanner(targetDatestamp: string) {
+        router.replace(`/planners/${targetDatestamp}`);
+    }
+
     function upsertFormDataToPlannerEvent(formData: TFormData, previousStorageId?: string): IPlannerEvent {
-        const { title, start, end, isAllDay } = formData;
-        const { startIso, endIso } = getDateRangeFromValues(start, end);
+        const { title, isAllDay } = formData;
+        const { startIso, endIso } = getDateRangeFormData(formData);
         return {
             id: previousStorageId ?? uuid.v4(),
             listId: isoToDatestamp(startIso),
@@ -604,7 +607,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
                 startIso,
                 endIso,
                 allDay: isAllDay,
-                calendarId: getNewCalendarId(formData)
+                calendarId: getCalendarIdFromFormData(formData)
             },
             storageId: EStorageId.PLANNER_EVENT
         }
@@ -641,18 +644,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         }
     }
 
-    function getDateRangeFromValues(startDate: DateTime, endDate: DateTime) {
-        return { startIso: startDate.toUTC().toISO()!, endIso: endDate.toUTC().toISO()! };
-    }
-
     function addEventToPlanner(event: IPlannerEvent, targetPlanner: TPlanner, previousEventMetadata?: TCarryoverEventMetadata) {
         const targetIndex = previousEventMetadata?.index ?? targetPlanner.eventIds.length;
         const newPlanner = updatePlannerEventIndexWithChronologicalCheck(targetPlanner, targetIndex, event);
         savePlannerToStorage(newPlanner);
-    }
-
-    function getNewCalendarId(formData: TFormData): string {
-        return calendarMap[formData.calendarType].id ?? primaryCalendar!.id
     }
 
     // ================
@@ -661,10 +656,9 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
 
     return (
         <Modal
-            title=''
             primaryButtonConfig={{
                 onClick: handleSubmit(handleSaveFormData),
-                disabled: !isValid || loading,
+                disabled: !isValid || isLoading,
                 color: modalColor
             }}
             deleteButtonConfig={{ actions: deleteActions }}
@@ -672,7 +666,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             isViewMode={isViewMode}
         >
             <View style={{ minHeight: isViewMode ? undefined : 400 }}>
-                {!buildingForm && (
+                {!isInitializingForm && (
                     <Form fieldSets={formFields} control={control} />
                 )}
 

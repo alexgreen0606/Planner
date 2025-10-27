@@ -27,7 +27,7 @@ const GlassIconButton = ({
         <Button
             onPress={onPress}
             color={getValidCssColor(color)}
-            variant={isPrimary ? 'glassProminent' : 'glass'}
+            variant={isPrimary && color !== 'label' ? 'glassProminent' : 'glass'}
             disabled={disabled}
             modifiers={[frame({ height: 45, width: 45 })]}
         >

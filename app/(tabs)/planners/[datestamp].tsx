@@ -31,7 +31,7 @@ const PlannerPage = () => {
             scrollContentAbsoluteTop={TOP_SPACER + PLANNER_CAROUSEL_HEIGHT}
             emptyPageLabelProps={{ label: 'No plans' }}
             toolbar={<PlannerEventToolbar />}
-            stickyHeader={<PlannerHeader datestamp={datestamp} />}
+            // stickyHeader={<PlannerHeader datestamp={datestamp} />}
             listId={datestamp}
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}

@@ -38,7 +38,8 @@ const FolderItemModal = () => {
     const {
         control,
         handleSubmit: onSubmit,
-        formState: { isValid }
+        formState: { isValid },
+        watch
     } = useForm<TFormData>({
         defaultValues: {
             title: folderItem?.value ?? '',
@@ -47,6 +48,9 @@ const FolderItemModal = () => {
         },
         mode: 'onChange'
     });
+
+    const type = watch('type');
+    const color = watch('color');
 
     const hasChildren = (folderItem?.itemIds.length ?? 0) > 0;
     const deleteActions = useMemo<TPopupAction[]>(() => [
@@ -68,6 +72,8 @@ const FolderItemModal = () => {
             type: EFormFieldType.TEXT,
             focusTrigger: !isEditMode,
             autoCapitalizeWords: true,
+            iconName: type === 'Folder' ? 'folder' : 'list.bullet',
+            iconColor: color,
             rules: {
                 required: 'Title is required.',
                 validate: (value: string) => value.trim() !== ''
@@ -123,14 +129,13 @@ const FolderItemModal = () => {
 
     return (
         <Modal
-            title=''
             primaryButtonConfig={{
                 onClick: onSubmit(handleSubmit),
-                disabled: !isValid
+                disabled: !isValid,
+                color
             }}
             deleteButtonConfig={{ actions: deleteActions }}
             onClose={() => router.back()}
-            isShortMode
         >
             <Form
                 fieldSets={formFields}
