@@ -1,4 +1,4 @@
-import PlannerCarousel from '@/components/PlannerCarousel';
+import PlannerHeader from '@/components/headers/NewHeader';
 import useAppTheme from '@/hooks/useAppTheme';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { getTodayDatestamp } from '@/utils/dateUtils';
@@ -23,7 +23,7 @@ const PlannersLayout = () => {
                 paddingTop: TOP_SPACER
             }}
         >
-            <PlannerCarousel datestamp={datestamp ?? getTodayDatestamp()} />
+            <PlannerHeader datestamp={datestamp ?? getTodayDatestamp()} />
             <Stack screenOptions={{
                 animation: 'fade',
                 headerTitle: '',
