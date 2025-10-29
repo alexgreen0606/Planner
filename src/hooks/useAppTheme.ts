@@ -20,12 +20,11 @@ const useAppTheme = () => {
         shadowColor: isLightMode ? 'rgb(229,229,234)' : 'black',
 
         isLightMode,
+
         PlatformColor: {
             background: isLightMode ? 'systemGray5' : 'systemBackground'
         },
         CssColor: {
-            thinLine: PlatformColor(isLightMode ? 'systemBlue' : 'systemGray'),
-
             background: PlatformColor(isLightMode ? 'systemGray5' : 'systemBackground'),
         },
         ColorArray: {

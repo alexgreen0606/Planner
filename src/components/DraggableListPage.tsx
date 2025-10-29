@@ -8,9 +8,10 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, RefreshControl, TextInput, useWindowDimensions, View } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Pressable, RefreshControl, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
 import DraggableFlatList, { DragEndParams, RenderItemParams } from 'react-native-draggable-flatlist';
 import { MMKV } from 'react-native-mmkv';
+import { Sortable, SortableItem, SortableRenderItemProps } from 'react-native-reanimated-dnd';
 import {
     FadeOut,
     runOnJS,
@@ -21,6 +22,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './icons/customButtons/GlassIconButton';
 import ListItem from './lists/ListItem';
+import useAppTheme from '@/hooks/useAppTheme';
+import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 
 // ✅ 
 
@@ -35,7 +38,7 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     storage: MMKV;
     defaultStorageObject?: S;
     collapsed?: boolean;
-    minRowHeight?: number;
+    rowHeight?: number;
     addButtonColor?: string;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
@@ -48,11 +51,6 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     onGetLeftIcon?: (item: T) => ReactNode;
     onGetRightIcon?: (item: T) => ReactNode;
     onGetIsEditable?: (item: T) => boolean;
-};
-
-type TContentBounds = {
-    upper: number;
-    lower: number;
 };
 
 const BUTTON_SIZE = 45;
@@ -68,7 +66,7 @@ const DraggableListPage = <T extends TListItem, S>({
     toolbar,
     stickyHeader,
     scrollContentAbsoluteTop = 0,
-    minRowHeight,
+    rowHeight = 40,
     addButtonColor = 'systemBlue',
     onIndexChange,
     onCreateItem,
@@ -82,6 +80,7 @@ const DraggableListPage = <T extends TListItem, S>({
 
     const { onReloadPage, loadingPathname } = useExternalDataContext();
 
+    const { CssColor: { background } } = useAppTheme();
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
     const placeholderInputRef = useRef<TextInput>(null);
@@ -92,25 +91,10 @@ const DraggableListPage = <T extends TListItem, S>({
 
     const scrollOffset = useSharedValue(0);
 
+    const data = itemIds.map(id => ({ id }));
+
     // TODO: calculate this correctly in the future.
     const BOTTOM_NAV_HEIGHT = 86;
-
-    // const minContentHeight = useMemo(() => {
-    //     if (stickyHeader) {
-    //         return SCREEN_HEIGHT - scrollContentAbsoluteTop - BOTTOM_NAV_HEIGHT - BUTTON_SIZE - BUTTON_MARGIN * 2;
-    //     }
-    //     return SCREEN_HEIGHT - maxHeaderHeight - BOTTOM_NAV_HEIGHT;
-    // }, [stickyHeader, scrollContentAbsoluteTop, maxHeaderHeight]);
-
-    // const contentBounds: TContentBounds = useMemo(() => {
-    //     const upper = stickyHeader
-    //         ? scrollContentAbsoluteTop
-    //         : headerHeight;
-
-    //     const lower = SCREEN_HEIGHT - BOTTOM_SPACER - BOTTOM_NAV_HEIGHT;
-
-    //     return { upper, lower };
-    // }, [stickyHeader, scrollContentAbsoluteTop, headerHeight]);
 
     const canReloadPath = reloadablePaths.some(p => pathname.includes(p));
     const isDraggingItem = Boolean(draggingItemInitialIndex);
@@ -179,65 +163,68 @@ const DraggableListPage = <T extends TListItem, S>({
         onCloseTextfield();
     }, [onCloseTextfield]);
 
-    const renderItemCallback = useCallback(({ item: itemId, drag, isActive, getIndex }: RenderItemParams<string>) => (
-        <ListItem<T>
-            itemIndex={getIndex() ?? 0}
-            listId={listId}
-            itemId={itemId}
-            storage={storage}
-            isActive={isActive}
-            isDragging={isDraggingItem}
-            minHeight={minRowHeight}
-            onFocusPlaceholderTextfield={handleFocusPlaceholder}
-            onLongPress={onIndexChange ? drag : undefined}
-            onCreateItem={onCreateItem}
-            onDeleteItem={onDeleteItem}
-            {...listItemProps}
-        />
+    const renderItemCallback = useCallback(({ item, id, index, positions, ...props }: SortableRenderItemProps<{ id: string }>) => (
+        <SortableItem key={id} id={id} positions={positions} data={data} style={{ backgroundColor: background }} {...props}>
+            <ListItem<T>
+                itemIndex={index}
+                listId={listId}
+                itemId={id}
+                storage={storage}
+                isActive={false}
+                isDragging={isDraggingItem}
+                height={rowHeight - THIN_LINE_HEIGHT}
+                onFocusPlaceholderTextfield={handleFocusPlaceholder}
+                onCreateItem={onCreateItem}
+                onDeleteItem={onDeleteItem}
+                {...listItemProps}
+            />
+        </SortableItem>
     ), [listId, storage, draggingItemInitialIndex, onCreateItem, onDeleteItem, listItemProps]);
-
-    const renderFooterCallback = useCallback(() => itemIds.length > 0 && (
-        <Pressable onPress={handleEmptySpaceClick}>
-            <ThinLine />
-        </Pressable>
-    ), [itemIds.length, handleEmptySpaceClick]);
 
     return (
         <View className='flex-1'>
+            {/* <ScrollView
+                refreshControl={canReloadPath ? (
+                    <RefreshControl
+                        refreshing={showLoadingSymbol || loadingPathname?.includes(listId)}
+                        onRefresh={handleReloadPage}
+                    />
+                ) : undefined}
+                contentInsetAdjustmentBehavior='automatic'
+                showsVerticalScrollIndicator={false}
+                scrollEventThrottle={SCROLL_THROTTLE}
+                contentContainerClassName='flex-grow'
+                style={{ backgroundColor: background }}
+                className='flex-1'
+                stickyHeaderIndices={stickyHeader ? [0] : undefined}
+            > */}
+
+            {stickyHeader}
 
             {/* List Contents */}
-            <KeyboardAvoidingView className='flex-1' behavior='padding'>
-                <DraggableFlatList
-                    data={itemIds}
-                    itemExitingAnimation={FadeOut}
-                    keyExtractor={(itemId) => `${itemId}-row`}
-                    contentInsetAdjustmentBehavior='automatic'
-                    scrollEventThrottle={SCROLL_THROTTLE}
-                    scrollEnabled={!isDraggingItem}
-                    renderItem={renderItemCallback}
-                    onDragBegin={beginDragCallback}
-                    onDragEnd={endDragCallback}
-                    ListFooterComponent={renderFooterCallback}
-                    showsVerticalScrollIndicator={false}
-                    ListHeaderComponent={stickyHeader}
-                    refreshControl={canReloadPath ? (
-                        <RefreshControl
-                            refreshing={showLoadingSymbol || loadingPathname?.includes(listId)}
-                            onRefresh={handleReloadPage}
-                        />
-                    ) : undefined}
+            <Sortable
+                data={data}
+                renderItem={renderItemCallback}
+                itemHeight={40}
+                // onDragBegin={beginDragCallback}
+                // onDragEnd={endDragCallback}
+                // ListFooterComponent={renderFooterCallback}
+                // ListHeaderComponent={stickyHeader}
 
-                    // TODO: dont do this when there is content that goes beyond the bounds of the screen
-                    // contentInset={!stickyHeader ? { bottom: -maxHeaderHeight } : undefined}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    backgroundColor: background,
+                    paddingTop: headerHeight,
+                    paddingBottom: BOTTOM_NAV_HEIGHT + BUTTON_SIZE + BUTTON_MARGIN * 2
+                }}
+                style={{ backgroundColor: background }}
+            />
 
-                    stickyHeaderIndices={stickyHeader ? [0] : undefined}
-                    contentContainerStyle={{
-                        flexGrow: 1,
-                        paddingBottom: BOTTOM_NAV_HEIGHT + BUTTON_SIZE + BUTTON_MARGIN * 2
-                    }}
-                    containerStyle={{ flexGrow: 1 }}
-                />
-            </KeyboardAvoidingView>
+            {/* {itemIds.length > 0 && (
+                <Pressable onPress={handleEmptySpaceClick}>
+                    <ThinLine />
+                </Pressable>
+            )} */}
 
             {/* Empty Label */}
             {isPageEmpty && (

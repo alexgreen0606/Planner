@@ -7,11 +7,11 @@ import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import PlannerActions from '../actions/PlannerActions';
-import PlannerChipSets from '../PlannerChip/PlannerChipSets';
-import CustomText from '../text/CustomText';
-import ColorFadeView from '../views/ColorFadeView';
-import ShadowView from '../views/ShadowView';
+import PlannerActions from '../components/actions/PlannerActions';
+import PlannerChipSets from '../components/PlannerChip/PlannerChipSets';
+import CustomText from '../components/text/CustomText';
+import ColorFadeView from '../components/views/ColorFadeView';
+import ShadowView from '../components/views/ShadowView';
 
 // ✅ 
 

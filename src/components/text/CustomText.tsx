@@ -124,7 +124,8 @@ export const textStyles = {
         fontSize: 8,
         fontFamily: 'RoundHeavy',
         letterSpacing: 1.2,
-        paddingLeft: 1
+        paddingLeft: 1,
+        color: PlatformColor('systemBackground')
     },
     dayOfMonth: {
         fontSize: 15,

@@ -21,8 +21,7 @@ type TListItemProps<T extends TListItem> = {
     isActive: boolean;
     isDragging: boolean;
     storage: MMKV;
-    minHeight?: number;
-    onLongPress?: () => void;
+    height: number;
     onFocusPlaceholderTextfield: () => void;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
@@ -43,8 +42,7 @@ const ListItem = <T extends TListItem>({
     itemIndex,
     isActive,
     isDragging,
-    minHeight = 28,
-    onLongPress,
+    height,
     onFocusPlaceholderTextfield,
     onValueChange,
     onCreateItem,
@@ -111,11 +109,6 @@ const ListItem = <T extends TListItem>({
         onContentClick(item);
     }
 
-    function handleContentLongPress() {
-        if (!item || isPendingDelete) return;
-        onLongPress?.();
-    }
-
     // ================
     //  User Interface
     // ================
@@ -140,46 +133,40 @@ const ListItem = <T extends TListItem>({
                 {/* Left Icon */}
                 {onGetLeftIcon?.(item)}
 
-                {/* Red Looseleaf Line */}
-                {isLightMode && (
-                    <View
-                        className='self-stretch'
-                        style={{
-                            width: StyleSheet.hairlineWidth,
-                            backgroundColor: PlatformColor('systemRed'),
-                            marginTop: -THIN_LINE_HEIGHT / 2,
-                            marginBottom: -THIN_LINE_HEIGHT / 2
-                        }}
-                    />
-                )}
-
                 {/* Content */}
-                <Pressable
+                {/* <Pressable
                     onPress={handleContentPress}
-                    onLongPress={handleContentLongPress}
                     className='flex-1 justify-center'
-                    style={{ minHeight }}
-                >
-                    {isEditing ? (
-                        <ListItemTextfield<T>
-                            item={item}
-                            customStyle={valueStyles}
-                            onFocusPlaceholderTextfield={onFocusPlaceholderTextfield}
-                            onDeleteItem={onDeleteItem}
-                            onSetItemInStorage={setItem}
-                            onValueChange={onValueChange}
-                            onSaveToExternalStorage={onSaveToExternalStorage}
-                            onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
-                        />
-                    ) : (
-                        <CustomText
-                            variant='listRow'
-                            customStyle={valueStyles}
-                        >
-                            {item.value}
-                        </CustomText>
-                    )}
-                </Pressable>
+                    style={{ height }}
+                > */}
+                {isEditing ? (
+                    <ListItemTextfield<T>
+                        item={item}
+                        customStyle={valueStyles}
+                        onFocusPlaceholderTextfield={onFocusPlaceholderTextfield}
+                        onDeleteItem={onDeleteItem}
+                        onSetItemInStorage={setItem}
+                        onValueChange={onValueChange}
+                        onSaveToExternalStorage={onSaveToExternalStorage}
+                        onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
+                    />
+                ) : (
+                    <Pressable 
+                        onPress={handleContentPress}
+                    className="flex-1"
+                    >
+                    <CustomText
+                        variant='listRow'
+                        customStyle={valueStyles}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+            
+                    >
+                        {item.value}
+                    </CustomText>
+                    </Pressable>
+                )}
+                {/* </Pressable> */}
 
                 {/* Right Icon */}
                 {onGetRightIcon?.(item)}

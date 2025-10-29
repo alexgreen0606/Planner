@@ -1,38 +1,23 @@
 import useAppTheme from "@/hooks/useAppTheme";
 import { SCROLL_THROTTLE } from "@/lib/constants/listConstants";
-import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
+import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_DAY_OF_WEEK_FONT_SIZE, PLANNER_CAROUSEL_HEIGHT, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange, getDayShiftedDatestamp } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
 import { DateTime } from "luxon";
 import { useEffect, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { PlatformColor, useWindowDimensions, View } from "react-native";
 import Animated, { scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { runOnJS, runOnUI } from "react-native-worklets";
-import Icon from "../icons/Icon";
-import CustomText from "../text/CustomText";
-import PlannerDateIcon from "./NewPlannerDateIcon";
+import PlannerDateIcon from "./PlannerDateIcon";
+import { DateTimePicker, Host } from "@expo/ui/swift-ui";
+import Icon from "../components/icons/Icon";
+import CustomText from "../components/text/CustomText";
+import IconButton from "../components/icons/IconButton";
 
 // ✅ 
 
 const CAROUSEL_RADIUS = 20;
-
-/**
- * Returns an array of ISO datestamps covering the range
- * from the first day of the previous month to the last day
- * of the next month (three months total).
- */
-export function getThreeMonthDatestampRange(): string[] {
-    const now = DateTime.now();
-
-    const startOfPrevMonth = now.minus({ months: 1 }).startOf("month");
-    const endOfNextMonth = now.plus({ months: 1 }).endOf("month");
-
-    return getDatestampRange(
-        startOfPrevMonth.toISODate()!,
-        endOfNextMonth.toISODate()!
-    );
-}
 
 const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
@@ -43,7 +28,10 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
     const scrollRef = useAnimatedRef<Animated.FlatList>();
 
     const [isScrolling, setIsScrolling] = useState(false);
-    const [datestampOptions, setDatestampOptions] = useState(getThreeMonthDatestampRange());
+    const [datestampOptions, setDatestampOptions] = useState(currentDatestamp ? getDatestampRange(
+        getDayShiftedDatestamp(currentDatestamp, -CAROUSEL_RADIUS),
+        getDayShiftedDatestamp(currentDatestamp, CAROUSEL_RADIUS)
+    ) : []);
 
     const PLANNER_CAROUSEL_ITEM_WIDTH = SCREEN_WIDTH / 8;
     const CONTENT_WIDTH = SCREEN_WIDTH - (PLANNER_BANNER_PADDING * 2);
@@ -153,20 +141,53 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
     return (
         <View
             className='w-full relative'
-            style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}
+            style={{ paddingHorizontal: PLANNER_BANNER_PADDING, height: PLANNER_CAROUSEL_HEIGHT + 20, paddingBottom: 20 }}
         >
+
 
             <View
                 className='absolute pointer-events-none -top-8'
                 style={{
-                    left: 8,
+                    left: Math.round((SCREEN_WIDTH - PLANNER_CAROUSEL_ICON_WIDTH - 20) / 2),
                     height: '100%',
                     justifyContent: 'center',
                     alignItems: 'center',
                 }}
             >
                 <CustomText variant="month">
-                    October into November
+                    October
+                </CustomText>
+            </View>
+
+            <View
+                className='absolute pointer-events-none'
+                style={{
+                    left: Math.round((SCREEN_WIDTH - PLANNER_CAROUSEL_ICON_WIDTH - 23) / 2),
+                    height: '100%',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    bottom: -5
+                }}
+            >
+                <CustomText variant="detail" customStyle={{fontSize: 10, color: PlatformColor('secondaryLabel')}}>
+                    14 Days Away
+                </CustomText>
+            </View>
+
+            <View
+                className='absolute flex-row pointer-events-none -top-8'
+                style={{
+                    left: 8,
+                    height: '100%',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    opacity: 0.4,
+                    transform: [{scale: 0.8}]
+                }}
+            >
+                <Icon size={14} name='chevron.left'/>
+                <CustomText variant="month">
+                    September
                 </CustomText>
             </View>
 
@@ -177,9 +198,14 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                     height: '100%',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    opacity: 0.4,
+                    transform: [{scale: 0.8}]
                 }}
             >
-                <Icon size={16} name='magnifyingglass' />
+                <CustomText variant="month">
+                    November
+                </CustomText>
+                <Icon size={14} name='chevron.right'/>
             </View>
 
             <View
@@ -224,6 +250,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                         </View>
                     );
                 }}
+                initialScrollIndex={datestampOptions.indexOf(currentDatestamp)}
                 horizontal
                 getItemLayout={(_, index) => ({
                     length: PLANNER_CAROUSEL_ITEM_WIDTH,

@@ -99,7 +99,6 @@ const ListItemTextfield = <T extends TListItem>({
             ]}
             submitBehavior='submit'
             className='w-full bg-transparent'
-            multiline
         />
     )
 }

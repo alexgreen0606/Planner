@@ -1,4 +1,3 @@
-import PlannerHeader from '@/components/headers/PlannerHeader';
 import DraggableListPage from '@/components/DraggableListPage';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import usePlanner from '@/hooks/planners/usePlanner';
@@ -31,7 +30,6 @@ const PlannerPage = () => {
             scrollContentAbsoluteTop={TOP_SPACER + PLANNER_CAROUSEL_HEIGHT}
             emptyPageLabelProps={{ label: 'No plans' }}
             toolbar={<PlannerEventToolbar />}
-            // stickyHeader={<PlannerHeader datestamp={datestamp} />}
             listId={datestamp}
             storageId={EStorageId.PLANNER_EVENT}
             storage={eventStorage}
