@@ -6,11 +6,9 @@ import { useDeleteSchedulerContext } from "@/providers/DeleteScheduler";
 import { useAtom } from "jotai";
 import { MotiView } from "moti";
 import React, { ReactNode, useMemo } from "react";
-import { PlatformColor, Pressable, StyleSheet, TextStyle, View } from "react-native";
+import { PlatformColor, Pressable, TextStyle, View } from "react-native";
 import { MMKV, useMMKVObject } from "react-native-mmkv";
 import ListItemTextfield from "./ListItemTextfield";
-import useAppTheme from "@/hooks/useAppTheme";
-import { THIN_LINE_HEIGHT } from "@/lib/constants/miscLayout";
 
 // ✅ 
 
@@ -71,8 +69,6 @@ const ListItem = <T extends TListItem>({
         [item]
     );
 
-    const { isLightMode } = useAppTheme();
-
     const isPendingDelete = item ?
         (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item)) :
         false;
@@ -121,24 +117,19 @@ const ListItem = <T extends TListItem>({
                 opacity: isActive ? 0.8 : 1,
                 translateY: isActive ? -6 : 0,
             }}
-            className='w-full relative'
+            className='w-full'
         >
             {/* Separator Line */}
             <Pressable onPress={handleSeparatorPress}>
                 <ThinLine />
             </Pressable>
 
-            <View className="flex-row items-center gap-3 px-3">
+            <View className="flex-row items-center gap-4 px-4">
 
                 {/* Left Icon */}
                 {onGetLeftIcon?.(item)}
 
                 {/* Content */}
-                {/* <Pressable
-                    onPress={handleContentPress}
-                    className='flex-1 justify-center'
-                    style={{ height }}
-                > */}
                 {isEditing ? (
                     <ListItemTextfield<T>
                         item={item}
@@ -151,22 +142,21 @@ const ListItem = <T extends TListItem>({
                         onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
                     />
                 ) : (
-                    <Pressable 
+                    <Pressable
                         onPress={handleContentPress}
-                    className="flex-1"
+                        className="flex-1"
                     >
-                    <CustomText
-                        variant='listRow'
-                        customStyle={valueStyles}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-            
-                    >
-                        {item.value}
-                    </CustomText>
+                        <CustomText
+                            variant='listRow'
+                            customStyle={valueStyles}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+
+                        >
+                            {item.value}
+                        </CustomText>
                     </Pressable>
                 )}
-                {/* </Pressable> */}
 
                 {/* Right Icon */}
                 {onGetRightIcon?.(item)}

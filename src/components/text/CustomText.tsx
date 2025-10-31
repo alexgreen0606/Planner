@@ -116,7 +116,7 @@ export const textStyles = {
     },
     // --- Planner Carousel ---
     month: {
-        fontSize: 16,
+        fontSize: 14,
         fontFamily: 'RoundHeavy',
         color: PlatformColor('label')
     },

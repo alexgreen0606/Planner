@@ -1,119 +1,4 @@
-// import useAppTheme from "@/hooks/useAppTheme";
-// import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
-// import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
-// import { getDatestampRange } from "@/utils/dateUtils";
-// import { DateTime } from "luxon";
-// import { MotiText } from "moti";
-// import { useEffect, useMemo, useState } from "react";
-// import { useWindowDimensions, View } from "react-native";
-// import Carousel from "react-native-reanimated-carousel";
-// import Icon from "../../icons/Icon";
-// import CustomText, { textStyles } from "../../text/CustomText";
-// import PlannerCarouselWeek from "./PlannerCarouselWeek";
-
-// /**
-//  * Returns a 2D array of ISO datestamps (chunks of 7 days each)
-//  * covering the range from the first day of the previous month
-//  * to the last day of the next month (three months total).
-//  */
-// export function getNextFourWeeksOfDatestamps(): string[][] {
-//     const now = DateTime.now();
-
-//     const startOfWeek = now.startOf("week");
-//     const threeWeeksAway = now.plus({ week: 3 }).endOf("week");
-
-//     const allDates = getDatestampRange(
-//         startOfWeek.toISODate()!,
-//         threeWeeksAway.toISODate()!
-//     );
-
-//     // Split into weeks of 7 days.
-//     const chunkedDates: string[][] = [];
-//     for (let i = 0; i < allDates.length; i += 7) {
-//         chunkedDates.push(allDates.slice(i, i + 7));
-//     }
-
-//     return chunkedDates;
-// }
-
-// const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
-//     const { width: SCREEN_WIDTH } = useWindowDimensions();
-
-//     const [weeks, setWeeks] = useState(getNextFourWeeksOfDatestamps());
-//     const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-
-//     const { startMonth, endMonth } = useMemo(() => ({
-//         startMonth: DateTime.fromISO(weeks[currentWeekIndex][0]).toFormat('LLLL'),
-//         endMonth: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat('LLLL')
-//     }), [currentWeekIndex]);
-
-//     const currentDatestampMonth = DateTime.fromISO(currentDatestamp).toFormat('LLLL');
-
-//     return (
-//         <View className='w-full' style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}>
-
-//             {/* Week Info */}
-//             <View className="flex-row justify-between" style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}>
-//                 <View className="flex-row items-end">
-//                     <MotiText
-//                         style={textStyles["month"]}
-//                         animate={{
-//                             opacity: currentDatestampMonth === startMonth ? 1 : 0.5,
-//                             scale: currentDatestampMonth === startMonth ? 1 : 0.875,
-//                             marginRight: currentDatestampMonth === startMonth ? 5 : 0
-//                         }}
-//                     >
-//                         {startMonth}
-//                     </MotiText>
-//                     {startMonth !== endMonth && (
-//                         <>
-//                             <CustomText
-//                                 variant="month"
-//                                 customStyle={{ opacity: 0.5, fontSize: 14 }}
-//                             >
-//                                 into
-//                             </CustomText>
-//                             <MotiText
-//                                 style={textStyles['month']}
-//                                 animate={{
-//                                     opacity: currentDatestampMonth === endMonth ? 1 : 0.5,
-//                                     scale: currentDatestampMonth === endMonth ? 1 : 0.875,
-//                                     marginLeft: currentDatestampMonth === endMonth ? 5 : 0
-//                                 }}
-//                             >
-//                                 {endMonth}
-//                             </MotiText>
-//                         </>
-//                     )}
-//                 </View>
-//                 <Icon size={26} name='calendar' />
-//             </View>
-
-//             {/* Scroll Wheel */}
-//             <Carousel
-//                 data={weeks}
-//                 renderItem={({ item: week }) => (
-//                     <View style={{ width: SCREEN_WIDTH - PLANNER_BANNER_PADDING * 2 }}>
-//                         <PlannerCarouselWeek
-//                             datestamps={week}
-//                             currentDatestamp={currentDatestamp}
-//                         />
-//                     </View>
-//                 )}
-//                 onSnapToItem={setCurrentWeekIndex}
-//                 loop={false}
-//                 width={SCREEN_WIDTH - PLANNER_BANNER_PADDING * 2}
-//                 height={PLANNER_CAROUSEL_ICON_WIDTH}
-//             />
-
-//         </View>
-//     )
-// };
-
-// export default PlannerCarousel;
-
-import useAppTheme from "@/hooks/useAppTheme";
-import { PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
+import { CONTAINER_HORIZONTAL_MARGIN, PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange } from "@/utils/dateUtils";
 import { DateTime } from "luxon";
@@ -124,13 +9,18 @@ import Carousel from "react-native-reanimated-carousel";
 import Icon from "../../icons/Icon";
 import CustomText, { textStyles } from "../../text/CustomText";
 import PlannerCarouselWeek from "./PlannerCarouselWeek";
+import { todayDatestampAtom } from "@/atoms/todayDatestamp";
+import { useAtomValue } from "jotai";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Host, VStack } from "@expo/ui/swift-ui";
+import { cornerRadius, glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
 
 /**
  * Returns a 2D array of ISO datestamps (chunks of 7 days each)
  * starting from a given date and spanning N weeks forward.
  */
 export function getWeeksFrom(startDate: DateTime, numberOfWeeks: number): string[][] {
-    const endDate = startDate.plus({ weeks: numberOfWeeks - 1 }).endOf("week");
+    const endDate = startDate.plus({ weeks: numberOfWeeks - 1 }).endOf("week").minus({day: 1});
     const allDates = getDatestampRange(startDate.toISODate()!, endDate.toISODate()!);
 
     const chunkedDates: string[][] = [];
@@ -143,84 +33,62 @@ export function getWeeksFrom(startDate: DateTime, numberOfWeeks: number): string
 const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
 
-    const initialWeeks = getWeeksFrom(DateTime.now().startOf("week"), 4);
-    const [weeks, setWeeks] = useState(initialWeeks);
+    const todayDatestamp = useAtomValue(todayDatestampAtom);
+
+    const [weeks, setWeeks] = useState(getWeeksFrom(DateTime.now().startOf("week").minus({day: 1}), 4));
     const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
 
-    // ✅ When we’re within 2 of the end, add 3 more weeks
+    // Add 3 more weeks when nearing the end of the list.
     useEffect(() => {
         if (currentWeekIndex >= weeks.length - 2) {
             const lastWeekEnd = DateTime.fromISO(weeks[weeks.length - 1][6]).endOf("week");
-            const newWeeks = getWeeksFrom(lastWeekEnd.plus({ days: 1 }), 3);
+            const newWeeks = getWeeksFrom(lastWeekEnd, 3);
             setWeeks(prev => [...prev, ...newWeeks]);
         }
     }, [currentWeekIndex, weeks]);
 
-    const { startMonth, endMonth } = useMemo(() => ({
+    const { startMonth, startYear, endMonth, endYear } = useMemo(() => ({
+        startYear: DateTime.fromISO(weeks[currentWeekIndex][0]).toFormat("yyyy"),
         startMonth: DateTime.fromISO(weeks[currentWeekIndex][0]).toFormat("LLLL"),
-        endMonth: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat("LLLL")
-    }), [currentWeekIndex, weeks]);
+        endMonth: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat("LLLL"),
+        endYear: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat("yyyy")
+    }), [currentWeekIndex]);
 
-    const currentDatestampMonth = DateTime.fromISO(currentDatestamp).toFormat("LLLL");
+    const todayYear = DateTime.fromISO(todayDatestamp).toFormat("yyyy");
 
     return (
-        <View className="w-full" style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}>
+        <Host>
+            <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(8)]}>
+                <View className="w-full py-2">
 
-            {/* Month Info */}
-            <View className="flex-row justify-between" style={{ paddingHorizontal: PLANNER_BANNER_PADDING }}>
-                <View className='flex-row'>
-                    <CustomText variant="month">
-                        <MotiText
-                            style={[textStyles.month, { color: PlatformColor('label') }]}
-                            animate={{
-                                opacity: currentDatestampMonth === startMonth ? 1 : 0.5,
-                                // @ts-ignore
-                                fontSize: currentDatestampMonth === startMonth ? 16 : 14
-                            }}
-                        >
-                            {startMonth}
-                        </MotiText>
-
-                        {startMonth !== endMonth && (
-                            <>
-                                <Text style={[textStyles.month,
-                                { opacity: 0.5, fontSize: 14 }]}>
-                                    {' into '}
-                                </Text>
-                                <MotiText
-                                    style={[textStyles.month, { color: PlatformColor('label') }]}
-                                    animate={{
-                                        opacity: currentDatestampMonth === endMonth ? 1 : 0.5,
-                                        // @ts-ignore
-                                        fontSize: currentDatestampMonth === endMonth ? 16 : 14
-                                    }}
-                                >
-                                    {endMonth}
-                                </MotiText>
-                            </>
-                        )}
-                    </CustomText>
-                </View>
-                <Icon size={26} name="calendar" />
-            </View>
-
-            {/* Scroll Wheel */}
-            <Carousel
-                data={weeks}
-                renderItem={({ item: week }) => (
-                    <View style={{ width: SCREEN_WIDTH - PLANNER_BANNER_PADDING * 2 }}>
-                        <PlannerCarouselWeek
-                            datestamps={week}
-                            currentDatestamp={currentDatestamp}
-                        />
+                    {/* Week Info */}
+                    <View className="flex-row justify-between items-center px-4">
+                        <CustomText variant="month">
+                            {startMonth}{startYear !== endYear && startYear !== todayYear && ` ${startYear}`}{startMonth !== endMonth && ` / ${endMonth}`}{endYear !== todayYear && ` ${endYear}`}
+                        </CustomText>
+                        <Icon size={24} name="calendar" />
                     </View>
-                )}
-                onSnapToItem={setCurrentWeekIndex}
-                loop={false}
-                width={SCREEN_WIDTH - PLANNER_BANNER_PADDING * 2}
-                height={PLANNER_CAROUSEL_ICON_WIDTH}
-            />
-        </View>
+
+                    {/* Scroll Wheel */}
+                    <Carousel
+                        data={weeks}
+                        renderItem={({ item: week }) => (
+                            <View style={{ width: SCREEN_WIDTH - CONTAINER_HORIZONTAL_MARGIN * 4, marginLeft: CONTAINER_HORIZONTAL_MARGIN }}>
+                                <PlannerCarouselWeek
+                                    datestamps={week}
+                                    currentDatestamp={currentDatestamp}
+                                />
+                            </View>
+                        )}
+                        onSnapToItem={setCurrentWeekIndex}
+                        loop={false}
+                        width={SCREEN_WIDTH - CONTAINER_HORIZONTAL_MARGIN * 2}
+                        height={PLANNER_CAROUSEL_ICON_WIDTH}
+                    />
+
+                </View>
+            </VStack>
+        </Host>
     );
 };
 

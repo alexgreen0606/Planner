@@ -7,30 +7,20 @@ import { isValidPlatformColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 import React, { useMemo } from 'react';
 import { PlatformColor, Pressable, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import Animated, { LinearTransition } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutDown, LinearTransition, SlideInDown, SlideInUp } from 'react-native-reanimated';
 import CustomText from '../text/CustomText';
 import Icon from '../icons/Icon';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 // ✅ 
 
-type TPlannerChipProps = {
-    chip: TPlannerChip;
-    backgroundPlatformColor?: string;
-    index: number;
-};
-
 const PlannerChip = ({
-    chip: {
-        title,
-        id,
-        iconConfig,
-        color,
-        onClick
-    },
-    backgroundPlatformColor = 'systemGray6',
-    index
-}: TPlannerChipProps) => {
+    title,
+    id,
+    iconConfig,
+    color,
+    onClick
+}: TPlannerChip) => {
     const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
 
     const isPendingDelete = useMemo(() =>
@@ -43,7 +33,7 @@ const PlannerChip = ({
         [onGetDeletingItemsByStorageIdCallback]
     );
 
-    const { weatherChip } = useAppTheme();
+    const { weatherChip, CssColor: { background } } = useAppTheme();
 
     const isWeatherChip = id.includes('weather-chip');
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
@@ -52,7 +42,8 @@ const PlannerChip = ({
     return (
         <TouchableOpacity activeOpacity={onClick ? PRESSABLE_OPACITY : 1} onPress={onClick}>
             <Animated.View
-                layout={LinearTransition.duration(5000)}
+                entering={FadeInUp}
+                exiting={FadeOutDown}
                 className='flex-row gap-1 h-6 rounded-xl min-w-6 items-center border justify-center relative overflow-hidden'
                 style={{
                     borderColor: chipCssColor,
@@ -61,7 +52,7 @@ const PlannerChip = ({
             >
                 <View
                     className='absolute opacity-80 right-0 top-0 left-0 bottom-0'
-                    style={{ backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : PlatformColor(backgroundPlatformColor) }}
+                    style={{ backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : background }}
                 />
                 <Icon
                     {...iconConfig}

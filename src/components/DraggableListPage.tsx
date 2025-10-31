@@ -1,29 +1,31 @@
 import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
 import ThinLine from '@/components/ThinLine';
+import useAppTheme from '@/hooks/useAppTheme';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import { CONTAINER_HORIZONTAL_MARGIN, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Pressable, RefreshControl, ScrollView, TextInput, useWindowDimensions, View } from 'react-native';
-import DraggableFlatList, { DragEndParams, RenderItemParams } from 'react-native-draggable-flatlist';
+import React, { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
+import { Pressable, RefreshControl, TextInput, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import { Sortable, SortableItem, SortableRenderItemProps } from 'react-native-reanimated-dnd';
-import {
-    FadeOut,
+import Animated, {
+    LinearTransition,
     runOnJS,
     useAnimatedReaction,
     useSharedValue
 } from 'react-native-reanimated';
+import { DropProvider, SortableItem, useSortableList } from 'react-native-reanimated-dnd';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './icons/customButtons/GlassIconButton';
 import ListItem from './lists/ListItem';
-import useAppTheme from '@/hooks/useAppTheme';
-import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
+import PlannerHeader from './PlannerHeader/PlannerHeader';
+import ColorFadeView from './views/ColorFadeView';
+import FillerView from './views/FillerView';
 
 // ✅ 
 
@@ -53,9 +55,6 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     onGetIsEditable?: (item: T) => boolean;
 };
 
-const BUTTON_SIZE = 45;
-const BUTTON_MARGIN = 12;
-
 const DraggableListPage = <T extends TListItem, S>({
     itemIds,
     listId,
@@ -73,39 +72,42 @@ const DraggableListPage = <T extends TListItem, S>({
     onDeleteItem,
     ...listItemProps
 }: TDraggableListPageProps<T, S>) => {
-    const { top: TOP_SPACER, bottom: BOTTOM_SPACER } = useSafeAreaInsets();
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
-    const headerHeight = useHeaderHeight();
+    const { top: TOP_SPACER } = useSafeAreaInsets();
     const pathname = usePathname();
 
-    const { onReloadPage, loadingPathname } = useExternalDataContext();
+    const data = itemIds.map(id => ({ id }));
+    const {
+        scrollViewRef,
+        dropProviderRef,
+        handleScroll,
+        handleScrollEnd,
+        contentHeight,
+        getItemProps,
+    } = useSortableList({
+        data: data,
+        itemHeight: rowHeight,
+    });
 
-    const { CssColor: { background } } = useAppTheme();
+    const { onReloadPage, loadingPathnames } = useExternalDataContext();
+
+    const { CssColor: { background }, ColorArray: { Screen: { upper } } } = useAppTheme();
     const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
     const placeholderInputRef = useRef<TextInput>(null);
 
-    const [maxHeaderHeight, setMaxHeaderHeight] = useState(headerHeight);
     const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
-    const [draggingItemInitialIndex, setDraggingItemIndex] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState<boolean>(false);
 
     const scrollOffset = useSharedValue(0);
-
-    const data = itemIds.map(id => ({ id }));
 
     // TODO: calculate this correctly in the future.
     const BOTTOM_NAV_HEIGHT = 86;
 
     const canReloadPath = reloadablePaths.some(p => pathname.includes(p));
-    const isDraggingItem = Boolean(draggingItemInitialIndex);
     const isPageEmpty = itemIds.length === 0;
 
-    // Track the maximum height of the page's header.
-    useEffect(() => {
-        setMaxHeaderHeight(prev => Math.max(prev, headerHeight));
-    }, [headerHeight]);
-
-    // Watch scrollOffset and turn off loading symbol when it returns to 0.
+    // TODO: not setting scroll offset right now. Watch scrollOffset and turn off loading symbol when it returns to 0.
     useAnimatedReaction(
         () => scrollOffset.value,
         (currentOffset) => {
@@ -142,89 +144,115 @@ const DraggableListPage = <T extends TListItem, S>({
         }
     }
 
-    const endDragCallback = useCallback(({ from, to }: DragEndParams<string>) => {
-        setDraggingItemIndex(null);
-
-        const draggedItemId = itemIds[from];
-        if (!draggedItemId) return;
-
-        const itemString = storage.getString(draggedItemId);
+    function handleMoveItem(id: string, from: number, to: number) {
+        const itemString = storage.getString(id);
         if (!itemString) return;
 
         const draggedItem = JSON.parse(itemString) as T;
         if (from !== to && onIndexChange) {
             onIndexChange(to, draggedItem);
         }
+    }
 
-    }, [listId, draggingItemInitialIndex, onIndexChange, setDraggingItemIndex]);
-
-    const beginDragCallback = useCallback((index: number) => {
-        setDraggingItemIndex(index);
+    function handleDragStart() {
+        setIsDragging(true);
         onCloseTextfield();
-    }, [onCloseTextfield]);
+    }
 
-    const renderItemCallback = useCallback(({ item, id, index, positions, ...props }: SortableRenderItemProps<{ id: string }>) => (
-        <SortableItem key={id} id={id} positions={positions} data={data} style={{ backgroundColor: background }} {...props}>
-            <ListItem<T>
-                itemIndex={index}
-                listId={listId}
-                itemId={id}
-                storage={storage}
-                isActive={false}
-                isDragging={isDraggingItem}
-                height={rowHeight - THIN_LINE_HEIGHT}
-                onFocusPlaceholderTextfield={handleFocusPlaceholder}
-                onCreateItem={onCreateItem}
-                onDeleteItem={onDeleteItem}
-                {...listItemProps}
-            />
-        </SortableItem>
-    ), [listId, storage, draggingItemInitialIndex, onCreateItem, onDeleteItem, listItemProps]);
+    function handleDragEnd() {
+        setIsDragging(false);
+    }
 
     return (
-        <View className='flex-1'>
-            {/* <ScrollView
+        <DropProvider ref={dropProviderRef}>
+
+            <Animated.ScrollView
+                ref={scrollViewRef}
+
+                // TODO: create custom refresh logic
                 refreshControl={canReloadPath ? (
                     <RefreshControl
-                        refreshing={showLoadingSymbol || loadingPathname?.includes(listId)}
+                        refreshing={showLoadingSymbol && loadingPathnames.has(listId)}
                         onRefresh={handleReloadPage}
                     />
                 ) : undefined}
-                contentInsetAdjustmentBehavior='automatic'
-                showsVerticalScrollIndicator={false}
+
+                contentInsetAdjustmentBehavior='always'
+                showsVerticalScrollIndicator={true}
                 scrollEventThrottle={SCROLL_THROTTLE}
-                contentContainerClassName='flex-grow'
-                style={{ backgroundColor: background }}
-                className='flex-1'
-                stickyHeaderIndices={stickyHeader ? [0] : undefined}
-            > */}
+                contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+                style={{ height: SCREEN_HEIGHT, backgroundColor: background }}
+            >
 
-            {stickyHeader}
+                {/* Header Filler */}
+                <FillerView>
+                    {stickyHeader}
+                </FillerView>
 
-            {/* List Contents */}
-            <Sortable
-                data={data}
-                renderItem={renderItemCallback}
-                itemHeight={40}
-                // onDragBegin={beginDragCallback}
-                // onDragEnd={endDragCallback}
-                // ListFooterComponent={renderFooterCallback}
-                // ListHeaderComponent={stickyHeader}
+                {/* List Items */}
+                <Animated.View layout={LinearTransition} style={{ height: contentHeight }} className='w-full'>
+                    {data.map((item, index) => {
+                        const itemProps = getItemProps(item, index);
+                        return (
+                            <SortableItem
+                                data={data}
+                                onMove={handleMoveItem}
+                                onDragStart={handleDragStart}
+                                onDrop={handleDragEnd}
+                                style={{ backgroundColor: background }}
+                                key={item.id}
+                                {...itemProps}
+                            >
+                                <ListItem<T>
+                                    itemIndex={index}
+                                    listId={listId}
+                                    itemId={item.id}
+                                    storage={storage}
+                                    isActive={false}
+                                    isDragging={isDragging}
+                                    height={rowHeight - THIN_LINE_HEIGHT}
+                                    onFocusPlaceholderTextfield={handleFocusPlaceholder}
+                                    onCreateItem={onCreateItem}
+                                    onDeleteItem={onDeleteItem}
+                                    {...listItemProps}
+                                />
+                            </SortableItem>
+                        )
+                    })}
+                </Animated.View>
 
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    backgroundColor: background,
-                    paddingTop: headerHeight,
-                    paddingBottom: BOTTOM_NAV_HEIGHT + BUTTON_SIZE + BUTTON_MARGIN * 2
-                }}
-                style={{ backgroundColor: background }}
-            />
+                {/* Bottom of List Separator */}
+                {itemIds.length > 0 && (
+                    <Pressable onPress={handleEmptySpaceClick}>
+                        <ThinLine />
+                    </Pressable>
+                )}
 
-            {/* {itemIds.length > 0 && (
-                <Pressable onPress={handleEmptySpaceClick}>
-                    <ThinLine />
-                </Pressable>
-            )} */}
+                <View className='flex-1' />
+
+                {/* Add Button Filler */}
+                <FillerView style={{ paddingBottom: CONTAINER_HORIZONTAL_MARGIN * 2 }}>
+                    <GlassIconButton
+                        systemImage='plus'
+                        isPrimary
+                        color={addButtonColor}
+                        onPress={handleEmptySpaceClick}
+                    />
+                </FillerView>
+
+            </Animated.ScrollView>
+
+            {/* Sticky Header */}
+            {stickyHeader && (
+                <>
+                    <View className='absolute w-full left-0 top-0'>
+                        <ColorFadeView colors={upper} solidHeight={TOP_SPACER} totalHeight={TOP_SPACER + 16} />
+                    </View>
+                    <View className='absolute left-0' style={{ top: TOP_SPACER }}>
+                        {stickyHeader}
+                    </View>
+                </>
+            )}
 
             {/* Empty Label */}
             {isPageEmpty && (
@@ -233,8 +261,8 @@ const DraggableListPage = <T extends TListItem, S>({
 
             {/* Add Button */}
             <View
-                style={{ bottom: BOTTOM_NAV_HEIGHT + BUTTON_MARGIN }}
-                className='absolute left-8'
+                style={{ bottom: BOTTOM_NAV_HEIGHT + CONTAINER_HORIZONTAL_MARGIN }}
+                className='absolute right-4'
             >
                 <GlassIconButton
                     systemImage='plus'
@@ -254,7 +282,7 @@ const DraggableListPage = <T extends TListItem, S>({
                 className='absolute w-1 h-1 left-[9999]'
                 autoCorrect={false}
             />
-        </View>
+        </DropProvider>
     )
 };
 

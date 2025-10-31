@@ -8,6 +8,7 @@ import Icon from "../../icons/Icon";
 import FadeInView from "../../views/FadeInView";
 import { useAtomValue } from "jotai";
 import { todayDatestampAtom } from "@/atoms/todayDatestamp";
+import { isTimeEarlier } from "@/utils/dateUtils";
 
 // ✅ 
 
@@ -34,6 +35,7 @@ const PlannerDateIcon = ({
     }, [datestamp]);
 
     const isTodayDatestamp = datestamp === todayDatestamp;
+    const isPastDate = isTimeEarlier(datestamp, todayDatestamp);
 
     function handlePress() {
         router.push(`/planners/${datestamp}`);
@@ -60,7 +62,7 @@ const PlannerDateIcon = ({
                 variant='dayOfWeek'
                 customStyle={{
                     color: PlatformColor(isCurrentDatestamp ? 'systemBackground' : isTodayDatestamp ? 'systemBlue' : 'label'),
-                    opacity: isCurrentDatestamp ? 1 : isTodayDatestamp ? 0.8  : 0.6
+                    opacity: isCurrentDatestamp ? 1 : isTodayDatestamp ? 0.8 : isPastDate ? 0.2 : 0.7
                 }}
             >
                 {dayOfWeek}
@@ -69,7 +71,7 @@ const PlannerDateIcon = ({
                 variant='dayOfMonth'
                 customStyle={{
                     color: PlatformColor(isTodayDatestamp && !isCurrentDatestamp ? 'systemBlue' : 'label'),
-                    opacity: isCurrentDatestamp ? 1 : isTodayDatestamp ? 0.8  : 0.6
+                    opacity: isCurrentDatestamp ? 1 : isTodayDatestamp ? 0.8 : isPastDate ? 0.2 : 0.7
                 }}
             >
                 {day}

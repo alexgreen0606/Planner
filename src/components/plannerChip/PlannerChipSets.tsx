@@ -10,17 +10,14 @@ import PlannerChip from '.';
 
 type TPlannerChipSetsProps = {
     datestamp: string;
-    backgroundPlatformColor?: string;
 };
 
 const PlannerChipSets = ({
-    datestamp,
-    ...rest
+    datestamp
 }: TPlannerChipSetsProps) => {
     const currentWeatherChip = useAtomValue(currentWeatherChipAtom);
-    const todayDatestamp = useAtomValue(todayDatestampAtom);
-
     const sets = useAtomValue(plannerChipsByDatestamp(datestamp));
+    const todayDatestamp = useAtomValue(todayDatestampAtom);
 
     // Include the current weather in today's planner's chip set.
     const allSets = datestamp === todayDatestamp && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;
@@ -28,16 +25,14 @@ const PlannerChipSets = ({
     return (
         <Animated.View className="flex-row flex-wrap gap-2">
             {allSets.map((set, setIndex) =>
-                set.map((chip, chipIndex) => (
+                set.map((chip) => (
                     <PlannerChip
-                        index={chipIndex}
+                        {...chip}
                         key={`${datestamp}-${chip.title}-${setIndex}`}
-                        chip={chip}
-                        {...rest}
                     />
                 )))}
         </Animated.View>
-    );
+    )
 };
 
 export default PlannerChipSets;

@@ -20,7 +20,6 @@ const useAppTheme = () => {
         shadowColor: isLightMode ? 'rgb(229,229,234)' : 'black',
 
         isLightMode,
-
         PlatformColor: {
             background: isLightMode ? 'systemGray5' : 'systemBackground'
         },
@@ -41,7 +40,7 @@ const useAppTheme = () => {
             },
             Screen: {
                 upper: (isLightMode ? ["rgba(229,229,234,0.85)", "rgba(229,229,234,0.85)", "rgba(229,229,234,0)"] :
-                    ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]]
+                    ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]]
             }
         }
     }

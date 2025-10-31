@@ -8,7 +8,7 @@ import { deletePlannerEventsFromStorageAndCalendar } from '@/utils/plannerUtils'
 import { deleteRecurringEventsFromStorageHideWeekday } from '@/utils/recurringPlannerUtils';
 import { useAtom } from 'jotai';
 import debounce from 'lodash.debounce';
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 
 // ✅ 
 
@@ -26,7 +26,7 @@ const deletionMap: Partial<Record<EStorageId, (items: any[]) => Promise<void> | 
 
 const DeleteSchedulerContext = createContext<DeleteSchedulerContextType<any> | undefined>(undefined);
 
-export function DeleteSchedulerProvider<T extends TListItem>({ children }: { children: React.ReactNode }) {
+export function DeleteSchedulerProvider<T extends TListItem>({ children }: { children: ReactNode }) {
     const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);
     const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 

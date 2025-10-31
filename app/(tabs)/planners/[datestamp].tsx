@@ -1,4 +1,5 @@
 import DraggableListPage from '@/components/DraggableListPage';
+import PlannerHeader from '@/components/PlannerHeader/PlannerHeader';
 import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import usePlanner from '@/hooks/planners/usePlanner';
 import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
@@ -27,6 +28,7 @@ const PlannerPage = () => {
 
     return (
         <DraggableListPage
+            stickyHeader={<PlannerHeader />}
             scrollContentAbsoluteTop={TOP_SPACER + PLANNER_CAROUSEL_HEIGHT}
             emptyPageLabelProps={{ label: 'No plans' }}
             toolbar={<PlannerEventToolbar />}

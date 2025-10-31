@@ -10,41 +10,46 @@ import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { useGlobalSearchParams, usePathname } from 'expo-router';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // ✅ 
 
-const ExternalDataContext = createContext({
-    onReloadPage: async () => { },
-    loading: false,
-    loadingPathname: null
-});
+type ExternalDataContextType = {
+    loadingPathnames: Set<string>;
+    onReloadPage: () => Promise<void>;
+};
 
-export function ExternalDataProvider({ children }: { children: React.ReactNode }) {
+const ExternalDataContext = createContext<ExternalDataContextType | undefined>(undefined);
+
+export function ExternalDataProvider({ children }: { children: ReactNode }) {
     const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
     const pathname = usePathname();
 
-    const trackLoadedDatestamp = useSetAtom(trackLoadedDatestampAtom);
-    const loadedDatestamps = useAtomValue(loadedDatestampsAtom);
-    const setTodayDatestamp = useSetAtom(todayDatestampAtom);
-    const setUserAccess = useSetAtom(userAccessAtom);
-
     const appReady = useAppInitialization();
 
-    const [loadingPathname, setLoadingPathname] = useState<string | null>(null);
+    const trackLoadedDatestamp = useSetAtom(trackLoadedDatestampAtom);
+    const loadedDatestamps = useAtomValue(loadedDatestampsAtom);
+    const [userAccess, setUserAccess] = useAtom(userAccessAtom);
+    const setTodayDatestamp = useSetAtom(todayDatestampAtom);
 
-    // Handle initial loading of data for newly-mounted pathnames.
+    const [loadingPathnames, setLoadingPathnames] = useState<Set<string>>(new Set<string>());
+
+    // Handle initial loading of calendar data for newly-mounted planners.
     useEffect(() => {
-
-        // Exit if app isn't ready.
-        if (!appReady) return;
+        // Exit if app isn't ready or the current page is not a planner.
+        if (!appReady || !pathname.includes('planners')) return;
 
         // Exit if the current datestamp has already been loaded.
-        if (pathname.includes('planners') && datestamp && loadedDatestamps.has(datestamp)) return;
+        if (datestamp && loadedDatestamps.has(datestamp)) return;
 
         handleLoadPage();
     }, [pathname, appReady, loadedDatestamps]);
+
+    // Load in the calendar data for the Upcoming Dates page when calendar access is granted.
+    useEffect(() => {
+        if (userAccess.get(EAccess.CALENDAR)) loadAllDayEventsToStore();
+    }, [userAccess]);
 
     // Update the mounted datestamps atom at midnight.
     useEffect(() => {
@@ -64,7 +69,10 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     }, []);
 
     async function handleLoadPage() {
-        setLoadingPathname(pathname);
+        setLoadingPathnames((prev) => {
+            prev.add(pathname);
+            return prev;
+        })
         await updateCalendarAndContactPermissions();
 
         if (pathname.includes('planners') && datestamp) {
@@ -76,7 +84,10 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
             await loadAllDayEventsToStore();
         }
 
-        setLoadingPathname(null);
+        setLoadingPathnames((prev) => {
+            prev.delete(pathname);
+            return prev;
+        })
     }
 
     async function updateCalendarAndContactPermissions(): Promise<TUserAccess> {
@@ -109,7 +120,7 @@ export function ExternalDataProvider({ children }: { children: React.ReactNode }
     if (!appReady) return null;
 
     return (
-        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage, loading: !loadingPathname, loadingPathname }}>
+        <ExternalDataContext.Provider value={{ onReloadPage: handleLoadPage, loadingPathnames }}>
             {children}
         </ExternalDataContext.Provider>
     )
