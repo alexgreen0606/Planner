@@ -1,16 +1,18 @@
-import useAppTheme from '@/hooks/useAppTheme';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
-import { isValidPlatformColor } from '@/utils/colorUtils';
+import { getValidCssColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
+import { Host, VStack } from '@expo/ui/swift-ui';
+import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import React, { useMemo } from 'react';
-import { PlatformColor, Pressable, TouchableOpacity, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeInUp, FadeOutDown, LinearTransition, SlideInDown, SlideInUp } from 'react-native-reanimated';
-import CustomText from '../text/CustomText';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import Icon from '../icons/Icon';
-import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
+import CustomText from '../text/CustomText';
+import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
 
 // ✅ 
 
@@ -33,43 +35,34 @@ const PlannerChip = ({
         [onGetDeletingItemsByStorageIdCallback]
     );
 
-    const { weatherChip, CssColor: { background } } = useAppTheme();
-
-    const isWeatherChip = id.includes('weather-chip');
     const chipColor = isPendingDelete ? 'tertiaryLabel' : color;
-    const chipCssColor = isValidPlatformColor(chipColor) ? PlatformColor(chipColor) : chipColor;
+    const chipCssColor = getValidCssColor(chipColor);
 
     return (
         <TouchableOpacity activeOpacity={onClick ? PRESSABLE_OPACITY : 1} onPress={onClick}>
             <Animated.View
                 entering={FadeInUp}
                 exiting={FadeOutDown}
-                className='flex-row gap-1 h-6 rounded-xl min-w-6 items-center border justify-center relative overflow-hidden'
                 style={{
+                    borderWidth: StyleSheet.hairlineWidth,
                     borderColor: chipCssColor,
-                    paddingHorizontal: 6
+                    borderRadius: PLANNER_CHIP_HEIGHT / 2
                 }}
             >
-                <View
-                    className='absolute opacity-80 right-0 top-0 left-0 bottom-0'
-                    style={{ backgroundColor: isWeatherChip ? PlatformColor(weatherChip.background) : background }}
-                />
-                <Icon
-                    {...iconConfig}
-                    color={chipColor}
-                    size={14}
-                />
-                <CustomText
-                    variant='eventChipLabel'
-                    ellipsizeMode='tail'
-                    numberOfLines={1}
-                    customStyle={{
-                        color: isWeatherChip ? PlatformColor(weatherChip.label) : chipCssColor,
-                        textDecorationLine: isPendingDelete ? 'line-through' : undefined,
-                    }}
-                >
-                    {title}
-                </CustomText>
+                <Host style={{ height: PLANNER_CHIP_HEIGHT }}>
+                    <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(PLANNER_CHIP_HEIGHT / 2), frame({ height: PLANNER_CHIP_HEIGHT })]}>
+                        <View className='px-2 flex-row gap-1 items-center py-[0.375rem]'>
+                            <Icon
+                                {...iconConfig}
+                                color={chipColor}
+                                size={14}
+                            />
+                            <CustomText variant='eventChipLabel' customStyle={{ color: chipCssColor }}>
+                                {title}
+                            </CustomText>
+                        </View>
+                    </VStack>
+                </Host>
             </Animated.View>
         </TouchableOpacity>
     )

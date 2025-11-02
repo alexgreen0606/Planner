@@ -1,30 +1,38 @@
-import { currentWeatherChipAtom } from '@/atoms/currentWeatherChip';
 import { plannerChipsByDatestamp } from '@/atoms/plannerChips';
-import { todayDatestampAtom } from '@/atoms/todayDatestamp';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import Animated from 'react-native-reanimated';
 import PlannerChip from '.';
+import { Host, VStack } from '@expo/ui/swift-ui';
+import { cornerRadius, frame, glassEffect, tint } from '@expo/ui/swift-ui/modifiers';
+import { PlatformColor, View } from 'react-native';
+import CustomText from '../text/CustomText';
+import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
 
 // ✅ 
 
 type TPlannerChipSetsProps = {
     datestamp: string;
+    label: string;
 };
 
 const PlannerChipSets = ({
-    datestamp
+    datestamp,
+    label
 }: TPlannerChipSetsProps) => {
-    const currentWeatherChip = useAtomValue(currentWeatherChipAtom);
     const sets = useAtomValue(plannerChipsByDatestamp(datestamp));
-    const todayDatestamp = useAtomValue(todayDatestampAtom);
-
-    // Include the current weather in today's planner's chip set.
-    const allSets = datestamp === todayDatestamp && currentWeatherChip ? [[currentWeatherChip], ...sets] : sets;
-
     return (
         <Animated.View className="flex-row flex-wrap gap-2">
-            {allSets.map((set, setIndex) =>
+            <Host style={{ height: PLANNER_CHIP_HEIGHT }}>
+                <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(PLANNER_CHIP_HEIGHT / 2), frame({ height: PLANNER_CHIP_HEIGHT })]}>
+                    <View className='px-4 py-[0.375rem]'>
+                        <CustomText variant='eventChipLabel' customStyle={{ color: PlatformColor('label') }}>
+                            {label}
+                        </CustomText>
+                    </View>
+                </VStack>
+            </Host>
+            {sets.map((set, setIndex) =>
                 set.map((chip) => (
                     <PlannerChip
                         {...chip}

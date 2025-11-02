@@ -1,26 +1,22 @@
-import { CONTAINER_HORIZONTAL_MARGIN, PLANNER_BANNER_PADDING, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
+import { CONTAINER_HORIZONTAL_MARGIN, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
 import { getDatestampRange } from "@/utils/dateUtils";
+import { Host, VStack } from "@expo/ui/swift-ui";
+import { cornerRadius, glassEffect } from "@expo/ui/swift-ui/modifiers";
 import { DateTime } from "luxon";
-import { MotiText } from "moti";
 import { useEffect, useMemo, useState } from "react";
-import { PlatformColor, Text, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import Icon from "../../icons/Icon";
-import CustomText, { textStyles } from "../../text/CustomText";
+import CustomText from "../../text/CustomText";
 import PlannerCarouselWeek from "./PlannerCarouselWeek";
-import { todayDatestampAtom } from "@/atoms/todayDatestamp";
-import { useAtomValue } from "jotai";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Host, VStack } from "@expo/ui/swift-ui";
-import { cornerRadius, glassEffect, padding } from "@expo/ui/swift-ui/modifiers";
 
 /**
  * Returns a 2D array of ISO datestamps (chunks of 7 days each)
  * starting from a given date and spanning N weeks forward.
  */
 export function getWeeksFrom(startDate: DateTime, numberOfWeeks: number): string[][] {
-    const endDate = startDate.plus({ weeks: numberOfWeeks - 1 }).endOf("week").minus({day: 1});
+    const endDate = startDate.plus({ weeks: numberOfWeeks - 1 }).endOf("week").minus({ day: 1 });
     const allDates = getDatestampRange(startDate.toISODate()!, endDate.toISODate()!);
 
     const chunkedDates: string[][] = [];
@@ -30,13 +26,15 @@ export function getWeeksFrom(startDate: DateTime, numberOfWeeks: number): string
     return chunkedDates;
 }
 
+function findWeekIndex(weeks: string[][], target: string) {
+    return weeks.findIndex(week => week.includes(target));
+}
+
 const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
 
-    const todayDatestamp = useAtomValue(todayDatestampAtom);
-
-    const [weeks, setWeeks] = useState(getWeeksFrom(DateTime.now().startOf("week").minus({day: 1}), 4));
-    const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
+    const [weeks, setWeeks] = useState(getWeeksFrom(DateTime.now().startOf("week").minus({ day: 1 }), 4));
+    const [currentWeekIndex, setCurrentWeekIndex] = useState(findWeekIndex(weeks, currentDatestamp));
 
     // Add 3 more weeks when nearing the end of the list.
     useEffect(() => {
@@ -54,8 +52,6 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
         endYear: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat("yyyy")
     }), [currentWeekIndex]);
 
-    const todayYear = DateTime.fromISO(todayDatestamp).toFormat("yyyy");
-
     return (
         <Host>
             <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(8)]}>
@@ -64,9 +60,9 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                     {/* Week Info */}
                     <View className="flex-row justify-between items-center px-4">
                         <CustomText variant="month">
-                            {startMonth}{startYear !== endYear && startYear !== todayYear && ` ${startYear}`}{startMonth !== endMonth && ` / ${endMonth}`}{endYear !== todayYear && ` ${endYear}`}
+                            {startMonth}{startYear !== endYear && ` ${startYear}`}{startMonth !== endMonth && ` / ${endMonth}`} {endYear}
                         </CustomText>
-                        <Icon size={24} name="calendar" />
+                        <Icon size={22} name="calendar" />
                     </View>
 
                     {/* Scroll Wheel */}
@@ -82,6 +78,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                         )}
                         onSnapToItem={setCurrentWeekIndex}
                         loop={false}
+                        defaultIndex={currentWeekIndex}
                         width={SCREEN_WIDTH - CONTAINER_HORIZONTAL_MARGIN * 2}
                         height={PLANNER_CAROUSEL_ICON_WIDTH}
                     />

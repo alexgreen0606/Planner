@@ -12,7 +12,7 @@ export const textStyles = {
     },
     detail: {
         color: PlatformColor('label'),
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: 'RoundRegular'
     },
     softDetail: {
@@ -63,21 +63,16 @@ export const textStyles = {
     // --- Event Chip ---
     eventChipLabel: {
         fontFamily: 'RoundRegular',
-        fontSize: 13
+        fontSize: 12
     },
     // --- Weather ---
-    currentTemp: {
-        fontSize: 18,
+    weatherCondition: {
+        fontSize: 12,
         color: PlatformColor('label'),
         fontFamily: 'RoundMedium',
     },
-    highTemp: {
-        fontSize: 16,
-        color: PlatformColor('label'),
-        fontFamily: 'RoundMedium'
-    },
-    lowTemp: {
-        fontSize: 14,
+    weatherTemperature: {
+        fontSize: 11,
         color: PlatformColor('secondaryLabel'),
         fontFamily: 'RoundMedium'
     },
@@ -117,7 +112,7 @@ export const textStyles = {
     // --- Planner Carousel ---
     month: {
         fontSize: 14,
-        fontFamily: 'RoundHeavy',
+        fontFamily: 'RoundMedium',
         color: PlatformColor('label')
     },
     dayOfWeek: {

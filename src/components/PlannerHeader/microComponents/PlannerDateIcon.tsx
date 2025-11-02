@@ -25,12 +25,13 @@ const PlannerDateIcon = ({
 
     const todayDatestamp = useAtomValue(todayDatestampAtom);
 
-    const { day, dayOfWeek } = useMemo(() => {
+    const { day, dayOfWeek, isWeekend } = useMemo(() => {
         const date = DateTime.fromISO(datestamp);
+        const dayOfWeek = date.toFormat('ccc').toUpperCase();
         return {
-            month: date.toFormat('MMM').toUpperCase(),
             day: date.toFormat('d'),
-            dayOfWeek: date.toFormat('ccc').toUpperCase()
+            dayOfWeek,
+            isWeekend: ['SAT', 'SUN'].includes(dayOfWeek)
         }
     }, [datestamp]);
 
@@ -61,8 +62,14 @@ const PlannerDateIcon = ({
             <CustomText
                 variant='dayOfWeek'
                 customStyle={{
-                    color: PlatformColor(isCurrentDatestamp ? 'systemBackground' : isTodayDatestamp ? 'systemBlue' : 'label'),
-                    opacity: isCurrentDatestamp ? 1 : isTodayDatestamp ? 0.8 : isPastDate ? 0.2 : 0.7
+                    color: PlatformColor(
+                        isCurrentDatestamp ? 'systemBackground' :
+                            isTodayDatestamp ? 'systemBlue' :
+                                isPastDate ? 'tertiaryLabel' :
+                                    isWeekend ? 'secondaryLabel' :
+                                        'label'
+                    ),
+                    opacity: isTodayDatestamp && !isCurrentDatestamp ? 0.8 : undefined
                 }}
             >
                 {dayOfWeek}
@@ -70,8 +77,13 @@ const PlannerDateIcon = ({
             <CustomText
                 variant='dayOfMonth'
                 customStyle={{
-                    color: PlatformColor(isTodayDatestamp && !isCurrentDatestamp ? 'systemBlue' : 'label'),
-                    opacity: isCurrentDatestamp ? 1 : isTodayDatestamp ? 0.8 : isPastDate ? 0.2 : 0.7
+                    color: PlatformColor(
+                        isCurrentDatestamp ? 'label' :
+                            isTodayDatestamp ? 'systemBlue' :
+                                isPastDate ? 'tertiaryLabel' :
+                                    isWeekend ? 'secondaryLabel' :
+                                        'label'),
+                    opacity: isTodayDatestamp && !isCurrentDatestamp ? 0.8 : undefined
                 }}
             >
                 {day}

@@ -2,7 +2,8 @@ import { TPlannerChip } from "@/lib/types/planner/TPlannerChip";
 import { jotaiStore } from "app/_layout";
 import { Linking } from "react-native";
 import { getTodayDatestamp } from "./dateUtils";
-import { currentWeatherChipAtom } from "@/atoms/currentWeatherChip";
+import { setWeatherDataForDatestampAtom } from "@/atoms/weatherAtoms";
+import { TWeatherData } from "@/lib/types/externalData/TWeatherData";
 
 const weatherIconMap: Record<
   string,
@@ -70,49 +71,23 @@ const weatherIconMap: Record<
   },
 };
 
-/**
- * Merges the current weather data with the current external planner data and sets it in the Jotai store.
- * 
- * @param newChip - The chip representing the current weather.
- */
-async function saveWeatherDataToStore(newChip: TPlannerChip) {
-  jotaiStore.set(currentWeatherChipAtom, newChip);
+
+async function saveWeatherDataToStore(datestamp: string, data: TWeatherData) {
+  jotaiStore.set(setWeatherDataForDatestampAtom, { datestamp, data });
 }
 
-// TODO: remove this once implemented
-export function getRandomWeatherChip(): { icon: string } {
-  const values = Object.values(weatherIconMap);
-  return values[Math.floor(Math.random() * values.length)];
-}
-
-export async function loadCurrentWeatherToStore() {
-
-  const canOpenWeatherApp = true;
-
-  const openWeatherApp = () => {
-    try {
-      Linking.openURL('weather://');
-    } catch (error) { }
-  };
+export async function loadWeatherToStore(datestamp: string) {
 
   // TODO: add in verification to weather app being openable
-
   // TODO: get actual weather here
-  const randomWeather = getRandomWeatherChip();
 
-  const todayDatestamp = getTodayDatestamp();
-
-  const newChip = {
-    id: `${todayDatestamp}-weather-chip`,
-    title: " Madison  64°",
-    iconConfig: {
-      name: randomWeather.icon,
-      multicolor: true
-    },
-    onClick: openWeatherApp,
-    hasClickAccess: canOpenWeatherApp,
-    color: 'secondaryLabel',
+  const newData: TWeatherData = {
+    datestamp,
+    symbol: "cloud.sun.fill",
+    high: 72,
+    low: 56,
+    condition: 'Partly Cloudy'
   };
 
-  saveWeatherDataToStore(newChip);
+  saveWeatherDataToStore(datestamp, newData);
 }

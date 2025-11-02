@@ -6,7 +6,7 @@ import { EAccess } from '@/lib/enums/EAccess';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { loadAllDayEventsToStore, loadExternalCalendarData } from '@/utils/calendarUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-import { loadCurrentWeatherToStore } from '@/utils/weatherUtils';
+import { loadWeatherToStore } from '@/utils/weatherUtils';
 import * as Calendar from 'expo-calendar';
 import * as Contacts from 'expo-contacts';
 import { useGlobalSearchParams, usePathname } from 'expo-router';
@@ -73,11 +73,11 @@ export function ExternalDataProvider({ children }: { children: ReactNode }) {
             prev.add(pathname);
             return prev;
         })
+
         await updateCalendarAndContactPermissions();
 
         if (pathname.includes('planners') && datestamp) {
-            // TODO: pass datestamp to weather getter
-            loadCurrentWeatherToStore();
+            await loadWeatherToStore(datestamp);
             await loadExternalCalendarData([datestamp]);
             trackLoadedDatestamp(datestamp);
         } else if (pathname.includes('upcomingDates')) {

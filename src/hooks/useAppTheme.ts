@@ -12,11 +12,6 @@ const useAppTheme = () => {
         modal: {
             inputField: isLightMode ? 'systemBackground' : 'systemGray5'
         },
-        weatherBackground: isLightMode ? PlatformColor('systemGray2') : undefined,
-        weatherChip: {
-            background: isLightMode ? 'systemGray' : 'systemBackground',
-            label: isLightMode ? 'systemGray6' : 'secondaryLabel'
-        },
         shadowColor: isLightMode ? 'rgb(229,229,234)' : 'black',
 
         isLightMode,

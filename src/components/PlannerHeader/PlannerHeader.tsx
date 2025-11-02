@@ -3,7 +3,7 @@ import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { useExternalDataContext } from '@/providers/ExternalDataProvider';
 import { getDayOfWeekFromDatestamp, getDaysUntilIso, getMonthDateFromDatestamp, getTodayDatestamp, getTomorrowDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { Host, VStack } from '@expo/ui/swift-ui';
-import { cornerRadius, glassEffect } from '@expo/ui/swift-ui/modifiers';
+import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useLocalSearchParams, usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -12,6 +12,9 @@ import PlannerActions from '../actions/PlannerActions';
 import PlannerChipSets from '../PlannerChip/PlannerChipSets';
 import CustomText from '../text/CustomText';
 import PlannerCarousel from './microComponents/PlannerCarousel';
+import { weatherForDatestampAtom } from '@/atoms/weatherAtoms';
+import Icon from '../icons/Icon';
+import FadeInView from '../views/FadeInView';
 
 // ✅ 
 
@@ -19,6 +22,7 @@ const PlannerHeader = () => {
     const { datestamp } = useLocalSearchParams<TPlannerPageParams>();
     const pathname = usePathname();
 
+    const weatherData = useAtomValue(weatherForDatestampAtom(datestamp));
     const todayDatestamp = useAtomValue(todayDatestampAtom);
 
     const { loadingPathnames } = useExternalDataContext();
@@ -68,29 +72,53 @@ const PlannerHeader = () => {
 
             <PlannerCarousel datestamp={datestamp} />
 
-            <View className='flex-row w-full justify-between items-center'>
-                <Host>
-                    <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(8)]}>
-                        <View className='px-4 py-2 relative'>
-                            <CustomText variant='pageLabel'>
-                                {dayOfWeek}
-                            </CustomText>
-                            <View className='flex-row gap-1'>
+            <View className='flex-row w-full justify-between'>
+                <View className='flex-row gap-2'>
+                    <Host style={{ height: 60 }}>
+                        <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(8), frame({ height: 60 })]}>
+                            <View className='px-4 py-2'>
+                                <CustomText variant='pageLabel'>
+                                    {dayOfWeek}
+                                </CustomText>
+                                {/* <View className='flex-row gap-1'> */}
                                 <CustomText variant='detail' customStyle={{ color: PlatformColor('secondaryLabel') }}>
                                     {date}
                                 </CustomText>
-                                <View className='h-full' style={{ width: StyleSheet.hairlineWidth, backgroundColor: PlatformColor('label') }} />
-                                <CustomText variant='detail' customStyle={{ color: PlatformColor('secondaryLabel') }}>
-                                    {label}
-                                </CustomText>
+                                {/* <View className='h-full' style={{ width: StyleSheet.hairlineWidth, backgroundColor: PlatformColor('label') }} />
+                                    <CustomText variant='detail' customStyle={{ color: PlatformColor('secondaryLabel') }}>
+                                        {label}
+                                    </CustomText> */}
+                                {/* </View> */}
                             </View>
-                        </View>
-                    </VStack>
-                </Host>
+                        </VStack>
+                    </Host>
+                    {weatherData && (
+                        <FadeInView>
+                            <Host style={{ height: 42 }}>
+                                <VStack modifiers={[glassEffect({ glass: { variant: 'regular' }, shape: 'rectangle' }), cornerRadius(8), frame({ height: 42 })]}>
+                                    <View className='px-4 py-2 flex-row gap-2'>
+                                        <View className='h-full justify-center'>
+                                            <Icon size={26} name={weatherData.symbol} type='multicolor' />
+                                        </View>
+                                        <View>
+                                            <CustomText variant='weatherCondition'>
+                                                {weatherData.condition}
+                                            </CustomText>
+                                            <CustomText variant='weatherTemperature'>
+                                                {weatherData.high}° | {weatherData.low}°
+                                            </CustomText>
+                                        </View>
+                                    </View>
+                                </VStack>
+                            </Host>
+                        </FadeInView>
+                    )}
+                </View>
+
                 <PlannerActions datestamp={datestamp} />
             </View>
 
-            <PlannerChipSets datestamp={datestamp} />
+            <PlannerChipSets label={label} datestamp={datestamp} />
         </View>
     )
 };
