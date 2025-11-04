@@ -8,8 +8,13 @@ import { View } from 'react-native';
 
 // ✅ 
 
+export type TPickerOption = {
+    label: string;
+    value: string;
+};
+
 export type TPickerModalFieldProps = {
-    options: string[];
+    options: TPickerOption[];
     width?: number;
     label?: string;
     color?: string;
@@ -22,17 +27,18 @@ const PickerModalField = ({
     label,
     color,
     onChange
-}: TPickerModalFieldProps & TFormFieldControl<string>) => options.length > 3 ? (
+}: TPickerModalFieldProps & TFormFieldControl<string | undefined>) => options.length > 3 ? (
     <ModalDisplayValue
         label={label ?? ''}
         value={
             <View className='flex-row flex-1 justify-end'>
                 <Host matchContents>
                     <Picker
-                        options={options}
-                        selectedIndex={options.indexOf(value) ?? null}
+                        options={options.map(({ label }) => label)}
+                        selectedIndex={options.findIndex((o) => o.value === value) ?? null}
                         onOptionSelected={({ nativeEvent: { label } }) => {
-                            onChange(label);
+                            const newValue = options.find((o) => o.label === label)?.value;
+                            onChange(newValue);
                         }}
                         variant='menu'
                         color={getValidCssColor(color)}
@@ -45,10 +51,11 @@ const PickerModalField = ({
 ) : (
         <Host matchContents>
             <Picker
-                options={options}
-                selectedIndex={options.indexOf(value) ?? null}
+                options={options.map(({ label }) => label)}
+                selectedIndex={options.findIndex((o) => o.value === value) ?? null}
                 onOptionSelected={({ nativeEvent: { label } }) => {
-                    onChange(label);
+                    const newValue = options.find((o) => o.label === label)?.value;
+                    onChange(newValue);
                 }}
                 variant='segmented'
                 modifiers={width ? [frame({ width })] : undefined}

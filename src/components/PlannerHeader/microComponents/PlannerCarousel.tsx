@@ -1,56 +1,47 @@
-import { CONTAINER_HORIZONTAL_MARGIN, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
+import { plannerCarouselWeeksAtom } from "@/atoms/plannerCarouselWeekAtom";
+import { LARGE_MARGIN, PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
 import { TPlannerPageParams } from "@/lib/types/routeParams/TPlannerPageParams";
-import { getDatestampRange } from "@/utils/dateUtils";
 import { Host, VStack } from "@expo/ui/swift-ui";
 import { cornerRadius, glassEffect } from "@expo/ui/swift-ui/modifiers";
+import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import Icon from "../../icons/Icon";
 import CustomText from "../../text/CustomText";
 import PlannerCarouselWeek from "./PlannerCarouselWeek";
 
-/**
- * Returns a 2D array of ISO datestamps (chunks of 7 days each)
- * starting from a given date and spanning N weeks forward.
- */
-export function getWeeksFrom(startDate: DateTime, numberOfWeeks: number): string[][] {
-    const endDate = startDate.plus({ weeks: numberOfWeeks - 1 }).endOf("week").minus({ day: 1 });
-    const allDates = getDatestampRange(startDate.toISODate()!, endDate.toISODate()!);
-
-    const chunkedDates: string[][] = [];
-    for (let i = 0; i < allDates.length; i += 7) {
-        chunkedDates.push(allDates.slice(i, i + 7));
-    }
-    return chunkedDates;
-}
-
-function findWeekIndex(weeks: string[][], target: string) {
-    return weeks.findIndex(week => week.includes(target));
-}
-
 const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
 
-    const [weeks, setWeeks] = useState(getWeeksFrom(DateTime.now().startOf("week").minus({ day: 1 }), 4));
-    const [currentWeekIndex, setCurrentWeekIndex] = useState(findWeekIndex(weeks, currentDatestamp));
+    const { weeks, map } = useAtomValue(plannerCarouselWeeksAtom);
 
-    // Add 3 more weeks when nearing the end of the list.
-    useEffect(() => {
-        if (currentWeekIndex >= weeks.length - 2) {
-            const lastWeekEnd = DateTime.fromISO(weeks[weeks.length - 1][6]).endOf("week");
-            const newWeeks = getWeeksFrom(lastWeekEnd, 3);
-            setWeeks(prev => [...prev, ...newWeeks]);
+    const { currentDatestampWeek, currentDatestampSundayIndex } = useMemo(() => {
+        const currentDate = DateTime.fromISO(currentDatestamp);
+        const currentSunday = currentDate.minus({ days: currentDate.weekday % 7 }).toISODate()!;
+        return {
+            currentDatestampWeek: map[currentSunday],
+            currentDatestampSundayIndex: weeks.indexOf(currentSunday)
         }
-    }, [currentWeekIndex, weeks]);
+    }, [currentDatestamp]);
 
-    const { startMonth, startYear, endMonth, endYear } = useMemo(() => ({
-        startYear: DateTime.fromISO(weeks[currentWeekIndex][0]).toFormat("yyyy"),
-        startMonth: DateTime.fromISO(weeks[currentWeekIndex][0]).toFormat("LLLL"),
-        endMonth: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat("LLLL"),
-        endYear: DateTime.fromISO(weeks[currentWeekIndex][6]).toFormat("yyyy")
-    }), [currentWeekIndex]);
+    const [currentWeek, setCurrentWeek] = useState(currentDatestampWeek);
+
+    const { startMonth, startYear, endMonth, endYear } = useMemo(() => {
+        const startDate = DateTime.fromISO(currentWeek[0]);
+        const endDate = DateTime.fromISO(currentWeek[6]);
+        return {
+            startYear: startDate.toFormat("yyyy"),
+            startMonth: startDate.toFormat("LLLL"),
+            endMonth: endDate.toFormat("LLLL"),
+            endYear: endDate.toFormat("yyyy"),
+        };
+    }, [currentWeek]);
+
+    function handleWeekChange(index: number) {
+        setCurrentWeek(map[weeks[index]]);
+    }
 
     return (
         <Host>
@@ -68,18 +59,19 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
                     {/* Scroll Wheel */}
                     <Carousel
                         data={weeks}
-                        renderItem={({ item: week }) => (
-                            <View style={{ width: SCREEN_WIDTH - CONTAINER_HORIZONTAL_MARGIN * 4, marginLeft: CONTAINER_HORIZONTAL_MARGIN }}>
+                        renderItem={({ item: startDatestamp }) => (
+                            <View style={{ width: SCREEN_WIDTH - LARGE_MARGIN * 4, marginLeft: LARGE_MARGIN }}>
                                 <PlannerCarouselWeek
-                                    datestamps={week}
+                                    datestamps={map[startDatestamp]}
                                     currentDatestamp={currentDatestamp}
                                 />
                             </View>
                         )}
-                        onSnapToItem={setCurrentWeekIndex}
+                        onSnapToItem={handleWeekChange}
                         loop={false}
-                        defaultIndex={currentWeekIndex}
-                        width={SCREEN_WIDTH - CONTAINER_HORIZONTAL_MARGIN * 2}
+                        defaultIndex={currentDatestampSundayIndex}
+                        windowSize={7}
+                        width={SCREEN_WIDTH - LARGE_MARGIN * 2}
                         height={PLANNER_CAROUSEL_ICON_WIDTH}
                     />
 

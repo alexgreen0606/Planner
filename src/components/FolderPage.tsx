@@ -116,7 +116,7 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
                 </Host>
             )}
             addButtonColor={folder?.platformColor}
-            rowHeight={36}
+            rowHeight={46}
             onGetLeftIcon={getLeftIcon}
             onDeleteItem={deleteFolderItemAndChildren}
             onCreateItem={createNewFolderItemAndSaveToStorage}

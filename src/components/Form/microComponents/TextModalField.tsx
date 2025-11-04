@@ -23,7 +23,7 @@ const TextModalField = ({
     focusTrigger,
     disabled,
     iconName,
-    iconColor,
+    iconColor = 'label',
     onChange
 }: TTextModalFieldProps & TFormFieldControl<string>) => {
     const bounceTrigger = useBounceTrigger([iconName, iconColor]);

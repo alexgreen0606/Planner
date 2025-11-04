@@ -10,10 +10,11 @@ import { getCalendarMap, getPrimaryCalendar } from "@/utils/calendarUtils";
 import { useCalendarPermissions } from "expo-calendar";
 import { getPermissionsAsync, requestPermissionsAsync } from "expo-contacts";
 import { useFonts } from "expo-font";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useEffect } from "react";
 import * as Calendar from 'expo-calendar';
 import { useMMKV, useMMKVObject } from "react-native-mmkv";
+import { plannerCarouselWeeksAtom } from "@/atoms/plannerCarouselWeekAtom";
 
 const initialRootFolder: IFolderItem = {
     id: EStorageKey.ROOT_FOLDER_KEY,
@@ -32,6 +33,7 @@ const useAppInitialization = () => {
     const [primaryCalendar, setPrimaryCalendar] = useAtom(primaryCalendarAtom);
     const [importantCalendar, setImportantCalendar] = useAtom(importantCalendarAtom);
     const [calendarMap, setCalendarMap] = useAtom(calendarMapAtom);
+    const plannerCarouselWeeks = useAtomValue(plannerCarouselWeeksAtom);
 
     const [fontsLoaded] = useFonts({
         'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
@@ -53,7 +55,8 @@ const useAppInitialization = () => {
         areCalendarsReady &&
         userAccess.get(EAccess.CALENDAR) !== undefined &&
         userAccess.get(EAccess.CONTACTS) !== undefined &&
-        rootFolder;
+        rootFolder &&
+        plannerCarouselWeeks.weeks.length > 0;
 
     // Calendar permissions.
     useEffect(() => {

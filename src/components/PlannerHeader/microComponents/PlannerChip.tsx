@@ -10,8 +10,8 @@ import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import React, { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
-import Icon from '../icons/Icon';
-import CustomText from '../text/CustomText';
+import Icon from '../../icons/Icon';
+import CustomText from '../../text/CustomText';
 import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
 
 // ✅ 
@@ -57,7 +57,7 @@ const PlannerChip = ({
                                 color={chipColor}
                                 size={14}
                             />
-                            <CustomText variant='eventChipLabel' customStyle={{ color: chipCssColor }}>
+                            <CustomText variant='plannerChipTitle' customStyle={{ color: chipCssColor }}>
                                 {title}
                             </CustomText>
                         </View>

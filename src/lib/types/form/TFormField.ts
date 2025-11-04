@@ -1,8 +1,8 @@
-import { TCheckboxModalFieldProps } from "@/components/form/fields/CheckboxModalField";
-import { TColorPickerModalFieldProps } from "@/components/form/fields/ColorPickerModalField";
-import { TDateModalFieldProps } from "@/components/form/fields/DateModalField";
-import { TPickerModalFieldProps } from "@/components/form/fields/PickerModalField";
-import { TTextModalFieldProps } from "@/components/form/fields/TextModalField";
+import { TCheckboxModalFieldProps } from "@/components/Form/microComponents/CheckboxModalField";
+import { TColorPickerModalFieldProps } from "@/components/Form/microComponents/ColorPickerModalField";
+import { TDateModalFieldProps } from "@/components/Form/microComponents/DateModalField";
+import { TPickerModalFieldProps } from "@/components/Form/microComponents/PickerModalField";
+import { TTextModalFieldProps } from "@/components/Form/microComponents/TextModalField";
 import { EFormFieldType } from "@/lib/enums/EFormFieldType";
 import { SFSymbol } from "expo-symbols";
 import { RegisterOptions } from "react-hook-form";

@@ -1,14 +1,15 @@
+import { todayDatestampAtom } from "@/atoms/todayDatestamp";
+import { PRESSABLE_OPACITY } from "@/lib/constants/generic";
 import { PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
+import { isTimeEarlier } from "@/utils/dateUtils";
 import { useRouter } from "expo-router";
+import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
 import { useMemo } from "react";
-import { PlatformColor, Pressable, View } from "react-native";
-import CustomText from "../../text/CustomText";
+import { PlatformColor, TouchableOpacity } from "react-native";
 import Icon from "../../icons/Icon";
+import CustomText from "../../text/CustomText";
 import FadeInView from "../../views/FadeInView";
-import { useAtomValue } from "jotai";
-import { todayDatestampAtom } from "@/atoms/todayDatestamp";
-import { isTimeEarlier } from "@/utils/dateUtils";
 
 // ✅ 
 
@@ -35,16 +36,19 @@ const PlannerDateIcon = ({
         }
     }, [datestamp]);
 
-    const isTodayDatestamp = datestamp === todayDatestamp;
-    const isPastDate = isTimeEarlier(datestamp, todayDatestamp);
+    const { isTodayDatestamp, isPastDate } = useMemo(() => ({
+        isTodayDatestamp: datestamp === todayDatestamp,
+        isPastDate: isTimeEarlier(datestamp, todayDatestamp)
+    }), [datestamp, todayDatestamp]);
 
     function handlePress() {
         router.push(`/planners/${datestamp}`);
     }
 
     return (
-        <Pressable
+        <TouchableOpacity
             onPress={handlePress}
+            activeOpacity={PRESSABLE_OPACITY}
             style={{ width: PLANNER_CAROUSEL_ICON_WIDTH, height: PLANNER_CAROUSEL_ICON_WIDTH }}
             className='w-full h-full items-center pt-[0.3rem]'
         >
@@ -89,7 +93,7 @@ const PlannerDateIcon = ({
                 {day}
             </CustomText>
 
-        </Pressable>
+        </TouchableOpacity>
     )
 }
 

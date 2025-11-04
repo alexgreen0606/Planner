@@ -4,7 +4,7 @@ import { TFormField } from "@/lib/types/form/TFormField";
 import { MotiView } from "moti";
 import { Control, Controller } from "react-hook-form";
 import { PlatformColor, StyleSheet, View } from "react-native";
-import FormField from "./FormField";
+import FormField from "./microComponents/FormField";
 
 // ✅ 
 

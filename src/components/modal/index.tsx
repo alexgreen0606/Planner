@@ -13,67 +13,57 @@ type TModalProps = {
         onClick: () => void;
     };
     deleteButtonConfig?: TPopupListProps;
-    isViewMode?: boolean;
+    isStaticMode?: boolean;
     children: ReactNode;
     onClose: () => void;
 };
 
-const TOP_GLASS_BAR_HEIGHT = 69;
-
 const Modal = ({
     primaryButtonConfig,
     deleteButtonConfig,
+    isStaticMode,
     children,
-    isViewMode,
     onClose,
 }: TModalProps) => (
     <Host style={{ flex: 1 }}>
         <GlassEffectContainer>
             <VStack>
-                <View>
+                <View className="p-4">
 
-                    {/* Top Bar with Fade */}
-                    {!isViewMode && (
-                        <View className='absolute top-0 left-0 right-0 z-[1]' style={{
-                            height: TOP_GLASS_BAR_HEIGHT
-                        }}>
-                            <View className='px-4 w-full h-full absolute flex-row items-center justify-between'>
-                                <GlassIconButton
-                                    systemImage="xmark"
-                                    onPress={onClose}
-                                />
-                                <GlassIconButton
-                                    systemImage="checkmark"
-                                    isPrimary
-                                    color={primaryButtonConfig.color}
-                                    disabled={primaryButtonConfig.disabled}
-                                    onPress={primaryButtonConfig.onClick}
-                                />
-                            </View>
+                    {/* Close and Submit Buttons */}
+                    {!isStaticMode && (
+                        <View className='flex-row justify-between'>
+                            <GlassIconButton
+                                systemImage="xmark"
+                                onPress={onClose}
+                            />
+                            <GlassIconButton
+                                systemImage="checkmark"
+                                isPrimary={!!primaryButtonConfig.color}
+                                color={primaryButtonConfig.color}
+                                disabled={primaryButtonConfig.disabled}
+                                onPress={primaryButtonConfig.onClick}
+                            />
                         </View>
                     )}
 
-                    <View
-                        style={[{
-                            paddingHorizontal: 26,
-                            paddingTop: !isViewMode ? TOP_GLASS_BAR_HEIGHT : 26
-                        }]}
-                        className="flex-1 z-[0]"
-                    >
+                    {/* Contents */}
+                    <View className='px-4 pt-4'>
                         {children}
-
-                        {/* Delete Actions */}
-                        {!isViewMode && deleteButtonConfig && (
-                            <View className='px-4 w-full items-start'>
-                                <PopupList
-                                    {...deleteButtonConfig}
-                                    wrapButton
-                                    systemImage="trash"
-                                    iconPlatformColor="systemRed"
-                                />
-                            </View>
-                        )}
                     </View>
+
+                    {/* Delete Button */}
+                    {!isStaticMode && deleteButtonConfig && (
+                        <View className='w-full items-start pt-4'>
+                            <PopupList
+                                {...deleteButtonConfig}
+                                systemImage="trash"
+                                iconPlatformColor="systemRed"
+                                wrapButton
+                            />
+                        </View>
+                    )}
+
                 </View>
             </VStack>
         </GlassEffectContainer>

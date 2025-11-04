@@ -11,9 +11,9 @@ When declaring, follow this order (exported after local):
 ## Flow of Files 
 When declaring, follow this order (exported after local):
 2. `external hooks`
-1. `atoms`
 2. `context`
 6. `custom hooks`
+1. `atoms`
 
 4. `useRef`
 4. `useAnimatedRef`

@@ -3,7 +3,7 @@ import ThinLine from '@/components/ThinLine';
 import useAppTheme from '@/hooks/useAppTheme';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { CONTAINER_HORIZONTAL_MARGIN, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
+import { LARGE_MARGIN, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
@@ -231,7 +231,7 @@ const DraggableListPage = <T extends TListItem, S>({
                 <View className='flex-1' />
 
                 {/* Add Button Filler */}
-                <FillerView style={{ paddingBottom: CONTAINER_HORIZONTAL_MARGIN * 2 }}>
+                <FillerView style={{ paddingBottom: LARGE_MARGIN * 2 }}>
                     <GlassIconButton
                         systemImage='plus'
                         isPrimary
@@ -261,7 +261,7 @@ const DraggableListPage = <T extends TListItem, S>({
 
             {/* Add Button */}
             <View
-                style={{ bottom: BOTTOM_NAV_HEIGHT + CONTAINER_HORIZONTAL_MARGIN }}
+                style={{ bottom: BOTTOM_NAV_HEIGHT + LARGE_MARGIN }}
                 className='absolute right-4'
             >
                 <GlassIconButton

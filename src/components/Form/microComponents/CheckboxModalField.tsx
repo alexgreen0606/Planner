@@ -17,7 +17,7 @@ const CheckboxModalField = ({
     label = '',
     value,
     iconName,
-    color = 'systemBlue',
+    color = 'label',
     onChange
 }: TCheckboxModalFieldProps & TFormFieldControl<boolean>) =>
     <ModalDisplayValue

@@ -1,7 +1,7 @@
 import { calendarMapAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
 import { untrackLoadedDatestampsAtom } from "@/atoms/loadedDatestampsAtom";
 import { userAccessAtom } from "@/atoms/userAccess";
-import Form from "@/components/form";
+import Form from "@/components/Form/Form";
 import Modal from "@/components/Modal";
 import useTextfieldItemAs from "@/hooks/useTextfieldItemAs";
 import { calendarIconMap } from "@/lib/constants/calendarIcons";
@@ -28,8 +28,8 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { View } from "react-native";
 import { useMMKV } from "react-native-mmkv";
+import { TPickerOption } from "./Form/microComponents/PickerModalField";
 
 // ✅ 
 
@@ -50,7 +50,7 @@ type TFormData = {
     end: DateTime;
     isCalendarEvent: boolean;
     isAllDay: boolean;
-    calendarType: string;
+    calendarId: string | undefined;
 };
 
 const EventModal = ({ isViewMode }: TEventModalProps) => {
@@ -72,41 +72,49 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             end: DateTime.fromISO(getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
             isCalendarEvent: false,
             isAllDay: false,
-            calendarType: 'Standard'
+            calendarId: undefined
         }
     });
+
+    const title = watch('title');
+    const isAllDay = watch('isAllDay');
+    const isCalendarEvent = watch('isCalendarEvent');
+    const calendarId = watch('calendarId');
+    const start = watch('start');
+    const end = watch('end');
+
+    const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
 
     const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom);
     const primaryCalendar = useAtomValue(primaryCalendarAtom);
     const calendarMap = useAtomValue(calendarMapAtom);
     const userAccess = useAtomValue(userAccessAtom);
 
-    const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
-
     const [initialEventState, setInitialEventState] = useState<TInitialEventMetadata | null>(null);
     const [isInitializingForm, setIsInitializingForm] = useState(true);
     const [isLoading, setIsLoading] = useState(true);
 
-    const calendarTypeOptions = useMemo(() => {
-        const titles = Array.from(
-            new Set(
-                Object.values(calendarMap).reduce<string[]>((acc, cal) => {
-                    if (cal.allowsModifications) {
-                        acc.push(cal.title === "Calendar" ? "Standard" : cal.title);
-                    }
-                    return acc;
-                }, [])
-            )
-        );
+    const calendarOptions = useMemo(() => {
+        let primaryIndex = -1;
 
-        const standardIndex = titles.indexOf("Standard");
-        if (standardIndex > 0) {
-            titles.splice(standardIndex, 1);
-            titles.unshift("Standard");
+        const options = Object.values(calendarMap).reduce<TPickerOption[]>((acc, cal) => {
+            if (cal.allowsModifications) {
+                acc.push({ label: cal.title, value: cal.id });
+
+                if (cal.isPrimary || cal.id === primaryCalendar?.id) {
+                    primaryIndex = acc.length - 1;
+                }
+            }
+            return acc;
+        }, []);
+
+        if (primaryIndex !== -1) {
+            const [primaryOption] = options.splice(primaryIndex, 1);
+            options.unshift(primaryOption);
         }
 
-        return titles;
-    }, [calendarMap]);
+        return options;
+    }, [calendarMap, primaryCalendar]);
 
     const deleteActions = useMemo(() => {
         const actions: TPopupAction[] = [
@@ -138,16 +146,17 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         return actions;
     }, [initialEventState]);
 
-    const title = watch('title');
-    const isAllDay = watch('isAllDay');
-    const isCalendarEvent = watch('isCalendarEvent');
-    const calendarType = watch('calendarType');
-    const start = watch('start');
-    const end = watch('end');
+    const hideEndDateField = useMemo(
+        () => !isCalendarEvent || (isViewMode && start.toISODate() === end.toISODate()),
+        [isViewMode, start, end, isCalendarEvent]
+    );
 
-    const modalColor = calendarMap[calendarType]?.color ?? 'systemBlue';
-    const modalIcon = calendarIconMap[calendarType] ?? 'calendar';
-    const hideEndDateField = isViewMode && isAllDay && start.toISODate() === end.toISODate();
+    const { modalPrimaryColor, eventIcon } = useMemo(() => {
+        const calendar = calendarId ? calendarMap[calendarId] : undefined;
+        const modalPrimaryColor = calendar?.color;
+        const eventIcon = calendar ? calendarIconMap[calendar.title] ?? 'calendar' : 'note';
+        return { modalPrimaryColor, eventIcon }
+    }, [calendarId, calendarMap]);
 
     const formFields: TFormField[][] = [
         [{
@@ -155,8 +164,8 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             type: EFormFieldType.TEXT,
             label: 'Event Title',
             disabled: isViewMode,
-            iconName: modalIcon,
-            iconColor: modalColor,
+            iconName: eventIcon,
+            iconColor: modalPrimaryColor,
             rules: { required: true },
             focusTrigger: isLoading ? false : title.length === 0
         }],
@@ -165,7 +174,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             label: 'Start',
             type: EFormFieldType.DATE,
             showTime: !isAllDay,
-            color: modalColor,
+            color: modalPrimaryColor,
             onHandleSideEffects: (newStart: DateTime) =>
                 handleDateRangeChange(newStart, EDateFieldType.START_DATE),
             disabled: isViewMode
@@ -175,8 +184,8 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             label: 'End',
             type: EFormFieldType.DATE,
             showTime: !isAllDay,
-            color: modalColor,
-            invisible: !isCalendarEvent || hideEndDateField,
+            color: modalPrimaryColor,
+            invisible: hideEndDateField,
             onHandleSideEffects: (newEnd: DateTime) =>
                 handleDateRangeChange(newEnd, EDateFieldType.END_DATE),
             disabled: isViewMode
@@ -185,7 +194,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             name: 'isCalendarEvent',
             type: EFormFieldType.CHECKBOX,
             label: 'Calendar',
-            color: modalColor,
+            color: modalPrimaryColor,
             invisible: !userAccess.get(EAccess.CALENDAR) || !primaryCalendar || isViewMode,
             onHandleSideEffects: handleCalendarEventChange,
             iconName: 'calendar'
@@ -194,19 +203,19 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             name: 'isAllDay',
             type: EFormFieldType.CHECKBOX,
             label: 'All Day',
-            color: modalColor,
+            color: modalPrimaryColor,
             invisible: !isCalendarEvent || isViewMode,
             onHandleSideEffects: handleAllDayChange,
             iconName: 'note'
         }],
         [{
-            name: 'calendarType',
+            name: 'calendarId',
             label: 'Type',
             type: EFormFieldType.PICKER,
-            options: calendarTypeOptions,
-            color: modalColor,
+            options: calendarOptions,
+            color: modalPrimaryColor,
             invisible: isViewMode || !isCalendarEvent,
-            floating: calendarTypeOptions.length <= 3,
+            floating: calendarOptions.length <= 3,
             width: 360
         }]
     ];
@@ -258,7 +267,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
                     end: DateTime.fromISO(calendarEvent.endDate as string)!,
                     isCalendarEvent: true,
                     isAllDay: calendarEvent.allDay,
-                    calendarType: calendarEvent.calendarId === primaryCalendar?.id ? 'Standard' : calendarMap[calendarEvent.calendarId]?.title ?? 'Standard'
+                    calendarId: calendarEvent.calendarId
                 });
 
                 setIsLoading(false);
@@ -289,7 +298,8 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
                 start: DateTime.fromISO(storageEvent.timeConfig?.startIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
                 end: DateTime.fromISO(storageEvent.timeConfig?.endIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp))!,
                 isCalendarEvent: !!storageEvent.calendarEventId,
-                isAllDay: false
+                isAllDay: false,
+                calendarId: storageEvent.timeConfig?.calendarId
             });
 
             setIsLoading(false);
@@ -423,10 +433,14 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     }
 
     function handleCalendarEventChange(newIsCalendarEvent: boolean) {
-        if (newIsCalendarEvent) return;
+        if (newIsCalendarEvent && primaryCalendar) {
+            setValue('calendarId', primaryCalendar.id);
+            return;
+        }
 
         // No all day option for non-calendar events.
         setValue("isAllDay", false);
+        setValue('calendarId', undefined);
     }
 
     // ==================
@@ -436,8 +450,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     async function saveAllDayCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
+        const { calendarId } = formData;
+        if (!calendarId) return;
+
         const timeRange = getDateRangeFormData(formData);
-        const calendarId = getCalendarIdFromFormData(formData);
         const { endIso } = timeRange;
 
         // Phase 1: Handle the initial event, extracting carryover data and deleting stale data.
@@ -463,8 +479,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     async function saveSingleDayCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
+        const { calendarId } = formData;
+        if (!calendarId) return;
+
         const timeRange = getDateRangeFormData(formData);
-        const calendarId = getCalendarIdFromFormData(formData);
         const { startIso } = timeRange;
 
         const targetDatestamp = isoToDatestamp(startIso);
@@ -521,8 +539,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     async function saveMultiDayCalendarEvent(formData: TFormData) {
         if (!initialEventState) return;
 
+        const { calendarId } = formData;
+        if (!calendarId) return;
+
         const timeRange = getDateRangeFormData(formData);
-        const calendarId = getCalendarIdFromFormData(formData);
         const { startIso, endIso } = timeRange;
 
         const targetStartDatestamp = isoToDatestamp(startIso);
@@ -586,10 +606,6 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         return { startIso: formData.start.toUTC().toISO()!, endIso: formData.end.toUTC().toISO()! };
     }
 
-    function getCalendarIdFromFormData(formData: TFormData): string {
-        return calendarMap[formData.calendarType].id ?? primaryCalendar!.id
-    }
-
     // ---------- Miscellaneous Helpers ----------
 
     function closeModalOpenPlanner(targetDatestamp: string) {
@@ -597,7 +613,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     }
 
     function upsertFormDataToPlannerEvent(formData: TFormData, previousStorageId?: string): IPlannerEvent {
-        const { title, isAllDay } = formData;
+        const { title, isAllDay, calendarId } = formData;
         const { startIso, endIso } = getDateRangeFormData(formData);
         return {
             id: previousStorageId ?? uuid.v4(),
@@ -607,7 +623,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
                 startIso,
                 endIso,
                 allDay: isAllDay,
-                calendarId: getCalendarIdFromFormData(formData)
+                calendarId
             },
             storageId: EStorageId.PLANNER_EVENT
         }
@@ -659,18 +675,15 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
             primaryButtonConfig={{
                 onClick: handleSubmit(handleSaveFormData),
                 disabled: !isValid || isLoading,
-                color: modalColor
+                color: modalPrimaryColor
             }}
-            deleteButtonConfig={{ actions: deleteActions }}
+            deleteButtonConfig={!isViewMode ? { actions: deleteActions } : undefined}
             onClose={() => router.back()}
-            isViewMode={isViewMode}
+            isStaticMode={isViewMode}
         >
-            <View style={{ minHeight: isViewMode ? undefined : 400 }}>
-                {!isInitializingForm && (
-                    <Form fieldSets={formFields} control={control} />
-                )}
-
-            </View>
+            {!isInitializingForm && (
+                <Form fieldSets={formFields} control={control} />
+            )}
         </Modal>
     )
 };

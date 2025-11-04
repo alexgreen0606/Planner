@@ -1,4 +1,4 @@
-import Form from '@/components/form';
+import Form from '@/components/Form/Form';
 import Modal from '@/components/Modal';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';

@@ -124,7 +124,7 @@ const ListItem = <T extends TListItem>({
                 <ThinLine />
             </Pressable>
 
-            <View className="flex-row items-center gap-4 px-4">
+            <View className="flex-row items-center gap-4 px-4" style={{ height }}>
 
                 {/* Left Icon */}
                 {onGetLeftIcon?.(item)}

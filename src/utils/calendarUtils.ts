@@ -267,21 +267,10 @@ export async function getPrimaryCalendar(): Promise<Calendar.Calendar> {
     return await Calendar.getDefaultCalendarAsync();
 }
 
-/**
- * Generates a map of the device's calendar IDs and titles to calendars.
- * Each calendar can be accessed by both its ID and its title.
- * 
- * @returns A map of calendar IDs and titles to Calendar objects.
- */
 export async function getCalendarMap(): Promise<Record<string, Calendar.Calendar>> {
     const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
     const calendarMap = allCalendars.reduce((acc, cal) => {
         acc[cal.id] = cal;
-        acc[cal.title] = cal;
-        if (cal.isPrimary) {
-            // Within event modals, primary will be identified by 'Standard' title
-            acc['Standard'] = cal;
-        }
         return acc;
     }, {} as Record<string, Calendar.Calendar>);
     return calendarMap;

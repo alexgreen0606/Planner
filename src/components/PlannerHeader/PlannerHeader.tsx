@@ -9,7 +9,7 @@ import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
 import { PlatformColor, StyleSheet, View } from 'react-native';
 import PlannerActions from '../actions/PlannerActions';
-import PlannerChipSets from '../PlannerChip/PlannerChipSets';
+import PlannerChipSets from './microComponents/PlannerChipSets';
 import CustomText from '../text/CustomText';
 import PlannerCarousel from './microComponents/PlannerCarousel';
 import { weatherForDatestampAtom } from '@/atoms/weatherAtoms';

@@ -61,8 +61,8 @@ export const textStyles = {
         fontFamily: 'Text'
     },
     // --- Event Chip ---
-    eventChipLabel: {
-        fontFamily: 'RoundRegular',
+    plannerChipTitle: {
+        fontFamily: 'RoundMedium',
         fontSize: 12
     },
     // --- Weather ---
@@ -132,6 +132,13 @@ export const textStyles = {
         fontSize: 14,
         fontWeight: '500',
         fontFamily: 'RoundMedium'
+    },
+    // --- Upcoming Dates ---
+    upcomingDate: {
+        color: PlatformColor('label'),
+        flexShrink: 1,
+        flexWrap: 'wrap',
+        fontSize: 14
     }
 } satisfies Record<string, TextStyle>;
 

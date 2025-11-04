@@ -25,7 +25,7 @@ const DateModalField = ({
     minimumDate,
     iconName,
     disabled,
-    color,
+    color = 'label',
     onChange
 }: TDateModalFieldProps & TFormFieldControl<DateTime>) => (
     <ModalDisplayValue

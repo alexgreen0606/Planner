@@ -1,18 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 
-const useBounceTrigger = (dependencies: any[]) => {
+// ✅ 
+
+const useBounceTrigger = (dependencies: any[], cooldown = 200) => {
     const isInitialMount = useRef(true);
+    const cooldownRef = useRef(false);
     const [bounceTrigger, setBounceTrigger] = useState(false);
 
-    // Trigger the bounce whenever the dependencies change.
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
 
+        // Already bouncing — ignore new triggers.
+        if (cooldownRef.current) return;
+
+        cooldownRef.current = true;
         setBounceTrigger(true);
-        const timeout = setTimeout(() => setBounceTrigger(false), 0);
+
+        const timeout = setTimeout(() => {
+            setBounceTrigger(false);
+            cooldownRef.current = false;
+        }, cooldown);
 
         return () => clearTimeout(timeout);
     }, dependencies);
