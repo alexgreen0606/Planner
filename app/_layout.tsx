@@ -26,27 +26,27 @@ const TabLayout = () => {
                                     name={`${EDIT_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
                                     options={{
                                         presentation: 'formSheet',
-                                        headerShown: false,
-                                        contentStyle: { backgroundColor: 'transparent' },
                                         sheetAllowedDetents: 'fitToContents',
+                                        contentStyle: { backgroundColor: 'transparent' },
+                                        headerShown: false
                                     }}
                                 />
                                 <Stack.Screen
                                     name={`${VIEW_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
                                     options={{
                                         presentation: 'formSheet',
-                                        headerShown: false,
                                         sheetAllowedDetents: 'fitToContents',
-                                        contentStyle: { backgroundColor: 'transparent' }
+                                        contentStyle: { backgroundColor: 'transparent' },
+                                        headerShown: false
                                     }}
                                 />
                                 <Stack.Screen
                                     name={`${FOLDER_ITEM_MODAL_PATHNAME}/[folderItemId]`}
                                     options={{
                                         presentation: 'formSheet',
-                                        headerShown: false,
-                                        contentStyle: { backgroundColor: 'transparent' },
                                         sheetAllowedDetents: 'fitToContents',
+                                        contentStyle: { backgroundColor: 'transparent' },
+                                        headerShown: false
                                     }}
                                 />
                             </Stack>

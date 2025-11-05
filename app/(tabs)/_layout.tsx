@@ -10,19 +10,19 @@ import { useMemo } from 'react';
 // ✅ 
 
 const TabLayout = () => {
-    const userAccess = useAtomValue(userAccessAtom);
     const todayDatestamp = useAtomValue(todayDatestampAtom);
+    const userAccess = useAtomValue(userAccessAtom);
 
-    const plannerIconName: SFSymbol = useMemo(() => {
-        const date = DateTime.fromISO(todayDatestamp);
-        return `${date.toFormat('d')}.calendar` as SFSymbol
-    }, [todayDatestamp]);
+    const todayPlannerIcon = useMemo(
+        () => `${DateTime.fromISO(todayDatestamp).toFormat('d')}.calendar` as SFSymbol,
+        [todayDatestamp]
+    );
 
     return (
         <NativeTabs minimizeBehavior='onScrollDown'>
             <NativeTabs.Trigger name="planners">
                 <Label hidden />
-                <Icon sf={plannerIconName} />
+                <Icon sf={todayPlannerIcon} />
             </NativeTabs.Trigger>
             <NativeTabs.Trigger hidden={!userAccess.get(EAccess.CALENDAR)} name='upcomingDates'>
                 <Label hidden />

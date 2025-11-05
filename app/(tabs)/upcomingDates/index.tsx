@@ -1,6 +1,7 @@
-import { filteredUpcomingDatesMapAtom } from '@/atoms/calendarAtoms';
+import { filteredUpcomingDateEntriesAtom } from '@/atoms/calendarAtoms';
 import EmptyPageLabel from '@/components/EmptyLabel';
 import UpcomingDateCard from '@/components/UpcomingDateCard';
+import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
 import { useExternalDataContext } from '@/providers/ExternalDataProvider';
 import { useScrollRegistry } from '@/providers/ScrollRegistry';
 import { useHeaderHeight } from '@react-navigation/elements';
@@ -21,24 +22,26 @@ const UpcomingDatesPage = () => {
     const { onReloadPage, loadingPathnames } = useExternalDataContext();
     const scrollRegistry = useScrollRegistry();
 
-    const filteredUpcomingDates = useAtomValue(filteredUpcomingDatesMapAtom);
+    const filteredUpcomingDates = useAtomValue(filteredUpcomingDateEntriesAtom);
 
     const scrollY = useSharedValue(0);
-
     const onScroll = useAnimatedScrollHandler({
         onScroll: (e) => {
             scrollY.value = e.contentOffset.y;
         }
     });
 
-    const contentInset = headerHeight - TOP_SPACER;
-
+    // Register the scroll offset for use within the header.
     useEffect(() => {
-        scrollRegistry.set('upcomingDates', scrollY);
+        scrollRegistry.set(UPCOMING_DATES_SCROLL_KEY, scrollY);
     }, []);
+
+    const contentInset = headerHeight - TOP_SPACER;
 
     return (
         <View className='flex-1'>
+
+            {/* Dates List */}
             <Animated.ScrollView
                 refreshControl={(
                     <RefreshControl
@@ -50,23 +53,22 @@ const UpcomingDatesPage = () => {
                 contentInset={{ top: contentInset }}
                 contentOffset={{ x: 0, y: -contentInset }}
                 scrollIndicatorInsets={{ top: contentInset }}
-                contentContainerClassName='pb-4'
                 className="flex-1"
+                contentContainerClassName='pb-4'
             >
-                {Object.entries(filteredUpcomingDates).map(([datestamp, events], index) => (
+                {filteredUpcomingDates.map(([datestamp, events], index) => (
                     <UpcomingDateCard
-                        key={`${datestamp}-upcoming-date`}
                         datestamp={datestamp}
                         events={events}
                         index={index}
+                        key={`${datestamp}-upcoming-date`}
                     />
                 ))}
             </Animated.ScrollView>
 
-            {Object.entries(filteredUpcomingDates).length === 0 && (
-                <EmptyPageLabel
-                    label='No upcoming dates'
-                />
+            {/* Empty Page Label */}
+            {filteredUpcomingDates.length === 0 && (
+                <EmptyPageLabel label='No upcoming dates' />
             )}
         </View>
     );

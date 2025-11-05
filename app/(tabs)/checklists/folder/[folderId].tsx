@@ -4,12 +4,12 @@ import React from 'react';
 
 // ✅ 
 
-type TFolderParams = {
+type TFolderPageParams = {
   folderId: string;
 };
 
 const ChildFolderPage = () => {
-  const { folderId } = useLocalSearchParams<TFolderParams>();
+  const { folderId } = useLocalSearchParams<TFolderPageParams>();
   return (
     <FolderPage folderId={folderId} />
   )

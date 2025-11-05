@@ -14,6 +14,7 @@ import IconButton from "../../icons/IconButton";
 import PopupList from "../../PopupList";
 import CustomText, { textStyles } from "../../text/CustomText";
 import ShadowView from "../../views/ShadowView";
+import { UPCOMING_DATES_SCROLL_KEY } from "@/lib/constants/scrollRegistryKeys";
 
 // ✅ 
 
@@ -23,7 +24,7 @@ const UpcomingDatesHeader = () => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
 
     const scrollRegistry = useScrollRegistry();
-    const scrollY = scrollRegistry.get('upcomingDates') ?? { value: 0 };
+    const scrollY = scrollRegistry.get(UPCOMING_DATES_SCROLL_KEY) ?? { value: 0 };
 
     const activeCalendarFilters = useAtomValue(activeCalendarFiltersAtom);
     const toggleCalendarFilter = useSetAtom(toggleCalendarFilterAtom);

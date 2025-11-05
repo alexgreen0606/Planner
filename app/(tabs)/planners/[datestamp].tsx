@@ -16,7 +16,6 @@ const PlannerPage = () => {
     const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
     const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(datestamp, eventStorage);
-
     const {
         planner: { eventIds },
         onUpdatePlannerEventIndexWithChronologicalCheck
@@ -24,13 +23,12 @@ const PlannerPage = () => {
 
     return (
         <DraggableListPage
-            padHeaderHeight
-            emptyPageLabelProps={{ label: 'No plans' }}
-            toolbar={<PlannerEventToolbar />}
             listId={datestamp}
-            storageId={EStorageId.PLANNER_EVENT}
-            storage={eventStorage}
             itemIds={eventIds}
+            storage={eventStorage}
+            toolbar={<PlannerEventToolbar />}
+            storageId={EStorageId.PLANNER_EVENT}
+            emptyPageLabelProps={{ label: 'No plans' }}
             onCreateItem={createPlannerEventInStorageAndFocusTextfield}
             onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
             onValueChange={onUpdatePlannerEventValueWithTimeParsing}
@@ -38,6 +36,7 @@ const PlannerPage = () => {
             onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
             onGetRightIcon={createPlannerEventTimeIcon}
             onGetLeftIcon={useGetPlannerEventToggle}
+            padHeaderHeight
         />
     )
 };

@@ -47,7 +47,7 @@ When declaring, follow this order (exported after local):
 ## Function Names
 - Declarations in components: 'handle'. 
 - Props: 'on'. 
-- Declarations in utils: action itself (ex: "saveToStorage"). 
+- Declarations of utils (anything outside component. May be above component): action itself (ex: "saveToStorage"). 
 
 ## Props  
 - Always define props using `type`.

@@ -18,16 +18,9 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 type TFormData = {
     title: string;
-    type: string;
+    type: EFolderItemType;
     color: string;
 };
-
-const folderTypeBiMap: Record<string, string> = {
-    [EFolderItemType.FOLDER]: "Folder",
-    [EFolderItemType.CHECKLIST]: "Checklist",
-    Folder: EFolderItemType.FOLDER,
-    Checklist: EFolderItemType.CHECKLIST
-} as const;
 
 const FolderItemModal = () => {
     const { folderItemId } = useLocalSearchParams<{ folderItemId: string }>();
@@ -43,7 +36,7 @@ const FolderItemModal = () => {
     } = useForm<TFormData>({
         defaultValues: {
             title: folderItem?.value ?? '',
-            type: folderItem ? folderTypeBiMap[folderItem.type] ?? 'Folder' : 'Folder',
+            type: folderItem?.type ?? EFolderItemType.FOLDER,
             color: folderItem?.platformColor ?? 'systemBrown'
         },
         mode: 'onChange'
@@ -53,6 +46,7 @@ const FolderItemModal = () => {
     const color = watch('color');
 
     const hasChildren = (folderItem?.itemIds.length ?? 0) > 0;
+    // TODO: enhance these. Need scatter and delete and delete all and none for root folder delete option you get it
     const deleteActions = useMemo<TPopupAction[]>(() => [
         {
             type: EPopupActionType.BUTTON,
@@ -64,7 +58,6 @@ const FolderItemModal = () => {
     ], [hasChildren, folderItem]);
 
     const isEditMode = folderItemId !== NULL;
-
     const formFields: TFormField[][] = [
         [{
             name: 'title',
@@ -72,7 +65,7 @@ const FolderItemModal = () => {
             type: EFormFieldType.TEXT,
             focusTrigger: !isEditMode,
             autoCapitalizeWords: true,
-            iconName: type === 'Folder' ? 'folder' : 'list.bullet',
+            iconName: type === EFolderItemType.FOLDER ? 'folder' : 'list.bullet',
             iconColor: color,
             rules: {
                 required: 'Title is required.',
@@ -88,7 +81,14 @@ const FolderItemModal = () => {
         [{
             name: 'type',
             type: EFormFieldType.PICKER,
-            options: ['Folder', 'Checklist'],
+            options: [{
+                label: 'Folder',
+                value: EFolderItemType.FOLDER
+            },
+            {
+                label: 'Checklist',
+                value: EFolderItemType.CHECKLIST
+            }],
             floating: true,
             invisible: hasChildren,
             width: 300
@@ -104,12 +104,11 @@ const FolderItemModal = () => {
 
         const { title, type, color } = data;
         const newTitle = title.trim();
-        const folderItemType = (folderTypeBiMap[type] ?? EFolderItemType.FOLDER) as EFolderItemType;
 
         setFolderItem((prev) => prev ? ({
             ...prev,
             value: newTitle,
-            type: folderItemType,
+            type,
             platformColor: color
         }) : prev);
 

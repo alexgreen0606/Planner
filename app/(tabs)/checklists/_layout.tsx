@@ -4,44 +4,44 @@ import useAppTheme from '@/hooks/useAppTheme';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPageParams';
 import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
+import { getValidCssColor } from '@/utils/colorUtils';
 import { Stack } from 'expo-router';
 import { useAtomValue } from 'jotai';
-import { PlatformColor } from 'react-native';
 
 // ✅ 
+
+function getChecklistId(params: TChecklistsPageParams) {
+    return params.checklistId ?? params.folderId ?? EStorageKey.ROOT_FOLDER_KEY;
+}
+
+function getChecklistTitle(params: TChecklistsPageParams) {
+    const folderItemId = getChecklistId(params);
+    const folderItem = getFolderItemFromStorageById(folderItemId);
+    return folderItem.value;
+}
+
+function getChecklistColor(params: TChecklistsPageParams) {
+    const folderItemId = getChecklistId(params);
+    const folderItem = getFolderItemFromStorageById(folderItemId);
+    return getValidCssColor(folderItem.platformColor);
+}
 
 const ChecklistsLayout = () => {
     const { CssColor: { background } } = useAppTheme();
 
     const itemInTransfer = useAtomValue(transferingFolderItemAtom);
 
-    function getFolderItemId(params: TChecklistsPageParams) {
-        return params.checklistId ?? params.folderId ?? EStorageKey.ROOT_FOLDER_KEY;
-    }
-
-    function getFolderItemTitle(params: TChecklistsPageParams) {
-        const folderItemId = getFolderItemId(params);
-        const folderItem = getFolderItemFromStorageById(folderItemId);
-        return folderItem.value;
-    }
-
-    function getFolderItemPlatformColor(params: TChecklistsPageParams) {
-        const folderItemId = getFolderItemId(params);
-        const folderItem = getFolderItemFromStorageById(folderItemId);
-        return folderItem.platformColor;
-    }
-
     return (
         <Stack
             screenOptions={({ route: { params } }) => ({
+                headerTitle: getChecklistTitle(params ?? {}),
+                headerRight: () => getChecklistId(params ?? {}) === EStorageKey.ROOT_FOLDER_KEY && !!itemInTransfer ? undefined : <FolderItemActions {...params} />,
                 animation: 'ios_from_right',
+                headerBackButtonDisplayMode: 'minimal',
+                headerTitleStyle: { color: getChecklistColor(params ?? {}) },
                 contentStyle: { backgroundColor: background },
                 headerTransparent: true,
-                headerLargeTitle: true,
-                headerBackButtonDisplayMode: 'minimal',
-                headerTitleStyle: { color: PlatformColor(getFolderItemPlatformColor(params ?? {})) as unknown as string },
-                headerTitle: getFolderItemTitle(params ?? {}),
-                headerRight: () => getFolderItemId(params ?? {}) === EStorageKey.ROOT_FOLDER_KEY && !!itemInTransfer ? undefined : <FolderItemActions {...params} />
+                headerLargeTitle: true
             })}
         >
             <Stack.Screen name='index' />

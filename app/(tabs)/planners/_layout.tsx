@@ -10,19 +10,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PlannersLayout = () => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
+
     const { CssColor: { background }, ColorArray: { Screen: { upper } } } = useAppTheme();
+
     return (
         <Stack screenOptions={({ route: { params } }) => ({
-            animation: 'fade',
-            headerShown: true,
-            headerTransparent: true,
+            header: () => {
+                const datestamp = (params as TPlannerPageParams)?.datestamp;
+                return datestamp && <PlannerHeader datestamp={datestamp} />
+            },
             headerBackground: () => (
                 <ColorFadeView totalHeight={TOP_SPACER + 32} solidHeight={TOP_SPACER} colors={upper} />
             ),
-            header: () => (params as TPlannerPageParams)?.datestamp && <PlannerHeader datestamp={(params as TPlannerPageParams)?.datestamp} />,
-            contentStyle: {
-                backgroundColor: background
-            }
+            animation: 'fade',
+            contentStyle: { backgroundColor: background },
+            headerShown: true,
+            headerTransparent: true
         })} />
     )
 };

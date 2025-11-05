@@ -8,7 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UpcomingDatesLayout = () => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
+
     const { CssColor: { background }, ColorArray: { Screen: { upperDark } } } = useAppTheme();
+
     return (
         <Stack
             screenOptions={{

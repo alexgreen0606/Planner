@@ -10,27 +10,26 @@ export const primaryCalendarAtom = atom<Calendar.Calendar | null>(null);
 export const importantCalendarAtom = atom<Calendar.Calendar | null>(null);
 
 // Stores the dates to be rendered in the Upcoming Dates page.
-export const filteredUpcomingDatesMapAtom = atom((get) => {
+export const filteredUpcomingDateEntriesAtom = atom((get) => {
     const activeCalendarFilters = get(activeCalendarFiltersAtom);
     const upcomingDatesMap = get(upcomingDatesMapAtom);
 
-    // If no filters are active, show all events.
+    // If no filters are active, return all entries
     if (activeCalendarFilters.size === 0) {
-        return upcomingDatesMap;
+        return Object.entries(upcomingDatesMap);
     }
 
-    const filteredMap: Record<string, Calendar.Event[]> = {};
-    Object.entries(upcomingDatesMap).forEach(([dateKey, events]) => {
-        const filteredEvents = events.filter(event =>
-            activeCalendarFilters.has(event.calendarId)
-        );
+    const result: Array<[string, Calendar.Event[]]> = [];
+
+    for (const [dateKey, events] of Object.entries(upcomingDatesMap)) {
+        const filteredEvents = events.filter(e => activeCalendarFilters.has(e.calendarId));
 
         if (filteredEvents.length > 0) {
-            filteredMap[dateKey] = filteredEvents;
+            result.push([dateKey, filteredEvents]);
         }
-    });
+    }
 
-    return filteredMap;
+    return result;
 });
 
 // Toggles calendar IDs in and out of the calendar filters atom.
