@@ -10,9 +10,9 @@ import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import React, { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
-import Icon from '../../icons/Icon';
-import CustomText from '../../text/CustomText';
 import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
+import Icon from '@/components/icons/Icon';
+import CustomText from '@/components/text/CustomText';
 
 // ✅ 
 

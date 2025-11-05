@@ -90,7 +90,7 @@ const ShadowView = ({
                             </SvgLinearGradient>
 
                             <SvgLinearGradient id="bottomEdge" x1="0" y1="1" x2="0" y2="0">
-                                <Stop offset="0" stopColor={shadowColor} stopOpacity="0" />
+                                <Stop offset="0" stopColor={shadowColor} stopOpacity="0" /> 
                                 <Stop offset="1" stopColor={shadowColor} stopOpacity={maxOpacity} />
                             </SvgLinearGradient>
 

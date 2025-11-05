@@ -1,31 +1,33 @@
 import { todayDatestampAtom } from '@/atoms/todayDatestamp';
-import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
+import { weatherForDatestampAtom } from '@/atoms/weatherAtoms';
 import { useExternalDataContext } from '@/providers/ExternalDataProvider';
+import { useScrollRegistry } from '@/providers/ScrollRegistry';
 import { getDayOfWeekFromDatestamp, getDaysUntilIso, getMonthDateFromDatestamp, getTodayDatestamp, getTomorrowDatestamp, getYesterdayDatestamp } from '@/utils/dateUtils';
 import { Host, VStack } from '@expo/ui/swift-ui';
 import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
-import { useLocalSearchParams, usePathname } from 'expo-router';
+import { usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useEffect, useMemo, useState } from 'react';
-import { PlatformColor, StyleSheet, View } from 'react-native';
-import PlannerActions from '../actions/PlannerActions';
-import PlannerChipSets from './microComponents/PlannerChipSets';
-import CustomText from '../text/CustomText';
+import { PlatformColor, View } from 'react-native';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import PlannerCarousel from './microComponents/PlannerCarousel';
-import { weatherForDatestampAtom } from '@/atoms/weatherAtoms';
-import Icon from '../icons/Icon';
-import FadeInView from '../views/FadeInView';
+import PlannerChipSets from './microComponents/PlannerChipSets';
+import PlannerActions from '@/components/actions/PlannerActions';
+import CustomText from '@/components/text/CustomText';
+import FadeInView from '@/components/views/FadeInView';
+import Icon from '@/components/icons/Icon';
 
 // ✅ 
 
-const PlannerHeader = () => {
-    const { datestamp } = useLocalSearchParams<TPlannerPageParams>();
+const PlannerHeader = ({ datestamp }: { datestamp: string }) => {
     const pathname = usePathname();
+
+    const { loadingPathnames } = useExternalDataContext();
+
+    const scrollRegistry = useScrollRegistry();
 
     const weatherData = useAtomValue(weatherForDatestampAtom(datestamp));
     const todayDatestamp = useAtomValue(todayDatestampAtom);
-
-    const { loadingPathnames } = useExternalDataContext();
 
     const [showLoading, setShowLoading] = useState(false);
 
@@ -50,6 +52,7 @@ const PlannerHeader = () => {
         return { label, dayOfWeek: getDayOfWeekFromDatestamp(datestamp), date: getMonthDateFromDatestamp(datestamp) };
     }, [todayDatestamp, datestamp]);
 
+    const scrollY = scrollRegistry.get(datestamp) ?? { value: 0 };
     const isLoading = loadingPathnames.has(pathname);
     const MIN_SHIMMER = 4000;
 
@@ -67,8 +70,12 @@ const PlannerHeader = () => {
         return () => clearTimeout(timeout);
     }, [isLoading]);
 
+    const headerStyle = useAnimatedStyle(() => ({
+        transform: [{translateY: -Math.min(scrollY.value, 20)}]
+    }));
+
     return (
-        <View className='px-4 gap-2'>
+        <Animated.View className='px-4 gap-2' style={headerStyle}>
 
             <PlannerCarousel datestamp={datestamp} />
 
@@ -80,15 +87,9 @@ const PlannerHeader = () => {
                                 <CustomText variant='pageLabel'>
                                     {dayOfWeek}
                                 </CustomText>
-                                {/* <View className='flex-row gap-1'> */}
                                 <CustomText variant='detail' customStyle={{ color: PlatformColor('secondaryLabel') }}>
                                     {date}
                                 </CustomText>
-                                {/* <View className='h-full' style={{ width: StyleSheet.hairlineWidth, backgroundColor: PlatformColor('label') }} />
-                                    <CustomText variant='detail' customStyle={{ color: PlatformColor('secondaryLabel') }}>
-                                        {label}
-                                    </CustomText> */}
-                                {/* </View> */}
                             </View>
                         </VStack>
                     </Host>
@@ -119,7 +120,7 @@ const PlannerHeader = () => {
             </View>
 
             <PlannerChipSets label={label} datestamp={datestamp} />
-        </View>
+        </Animated.View>
     )
 };
 

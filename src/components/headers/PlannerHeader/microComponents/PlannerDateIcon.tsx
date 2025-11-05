@@ -1,4 +1,7 @@
 import { todayDatestampAtom } from "@/atoms/todayDatestamp";
+import Icon from "@/components/icons/Icon";
+import CustomText from "@/components/text/CustomText";
+import FadeInView from "@/components/views/FadeInView";
 import { PRESSABLE_OPACITY } from "@/lib/constants/generic";
 import { PLANNER_CAROUSEL_ICON_WIDTH } from "@/lib/constants/miscLayout";
 import { isTimeEarlier } from "@/utils/dateUtils";
@@ -7,9 +10,6 @@ import { useAtomValue } from "jotai";
 import { DateTime } from "luxon";
 import { useMemo } from "react";
 import { PlatformColor, TouchableOpacity } from "react-native";
-import Icon from "../../icons/Icon";
-import CustomText from "../../text/CustomText";
-import FadeInView from "../../views/FadeInView";
 
 // ✅ 
 

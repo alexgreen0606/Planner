@@ -13,6 +13,7 @@ import Icon from './icons/Icon';
 import CustomText, { textStyles } from './text/CustomText';
 import DateValue from './text/DateValue';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 type TUpcomingDateCardProps = {
     datestamp: string;
@@ -57,12 +58,17 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
     const minimumContainerHeight = textStyles['conciseDate'].fontSize + LARGE_MARGIN * 2;
 
     return (
-        <View className="flex-row gap-2" style={{
-            borderBottomWidth: StyleSheet.hairlineWidth,
-            borderColor: PlatformColor('systemGray'),
-            borderTopWidth: index === 0 ? StyleSheet.hairlineWidth : 0,
-            minHeight: minimumContainerHeight
-        }}>
+        <Animated.View
+            entering={FadeIn}
+            exiting={FadeOut}
+            style={{
+                borderBottomWidth: StyleSheet.hairlineWidth,
+                borderColor: PlatformColor('systemGray'),
+                borderTopWidth: index === 0 ? StyleSheet.hairlineWidth : 0,
+                minHeight: minimumContainerHeight
+            }}
+            className="flex-row gap-2"
+        >
             {/* Date */}
             <TouchableOpacity
                 onPress={handleOpenPlanner}
@@ -98,7 +104,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
                                 color={color}
                                 size={16}
                             />
-                            <CustomText variant='upcomingDate'>
+                            <CustomText variant='upcomingEvent'>
                                 {event.title}
                             </CustomText>
                         </TouchableOpacity>
@@ -114,7 +120,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
                     {countdownLabel}
                 </CustomText>
             </View>
-        </View>
+        </Animated.View>
     )
 };
 

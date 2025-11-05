@@ -1,8 +1,7 @@
-import { Host, Text, VStack } from '@expo/ui/swift-ui';
-import { frame } from '@expo/ui/swift-ui/modifiers';
 import React from 'react';
-import { PlatformColor, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import Icon, { TIconProps } from './icons/Icon';
+import CustomText from './text/CustomText';
 import FadeInView from './views/FadeInView';
 
 // ✅ 
@@ -25,13 +24,9 @@ const EmptyPageLabel = ({
             {iconProps && (
                 <Icon {...iconProps} />
             )}
-            <Host matchContents>
-                <VStack modifiers={[frame({ width })]}>
-                    <Text design='rounded' weight='semibold' size={16} color={PlatformColor('tertiaryLabel') as unknown as string}>
-                        {label}
-                    </Text>
-                </VStack>
-            </Host>
+            <CustomText variant='emptyLabel'>
+                {label}
+            </CustomText>
         </FadeInView>
     )
 };

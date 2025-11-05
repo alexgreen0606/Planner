@@ -1,31 +1,30 @@
 import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
 import ThinLine from '@/components/ThinLine';
 import useAppTheme from '@/hooks/useAppTheme';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
+import useSortableMmkvList from '@/hooks/useSortableMmkvList';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { LARGE_MARGIN, THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
+import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
-import React, { ReactElement, ReactNode, useEffect, useRef, useState } from 'react';
-import { Pressable, RefreshControl, TextInput, useWindowDimensions, View } from 'react-native';
+import React, { ReactElement, ReactNode, useEffect, useState } from 'react';
+import { Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import Animated, {
-    LinearTransition,
     runOnJS,
     useAnimatedReaction,
+    useAnimatedScrollHandler,
     useSharedValue
 } from 'react-native-reanimated';
-import { DropProvider, SortableItem, useSortableList } from 'react-native-reanimated-dnd';
+import { DropProvider } from 'react-native-reanimated-dnd';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './icons/customButtons/GlassIconButton';
-import ListItem from './lists/ListItem';
-import PlannerHeader from './PlannerHeader/PlannerHeader';
 import ColorFadeView from './views/ColorFadeView';
 import FillerView from './views/FillerView';
+import { useHeaderHeight } from '@react-navigation/elements';
+import { useScrollRegistry } from '@/providers/ScrollRegistry';
 
 // ✅ 
 
@@ -33,7 +32,6 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     emptyPageLabelProps: TEmptyPageLabelProps;
     toolbar?: ReactNode;
     stickyHeader?: ReactElement;
-    scrollContentAbsoluteTop?: number;
     itemIds: string[];
     listId: string;
     storageId: EStorageId;
@@ -42,6 +40,7 @@ type TDraggableListPageProps<T extends TListItem, S> = {
     collapsed?: boolean;
     rowHeight?: number;
     addButtonColor?: string;
+    padHeaderHeight?: boolean;
     onCreateItem: (listId: string, index: number) => void;
     onDeleteItem: (item: T) => void;
     onValueChange?: (newValue: string) => void;
@@ -64,9 +63,9 @@ const DraggableListPage = <T extends TListItem, S>({
     emptyPageLabelProps,
     toolbar,
     stickyHeader,
-    scrollContentAbsoluteTop = 0,
     rowHeight = 40,
     addButtonColor = 'systemBlue',
+    padHeaderHeight,
     onIndexChange,
     onCreateItem,
     onDeleteItem,
@@ -74,93 +73,53 @@ const DraggableListPage = <T extends TListItem, S>({
 }: TDraggableListPageProps<T, S>) => {
     const { height: SCREEN_HEIGHT } = useWindowDimensions();
     const { top: TOP_SPACER } = useSafeAreaInsets();
+    const headerHeight = useHeaderHeight();
     const pathname = usePathname();
 
-    const data = itemIds.map(id => ({ id }));
-    const {
-        scrollViewRef,
-        dropProviderRef,
-        handleScroll,
-        handleScrollEnd,
-        contentHeight,
-        getItemProps,
-    } = useSortableList({
-        data: data,
-        itemHeight: rowHeight,
-    });
+    const scrollRegistry = useScrollRegistry();
+    const scrollY = useSharedValue(0);
 
     const { onReloadPage, loadingPathnames } = useExternalDataContext();
 
     const { CssColor: { background }, ColorArray: { Screen: { upper } } } = useAppTheme();
-    const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-    const placeholderInputRef = useRef<TextInput>(null);
+    const {
+        scrollViewRef,
+        dropProviderRef,
+        isListEmpty,
+        onToggleLowerListItem,
+        ListItems
+    } = useSortableMmkvList(
+        itemIds,
+        rowHeight,
+        storage,
+        listId,
+        onCreateItem,
+        onDeleteItem,
+        onIndexChange,
+        listItemProps
+    );
+
+    useEffect(() => {
+        scrollRegistry.set(listId, scrollY);
+    }, [listId]);
+
+    const onScroll = useAnimatedScrollHandler({
+        onScroll: (e) => {
+            scrollY.value = e.contentOffset.y;
+        },
+    });
 
     const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
-    const [isDragging, setIsDragging] = useState<boolean>(false);
-
-    const scrollOffset = useSharedValue(0);
 
     // TODO: calculate this correctly in the future.
     const BOTTOM_NAV_HEIGHT = 86;
 
     const canReloadPath = reloadablePaths.some(p => pathname.includes(p));
-    const isPageEmpty = itemIds.length === 0;
-
-    // TODO: not setting scroll offset right now. Watch scrollOffset and turn off loading symbol when it returns to 0.
-    useAnimatedReaction(
-        () => scrollOffset.value,
-        (currentOffset) => {
-            if (currentOffset <= 0 && showLoadingSymbol) {
-                runOnJS(setShowLoadingSymbol)(false);
-            }
-        }
-    );
-
-    // ================
-    //  Event Handlers
-    // ================
-
-    function handleFocusPlaceholder() {
-        placeholderInputRef.current?.focus();
-    }
 
     function handleReloadPage() {
         setShowLoadingSymbol(true);
         onReloadPage();
-    }
-
-    function handleEmptySpaceClick() {
-        if (!textfieldItem) {
-            // Open a textfield at the bottom of the list.
-            onCreateItem(listId, itemIds.length);
-            return;
-        }
-
-        onCloseTextfield();
-
-        if (textfieldItem.value.trim() === '') {
-            onDeleteItem(textfieldItem);
-        }
-    }
-
-    function handleMoveItem(id: string, from: number, to: number) {
-        const itemString = storage.getString(id);
-        if (!itemString) return;
-
-        const draggedItem = JSON.parse(itemString) as T;
-        if (from !== to && onIndexChange) {
-            onIndexChange(to, draggedItem);
-        }
-    }
-
-    function handleDragStart() {
-        setIsDragging(true);
-        onCloseTextfield();
-    }
-
-    function handleDragEnd() {
-        setIsDragging(false);
     }
 
     return (
@@ -177,10 +136,11 @@ const DraggableListPage = <T extends TListItem, S>({
                     />
                 ) : undefined}
 
+                onScroll={onScroll}
                 contentInsetAdjustmentBehavior='always'
                 showsVerticalScrollIndicator={true}
                 scrollEventThrottle={SCROLL_THROTTLE}
-                contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+                contentContainerStyle={{ minHeight: SCREEN_HEIGHT, paddingTop: padHeaderHeight ? headerHeight: 0 }}
                 style={{ height: SCREEN_HEIGHT, backgroundColor: background }}
             >
 
@@ -190,40 +150,11 @@ const DraggableListPage = <T extends TListItem, S>({
                 </FillerView>
 
                 {/* List Items */}
-                <Animated.View layout={LinearTransition} style={{ height: contentHeight }} className='w-full'>
-                    {data.map((item, index) => {
-                        const itemProps = getItemProps(item, index);
-                        return (
-                            <SortableItem
-                                data={data}
-                                onMove={handleMoveItem}
-                                onDragStart={handleDragStart}
-                                onDrop={handleDragEnd}
-                                style={{ backgroundColor: background }}
-                                key={item.id}
-                                {...itemProps}
-                            >
-                                <ListItem<T>
-                                    itemIndex={index}
-                                    listId={listId}
-                                    itemId={item.id}
-                                    storage={storage}
-                                    isActive={false}
-                                    isDragging={isDragging}
-                                    height={rowHeight - THIN_LINE_HEIGHT}
-                                    onFocusPlaceholderTextfield={handleFocusPlaceholder}
-                                    onCreateItem={onCreateItem}
-                                    onDeleteItem={onDeleteItem}
-                                    {...listItemProps}
-                                />
-                            </SortableItem>
-                        )
-                    })}
-                </Animated.View>
+                <ListItems />
 
                 {/* Bottom of List Separator */}
                 {itemIds.length > 0 && (
-                    <Pressable onPress={handleEmptySpaceClick}>
+                    <Pressable onPress={onToggleLowerListItem}>
                         <ThinLine />
                     </Pressable>
                 )}
@@ -236,7 +167,7 @@ const DraggableListPage = <T extends TListItem, S>({
                         systemImage='plus'
                         isPrimary
                         color={addButtonColor}
-                        onPress={handleEmptySpaceClick}
+                        onPress={onToggleLowerListItem}
                     />
                 </FillerView>
 
@@ -255,7 +186,7 @@ const DraggableListPage = <T extends TListItem, S>({
             )}
 
             {/* Empty Label */}
-            {isPageEmpty && (
+            {isListEmpty && (
                 <EmptyPageLabel {...emptyPageLabelProps} />
             )}
 
@@ -268,20 +199,13 @@ const DraggableListPage = <T extends TListItem, S>({
                     systemImage='plus'
                     isPrimary
                     color={addButtonColor}
-                    onPress={handleEmptySpaceClick}
+                    onPress={onToggleLowerListItem}
                 />
             </View>
 
             {/* Toolbar */}
             {toolbar}
 
-            {/* Placeholder Field */}
-            <TextInput
-                ref={placeholderInputRef}
-                returnKeyType='done'
-                className='absolute w-1 h-1 left-[9999]'
-                autoCorrect={false}
-            />
         </DropProvider>
     )
 };

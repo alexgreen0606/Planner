@@ -35,7 +35,9 @@ const useAppTheme = () => {
             },
             Screen: {
                 upper: (isLightMode ? ["rgba(229,229,234,0.85)", "rgba(229,229,234,0.85)", "rgba(229,229,234,0)"] :
-                    ['rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]]
+                    ['rgba(0,0,0,0.78)', 'rgba(0,0,0,0.78)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]],
+                    upperDark: (isLightMode ? ["rgba(229,229,234,0.95)", "rgba(229,229,234,0.95)", "rgba(229,229,234,0)"] :
+                    ['rgba(0,0,0,0.95)', 'rgba(0,0,0,0.95)', 'rgba(0,0,0,0)']) as readonly [ColorValue, ColorValue, ...ColorValue[]]
             }
         }
     }

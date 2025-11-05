@@ -6,8 +6,8 @@ import PlannerChip from './PlannerChip';
 import { Host, VStack } from '@expo/ui/swift-ui';
 import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { PlatformColor, View } from 'react-native';
-import CustomText from '../../text/CustomText';
 import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
+import CustomText from '@/components/text/CustomText';
 
 // ✅ 
 

@@ -38,12 +38,22 @@ export const toggleCalendarFilterAtom = atom(
     null,
     (get, set, calendarId: string) => {
         const current = get(activeCalendarFiltersAtom);
+        const calendarMap = get(calendarMapAtom);
 
         const newSet = new Set(current);
+
         if (newSet.has(calendarId)) {
             newSet.delete(calendarId);
         } else {
             newSet.add(calendarId);
+        }
+
+        const availableCalendarIds = Object.keys(calendarMap);
+        const allSelected = newSet.size === availableCalendarIds.length;
+
+        if (allSelected) {
+            set(activeCalendarFiltersAtom, new Set());
+            return;
         }
 
         set(activeCalendarFiltersAtom, newSet);

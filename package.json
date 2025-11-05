@@ -13,7 +13,7 @@
   "dependencies": {
     "@babel/runtime": "^7.28.4",
     "@expo/metro-runtime": "~6.1.2",
-    "@expo/ui": "^0.2.0-beta.4",
+    "@expo/ui": "^0.2.0-beta.7",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-navigation/core": "^7.3.1",
     "@react-navigation/elements": "^2.6.4",

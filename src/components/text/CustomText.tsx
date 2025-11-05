@@ -134,11 +134,31 @@ export const textStyles = {
         fontFamily: 'RoundMedium'
     },
     // --- Upcoming Dates ---
-    upcomingDate: {
+    upcomingDatesHeader: {
+        fontSize: 28,
+        color: PlatformColor('label'),
+        fontFamily: 'RoundHeavy'
+    },
+    upcomingDatesSubHeader: {
+        fontSize: 15,
+        color: PlatformColor('secondaryLabel'),
+        fontFamily: 'RoundMedium',
+        overflow: 'hidden'
+    },
+    upcomingEvent: {
         color: PlatformColor('label'),
         flexShrink: 1,
         flexWrap: 'wrap',
         fontSize: 14
+    },
+    // Empty Label
+    emptyLabel: {
+        color: PlatformColor('tertiaryLabel'),
+        flexWrap: 'wrap',
+        fontSize: 16,
+        paddingHorizontal: 64,
+        textAlign: 'center',
+        fontFamily: 'RoundMedium'
     }
 } satisfies Record<string, TextStyle>;
 

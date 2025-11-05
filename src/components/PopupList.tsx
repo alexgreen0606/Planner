@@ -5,13 +5,12 @@ import {
     ContextMenu,
     Host,
     Image,
-    Submenu,
     Switch
 } from "@expo/ui/swift-ui";
+import { SFSymbol } from "expo-symbols";
 import React, { ReactNode, useMemo } from "react";
 import { PlatformColor } from "react-native";
 import GlassIconButton from "./icons/customButtons/GlassIconButton";
-import { SFSymbol } from "expo-symbols";
 
 // ✅ 
 
@@ -61,22 +60,21 @@ const PopupList = ({
                 );
 
             case EPopupActionType.SUBMENU:
-                if (option.items.some((item) => !item.hidden)) {
+                if (option.items.some(i => !i.hidden)) {
                     return (
-                        <Submenu
-                            key={index}
-                            button={
-                                <Button systemImage={option.systemImage}>{option.title}</Button>
-                            }
-                        >
-                            {option.items?.map((subItem: any, subIndex: number) =>
-                                renderMenuAction(subItem, subIndex)
-                            )}
-                        </Submenu>
+                        <ContextMenu key={index}>
+                            <ContextMenu.Items>
+                                {option.items.map((sub, subIndex) => renderMenuAction(sub, subIndex))}
+                            </ContextMenu.Items>
+                            <ContextMenu.Trigger>
+                                <Button systemImage={option.systemImage}>
+                                    {option.title}
+                                </Button>
+                            </ContextMenu.Trigger>
+                        </ContextMenu>
                     );
-                } else {
-                    return null;
                 }
+                return null;
 
             default:
                 return null;

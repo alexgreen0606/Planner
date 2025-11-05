@@ -19,7 +19,7 @@ const TabLayout = () => {
     }, [todayDatestamp]);
 
     return (
-        <NativeTabs>
+        <NativeTabs minimizeBehavior='onScrollDown'>
             <NativeTabs.Trigger name="planners">
                 <Label hidden />
                 <Icon sf={plannerIconName} />
