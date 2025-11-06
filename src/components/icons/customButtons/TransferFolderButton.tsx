@@ -1,13 +1,13 @@
-import { TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native';
 
-import Icon from '../Icon'
+import Icon from '../Icon';
 
 // ✅
 
 type TTransferFolderIconProps = {
-  disabled: boolean
-  onClick: () => void
-}
+  disabled: boolean;
+  onClick: () => void;
+};
 
 const TransferFolderIcon = ({ disabled, onClick }: TTransferFolderIconProps) => (
   <TouchableOpacity activeOpacity={0.5} onPress={onClick} disabled={disabled} className="relative">
@@ -21,6 +21,6 @@ const TransferFolderIcon = ({ disabled, onClick }: TTransferFolderIconProps) => 
       <Icon name="folder.fill" size={16} disabled={disabled} color="label" />
     </View>
   </TouchableOpacity>
-)
+);
 
-export default TransferFolderIcon
+export default TransferFolderIcon;

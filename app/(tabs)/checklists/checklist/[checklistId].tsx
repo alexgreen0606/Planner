@@ -1,27 +1,27 @@
-import { useLocalSearchParams } from 'expo-router'
-import React from 'react'
-import { useMMKV } from 'react-native-mmkv'
+import { useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { useMMKV } from 'react-native-mmkv';
 
-import DraggableListPage from '@/components/DraggableListPage'
-import useFolderItem from '@/hooks/useFolderItem'
-import useListItemToggle from '@/hooks/useListItemToggle'
-import { EStorageId } from '@/lib/enums/EStorageId'
+import DraggableListPage from '@/components/DraggableListPage';
+import useFolderItem from '@/hooks/useFolderItem';
+import useListItemToggle from '@/hooks/useListItemToggle';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import {
   createNewChecklistItemAndSaveToStorage,
   deleteChecklistItems,
-  updateListItemIndex,
-} from '@/utils/checklistUtils'
+  updateListItemIndex
+} from '@/utils/checklistUtils';
 
 type TChecklistPageParams = {
-  checklistId: string
-}
+  checklistId: string;
+};
 
 const ChecklistPage = () => {
-  const { checklistId } = useLocalSearchParams<TChecklistPageParams>()
-  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM })
-  const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM })
+  const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
+  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+  const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
 
-  const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage)
+  const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage);
 
   return (
     <DraggableListPage
@@ -36,7 +36,7 @@ const ChecklistPage = () => {
       onIndexChange={updateListItemIndex}
       onGetLeftIcon={useListItemToggle}
     />
-  )
-}
+  );
+};
 
-export default ChecklistPage
+export default ChecklistPage;

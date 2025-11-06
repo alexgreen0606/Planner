@@ -1,21 +1,21 @@
-import { TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native';
 
-import { EFolderItemType } from '@/lib/enums/EFolderItemType'
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 
-import Icon from '../Icon'
+import Icon from '../Icon';
 
 // ✅
 
 type TToggleFolderItemTypeButtonProps = {
-  currentType: EFolderItemType
-  disabled: boolean
-  onClick: () => void
-}
+  currentType: EFolderItemType;
+  disabled: boolean;
+  onClick: () => void;
+};
 
 const ToggleFolderItemTypeButton = ({
   currentType,
   disabled,
-  onClick,
+  onClick
 }: TToggleFolderItemTypeButtonProps) => (
   <TouchableOpacity
     disabled={disabled}
@@ -52,6 +52,6 @@ const ToggleFolderItemTypeButton = ({
       />
     </View>
   </TouchableOpacity>
-)
+);
 
-export default ToggleFolderItemTypeButton
+export default ToggleFolderItemTypeButton;

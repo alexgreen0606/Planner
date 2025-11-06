@@ -1,4 +1,4 @@
 export type TChecklistsPageParams = {
-  checklistId?: string
-  folderId?: string
-}
+  checklistId?: string;
+  folderId?: string;
+};

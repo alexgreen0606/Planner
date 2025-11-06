@@ -1,4 +1,3 @@
-// eslint.config.js
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
@@ -49,25 +48,20 @@ export default [
         },
       ],
       "react-hooks/exhaustive-deps": "off",
-      // ✅ Style & formatting rules
       "max-len": ["warn", { code: 100 }],
-      semi: ["error", "never"],
+      semi: ["error", "always"],
       quotes: ["error", "single"],
-      "comma-dangle": ["error", "always-multiline"],
-
-      // ✅ React-specific
+      "comma-dangle": ["error", "never"],
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
       "react-hooks/rules-of-hooks": "error",
-
-      // ✅ Prettier integration
       "prettier/prettier": [
         "error",
         {
           printWidth: 100,
           singleQuote: true,
-          semi: false,
-          trailingComma: "all",
+          semi: true,
+          trailingComma: "none"
         },
       ],
     },

@@ -1,39 +1,39 @@
-import { useAtom } from 'jotai'
-import { MotiView } from 'moti'
-import React, { ReactNode, useMemo } from 'react'
-import { PlatformColor, Pressable, TextStyle, View } from 'react-native'
-import { MMKV, useMMKVObject } from 'react-native-mmkv'
+import { useAtom } from 'jotai';
+import { MotiView } from 'moti';
+import React, { ReactNode, useMemo } from 'react';
+import { PlatformColor, Pressable, TextStyle, View } from 'react-native';
+import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId'
-import CustomText from '@/components/text/CustomText'
-import ThinLine from '@/components/ThinLine'
-import { TListItem } from '@/lib/types/listItems/core/TListItem'
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler'
+import { textfieldIdAtom } from '@/atoms/textfieldId';
+import CustomText from '@/components/text/CustomText';
+import ThinLine from '@/components/ThinLine';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 
-import ListItemTextfield from './ListItemTextfield'
+import ListItemTextfield from './ListItemTextfield';
 
 // ✅
 
 type TListItemProps<T extends TListItem> = {
-  listId: string
-  itemId: string
-  itemIndex: number
-  isActive: boolean
-  isDragging: boolean
-  storage: MMKV
-  height: number
-  onFocusPlaceholderTextfield: () => void
-  onCreateItem: (listId: string, index: number) => void
-  onDeleteItem: (item: T) => void
-  onValueChange?: (newValue: string) => void
-  onSaveToExternalStorage?: (item: T) => void
-  onContentClick?: (item: T) => void
-  onGetRowTextPlatformColor?: (item: T) => string
-  onGetLeftIcon?: (item: T) => ReactNode
-  onGetRightIcon?: (item: T) => ReactNode
-  onGetIsItemDeletingCustom?: (item: T) => boolean
-  onGetIsEditable?: (item: T) => boolean
-}
+  listId: string;
+  itemId: string;
+  itemIndex: number;
+  isActive: boolean;
+  isDragging: boolean;
+  storage: MMKV;
+  height: number;
+  onFocusPlaceholderTextfield: () => void;
+  onCreateItem: (listId: string, index: number) => void;
+  onDeleteItem: (item: T) => void;
+  onValueChange?: (newValue: string) => void;
+  onSaveToExternalStorage?: (item: T) => void;
+  onContentClick?: (item: T) => void;
+  onGetRowTextPlatformColor?: (item: T) => string;
+  onGetLeftIcon?: (item: T) => ReactNode;
+  onGetRightIcon?: (item: T) => ReactNode;
+  onGetIsItemDeletingCustom?: (item: T) => boolean;
+  onGetIsEditable?: (item: T) => boolean;
+};
 
 const ListItem = <T extends TListItem>({
   listId,
@@ -53,31 +53,31 @@ const ListItem = <T extends TListItem>({
   onGetRowTextPlatformColor,
   onGetLeftIcon,
   onGetIsEditable,
-  onGetIsItemDeletingCustom,
+  onGetIsItemDeletingCustom
 }: TListItemProps<T>) => {
-  const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom)
+  const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
-  const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>()
+  const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>();
 
-  const [item, setItem] = useMMKVObject<T>(itemId, storage)
+  const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
   const textPlatformColor = useMemo(
     () => (item ? onGetRowTextPlatformColor?.(item) : 'label'),
-    [item, onGetRowTextPlatformColor],
-  )
+    [item, onGetRowTextPlatformColor]
+  );
 
-  const isItemEditable = useMemo(() => (item ? (onGetIsEditable?.(item) ?? true) : true), [item])
+  const isItemEditable = useMemo(() => (item ? (onGetIsEditable?.(item) ?? true) : true), [item]);
 
   const isPendingDelete = item
     ? (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item))
-    : false
+    : false;
 
   const valueStyles: TextStyle = {
     color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
-    textDecorationLine: isPendingDelete ? 'line-through' : undefined,
-  }
+    textDecorationLine: isPendingDelete ? 'line-through' : undefined
+  };
 
-  const isEditing = textfieldId === item?.id
+  const isEditing = textfieldId === item?.id;
 
   // ================
   //  Event Handlers
@@ -85,32 +85,32 @@ const ListItem = <T extends TListItem>({
 
   function handleSeparatorPress() {
     if (!isDragging) {
-      onCreateItem(listId, itemIndex)
+      onCreateItem(listId, itemIndex);
     }
   }
 
   function handleContentPress() {
-    if (!item || isPendingDelete || isDragging || !isItemEditable) return
+    if (!item || isPendingDelete || isDragging || !isItemEditable) return;
 
     if (!onContentClick) {
-      onFocusPlaceholderTextfield()
-      setTextfieldId(itemId)
-      return
+      onFocusPlaceholderTextfield();
+      setTextfieldId(itemId);
+      return;
     }
-    onContentClick(item)
+    onContentClick(item);
   }
 
   // ================
   //  User Interface
   // ================
 
-  if (!item) return null
+  if (!item) return null;
 
   return (
     <MotiView
       animate={{
         opacity: isActive ? 0.8 : 1,
-        translateY: isActive ? -6 : 0,
+        translateY: isActive ? -6 : 0
       }}
       className="w-full"
     >
@@ -152,7 +152,7 @@ const ListItem = <T extends TListItem>({
         {onGetRightIcon?.(item)}
       </View>
     </MotiView>
-  )
-}
+  );
+};
 
-export default ListItem
+export default ListItem;

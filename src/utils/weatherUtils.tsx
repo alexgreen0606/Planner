@@ -1,10 +1,10 @@
-import { jotaiStore } from 'app/_layout'
+import { jotaiStore } from 'app/_layout';
 
-import { setWeatherForDatestampAtom } from '@/atoms/weatherAtoms'
-import { TWeatherData } from '@/lib/types/externalData/TWeatherData'
+import { setWeatherForDatestampAtom } from '@/atoms/weatherAtoms';
+import { TWeatherData } from '@/lib/types/externalData/TWeatherData';
 
 async function saveWeatherDataToStore(datestamp: string, data: TWeatherData) {
-  jotaiStore.set(setWeatherForDatestampAtom, { datestamp, data })
+  jotaiStore.set(setWeatherForDatestampAtom, { datestamp, data });
 }
 
 export async function loadWeatherToStore(datestamp: string) {
@@ -16,8 +16,8 @@ export async function loadWeatherToStore(datestamp: string) {
     symbol: 'cloud.sun.fill',
     high: 72,
     low: 56,
-    condition: 'Partly Cloudy',
-  }
+    condition: 'Partly Cloudy'
+  };
 
-  saveWeatherDataToStore(datestamp, newData)
+  saveWeatherDataToStore(datestamp, newData);
 }

@@ -1,66 +1,66 @@
-import { useSetAtom } from 'jotai'
-import { useEffect } from 'react'
-import { Alert } from 'react-native'
-import { useMMKV } from 'react-native-mmkv'
+import { useSetAtom } from 'jotai';
+import { useEffect } from 'react';
+import { Alert } from 'react-native';
+import { useMMKV } from 'react-native-mmkv';
 
-import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem'
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs'
-import { selectableColors } from '@/lib/constants/colors'
-import { EFolderItemType } from '@/lib/enums/EFolderItemType'
-import { EStorageId } from '@/lib/enums/EStorageId'
-import { IFolderItem } from '@/lib/types/listItems/IFolderItem'
-import { deleteFolderItemAndChildren } from '@/utils/checklistUtils'
+import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
+import { selectableColors } from '@/lib/constants/colors';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 
-import ToggleFolderItemTypeButton from '../icons/customButtons/ToggleFolderItemTypeButton'
-import TransferFolderIcon from '../icons/customButtons/TransferFolderButton'
-import IconButton from '../icons/IconButton'
-import ListToolbar from '../lists/ListToolbar'
+import ToggleFolderItemTypeButton from '../icons/customButtons/ToggleFolderItemTypeButton';
+import TransferFolderIcon from '../icons/customButtons/TransferFolderButton';
+import IconButton from '../icons/IconButton';
+import ListToolbar from '../lists/ListToolbar';
 
 // ✅
 
 const FolderItemToolbar = () => {
-  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM })
+  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
 
-  const setTransferingItem = useSetAtom(transferingFolderItemAtom)
+  const setTransferingItem = useSetAtom(transferingFolderItemAtom);
 
   const {
     textfieldItem: focusedItem,
     textfieldId: focusedItemId,
     onSetTextfieldItem: onSetFocusedItem,
-    onCloseTextfield: onCloseFocusedItem,
-  } = useTextfieldItemAs<IFolderItem>(itemStorage)
+    onCloseTextfield: onCloseFocusedItem
+  } = useTextfieldItemAs<IFolderItem>(itemStorage);
 
   // Clear the transfering item if a new item begins editing.
   useEffect(() => {
     if (focusedItemId) {
-      setTransferingItem(null)
+      setTransferingItem(null);
     }
-  }, [focusedItemId])
+  }, [focusedItemId]);
 
   function beginFocusedItemTransfer() {
-    if (!focusedItem) return
+    if (!focusedItem) return;
 
-    setTransferingItem({ ...focusedItem })
-    onCloseFocusedItem()
+    setTransferingItem({ ...focusedItem });
+    onCloseFocusedItem();
   }
 
   function changeFocusedItemColor(platformColor: string) {
     onSetFocusedItem((prev) => {
-      if (!prev) return prev
-      return { ...prev, platformColor }
-    })
+      if (!prev) return prev;
+      return { ...prev, platformColor };
+    });
   }
 
   function toggleFocusedItemType() {
-    if (!focusedItem) return
+    if (!focusedItem) return;
     onSetFocusedItem((prev) => {
-      if (!prev) return prev
+      if (!prev) return prev;
       return {
         ...prev,
         type:
-          prev.type === EFolderItemType.FOLDER ? EFolderItemType.CHECKLIST : EFolderItemType.FOLDER,
-      }
-    })
+          prev.type === EFolderItemType.FOLDER ? EFolderItemType.CHECKLIST : EFolderItemType.FOLDER
+      };
+    });
   }
 
   return (
@@ -73,28 +73,28 @@ const FolderItemToolbar = () => {
             color="label"
             size={22}
             onClick={() => {
-              if (!focusedItem) return
+              if (!focusedItem) return;
 
-              onCloseFocusedItem()
+              onCloseFocusedItem();
 
-              if (focusedItem.value.trim() === '') return
+              if (focusedItem.value.trim() === '') return;
 
-              const hasChildren = focusedItem.itemIds.length > 0
-              const message = `Would you like to delete this ${focusedItem.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`
+              const hasChildren = focusedItem.itemIds.length > 0;
+              const message = `Would you like to delete this ${focusedItem.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
 
               Alert.alert(`Delete "${focusedItem.value}"?`, message, [
                 {
                   text: 'Cancel',
-                  style: 'cancel',
+                  style: 'cancel'
                 },
                 {
                   text: hasChildren ? 'Force Delete' : 'Delete',
                   style: 'destructive',
-                  onPress: () => deleteFolderItemAndChildren(focusedItem, true),
-                },
-              ])
+                  onPress: () => deleteFolderItemAndChildren(focusedItem, true)
+                }
+              ]);
             }}
-          />,
+          />
         ],
         [
           // Type Toggle
@@ -102,14 +102,14 @@ const FolderItemToolbar = () => {
             disabled={!!focusedItem && focusedItem.itemIds.length > 0}
             currentType={focusedItem?.type ?? EFolderItemType.FOLDER}
             onClick={toggleFocusedItemType}
-          />,
+          />
         ],
         [
           // Transfer
           <TransferFolderIcon
             onClick={beginFocusedItemTransfer}
             disabled={!!focusedItem && focusedItem.value.length === 0}
-          />,
+          />
         ], // Color
         Object.values(selectableColors).map((color) => (
           <IconButton
@@ -120,10 +120,10 @@ const FolderItemToolbar = () => {
             size={20}
             onClick={() => changeFocusedItemColor(color)}
           />
-        )),
+        ))
       ]}
     />
-  )
-}
+  );
+};
 
-export default FolderItemToolbar
+export default FolderItemToolbar;

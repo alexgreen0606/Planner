@@ -1,19 +1,19 @@
-import { DateTime } from 'luxon'
-import React, { useEffect, useState } from 'react'
-import { PlatformColor, View } from 'react-native'
+import { DateTime } from 'luxon';
+import React, { useEffect, useState } from 'react';
+import { PlatformColor, View } from 'react-native';
 
-import CustomText from './CustomText'
+import CustomText from './CustomText';
 
 // ✅
 
 type TTimeValueProps = {
-  timeValue?: string | null
-  isoTimestamp?: string | null
-  isEndEvent?: boolean
-  isStartEvent?: boolean
-  platformColor?: string
-  disabled?: boolean
-}
+  timeValue?: string | null;
+  isoTimestamp?: string | null;
+  isEndEvent?: boolean;
+  isStartEvent?: boolean;
+  platformColor?: string;
+  disabled?: boolean;
+};
 
 const TimeValue = ({
   timeValue,
@@ -21,44 +21,46 @@ const TimeValue = ({
   isEndEvent: endEvent,
   isStartEvent: startEvent,
   platformColor = 'systemBlue',
-  disabled,
+  disabled
 }: TTimeValueProps) => {
-  const [hour, setHour] = useState('')
-  const [minute, setMinute] = useState('')
-  const [indicator, setIndicator] = useState('')
+  const [hour, setHour] = useState('');
+  const [minute, setMinute] = useState('');
+  const [indicator, setIndicator] = useState('');
 
   useEffect(() => {
-    let date: DateTime | null = null
+    let date: DateTime | null = null;
 
     if (isoTimestamp) {
-      date = DateTime.fromISO(isoTimestamp)
+      date = DateTime.fromISO(isoTimestamp);
     } else if (timeValue) {
-      date = DateTime.fromFormat(timeValue, 'HH:mm')
+      date = DateTime.fromFormat(timeValue, 'HH:mm');
     }
 
     if (date && date.isValid) {
-      const rawHour = date.hour
-      const rawMinute = date.minute
-      const isPM = rawHour >= 12
+      const rawHour = date.hour;
+      const rawMinute = date.minute;
+      const isPM = rawHour >= 12;
 
-      const adjustedHour = rawHour % 12 === 0 ? 12 : rawHour % 12
-      const paddedMinute = rawMinute > 0 ? `:${String(rawMinute).padStart(2, '0')}` : ''
+      const adjustedHour = rawHour % 12 === 0 ? 12 : rawHour % 12;
+      const paddedMinute = rawMinute > 0 ? `:${String(rawMinute).padStart(2, '0')}` : '';
 
-      setHour(String(adjustedHour))
-      setMinute(paddedMinute)
-      setIndicator(isPM ? 'PM' : 'AM')
+      setHour(String(adjustedHour));
+      setMinute(paddedMinute);
+      setIndicator(isPM ? 'PM' : 'AM');
     } else {
-      setHour('')
-      setMinute('')
-      setIndicator('')
+      setHour('');
+      setMinute('');
+      setIndicator('');
     }
-  }, [timeValue, isoTimestamp])
+  }, [timeValue, isoTimestamp]);
 
   return (
     <View className="flex-row relative">
       <CustomText
         variant="listTime"
-        customStyle={{ color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor) }}
+        customStyle={{
+          color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor)
+        }}
       >
         {hour}
         {minute}
@@ -75,7 +77,7 @@ const TimeValue = ({
         </CustomText>
       )}
     </View>
-  )
-}
+  );
+};
 
-export default TimeValue
+export default TimeValue;

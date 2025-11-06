@@ -1,20 +1,20 @@
-import { jotaiStore } from 'app/_layout'
-import { uuid } from 'expo-modules-core'
+import { jotaiStore } from 'app/_layout';
+import { uuid } from 'expo-modules-core';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId'
-import { NULL } from '@/lib/constants/generic'
-import { EFolderItemType } from '@/lib/enums/EFolderItemType'
-import { EStorageId } from '@/lib/enums/EStorageId'
-import { TListItem } from '@/lib/types/listItems/core/TListItem'
-import { IFolderItem } from '@/lib/types/listItems/IFolderItem'
+import { textfieldIdAtom } from '@/atoms/textfieldId';
+import { NULL } from '@/lib/constants/generic';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import {
   deleteChecklistItemFromStorage,
   deleteFolderItemFromStorage,
   getFolderItemFromStorageById,
   getListItemFromStorageById,
   saveChecklistItemToStorage,
-  saveFolderItemToStorage,
-} from '@/storage/checklistsStorage'
+  saveFolderItemToStorage
+} from '@/storage/checklistsStorage';
 
 // ✅
 
@@ -33,20 +33,20 @@ import {
  * @param index - The index of the new item within its list.
  */
 export function createNewChecklistItemAndSaveToStorage(checklistId: string, index: number) {
-  const checklist = getFolderItemFromStorageById(checklistId)
+  const checklist = getFolderItemFromStorageById(checklistId);
 
   const item: TListItem = {
     id: uuid.v4(),
     value: '',
     listId: checklistId,
-    storageId: EStorageId.CHECKLIST_ITEM,
-  }
-  saveChecklistItemToStorage(item)
+    storageId: EStorageId.CHECKLIST_ITEM
+  };
+  saveChecklistItemToStorage(item);
 
-  checklist.itemIds.splice(index, 0, item.id)
-  saveFolderItemToStorage(checklist)
+  checklist.itemIds.splice(index, 0, item.id);
+  saveFolderItemToStorage(checklist);
 
-  jotaiStore.set(textfieldIdAtom, item.id)
+  jotaiStore.set(textfieldIdAtom, item.id);
 }
 
 /**
@@ -56,7 +56,7 @@ export function createNewChecklistItemAndSaveToStorage(checklistId: string, inde
  * @param index - The index of the new item within its parent folder.
  */
 export function createNewFolderItemAndSaveToStorage(parentFolderId: string, index: number) {
-  const parentFolder = getFolderItemFromStorageById(parentFolderId)
+  const parentFolder = getFolderItemFromStorageById(parentFolderId);
 
   const folderItem: IFolderItem = {
     id: uuid.v4(),
@@ -65,14 +65,14 @@ export function createNewFolderItemAndSaveToStorage(parentFolderId: string, inde
     storageId: EStorageId.FOLDER_ITEM,
     platformColor: 'systemBrown',
     type: EFolderItemType.FOLDER,
-    itemIds: [],
-  }
-  saveFolderItemToStorage(folderItem)
+    itemIds: []
+  };
+  saveFolderItemToStorage(folderItem);
 
-  parentFolder.itemIds.splice(index, 0, folderItem.id)
-  saveFolderItemToStorage(parentFolder)
+  parentFolder.itemIds.splice(index, 0, folderItem.id);
+  saveFolderItemToStorage(parentFolder);
 
-  jotaiStore.set(textfieldIdAtom, folderItem.id)
+  jotaiStore.set(textfieldIdAtom, folderItem.id);
 }
 
 // ===================
@@ -86,12 +86,12 @@ export function createNewFolderItemAndSaveToStorage(parentFolderId: string, inde
  * @param item - The item to move.
  */
 export function updateListItemIndex<T extends TListItem>(index: number, item: T) {
-  const checklist = getFolderItemFromStorageById(item.listId)
+  const checklist = getFolderItemFromStorageById(item.listId);
 
-  checklist.itemIds = checklist.itemIds.filter((id) => id !== item.id)
-  checklist.itemIds.splice(index, 0, item.id)
+  checklist.itemIds = checklist.itemIds.filter((id) => id !== item.id);
+  checklist.itemIds.splice(index, 0, item.id);
 
-  saveFolderItemToStorage(checklist)
+  saveFolderItemToStorage(checklist);
 }
 
 // ====================
@@ -104,16 +104,16 @@ export function updateListItemIndex<T extends TListItem>(index: number, item: T)
  * @param items - The list of items to delete.
  */
 export async function deleteChecklistItems(items: TListItem[]) {
-  const listsToUpdate: Record<string, IFolderItem> = {}
-  const itemIdsToDelete = new Set<string>()
+  const listsToUpdate: Record<string, IFolderItem> = {};
+  const itemIdsToDelete = new Set<string>();
 
   // Phase 1: Load in the needed checklists.
   for (const item of items) {
-    itemIdsToDelete.add(item.id)
+    itemIdsToDelete.add(item.id);
 
     if (!listsToUpdate[item.listId]) {
-      const checklist = getFolderItemFromStorageById(item.listId)
-      listsToUpdate[item.listId] = checklist
+      const checklist = getFolderItemFromStorageById(item.listId);
+      listsToUpdate[item.listId] = checklist;
     }
   }
 
@@ -121,13 +121,13 @@ export async function deleteChecklistItems(items: TListItem[]) {
   for (const checklist of Object.values(listsToUpdate)) {
     saveFolderItemToStorage({
       ...checklist,
-      itemIds: checklist.itemIds.filter((id) => !itemIdsToDelete.has(id)),
-    })
+      itemIds: checklist.itemIds.filter((id) => !itemIdsToDelete.has(id))
+    });
   }
 
   // Phase 3: Delete items from storage.
   for (const itemId of itemIdsToDelete) {
-    deleteChecklistItemFromStorage(itemId)
+    deleteChecklistItemFromStorage(itemId);
   }
 }
 
@@ -138,7 +138,7 @@ export async function deleteChecklistItems(items: TListItem[]) {
  */
 export function deleteFolderItemAndChildren(item: IFolderItem, isForceDelete: boolean = false) {
   if (item.listId === NULL) {
-    throw new Error('deleteFolderItemAndChildren: Cannot delete the root folder.')
+    throw new Error('deleteFolderItemAndChildren: Cannot delete the root folder.');
   }
 
   if (!isForceDelete && item.itemIds.length > 0) {
@@ -146,29 +146,29 @@ export function deleteFolderItemAndChildren(item: IFolderItem, isForceDelete: bo
     if (item.value.trim() === '') {
       saveFolderItemToStorage({
         ...item,
-        value: item.type === EFolderItemType.FOLDER ? 'Folder' : 'Checklist',
-      })
+        value: item.type === EFolderItemType.FOLDER ? 'Folder' : 'Checklist'
+      });
     }
-    return
+    return;
   }
 
   // Remove the item from its parent.
-  const parentFolder = getFolderItemFromStorageById(item.listId)
+  const parentFolder = getFolderItemFromStorageById(item.listId);
   saveFolderItemToStorage({
     ...parentFolder,
-    itemIds: parentFolder.itemIds.filter((currId) => currId !== item.id),
-  })
+    itemIds: parentFolder.itemIds.filter((currId) => currId !== item.id)
+  });
 
   // Delete the item's children (for folders).
   if (item.type === EFolderItemType.FOLDER) {
     item.itemIds.forEach((childFolderItemId) => {
-      const childFolderItem = getFolderItemFromStorageById(childFolderItemId)
-      deleteFolderItemAndChildren(childFolderItem)
-    })
+      const childFolderItem = getFolderItemFromStorageById(childFolderItemId);
+      deleteFolderItemAndChildren(childFolderItem);
+    });
   } else {
-    deleteChecklistItems(item.itemIds.map(getListItemFromStorageById))
+    deleteChecklistItems(item.itemIds.map(getListItemFromStorageById));
   }
 
   // Delete the item.
-  deleteFolderItemFromStorage(item.id)
+  deleteFolderItemFromStorage(item.id);
 }

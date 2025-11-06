@@ -1,19 +1,19 @@
-import React from 'react'
-import { View } from 'react-native'
+import React from 'react';
+import { View } from 'react-native';
 
-import IconButton from '@/components/icons/IconButton'
-import { selectableColors } from '@/lib/constants/colors'
-import { TFormFieldControl } from '@/lib/types/form/TFormField'
+import IconButton from '@/components/icons/IconButton';
+import { selectableColors } from '@/lib/constants/colors';
+import { TFormFieldControl } from '@/lib/types/form/TFormField';
 
 // ✅
 
 export type TColorPickerModalFieldProps = {
-  label: string
-}
+  label: string;
+};
 
 const ColorPickerModalField = ({
   value,
-  onChange,
+  onChange
 }: TColorPickerModalFieldProps & TFormFieldControl<string>) => {
   return (
     <View className="flex-row w-full justify-between items-center px-2 py-3">
@@ -27,7 +27,7 @@ const ColorPickerModalField = ({
         />
       ))}
     </View>
-  )
-}
+  );
+};
 
-export default ColorPickerModalField
+export default ColorPickerModalField;

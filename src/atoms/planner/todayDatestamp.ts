@@ -1,7 +1,5 @@
-import { atom } from 'jotai'
+import { atom } from 'jotai';
 
-import { getTodayDatestamp } from '@/utils/dateUtils'
+import { getTodayDatestamp } from '@/utils/dateUtils';
 
-// ✅
-
-export const todayDatestampAtom = atom<string>(getTodayDatestamp())
+export const todayDatestampAtom = atom<string>(getTodayDatestamp());

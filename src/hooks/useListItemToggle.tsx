@@ -1,19 +1,19 @@
-import ListItemToggleButton from '@/components/icons/customButtons/ListItemToggleButton'
-import { TListItem } from '@/lib/types/listItems/core/TListItem'
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler'
+import ListItemToggleButton from '@/components/icons/customButtons/ListItemToggleButton';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 
 const useListItemToggle = <T extends TListItem>(item: T) => {
   const { onToggleScheduleItemDeleteCallback, onGetIsItemDeletingCallback } =
-    useDeleteSchedulerContext<T>()
+    useDeleteSchedulerContext<T>();
 
-  const isDeleting = onGetIsItemDeletingCallback(item)
+  const isDeleting = onGetIsItemDeletingCallback(item);
 
   return (
     <ListItemToggleButton
       isDeleting={isDeleting}
       onToggle={() => onToggleScheduleItemDeleteCallback(item)}
     />
-  )
-}
+  );
+};
 
-export default useListItemToggle
+export default useListItemToggle;

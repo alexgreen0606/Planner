@@ -8,5 +8,5 @@ export enum ERecurringPlannerId {
   THURSDAY = 'Thursday',
   FRIDAY = 'Friday',
   SATURDAY = 'Saturday',
-  SUNDAY = 'Sunday',
+  SUNDAY = 'Sunday'
 }

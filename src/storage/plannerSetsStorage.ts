@@ -1,18 +1,18 @@
-import { MMKV } from 'react-native-mmkv'
+import { MMKV } from 'react-native-mmkv';
 
-import { EStorageId } from '@/lib/enums/EStorageId'
-import { TPlannerSet } from '@/lib/types/planner/TPlannerSet'
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { TPlannerSet } from '@/lib/types/planner/TPlannerSet';
 
 // ✅
 
-const storage = new MMKV({ id: EStorageId.PLANNER_SETS })
+const storage = new MMKV({ id: EStorageId.PLANNER_SETS });
 
 // ===================
 // 1. Upsert Function
 // ===================
 
 export function upsertPlannerSet(newSet: TPlannerSet) {
-  storage.set(newSet.title, JSON.stringify(newSet))
+  storage.set(newSet.title, JSON.stringify(newSet));
 }
 
 // ==================
@@ -20,17 +20,17 @@ export function upsertPlannerSet(newSet: TPlannerSet) {
 // ==================
 
 export function getPlannerSetByTitle(title: string): TPlannerSet {
-  const eventsString = storage.getString(title)
+  const eventsString = storage.getString(title);
 
   if (eventsString) {
-    return JSON.parse(eventsString)
+    return JSON.parse(eventsString);
   }
 
-  throw new Error(`getPlannerSetByTitle: Planner Set not found for title ${title}`)
+  throw new Error(`getPlannerSetByTitle: Planner Set not found for title ${title}`);
 }
 
 export function getAllPlannerSetTitles(): string[] {
-  return storage.getAllKeys()
+  return storage.getAllKeys();
 }
 
 // ===================
@@ -38,5 +38,5 @@ export function getAllPlannerSetTitles(): string[] {
 // ===================
 
 export function deletePlannerSet(deleteSet: TPlannerSet) {
-  storage.delete(deleteSet.title)
+  storage.delete(deleteSet.title);
 }

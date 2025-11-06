@@ -1,34 +1,32 @@
-import { useLocalSearchParams } from 'expo-router'
-import React from 'react'
-import { useMMKV } from 'react-native-mmkv'
+import { useLocalSearchParams } from 'expo-router';
+import React from 'react';
+import { useMMKV } from 'react-native-mmkv';
 
-import DraggableListPage from '@/components/DraggableListPage'
-import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar'
-import usePlanner from '@/hooks/planners/usePlanner'
-import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser'
-import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle'
-import { EStorageId } from '@/lib/enums/EStorageId'
+import DraggableListPage from '@/components/DraggableListPage';
+import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
+import usePlanner from '@/hooks/planners/usePlanner';
+import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
+import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
+import { EStorageId } from '@/lib/enums/EStorageId';
 import {
   createPlannerEventInStorageAndFocusTextfield,
   createPlannerEventTimeIcon,
   deletePlannerEventsFromStorageAndCalendar,
-  updateDeviceCalendarEventByPlannerEvent,
-} from '@/utils/plannerUtils'
-
-// ✅
+  updateDeviceCalendarEventByPlannerEvent
+} from '@/utils/plannerUtils';
 
 const PlannerPage = () => {
-  const { datestamp } = useLocalSearchParams<{ datestamp: string }>()
-  const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT })
+  const { datestamp } = useLocalSearchParams<{ datestamp: string }>();
+  const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
   const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(
     datestamp,
-    eventStorage,
-  )
+    eventStorage
+  );
   const {
     planner: { eventIds },
-    onUpdatePlannerEventIndexWithChronologicalCheck,
-  } = usePlanner(datestamp)
+    onUpdatePlannerEventIndexWithChronologicalCheck
+  } = usePlanner(datestamp);
 
   return (
     <DraggableListPage
@@ -47,7 +45,7 @@ const PlannerPage = () => {
       onGetLeftIcon={useGetPlannerEventToggle}
       padHeaderHeight
     />
-  )
-}
+  );
+};
 
-export default PlannerPage
+export default PlannerPage;

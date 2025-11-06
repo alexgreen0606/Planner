@@ -1,13 +1,13 @@
-import { EStorageId } from '@/lib/enums/EStorageId'
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent'
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler'
-import { getTodayDatestamp } from '@/utils/dateUtils'
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
+import { getTodayDatestamp } from '@/utils/dateUtils';
 
 // ✅
 
 const useIsPlannerEventDeleting = (item?: IPlannerEvent) => {
   const { onGetDeletingItemsByStorageIdCallback: onGetDeletingItems } =
-    useDeleteSchedulerContext<IPlannerEvent>()
+    useDeleteSchedulerContext<IPlannerEvent>();
   return item
     ? onGetDeletingItems(EStorageId.PLANNER_EVENT).some(
         (deleteItem) =>
@@ -17,9 +17,9 @@ const useIsPlannerEventDeleting = (item?: IPlannerEvent) => {
           // The item is from today
           (item.listId === getTodayDatestamp() ||
             // OR the deleting item is NOT from today
-            deleteItem.listId !== getTodayDatestamp()),
+            deleteItem.listId !== getTodayDatestamp())
       )
-    : false
-}
+    : false;
+};
 
-export default useIsPlannerEventDeleting
+export default useIsPlannerEventDeleting;

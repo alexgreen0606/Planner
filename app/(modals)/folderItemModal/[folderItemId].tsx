@@ -1,50 +1,50 @@
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import React, { useMemo } from 'react'
-import { useForm } from 'react-hook-form'
-import { useMMKV, useMMKVObject } from 'react-native-mmkv'
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useMemo } from 'react';
+import { useForm } from 'react-hook-form';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-import Form from '@/components/Form/Form'
-import Modal from '@/components/Modal'
-import { NULL } from '@/lib/constants/generic'
-import { EFolderItemType } from '@/lib/enums/EFolderItemType'
-import { EFormFieldType } from '@/lib/enums/EFormFieldType'
-import { EPopupActionType } from '@/lib/enums/EPopupActionType'
-import { EStorageId } from '@/lib/enums/EStorageId'
-import { TFormField } from '@/lib/types/form/TFormField'
-import { IFolderItem } from '@/lib/types/listItems/IFolderItem'
-import { TPopupAction } from '@/lib/types/TPopupAction'
-import { deleteFolderItemAndChildren } from '@/utils/checklistUtils'
+import Form from '@/components/Form/Form';
+import Modal from '@/components/Modal';
+import { NULL } from '@/lib/constants/generic';
+import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EFormFieldType } from '@/lib/enums/EFormFieldType';
+import { EPopupActionType } from '@/lib/enums/EPopupActionType';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { TFormField } from '@/lib/types/form/TFormField';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { TPopupAction } from '@/lib/types/TPopupAction';
+import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 
 type TFormData = {
-  title: string
-  type: EFolderItemType
-  color: string
-}
+  title: string;
+  type: EFolderItemType;
+  color: string;
+};
 
 const FolderItemModal = () => {
-  const { folderItemId } = useLocalSearchParams<{ folderItemId: string }>()
-  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM })
-  const router = useRouter()
+  const { folderItemId } = useLocalSearchParams<{ folderItemId: string }>();
+  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+  const router = useRouter();
 
-  const [folderItem, setFolderItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage)
+  const [folderItem, setFolderItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage);
   const {
     control,
     handleSubmit: onSubmit,
     formState: { isValid },
-    watch,
+    watch
   } = useForm<TFormData>({
     defaultValues: {
       title: folderItem?.value ?? '',
       type: folderItem?.type ?? EFolderItemType.FOLDER,
-      color: folderItem?.platformColor ?? 'systemBrown',
+      color: folderItem?.platformColor ?? 'systemBrown'
     },
-    mode: 'onChange',
-  })
+    mode: 'onChange'
+  });
 
-  const type = watch('type')
-  const color = watch('color')
+  const type = watch('type');
+  const color = watch('color');
 
-  const hasChildren = (folderItem?.itemIds.length ?? 0) > 0
+  const hasChildren = (folderItem?.itemIds.length ?? 0) > 0;
   // TODO: enhance these. Need scatter delete and delete all
   const deleteActions = useMemo<TPopupAction[]>(
     () => [
@@ -53,13 +53,13 @@ const FolderItemModal = () => {
         title: hasChildren ? 'Force Delete' : 'Delete',
         systemImage: 'trash',
         destructive: true,
-        onPress: handleDelete,
-      },
+        onPress: handleDelete
+      }
     ],
-    [hasChildren, folderItem],
-  )
+    [hasChildren, folderItem]
+  );
 
-  const isEditMode = folderItemId !== NULL
+  const isEditMode = folderItemId !== NULL;
   const formFields: TFormField[][] = [
     [
       {
@@ -72,17 +72,17 @@ const FolderItemModal = () => {
         iconColor: color,
         rules: {
           required: 'Title is required.',
-          validate: (value: string) => value.trim() !== '',
-        },
-      },
+          validate: (value: string) => value.trim() !== ''
+        }
+      }
     ],
     [
       {
         name: 'color',
         label: 'Color',
         type: EFormFieldType.COLOR_PICKER,
-        floating: true,
-      },
+        floating: true
+      }
     ],
     [
       {
@@ -91,29 +91,29 @@ const FolderItemModal = () => {
         options: [
           {
             label: 'Folder',
-            value: EFolderItemType.FOLDER,
+            value: EFolderItemType.FOLDER
           },
           {
             label: 'Checklist',
-            value: EFolderItemType.CHECKLIST,
-          },
+            value: EFolderItemType.CHECKLIST
+          }
         ],
         floating: true,
         invisible: hasChildren,
-        width: 300,
-      },
-    ],
-  ]
+        width: 300
+      }
+    ]
+  ];
 
   // ================
   //  Event Handlers
   // ================
 
   function handleSubmit(data: TFormData) {
-    if (!folderItem) return
+    if (!folderItem) return;
 
-    const { title, type, color } = data
-    const newTitle = title.trim()
+    const { title, type, color } = data;
+    const newTitle = title.trim();
 
     setFolderItem((prev) =>
       prev
@@ -121,19 +121,19 @@ const FolderItemModal = () => {
             ...prev,
             value: newTitle,
             type,
-            platformColor: color,
+            platformColor: color
           }
-        : prev,
-    )
+        : prev
+    );
 
-    router.back()
+    router.back();
   }
 
   function handleDelete() {
-    if (!folderItem) return
+    if (!folderItem) return;
 
-    deleteFolderItemAndChildren(folderItem, true)
-    router.back()
+    deleteFolderItemAndChildren(folderItem, true);
+    router.back();
   }
 
   // ================
@@ -145,14 +145,14 @@ const FolderItemModal = () => {
       primaryButtonConfig={{
         onClick: onSubmit(handleSubmit),
         disabled: !isValid,
-        color,
+        color
       }}
       deleteButtonConfig={{ actions: deleteActions }}
       onClose={() => router.back()}
     >
       <Form fieldSets={formFields} control={control} />
     </Modal>
-  )
-}
+  );
+};
 
-export default FolderItemModal
+export default FolderItemModal;

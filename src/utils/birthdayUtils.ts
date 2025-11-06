@@ -1,5 +1,5 @@
-import * as Contacts from 'expo-contacts'
-import * as SMS from 'expo-sms'
+import * as Contacts from 'expo-contacts';
+import * as SMS from 'expo-sms';
 
 // ✅
 
@@ -12,57 +12,57 @@ import * as SMS from 'expo-sms'
  */
 export async function openMessageForContact(
   personName: string,
-  message: string = '',
+  message: string = ''
 ): Promise<boolean> {
   try {
     if (!personName?.trim()) {
-      console.warn('No person name provided')
-      return false
+      console.warn('No person name provided');
+      return false;
     }
 
     // Check SMS availability first
-    const isAvailable = await SMS.isAvailableAsync()
+    const isAvailable = await SMS.isAvailableAsync();
     if (!isAvailable) {
-      console.warn('SMS is not available on this device')
-      return false
+      console.warn('SMS is not available on this device');
+      return false;
     }
 
     // Find contact by name
     const { data: contacts } = await Contacts.getContactsAsync({
       name: personName,
-      fields: [Contacts.Fields.PhoneNumbers],
-    })
+      fields: [Contacts.Fields.PhoneNumbers]
+    });
 
     if (!contacts.length) {
-      console.warn(`No contact found with name: ${personName}`)
-      return false
+      console.warn(`No contact found with name: ${personName}`);
+      return false;
     }
 
-    const contact = contacts[0]
-    const phoneNumber = contact.phoneNumbers?.[0]?.digits
+    const contact = contacts[0];
+    const phoneNumber = contact.phoneNumbers?.[0]?.digits;
 
     if (!phoneNumber) {
-      console.warn(`No phone number found for contact: ${personName}`)
-      return false
+      console.warn(`No phone number found for contact: ${personName}`);
+      return false;
     }
 
     // Send SMS with or without message
     const { result } = await SMS.sendSMSAsync(
       [phoneNumber],
-      message, // Will be empty string if not provided
-    )
+      message // Will be empty string if not provided
+    );
 
     // Log result
     if (result === 'sent') {
-      return true
+      return true;
     } else if (result === 'cancelled') {
-      return false
+      return false;
     } else {
-      return false
+      return false;
     }
   } catch (error) {
-    console.error('Error in openMessageForContact:', error)
-    return false
+    console.error('Error in openMessageForContact:', error);
+    return false;
   }
 }
 
@@ -73,5 +73,5 @@ export async function openMessageForContact(
  * @returns A person's first and last name, or an empty string.
  */
 export function extractNameFromBirthdayText(birthdayText: string): string {
-  return birthdayText.split(/['’]s /)[0] ?? ''
+  return birthdayText.split(/['’]s /)[0] ?? '';
 }

@@ -1,6 +1,6 @@
 // ✅
 
-import { PlatformColor } from 'react-native'
+import { PlatformColor } from 'react-native';
 
 export function isValidPlatformColor(color: string) {
   return [
@@ -21,8 +21,8 @@ export function isValidPlatformColor(color: string) {
     'systemBlue',
     'systemCyan',
     'systemIndigo',
-    'tertiaryLabel',
-  ].includes(color)
+    'tertiaryLabel'
+  ].includes(color);
 }
 
 export function getValidCssColor(color?: string): string | undefined {
@@ -30,27 +30,27 @@ export function getValidCssColor(color?: string): string | undefined {
     ? isValidPlatformColor(color)
       ? (PlatformColor(color) as unknown as string)
       : color
-    : undefined
+    : undefined;
 }
 
 export function hexToRgba(hex: string, opacity = 0.4): string {
-  let normalized = hex.trim().replace('#', '')
+  let normalized = hex.trim().replace('#', '');
 
   if (normalized.length === 3) {
     normalized = normalized
       .split('')
       .map((c) => c + c)
-      .join('')
+      .join('');
   }
 
   if (!/^([0-9A-F]{6})$/i.test(normalized)) {
-    console.warn(`Invalid hex color: ${hex}`)
-    return hex
+    console.warn(`Invalid hex color: ${hex}`);
+    return hex;
   }
 
-  const r = parseInt(normalized.slice(0, 2), 16)
-  const g = parseInt(normalized.slice(2, 4), 16)
-  const b = parseInt(normalized.slice(4, 6), 16)
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
 
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }

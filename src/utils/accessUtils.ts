@@ -1,7 +1,7 @@
-import { jotaiStore } from 'app/_layout'
+import { jotaiStore } from 'app/_layout';
 
-import { permissionsAtom } from '@/atoms/userAccessAtoms'
-import { EAccess } from '@/lib/enums/EAccess'
+import { permissionsAtom } from '@/atoms/userAccessAtoms';
+import { EAccess } from '@/lib/enums/EAccess';
 
 // ✅
 
@@ -11,8 +11,8 @@ import { EAccess } from '@/lib/enums/EAccess'
  * @returns True if calendar access is granted, false if denied.
  */
 export function hasCalendarAccess(): boolean {
-  const userAccess = jotaiStore.get(permissionsAtom)
-  return userAccess.get(EAccess.CALENDAR) === true
+  const userAccess = jotaiStore.get(permissionsAtom);
+  return userAccess.get(EAccess.CALENDAR) === true;
 }
 
 /**
@@ -21,6 +21,6 @@ export function hasCalendarAccess(): boolean {
  * @returns True if contacts access is granted, false if denied.
  */
 export function hasContactsAccess(): boolean {
-  const userAccess = jotaiStore.get(permissionsAtom)
-  return userAccess.get(EAccess.CONTACTS) === true
+  const userAccess = jotaiStore.get(permissionsAtom);
+  return userAccess.get(EAccess.CONTACTS) === true;
 }

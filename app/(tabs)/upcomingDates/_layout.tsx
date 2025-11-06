@@ -1,21 +1,19 @@
-import { Stack } from 'expo-router'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import UpcomingDatesHeader from '@/components/headers/UpcomingDatesHeader/UpcomingDatesHeader'
-import ColorFadeView from '@/components/views/ColorFadeView'
-import useAppTheme from '@/hooks/useAppTheme'
-
-// ✅
+import UpcomingDatesHeader from '@/components/headers/UpcomingDatesHeader/UpcomingDatesHeader';
+import ColorFadeView from '@/components/views/ColorFadeView';
+import useAppTheme from '@/hooks/useAppTheme';
 
 const UpcomingDatesLayout = () => {
-  const { top: TOP_SPACER } = useSafeAreaInsets()
+  const { top: TOP_SPACER } = useSafeAreaInsets();
 
   const {
     CssColor: { background },
     ColorArray: {
-      Screen: { upperDark },
-    },
-  } = useAppTheme()
+      Screen: { upperDark }
+    }
+  } = useAppTheme();
 
   return (
     <Stack
@@ -29,12 +27,12 @@ const UpcomingDatesLayout = () => {
           />
         ),
         contentStyle: { backgroundColor: background },
-        headerTransparent: true,
+        headerTransparent: true
       }}
     >
       <Stack.Screen name="index" />
     </Stack>
-  )
-}
+  );
+};
 
-export default UpcomingDatesLayout
+export default UpcomingDatesLayout;

@@ -1,13 +1,13 @@
-import { SymbolView } from 'expo-symbols'
-import React from 'react'
-import { PlatformColor, TouchableOpacity } from 'react-native'
+import { SymbolView } from 'expo-symbols';
+import React from 'react';
+import { PlatformColor, TouchableOpacity } from 'react-native';
 
 // ✅
 
 type ListItemToggleButtonProps = {
-  isDeleting: boolean
-  onToggle: () => void
-}
+  isDeleting: boolean;
+  onToggle: () => void;
+};
 
 const ListItemToggleButton = ({ isDeleting, onToggle }: ListItemToggleButtonProps) => (
   <TouchableOpacity onPress={onToggle} activeOpacity={0.6}>
@@ -19,16 +19,18 @@ const ListItemToggleButton = ({ isDeleting, onToggle }: ListItemToggleButtonProp
           ? {
               effect: { type: 'bounce' },
               speed: 1.7,
-              repeating: false,
+              repeating: false
             }
           : undefined
       }
       size={22}
       {...(isDeleting
-        ? { colors: [PlatformColor('systemBlue'), PlatformColor('secondaryLabel')] }
+        ? {
+            colors: [PlatformColor('systemBlue'), PlatformColor('secondaryLabel')]
+          }
         : { tintColor: PlatformColor('secondaryLabel') })}
     />
   </TouchableOpacity>
-)
+);
 
-export default ListItemToggleButton
+export default ListItemToggleButton;

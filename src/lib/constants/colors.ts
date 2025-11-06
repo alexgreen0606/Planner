@@ -9,7 +9,7 @@ export const selectableColors = [
   'systemIndigo',
   'systemPurple',
   'systemBrown',
-  'label',
-]
+  'label'
+];
 
-export type TSelectableColor = (typeof selectableColors)[number]
+export type TSelectableColor = (typeof selectableColors)[number];

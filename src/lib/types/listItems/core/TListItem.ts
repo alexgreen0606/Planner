@@ -1,10 +1,10 @@
-import { EStorageId } from '@/lib/enums/EStorageId'
+import { EStorageId } from '@/lib/enums/EStorageId';
 
 // ✅
 
 export type TListItem = {
-  id: string
-  value: string
-  listId: string
-  storageId: EStorageId
-}
+  id: string;
+  value: string;
+  listId: string;
+  storageId: EStorageId;
+};

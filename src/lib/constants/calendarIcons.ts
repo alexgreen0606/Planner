@@ -1,4 +1,4 @@
-import { SFSymbol } from 'expo-symbols'
+import { SFSymbol } from 'expo-symbols';
 
 // ✅
 
@@ -7,5 +7,5 @@ export const calendarIconMap: Record<string, SFSymbol> = {
   'US Holidays': 'globe.europe.africa.fill',
   Birthdays: 'birthday.cake.fill',
   Important: 'flag.fill',
-  Calendar: 'calendar',
-}
+  Calendar: 'calendar'
+};

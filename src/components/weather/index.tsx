@@ -1,26 +1,26 @@
-import { SymbolView } from 'expo-symbols'
-import React from 'react'
-import { Linking, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { SymbolView } from 'expo-symbols';
+import React from 'react';
+import { Linking, PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-import useAppTheme from '@/hooks/useAppTheme'
-import { getRandomWeatherChip } from '@/utils/weatherUtils'
+import useAppTheme from '@/hooks/useAppTheme';
+import { getRandomWeatherChip } from '@/utils/weatherUtils';
 
-import CustomText from '../text/CustomText'
-import FadeInView from '../views/FadeInView'
+import CustomText from '../text/CustomText';
+import FadeInView from '../views/FadeInView';
 
 // ✅
 
 type WeatherDisplayProps = {
-  high?: number
-  low?: number
-}
+  high?: number;
+  low?: number;
+};
 
 const WeatherDisplay = ({ high = 79, low = 23 }: WeatherDisplayProps) => {
-  const { weatherBackground } = useAppTheme()
+  const { weatherBackground } = useAppTheme();
 
   function handleOpenWeatherApp() {
     try {
-      Linking.openURL('weather://')
+      Linking.openURL('weather://');
     } catch (error) {}
   }
 
@@ -33,14 +33,14 @@ const WeatherDisplay = ({ high = 79, low = 23 }: WeatherDisplayProps) => {
             className="h-full"
             style={{
               width: StyleSheet.hairlineWidth,
-              backgroundColor: PlatformColor('systemGray'),
+              backgroundColor: PlatformColor('systemGray')
             }}
           />
           <CustomText variant="lowTemp">{Math.round(low)}°</CustomText>
           <View
             className="px-4 w-10 h-10 rounded-3xl items-center justify-center"
             style={{
-              backgroundColor: weatherBackground,
+              backgroundColor: weatherBackground
             }}
           >
             <SymbolView
@@ -53,7 +53,7 @@ const WeatherDisplay = ({ high = 79, low = 23 }: WeatherDisplayProps) => {
         </View>
       </TouchableOpacity>
     </FadeInView>
-  )
-}
+  );
+};
 
-export default WeatherDisplay
+export default WeatherDisplay;

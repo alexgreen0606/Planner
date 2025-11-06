@@ -1,26 +1,26 @@
-import { Host, Switch } from '@expo/ui/swift-ui'
-import { SFSymbol } from 'expo-symbols'
-import React from 'react'
+import { Host, Switch } from '@expo/ui/swift-ui';
+import { SFSymbol } from 'expo-symbols';
+import React from 'react';
 
-import { TFormFieldControl } from '@/lib/types/form/TFormField'
-import { getValidCssColor } from '@/utils/colorUtils'
+import { TFormFieldControl } from '@/lib/types/form/TFormField';
+import { getValidCssColor } from '@/utils/colorUtils';
 
-import ModalDisplayValue from '../../Modal/ModalDisplayValue'
+import ModalDisplayValue from '../../Modal/ModalDisplayValue';
 
 // ✅
 
 export type TCheckboxModalFieldProps = {
-  label: string
-  iconName?: SFSymbol
-  color?: string
-}
+  label: string;
+  iconName?: SFSymbol;
+  color?: string;
+};
 
 const CheckboxModalField = ({
   label = '',
   value,
   iconName,
   color = 'label',
-  onChange,
+  onChange
 }: TCheckboxModalFieldProps & TFormFieldControl<boolean>) => (
   <ModalDisplayValue
     label={label}
@@ -31,6 +31,6 @@ const CheckboxModalField = ({
     }
     iconName={iconName}
   />
-)
+);
 
-export default CheckboxModalField
+export default CheckboxModalField;

@@ -1,26 +1,28 @@
-import { useAtom } from 'jotai'
-import debounce from 'lodash.debounce'
-import React, { ReactNode, useEffect, useMemo, useRef } from 'react'
-import { PlatformColor, TextInput, TextStyle } from 'react-native'
+import { useAtom } from 'jotai';
+import debounce from 'lodash.debounce';
+import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
+import { PlatformColor, TextInput, TextStyle } from 'react-native';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId'
-import { TListItem } from '@/lib/types/listItems/core/TListItem'
+import { textfieldIdAtom } from '@/atoms/textfieldId';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
-import { textStyles } from '../text/CustomText'
+import { textStyles } from '../text/CustomText';
 
 // ✅
 
 type TListItemTextfieldProps<T extends TListItem> = {
-  item: T
-  toolbarIconSet?: ReactNode[][]
-  customStyle: TextStyle
-  onFocusPlaceholderTextfield: () => void
-  onSetItemInStorage: (value: T | ((prevValue: T | undefined) => T | undefined) | undefined) => void
-  onCreateChildTextfield: () => void
-  onDeleteItem: (item: T) => void
-  onValueChange?: (newValue: string) => void
-  onSaveToExternalStorage?: (item: T) => void
-}
+  item: T;
+  toolbarIconSet?: ReactNode[][];
+  customStyle: TextStyle;
+  onFocusPlaceholderTextfield: () => void;
+  onSetItemInStorage: (
+    value: T | ((prevValue: T | undefined) => T | undefined) | undefined
+  ) => void;
+  onCreateChildTextfield: () => void;
+  onDeleteItem: (item: T) => void;
+  onValueChange?: (newValue: string) => void;
+  onSaveToExternalStorage?: (item: T) => void;
+};
 
 const ListItemTextfield = <T extends TListItem>({
   item,
@@ -30,58 +32,58 @@ const ListItemTextfield = <T extends TListItem>({
   onDeleteItem,
   onValueChange,
   onCreateChildTextfield,
-  onSaveToExternalStorage,
+  onSaveToExternalStorage
 }: TListItemTextfieldProps<T>) => {
-  const [, setTextfieldId] = useAtom(textfieldIdAtom)
+  const [, setTextfieldId] = useAtom(textfieldIdAtom);
 
-  const itemValue = useRef(item.value)
-  const inputRef = useRef<TextInput>(null)
+  const itemValue = useRef(item.value);
+  const inputRef = useRef<TextInput>(null);
 
   const handleSaveToExternalStorageDebounce = useMemo(
     () =>
       debounce((latestItem: T) => {
-        onSaveToExternalStorage?.(latestItem)
+        onSaveToExternalStorage?.(latestItem);
       }, 1000),
-    [],
-  )
+    []
+  );
 
   // Handle the blur event.
   useEffect(() => {
-    return handleBlurTextfield
-  }, [])
+    return handleBlurTextfield;
+  }, []);
 
   // Save to external storage.
   useEffect(() => {
-    itemValue.current = item.value
-    handleSaveToExternalStorageDebounce(item)
-  }, [item])
+    itemValue.current = item.value;
+    handleSaveToExternalStorageDebounce(item);
+  }, [item]);
 
   function handleValueChange(value: string) {
     onSetItemInStorage((prev) => {
-      if (!prev) return prev
-      return { ...prev, value }
-    })
+      if (!prev) return prev;
+      return { ...prev, value };
+    });
   }
 
   function handleSubmitTextfield() {
     if (item.value.trim() === '') {
-      onDeleteItem(item)
-      return
+      onDeleteItem(item);
+      return;
     }
 
-    onFocusPlaceholderTextfield()
-    onCreateChildTextfield()
+    onFocusPlaceholderTextfield();
+    onCreateChildTextfield();
   }
 
   function handleBlurTextfield() {
     if (itemValue.current.trim() === '') {
-      handleSaveToExternalStorageDebounce.cancel()
-      onDeleteItem(item)
+      handleSaveToExternalStorageDebounce.cancel();
+      onDeleteItem(item);
     } else {
-      handleSaveToExternalStorageDebounce.flush()
+      handleSaveToExternalStorageDebounce.flush();
     }
 
-    setTextfieldId((prev) => (prev === item.id ? null : prev))
+    setTextfieldId((prev) => (prev === item.id ? null : prev));
   }
 
   return (
@@ -89,7 +91,7 @@ const ListItemTextfield = <T extends TListItem>({
       ref={inputRef}
       value={item.value}
       onLayout={() => {
-        inputRef.current?.focus()
+        inputRef.current?.focus();
       }}
       onBlur={handleBlurTextfield}
       onChangeText={onValueChange ?? handleValueChange}
@@ -99,7 +101,7 @@ const ListItemTextfield = <T extends TListItem>({
       submitBehavior="submit"
       className="w-full bg-transparent"
     />
-  )
-}
+  );
+};
 
-export default ListItemTextfield
+export default ListItemTextfield;

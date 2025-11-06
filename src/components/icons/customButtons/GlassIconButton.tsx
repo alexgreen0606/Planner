@@ -1,20 +1,20 @@
-import { Button, Host, Image } from '@expo/ui/swift-ui'
-import { frame } from '@expo/ui/swift-ui/modifiers'
-import { SFSymbol } from 'expo-symbols'
-import { PlatformColor } from 'react-native'
+import { Button, Host, Image } from '@expo/ui/swift-ui';
+import { frame } from '@expo/ui/swift-ui/modifiers';
+import { SFSymbol } from 'expo-symbols';
+import { PlatformColor } from 'react-native';
 
-import { getValidCssColor } from '@/utils/colorUtils'
+import { getValidCssColor } from '@/utils/colorUtils';
 
 // ✅
 
 type TGlassIconButtonProps = {
-  systemImage: SFSymbol
-  disabled?: boolean
-  isPrimary?: boolean
-  color?: string
-  iconPlatformColor?: string
-  onPress?: () => void
-}
+  systemImage: SFSymbol;
+  disabled?: boolean;
+  isPrimary?: boolean;
+  color?: string;
+  iconPlatformColor?: string;
+  onPress?: () => void;
+};
 
 const GlassIconButton = ({
   systemImage,
@@ -22,7 +22,7 @@ const GlassIconButton = ({
   isPrimary,
   color,
   iconPlatformColor = 'label',
-  onPress,
+  onPress
 }: TGlassIconButtonProps) => (
   <Host matchContents>
     <Button
@@ -40,6 +40,6 @@ const GlassIconButton = ({
       </Host>
     </Button>
   </Host>
-)
+);
 
-export default GlassIconButton
+export default GlassIconButton;

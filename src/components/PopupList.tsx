@@ -1,30 +1,30 @@
-import { Button, ContextMenu, Host, Image, Switch } from '@expo/ui/swift-ui'
-import { SFSymbol } from 'expo-symbols'
-import React, { ReactNode, useMemo } from 'react'
-import { PlatformColor } from 'react-native'
+import { Button, ContextMenu, Host, Image, Switch } from '@expo/ui/swift-ui';
+import { SFSymbol } from 'expo-symbols';
+import React, { ReactNode, useMemo } from 'react';
+import { PlatformColor } from 'react-native';
 
-import { EPopupActionType } from '@/lib/enums/EPopupActionType'
-import { TPopupAction } from '@/lib/types/TPopupAction'
+import { EPopupActionType } from '@/lib/enums/EPopupActionType';
+import { TPopupAction } from '@/lib/types/TPopupAction';
 
-import GlassIconButton from './icons/customButtons/GlassIconButton'
+import GlassIconButton from './icons/customButtons/GlassIconButton';
 
 // ✅
 
 export type TPopupListProps = {
-  actions: TPopupAction[]
-  wrapButton?: boolean
-  systemImage?: SFSymbol
-  iconPlatformColor?: string
-}
+  actions: TPopupAction[];
+  wrapButton?: boolean;
+  systemImage?: SFSymbol;
+  iconPlatformColor?: string;
+};
 
 const PopupList = ({
   actions,
   wrapButton,
   systemImage = 'ellipsis',
-  iconPlatformColor = 'label',
+  iconPlatformColor = 'label'
 }: TPopupListProps) => {
   const renderMenuAction = (option: TPopupAction, index: number): ReactNode | null => {
-    if (option.hidden) return null
+    if (option.hidden) return null;
 
     switch (option.type) {
       case EPopupActionType.BUTTON:
@@ -40,7 +40,7 @@ const PopupList = ({
           >
             {option.title}
           </Button>
-        )
+        );
 
       case EPopupActionType.SWITCH:
         return (
@@ -51,7 +51,7 @@ const PopupList = ({
             variant="checkbox"
             onValueChange={option.onPress}
           />
-        )
+        );
 
       case EPopupActionType.SUBMENU:
         if (option.items.some((i) => !i.hidden)) {
@@ -64,19 +64,19 @@ const PopupList = ({
                 <Button systemImage={option.systemImage}>{option.title}</Button>
               </ContextMenu.Trigger>
             </ContextMenu>
-          )
+          );
         }
-        return null
+        return null;
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const actionTsx = useMemo(
     () => actions.map((option, index) => renderMenuAction(option, index)),
-    [actions],
-  )
+    [actions]
+  );
 
   if (!actionTsx.some(Boolean)) {
     return wrapButton ? (
@@ -88,7 +88,7 @@ const PopupList = ({
           color={PlatformColor('tertiaryLabel') as unknown as string}
         />
       </Host>
-    )
+    );
   }
 
   return (
@@ -109,7 +109,7 @@ const PopupList = ({
         </ContextMenu.Trigger>
       </ContextMenu>
     </Host>
-  )
-}
+  );
+};
 
-export default PopupList
+export default PopupList;

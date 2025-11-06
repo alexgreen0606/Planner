@@ -1,6 +1,6 @@
-import { Event as CalendarEvent } from 'expo-calendar'
+import { Event as CalendarEvent } from 'expo-calendar';
 
 // ✅
 
 // Maps datestamps to calendar events.
-export type TCalendarEventMap = Record<string, CalendarEvent[]>
+export type TCalendarEventMap = Record<string, CalendarEvent[]>;

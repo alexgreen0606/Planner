@@ -1,21 +1,21 @@
-import { SFSymbol } from 'expo-symbols'
-import React, { useEffect, useRef } from 'react'
-import { PlatformColor, TextInput, View } from 'react-native'
+import { SFSymbol } from 'expo-symbols';
+import React, { useEffect, useRef } from 'react';
+import { PlatformColor, TextInput, View } from 'react-native';
 
-import Icon from '@/components/icons/Icon'
-import useBounceTrigger from '@/hooks/useBounceTrigger'
-import { TFormFieldControl } from '@/lib/types/form/TFormField'
+import Icon from '@/components/icons/Icon';
+import useBounceTrigger from '@/hooks/useBounceTrigger';
+import { TFormFieldControl } from '@/lib/types/form/TFormField';
 
 // ✅
 
 export type TTextModalFieldProps = {
-  label: string
-  focusTrigger?: boolean
-  disabled?: boolean
-  iconName?: SFSymbol
-  iconColor?: string
-  autoCapitalizeWords?: boolean
-}
+  label: string;
+  focusTrigger?: boolean;
+  disabled?: boolean;
+  iconName?: SFSymbol;
+  iconColor?: string;
+  autoCapitalizeWords?: boolean;
+};
 
 const TextModalField = ({
   value,
@@ -25,18 +25,18 @@ const TextModalField = ({
   disabled,
   iconName,
   iconColor = 'label',
-  onChange,
+  onChange
 }: TTextModalFieldProps & TFormFieldControl<string>) => {
-  const bounceTrigger = useBounceTrigger([iconName, iconColor])
+  const bounceTrigger = useBounceTrigger([iconName, iconColor]);
 
-  const inputRef = useRef<TextInput>(null)
+  const inputRef = useRef<TextInput>(null);
 
   // Manually focus the text input.
   useEffect(() => {
     if (focusTrigger) {
-      inputRef.current?.focus()
+      inputRef.current?.focus();
     }
-  }, [focusTrigger])
+  }, [focusTrigger]);
 
   return (
     <View className="flex-row flex-1 items-center justify-center">
@@ -48,7 +48,7 @@ const TextModalField = ({
             bounceTrigger
               ? {
                   effect: { type: 'bounce' },
-                  repeating: false,
+                  repeating: false
                 }
               : undefined
           }
@@ -67,11 +67,11 @@ const TextModalField = ({
         className="text-[16px] px-4 flex-1 h-full"
         style={{
           color: PlatformColor('label'),
-          fontFamily: 'Text',
+          fontFamily: 'Text'
         }}
       />
     </View>
-  )
-}
+  );
+};
 
-export default TextModalField
+export default TextModalField;

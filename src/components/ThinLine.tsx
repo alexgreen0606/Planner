@@ -1,7 +1,7 @@
-import React from 'react'
-import { PlatformColor, StyleSheet, View } from 'react-native'
+import React from 'react';
+import { PlatformColor, StyleSheet, View } from 'react-native';
 
-import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout'
+import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 
 // ✅
 
@@ -11,10 +11,10 @@ const ThinLine = () => (
       className="w-full"
       style={{
         height: StyleSheet.hairlineWidth,
-        backgroundColor: PlatformColor('systemGray'),
+        backgroundColor: PlatformColor('systemGray')
       }}
     />
   </View>
-)
+);
 
-export default ThinLine
+export default ThinLine;

@@ -1,26 +1,26 @@
-import React, { useCallback, useState } from 'react'
-import { LayoutChangeEvent, StyleSheet, View, ViewProps } from 'react-native'
+import React, { useCallback, useState } from 'react';
+import { LayoutChangeEvent, StyleSheet, View, ViewProps } from 'react-native';
 import Svg, {
   Defs,
   RadialGradient,
   Rect,
   Stop,
-  LinearGradient as SvgLinearGradient,
-} from 'react-native-svg'
+  LinearGradient as SvgLinearGradient
+} from 'react-native-svg';
 
-import useAppTheme from '@/hooks/useAppTheme'
+import useAppTheme from '@/hooks/useAppTheme';
 
 type TShadowViewProps = ViewProps & {
-  edgeSize?: number | TEdgeSize
-  maxOpacity?: number
-}
+  edgeSize?: number | TEdgeSize;
+  maxOpacity?: number;
+};
 
 type TEdgeSize = {
-  top?: number
-  right?: number
-  bottom?: number
-  left?: number
-}
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+};
 
 const ShadowView = ({
   children,
@@ -29,14 +29,14 @@ const ShadowView = ({
   maxOpacity = 0.8,
   ...props
 }: TShadowViewProps) => {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  const { shadowColor } = useAppTheme()
+  const { shadowColor } = useAppTheme();
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout
-    setDimensions({ width, height })
-  }, [])
+    const { width, height } = event.nativeEvent.layout;
+    setDimensions({ width, height });
+  }, []);
 
   // Normalize edgeSize to individual values
   const edges =
@@ -46,12 +46,12 @@ const ShadowView = ({
           top: edgeSize.top ?? 32,
           right: edgeSize.right ?? 32,
           bottom: edgeSize.bottom ?? 32,
-          left: edgeSize.left ?? 32,
-        }
+          left: edgeSize.left ?? 32
+        };
 
-  const { width, height } = dimensions
-  const totalWidth = width + edges.left + edges.right
-  const totalHeight = height + edges.top + edges.bottom
+  const { width, height } = dimensions;
+  const totalWidth = width + edges.left + edges.right;
+  const totalHeight = height + edges.top + edges.bottom;
 
   return (
     <View className="relative self-start" style={style} {...props}>
@@ -64,8 +64,8 @@ const ShadowView = ({
               width: totalWidth,
               height: totalHeight,
               top: -edges.top,
-              left: -edges.left,
-            },
+              left: -edges.left
+            }
           ]}
         >
           <Svg width={totalWidth} height={totalHeight} style={StyleSheet.absoluteFillObject}>
@@ -183,7 +183,7 @@ const ShadowView = ({
       {/* Children content layer */}
       <View onLayout={handleLayout}>{children}</View>
     </View>
-  )
-}
+  );
+};
 
-export default ShadowView
+export default ShadowView;

@@ -1,7 +1,5 @@
-import { atom } from 'jotai'
+import { atom } from 'jotai';
 
-import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent'
+import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 
-// ✅
-
-export const recurringTimeModalEventAtom = atom<IRecurringEvent | null>(null)
+export const recurringTimeModalEventAtom = atom<IRecurringEvent | null>(null);
