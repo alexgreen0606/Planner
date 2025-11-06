@@ -25,7 +25,7 @@ const ChecklistPage = () => {
 
   return (
     <DraggableListPage
-      emptyPageLabelProps={{ label: 'All items complete' }}
+      emptyPageLabel='All items complete'
       listId={checklistId}
       storage={itemStorage}
       storageId={EStorageId.CHECKLIST_ITEM}

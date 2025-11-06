@@ -35,7 +35,7 @@ const PlannerPage = () => {
       storage={eventStorage}
       toolbar={<PlannerEventToolbar />}
       storageId={EStorageId.PLANNER_EVENT}
-      emptyPageLabelProps={{ label: 'No plans' }}
+      emptyPageLabel='No plans'
       onCreateItem={createPlannerEventInStorageAndFocusTextfield}
       onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
       onValueChange={onUpdatePlannerEventValueWithTimeParsing}

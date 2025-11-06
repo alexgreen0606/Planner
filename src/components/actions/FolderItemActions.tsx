@@ -61,7 +61,7 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
     let message = '';
     switch (action) {
       case EFolderAction.EDIT:
-        router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${folderItemId}`);
+        router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${NULL}/${folderItemId}`);
         break;
       case EFolderAction.DELETE_ALL:
         const hasChildren = item.itemIds.length > 0;

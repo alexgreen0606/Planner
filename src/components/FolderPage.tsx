@@ -1,36 +1,29 @@
-import { Host, Text } from '@expo/ui/swift-ui';
+import { Host, List } from '@expo/ui/swift-ui';
 import { useRouter } from 'expo-router';
-import { useSetAtom } from 'jotai';
-import React from 'react';
-import { PlatformColor } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, useWindowDimensions } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId';
-import DraggableListPage from '@/components/DraggableListPage';
-import FolderItemButton from '@/components/icons/customButtons/FolderItemButton';
-import FolderItemToolbar from '@/components/toolbars/FolderItemToolbar';
 import useFolderItem from '@/hooks/useFolderItem';
-import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { NULL } from '@/lib/constants/generic';
+import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
-import {
-  createNewFolderItemAndSaveToStorage,
-  deleteFolderItemAndChildren,
-  updateListItemIndex
-} from '@/utils/checklistUtils';
+import { updateFolderItemIndex } from '@/utils/checklistUtils';
 
-// ✅
+import FolderItem from './FolderItem/FolderItem';
+import PageContainer from './PageContainer';
 
 type TFolderPageProps = {
   folderId: string;
 };
 
+// TODO: calculate this correctly in the future.
+const BOTTOM_NAV_HEIGHT = 86;
+
 const FolderPage = ({ folderId }: TFolderPageProps) => {
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const router = useRouter();
-
-  const setTextfieldId = useSetAtom(textfieldIdAtom);
 
   const {
     item: folder,
@@ -40,104 +33,56 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
     onEndTransfer
   } = useFolderItem(folderId, folderItemStorage);
 
-  const getLeftIcon = (item: IFolderItem) => (
-    <FolderItemButton
-      item={item}
-      disabled={
-        getIsItemTransfering(item.id) || (isTransferMode && item.type === EFolderItemType.CHECKLIST)
-      }
-      onClick={() => {
-        // TODO: focus placeholder
-        setTextfieldId(item.id);
-      }}
-    />
-  );
-
-  // ==================
-  // 1. Event Handlers
-  // ==================
-
-  function handleTransferToChild(destinationItem: IFolderItem) {
-    if (!folder || !transferingItem) return;
-
-    // TODO: dont allow transfer into self
-
-    const childFolder = getFolderItemFromStorageById(destinationItem.id);
-    childFolder.itemIds.push(transferingItem.id);
-    saveFolderItemToStorage(childFolder);
-
-    saveFolderItemToStorage({
-      ...folder,
-      itemIds: folder.itemIds.filter((id) => id !== transferingItem.id)
-    });
-    saveFolderItemToStorage({ ...transferingItem, listId: destinationItem.id });
-  }
-
-  function handleItemClick(item: IFolderItem) {
-    if (isTransferMode) {
-      if (item.type === EFolderItemType.FOLDER && item.id !== transferingItem?.id) {
-        handleTransferToChild(item);
-      }
-      onEndTransfer();
-      return;
+  // Track the ordering of IDs to pass to the list function.
+  // This sort order will be out of sync with the UI and MMKV once a user drags items around.
+  const [updatedList, setUpdatedList] = useState(itemIds);
+  useEffect(() => {
+    if (itemIds.length !== updatedList.length) {
+      setUpdatedList(itemIds);
     }
+  }, [itemIds]);
 
-    setTextfieldId(null);
-
-    if (item.type === EFolderItemType.FOLDER) {
-      router.push(`checklists/folder/${item.id}`);
-    } else if (item.type === EFolderItemType.CHECKLIST) {
-      router.push(`checklists/checklist/${item.id}`);
-    }
-  }
-
-  // ====================
-  // 2. Helper Functions
-  // ====================
-
-  function getIsItemTransfering(itemId: string) {
-    return transferingItem?.id === itemId;
-  }
-
-  function getRowTextPlatformColor(item: IFolderItem) {
-    if (getIsItemTransfering(item.id)) {
-      return 'tertiaryLabel';
-    }
-    if (isTransferMode && item.type === EFolderItemType.CHECKLIST) {
-      return 'tertiaryLabel';
-    }
-    return 'label';
+  function handleMoveItem(from: number, to: number) {
+    updateFolderItemIndex(from, to, folderId);
   }
 
   return (
-    <DraggableListPage
-      emptyPageLabelProps={{ label: 'No contents' }}
-      toolbar={<FolderItemToolbar />}
-      listId={folderId}
-      itemIds={itemIds}
-      storage={folderItemStorage}
-      storageId={EStorageId.FOLDER_ITEM}
-      onGetRowTextPlatformColor={getRowTextPlatformColor}
-      onGetRightIcon={(item) => (
-        <Host style={{ minWidth: 40 }}>
-          <Text
-            design="rounded"
-            weight="semibold"
-            size={10}
-            color={PlatformColor(getRowTextPlatformColor(item)) as unknown as string}
-          >
-            {String(item.itemIds.length)}
-          </Text>
-        </Host>
-      )}
+    <PageContainer
+      emptyPageLabel="No contents"
+      isPageEmpty={itemIds.length === 0}
       addButtonColor={folder?.platformColor}
-      rowHeight={46}
-      onGetLeftIcon={getLeftIcon}
-      onDeleteItem={deleteFolderItemAndChildren}
-      onCreateItem={createNewFolderItemAndSaveToStorage}
-      onContentClick={handleItemClick}
-      onIndexChange={updateListItemIndex}
-    />
+      onAddButtonClick={() => folder && router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${folder.id}/${NULL}`)}
+    >
+      <ScrollView
+        className="flex-1"
+        contentInsetAdjustmentBehavior='automatic'
+        contentContainerClassName="pb-4 flex-1"
+        scrollIndicatorInsets={{ bottom: BOTTOM_NAV_HEIGHT }}
+        contentContainerStyle={{ minHeight: Math.max(SCREEN_HEIGHT, updatedList.length * 52 + BOTTOM_NAV_HEIGHT) }}
+      >
+        {/* Content List */}
+        <Host style={{ flex: 1 }}>
+          <List
+            moveEnabled
+            scrollEnabled={false}
+            onMoveItem={handleMoveItem}
+            listStyle='plain'
+          >
+            {updatedList.map((id) => (
+              <FolderItem
+                parentFolder={folder}
+                storage={folderItemStorage}
+                itemId={id}
+                onEndTransfer={onEndTransfer}
+                transferingItem={transferingItem}
+                isTransferMode={isTransferMode}
+                key={id}
+              />
+            ))}
+          </List>
+        </Host>
+      </ScrollView>
+    </PageContainer>
   );
 };
 

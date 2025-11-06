@@ -2,7 +2,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useEffect } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { RefreshControl, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +14,7 @@ import { useExternalDataContext } from '@/providers/ExternalDataProvider';
 import { useScrollRegistry } from '@/providers/ScrollRegistry';
 
 const UpcomingDatesPage = () => {
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { top: TOP_SPACER } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const pathname = usePathname();
@@ -49,7 +50,7 @@ const UpcomingDatesPage = () => {
         contentOffset={{ x: 0, y: -contentInset }}
         scrollIndicatorInsets={{ top: contentInset }}
         className="flex-1"
-        contentContainerClassName="pb-4"
+        contentContainerClassName="pb-4 px-4"
       >
         {filteredUpcomingDates.map(([datestamp, events], index) => (
           <UpcomingDateCard

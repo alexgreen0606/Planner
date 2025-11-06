@@ -1,8 +1,17 @@
+import * as Calendar from 'expo-calendar';
+import { uuid } from 'expo-modules-core';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { DateTime } from 'luxon';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useMMKV } from 'react-native-mmkv';
+
 import { calendarMapAtom, primaryCalendarAtom } from '@/atoms/planner/calendarAtoms';
 import { untrackLoadedDatestampsAtom } from '@/atoms/planner/loadedDatestampsAtom';
-import { getAccessAtom } from '@/atoms/userAccessAtoms';
 import Form from '@/components/Form/Form';
 import Modal from '@/components/Modal';
+import usePermissions from '@/hooks/usePermissions';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { calendarIconMap } from '@/lib/constants/calendarIcons';
 import { NULL } from '@/lib/constants/generic';
@@ -45,14 +54,7 @@ import {
   getPlannerEventFromStorageByCalendarId,
   updatePlannerEventIndexWithChronologicalCheck,
 } from '@/utils/plannerUtils'
-import * as Calendar from 'expo-calendar';
-import { uuid } from 'expo-modules-core';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { DateTime } from 'luxon';
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useMMKV } from 'react-native-mmkv';
+
 import { TPickerOption } from './Form/microComponents/PickerModalField';
 
 // ✅
@@ -112,7 +114,10 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
   const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom)
   const primaryCalendar = useAtomValue(primaryCalendarAtom)
   const calendarMap = useAtomValue(calendarMapAtom)
-  const hasCalendarAccess = useAtomValue(getAccessAtom(EAccess.CALENDAR))
+
+  const {
+    permission: hasCalendarPermissions,
+  } = usePermissions(EAccess.CALENDAR);
 
   const [initialEventState, setInitialEventState] = useState<TInitialEventMetadata | null>(null)
   const [isInitializingForm, setIsInitializingForm] = useState(true)
@@ -224,7 +229,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         type: EFormFieldType.CHECKBOX,
         label: 'Calendar',
         color: modalPrimaryColor,
-        invisible: !hasCalendarAccess || !primaryCalendar || isViewMode,
+        invisible: !hasCalendarPermissions || !primaryCalendar || isViewMode,
         onHandleSideEffects: handleCalendarEventChange,
         iconName: 'calendar',
       },
@@ -247,12 +252,13 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         color: modalPrimaryColor,
         invisible: isViewMode || !isCalendarEvent,
         floating: calendarOptions.length <= 3,
-        width: 360,
+        width: 340,
       },
     ]
+  ];
 
-    // Get the initial event state.
-    useEffect(() => {
+  // Get the initial event state.
+  useEffect(() => {
     const buildFormData = async () => {
       const isEventInStorage = getDoesPlannerEventExist(eventId)
       const storageEvent = isEventInStorage ? getPlannerEventFromStorageById(eventId) : null
@@ -337,7 +343,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         title: storageEvent.value,
         start: DateTime.fromISO(
           storageEvent.timeConfig?.startIso ??
-            getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp),
+          getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp),
         )!,
         end: DateTime.fromISO(
           storageEvent.timeConfig?.endIso ?? getIsoFromNowTimeRoundedDown5Minutes(triggerDatestamp),

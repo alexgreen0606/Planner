@@ -1,4 +1,3 @@
-import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 
 import { textfieldIdAtom } from '@/atoms/textfieldId';
@@ -14,6 +13,7 @@ import {
   saveRecurringPlannerToStorage
 } from '@/storage/recurringPlannerStorage';
 
+import { jotaiStore } from '../../app/_layout';
 import { isTimeEarlierOrEqual } from './dateUtils';
 
 // ✅

@@ -1,9 +1,11 @@
-import useAppTheme from '@/hooks/useAppTheme';
-import { MODAL_INPUT_HEIGHT } from '@/lib/constants/miscLayout';
-import { TFormField } from '@/lib/types/form/TFormField';
 import { MotiView } from 'moti';
 import { Control, Controller } from 'react-hook-form';
 import { PlatformColor, StyleSheet, View } from 'react-native';
+
+import useAppTheme from '@/hooks/useAppTheme';
+import { MODAL_INPUT_HEIGHT } from '@/lib/constants/miscLayout';
+import { TFormField } from '@/lib/types/form/TFormField';
+
 import FormField from './microComponents/FormField';
 
 // ✅
@@ -96,8 +98,9 @@ const Form = ({ fieldSets, control }: TFormProps) => {
               </MotiView>
             )
           })}
-        </View>,
-            )}
+        </View>
+      ),
+      )}
     </View>
   )
 }

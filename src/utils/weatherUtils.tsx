@@ -1,7 +1,7 @@
-import { jotaiStore } from 'app/_layout';
-
 import { setWeatherForDatestampAtom } from '@/atoms/weatherAtoms';
 import { TWeatherData } from '@/lib/types/externalData/TWeatherData';
+
+import { jotaiStore } from '../../app/_layout';
 
 async function saveWeatherDataToStore(datestamp: string, data: TWeatherData) {
   jotaiStore.set(setWeatherForDatestampAtom, { datestamp, data });

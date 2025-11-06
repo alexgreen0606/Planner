@@ -1,4 +1,3 @@
-import { jotaiStore } from 'app/_layout';
 import { uuid } from 'expo-modules-core';
 
 import { textfieldIdAtom } from '@/atoms/textfieldId';
@@ -16,11 +15,9 @@ import {
   saveFolderItemToStorage
 } from '@/storage/checklistsStorage';
 
-// ✅
+import { jotaiStore } from '../../app/_layout';
 
-// ==================
-//  Create Functions
-// ==================
+// ✅
 
 // ====================
 // 1. Create Functions
@@ -92,6 +89,22 @@ export function updateListItemIndex<T extends TListItem>(index: number, item: T)
   checklist.itemIds.splice(index, 0, item.id);
 
   saveFolderItemToStorage(checklist);
+}
+
+/**
+ * Updates the position of an item within its folder.
+ *
+ * @param from - The initial index of the item.
+ * @param to - The final index of the item.
+ * @param parentFolderId - The ID of the folder where the item exists.
+ */
+export function updateFolderItemIndex<T extends TListItem>(from: number, to: number, parentFolderId: string) {
+  const folder = getFolderItemFromStorageById(parentFolderId);
+
+  const [itemId] = folder.itemIds.splice(from, 1);
+  folder.itemIds.splice(to, 0, itemId);
+
+  saveFolderItemToStorage(folder);
 }
 
 // ====================

@@ -1,5 +1,6 @@
+import { uuid } from 'expo-modules-core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
@@ -12,7 +13,9 @@ import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { TFolderItemModalParams } from '@/lib/types/routeParams/TFolderItemModalParams';
 import { TPopupAction } from '@/lib/types/TPopupAction';
+import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 import { deleteFolderItemAndChildren } from '@/utils/checklistUtils';
 
 type TFormData = {
@@ -22,7 +25,7 @@ type TFormData = {
 };
 
 const FolderItemModal = () => {
-  const { folderItemId } = useLocalSearchParams<{ folderItemId: string }>();
+  const { folderItemId, parentFolderId } = useLocalSearchParams<TFolderItemModalParams>();
   const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const router = useRouter();
 
@@ -105,28 +108,89 @@ const FolderItemModal = () => {
     ]
   ];
 
+  // Determine if we're in create or edit mode
+  const isCreateMode = folderItemId === NULL;
+
+  // Generate a new ID for create mode
+  const [newItemId] = useState(() => isCreateMode ? uuid.v4() : folderItemId);
+
+
   // ================
   //  Event Handlers
   // ================
 
-  function handleSubmit(data: TFormData) {
-    if (!folderItem) return;
+  // function handleSubmit(data: TFormData) {
+  //   if (!folderItem) return;
 
+  //   const { title, type, color } = data;
+  //   const newTitle = title.trim();
+
+  //   setFolderItem((prev) =>
+  //     prev
+  //       ? {
+  //           ...prev,
+  //           value: newTitle,
+  //           type,
+  //           platformColor: color
+  //         }
+  //       : prev
+  //   );
+
+  //   router.back();
+  // }
+
+  function handleSubmit(data: TFormData) {
     const { title, type, color } = data;
     const newTitle = title.trim();
 
-    setFolderItem((prev) =>
-      prev
-        ? {
+    if (isCreateMode) {
+      // Create mode: Create a new folder item and add it to parent
+      createNewFolderItem(newTitle, type, color);
+    } else {
+      // Edit mode: Update existing folder item
+      if (!folderItem) return;
+
+      setFolderItem((prev) =>
+        prev
+          ? {
             ...prev,
             value: newTitle,
             type,
             platformColor: color
           }
-        : prev
-    );
+          : prev
+      );
+    }
 
     router.back();
+  }
+
+  function createNewFolderItem(title: string, type: EFolderItemType, color: string) {
+    if (!parentFolderId || parentFolderId === NULL) {
+      console.error('Parent folder ID is required for creating new items');
+      return;
+    }
+
+    // Create the new folder item
+    const newFolderItem: IFolderItem = {
+      id: newItemId,
+      value: title,
+      listId: parentFolderId,
+      storageId: EStorageId.FOLDER_ITEM,
+      platformColor: color,
+      type,
+      itemIds: []
+    };
+
+    // Save the new item to storage
+    saveFolderItemToStorage(newFolderItem);
+
+    // Update the parent folder to include this new item at the bottom
+    const parentFolder = getFolderItemFromStorageById(parentFolderId);
+    if (parentFolder) {
+      parentFolder.itemIds.push(newItemId); // Append to bottom
+      saveFolderItemToStorage(parentFolder);
+    }
   }
 
   function handleDelete() {

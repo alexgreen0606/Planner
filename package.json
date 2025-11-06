@@ -2,7 +2,6 @@
   "name": "assistant",
   "version": "1.0.0",
   "main": "expo-router/entry",
-  "type": "module",
   "scripts": {
     "start": "expo start --dev-client",
     "ios": "expo prebuild && npx pod-install && expo run:ios",
@@ -21,6 +20,8 @@
     "@react-navigation/elements": "^2.6.4",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "expo": "^54.0.20",
     "expo-asset": "~12.0.8",
     "expo-blur": "~15.0.7",

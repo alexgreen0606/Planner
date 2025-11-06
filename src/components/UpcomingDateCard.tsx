@@ -39,7 +39,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
     } else if (datestamp === getTomorrowDatestamp()) {
       countdownLabel = 'Tomorrow';
     } else if (daysUntilDate > 0) {
-      countdownLabel = `${daysUntilDate} days away`;
+      countdownLabel = `${daysUntilDate} days`;
     }
 
     return countdownLabel;
@@ -75,7 +75,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
       <TouchableOpacity
         onPress={handleOpenPlanner}
         activeOpacity={PRESSABLE_OPACITY}
-        className="w-[80] justify-center pl-4"
+        className="w-[80] justify-center"
         style={{ height: minimumContainerHeight }}
       >
         <DateValue isoTimestamp={datestamp} platformColor="secondaryLabel" />
@@ -110,7 +110,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) 
 
       {/* Countdown */}
       <View
-        className="w-22 items-end justify-center pr-4"
+        className="w-22 items-end justify-center"
         style={{ height: minimumContainerHeight }}
       >
         <CustomText variant="microDetail">{countdownLabel}</CustomText>

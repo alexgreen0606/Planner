@@ -2,11 +2,10 @@ import React, { useCallback, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, View, ViewProps } from 'react-native';
 import Svg, {
   Defs,
+  LinearGradient as SvgLinearGradient,
   RadialGradient,
   Rect,
-  Stop,
-  LinearGradient as SvgLinearGradient
-} from 'react-native-svg';
+  Stop} from 'react-native-svg';
 
 import useAppTheme from '@/hooks/useAppTheme';
 

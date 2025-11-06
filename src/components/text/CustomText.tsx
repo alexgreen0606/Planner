@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  TextProps as NativeTextProps,
   PlatformColor,
   StyleSheet,
   Text,
+  TextProps as NativeTextProps,
   TextStyle
 } from 'react-native';
 
@@ -28,8 +28,8 @@ export const textStyles = {
   },
   microDetail: {
     color: PlatformColor('secondaryLabel'),
-    fontSize: 10,
-    fontFamily: 'Text'
+    fontSize: 12,
+    fontFamily: 'RoundMedium'
   },
   standard: {
     color: PlatformColor('label'),

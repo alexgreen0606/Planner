@@ -1,4 +1,3 @@
-import { jotaiStore } from 'app/_layout';
 import * as Calendar from 'expo-calendar';
 import { Event as CalendarEvent } from 'expo-calendar';
 import { uuid } from 'expo-modules-core';
@@ -29,6 +28,7 @@ import {
   getRecurringPlannerFromStorageById
 } from '@/storage/recurringPlannerStorage';
 
+import { jotaiStore } from '../../app/_layout';
 import {
   getDatestampOneYearAgo,
   getDayOfWeekFromDatestamp,
