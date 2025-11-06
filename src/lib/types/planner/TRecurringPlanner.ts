@@ -1,7 +1,7 @@
-// ✅ 
+// ✅
 
 export type TRecurringPlanner = {
-    id: string;
-    eventIds: string[];
-    deletedWeekdayEventIds: string[];
-};
+  id: string
+  eventIds: string[]
+  deletedWeekdayEventIds: string[]
+}

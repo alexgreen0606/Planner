@@ -1,14 +1,15 @@
-import { EStorageId } from '@/lib/enums/EStorageId';
-import { atom } from 'jotai';
+import { atom } from 'jotai'
 
-// ✅ 
+import { EStorageId } from '@/lib/enums/EStorageId'
 
-// Map of list types to -> map of list ids to -> deleting items in that list
-type PendingDeleteMap = Partial<Record<EStorageId, Record<string, any>>>;
+// ✅
+
+// Maps list types to -> map of list ids to deleting items in that list
+type PendingDeleteMap = Partial<Record<EStorageId, Record<string, any>>>
 
 export const pendingDeleteItemsAtom = atom<PendingDeleteMap>(
-    Object.values(EStorageId).reduce((acc, type) => {
-        acc[type] = {};
-        return acc;
-    }, {} as PendingDeleteMap)
-);
+  Object.values(EStorageId).reduce((acc, type) => {
+    acc[type] = {}
+    return acc
+  }, {} as PendingDeleteMap),
+)

@@ -1,23 +1,24 @@
-import { EStorageId } from "@/lib/enums/EStorageId";
-import { TListItem } from "@/lib/types/listItems/core/TListItem";
-import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
-import { MMKV } from "react-native-mmkv";
+import { MMKV } from 'react-native-mmkv'
 
-// ✅ 
+import { EStorageId } from '@/lib/enums/EStorageId'
+import { TListItem } from '@/lib/types/listItems/core/TListItem'
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem'
 
-const folderStorage = new MMKV({ id: EStorageId.FOLDER_ITEM });
-const itemStorage = new MMKV({ id: EStorageId.CHECKLIST_ITEM });
+// ✅
+
+const folderStorage = new MMKV({ id: EStorageId.FOLDER_ITEM })
+const itemStorage = new MMKV({ id: EStorageId.CHECKLIST_ITEM })
 
 // ==================
 // 1. Save Functions
 // ==================
 
 export function saveFolderItemToStorage(data: IFolderItem) {
-    folderStorage.set(data.id, JSON.stringify(data));
+  folderStorage.set(data.id, JSON.stringify(data))
 }
 
 export function saveChecklistItemToStorage(data: TListItem) {
-    itemStorage.set(data.id, JSON.stringify(data));
+  itemStorage.set(data.id, JSON.stringify(data))
 }
 
 // ==================
@@ -25,21 +26,21 @@ export function saveChecklistItemToStorage(data: TListItem) {
 // ==================
 
 export function getListItemFromStorageById(itemId: string): TListItem {
-    const itemString = itemStorage.getString(itemId);
-    if (!itemString) {
-        throw new Error(`getListItemFromStorageById: Checklist item not found with ID ${itemId}`);
-    }
+  const itemString = itemStorage.getString(itemId)
+  if (!itemString) {
+    throw new Error(`getListItemFromStorageById: Checklist item not found with ID ${itemId}`)
+  }
 
-    return JSON.parse(itemString);
+  return JSON.parse(itemString)
 }
 
 export function getFolderItemFromStorageById(itemId: string): IFolderItem {
-    const itemString = folderStorage.getString(itemId);
-    if (!itemString) {
-        throw new Error(`getFolderItemFromStorageById: Folder item not found with ID ${itemId}`);
-    }
+  const itemString = folderStorage.getString(itemId)
+  if (!itemString) {
+    throw new Error(`getFolderItemFromStorageById: Folder item not found with ID ${itemId}`)
+  }
 
-    return JSON.parse(itemString);
+  return JSON.parse(itemString)
 }
 
 // ====================
@@ -47,9 +48,9 @@ export function getFolderItemFromStorageById(itemId: string): IFolderItem {
 // ====================
 
 export function deleteFolderItemFromStorage(itemId: string) {
-    folderStorage.delete(itemId);
+  folderStorage.delete(itemId)
 }
 
 export function deleteChecklistItemFromStorage(itemId: string) {
-    itemStorage.delete(itemId);
+  itemStorage.delete(itemId)
 }

@@ -1,9 +1,5 @@
-import EventModal from "@/components/EventModal";
+import EventModal from '@/components/EventModal'
 
-// ✅ 
+const ViewEventModal = () => <EventModal isViewMode />
 
-const ViewEventModal = () => (
-    <EventModal isViewMode />
-);
-
-export default ViewEventModal;
+export default ViewEventModal

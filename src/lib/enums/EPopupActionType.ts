@@ -1,5 +1,5 @@
 export enum EPopupActionType {
-    BUTTON = "BUTTON",
-    SWITCH = "SWITCH",
-    SUBMENU = "SUBMENU",
+  BUTTON = 'BUTTON',
+  SWITCH = 'SWITCH',
+  SUBMENU = 'SUBMENU',
 }

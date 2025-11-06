@@ -2,13 +2,15 @@
   "name": "assistant",
   "version": "1.0.0",
   "main": "expo-router/entry",
+  "type": "module",
   "scripts": {
     "start": "expo start --dev-client",
     "ios": "expo prebuild && npx pod-install && expo run:ios",
     "ios_fast": "expo run:ios",
     "web": "expo start --web",
     "android": "expo run:android",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "lint": "eslint 'app/**/*.{js,jsx,ts,tsx}' 'src/**/*.{js,jsx,ts,tsx}' --fix"
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
@@ -34,6 +36,7 @@
     "expo-sms": "~14.0.7",
     "expo-status-bar": "~3.0.8",
     "expo-symbols": "~1.0.7",
+    "jiti": "^2.6.1",
     "jotai": "^2.12.4",
     "lodash.debounce": "^4.0.8",
     "luxon": "^3.6.1",
@@ -68,12 +71,22 @@
     "@types/lodash.debounce": "^4.0.9",
     "@types/luxon": "^3.6.2",
     "@types/react": "~19.1.10",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
     "autoprefixer": "^10.4.21",
     "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "patch-package": "^8.0.1",
     "postcss": "^8.5.3",
     "postinstall-postinstall": "^2.1.0",
-    "typescript": "~5.9.2"
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.46.3"
   },
   "private": true
 }

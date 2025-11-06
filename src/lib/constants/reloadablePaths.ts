@@ -1,5 +1,3 @@
-// ✅ 
+// ✅
 
-export const reloadablePaths = [
-    '/planners',
-];
+export const reloadablePaths = ['/planners']

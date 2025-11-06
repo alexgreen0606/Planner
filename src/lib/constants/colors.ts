@@ -1,4 +1,4 @@
-// ✅ 
+// ✅
 
 export const selectableColors = [
   'systemRed',
@@ -10,6 +10,6 @@ export const selectableColors = [
   'systemPurple',
   'systemBrown',
   'label',
-];
+]
 
-export type TSelectableColor = (typeof selectableColors)[number];
+export type TSelectableColor = (typeof selectableColors)[number]

@@ -45,9 +45,9 @@ When declaring, follow this order (exported after local):
 6. `Validation Functions`
 
 ## Function Names
-- Declarations in components: 'handle'. 
+- Declarations in components that are use in TSX or returned : 'handle'. 
 - Props: 'on'. 
-- Declarations of utils (anything outside component. May be above component): action itself (ex: "saveToStorage"). 
+- Declarations of utils (anything outside component or only used within the component, not shared): action itself (ex: "saveToStorage"). 
 
 ## Props  
 - Always define props using `type`.

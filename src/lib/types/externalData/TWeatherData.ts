@@ -1,11 +1,11 @@
-import { SFSymbol } from "expo-symbols";
+import { SFSymbol } from 'expo-symbols'
 
-// ✅ 
+// ✅
 
 export type TWeatherData = {
-    datestamp: string;
-    condition: string;
-    high: number;
-    low: number;
-    symbol: SFSymbol;
-};
+  datestamp: string
+  condition: string
+  high: number
+  low: number
+  symbol: SFSymbol
+}

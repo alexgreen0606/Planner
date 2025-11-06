@@ -1,5 +1,5 @@
-import { atom } from 'jotai';
+import { atom } from 'jotai'
 
-// ✅ 
+// ✅
 
-export const textfieldIdAtom = atom<string | null>(null);
+export const textfieldIdAtom = atom<string | null>(null)

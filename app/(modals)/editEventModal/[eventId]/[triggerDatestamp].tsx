@@ -1,9 +1,5 @@
-import EventModal from "@/components/EventModal";
+import EventModal from '@/components/EventModal'
 
-// ✅ 
+const EditEventModal = () => <EventModal />
 
-const EditEventModal = () => (
-    <EventModal />
-);
-
-export default EditEventModal;
+export default EditEventModal

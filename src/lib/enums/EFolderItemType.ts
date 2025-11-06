@@ -1,6 +1,6 @@
-// ✅ 
+// ✅
 
 export enum EFolderItemType {
-    FOLDER = 'folder',
-    CHECKLIST = 'checklist'
+  FOLDER = 'folder',
+  CHECKLIST = 'checklist',
 }

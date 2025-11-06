@@ -1,148 +1,275 @@
-import { calendarMapAtom, importantCalendarAtom, primaryCalendarAtom } from "@/atoms/calendarAtoms";
-import { userAccessAtom } from "@/atoms/userAccess";
-import { NULL } from "@/lib/constants/generic";
-import { EAccess } from "@/lib/enums/EAccess";
-import { EFolderItemType } from "@/lib/enums/EFolderItemType";
-import { EStorageId } from "@/lib/enums/EStorageId";
-import { EStorageKey } from "@/lib/enums/EStorageKey";
-import { IFolderItem } from "@/lib/types/listItems/IFolderItem";
-import { getCalendarMap, getPrimaryCalendar } from "@/utils/calendarUtils";
-import { useCalendarPermissions } from "expo-calendar";
-import { getPermissionsAsync, requestPermissionsAsync } from "expo-contacts";
-import { useFonts } from "expo-font";
-import { useAtom, useAtomValue } from "jotai";
-import { useEffect } from "react";
-import * as Calendar from 'expo-calendar';
-import { useMMKV, useMMKVObject } from "react-native-mmkv";
-import { plannerCarouselWeeksAtom } from "@/atoms/plannerCarouselWeekAtom";
+import * as Calendar from 'expo-calendar'
+import * as Contacts from 'expo-contacts'
+import { useFonts } from 'expo-font'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { useEffect } from 'react'
+import { useMMKV, useMMKVObject } from 'react-native-mmkv'
+
+import {
+  calendarMapAtom,
+  primaryCalendarAtom,
+  upcomingDatesMapAtom,
+} from '@/atoms/planner/calendarAtoms'
+import { plannerCarouselDataAtom } from '@/atoms/planner/plannerCarouselWeekAtom'
+import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp'
+import { NULL } from '@/lib/constants/generic'
+import { EAccess } from '@/lib/enums/EAccess'
+import { EFolderItemType } from '@/lib/enums/EFolderItemType'
+import { EStorageId } from '@/lib/enums/EStorageId'
+import { EStorageKey } from '@/lib/enums/EStorageKey'
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem'
+import { getDatestampOneYearFromToday, getTodayDatestamp } from '@/utils/dateUtils'
+
+import usePermissions from './usePermissions'
 
 const initialRootFolder: IFolderItem = {
-    id: EStorageKey.ROOT_FOLDER_KEY,
-    listId: NULL,
-    itemIds: [],
-    value: 'Checklists',
-    platformColor: 'label',
-    type: EFolderItemType.FOLDER,
-    storageId: EStorageId.FOLDER_ITEM
-};
+  id: EStorageKey.ROOT_FOLDER_KEY,
+  listId: NULL,
+  itemIds: [],
+  value: 'Checklists',
+  platformColor: 'label',
+  type: EFolderItemType.FOLDER,
+  storageId: EStorageId.FOLDER_ITEM,
+}
 
 const useAppInitialization = () => {
-    const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM })
 
-    const [userAccess, setUserAccess] = useAtom(userAccessAtom);
-    const [primaryCalendar, setPrimaryCalendar] = useAtom(primaryCalendarAtom);
-    const [importantCalendar, setImportantCalendar] = useAtom(importantCalendarAtom);
-    const [calendarMap, setCalendarMap] = useAtom(calendarMapAtom);
-    const plannerCarouselWeeks = useAtomValue(plannerCarouselWeeksAtom);
+  const {
+    permission: hasCalendarPermissions,
+    isLoaded: isCalendarPermissionsLoaded,
+    setPermission: setCalendarPermissions,
+  } = usePermissions(EAccess.CALENDAR)
+  const { isLoaded: isContactsPermissionsLoaded, setPermission: setContactsPermissions } =
+    usePermissions(EAccess.CONTACTS)
 
-    const [fontsLoaded] = useFonts({
-        'RoundHeavy': require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
-        'RoundMedium': require('../../assets/fonts/SF-Compact-Rounded-Medium.otf'),
-        'Round': require('../../assets/fonts/SF-Compact-Rounded-Regular.otf'),
-        'Text': require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
-    });
+  const [primaryCalendar, setPrimaryCalendar] = useAtom(primaryCalendarAtom)
+  const [calendarMapInStore, setCalendarMapInStore] = useAtom(calendarMapAtom)
+  const setUpcomingDatesMap = useSetAtom(upcomingDatesMapAtom)
+  const plannerCarouselWeeks = useAtomValue(plannerCarouselDataAtom)
+  const setTodayDatestamp = useSetAtom(todayDatestampAtom)
 
-    const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(EStorageKey.ROOT_FOLDER_KEY, folderItemStorage);
+  const [fontsLoaded] = useFonts({
+    RoundHeavy: require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
+    RoundMedium: require('../../assets/fonts/SF-Compact-Rounded-Medium.otf'),
+    Round: require('../../assets/fonts/SF-Compact-Rounded-Regular.otf'),
+    Text: require('../../assets/fonts/SF-Pro-Text-Regular.otf'),
+  })
 
-    const [calendarStatus, requestCalendarPermissions] = useCalendarPermissions();
+  const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(
+    EStorageKey.ROOT_FOLDER_KEY,
+    folderItemStorage,
+  )
 
-    const areCalendarsReady = userAccess.get(EAccess.CALENDAR) === false || (
-        primaryCalendar && importantCalendar && calendarMap
-    );
+  const areCalendarsReady =
+    (isCalendarPermissionsLoaded && !hasCalendarPermissions) ||
+    (primaryCalendar && calendarMapInStore)
+  const appReady =
+    fontsLoaded &&
+    areCalendarsReady &&
+    isContactsPermissionsLoaded &&
+    rootFolder &&
+    plannerCarouselWeeks.weeks.length > 0
 
-    const appReady =
-        fontsLoaded &&
-        areCalendarsReady &&
-        userAccess.get(EAccess.CALENDAR) !== undefined &&
-        userAccess.get(EAccess.CONTACTS) !== undefined &&
-        rootFolder &&
-        plannerCarouselWeeks.weeks.length > 0;
+  // Load in the initial calendar data.
+  useEffect(() => {
+    checkRootFolderExistence()
+    handleLoadBaseData()
+    const todayDatestampSchedulerId = startMidnightDatestampScheduler()
 
-    // Calendar permissions.
-    useEffect(() => {
-        if (!calendarStatus || calendarStatus.status === 'undetermined') {
-            requestCalendarPermissions();
-        } else {
-            setUserAccess(prev => {
-                const newMap = new Map(prev);
-                newMap.set(EAccess.CALENDAR, calendarStatus.status === 'granted');
-                return newMap;
-            });
-        }
-    }, [calendarStatus]);
+    return () => clearTimeout(todayDatestampSchedulerId)
+  }, [])
 
-    // Contacts permission and root folder check.
-    useEffect(() => {
-        checkContactsPermissions();
-        checkRootFolderExistence();
-    }, []);
+  async function handleLoadBaseData() {
+    // Get the calendar permissions.
+    const hasCalendarsPermissions = await handleCheckCalendarPermissions()
+    const hasContactsPermissions = await handleCheckContactsPermissions()
 
-    // Load in the device calendars to the jotai store.
-    useEffect(() => {
-        if (userAccess.get(EAccess.CALENDAR)) {
-            loadCalendars();
-        }
-    }, [userAccess]);
+    // Get the calendar map.
+    const calendarMap = await handleLoadCalendarsMap(hasCalendarsPermissions)
 
-    async function loadCalendars() {
-        const primaryCalendar = await getPrimaryCalendar();
-        let calendarMap = await getCalendarMap();
-        let importantCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Important');
+    // Get the all-day events for the Upcoming Dates page.
+    handleLoadAllDayEventsToStore(hasCalendarsPermissions, calendarMap)
 
-        if (!importantCalendar) {
-            await Calendar.createCalendarAsync({
-                title: 'Important',
-                color: 'rgb(255,56,60)',
-                entityType: Calendar.EntityTypes.EVENT,
-                name: 'Important',
-                ownerAccount: 'PlannerApp'
-            });
-            calendarMap = await getCalendarMap();
-            importantCalendar = Object.values(calendarMap).find(calendar => calendar.title === 'Important')!;
-        }
+    return { hasCalendarsPermissions, hasContactsPermissions, calendarMap }
+  }
 
-        setPrimaryCalendar(primaryCalendar);
-        setImportantCalendar(importantCalendar);
-        setCalendarMap(calendarMap);
+  async function handleLoadCalendarsMap(hasCalendarsPermissions: boolean) {
+    if (!hasCalendarsPermissions) {
+      // TODO; handle no access
     }
 
-    async function checkContactsPermissions() {
-        if (userAccess.get(EAccess.CONTACTS) !== undefined) return;
+    const primaryCalendar = await Calendar.getDefaultCalendarAsync()
+    let calendarMap = await getCalendarsMap()
 
-        try {
-            const { status } = await getPermissionsAsync();
-
-            if (status === 'undetermined') {
-                const { status: newStatus } = await requestPermissionsAsync();
-                setUserAccess(prev => {
-                    const newMap = new Map(prev);
-                    newMap.set(EAccess.CONTACTS, newStatus === 'granted');
-                    return newMap;
-                });
-            } else {
-                setUserAccess(prev => {
-                    const newMap = new Map(prev);
-                    newMap.set(EAccess.CONTACTS, status === 'granted');
-                    return newMap;
-                });
-            }
-        } catch (error) {
-            console.error('Error requesting contacts permission:', error);
-            setUserAccess(prev => {
-                const newMap = new Map(prev);
-                newMap.set(EAccess.CONTACTS, false);
-                return newMap;
-            });
-        }
+    let importantCalendar = Object.values(calendarMap).find(
+      (calendar) => calendar.title === 'Important',
+    )
+    if (!importantCalendar) {
+      await Calendar.createCalendarAsync({
+        title: 'Important',
+        color: 'rgb(255,56,60)',
+        entityType: Calendar.EntityTypes.EVENT,
+        name: 'Important',
+        ownerAccount: 'PlannerApp',
+      })
+      calendarMap = await getCalendarsMap()
+      importantCalendar = Object.values(calendarMap).find(
+        (calendar) => calendar.title === 'Important',
+      )!
     }
 
-    function checkRootFolderExistence() {
-        if (!rootFolder) {
-            setRootFolder(initialRootFolder);
-        }
+    if (Object.keys(calendarMapInStore).length === 0) {
+      setCalendarMapInStore(calendarMap)
+      setPrimaryCalendar(primaryCalendar)
     }
 
-    return appReady;
-};
+    return calendarMap
+  }
 
-export default useAppInitialization;
+  async function handleCheckContactsPermissions(): Promise<boolean> {
+    try {
+      const { status } = await Contacts.getPermissionsAsync()
+      if (status === 'undetermined') {
+        const { status: newStatus } = await Contacts.requestPermissionsAsync()
+        setContactsPermissions(newStatus === 'granted')
+        return newStatus === 'granted'
+      } else {
+        setContactsPermissions(status === 'granted')
+        return status === 'granted'
+      }
+    } catch (error) {
+      console.error('Error requesting contacts permission:', error)
+      setContactsPermissions(false)
+      return false
+    }
+  }
+
+  async function handleCheckCalendarPermissions(): Promise<boolean> {
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync()
+      if (status === 'undetermined') {
+        const { status: newStatus } = await Contacts.requestPermissionsAsync()
+        setCalendarPermissions(newStatus === 'granted')
+        return newStatus === 'granted'
+      } else {
+        setCalendarPermissions(status === 'granted')
+        return status === 'granted'
+      }
+    } catch (error) {
+      console.error('Error requesting calendars permission:', error)
+      setCalendarPermissions(false)
+      return false
+    }
+  }
+
+  async function handleLoadAllDayEventsToStore(
+    hasCalendarsPermissions: boolean,
+    calendarMap: any,
+  ): Promise<void> {
+    if (!hasCalendarsPermissions) {
+      // TODO: handle this case
+    }
+
+    try {
+      // Get all upcoming all-day events
+      const allDayEvents = await getAllDayEventsFromCalendarsForNextYear(calendarMap)
+
+      // Group events by datestamp (YYYY-MM-DD)
+      const eventsByDate: Record<string, Calendar.Event[]> = {}
+
+      for (const event of allDayEvents) {
+        // Extract date from event's startDate
+        // startDate is in ISO format, so we extract the date part
+        const eventDate = new Date(event.startDate)
+        const datestamp = eventDate.toISOString().split('T')[0] // YYYY-MM-DD format
+
+        if (!eventsByDate[datestamp]) {
+          eventsByDate[datestamp] = []
+        }
+        eventsByDate[datestamp].push(event)
+      }
+
+      // Sort events within each date by title or start time for consistent ordering
+      Object.keys(eventsByDate).forEach((date) => {
+        eventsByDate[date].sort((a, b) => {
+          // First sort by time if they have different times (unlikely for all-day events)
+          const timeCompare = new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          if (timeCompare !== 0) return timeCompare
+
+          // Then sort alphabetically by title
+          return (a.title || '').localeCompare(b.title || '')
+        })
+      })
+
+      // Update the atom with the grouped events
+      setUpcomingDatesMap(eventsByDate)
+    } catch (error) {
+      console.error('Error loading all-day events to store:', error)
+      setUpcomingDatesMap({})
+    }
+  }
+
+  function checkRootFolderExistence() {
+    if (!rootFolder) {
+      setRootFolder(initialRootFolder)
+    }
+  }
+
+  // HELPER FUNCTIONS
+
+  function updateTodayDatestamp() {
+    const todayDatestamp = getTodayDatestamp()
+    setTodayDatestamp(todayDatestamp)
+  }
+
+  function startMidnightDatestampScheduler() {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    const msUntilMidnight = tomorrow.getTime() - now.getTime() + 100
+
+    const timeoutId = setTimeout(() => {
+      updateTodayDatestamp()
+      const intervalId = setInterval(updateTodayDatestamp, 24 * 60 * 60 * 1000)
+      return () => clearInterval(intervalId)
+    }, msUntilMidnight)
+
+    return timeoutId
+  }
+
+  async function getAllDayEventsFromCalendarsForNextYear(
+    calendarsMap: any,
+  ): Promise<Calendar.Event[]> {
+    const startDate = new Date(`${getTodayDatestamp()}T00:00:00`)
+    const endDate = new Date(`${getDatestampOneYearFromToday()}T23:59:59`)
+
+    const allCalendarIds = Object.keys(calendarsMap)
+
+    const allCalendarEvents = await Calendar.getEventsAsync(allCalendarIds, startDate, endDate)
+    const allDayEvents = allCalendarEvents.filter((event) => event.allDay === true)
+
+    return allDayEvents
+  }
+
+  async function getCalendarsMap(): Promise<Record<string, Calendar.Calendar>> {
+    const allCalendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT)
+    const calendarMap = allCalendars.reduce(
+      (acc, cal) => {
+        acc[cal.id] = cal
+        return acc
+      },
+      {} as Record<string, Calendar.Calendar>,
+    )
+    return calendarMap
+  }
+
+  return {
+    appReady,
+    onLoadAllDayEventsToStore: handleLoadAllDayEventsToStore,
+    onLoadBaseData: handleLoadBaseData,
+  }
+}
+
+export default useAppInitialization

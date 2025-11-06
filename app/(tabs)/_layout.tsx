@@ -1,43 +1,45 @@
-import { todayDatestampAtom } from '@/atoms/todayDatestamp';
-import { userAccessAtom } from '@/atoms/userAccess';
-import { EAccess } from '@/lib/enums/EAccess';
-import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
-import { SFSymbol } from 'expo-symbols';
-import { useAtomValue } from 'jotai';
-import { DateTime } from 'luxon';
-import { useMemo } from 'react';
+import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs'
+import { SFSymbol } from 'expo-symbols'
+import { useAtomValue } from 'jotai'
+import { DateTime } from 'luxon'
+import { useMemo } from 'react'
 
-// ✅ 
+import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp'
+import usePermissions from '@/hooks/usePermissions'
+import { EAccess } from '@/lib/enums/EAccess'
+
+// ✅
 
 const TabLayout = () => {
-    const todayDatestamp = useAtomValue(todayDatestampAtom);
-    const userAccess = useAtomValue(userAccessAtom);
+  const { permission: hasCalendarPermissions } = usePermissions(EAccess.CALENDAR)
 
-    const todayPlannerIcon = useMemo(
-        () => `${DateTime.fromISO(todayDatestamp).toFormat('d')}.calendar` as SFSymbol,
-        [todayDatestamp]
-    );
+  const todayDatestamp = useAtomValue(todayDatestampAtom)
 
-    return (
-        <NativeTabs minimizeBehavior='onScrollDown'>
-            <NativeTabs.Trigger name="planners">
-                <Label hidden />
-                <Icon sf={todayPlannerIcon} />
-            </NativeTabs.Trigger>
-            <NativeTabs.Trigger hidden={!userAccess.get(EAccess.CALENDAR)} name='upcomingDates'>
-                <Label hidden />
-                <Icon sf='calendar' />
-            </NativeTabs.Trigger>
-            <NativeTabs.Trigger name="checklists">
-                <Label hidden />
-                <Icon sf='list.bullet.clipboard' />
-            </NativeTabs.Trigger>
-            {/* <NativeTabs.Trigger name='recurring'>
+  const todayPlannerIcon = useMemo(
+    () => `${DateTime.fromISO(todayDatestamp).toFormat('d')}.calendar` as SFSymbol,
+    [todayDatestamp],
+  )
+
+  return (
+    <NativeTabs minimizeBehavior="onScrollDown">
+      <NativeTabs.Trigger name="planners">
+        <Label hidden />
+        <Icon sf={todayPlannerIcon} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger hidden={!hasCalendarPermissions} name="upcomingDates">
+        <Label hidden />
+        <Icon sf="calendar" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="checklists">
+        <Label hidden />
+        <Icon sf="list.bullet.clipboard" />
+      </NativeTabs.Trigger>
+      {/* <NativeTabs.Trigger name='recurring'>
             <Label hidden />
             <Icon sf='repeat' />
         </NativeTabs.Trigger> */}
-        </NativeTabs>
-    )
-};
+    </NativeTabs>
+  )
+}
 
-export default TabLayout;
+export default TabLayout
