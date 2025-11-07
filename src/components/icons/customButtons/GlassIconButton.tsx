@@ -5,8 +5,6 @@ import { PlatformColor } from 'react-native';
 
 import { getValidCssColor } from '@/utils/colorUtils';
 
-// ✅
-
 type TGlassIconButtonProps = {
   systemImage: SFSymbol;
   disabled?: boolean;

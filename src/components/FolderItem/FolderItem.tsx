@@ -75,7 +75,7 @@ const FolderItem = ({
     if (!item) return null;
 
     return (
-        <View className="flex-row items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22 }}>
+        <View className="flex-row items-center gap-4 relative" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22 }}>
             {/* Type Icon */}
             <FolderItemButton
                 item={item}

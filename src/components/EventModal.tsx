@@ -24,7 +24,7 @@ import { ECarryoverEventType, EEventType } from '@/lib/enums/plannerEventModalEn
 import {
   TCarryoverEventMetadata,
   TInitialEventMetadata,
-} from '@/lib/types/form/plannerEventMetadata'
+} from '@/lib/types/form/plannerEventMetadata';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { IPlannerEvent, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
@@ -36,28 +36,26 @@ import {
   getPlannerFromStorageByDatestamp,
   savePlannerEventToStorage,
   savePlannerToStorage,
-} from '@/storage/plannerStorage'
+} from '@/storage/plannerStorage';
 import {
   getIsoFromNowTimeRoundedDown5Minutes,
   getTodayDatestamp,
   isoToDatestamp,
-} from '@/utils/dateUtils'
+} from '@/utils/dateUtils';
 import {
   getCalendarEventTimeRange,
   transitionToAllDayCalendarEvent,
   transitionToMultiDayCalendarEvent,
   transitionToNonCalendarEvent,
   transitionToSingleDayCalendarEvent,
-} from '@/utils/plannerEventTransitionUtils'
+} from '@/utils/plannerEventTransitionUtils';
 import {
   deletePlannerEventsFromStorageAndCalendar,
   getPlannerEventFromStorageByCalendarId,
   updatePlannerEventIndexWithChronologicalCheck,
-} from '@/utils/plannerUtils'
+} from '@/utils/plannerUtils';
 
 import { TPickerOption } from './Form/microComponents/PickerModalField';
-
-// ✅
 
 type TEventModalProps = {
   isViewMode?: boolean
@@ -81,7 +79,6 @@ type TFormData = {
 
 const EventModal = ({ isViewMode }: TEventModalProps) => {
   const { eventId, triggerDatestamp } = useLocalSearchParams<TEventModalParams>()
-  const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT })
   const router = useRouter()
 
   const {
@@ -109,6 +106,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
   const start = watch('start')
   const end = watch('end')
 
+  const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT })
   const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage)
 
   const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom)

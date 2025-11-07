@@ -1,0 +1,104 @@
+import { useRouter } from 'expo-router';
+import { MotiText, MotiView } from 'moti';
+import { useMemo } from 'react';
+import { Text, useWindowDimensions, View } from 'react-native';
+import { useMMKV, useMMKVObject } from 'react-native-mmkv';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import FolderItemActions from '@/components/actions/FolderItemActions';
+import GlassIconButton from '@/components/icons/customButtons/GlassIconButton';
+import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
+import { NULL } from '@/lib/constants/generic';
+import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { EStorageId } from '@/lib/enums/EStorageId';
+import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
+import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
+import { getValidCssColor } from '@/utils/colorUtils';
+
+import { textStyles } from '../../text/CustomText';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
+
+type FolderItemHeaderProps = {
+    folderItemId: string;
+};
+
+const FolderItemHeader = ({ folderItemId }: FolderItemHeaderProps) => {
+    const isCollapsed = useCollapsibleHeader(folderItemId, EHeaderHeight.FOLDER_ITEM);
+    const { width: SCREEN_WIDTH } = useWindowDimensions();
+    const { top: TOP_SPACER } = useSafeAreaInsets();
+    const router = useRouter();
+
+    const storage = useMMKV({ id: EStorageId.FOLDER_ITEM })
+    const [item] = useMMKVObject<IFolderItem>(folderItemId, storage);
+
+    const breadcrumbPath = useMemo(() => {
+        if (!item) return;
+
+        const pathItems: string[] = [];
+        let currentItem = item;
+        while (currentItem && currentItem.listId !== NULL) {
+            const parentFolder = getFolderItemFromStorageById(currentItem.listId);
+            pathItems.unshift(parentFolder.value);
+            currentItem = parentFolder;
+        }
+
+        return pathItems.join(' / ');
+    }, [item?.listId]);
+
+    const buttonWidth = 45;
+    const totalContainerPadding = LARGE_MARGIN * 2;
+    const expandedWidth = SCREEN_WIDTH - totalContainerPadding;
+    const collapsedWidth = expandedWidth - (totalContainerPadding + (buttonWidth * 2));
+    const collapsedScale = collapsedWidth / expandedWidth;
+
+    return (
+        <View
+            style={{
+                marginTop: TOP_SPACER,
+                height: EHeaderHeight.FOLDER_ITEM
+            }}
+            className="px-4 relative"
+        >
+            {/* Action Buttons */}
+            <View className="flex-row justify-between items-start mb-2">
+                <GlassIconButton
+                    systemImage="chevron.left"
+                    onPress={() => router.back()}
+                />
+
+                <FolderItemActions folderId={folderItemId} />
+            </View>
+
+            {/* Title and Breadcrumbs */}
+            <MotiView
+                className='absolute'
+                animate={{
+                    top: isCollapsed ? 0 : 45 + LARGE_MARGIN,
+                    transform: [{ scale: isCollapsed ? collapsedScale : 1 }]
+                }}
+                style={{ width: expandedWidth, left: LARGE_MARGIN }}
+            >
+                <MotiText
+                    style={[textStyles['upcomingDatesHeader'], {
+                        color: getValidCssColor(item?.platformColor)
+                    }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                >
+                    {item?.value}
+                </MotiText>
+                {breadcrumbPath && (
+                    <Text
+                        style={textStyles['microDetail']}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                    >
+                        {breadcrumbPath}
+                    </Text>
+                )}
+            </MotiView>
+        </View>
+    );
+};
+
+export default FolderItemHeader;

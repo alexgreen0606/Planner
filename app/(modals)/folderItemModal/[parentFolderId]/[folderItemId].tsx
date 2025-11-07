@@ -119,26 +119,6 @@ const FolderItemModal = () => {
   //  Event Handlers
   // ================
 
-  // function handleSubmit(data: TFormData) {
-  //   if (!folderItem) return;
-
-  //   const { title, type, color } = data;
-  //   const newTitle = title.trim();
-
-  //   setFolderItem((prev) =>
-  //     prev
-  //       ? {
-  //           ...prev,
-  //           value: newTitle,
-  //           type,
-  //           platformColor: color
-  //         }
-  //       : prev
-  //   );
-
-  //   router.back();
-  // }
-
   function handleSubmit(data: TFormData) {
     const { title, type, color } = data;
     const newTitle = title.trim();

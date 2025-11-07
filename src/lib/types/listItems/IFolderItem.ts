@@ -3,8 +3,6 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 
 import { IColoredListItem } from './core/IColoredListItem';
 
-// ✅
-
 export interface IFolderItem extends IColoredListItem {
   type: EFolderItemType;
   itemIds: string[];

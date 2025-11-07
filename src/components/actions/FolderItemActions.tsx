@@ -212,6 +212,7 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
           ]
         }
       ]}
+      wrapButton
     />
   );
 };

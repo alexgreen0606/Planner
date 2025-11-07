@@ -7,8 +7,6 @@ import {
   TextStyle
 } from 'react-native';
 
-// ✅
-
 export const textStyles = {
   // --- Standard Text ---
   pageLabel: {

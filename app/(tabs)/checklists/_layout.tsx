@@ -1,52 +1,68 @@
 import { Stack } from 'expo-router';
-import { useAtomValue } from 'jotai';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
-import FolderItemActions from '@/components/actions/FolderItemActions';
+import FolderItemHeader from '@/components/headers/FolderItemHeader/FolderItemHeader';
+import RootFolderHeader from '@/components/headers/RootFolderHeader/RootFolderHeader';
+import ColorFadeView from '@/components/views/ColorFadeView';
 import useAppTheme from '@/hooks/useAppTheme';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPageParams';
-import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
-import { getValidCssColor } from '@/utils/colorUtils';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 
-function getChecklistId(params: TChecklistsPageParams) {
+function getFolderItemId(params: TChecklistsPageParams) {
   return params.checklistId ?? params.folderId ?? EStorageKey.ROOT_FOLDER_KEY;
 }
 
-function getChecklistTitle(params: TChecklistsPageParams) {
-  const folderItemId = getChecklistId(params);
-  const folderItem = getFolderItemFromStorageById(folderItemId);
-  return folderItem.value;
-}
+function getHeader(params: TChecklistsPageParams) {
+  const folderItemId = getFolderItemId(params);
+  if (folderItemId === EStorageKey.ROOT_FOLDER_KEY) {
+    return (
+      <RootFolderHeader />
+    )
+  }
 
-function getChecklistColor(params: TChecklistsPageParams) {
-  const folderItemId = getChecklistId(params);
-  const folderItem = getFolderItemFromStorageById(folderItemId);
-  return getValidCssColor(folderItem.platformColor);
+  return (
+    <FolderItemHeader folderItemId={folderItemId} />
+  )
 }
 
 const ChecklistsLayout = () => {
+  const { top: TOP_SPACER } = useSafeAreaInsets();
   const {
-    CssColor: { background }
+    CssColor: { background },
+    ColorArray: {
+      Screen: { upperDark, upper }
+    }
   } = useAppTheme();
 
-  const itemInTransfer = useAtomValue(transferingFolderItemAtom);
+  function handleGetHeaderBackground(params: TChecklistsPageParams) {
+    const folderItemId = getFolderItemId(params);
+    if (folderItemId === EStorageKey.ROOT_FOLDER_KEY) {
+      return (
+        <ColorFadeView
+          totalHeight={TOP_SPACER + EHeaderHeight.ROOT_FOLDER}
+          solidHeight={TOP_SPACER + EHeaderHeight.ROOT_FOLDER / 2}
+          colors={upper}
+        />
+      )
+    }
+    return (
+      <ColorFadeView
+        totalHeight={TOP_SPACER + EHeaderHeight.FOLDER_ITEM}
+        solidHeight={TOP_SPACER + EHeaderHeight.FOLDER_ITEM / 4}
+        colors={upperDark}
+      />
+    )
+  }
 
   return (
     <Stack
       screenOptions={({ route: { params } }) => ({
-        headerTitle: getChecklistTitle(params ?? {}),
-        headerRight: () =>
-          getChecklistId(params ?? {}) === EStorageKey.ROOT_FOLDER_KEY &&
-          !!itemInTransfer ? undefined : (
-            <FolderItemActions {...params} />
-          ),
+        header: () => getHeader(params ?? {}),
+        headerBackground: () => handleGetHeaderBackground(params ?? {}),
         animation: 'ios_from_right',
-        headerBackButtonDisplayMode: 'minimal',
-        headerTitleStyle: { color: getChecklistColor(params ?? {}) },
         contentStyle: { backgroundColor: background },
         headerTransparent: true,
-        headerLargeTitle: true
       })}
     >
       <Stack.Screen name="index" />

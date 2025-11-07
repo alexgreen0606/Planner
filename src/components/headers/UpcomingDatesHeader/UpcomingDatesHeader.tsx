@@ -1,10 +1,8 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MotiText, MotiView } from 'moti';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { View } from 'react-native';
-import { useAnimatedReaction } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { runOnJS } from 'react-native-worklets';
 
 import {
   activeCalendarFiltersAtom,
@@ -12,33 +10,27 @@ import {
   primaryCalendarAtom,
   toggleCalendarFilterAtom
 } from '@/atoms/planner/calendarAtoms';
+import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
 import { calendarIconMap } from '@/lib/constants/calendarIcons';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
 import { hexToRgba } from '@/utils/colorUtils';
 
 import IconButton from '../../icons/IconButton';
 import PopupList from '../../PopupList';
 import CustomText, { textStyles } from '../../text/CustomText';
 import ShadowView from '../../views/ShadowView';
-
-// ✅
-
-const HEADER_HEIGHT = 90;
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 
 const UpcomingDatesHeader = () => {
   const { top: TOP_SPACER } = useSafeAreaInsets();
 
-  const scrollRegistry = useScrollRegistry();
-  const scrollY = scrollRegistry.get(UPCOMING_DATES_SCROLL_KEY) ?? { value: 0 };
+  const isCollapsed = useCollapsibleHeader(UPCOMING_DATES_SCROLL_KEY, EHeaderHeight.UPCOMING_DATES);
 
   const activeCalendarFilters = useAtomValue(activeCalendarFiltersAtom);
   const toggleCalendarFilter = useSetAtom(toggleCalendarFilterAtom);
   const primaryCalendar = useAtomValue(primaryCalendarAtom);
   const calendarMap = useAtomValue(calendarMapAtom);
-
-  const [collapseHeader, setCollapseHeader] = useState(false);
 
   const calendars = useMemo(() => {
     return Object.values(calendarMap)
@@ -49,26 +41,13 @@ const UpcomingDatesHeader = () => {
       .sort((a, b) => (a.id === primaryCalendar?.id ? -1 : b.id === primaryCalendar?.id ? 1 : 0));
   }, [calendarMap, calendarIconMap, primaryCalendar]);
 
-  // Collapse the header whenever the user scrolls past the default scroll position.
-  const headerCollapseThreshold = -HEADER_HEIGHT + 1;
-  useAnimatedReaction(
-    () => scrollY.value,
-    (offset) => {
-      if (!collapseHeader && offset >= headerCollapseThreshold) {
-        runOnJS(setCollapseHeader)(true);
-      } else if (collapseHeader && offset < headerCollapseThreshold) {
-        runOnJS(setCollapseHeader)(false);
-      }
-    }
-  );
-
   function handleGetIsCalendarActive(calendarId: string) {
     return activeCalendarFilters.size === 0 || activeCalendarFilters.has(calendarId);
   }
 
   return (
     <View
-      style={{ marginTop: TOP_SPACER, height: HEADER_HEIGHT }}
+      style={{ marginTop: TOP_SPACER, height: EHeaderHeight.UPCOMING_DATES }}
       className="flex-row justify-between items-start px-4"
     >
       <View>
@@ -79,7 +58,7 @@ const UpcomingDatesHeader = () => {
             style={textStyles['upcomingDatesHeader']}
             animate={{
               // @ts-ignore
-              fontSize: collapseHeader ? 18 : 28
+              fontSize: isCollapsed ? 22 : 32
             }}
           >
             Upcoming Dates
@@ -90,7 +69,7 @@ const UpcomingDatesHeader = () => {
         <MotiView
           className="overflow-hidden"
           animate={{
-            height: collapseHeader ? 0 : 20
+            height: isCollapsed ? 0 : 20
           }}
         >
           <CustomText variant="upcomingDatesSubHeader">All-day calendar events</CustomText>

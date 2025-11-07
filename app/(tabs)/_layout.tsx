@@ -10,9 +10,8 @@ import { EAccess } from '@/lib/enums/EAccess';
 
 const TabLayout = () => {
   const { permission: hasCalendarPermissions } = usePermissions(EAccess.CALENDAR);
-
+  
   const todayDatestamp = useAtomValue(todayDatestampAtom);
-
   const todayPlannerIcon = useMemo(
     () => `${DateTime.fromISO(todayDatestamp).toFormat('d')}.calendar` as SFSymbol,
     [todayDatestamp]

@@ -24,11 +24,10 @@ type TUpcomingDateCardProps = {
 };
 
 const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) => {
+  const calendarMap = useAtomValue(calendarMapAtom);
   const router = useRouter();
 
   const todayDatestamp = useAtomValue(todayDatestampAtom);
-  const calendarMap = useAtomValue(calendarMapAtom);
-
   const countdownLabel = useMemo(() => {
     let countdownLabel = '';
 

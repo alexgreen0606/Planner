@@ -17,14 +17,15 @@ type TChecklistPageParams = {
 };
 
 const ChecklistPage = () => {
-  const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
-  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
 
+  const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
+  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage);
 
   return (
     <DraggableListPage
+      padHeaderHeight
       emptyPageLabel='All items complete'
       listId={checklistId}
       storage={itemStorage}

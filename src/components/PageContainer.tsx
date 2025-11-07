@@ -1,36 +1,18 @@
-import { useHeaderHeight } from '@react-navigation/elements';
-import { usePathname } from 'expo-router';
-import React, { ReactElement, ReactNode, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
-import { MMKV } from 'react-native-mmkv';
-import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import { DropProvider } from 'react-native-reanimated-dnd';
+import React, { ReactNode } from 'react';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
-import ThinLine from '@/components/ThinLine';
+import EmptyPageLabel from '@/components/EmptyLabel';
 import useAppTheme from '@/hooks/useAppTheme';
-import useSortableMmkvList from '@/hooks/useSortableMmkvList';
-import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
-import { reloadablePaths } from '@/lib/constants/reloadablePaths';
-import { EStorageId } from '@/lib/enums/EStorageId';
-import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
 
-import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './icons/customButtons/GlassIconButton';
 import ColorFadeView from './views/ColorFadeView';
-import FillerView from './views/FillerView';
-
-// ✅
-
 
 type TPageContainerProps = {
     emptyPageLabel: string;
     children: ReactNode;
     onAddButtonClick: () => void;
-
     isPageEmpty?: boolean;
     toolbar?: ReactNode;
     stickyHeader?: ReactNode;
@@ -50,16 +32,13 @@ const PageContainer = ({
     children
 }: TPageContainerProps) => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
-
     const {
         ColorArray: {
             Screen: { upper }
         }
     } = useAppTheme();
-
     return (
         <>
-
             {children}
 
             {/* Sticky Header */}
@@ -81,8 +60,7 @@ const PageContainer = ({
             <View style={{ bottom: BOTTOM_NAV_HEIGHT + LARGE_MARGIN }} className="absolute right-4">
                 <GlassIconButton
                     systemImage="plus"
-                    isPrimary
-                    color={addButtonColor}
+                    iconPlatformColor={addButtonColor}
                     onPress={onAddButtonClick}
                 />
             </View>

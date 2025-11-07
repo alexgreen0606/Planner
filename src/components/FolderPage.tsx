@@ -1,9 +1,13 @@
 import { Host, List } from '@expo/ui/swift-ui';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
+import Animated from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import useFolderItem from '@/hooks/useFolderItem';
 import { NULL } from '@/lib/constants/generic';
 import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
@@ -12,6 +16,7 @@ import { updateFolderItemIndex } from '@/utils/checklistUtils';
 
 import FolderItem from './FolderItem/FolderItem';
 import PageContainer from './PageContainer';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 
 type TFolderPageProps = {
   folderId: string;
@@ -23,6 +28,9 @@ const BOTTOM_NAV_HEIGHT = 86;
 const FolderPage = ({ folderId }: TFolderPageProps) => {
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const { top: TOP_SPACER } = useSafeAreaInsets();
+  const onScroll = useScrollTracker(folderId);
+  const headerHeight = useHeaderHeight();
   const router = useRouter();
 
   const {
@@ -46,6 +54,9 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
     updateFolderItemIndex(from, to, folderId);
   }
 
+  const contentInset = headerHeight - TOP_SPACER;
+  const emptyPageHeight = SCREEN_HEIGHT;
+
   return (
     <PageContainer
       emptyPageLabel="No contents"
@@ -53,14 +64,16 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
       addButtonColor={folder?.platformColor}
       onAddButtonClick={() => folder && router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${folder.id}/${NULL}`)}
     >
-      <ScrollView
+      <Animated.ScrollView
+        onScroll={onScroll}
         className="flex-1"
         contentInsetAdjustmentBehavior='automatic'
         contentContainerClassName="pb-4 flex-1"
-        scrollIndicatorInsets={{ bottom: BOTTOM_NAV_HEIGHT }}
-        contentContainerStyle={{ minHeight: Math.max(SCREEN_HEIGHT, updatedList.length * 52 + BOTTOM_NAV_HEIGHT) }}
+        contentInset={{ top: contentInset }}
+        contentOffset={{ x: 0, y: -contentInset }}
+        scrollIndicatorInsets={{ top: contentInset, bottom: BOTTOM_NAV_HEIGHT }}
+        contentContainerStyle={{ minHeight: Math.max(emptyPageHeight, updatedList.length * 52 + BOTTOM_NAV_HEIGHT) }}
       >
-        {/* Content List */}
         <Host style={{ flex: 1 }}>
           <List
             moveEnabled
@@ -81,7 +94,7 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
             ))}
           </List>
         </Host>
-      </ScrollView>
+      </Animated.ScrollView>
     </PageContainer>
   );
 };

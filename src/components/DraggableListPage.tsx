@@ -23,6 +23,7 @@ import GlassIconButton from './icons/customButtons/GlassIconButton';
 import PageContainer from './PageContainer';
 import ColorFadeView from './views/ColorFadeView';
 import FillerView from './views/FillerView';
+import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 
 // ✅
 
@@ -67,12 +68,11 @@ const DraggableListPage = <T extends TListItem, S>({
   ...listItemProps
 }: TDraggableListPageProps<T, S>) => {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
-  const { top: TOP_SPACER } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const pathname = usePathname();
+  const {top: TOP_SPACER} = useSafeAreaInsets();
 
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
-  const scrollRegistry = useScrollRegistry();
   const {
     CssColor: { background },
     ColorArray: {
@@ -93,27 +93,25 @@ const DraggableListPage = <T extends TListItem, S>({
 
   const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
 
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollY.value = e.contentOffset.y;
-    }
-  });
+  const onScroll = useScrollTracker(listId);
 
   // TODO: calculate this correctly in the future.
   const BOTTOM_NAV_HEIGHT = 86;
 
   const canReloadPath = reloadablePaths.some((p) => pathname.includes(p));
 
-  // Register the scroll offset for use within the header components.
-  useEffect(() => {
-    scrollRegistry.set(listId, scrollY);
-  }, [listId]);
-
   function handleReloadPage() {
     setShowLoadingSymbol(true);
     onReloadPage();
   }
+
+  const contentInset = headerHeight - TOP_SPACER;
+
+  const paddedHeaderScrollProps = padHeaderHeight ? {
+contentInset: { top: contentInset },
+        contentOffset: { x: 0, y: -contentInset },
+        scrollIndicatorInsets: { top: contentInset }
+  } : {};
 
   return (
     <DropProvider ref={dropProviderRef}>
@@ -127,6 +125,7 @@ const DraggableListPage = <T extends TListItem, S>({
       >
         <Animated.ScrollView
           ref={scrollViewRef}
+
           // TODO: create custom refresh logic
           refreshControl={
             canReloadPath ? (
@@ -140,10 +139,15 @@ const DraggableListPage = <T extends TListItem, S>({
           contentInsetAdjustmentBehavior="always"
           showsVerticalScrollIndicator={true}
           scrollEventThrottle={SCROLL_THROTTLE}
+
           contentContainerStyle={{
             minHeight: SCREEN_HEIGHT,
-            paddingTop: padHeaderHeight ? headerHeight : 0
+            // paddingTop: padHeaderHeight ? headerHeight : 0
           }}
+
+
+          {...paddedHeaderScrollProps}
+
           style={{ height: SCREEN_HEIGHT, backgroundColor: background }}
         >
           {/* Header Filler */}
