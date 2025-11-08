@@ -16,7 +16,6 @@ import { updateFolderItemIndex } from '@/utils/checklistUtils';
 
 import FolderItem from './FolderItem/FolderItem';
 import PageContainer from './PageContainer';
-import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 
 type TFolderPageProps = {
   folderId: string;
@@ -68,7 +67,7 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
         onScroll={onScroll}
         className="flex-1"
         contentInsetAdjustmentBehavior='automatic'
-        contentContainerClassName="pb-4 flex-1"
+        contentContainerClassName="pb-4 flex-1 relative"
         contentInset={{ top: contentInset }}
         contentOffset={{ x: 0, y: -contentInset }}
         scrollIndicatorInsets={{ top: contentInset, bottom: BOTTOM_NAV_HEIGHT }}
