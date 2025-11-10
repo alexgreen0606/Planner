@@ -6,6 +6,8 @@ import { MMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DraggableList } from "draggable-list";
+
 import useSortableMmkvList from '@/hooks/useSortableMmkvList';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
@@ -14,13 +16,11 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
-import { Host, List } from '@expo/ui/swift-ui';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './icons/customButtons/GlassIconButton';
 import PageContainer from './PageContainer';
 import FillerView from './views/FillerView';
-
-import { MagicButton } from 'magic-button';
+import { Host } from '@expo/ui/swift-ui';
 
 type TDraggableListPageProps<T extends TListItem, S> = {
   emptyPageLabel: string;
@@ -65,7 +65,7 @@ const DraggableListPage = <T extends TListItem, S>({
   const headerHeight = useHeaderHeight();
   const pathname = usePathname();
   const { top: TOP_SPACER } = useSafeAreaInsets();
-  const { isListEmpty, listHeight, PlaceholderField, onToggleLowerListItem, ListItems, NewItemTriggers } =
+  const { isListEmpty, listHeight, PlaceholderField, onToggleLowerListItem, ListItems } =
     useSortableMmkvList(
       itemIds,
       storage,
@@ -120,24 +120,17 @@ const DraggableListPage = <T extends TListItem, S>({
             ) : undefined
           }
         >
-
-          <MagicButton title='teat' />
-          
-
-
           {/* Content */}
-          <View className='w-full' style={{ height: listHeight }}>
+          <View className='w-full p-4' style={{ height: listHeight + LARGE_MARGIN * 2 }}>
             <Host style={{ flex: 1 }}>
-              <List
+
+              <DraggableList
                 moveEnabled
-                scrollEnabled={false}
-                // onMoveItem={handleMoveItem}
-                listStyle='plain'
+              // onMoveItem={handleMoveItem}
               >
                 <ListItems />
-              </List>
+              </DraggableList>
             </Host>
-            <NewItemTriggers />
           </View>
 
           {/* Add Button Filler */}

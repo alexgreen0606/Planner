@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Pressable, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 
 import ListItem from '@/components/lists/ListItem';
@@ -28,8 +28,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
   }
 ) => {
   const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
-
-  const [isDragging, setIsDragging] = useState<boolean>(false);
 
   // =======================
   //  Placeholder Textfield
@@ -73,15 +71,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
     }
   }
 
-  function handleDragStart() {
-    setIsDragging(true);
-    onCloseTextfield();
-  }
-
-  function handleDragEnd() {
-    setIsDragging(false);
-  }
-
   // Track the ordering of IDs to pass to the list function.
   // This sort order will be out of sync with the UI and MMKV once a user drags items around.
   const [updatedList, setUpdatedList] = useState(itemIds);
@@ -97,7 +86,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
       listId={listId}
       itemId={itemId}
       storage={storage}
-      isDragging={isDragging}
       onFocusPlaceholderTextfield={handleFocusPlaceholder}
       onCreateItem={onCreateItem}
       onDeleteItem={onDeleteItem}
@@ -106,22 +94,12 @@ const useSortableMmkvList = <T extends TListItem, S>(
     />
   ));
 
-  const NewItemTriggers = () => updatedList.map((_, index) => (
-    <Pressable
-      onPress={() => onCreateItem(listId, index)}
-      style={{ height: EListLayout.NEW_ITEM_TRIGGER_HEIGHT, top: -(EListLayout.NEW_ITEM_TRIGGER_HEIGHT / 2) + index * EListLayout.ITEM_HEIGHT }}
-      className='w-full absolute'
-      key={`new-item-trigger-${index}`}
-    />
-  ));
-
   return {
     isListEmpty: itemIds.length === 0,
     listHeight: EListLayout.ITEM_HEIGHT * updatedList.length,
     PlaceholderField,
     onToggleLowerListItem: handleToggleLowerListItem,
-    ListItems,
-    NewItemTriggers
+    ListItems
   };
 };
 

@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import React, { ReactNode, useMemo } from 'react';
-import { PlatformColor, Pressable, TextStyle, useWindowDimensions, View } from 'react-native';
+import { PlatformColor, Pressable, StyleSheet, TextStyle, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { textfieldIdAtom } from '@/atoms/textfieldId';
@@ -9,13 +9,13 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { EListLayout } from '@/lib/enums/EListLayout';
 import ListItemTextfield from './ListItemTextfield';
 
 type TListItemProps<T extends TListItem> = {
   listId: string;
   itemId: string;
   itemIndex: number;
-  isDragging: boolean;
   storage: MMKV;
   onFocusPlaceholderTextfield: () => void;
   onCreateItem: (listId: string, index: number) => void;
@@ -35,7 +35,6 @@ const ListItem = <T extends TListItem>({
   itemId,
   storage,
   itemIndex,
-  isDragging,
   onFocusPlaceholderTextfield,
   onValueChange,
   onCreateItem,
@@ -78,7 +77,7 @@ const ListItem = <T extends TListItem>({
   // ================
 
   function handleContentPress() {
-    if (!item || isPendingDelete || isDragging || !isItemEditable) return;
+    if (!item || isPendingDelete || !isItemEditable) return;
 
     if (!onContentClick) {
       onFocusPlaceholderTextfield();
@@ -88,6 +87,14 @@ const ListItem = <T extends TListItem>({
     onContentClick(item);
   }
 
+  function handleCreateUpperItem() {
+      onCreateItem(listId, itemIndex);
+  }
+
+  function handleCreateLowerItem() {
+      onCreateItem(listId, itemIndex + 1);
+  }
+
   // ================
   //  User Interface
   // ================
@@ -95,37 +102,51 @@ const ListItem = <T extends TListItem>({
   if (!item) return null;
 
   return (
-    <View className="flex-row w-full items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22 }}>
-      {/* Left Icon */}
-      {onGetLeftIcon?.(item)}
+    <View className='w-full justify-between' style={{
+      height: EListLayout.ITEM_HEIGHT,
+      borderTopColor: itemIndex === 0 ? PlatformColor('systemGray') : undefined,
+      borderBottomColor: PlatformColor('systemGray'),
+      borderWidth: StyleSheet.hairlineWidth,
+      borderStyle: 'solid'
+    }}>
+      {/* Separator Line */}
+      <Pressable onPress={handleCreateUpperItem} className='w-full' style={{ height: EListLayout.NEW_ITEM_TRIGGER_HEIGHT }} />
 
-      {/* Content */}
-      {isEditing ? (
-        <ListItemTextfield<T>
-          item={item}
-          customStyle={valueStyles}
-          onFocusPlaceholderTextfield={onFocusPlaceholderTextfield}
-          onDeleteItem={onDeleteItem}
-          onSetItemInStorage={setItem}
-          onValueChange={onValueChange}
-          onSaveToExternalStorage={onSaveToExternalStorage}
-          onCreateChildTextfield={() => onCreateItem(listId, itemIndex + 1)}
-        />
-      ) : (
-        <Pressable onPress={handleContentPress} className="flex-1">
-          <CustomText
-            variant="listRow"
+      <View className="flex-row w-full items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22 }}>
+        {/* Left Icon */}
+        {onGetLeftIcon?.(item)}
+
+        {/* Content */}
+        {isEditing ? (
+          <ListItemTextfield<T>
+            item={item}
             customStyle={valueStyles}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {item.value}
-          </CustomText>
-        </Pressable>
-      )}
+            onFocusPlaceholderTextfield={onFocusPlaceholderTextfield}
+            onDeleteItem={onDeleteItem}
+            onSetItemInStorage={setItem}
+            onValueChange={onValueChange}
+            onSaveToExternalStorage={onSaveToExternalStorage}
+            onCreateChildTextfield={handleCreateLowerItem}
+          />
+        ) : (
+          <Pressable onPress={handleContentPress} className="flex-1">
+            <CustomText
+              variant="listRow"
+              customStyle={valueStyles}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.value}
+            </CustomText>
+          </Pressable>
+        )}
 
-      {/* Right Icon */}
-      {onGetRightIcon?.(item)}
+        {/* Right Icon */}
+        {onGetRightIcon?.(item)}
+      </View>
+
+      {/* Separator Line */}
+      <Pressable onPress={handleCreateLowerItem} className='w-full' style={{ height: EListLayout.NEW_ITEM_TRIGGER_HEIGHT }} />
     </View>
   );
 };

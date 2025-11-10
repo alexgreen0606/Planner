@@ -11,6 +11,7 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 
 import { textStyles } from '../../text/CustomText';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
+import { getValidCssColor } from '@/utils/colorUtils';
 
 const RootFolderHeader = () => {
     const isCollapsed = useCollapsibleHeader(EStorageKey.ROOT_FOLDER_KEY, EHeaderHeight.ROOT_FOLDER);
@@ -25,15 +26,15 @@ const RootFolderHeader = () => {
             className="flex-row justify-between items-start px-4"
         >
             {/* Page Label */}
-                <MotiText
-                    style={textStyles['upcomingDatesHeader']}
-                    animate={{
-                        // @ts-ignore
-                        fontSize: isCollapsed ? 22 : 32
-                    }}
-                >
-                    {rootFolder?.value}
-                </MotiText>
+            <MotiText
+                style={[textStyles['upcomingDatesHeader'], { color: getValidCssColor(rootFolder?.platformColor) }]}
+                animate={{
+                    // @ts-ignore
+                    fontSize: isCollapsed ? 22 : 32
+                }}
+            >
+                {rootFolder?.value}
+            </MotiText>
 
             {/* Filter Popup List */}
             <FolderItemActions folderId={EStorageKey.ROOT_FOLDER_KEY} />
