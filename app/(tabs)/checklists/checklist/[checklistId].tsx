@@ -25,7 +25,6 @@ const ChecklistPage = () => {
 
   return (
     <DraggableListPage
-      padHeaderHeight
       emptyPageLabel='All items complete'
       listId={checklistId}
       storage={itemStorage}

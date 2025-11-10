@@ -1,5 +1,5 @@
 import { Host, VStack } from '@expo/ui/swift-ui';
-import { cornerRadius, glassEffect } from '@expo/ui/swift-ui/modifiers';
+import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
 import { useMemo, useState } from 'react';
@@ -19,9 +19,14 @@ import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { useScrollRegistry } from '@/providers/ScrollRegistry';
 
 import PlannerCarouselWeek from './PlannerCarouselWeek';
+import { MotiView } from 'moti';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) => {
+export const CAROUSEL_HEIGHT = 22 + PLANNER_CAROUSEL_ICON_WIDTH + SMALL_MARGIN * 2;
+
+const PlannerCarousel = ({ datestamp: currentDatestamp, isCollapsed }: any) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const { top: TOP_SPACER } = useSafeAreaInsets();
 
   const { weeks, map } = useAtomValue(plannerCarouselDataAtom);
 
@@ -33,9 +38,6 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
       currentDatestampSundayIndex: weeks.indexOf(currentSunday)
     };
   }, [currentDatestamp]);
-
-  const scrollRegistry = useScrollRegistry();
-  const scrollY = scrollRegistry.get(currentDatestamp) ?? { value: 0 };
 
   const [currentWeek, setCurrentWeek] = useState(currentDatestampWeek);
 
@@ -54,65 +56,77 @@ const PlannerCarousel = ({ datestamp: currentDatestamp }: TPlannerPageParams) =>
     setCurrentWeek(map[weeks[index]]);
   }
 
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, 20], [1, 0], Extrapolation.CLAMP)
-  }));
-
   return (
-    <Animated.View style={headerStyle}>
-      <Host
-        style={{
-          height: 22 + PLANNER_CAROUSEL_ICON_WIDTH + SMALL_MARGIN * 2,
-          width: '100%'
+    <View className='w-full relative' style={{ marginTop: TOP_SPACER }}>
+
+      <MotiView
+        className='absolute z-[1]'
+        animate={{
+          top: isCollapsed ? -20 : SMALL_MARGIN,
+          right: isCollapsed ? SCREEN_WIDTH - 22 - LARGE_MARGIN * 2 : LARGE_MARGIN
         }}
       >
-        <VStack
-          modifiers={[
-            glassEffect({
-              glass: { variant: 'regular' },
-              shape: 'rectangle'
-            }),
-            cornerRadius(8)
-          ]}
-        >
-          <View className="w-full py-2">
-            {/* Week Info */}
-            <View className="flex-row justify-between items-center px-4">
-              <CustomText variant="month">
-                {startMonth}
-                {startYear !== endYear && ` ${startYear}`}
-                {startMonth !== endMonth && ` / ${endMonth}`} {endYear}
-              </CustomText>
-              <Icon size={22} name="calendar" />
-            </View>
+        <Icon size={22} name="calendar" />
+      </MotiView>
 
-            {/* Scroll Wheel */}
-            <Carousel
-              data={weeks}
-              renderItem={({ item: startDatestamp }) => (
-                <View
-                  style={{
-                    width: SCREEN_WIDTH - LARGE_MARGIN * 4,
-                    marginLeft: LARGE_MARGIN
-                  }}
-                >
-                  <PlannerCarouselWeek
-                    datestamps={map[startDatestamp]}
-                    currentDatestamp={currentDatestamp}
-                  />
-                </View>
-              )}
-              onSnapToItem={handleWeekChange}
-              loop={false}
-              defaultIndex={currentDatestampSundayIndex}
-              windowSize={7}
-              width={SCREEN_WIDTH - LARGE_MARGIN * 2}
-              height={PLANNER_CAROUSEL_ICON_WIDTH}
-            />
-          </View>
-        </VStack>
-      </Host>
-    </Animated.View>
+      <MotiView
+        className='overflow-hidden'
+        animate={{ height: isCollapsed ? 0 : CAROUSEL_HEIGHT }}
+      >
+        <Host
+          style={{
+            height: CAROUSEL_HEIGHT,
+            width: '100%'
+          }}
+        >
+          <VStack
+            modifiers={[
+              glassEffect({
+                glass: { variant: 'regular' },
+                shape: 'rectangle'
+              }),
+              cornerRadius(8),
+              frame({ height: CAROUSEL_HEIGHT })
+            ]}
+          >
+            <View className="w-full py-2">
+              {/* Week Info */}
+              <View className="flex-row justify-between items-center px-4 h-[22]">
+                <CustomText variant="month">
+                  {startMonth}
+                  {startYear !== endYear && ` ${startYear}`}
+                  {startMonth !== endMonth && ` / ${endMonth}`} {endYear}
+                </CustomText>
+              </View>
+
+              {/* Scroll Wheel */}
+              <Carousel
+                data={weeks}
+                renderItem={({ item: startDatestamp }) => (
+                  <View
+                    style={{
+                      width: SCREEN_WIDTH - LARGE_MARGIN * 4,
+                      marginLeft: LARGE_MARGIN
+                    }}
+                  >
+                    <PlannerCarouselWeek
+                      datestamps={map[startDatestamp]}
+                      currentDatestamp={currentDatestamp}
+                    />
+                  </View>
+                )}
+                onSnapToItem={handleWeekChange}
+                loop={false}
+                defaultIndex={currentDatestampSundayIndex}
+                windowSize={7}
+                width={SCREEN_WIDTH - LARGE_MARGIN * 2}
+                height={PLANNER_CAROUSEL_ICON_WIDTH}
+              />
+            </View>
+          </VStack>
+        </Host>
+      </MotiView>
+    </View>
   );
 };
 

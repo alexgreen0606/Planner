@@ -1,19 +1,15 @@
-import { ReactNode, useRef, useState } from 'react';
-import { TextInput } from 'react-native';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { Pressable, TextInput } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import Animated, { LinearTransition } from 'react-native-reanimated';
-import { SortableItem, useSortableList } from 'react-native-reanimated-dnd';
 
 import ListItem from '@/components/lists/ListItem';
-import { THIN_LINE_HEIGHT } from '@/lib/constants/miscLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
-import useAppTheme from './useAppTheme';
+import { EListLayout } from '@/lib/enums/EListLayout';
 import useTextfieldItemAs from './useTextfieldItemAs';
 
 const useSortableMmkvList = <T extends TListItem, S>(
   itemIds: string[],
-  rowHeight: number,
   storage: MMKV,
   listId: string,
   onCreateItem: (listId: string, index: number) => void,
@@ -31,33 +27,23 @@ const useSortableMmkvList = <T extends TListItem, S>(
     onGetIsEditable?: ((item: T) => boolean) | undefined;
   }
 ) => {
-  const data = itemIds.map((id) => ({ id }));
-  const {
-    scrollViewRef,
-    dropProviderRef,
-    handleScroll,
-    handleScrollEnd,
-    contentHeight,
-    getItemProps
-  } = useSortableList({
-    data: data,
-    itemHeight: rowHeight
-  });
-
   const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
-  const {
-    CssColor: { background }
-  } = useAppTheme();
-
-  const placeholderInputRef = useRef<TextInput>(null);
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
-  const isListEmpty = itemIds.length === 0;
+  // =======================
+  //  Placeholder Textfield
+  // =======================
 
-  // ================
-  //  Event Handlers
-  // ================
+  const placeholderInputRef = useRef<TextInput>(null);
+  const PlaceholderField = () => (
+    <TextInput
+      ref={placeholderInputRef}
+      returnKeyType="done"
+      className="absolute w-1 h-1 left-[9999]"
+      autoCorrect={false}
+    />
+  );
 
   function handleFocusPlaceholder() {
     placeholderInputRef.current?.focus();
@@ -96,53 +82,46 @@ const useSortableMmkvList = <T extends TListItem, S>(
     setIsDragging(false);
   }
 
-  const ListItems = () => (
-    <Animated.View layout={LinearTransition} style={{ height: contentHeight }} className="w-full">
-      {data.map((item, index) => {
-        const itemProps = getItemProps(item, index);
-        return (
-          <SortableItem
-            data={data}
-            onMove={handleMoveItem}
-            onDragStart={handleDragStart}
-            onDrop={handleDragEnd}
-            style={{ backgroundColor: background }}
-            key={item.id}
-            {...itemProps}
-          >
-            <ListItem<T>
-              itemIndex={index}
-              listId={listId}
-              itemId={item.id}
-              storage={storage}
-              isActive={false}
-              isDragging={isDragging}
-              height={rowHeight - THIN_LINE_HEIGHT}
-              onFocusPlaceholderTextfield={handleFocusPlaceholder}
-              onCreateItem={onCreateItem}
-              onDeleteItem={onDeleteItem}
-              {...listItemProps}
-            />
-          </SortableItem>
-        );
-      })}
+  // Track the ordering of IDs to pass to the list function.
+  // This sort order will be out of sync with the UI and MMKV once a user drags items around.
+  const [updatedList, setUpdatedList] = useState(itemIds);
+  useEffect(() => {
+    if (itemIds.length !== updatedList.length) {
+      setUpdatedList(itemIds);
+    }
+  }, [itemIds]);
 
-      {/* Placeholder Field */}
-      <TextInput
-        ref={placeholderInputRef}
-        returnKeyType="done"
-        className="absolute w-1 h-1 left-[9999]"
-        autoCorrect={false}
-      />
-    </Animated.View>
-  );
+  const ListItems = () => updatedList.map((itemId, index) => (
+    <ListItem<T>
+      itemIndex={index}
+      listId={listId}
+      itemId={itemId}
+      storage={storage}
+      isDragging={isDragging}
+      onFocusPlaceholderTextfield={handleFocusPlaceholder}
+      onCreateItem={onCreateItem}
+      onDeleteItem={onDeleteItem}
+      {...listItemProps}
+      key={itemId}
+    />
+  ));
+
+  const NewItemTriggers = () => updatedList.map((_, index) => (
+    <Pressable
+      onPress={() => onCreateItem(listId, index)}
+      style={{ height: EListLayout.NEW_ITEM_TRIGGER_HEIGHT, top: -(EListLayout.NEW_ITEM_TRIGGER_HEIGHT / 2) + index * EListLayout.ITEM_HEIGHT }}
+      className='w-full absolute'
+      key={`new-item-trigger-${index}`}
+    />
+  ));
 
   return {
-    scrollViewRef,
-    dropProviderRef,
-    isListEmpty,
+    isListEmpty: itemIds.length === 0,
+    listHeight: EListLayout.ITEM_HEIGHT * updatedList.length,
+    PlaceholderField,
     onToggleLowerListItem: handleToggleLowerListItem,
-    ListItems
+    ListItems,
+    NewItemTriggers
   };
 };
 

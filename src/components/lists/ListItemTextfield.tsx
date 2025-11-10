@@ -1,4 +1,4 @@
-import { useAtom } from 'jotai';
+import { useSetAtom } from 'jotai';
 import debounce from 'lodash.debounce';
 import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle } from 'react-native';
@@ -7,8 +7,6 @@ import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
 import { textStyles } from '../text/CustomText';
-
-// ✅
 
 type TListItemTextfieldProps<T extends TListItem> = {
   item: T;
@@ -34,7 +32,7 @@ const ListItemTextfield = <T extends TListItem>({
   onCreateChildTextfield,
   onSaveToExternalStorage
 }: TListItemTextfieldProps<T>) => {
-  const [, setTextfieldId] = useAtom(textfieldIdAtom);
+  const setTextfieldId = useSetAtom(textfieldIdAtom);
 
   const itemValue = useRef(item.value);
   const inputRef = useRef<TextInput>(null);
@@ -88,18 +86,18 @@ const ListItemTextfield = <T extends TListItem>({
 
   return (
     <TextInput
-      ref={inputRef}
       value={item.value}
       onLayout={() => {
         inputRef.current?.focus();
       }}
+      submitBehavior="submit"
       onBlur={handleBlurTextfield}
       onChangeText={onValueChange ?? handleValueChange}
       onSubmitEditing={handleSubmitTextfield}
       selectionColor={PlatformColor('systemBlue')}
       style={[textStyles['listRow'], customStyle]}
-      submitBehavior="submit"
       className="w-full bg-transparent"
+      ref={inputRef}
     />
   );
 };

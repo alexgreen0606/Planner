@@ -1,44 +1,36 @@
 import { useHeaderHeight } from '@react-navigation/elements';
 import { usePathname } from 'expo-router';
-import React, { ReactElement, ReactNode, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
+import React, { ReactNode, useState } from 'react';
+import { KeyboardAvoidingView, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
-import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import { DropProvider } from 'react-native-reanimated-dnd';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import EmptyPageLabel, { TEmptyPageLabelProps } from '@/components/EmptyLabel';
-import ThinLine from '@/components/ThinLine';
-import useAppTheme from '@/hooks/useAppTheme';
 import useSortableMmkvList from '@/hooks/useSortableMmkvList';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
 import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
 
+import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
+import { Host, List } from '@expo/ui/swift-ui';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './icons/customButtons/GlassIconButton';
 import PageContainer from './PageContainer';
-import ColorFadeView from './views/ColorFadeView';
 import FillerView from './views/FillerView';
-import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 
-// ✅
+import { MagicButton } from 'magic-button';
 
 type TDraggableListPageProps<T extends TListItem, S> = {
   emptyPageLabel: string;
   toolbar?: ReactNode;
-  stickyHeader?: ReactElement;
   itemIds: string[];
   listId: string;
   storageId: EStorageId;
   storage: MMKV;
   defaultStorageObject?: S;
-  rowHeight?: number;
   addButtonColor?: string;
-  padHeaderHeight?: boolean;
   onCreateItem: (listId: string, index: number) => void;
   onDeleteItem: (item: T) => void;
   onValueChange?: (newValue: string) => void;
@@ -52,37 +44,30 @@ type TDraggableListPageProps<T extends TListItem, S> = {
   onGetIsEditable?: (item: T) => boolean;
 };
 
+// TODO: calculate this correctly in the future.
+const BOTTOM_NAV_HEIGHT = 86;
+
 const DraggableListPage = <T extends TListItem, S>({
   itemIds,
   listId,
   storage,
   emptyPageLabel,
   toolbar,
-  stickyHeader,
-  rowHeight = 40,
   addButtonColor = 'systemBlue',
-  padHeaderHeight,
   onIndexChange,
   onCreateItem,
   onDeleteItem,
   ...listItemProps
 }: TDraggableListPageProps<T, S>) => {
+  const { onReloadPage, loadingPathnames } = useExternalDataContext();
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const onScroll = useScrollTracker(listId);
   const headerHeight = useHeaderHeight();
   const pathname = usePathname();
-  const {top: TOP_SPACER} = useSafeAreaInsets();
-
-  const { onReloadPage, loadingPathnames } = useExternalDataContext();
-  const {
-    CssColor: { background },
-    ColorArray: {
-      Screen: { upper }
-    }
-  } = useAppTheme();
-  const { scrollViewRef, dropProviderRef, isListEmpty, onToggleLowerListItem, ListItems } =
+  const { top: TOP_SPACER } = useSafeAreaInsets();
+  const { isListEmpty, listHeight, PlaceholderField, onToggleLowerListItem, ListItems, NewItemTriggers } =
     useSortableMmkvList(
       itemIds,
-      rowHeight,
       storage,
       listId,
       onCreateItem,
@@ -93,38 +78,37 @@ const DraggableListPage = <T extends TListItem, S>({
 
   const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
 
-  const onScroll = useScrollTracker(listId);
-
-  // TODO: calculate this correctly in the future.
-  const BOTTOM_NAV_HEIGHT = 86;
-
-  const canReloadPath = reloadablePaths.some((p) => pathname.includes(p));
-
   function handleReloadPage() {
     setShowLoadingSymbol(true);
     onReloadPage();
   }
 
+  const canReloadPath = reloadablePaths.some((p) => pathname.includes(p));
   const contentInset = headerHeight - TOP_SPACER;
 
-  const paddedHeaderScrollProps = padHeaderHeight ? {
-contentInset: { top: contentInset },
-        contentOffset: { x: 0, y: -contentInset },
-        scrollIndicatorInsets: { top: contentInset }
-  } : {};
-
   return (
-    <DropProvider ref={dropProviderRef}>
-      <PageContainer
-        stickyHeader={stickyHeader}
-        emptyPageLabel={emptyPageLabel}
-        addButtonColor={addButtonColor}
-        toolbar={toolbar}
-        isPageEmpty={isListEmpty}
-        onAddButtonClick={onToggleLowerListItem}
-      >
+    <PageContainer
+      emptyPageLabel={emptyPageLabel}
+      addButtonColor={addButtonColor}
+      toolbar={toolbar}
+      isPageEmpty={isListEmpty}
+      onAddButtonClick={onToggleLowerListItem}
+    >
+      <KeyboardAvoidingView behavior='height'>
         <Animated.ScrollView
-          ref={scrollViewRef}
+          onScroll={onScroll}
+          contentInsetAdjustmentBehavior="automatic"
+          keyboardDismissMode='interactive'
+          keyboardShouldPersistTaps='always'
+          scrollEventThrottle={SCROLL_THROTTLE}
+          contentInset={{ top: contentInset }}
+          contentOffset={{ x: 0, y: -contentInset - TOP_SPACER }}
+          scrollIndicatorInsets={{ top: contentInset }}
+          contentContainerStyle={{
+            minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + BOTTOM_NAV_HEIGHT),
+          }}
+          style={{ height: SCREEN_HEIGHT }}
+          showsVerticalScrollIndicator
 
           // TODO: create custom refresh logic
           refreshControl={
@@ -135,38 +119,29 @@ contentInset: { top: contentInset },
               />
             ) : undefined
           }
-          onScroll={onScroll}
-          contentInsetAdjustmentBehavior="always"
-          showsVerticalScrollIndicator={true}
-          scrollEventThrottle={SCROLL_THROTTLE}
-
-          contentContainerStyle={{
-            minHeight: SCREEN_HEIGHT,
-            // paddingTop: padHeaderHeight ? headerHeight : 0
-          }}
-
-
-          {...paddedHeaderScrollProps}
-
-          style={{ height: SCREEN_HEIGHT, backgroundColor: background }}
         >
-          {/* Header Filler */}
-          <FillerView>{stickyHeader}</FillerView>
 
-          {/* List Items */}
-          <ListItems />
+          <MagicButton title='teat' />
+          
 
-          {/* Bottom of List Separator */}
-          {itemIds.length > 0 && (
-            <Pressable onPress={onToggleLowerListItem}>
-              <ThinLine />
-            </Pressable>
-          )}
 
-          <View className="flex-1" />
+          {/* Content */}
+          <View className='w-full' style={{ height: listHeight }}>
+            <Host style={{ flex: 1 }}>
+              <List
+                moveEnabled
+                scrollEnabled={false}
+                // onMoveItem={handleMoveItem}
+                listStyle='plain'
+              >
+                <ListItems />
+              </List>
+            </Host>
+            <NewItemTriggers />
+          </View>
 
           {/* Add Button Filler */}
-          <FillerView style={{ paddingBottom: LARGE_MARGIN * 2 }}>
+          <FillerView style={{ paddingVertical: LARGE_MARGIN }}>
             <GlassIconButton
               systemImage="plus"
               isPrimary
@@ -175,8 +150,11 @@ contentInset: { top: contentInset },
             />
           </FillerView>
         </Animated.ScrollView>
-      </PageContainer>
-    </DropProvider>
+      </KeyboardAvoidingView>
+
+      {/* Placeholder Field */}
+      <PlaceholderField />
+    </PageContainer>
   );
 };
 

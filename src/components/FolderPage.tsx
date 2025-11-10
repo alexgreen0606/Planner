@@ -14,6 +14,8 @@ import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { updateFolderItemIndex } from '@/utils/checklistUtils';
 
+import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
+import { EListLayout } from '@/lib/enums/EListLayout';
 import FolderItem from './FolderItem/FolderItem';
 import PageContainer from './PageContainer';
 
@@ -25,13 +27,13 @@ type TFolderPageProps = {
 const BOTTOM_NAV_HEIGHT = 86;
 
 const FolderPage = ({ folderId }: TFolderPageProps) => {
-  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { top: TOP_SPACER } = useSafeAreaInsets();
   const onScroll = useScrollTracker(folderId);
   const headerHeight = useHeaderHeight();
   const router = useRouter();
 
+  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const {
     item: folder,
     itemIds,
@@ -54,7 +56,6 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
   }
 
   const contentInset = headerHeight - TOP_SPACER;
-  const emptyPageHeight = SCREEN_HEIGHT;
 
   return (
     <PageContainer
@@ -65,13 +66,16 @@ const FolderPage = ({ folderId }: TFolderPageProps) => {
     >
       <Animated.ScrollView
         onScroll={onScroll}
-        className="flex-1"
         contentInsetAdjustmentBehavior='automatic'
-        contentContainerClassName="pb-4 flex-1 relative"
+        scrollEventThrottle={SCROLL_THROTTLE}
         contentInset={{ top: contentInset }}
         contentOffset={{ x: 0, y: -contentInset }}
         scrollIndicatorInsets={{ top: contentInset, bottom: BOTTOM_NAV_HEIGHT }}
-        contentContainerStyle={{ minHeight: Math.max(emptyPageHeight, updatedList.length * 52 + BOTTOM_NAV_HEIGHT) }}
+        contentContainerStyle={{
+          minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, updatedList.length * EListLayout.ITEM_HEIGHT + BOTTOM_NAV_HEIGHT),
+        }}
+        style={{ height: SCREEN_HEIGHT }}
+        showsVerticalScrollIndicator
       >
         <Host style={{ flex: 1 }}>
           <List

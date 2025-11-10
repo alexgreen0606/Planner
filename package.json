@@ -12,6 +12,7 @@
     "lint": "eslint 'app/**/*.{js,jsx,ts,tsx}' 'src/**/*.{js,jsx,ts,tsx}' --fix"
   },
   "dependencies": {
+    "magic-button": "file:modules/magic-button",
     "@babel/runtime": "^7.28.4",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ui": "^0.2.0-beta.7",

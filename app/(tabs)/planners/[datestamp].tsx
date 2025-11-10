@@ -43,7 +43,6 @@ const PlannerPage = () => {
       onSaveToExternalStorage={updateDeviceCalendarEventByPlannerEvent}
       onGetRightIcon={createPlannerEventTimeIcon}
       onGetLeftIcon={useGetPlannerEventToggle}
-      padHeaderHeight
     />
   );
 };
