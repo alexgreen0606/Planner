@@ -5,14 +5,14 @@ import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
+import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { EListLayout } from '@/lib/enums/EListLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
-import { EListLayout } from '@/lib/enums/EListLayout';
 import ListItemTextfield from './ListItemTextfield';
 
-type TListItemProps<T extends TListItem> = {
+interface IListItemProps<T extends TListItem> {
   listId: string;
   itemId: string;
   itemIndex: number;
@@ -46,11 +46,9 @@ const ListItem = <T extends TListItem>({
   onGetLeftIcon,
   onGetIsEditable,
   onGetIsItemDeletingCustom
-}: TListItemProps<T>) => {
-  const { width: SCREEN_WIDTH } = useWindowDimensions();
+}: IListItemProps<T>) => {
   const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
-
-  const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>();
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
 
   const [item, setItem] = useMMKVObject<T>(itemId, storage);
 
@@ -61,20 +59,11 @@ const ListItem = <T extends TListItem>({
 
   const isItemEditable = useMemo(() => (item ? (onGetIsEditable?.(item) ?? true) : true), [item]);
 
+  // Track deletion status of the item.
+  const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>();
   const isPendingDelete = item
     ? (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item))
     : false;
-
-  const valueStyles: TextStyle = {
-    color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
-    textDecorationLine: isPendingDelete ? 'line-through' : undefined
-  };
-
-  const isEditing = textfieldId === item?.id;
-
-  // ================
-  //  Event Handlers
-  // ================
 
   function handleContentPress() {
     if (!item || isPendingDelete || !isItemEditable) return;
@@ -95,11 +84,13 @@ const ListItem = <T extends TListItem>({
       onCreateItem(listId, itemIndex + 1);
   }
 
-  // ================
-  //  User Interface
-  // ================
-
   if (!item) return null;
+
+  const isEditing = textfieldId === item?.id;
+  const valueStyles: TextStyle = {
+    color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
+    textDecorationLine: isPendingDelete ? 'line-through' : undefined
+  };
 
   return (
     <View className='w-full justify-between' style={{

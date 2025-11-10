@@ -8,8 +8,6 @@ type TPlannerCarouselData = {
 
 function initializeCarouselData(): TPlannerCarouselData {
   const today = DateTime.local();
-
-  // Start at the Sunday 3 weeks ago
   let start = today.minus({ weeks: 3 });
   start = start.minus({ days: start.weekday % 7 });
   const end = today.plus({ years: 3 });
@@ -32,6 +30,7 @@ function initializeCarouselData(): TPlannerCarouselData {
   return { weeks, map };
 }
 
-// Weeks: An array of Sunday datestamps from 3 weeks ago to 3 years in the future.
-// Map: Map of Sunday datestamp to array of the datestamps for that 7-day week.
+// Returns 2 values:
+// An array of Sunday datestamps from 3 weeks ago to 3 years in the future.
+// Map of Sunday datestamps to arrays of the datestamps for that 7-day week.
 export const plannerCarouselDataAtom = atom<TPlannerCarouselData>(initializeCarouselData());

@@ -33,26 +33,24 @@ enum EFolderAction {
 }
 
 const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => {
-  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+  const [itemInTransfer, setItemInTransfer] = useAtom(transferingFolderItemAtom);
   const router = useRouter();
 
-  const [itemInTransfer, setItemInTransfer] = useAtom(transferingFolderItemAtom);
-
   const folderItemId = folderId ?? checklistId ?? EStorageKey.ROOT_FOLDER_KEY;
-  const [item, setItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage);
 
-  const itemTypeName = item?.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : 'Item';
+  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
+  const [folderItem, setFolderItem] = useMMKVObject<IFolderItem>(folderItemId, folderItemStorage);
 
   function handleAction(action: string) {
-    if (!item) return;
+    if (!folderItem) return;
 
     if (isValidPlatformColor(action)) {
-      setItem((prev) =>
+      setFolderItem((prev) =>
         prev
           ? {
-              ...prev,
-              platformColor: action
-            }
+            ...prev,
+            platformColor: action
+          }
           : prev
       );
       return;
@@ -64,10 +62,10 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
         router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${NULL}/${folderItemId}`);
         break;
       case EFolderAction.DELETE_ALL:
-        const hasChildren = item.itemIds.length > 0;
-        message = `Would you like to delete this ${item.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
+        const hasChildren = folderItem.itemIds.length > 0;
+        message = `Would you like to delete this ${folderItem.type}?${hasChildren ? ' All inner contents will be lost.' : ''}`;
 
-        Alert.alert(`Delete "${item.value}"?`, message, [
+        Alert.alert(`Delete "${folderItem.value}"?`, message, [
           {
             text: 'Cancel',
             style: 'cancel'
@@ -76,14 +74,14 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
             text: hasChildren ? 'Force Delete' : 'Delete',
             style: 'destructive',
             onPress: () => {
-              deleteFolderItemAndChildren(item, true);
+              deleteFolderItemAndChildren(folderItem, true);
               router.back();
             }
           }
         ]);
         break;
       case EFolderAction.ERASE_CONTENTS:
-        message = `Would you like to erase all contents from this ${item.type}?`;
+        message = `Would you like to erase all contents from this ${folderItem.type}?`;
 
         Alert.alert('Erase All Contents?', message, [
           {
@@ -94,29 +92,29 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
             text: 'Erase',
             style: 'destructive',
             onPress: () => {
-              if (item.type === EFolderItemType.FOLDER) {
-                item.itemIds.forEach((childFolderItemId) => {
+              if (folderItem.type === EFolderItemType.FOLDER) {
+                folderItem.itemIds.forEach((childFolderItemId) => {
                   const childFolderItem = getFolderItemFromStorageById(childFolderItemId);
                   deleteFolderItemAndChildren(childFolderItem);
                 });
               } else {
-                deleteChecklistItems(item.itemIds.map(getListItemFromStorageById));
+                deleteChecklistItems(folderItem.itemIds.map(getListItemFromStorageById));
               }
             }
           }
         ]);
         break;
       case EFolderAction.DELETE_AND_SCATTER:
-        const parentFolder = getFolderItemFromStorageById(item.listId);
-        item.itemIds.forEach((id) => {
+        const parentFolder = getFolderItemFromStorageById(folderItem.listId);
+        folderItem.itemIds.forEach((id) => {
           const childItem = getFolderItemFromStorageById(id);
           childItem.listId = parentFolder.id;
           parentFolder.itemIds.push(id);
           saveFolderItemToStorage(childItem);
         });
-        parentFolder.itemIds = parentFolder.itemIds.filter((id) => id !== item.id);
+        parentFolder.itemIds = parentFolder.itemIds.filter((id) => id !== folderItem.id);
         saveFolderItemToStorage(parentFolder);
-        deleteFolderItemFromStorage(item.id);
+        deleteFolderItemFromStorage(folderItem.id);
         router.back();
         break;
     }
@@ -158,6 +156,8 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
     ) : null;
   }
 
+  const itemTypeName = folderItem?.type ? folderItem.type.charAt(0).toUpperCase() + folderItem.type.slice(1) : 'Item';
+
   return (
     <PopupList
       actions={[
@@ -174,7 +174,7 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
           items: selectableColors.map((color) => ({
             title: color === 'label' ? 'None' : color.replace('system', ''),
             type: EPopupActionType.BUTTON,
-            systemImage: item?.platformColor === color ? 'inset.filled.circle' : 'circle',
+            systemImage: folderItem?.platformColor === color ? 'inset.filled.circle' : 'circle',
             color: PlatformColor(color) as unknown as string,
             onPress: () => handleAction(color)
           }))
@@ -190,23 +190,23 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
               title: 'Delete And Scatter',
               systemImage: 'shippingbox.and.arrow.backward',
               hidden:
-                item?.type !== EFolderItemType.FOLDER ||
-                item?.listId === NULL ||
-                !item?.itemIds.length
+                folderItem?.type !== EFolderItemType.FOLDER ||
+                folderItem?.listId === NULL ||
+                !folderItem?.itemIds.length
             },
             {
               type: EPopupActionType.BUTTON,
               onPress: () => handleAction(EFolderAction.ERASE_CONTENTS),
               title: 'Erase All Contents',
               systemImage: 'minus',
-              hidden: !item?.itemIds.length
+              hidden: !folderItem?.itemIds.length
             },
             {
               type: EPopupActionType.BUTTON,
               onPress: () => handleAction(EFolderAction.DELETE_ALL),
               title: `Delete Entire ${itemTypeName}`,
               destructive: true,
-              hidden: item?.listId === NULL,
+              hidden: folderItem?.listId === NULL,
               systemImage: 'trash'
             }
           ]

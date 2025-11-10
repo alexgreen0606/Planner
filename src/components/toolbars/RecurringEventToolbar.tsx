@@ -21,18 +21,15 @@ import {
   upsertWeekdayEventToRecurringPlanners
 } from '@/utils/recurringPlannerUtils';
 
-import IconButton from '../icons/IconButton';
+import IconButton from '../buttons/IconButton';
 import ListToolbar from '../lists/ListToolbar';
 
-// ✅
-
 const RecurringEventToolbar = () => {
-  const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
-
   const [recurringTimeModalEvent, setRecurringTimeModalEvent] = useAtom(
     recurringTimeModalEventAtom
   );
 
+  const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
   const {
     textfieldItem: focusedEvent,
     onSetTextfieldItem: onSetFocusedEvent,

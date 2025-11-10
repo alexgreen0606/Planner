@@ -17,9 +17,9 @@ type TChecklistPageParams = {
 };
 
 const ChecklistPage = () => {
+  const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
   const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
 
-  const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage);
 

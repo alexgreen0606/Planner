@@ -3,11 +3,9 @@ import { SFSymbol } from 'expo-symbols';
 import { DateTime } from 'luxon';
 import React from 'react';
 
-import ModalDisplayValue from '@/components/Modal/ModalDisplayValue';
+import ModalDisplayValue from '@/components/modals/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import { getValidCssColor } from '@/utils/colorUtils';
-
-// ✅
 
 export type TDateModalFieldProps = {
   label: string;

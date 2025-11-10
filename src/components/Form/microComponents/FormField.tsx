@@ -9,8 +9,6 @@ import DateModalField, { TDateModalFieldProps } from './DateModalField';
 import PickerModalField, { TPickerModalFieldProps, TPickerOption } from './PickerModalField';
 import TextModalField, { TTextModalFieldProps } from './TextModalField';
 
-// ✅
-
 const TextField = (props: TTextModalFieldProps & TFormFieldControl<string>) => (
   <TextModalField {...props} />
 );

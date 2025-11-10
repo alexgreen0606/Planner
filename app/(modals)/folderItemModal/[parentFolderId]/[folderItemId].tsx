@@ -1,11 +1,11 @@
 import { uuid } from 'expo-modules-core';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 import Form from '@/components/Form/Form';
-import Modal from '@/components/Modal';
+import Modal from '@/components/modals/Modal';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
@@ -26,10 +26,13 @@ type TFormData = {
 
 const FolderItemModal = () => {
   const { folderItemId, parentFolderId } = useLocalSearchParams<TFolderItemModalParams>();
-  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const router = useRouter();
 
+  const isCreateMode = folderItemId === NULL;
+
+  const itemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const [folderItem, setFolderItem] = useMMKVObject<IFolderItem>(folderItemId, itemStorage);
+
   const {
     control,
     handleSubmit: onSubmit,
@@ -43,12 +46,11 @@ const FolderItemModal = () => {
     },
     mode: 'onChange'
   });
-
   const type = watch('type');
   const color = watch('color');
 
-  const hasChildren = (folderItem?.itemIds.length ?? 0) > 0;
   // TODO: enhance these. Need scatter delete and delete all
+  const hasChildren = (folderItem?.itemIds.length ?? 0) > 0;
   const deleteActions = useMemo<TPopupAction[]>(
     () => [
       {
@@ -62,14 +64,13 @@ const FolderItemModal = () => {
     [hasChildren, folderItem]
   );
 
-  const isEditMode = folderItemId !== NULL;
   const formFields: TFormField[][] = [
     [
       {
         name: 'title',
         label: 'Title',
         type: EFormFieldType.TEXT,
-        focusTrigger: !isEditMode,
+        focusTrigger: isCreateMode,
         autoCapitalizeWords: true,
         iconName: type === EFolderItemType.FOLDER ? 'folder' : 'list.bullet',
         iconColor: color,
@@ -108,13 +109,6 @@ const FolderItemModal = () => {
     ]
   ];
 
-  // Determine if we're in create or edit mode
-  const isCreateMode = folderItemId === NULL;
-
-  // Generate a new ID for create mode
-  const [newItemId] = useState(() => isCreateMode ? uuid.v4() : folderItemId);
-
-
   // ================
   //  Event Handlers
   // ================
@@ -124,10 +118,8 @@ const FolderItemModal = () => {
     const newTitle = title.trim();
 
     if (isCreateMode) {
-      // Create mode: Create a new folder item and add it to parent
       createNewFolderItem(newTitle, type, color);
     } else {
-      // Edit mode: Update existing folder item
       if (!folderItem) return;
 
       setFolderItem((prev) =>
@@ -145,15 +137,28 @@ const FolderItemModal = () => {
     router.back();
   }
 
+  function handleDelete() {
+    if (!folderItem) return;
+    deleteFolderItemAndChildren(folderItem, true);
+    router.back();
+  }
+
+  // ==================
+  //  Helper Functions
+  // ==================
+
   function createNewFolderItem(title: string, type: EFolderItemType, color: string) {
     if (!parentFolderId || parentFolderId === NULL) {
       console.error('Parent folder ID is required for creating new items');
+      router.back();
       return;
     }
 
-    // Create the new folder item
+    const newId = uuid.v4();
+
+    // Add the item to storage.
     const newFolderItem: IFolderItem = {
-      id: newItemId,
+      id: newId,
       value: title,
       listId: parentFolderId,
       storageId: EStorageId.FOLDER_ITEM,
@@ -161,23 +166,14 @@ const FolderItemModal = () => {
       type,
       itemIds: []
     };
-
-    // Save the new item to storage
     saveFolderItemToStorage(newFolderItem);
 
-    // Update the parent folder to include this new item at the bottom
+    // Add the item to the folder.
     const parentFolder = getFolderItemFromStorageById(parentFolderId);
     if (parentFolder) {
-      parentFolder.itemIds.push(newItemId); // Append to bottom
+      parentFolder.itemIds.push(newId);
       saveFolderItemToStorage(parentFolder);
     }
-  }
-
-  function handleDelete() {
-    if (!folderItem) return;
-
-    deleteFolderItemAndChildren(folderItem, true);
-    router.back();
   }
 
   // ================

@@ -6,13 +6,11 @@ import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-re
 
 import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
 
-// ✅
-
-type TListToolbarProps = {
+interface IListToolbarProps {
   iconSet: ReactNode[][];
 };
 
-const ListToolbar = ({ iconSet }: TListToolbarProps) => {
+const ListToolbar = ({ iconSet }: IListToolbarProps) => {
   const { height: keyboardHeight } = useAnimatedKeyboard();
 
   const toolbarStyle = useAnimatedStyle(() => ({

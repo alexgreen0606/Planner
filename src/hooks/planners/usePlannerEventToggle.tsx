@@ -1,5 +1,5 @@
-import ListItemToggleButton from '@/components/icons/customButtons/ListItemToggleButton';
-import IconButton from '@/components/icons/IconButton';
+import ListItemToggleButton from '@/components/buttons/ListItemToggleButton';
+import IconButton from '@/components/buttons/IconButton';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 

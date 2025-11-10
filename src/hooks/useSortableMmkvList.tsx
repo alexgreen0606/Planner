@@ -3,9 +3,9 @@ import { TextInput } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 
 import ListItem from '@/components/lists/ListItem';
+import { EListLayout } from '@/lib/enums/EListLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
-import { EListLayout } from '@/lib/enums/EListLayout';
 import useTextfieldItemAs from './useTextfieldItemAs';
 
 const useSortableMmkvList = <T extends TListItem, S>(

@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 
-import Icon from '@/components/icons/Icon';
+import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
@@ -14,8 +14,6 @@ import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { getValidCssColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
-
-// ✅
 
 const PlannerChip = ({ title, id, iconConfig, color, onClick }: TPlannerChip) => {
   const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();

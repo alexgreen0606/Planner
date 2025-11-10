@@ -8,8 +8,6 @@ import { TFormField } from '@/lib/types/form/TFormField';
 
 import FormField from './microComponents/FormField';
 
-// ✅
-
 type TFormProps = {
   fieldSets: TFormField[][]
   control: Control<any>

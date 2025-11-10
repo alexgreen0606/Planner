@@ -27,15 +27,17 @@ const UpcomingDatesPage = () => {
     <View className="flex-1">
       {/* Dates List */}
       <Animated.ScrollView
-        refreshControl={
-          <RefreshControl refreshing={loadingPathnames.has(pathname)} onRefresh={onReloadPage} />
-        }
         onScroll={onScroll}
         contentInset={{ top: contentInset }}
         contentOffset={{ x: 0, y: -contentInset }}
         scrollIndicatorInsets={{ top: contentInset }}
         className="flex-1"
         contentContainerClassName="pb-4 px-4"
+
+        // TODO: use custom reload trigger icon
+        refreshControl={
+          <RefreshControl refreshing={loadingPathnames.has(pathname)} onRefresh={onReloadPage} />
+        }
       >
         {filteredUpcomingDates.map(([datestamp, events], index) => (
           <UpcomingDateCard

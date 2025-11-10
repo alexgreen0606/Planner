@@ -1,11 +1,9 @@
 import React from 'react';
 import { View } from 'react-native';
 
-import IconButton from '@/components/icons/IconButton';
+import IconButton from '@/components/buttons/IconButton';
 import { selectableColors } from '@/lib/constants/colors';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
-
-// ✅
 
 export type TColorPickerModalFieldProps = {
   label: string;

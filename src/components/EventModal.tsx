@@ -10,7 +10,7 @@ import { useMMKV } from 'react-native-mmkv';
 import { calendarMapAtom, primaryCalendarAtom } from '@/atoms/planner/calendarAtoms';
 import { untrackLoadedDatestampsAtom } from '@/atoms/planner/loadedDatestampsAtom';
 import Form from '@/components/Form/Form';
-import Modal from '@/components/Modal';
+import Modal from '@/components/modals/Modal';
 import usePermissions from '@/hooks/usePermissions';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { calendarIconMap } from '@/lib/constants/calendarIcons';
@@ -57,7 +57,7 @@ import {
 
 import { TPickerOption } from './Form/microComponents/PickerModalField';
 
-type TEventModalProps = {
+interface IEventModalProps {
   isViewMode?: boolean
 }
 
@@ -77,10 +77,15 @@ type TFormData = {
   calendarId: string | undefined
 }
 
-const EventModal = ({ isViewMode }: TEventModalProps) => {
+const EventModal = ({ isViewMode }: IEventModalProps) => {
   const { eventId, triggerDatestamp } = useLocalSearchParams<TEventModalParams>()
+  const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom)
+  const primaryCalendar = useAtomValue(primaryCalendarAtom)
+  const calendarMap = useAtomValue(calendarMapAtom)
   const router = useRouter()
-
+  const {
+    permission: hasCalendarPermissions,
+  } = usePermissions(EAccess.CALENDAR);
   const {
     control,
     watch,
@@ -98,7 +103,6 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
       calendarId: undefined,
     },
   })
-
   const title = watch('title')
   const isAllDay = watch('isAllDay')
   const isCalendarEvent = watch('isCalendarEvent')
@@ -108,14 +112,6 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
 
   const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT })
   const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage)
-
-  const untrackLoadedDatestamps = useSetAtom(untrackLoadedDatestampsAtom)
-  const primaryCalendar = useAtomValue(primaryCalendarAtom)
-  const calendarMap = useAtomValue(calendarMapAtom)
-
-  const {
-    permission: hasCalendarPermissions,
-  } = usePermissions(EAccess.CALENDAR);
 
   const [initialEventState, setInitialEventState] = useState<TInitialEventMetadata | null>(null)
   const [isInitializingForm, setIsInitializingForm] = useState(true)
@@ -206,7 +202,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         showTime: !isAllDay,
         color: modalPrimaryColor,
         onHandleSideEffects: (newStart: DateTime) =>
-          handleDateRangeChange(newStart, EDateFieldType.START_DATE),
+          triggerDateRangeChangeEffects(newStart, EDateFieldType.START_DATE),
         disabled: isViewMode,
       },
       {
@@ -217,7 +213,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         color: modalPrimaryColor,
         invisible: hideEndDateField,
         onHandleSideEffects: (newEnd: DateTime) =>
-          handleDateRangeChange(newEnd, EDateFieldType.END_DATE),
+          triggerDateRangeChangeEffects(newEnd, EDateFieldType.END_DATE),
         disabled: isViewMode,
       },
     ],
@@ -228,7 +224,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         label: 'Calendar',
         color: modalPrimaryColor,
         invisible: !hasCalendarPermissions || !primaryCalendar || isViewMode,
-        onHandleSideEffects: handleCalendarEventChange,
+        onHandleSideEffects: triggerCalendarEventChangeEffects,
         iconName: 'calendar',
       },
       {
@@ -237,7 +233,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
         label: 'All Day',
         color: modalPrimaryColor,
         invisible: !isCalendarEvent || isViewMode,
-        onHandleSideEffects: handleAllDayChange,
+        onHandleSideEffects: triggerAllDayChangeEffects,
         iconName: 'note',
       },
     ],
@@ -460,7 +456,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
   //  Side Effect Functions
   // =======================
 
-  function handleDateRangeChange(date: DateTime, selectorMode: EDateFieldType) {
+  function triggerDateRangeChangeEffects(date: DateTime, selectorMode: EDateFieldType) {
     if (selectorMode === EDateFieldType.START_DATE) {
       // Enforce end is later than start.
       if (end.toMillis() < date.toMillis()) {
@@ -474,7 +470,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     }
   }
 
-  function handleAllDayChange(newAllDay: boolean) {
+  function triggerAllDayChangeEffects(newAllDay: boolean) {
     if (!newAllDay) return
 
     // Start and end at midnight for all-day events.
@@ -482,7 +478,7 @@ const EventModal = ({ isViewMode }: TEventModalProps) => {
     setValue('end', end.startOf('day'))
   }
 
-  function handleCalendarEventChange(newIsCalendarEvent: boolean) {
+  function triggerCalendarEventChangeEffects(newIsCalendarEvent: boolean) {
     if (newIsCalendarEvent && primaryCalendar) {
       setValue('calendarId', primaryCalendar.id)
       return

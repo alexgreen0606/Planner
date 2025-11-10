@@ -13,14 +13,14 @@ import {
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
 import { calendarIconMap } from '@/lib/constants/calendarIcons';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { hexToRgba } from '@/utils/colorUtils';
 
-import IconButton from '../../icons/IconButton';
-import PopupList from '../../PopupList';
-import CustomText, { textStyles } from '../../text/CustomText';
-import ShadowView from '../../views/ShadowView';
-import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
+import IconButton from '../buttons/IconButton';
+import PopupList from '../PopupList';
+import CustomText, { textStyles } from '../text/CustomText';
+import ShadowView from '../views/ShadowView';
 
 const UpcomingDatesHeader = () => {
   const { top: TOP_SPACER } = useSafeAreaInsets();

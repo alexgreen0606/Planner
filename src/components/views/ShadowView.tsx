@@ -9,7 +9,7 @@ import Svg, {
 
 import useAppTheme from '@/hooks/useAppTheme';
 
-type TShadowViewProps = ViewProps & {
+interface IShadowViewProps extends ViewProps {
   edgeSize?: number | TEdgeSize;
   maxOpacity?: number;
 };
@@ -27,10 +27,10 @@ const ShadowView = ({
   edgeSize = 32,
   maxOpacity = 0.8,
   ...props
-}: TShadowViewProps) => {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
+}: IShadowViewProps) => {
   const { shadowColor } = useAppTheme();
+
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   const handleLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;

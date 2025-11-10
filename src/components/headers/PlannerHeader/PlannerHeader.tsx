@@ -1,17 +1,13 @@
-import { usePathname } from 'expo-router';
 import { useAtomValue } from 'jotai';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { PlatformColor, View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
 import { getWeatherByDatestampAtom } from '@/atoms/weatherAtoms';
 import PlannerActions from '@/components/actions/PlannerActions';
-import Icon from '@/components/icons/Icon';
+import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import FadeInView from '@/components/views/FadeInView';
-import { useExternalDataContext } from '@/providers/ExternalDataProvider';
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
 import {
   getDayOfWeekFromDatestamp,
   getDaysUntilIso,
@@ -21,30 +17,29 @@ import {
   getYesterdayDatestamp
 } from '@/utils/dateUtils';
 
-import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
-import PlannerCarousel, { CAROUSEL_HEIGHT } from './microComponents/PlannerCarousel';
+import PlannerCarousel from './microComponents/PlannerCarousel';
 import PlannerChipSets from './microComponents/PlannerChipSets';
-import { MotiView } from 'moti';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PlannerHeader = ({ datestamp }: { datestamp: string }) => {
-  const weatherData = useAtomValue(getWeatherByDatestampAtom(datestamp));
+interface IPlannerHeaderProps {
+  activeDatestamp: string;
+}
+
+const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
+  const weatherData = useAtomValue(getWeatherByDatestampAtom(activeDatestamp));
+
   // const isCollapsed = useCollapsibleHeader(datestamp, 60);
   const isCollapsed = false
-
-  const { top: TOP_SPACER } = useSafeAreaInsets();
 
   const todayDatestamp = useAtomValue(todayDatestampAtom);
   const { label, dayOfWeek, date } = useMemo(() => {
     let label = '';
 
-    const daysUntilDate = getDaysUntilIso(datestamp);
-
-    if (datestamp === getTodayDatestamp()) {
+    const daysUntilDate = getDaysUntilIso(activeDatestamp);
+    if (activeDatestamp === getTodayDatestamp()) {
       label = 'Today';
-    } else if (datestamp === getTomorrowDatestamp()) {
+    } else if (activeDatestamp === getTomorrowDatestamp()) {
       label = 'Tomorrow';
-    } else if (datestamp === getYesterdayDatestamp()) {
+    } else if (activeDatestamp === getYesterdayDatestamp()) {
       label = 'Yesterday';
     } else if (daysUntilDate > 0) {
       label = `${daysUntilDate} days away`;
@@ -55,14 +50,14 @@ const PlannerHeader = ({ datestamp }: { datestamp: string }) => {
 
     return {
       label,
-      dayOfWeek: getDayOfWeekFromDatestamp(datestamp),
-      date: getMonthDateFromDatestamp(datestamp)
+      dayOfWeek: getDayOfWeekFromDatestamp(activeDatestamp),
+      date: getMonthDateFromDatestamp(activeDatestamp)
     };
-  }, [todayDatestamp, datestamp]);
+  }, [todayDatestamp, activeDatestamp]);
 
   return (
     <View className="px-4 gap-2">
-      <PlannerCarousel isCollapsed={isCollapsed} datestamp={datestamp} />
+      <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} />
 
       <View className="flex-row w-full justify-between">
         <View>
@@ -93,11 +88,11 @@ const PlannerHeader = ({ datestamp }: { datestamp: string }) => {
               </View>
             </FadeInView>
           )}
-          <PlannerActions datestamp={datestamp} />
+          <PlannerActions datestamp={activeDatestamp} />
         </View>
       </View>
 
-      <PlannerChipSets label={label} datestamp={datestamp} />
+      <PlannerChipSets label={label} datestamp={activeDatestamp} />
     </View>
   );
 };

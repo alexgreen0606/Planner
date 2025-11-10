@@ -10,23 +10,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import useFolderItem from '@/hooks/useFolderItem';
 import { NULL } from '@/lib/constants/generic';
+import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { EListLayout } from '@/lib/enums/EListLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { updateFolderItemIndex } from '@/utils/checklistUtils';
 
-import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { EListLayout } from '@/lib/enums/EListLayout';
-import FolderItem from './FolderItem/FolderItem';
+import FolderItem from './FolderItem';
 import PageContainer from './PageContainer';
 
-type TFolderPageProps = {
+interface IFolderPageProps {
   folderId: string;
 };
 
 // TODO: calculate this correctly in the future.
 const BOTTOM_NAV_HEIGHT = 86;
 
-const FolderPage = ({ folderId }: TFolderPageProps) => {
+const FolderPage = ({ folderId }: IFolderPageProps) => {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { top: TOP_SPACER } = useSafeAreaInsets();
   const onScroll = useScrollTracker(folderId);

@@ -6,10 +6,10 @@ import EmptyPageLabel from '@/components/EmptyLabel';
 import useAppTheme from '@/hooks/useAppTheme';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
 
-import GlassIconButton from './icons/customButtons/GlassIconButton';
+import GlassIconButton from './buttons/GlassIconButton';
 import ColorFadeView from './views/ColorFadeView';
 
-type TPageContainerProps = {
+interface IPageContainerProps {
     emptyPageLabel: string;
     children: ReactNode;
     onAddButtonClick: () => void;
@@ -30,7 +30,7 @@ const PageContainer = ({
     addButtonColor = 'systemBlue',
     onAddButtonClick,
     children
-}: TPageContainerProps) => {
+}: IPageContainerProps) => {
     const { top: TOP_SPACER } = useSafeAreaInsets();
     const {
         ColorArray: {

@@ -1,4 +1,4 @@
-import ListItemToggleButton from '@/components/icons/customButtons/ListItemToggleButton';
+import ListItemToggleButton from '@/components/buttons/ListItemToggleButton';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 

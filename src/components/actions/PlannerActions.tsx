@@ -1,13 +1,5 @@
-import { Host, VStack } from '@expo/ui/swift-ui';
-import { cornerRadius, glassEffect } from '@expo/ui/swift-ui/modifiers';
-import { useAtomValue } from 'jotai';
-import { DateTime } from 'luxon';
-import { useEffect, useMemo, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
-import Carousel from 'react-native-reanimated-carousel';
 
-import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
 import PopupList from '@/components/PopupList';
 import { NULL } from '@/lib/constants/generic';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
@@ -22,11 +14,6 @@ import { getRecurringPlannerFromStorageById } from '@/storage/recurringPlannerSt
 import { getDayOfWeekFromDatestamp } from '@/utils/dateUtils';
 import { createEmptyPlanner, upsertRecurringEventsIntoPlanner } from '@/utils/plannerUtils';
 
-import Icon from '../icons/Icon';
-import CustomText from '../text/CustomText';
-
-// ✅
-
 enum EPlannerEditAction {
   RESET_RECURRING = 'RESET_RECURRING',
   DELETE_RECURRING = 'DELETE_RECURRING'
@@ -34,15 +21,7 @@ enum EPlannerEditAction {
 
 const PlannerActions = ({ datestamp }: TPlannerPageParams) => {
   const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
-
   const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp ?? NULL, plannerStorage);
-
-  const hasStaleRecurring = planner && planner.deletedRecurringEventIds.length;
-
-  const hasRecurring = planner?.eventIds.some((id) => {
-    const event = getPlannerEventFromStorageById(id);
-    return !!event.recurringId;
-  });
 
   function handleAction(action: EPlannerEditAction) {
     switch (action) {
@@ -88,6 +67,12 @@ const PlannerActions = ({ datestamp }: TPlannerPageParams) => {
       return newPlanner;
     });
   }
+
+  const hasStaleRecurring = planner && planner.deletedRecurringEventIds.length;
+  const hasRecurring = planner?.eventIds.some((id) => {
+    const event = getPlannerEventFromStorageById(id);
+    return !!event.recurringId;
+  });
 
   return (
     <PopupList

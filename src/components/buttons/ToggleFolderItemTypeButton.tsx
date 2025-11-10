@@ -3,23 +3,22 @@ import { TouchableOpacity, View } from 'react-native';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 
 import Icon from '../Icon';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
-// ✅
-
-type TToggleFolderItemTypeButtonProps = {
+interface IToggleFolderItemTypeButtonProps {
   currentType: EFolderItemType;
   disabled: boolean;
   onClick: () => void;
-};
+}
 
 const ToggleFolderItemTypeButton = ({
   currentType,
   disabled,
   onClick
-}: TToggleFolderItemTypeButtonProps) => (
+}: IToggleFolderItemTypeButtonProps) => (
   <TouchableOpacity
     disabled={disabled}
-    activeOpacity={0.5}
+    activeOpacity={PRESSABLE_OPACITY}
     onPress={onClick}
     className="gap-[0.1rem] items-center"
   >

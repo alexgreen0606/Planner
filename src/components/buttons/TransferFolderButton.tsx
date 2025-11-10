@@ -2,14 +2,12 @@ import { TouchableOpacity, View } from 'react-native';
 
 import Icon from '../Icon';
 
-// ✅
-
-type TTransferFolderIconProps = {
+interface ITransferFolderIconProps {
   disabled: boolean;
   onClick: () => void;
 };
 
-const TransferFolderIcon = ({ disabled, onClick }: TTransferFolderIconProps) => (
+const TransferFolderIcon = ({ disabled, onClick }: ITransferFolderIconProps) => (
   <TouchableOpacity activeOpacity={0.5} onPress={onClick} disabled={disabled} className="relative">
     <View className="-left-2 -top-1">
       <Icon name="arrow.uturn.right" size={16} disabled={disabled} color="label" />

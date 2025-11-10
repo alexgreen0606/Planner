@@ -6,23 +6,23 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FolderItemActions from '@/components/actions/FolderItemActions';
-import GlassIconButton from '@/components/icons/customButtons/GlassIconButton';
+import GlassIconButton from '@/components/buttons/GlassIconButton';
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
 import { NULL } from '@/lib/constants/generic';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
 import { getValidCssColor } from '@/utils/colorUtils';
 
-import { textStyles } from '../../text/CustomText';
-import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
+import { textStyles } from '../text/CustomText';
 
-type FolderItemHeaderProps = {
+type TFolderItemHeaderProps = {
     folderItemId: string;
 };
 
-const FolderItemHeader = ({ folderItemId }: FolderItemHeaderProps) => {
+const FolderItemHeader = ({ folderItemId }: TFolderItemHeaderProps) => {
     const isCollapsed = useCollapsibleHeader(folderItemId, EHeaderHeight.FOLDER_ITEM);
     const { width: SCREEN_WIDTH } = useWindowDimensions();
     const { top: TOP_SPACER } = useSafeAreaInsets();

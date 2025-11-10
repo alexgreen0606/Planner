@@ -2,11 +2,9 @@ import { SFSymbol } from 'expo-symbols';
 import React, { useEffect, useRef } from 'react';
 import { PlatformColor, TextInput, View } from 'react-native';
 
-import Icon from '@/components/icons/Icon';
+import Icon from '@/components/Icon';
 import useBounceTrigger from '@/hooks/useBounceTrigger';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
-
-// ✅
 
 export type TTextModalFieldProps = {
   label: string;
@@ -29,9 +27,8 @@ const TextModalField = ({
 }: TTextModalFieldProps & TFormFieldControl<string>) => {
   const bounceTrigger = useBounceTrigger([iconName, iconColor]);
 
-  const inputRef = useRef<TextInput>(null);
-
   // Manually focus the text input.
+  const inputRef = useRef<TextInput>(null);
   useEffect(() => {
     if (focusTrigger) {
       inputRef.current?.focus();

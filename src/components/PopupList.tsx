@@ -6,11 +6,9 @@ import { PlatformColor } from 'react-native';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { TPopupAction } from '@/lib/types/TPopupAction';
 
-import GlassIconButton from './icons/customButtons/GlassIconButton';
+import GlassIconButton from './buttons/GlassIconButton';
 
-// ✅
-
-export type TPopupListProps = {
+export interface IPopupListProps {
   actions: TPopupAction[];
   wrapButton?: boolean;
   systemImage?: SFSymbol;
@@ -22,7 +20,12 @@ const PopupList = ({
   wrapButton,
   systemImage = 'ellipsis',
   iconPlatformColor = 'label'
-}: TPopupListProps) => {
+}: IPopupListProps) => {
+  const actionTsx = useMemo(
+    () => actions.map((option, index) => renderMenuAction(option, index)),
+    [actions]
+  );
+
   const renderMenuAction = (option: TPopupAction, index: number): ReactNode | null => {
     if (option.hidden) return null;
 
@@ -72,11 +75,6 @@ const PopupList = ({
         return null;
     }
   };
-
-  const actionTsx = useMemo(
-    () => actions.map((option, index) => renderMenuAction(option, index)),
-    [actions]
-  );
 
   if (!actionTsx.some(Boolean)) {
     return wrapButton ? (

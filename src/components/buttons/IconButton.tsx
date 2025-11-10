@@ -3,16 +3,14 @@ import { TouchableOpacity } from 'react-native';
 
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
-import Icon, { TIconProps } from './Icon';
+import Icon, { IIconProps } from '../Icon';
 
-// ✅
-
-type TIconButtonProps = TIconProps & {
+interface IIconButtonProps extends IIconProps {
   hideRipple?: boolean;
   onClick: () => void;
 };
 
-const IconButton = ({ hideRipple, onClick, ...iconProps }: TIconButtonProps) => (
+const IconButton = ({ hideRipple, onClick, ...iconProps }: IIconButtonProps) => (
   <TouchableOpacity activeOpacity={hideRipple ? 1 : PRESSABLE_OPACITY} onPress={onClick}>
     <Icon {...iconProps} />
   </TouchableOpacity>

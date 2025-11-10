@@ -2,43 +2,44 @@ import { Host, VStack } from '@expo/ui/swift-ui';
 import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useAtomValue } from 'jotai';
 import { DateTime } from 'luxon';
+import { MotiView } from 'moti';
 import { useMemo, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { plannerCarouselDataAtom } from '@/atoms/planner/plannerCarouselWeekAtom';
-import Icon from '@/components/icons/Icon';
+import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import {
   LARGE_MARGIN,
-  PLANNER_CAROUSEL_ICON_WIDTH,
   SMALL_MARGIN
 } from '@/lib/constants/miscLayout';
-import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
 
+import { EPlannerCarouselLayout } from '@/lib/enums/EPlannerCarouselLayout';
 import PlannerCarouselWeek from './PlannerCarouselWeek';
-import { MotiView } from 'moti';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export const CAROUSEL_HEIGHT = 22 + PLANNER_CAROUSEL_ICON_WIDTH + SMALL_MARGIN * 2;
+interface IPlannerCarouselProps {
+  activeDatestamp: string;
+  isCollapsed: boolean;
+}
 
-const PlannerCarousel = ({ datestamp: currentDatestamp, isCollapsed }: any) => {
+const PlannerCarousel = ({ activeDatestamp, isCollapsed }: IPlannerCarouselProps) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const { top: TOP_SPACER } = useSafeAreaInsets();
 
+  // Build the carousel data to render.
   const { weeks, map } = useAtomValue(plannerCarouselDataAtom);
-
   const { currentDatestampWeek, currentDatestampSundayIndex } = useMemo(() => {
-    const currentDate = DateTime.fromISO(currentDatestamp);
+    const currentDate = DateTime.fromISO(activeDatestamp);
     const currentSunday = currentDate.minus({ days: currentDate.weekday % 7 }).toISODate()!;
     return {
       currentDatestampWeek: map[currentSunday],
       currentDatestampSundayIndex: weeks.indexOf(currentSunday)
     };
-  }, [currentDatestamp]);
+  }, [activeDatestamp]);
 
+  // Todo: update this when the current datestamp changes. Use atom to store this and above.
   const [currentWeek, setCurrentWeek] = useState(currentDatestampWeek);
 
   const { startMonth, startYear, endMonth, endYear } = useMemo(() => {
@@ -71,11 +72,11 @@ const PlannerCarousel = ({ datestamp: currentDatestamp, isCollapsed }: any) => {
 
       <MotiView
         className='overflow-hidden'
-        animate={{ height: isCollapsed ? 0 : CAROUSEL_HEIGHT }}
+        animate={{ height: isCollapsed ? 0 : EPlannerCarouselLayout.CAROUSEL_HEIGHT }}
       >
         <Host
           style={{
-            height: CAROUSEL_HEIGHT,
+            height: EPlannerCarouselLayout.CAROUSEL_HEIGHT,
             width: '100%'
           }}
         >
@@ -86,7 +87,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp, isCollapsed }: any) => {
                 shape: 'rectangle'
               }),
               cornerRadius(8),
-              frame({ height: CAROUSEL_HEIGHT })
+              frame({ height: EPlannerCarouselLayout.CAROUSEL_HEIGHT })
             ]}
           >
             <View className="w-full py-2">
@@ -111,7 +112,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp, isCollapsed }: any) => {
                   >
                     <PlannerCarouselWeek
                       datestamps={map[startDatestamp]}
-                      currentDatestamp={currentDatestamp}
+                      currentDatestamp={activeDatestamp}
                     />
                   </View>
                 )}
@@ -120,7 +121,7 @@ const PlannerCarousel = ({ datestamp: currentDatestamp, isCollapsed }: any) => {
                 defaultIndex={currentDatestampSundayIndex}
                 windowSize={7}
                 width={SCREEN_WIDTH - LARGE_MARGIN * 2}
-                height={PLANNER_CAROUSEL_ICON_WIDTH}
+                height={EPlannerCarouselLayout.DATESTAMP_ICON_SIZE}
               />
             </View>
           </VStack>

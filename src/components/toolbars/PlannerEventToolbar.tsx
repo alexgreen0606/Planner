@@ -6,15 +6,11 @@ import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { openEditEventModal } from '@/utils/plannerUtils';
 
 import useTextfieldItemAs from '../../hooks/useTextfieldItemAs';
-import IconButton from '../icons/IconButton';
-
-// ✅
+import IconButton from '../buttons/IconButton';
 
 const PlannerEventToolbar = () => {
   const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
-
   const { textfieldItem: focusedEvent } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
-
   return (
     <ListToolbar
       iconSet={[

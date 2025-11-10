@@ -11,9 +11,9 @@ import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 
-import FolderItemButton from '../icons/customButtons/FolderItemButton';
+import FolderItemButton from './buttons/FolderItemButton';
 
-type TFolderItemProps = {
+interface IFolderItemProps {
     itemId: string;
     storage: MMKV;
     transferingItem: IFolderItem | null;
@@ -29,7 +29,7 @@ const FolderItem = ({
     isTransferMode,
     parentFolder,
     onEndTransfer
-}: TFolderItemProps) => {
+}: IFolderItemProps) => {
     const { width: SCREEN_WIDTH } = useWindowDimensions();
     const router = useRouter();
 
@@ -75,7 +75,7 @@ const FolderItem = ({
     if (!item) return null;
 
     return (
-        <View className="flex-row items-center gap-4 relative" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22 }}>
+        <View className="flex-row items-center gap-4 relative" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 24 }}>
             {/* Type Icon */}
             <FolderItemButton
                 item={item}

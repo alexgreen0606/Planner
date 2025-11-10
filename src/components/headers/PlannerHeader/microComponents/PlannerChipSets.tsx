@@ -5,21 +5,19 @@ import React from 'react';
 import { PlatformColor, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { plannerChipsByDatestamp } from '@/atoms/planner/plannerChips';
+import { getPlannerChipsByDatestampAtom } from '@/atoms/planner/plannerChips';
 import CustomText from '@/components/text/CustomText';
 import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
 
 import PlannerChip from './PlannerChip';
 
-// ✅
-
-type TPlannerChipSetsProps = {
+interface IPlannerChipSetsProps {
   datestamp: string;
   label: string;
 };
 
-const PlannerChipSets = ({ datestamp, label }: TPlannerChipSetsProps) => {
-  const sets = useAtomValue(plannerChipsByDatestamp(datestamp));
+const PlannerChipSets = ({ datestamp, label }: IPlannerChipSetsProps) => {
+  const sets = useAtomValue(getPlannerChipsByDatestampAtom(datestamp));
   return (
     <Animated.View className="flex-row flex-wrap gap-2">
       <Host style={{ height: PLANNER_CHIP_HEIGHT }}>

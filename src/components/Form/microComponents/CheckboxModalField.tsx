@@ -5,9 +5,7 @@ import React from 'react';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import { getValidCssColor } from '@/utils/colorUtils';
 
-import ModalDisplayValue from '../../Modal/ModalDisplayValue';
-
-// ✅
+import ModalDisplayValue from '../../modals/ModalDisplayValue';
 
 export type TCheckboxModalFieldProps = {
   label: string;

@@ -13,17 +13,17 @@ import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 
-import Icon from './icons/Icon';
+import Icon from './Icon';
 import CustomText, { textStyles } from './text/CustomText';
 import DateValue from './text/DateValue';
 
-type TUpcomingDateCardProps = {
+interface IUpcomingDateCardProps {
   datestamp: string;
   events: Calendar.Event[];
   index: number;
 };
 
-const UpcomingDateCard = ({ datestamp, events, index }: TUpcomingDateCardProps) => {
+const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) => {
   const calendarMap = useAtomValue(calendarMapAtom);
   const router = useRouter();
 

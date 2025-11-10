@@ -2,8 +2,6 @@ import { View } from 'react-native';
 
 import PlannerDateIcon from './PlannerDateIcon';
 
-// ✅
-
 type TPlannerCarouselWeekProps = {
   datestamps: string[];
   currentDatestamp: string;

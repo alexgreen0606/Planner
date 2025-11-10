@@ -4,14 +4,12 @@ import { PlatformColor } from 'react-native';
 
 import { isValidPlatformColor } from '@/utils/colorUtils';
 
-// ✅
-
-export type TIconProps = SymbolViewProps & {
+export interface IIconProps extends SymbolViewProps {
   color?: string;
   disabled?: boolean;
 };
 
-const Icon = ({ color, disabled, ...symbolViewProps }: TIconProps) => {
+const Icon = ({ color, disabled, ...symbolViewProps }: IIconProps) => {
   const colorToUse = disabled ? 'tertiaryLabel' : color || 'label';
   const iconColor = isValidPlatformColor(colorToUse) ? PlatformColor(colorToUse) : colorToUse;
   return (

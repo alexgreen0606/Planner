@@ -2,18 +2,16 @@ import { GlassEffectContainer, Host, VStack } from '@expo/ui/swift-ui';
 import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import GlassIconButton from '../icons/customButtons/GlassIconButton';
-import PopupList, { TPopupListProps } from '../PopupList';
+import GlassIconButton from '../buttons/GlassIconButton';
+import PopupList, { IPopupListProps } from '../PopupList';
 
-// ✅
-
-type TModalProps = {
+interface IModalProps {
   primaryButtonConfig: {
     color?: string;
     disabled?: boolean;
     onClick: () => void;
   };
-  deleteButtonConfig?: TPopupListProps;
+  deleteButtonConfig?: IPopupListProps;
   isStaticMode?: boolean;
   children: ReactNode;
   onClose: () => void;
@@ -25,7 +23,7 @@ const Modal = ({
   isStaticMode,
   children,
   onClose
-}: TModalProps) => (
+}: IModalProps) => (
   <Host style={{ flex: 1 }}>
     <GlassEffectContainer>
       <VStack>

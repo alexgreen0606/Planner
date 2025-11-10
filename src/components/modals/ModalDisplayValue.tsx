@@ -5,16 +5,14 @@ import { PlatformColor, View } from 'react-native';
 
 import { MODAL_INPUT_HEIGHT } from '@/lib/constants/miscLayout';
 
-// ✅
-
-type TModalDisplayValueProps = {
+interface IModalDisplayValueProps {
   label: string;
   value: React.ReactNode;
   disabled?: boolean;
   iconName?: SFSymbol;
-};
+}
 
-const ModalDisplayValue = ({ label, value, disabled, iconName }: TModalDisplayValueProps) => (
+const ModalDisplayValue = ({ label, value, disabled, iconName }: IModalDisplayValueProps) => (
   <View
     className="flex-row w-full items-center"
     style={{ minHeight: MODAL_INPUT_HEIGHT, pointerEvents: disabled ? 'none' : 'auto' }}

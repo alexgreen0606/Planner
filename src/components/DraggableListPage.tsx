@@ -1,4 +1,6 @@
+import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { DraggableList } from "draggable-list";
 import { usePathname } from 'expo-router';
 import React, { ReactNode, useState } from 'react';
 import { KeyboardAvoidingView, RefreshControl, useWindowDimensions, View } from 'react-native';
@@ -6,8 +8,7 @@ import { MMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { DraggableList } from "draggable-list";
-
+import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import useSortableMmkvList from '@/hooks/useSortableMmkvList';
 import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
@@ -15,14 +16,12 @@ import { reloadablePaths } from '@/lib/constants/reloadablePaths';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
-import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
-import GlassIconButton from './icons/customButtons/GlassIconButton';
+import GlassIconButton from './buttons/GlassIconButton';
 import PageContainer from './PageContainer';
 import FillerView from './views/FillerView';
-import { Host } from '@expo/ui/swift-ui';
 
-type TDraggableListPageProps<T extends TListItem, S> = {
+interface IDraggableListPageProps<T extends TListItem, S> {
   emptyPageLabel: string;
   toolbar?: ReactNode;
   itemIds: string[];
@@ -58,7 +57,7 @@ const DraggableListPage = <T extends TListItem, S>({
   onCreateItem,
   onDeleteItem,
   ...listItemProps
-}: TDraggableListPageProps<T, S>) => {
+}: IDraggableListPageProps<T, S>) => {
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const onScroll = useScrollTracker(listId);

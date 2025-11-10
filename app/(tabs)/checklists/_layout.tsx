@@ -1,20 +1,20 @@
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import FolderItemHeader from '@/components/headers/FolderItemHeader/FolderItemHeader';
-import RootFolderHeader from '@/components/headers/RootFolderHeader/RootFolderHeader';
+import FolderItemHeader from '@/components/headers/FolderItemHeader';
+import RootFolderHeader from '@/components/headers/RootFolderHeader';
 import ColorFadeView from '@/components/views/ColorFadeView';
 import useAppTheme from '@/hooks/useAppTheme';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { TChecklistsPageParams } from '@/lib/types/routeParams/TChecklistPageParams';
-import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 
-function getFolderItemId(params: TChecklistsPageParams) {
+function getFolderItemIdFromParams(params: TChecklistsPageParams) {
   return params.checklistId ?? params.folderId ?? EStorageKey.ROOT_FOLDER_KEY;
 }
 
-function getHeader(params: TChecklistsPageParams) {
-  const folderItemId = getFolderItemId(params);
+function getHeaderFromParams(params: TChecklistsPageParams) {
+  const folderItemId = getFolderItemIdFromParams(params);
   if (folderItemId === EStorageKey.ROOT_FOLDER_KEY) {
     return (
       <RootFolderHeader />
@@ -36,7 +36,7 @@ const ChecklistsLayout = () => {
   } = useAppTheme();
 
   function handleGetHeaderBackground(params: TChecklistsPageParams) {
-    const folderItemId = getFolderItemId(params);
+    const folderItemId = getFolderItemIdFromParams(params);
     if (folderItemId === EStorageKey.ROOT_FOLDER_KEY) {
       return (
         <ColorFadeView
@@ -58,7 +58,7 @@ const ChecklistsLayout = () => {
   return (
     <Stack
       screenOptions={({ route: { params } }) => ({
-        header: () => getHeader(params ?? {}),
+        header: () => getHeaderFromParams(params ?? {}),
         headerBackground: () => handleGetHeaderBackground(params ?? {}),
         animation: 'ios_from_right',
         contentStyle: { backgroundColor: background },

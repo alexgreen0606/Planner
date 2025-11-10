@@ -31,10 +31,6 @@ const TabLayout = () => {
         <Label hidden />
         <Icon sf="list.bullet.clipboard" />
       </NativeTabs.Trigger>
-      {/* <NativeTabs.Trigger name='recurring'>
-            <Label hidden />
-            <Icon sf='repeat' />
-        </NativeTabs.Trigger> */}
     </NativeTabs>
   );
 };

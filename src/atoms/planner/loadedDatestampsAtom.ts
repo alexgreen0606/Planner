@@ -6,13 +6,14 @@ import { datestampToMidnightJsDate, isTimeEarlier, isTimeEarlierOrEqual } from '
 // Stores all datestamps that have been loaded from the Calendar.
 export const loadedDatestampsAtom = atom<Set<string>>(new Set<string>());
 
+// Adds a datestamp to loadedDatestampsAtom.
 export const trackLoadedDatestampAtom = atom(null, (get, set, newDatestamp: string) => {
   const current = new Set(get(loadedDatestampsAtom));
   current.add(newDatestamp);
   set(loadedDatestampsAtom, current);
 });
 
-// Clears any loaded datestamps that fall within the ranges.
+// Clears any loaded datestamps that fall within the given ranges.
 export const untrackLoadedDatestampsAtom = atom(null, (get, set, ranges: TDateRange[]) => {
   const current = new Set(get(loadedDatestampsAtom));
 

@@ -5,13 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FolderItemActions from '@/components/actions/FolderItemActions';
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-
-import { textStyles } from '../../text/CustomText';
-import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { getValidCssColor } from '@/utils/colorUtils';
+
+import { textStyles } from '../text/CustomText';
 
 const RootFolderHeader = () => {
     const isCollapsed = useCollapsibleHeader(EStorageKey.ROOT_FOLDER_KEY, EHeaderHeight.ROOT_FOLDER);

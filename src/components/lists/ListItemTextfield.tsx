@@ -8,7 +8,7 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
 import { textStyles } from '../text/CustomText';
 
-type TListItemTextfieldProps<T extends TListItem> = {
+interface IListItemTextfieldProps<T extends TListItem> {
   item: T;
   toolbarIconSet?: ReactNode[][];
   customStyle: TextStyle;
@@ -31,10 +31,8 @@ const ListItemTextfield = <T extends TListItem>({
   onValueChange,
   onCreateChildTextfield,
   onSaveToExternalStorage
-}: TListItemTextfieldProps<T>) => {
+}: IListItemTextfieldProps<T>) => {
   const setTextfieldId = useSetAtom(textfieldIdAtom);
-
-  const itemValue = useRef(item.value);
   const inputRef = useRef<TextInput>(null);
 
   const handleSaveToExternalStorageDebounce = useMemo(
@@ -50,7 +48,8 @@ const ListItemTextfield = <T extends TListItem>({
     return handleBlurTextfield;
   }, []);
 
-  // Save to external storage.
+  // Schedule external storage save.
+  const itemValue = useRef(item.value);
   useEffect(() => {
     itemValue.current = item.value;
     handleSaveToExternalStorageDebounce(item);

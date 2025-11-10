@@ -5,24 +5,20 @@ import { useMemo } from 'react';
 import { PlatformColor, TouchableOpacity } from 'react-native';
 
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
-import Icon from '@/components/icons/Icon';
+import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import FadeInView from '@/components/views/FadeInView';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
-import { PLANNER_CAROUSEL_ICON_WIDTH } from '@/lib/constants/miscLayout';
 import { isTimeEarlier } from '@/utils/dateUtils';
+import { EPlannerCarouselLayout } from '@/lib/enums/EPlannerCarouselLayout';
 
-// ✅
-
-type TPlannerDateIconProps = {
+interface IPlannerDateIconProps {
   datestamp: string;
   isCurrentDatestamp: boolean;
 };
 
-const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: TPlannerDateIconProps) => {
+const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: IPlannerDateIconProps) => {
   const router = useRouter();
-
-  const todayDatestamp = useAtomValue(todayDatestampAtom);
 
   const { day, dayOfWeek, isWeekend } = useMemo(() => {
     const date = DateTime.fromISO(datestamp);
@@ -34,6 +30,8 @@ const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: TPlannerDateIconProp
     };
   }, [datestamp]);
 
+  // Track datestamp's relation to today.
+  const todayDatestamp = useAtomValue(todayDatestampAtom);
   const { isTodayDatestamp, isPastDate } = useMemo(
     () => ({
       isTodayDatestamp: datestamp === todayDatestamp,
@@ -51,14 +49,14 @@ const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: TPlannerDateIconProp
       onPress={handlePress}
       activeOpacity={PRESSABLE_OPACITY}
       style={{
-        width: PLANNER_CAROUSEL_ICON_WIDTH,
-        height: PLANNER_CAROUSEL_ICON_WIDTH
+        width: EPlannerCarouselLayout.DATESTAMP_ICON_SIZE,
+        height: EPlannerCarouselLayout.DATESTAMP_ICON_SIZE
       }}
       className="w-full h-full items-center pt-[0.3rem]"
     >
       {isCurrentDatestamp && (
         <FadeInView className="absolute">
-          <Icon name="note" color="systemBlue" size={PLANNER_CAROUSEL_ICON_WIDTH} />
+          <Icon name="note" color="systemBlue" size={EPlannerCarouselLayout.DATESTAMP_ICON_SIZE} />
         </FadeInView>
       )}
 

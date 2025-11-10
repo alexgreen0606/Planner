@@ -4,9 +4,7 @@ import { PlatformColor, View } from 'react-native';
 
 import CustomText from './CustomText';
 
-// ✅
-
-type TTimeValueProps = {
+interface ITimeValueProps {
   timeValue?: string | null;
   isoTimestamp?: string | null;
   isEndEvent?: boolean;
@@ -22,10 +20,12 @@ const TimeValue = ({
   isStartEvent: startEvent,
   platformColor = 'systemBlue',
   disabled
-}: TTimeValueProps) => {
+}: ITimeValueProps) => {
   const [hour, setHour] = useState('');
   const [minute, setMinute] = useState('');
   const [indicator, setIndicator] = useState('');
+
+  // TODO: memoize and combine
 
   useEffect(() => {
     let date: DateTime | null = null;

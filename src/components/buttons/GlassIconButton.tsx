@@ -5,14 +5,14 @@ import { PlatformColor } from 'react-native';
 
 import { getValidCssColor } from '@/utils/colorUtils';
 
-type TGlassIconButtonProps = {
+interface IGlassIconButtonProps {
   systemImage: SFSymbol;
   disabled?: boolean;
   isPrimary?: boolean;
   color?: string;
   iconPlatformColor?: string;
   onPress?: () => void;
-};
+}
 
 const GlassIconButton = ({
   systemImage,
@@ -21,7 +21,7 @@ const GlassIconButton = ({
   color,
   iconPlatformColor = 'label',
   onPress
-}: TGlassIconButtonProps) => (
+}: IGlassIconButtonProps) => (
   <Host matchContents>
     <Button
       onPress={onPress}

@@ -3,22 +3,20 @@ import { frame } from '@expo/ui/swift-ui/modifiers';
 import React from 'react';
 import { View } from 'react-native';
 
-import ModalDisplayValue from '@/components/Modal/ModalDisplayValue';
+import ModalDisplayValue from '@/components/modals/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormField';
 import { getValidCssColor } from '@/utils/colorUtils';
-
-// ✅
-
-export type TPickerOption = {
-  label: string;
-  value: string;
-};
 
 export type TPickerModalFieldProps = {
   options: TPickerOption[];
   width?: number;
   label?: string;
   color?: string;
+};
+
+export type TPickerOption = {
+  label: string;
+  value: string;
 };
 
 const PickerModalField = ({

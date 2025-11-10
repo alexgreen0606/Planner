@@ -9,21 +9,19 @@ import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 
 const PlannersLayout = () => {
   const { top: TOP_SPACER } = useSafeAreaInsets();
-
   const {
     CssColor: { background },
     ColorArray: {
       Screen: { upper }
     }
   } = useAppTheme();
-
   return (
     <Stack
       screenOptions={({ route: { params } }) => ({
         header: () => {
-          // TODO: move this to a special page ScrollView so it won't re-render each time the datestamp changes
+          // TODO: move this so it won't re-render each time the datestamp changes
           const datestamp = (params as TPlannerPageParams)?.datestamp;
-          return datestamp && <PlannerHeader datestamp={datestamp} />;
+          return datestamp && <PlannerHeader activeDatestamp={datestamp} />;
         },
         headerBackground: () => (
           <ColorFadeView totalHeight={TOP_SPACER + 32} solidHeight={TOP_SPACER} colors={upper} />

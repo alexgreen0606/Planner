@@ -1,4 +1,4 @@
-import { GenericIconProps } from '@/components/icons/Icon';
+import { GenericIconProps } from '@/components/Icon';
 
 // ✅
 

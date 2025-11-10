@@ -4,23 +4,22 @@ import { PlatformColor, View } from 'react-native';
 
 import CustomText from './CustomText';
 
-// ✅
-
-type TDateValueProps = {
+interface IDateValueProps {
   isoTimestamp: string;
   platformColor?: string;
   disabled?: boolean;
 };
 
-const DateValue = ({ isoTimestamp, disabled, platformColor = 'label' }: TDateValueProps) => {
+const DateValue = ({ isoTimestamp, disabled, platformColor = 'label' }: IDateValueProps) => {
   const dayFormat = 'MMM d';
   const yearFormat = 'yyyy';
+
+  // TODO: memoize
 
   const date = DateTime.fromISO(isoTimestamp);
   const monthDay = date.toFormat(dayFormat);
   const year = date.toFormat(yearFormat);
 
-  // Show year only if it's different from the current year
   const showYear = date.year !== DateTime.now().year;
 
   return (
