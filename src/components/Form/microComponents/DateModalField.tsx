@@ -7,7 +7,7 @@ import ModalDisplayValue from '@/components/modals/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 import { getValidCssColor } from '@/utils/colorUtils';
 
-export type TDateModalFieldProps = {
+export interface IDateModalFieldProps {
   label: string;
   showTime?: boolean;
   minimumDate?: Date;
@@ -26,7 +26,7 @@ const DateModalField = ({
   disabled,
   color = 'label',
   onChange
-}: TDateModalFieldProps & TFormFieldControl<DateTime>) => (
+}: IDateModalFieldProps & TFormFieldControl<DateTime>) => (
   <ModalDisplayValue
     label={label}
     value={

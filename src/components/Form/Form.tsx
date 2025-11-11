@@ -8,12 +8,12 @@ import { TFormField } from '@/lib/types/form/TFormField';
 
 import FormField from './microComponents/FormField';
 
-type TFormProps = {
+interface IFormProps {
   fieldSets: TFormField[][]
   control: Control<any>
 }
 
-const Form = ({ fieldSets, control }: TFormProps) => {
+const Form = ({ fieldSets, control }: IFormProps) => {
   const {
     modal: { inputField },
   } = useAppTheme()

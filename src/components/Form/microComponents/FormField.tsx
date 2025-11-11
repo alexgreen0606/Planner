@@ -4,25 +4,25 @@ import { EFormFieldType } from '@/lib/enums/EFormFieldType';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 
-import CheckboxModalField, { TCheckboxModalFieldProps } from './CheckboxModalField';
-import ColorPickerModalField, { TColorPickerModalFieldProps } from './ColorPickerModalField';
-import DateModalField, { TDateModalFieldProps } from './DateModalField';
-import PickerModalField, { TPickerModalFieldProps } from './PickerModalField';
-import TextModalField, { TTextModalFieldProps } from './TextModalField';
+import CheckboxModalField, { ICheckboxModalFieldProps } from './CheckboxModalField';
+import ColorPickerModalField, { IColorPickerModalFieldProps } from './ColorPickerModalField';
+import DateModalField, { IDateModalFieldProps } from './DateModalField';
+import PickerModalField, { IPickerModalFieldProps } from './PickerModalField';
+import TextModalField, { ITextModalFieldProps } from './TextModalField';
 
-const TextField = (props: TTextModalFieldProps & TFormFieldControl<string>) => (
+const TextField = (props: ITextModalFieldProps & TFormFieldControl<string>) => (
   <TextModalField {...props} />
 );
-const CheckboxField = (props: TCheckboxModalFieldProps & TFormFieldControl<boolean>) => (
+const CheckboxField = (props: ICheckboxModalFieldProps & TFormFieldControl<boolean>) => (
   <CheckboxModalField {...props} />
 );
-const DateField = (props: TDateModalFieldProps & TFormFieldControl<DateTime>) => (
+const DateField = (props: IDateModalFieldProps & TFormFieldControl<DateTime>) => (
   <DateModalField {...props} />
 );
-const PickerField = (props: TPickerModalFieldProps & TFormFieldControl<string | undefined>) => (
+const PickerField = (props: IPickerModalFieldProps & TFormFieldControl<string | undefined>) => (
   <PickerModalField {...props} />
 );
-const ColorPickerField = (props: TColorPickerModalFieldProps & TFormFieldControl<string>) => (
+const ColorPickerField = (props: IColorPickerModalFieldProps & TFormFieldControl<string>) => (
   <ColorPickerModalField {...props} />
 );
 

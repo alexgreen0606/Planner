@@ -2,12 +2,12 @@ import { View } from 'react-native';
 
 import PlannerDateIcon from './PlannerDateIcon';
 
-type TPlannerCarouselWeekProps = {
+interface IPlannerCarouselWeekProps {
   datestamps: string[];
   currentDatestamp: string;
 };
 
-const PlannerCarouselWeek = ({ datestamps, currentDatestamp }: TPlannerCarouselWeekProps) => (
+const PlannerCarouselWeek = ({ datestamps, currentDatestamp }: IPlannerCarouselWeekProps) => (
   <View className="flex-row justify-evenly">
     {datestamps.map((datestamp) => (
       <PlannerDateIcon

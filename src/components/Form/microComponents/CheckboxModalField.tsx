@@ -7,7 +7,7 @@ import { getValidCssColor } from '@/utils/colorUtils';
 
 import ModalDisplayValue from '../../modals/ModalDisplayValue';
 
-export type TCheckboxModalFieldProps = {
+export interface ICheckboxModalFieldProps {
   label: string;
   iconName?: SFSymbol;
   color?: string;
@@ -19,7 +19,7 @@ const CheckboxModalField = ({
   iconName,
   color = 'label',
   onChange
-}: TCheckboxModalFieldProps & TFormFieldControl<boolean>) => (
+}: ICheckboxModalFieldProps & TFormFieldControl<boolean>) => (
   <ModalDisplayValue
     label={label}
     value={

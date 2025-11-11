@@ -5,14 +5,14 @@ import IconButton from '@/components/buttons/IconButton';
 import { selectableColors } from '@/lib/constants/selectableColors';
 import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 
-export type TColorPickerModalFieldProps = {
+export interface IColorPickerModalFieldProps {
   label: string;
 };
 
 const ColorPickerModalField = ({
   value,
   onChange
-}: TColorPickerModalFieldProps & TFormFieldControl<string>) => {
+}: IColorPickerModalFieldProps & TFormFieldControl<string>) => {
   return (
     <View className="flex-row w-full justify-between items-center px-2 py-3">
       {Object.values(selectableColors).map((color) => (

@@ -6,7 +6,7 @@ import Icon from '@/components/Icon';
 import useBounceTrigger from '@/hooks/useBounceTrigger';
 import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 
-export type TTextModalFieldProps = {
+export interface ITextModalFieldProps {
   label: string;
   focusTrigger?: boolean;
   disabled?: boolean;
@@ -24,7 +24,7 @@ const TextModalField = ({
   iconName,
   iconColor = 'label',
   onChange
-}: TTextModalFieldProps & TFormFieldControl<string>) => {
+}: ITextModalFieldProps & TFormFieldControl<string>) => {
   const bounceTrigger = useBounceTrigger([iconName, iconColor]);
 
   // Manually focus the text input.

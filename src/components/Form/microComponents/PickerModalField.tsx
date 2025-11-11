@@ -6,17 +6,13 @@ import { View } from 'react-native';
 import ModalDisplayValue from '@/components/modals/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 import { getValidCssColor } from '@/utils/colorUtils';
+import { TPickerOption } from '@/lib/types/form/TPickerOption';
 
-export type TPickerModalFieldProps = {
+export interface IPickerModalFieldProps {
   options: TPickerOption[];
   width?: number;
   label?: string;
   color?: string;
-};
-
-export type TPickerOption = {
-  label: string;
-  value: string;
 };
 
 const PickerModalField = ({
@@ -26,7 +22,7 @@ const PickerModalField = ({
   label,
   color,
   onChange
-}: TPickerModalFieldProps & TFormFieldControl<string | undefined>) =>
+}: IPickerModalFieldProps & TFormFieldControl<string | undefined>) =>
   options.length > 3 ? (
     <ModalDisplayValue
       label={label ?? ''}

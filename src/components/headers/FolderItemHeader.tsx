@@ -18,11 +18,11 @@ import { getValidCssColor } from '@/utils/colorUtils';
 
 import { textStyles } from '../text/CustomText';
 
-type TFolderItemHeaderProps = {
+interface IFolderItemHeaderProps {
     folderItemId: string;
 };
 
-const FolderItemHeader = ({ folderItemId }: TFolderItemHeaderProps) => {
+const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
     const isCollapsed = useCollapsibleHeader(folderItemId, EHeaderHeight.FOLDER_ITEM);
     const { width: SCREEN_WIDTH } = useWindowDimensions();
     const { top: TOP_SPACER } = useSafeAreaInsets();
