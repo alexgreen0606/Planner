@@ -5,15 +5,14 @@ import { useMMKV } from 'react-native-mmkv';
 import DraggableListPage from '@/components/DraggableListPage';
 import useFolderItem from '@/hooks/useFolderItem';
 import useListItemToggle from '@/hooks/useListItemToggle';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { EStorageId } from '@/lib/enums/EStorageId';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { saveChecklistItemToStorage } from '@/storage/checklistsStorage';
 import {
   deleteChecklistItems,
-  updateFolderOrChecklistItemIndex
 } from '@/utils/checklistUtils';
-import { getFolderItemFromStorageById, saveChecklistItemToStorage, saveFolderItemToStorage } from '@/storage/checklistsStorage';
-import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { uuid } from 'expo-modules-core';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 type TChecklistPageParams = {
   checklistId: string;
@@ -26,23 +25,27 @@ const ChecklistPage = () => {
   const { onSetTextfieldId } = useTextfieldItemAs<TListItem>(itemStorage);
 
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
-  const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage);
+  const { itemIds, platformColor, onUpdateItemIndex, onSetFolderItem } = useFolderItem(checklistId, folderItemStorage);
 
-  function handleCreateNewChecklistItemAndSaveToStorage(checklistId: string, index: number) {
-    const checklist = getFolderItemFromStorageById(checklistId);
-
-    const item: TListItem = {
+  function handleCreateNewChecklistItemAndSaveToStorage(index: number) {
+    // Save the new item to storage.
+    const newItem: TListItem = {
       id: uuid.v4(),
       value: '',
       listId: checklistId,
       storageId: EStorageId.CHECKLIST_ITEM
     };
-    saveChecklistItemToStorage(item);
+    saveChecklistItemToStorage(newItem);
 
-    checklist.itemIds.splice(index, 0, item.id);
-    saveFolderItemToStorage(checklist);
+    // Add the new item to the checklist.
+    onSetFolderItem((prev) => {
+      if (!prev) return prev;
+      const newChecklist = { ...prev };
+      newChecklist.itemIds.splice(index, 0, newItem.id);
+      return newChecklist;
+    });
 
-    onSetTextfieldId(item.id);
+    onSetTextfieldId(newItem.id);
   }
 
   return (
@@ -55,7 +58,7 @@ const ChecklistPage = () => {
       addButtonColor={platformColor}
       onCreateItem={handleCreateNewChecklistItemAndSaveToStorage}
       onDeleteItem={(item) => deleteChecklistItems([item])}
-      onIndexChange={updateFolderOrChecklistItemIndex}
+      onIndexChange={onUpdateItemIndex}
       onGetLeftIcon={useListItemToggle}
     />
   );

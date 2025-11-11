@@ -30,7 +30,7 @@ interface IDraggableListPageProps<T extends TListItem, S> {
   defaultStorageObject?: S;
   addButtonColor?: string;
   hasExternalData?: boolean;
-  onCreateItem: (listId: string, index: number) => void;
+  onCreateItem: (index: number) => void;
   onDeleteItem: (item: T) => void;
   onValueChange?: (newValue: string) => void;
   onIndexChange?: (from: number, to: number, listId: string) => void;
@@ -63,7 +63,6 @@ const DraggableListPage = <T extends TListItem, S>({
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const onScroll = useScrollTracker(listId);
   const headerHeight = useHeaderHeight();
-  const pathname = usePathname();
   const { top: TOP_SPACER } = useSafeAreaInsets();
   const { isListEmpty, listHeight, PlaceholderField, onToggleLowerListItem, ListItems } =
     useSortableMmkvList(

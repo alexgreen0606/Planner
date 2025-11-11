@@ -51,7 +51,6 @@ import {
 } from '@/utils/plannerEventTransitionUtils';
 import {
   deletePlannerEventsFromStorageAndCalendar,
-  getPlannerEventFromStorageByCalendarId,
   updatePlannerEventIndexWithChronologicalCheck,
 } from '@/utils/plannerUtils';
 
@@ -712,6 +711,15 @@ const EventModal = ({ isViewMode }: IEventModalProps) => {
 
   function getIsRangeMultiDay(range: TDateRange): boolean {
     return isoToDatestamp(range.startIso) !== isoToDatestamp(range.endIso)
+  }
+
+  function getPlannerEventFromStorageByCalendarId(
+    datestamp: string,
+    calendarEventId: string
+  ): IPlannerEvent {
+    const storagePlanner = getPlannerFromStorageByDatestamp(datestamp);
+    const storageEvents = storagePlanner.eventIds.map(getPlannerEventFromStorageById);
+    return storageEvents.find((e) => e.calendarEventId === calendarEventId)!;
   }
 
   async function upsertCalendarEventToDevice(

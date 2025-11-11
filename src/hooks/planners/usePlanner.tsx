@@ -52,7 +52,7 @@ const usePlanner = (datestamp: string, plannerEventStorage: MMKV) => {
     });
   }
 
-  function handleCreateEventAndFocusTextfield(datestamp: string, index: number) {
+  function handleCreateEventAndFocusTextfield(index: number) {
     // Create the new planner event.
     const plannerEvent: IPlannerEvent = {
       id: uuid.v4(),

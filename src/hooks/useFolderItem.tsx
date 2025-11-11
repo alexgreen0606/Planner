@@ -7,10 +7,20 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 const useFolderItem = (itemId: string, itemStorage: MMKV) => {
   const [transferingItem, setTransferingItem] = useAtom(transferingFolderItemAtom);
 
-  const [folderItem] = useMMKVObject<IFolderItem>(itemId, itemStorage);
+  const [folderItem, setFolderItem] = useMMKVObject<IFolderItem>(itemId, itemStorage);
 
   function handleEndItemTransfer() {
     setTransferingItem(null);
+  }
+
+  function handleUpdateItemIndex(from: number, to: number) {
+    setFolderItem((prev) => {
+      if (!prev) return prev;
+      const newFolder = { ...prev };
+      const [itemId] = newFolder.itemIds.splice(from, 1);
+      newFolder.itemIds.splice(to, 0, itemId);
+      return newFolder;
+    });
   }
 
   return {
@@ -20,6 +30,8 @@ const useFolderItem = (itemId: string, itemStorage: MMKV) => {
     transferingItem,
     platformColor: folderItem?.platformColor,
     onEndTransfer: handleEndItemTransfer,
+    onUpdateItemIndex: handleUpdateItemIndex,
+    onSetFolderItem: setFolderItem
   };
 };
 

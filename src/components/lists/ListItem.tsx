@@ -18,7 +18,7 @@ interface IListItemProps<T extends TListItem> {
   itemIndex: number;
   storage: MMKV;
   onFocusPlaceholderTextfield: () => void;
-  onCreateItem: (listId: string, index: number) => void;
+  onCreateItem: (index: number) => void;
   onDeleteItem: (item: T) => void;
   onValueChange?: (newValue: string) => void;
   onSaveToExternalStorage?: (item: T) => void;
@@ -77,11 +77,11 @@ const ListItem = <T extends TListItem>({
   }
 
   function handleCreateUpperItem() {
-      onCreateItem(listId, itemIndex);
+      onCreateItem(itemIndex);
   }
 
   function handleCreateLowerItem() {
-      onCreateItem(listId, itemIndex + 1);
+      onCreateItem(itemIndex + 1);
   }
 
   if (!item) return null;

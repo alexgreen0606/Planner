@@ -13,7 +13,6 @@ import { NULL, SCROLL_THROTTLE } from '@/lib/constants/generic';
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { updateFolderOrChecklistItemIndex } from '@/utils/checklistUtils';
 
 import FolderItem from './FolderItem';
 import PageContainer from './PageContainer';
@@ -38,6 +37,7 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
     itemIds,
     isTransferMode,
     transferingItem,
+    onUpdateItemIndex,
     onEndTransfer
   } = useFolderItem(folderId, folderItemStorage);
 
@@ -49,10 +49,6 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
       setUpdatedList(itemIds);
     }
   }, [itemIds]);
-
-  function handleMoveItem(from: number, to: number) {
-    updateFolderOrChecklistItemIndex(from, to, folderId);
-  }
 
   const contentInset = headerHeight - TOP_SPACER;
 
@@ -80,7 +76,7 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
           <List
             moveEnabled
             scrollEnabled={false}
-            onMoveItem={handleMoveItem}
+            onMoveItem={onUpdateItemIndex}
             listStyle='plain'
           >
             {updatedList.map((id) => (

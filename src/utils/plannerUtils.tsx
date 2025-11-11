@@ -459,26 +459,6 @@ export function createPlannerEventTimeConfig(datestamp: string, timeValue: strin
   };
 }
 
-// ================
-//  Read Functions
-// ================
-
-/**
- * Fetches a planner event from storage by its calendar event ID.
- *
- * @param datestamp - The date of the planner. (YYYY-MM-DD)
- * @param calendarEventId - The ID of the calendar event.
- * @returns The planner event associated with the calendar event ID.
- */
-export function getPlannerEventFromStorageByCalendarId(
-  datestamp: string,
-  calendarEventId: string
-): IPlannerEvent {
-  const storagePlanner = getPlannerFromStorageByDatestamp(datestamp);
-  const storageEvents = storagePlanner.eventIds.map(getPlannerEventFromStorageById);
-  return storageEvents.find((e) => e.calendarEventId === calendarEventId)!;
-}
-
 // ==================
 //  Update Functions
 // ==================

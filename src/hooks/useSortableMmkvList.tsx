@@ -12,7 +12,7 @@ const useSortableMmkvList = <T extends TListItem, S>(
   itemIds: string[],
   storage: MMKV,
   listId: string,
-  onCreateItem: (listId: string, index: number) => void,
+  onCreateItem: (index: number) => void,
   onDeleteItem: (item: T) => void,
   listItemProps?: {
     defaultStorageObject?: S | undefined;
@@ -69,7 +69,7 @@ const useSortableMmkvList = <T extends TListItem, S>(
   function handleToggleLowerListItem() {
     if (!textfieldItem) {
       // Open a textfield at the bottom of the list.
-      onCreateItem(listId, itemIds.length);
+      onCreateItem(itemIds.length);
       return;
     }
 
