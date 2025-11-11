@@ -11,7 +11,7 @@ import {
   toggleCalendarFilterAtom
 } from '@/atoms/planner/calendarAtoms';
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
-import { calendarIconMap } from '@/lib/constants/calendarIcons';
+import { calendarIconMap } from '@/lib/constants/calendarIconMap';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';

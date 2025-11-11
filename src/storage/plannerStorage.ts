@@ -2,7 +2,7 @@ import { MMKV } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { createEmptyPlanner } from '@/utils/plannerUtils';
 
 // ✅

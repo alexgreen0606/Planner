@@ -10,9 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import useSortableMmkvList from '@/hooks/useSortableMmkvList';
-import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
-import { reloadablePaths } from '@/lib/constants/reloadablePaths';
+import { SCROLL_THROTTLE } from '@/lib/constants/generic';
+import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
@@ -30,6 +29,7 @@ interface IDraggableListPageProps<T extends TListItem, S> {
   storage: MMKV;
   defaultStorageObject?: S;
   addButtonColor?: string;
+  hasExternalData?: boolean;
   onCreateItem: (listId: string, index: number) => void;
   onDeleteItem: (item: T) => void;
   onValueChange?: (newValue: string) => void;
@@ -52,6 +52,7 @@ const DraggableListPage = <T extends TListItem, S>({
   storage,
   emptyPageLabel,
   toolbar,
+  hasExternalData,
   addButtonColor = 'systemBlue',
   onIndexChange,
   onCreateItem,
@@ -81,7 +82,6 @@ const DraggableListPage = <T extends TListItem, S>({
     onReloadPage();
   }
 
-  const canReloadPath = reloadablePaths.some((p) => pathname.includes(p));
   const contentInset = headerHeight - TOP_SPACER;
 
   return (
@@ -110,7 +110,7 @@ const DraggableListPage = <T extends TListItem, S>({
 
           // TODO: create custom refresh logic
           refreshControl={
-            canReloadPath ? (
+            hasExternalData ? (
               <RefreshControl
                 refreshing={showLoadingSymbol && loadingPathnames.has(listId)}
                 onRefresh={handleReloadPage}

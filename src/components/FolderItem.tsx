@@ -5,9 +5,9 @@ import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
 import CustomText from '@/components/text/CustomText';
 import { NULL } from '@/lib/constants/generic';
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
-import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItemFromStorageById, saveFolderItemToStorage } from '@/storage/checklistsStorage';
 
@@ -80,7 +80,7 @@ const FolderItem = ({
             <FolderItemButton
                 item={item}
                 disabled={!isItemClickable}
-                onClick={() => router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${NULL}/${itemId}`)}
+                onClick={() => router.push(`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/${NULL}/${itemId}`)}
             />
 
             {/* Title */}

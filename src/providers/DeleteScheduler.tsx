@@ -4,7 +4,7 @@ import React, { createContext, ReactNode, useCallback, useContext, useMemo } fro
 
 import { pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
 import { textfieldIdAtom } from '@/atoms/textfieldId';
-import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/listConstants';
+import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/generic';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { deleteChecklistItems } from '@/utils/checklistUtils';

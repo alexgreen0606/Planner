@@ -1,11 +1,9 @@
-import { GenericIconProps } from '@/components/Icon';
-
-// ✅
+import { SFSymbol } from "expo-symbols";
 
 export type TPlannerChip = {
   id: string;
   title: string;
   color: string;
-  iconConfig: GenericIconProps;
+  iconName: SFSymbol;
   onClick?: () => void;
 };

@@ -2,7 +2,7 @@ import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { TRecurringPlanner } from '@/lib/types/planner/TRecurringPlanner';
+import { TRecurringPlanner } from '@/lib/types/planners/TRecurringPlanner';
 import { getRecurringPlannerFromStorageById } from '@/storage/recurringPlannerStorage';
 import { parseTimeValueFromText } from '@/utils/dateUtils';
 import { updateRecurringEventIndexWithChronologicalCheck } from '@/utils/recurringPlannerUtils';

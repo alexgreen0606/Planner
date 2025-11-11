@@ -14,9 +14,9 @@ import CustomText from '@/components/text/CustomText';
 import {
   LARGE_MARGIN,
   SMALL_MARGIN
-} from '@/lib/constants/miscLayout';
+} from '@/lib/constants/layout';
+import { EPlannerCarouselLayout } from '@/lib/enums/planners/EPlannerCarouselLayout';
 
-import { EPlannerCarouselLayout } from '@/lib/enums/EPlannerCarouselLayout';
 import PlannerCarouselWeek from './PlannerCarouselWeek';
 
 interface IPlannerCarouselProps {

@@ -2,7 +2,7 @@ import { MMKV } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { TRecurringPlanner } from '@/lib/types/planner/TRecurringPlanner';
+import { TRecurringPlanner } from '@/lib/types/planners/TRecurringPlanner';
 import { createEmptyRecurringPlanner } from '@/utils/recurringPlannerUtils';
 
 // ✅

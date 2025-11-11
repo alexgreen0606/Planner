@@ -1,5 +1,3 @@
-// ✅
-
 export enum ERecurringPlannerId {
   WEEKDAYS = 'Weekdays',
   MONDAY = 'Monday',

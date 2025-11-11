@@ -2,7 +2,7 @@ import { Host, Switch } from '@expo/ui/swift-ui';
 import { SFSymbol } from 'expo-symbols';
 import React from 'react';
 
-import { TFormFieldControl } from '@/lib/types/form/TFormField';
+import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 import { getValidCssColor } from '@/utils/colorUtils';
 
 import ModalDisplayValue from '../../modals/ModalDisplayValue';

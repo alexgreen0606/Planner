@@ -7,15 +7,15 @@ import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
-import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
+import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/layout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
+import { TPlannerChip } from '@/lib/types/planners/TPlannerChip';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { getValidCssColor } from '@/utils/colorUtils';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 
-const PlannerChip = ({ title, id, iconConfig, color, onClick }: TPlannerChip) => {
+const PlannerChip = ({ title, id, iconName, color, onClick }: TPlannerChip) => {
   const { onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
 
   const isPendingDelete = useMemo(
@@ -56,7 +56,7 @@ const PlannerChip = ({ title, id, iconConfig, color, onClick }: TPlannerChip) =>
             ]}
           >
             <View className="px-2 flex-row gap-1 items-center py-[0.375rem]">
-              <Icon {...iconConfig} color={chipColor} size={14} />
+              <Icon name={iconName} color={chipColor} size={14} />
               <CustomText
                 variant="plannerChipTitle"
                 customStyle={{

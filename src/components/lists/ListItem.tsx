@@ -5,7 +5,7 @@ import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { textfieldIdAtom } from '@/atoms/textfieldId';
 import CustomText from '@/components/text/CustomText';
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';

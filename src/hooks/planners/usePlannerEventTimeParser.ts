@@ -2,7 +2,7 @@ import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { parseTimeValueFromText } from '@/utils/dateUtils';
 import {
   createPlannerEventTimeConfig,

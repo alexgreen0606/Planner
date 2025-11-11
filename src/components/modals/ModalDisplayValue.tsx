@@ -3,7 +3,7 @@ import { SFSymbol } from 'expo-symbols';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
 
-import { MODAL_INPUT_HEIGHT } from '@/lib/constants/miscLayout';
+import { MODAL_INPUT_HEIGHT } from '@/lib/constants/layout';
 
 interface IModalDisplayValueProps {
   label: string;

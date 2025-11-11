@@ -1,9 +1,9 @@
-import * as Calendar from 'expo-calendar';
+import * as Calendar from "expo-calendar";
 
-import { EEventType } from '@/lib/enums/plannerEventModalEnums';
+import { EEventType } from "@/lib/enums/planners/modal/EEventType";
 
-import { IPlannerEvent } from '../listItems/IPlannerEvent';
-import { TPlanner } from '../planner/TPlanner';
+import { IPlannerEvent } from "../../listItems/IPlannerEvent";
+import { TPlanner } from "../TPlanner";
 
 // The state of the event at time of modal open.
 export type TInitialEventMetadata =
@@ -22,8 +22,3 @@ export type TInitialEventMetadata =
       endPlanner: TPlanner | null;
       calendarEvent: Calendar.Event;
     };
-
-export type TCarryoverEventMetadata = {
-  id: string;
-  index: number | null; // null means the event has moved to a new planner
-};

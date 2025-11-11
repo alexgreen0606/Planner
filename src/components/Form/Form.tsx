@@ -3,7 +3,7 @@ import { Control, Controller } from 'react-hook-form';
 import { PlatformColor, StyleSheet, View } from 'react-native';
 
 import useAppTheme from '@/hooks/useAppTheme';
-import { MODAL_INPUT_HEIGHT } from '@/lib/constants/miscLayout';
+import { MODAL_INPUT_HEIGHT } from '@/lib/constants/layout';
 import { TFormField } from '@/lib/types/form/TFormField';
 
 import FormField from './microComponents/FormField';

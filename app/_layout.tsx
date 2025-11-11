@@ -5,11 +5,7 @@ import { createStore, Provider as JotaiProvider } from 'jotai';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import useAppTheme from '@/hooks/useAppTheme';
-import {
-  EDIT_EVENT_MODAL_PATHNAME,
-  FOLDER_ITEM_MODAL_PATHNAME,
-  VIEW_EVENT_MODAL_PATHNAME
-} from '@/lib/constants/pathnames';
+import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 import { DeleteSchedulerProvider } from '@/providers/DeleteScheduler';
 import { ExternalDataProvider } from '@/providers/ExternalDataProvider';
 import { ScrollRegistryProvider } from '@/providers/ScrollRegistry';
@@ -37,7 +33,7 @@ const TabLayout = () => {
                   }}
                 />
                 <Stack.Screen
-                  name={`${EDIT_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
+                  name={`${EModalBasePath.EDIT_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
                   options={{
                     presentation: 'formSheet',
                     sheetAllowedDetents: 'fitToContents',
@@ -48,7 +44,7 @@ const TabLayout = () => {
                   }}
                 />
                 <Stack.Screen
-                  name={`${VIEW_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
+                  name={`${EModalBasePath.VIEW_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
                   options={{
                     presentation: 'formSheet',
                     sheetAllowedDetents: 'fitToContents',
@@ -59,7 +55,7 @@ const TabLayout = () => {
                   }}
                 />
                 <Stack.Screen
-                  name={`${FOLDER_ITEM_MODAL_PATHNAME}/[parentFolderId]/[folderItemId]`}
+                  name={`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/[parentFolderId]/[folderItemId]`}
                   options={{
                     presentation: 'formSheet',
                     sheetAllowedDetents: 'fitToContents',

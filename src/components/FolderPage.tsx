@@ -9,10 +9,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import useFolderItem from '@/hooks/useFolderItem';
-import { NULL } from '@/lib/constants/generic';
-import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
-import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { NULL, SCROLL_THROTTLE } from '@/lib/constants/generic';
 import { EListLayout } from '@/lib/enums/EListLayout';
+import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { updateFolderOrChecklistItemIndex } from '@/utils/checklistUtils';
 
@@ -62,7 +61,7 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
       emptyPageLabel="No contents"
       isPageEmpty={itemIds.length === 0}
       addButtonColor={folder?.platformColor}
-      onAddButtonClick={() => folder && router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${folder.id}/${NULL}`)}
+      onAddButtonClick={() => folder && router.push(`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/${folder.id}/${NULL}`)}
     >
       <Animated.ScrollView
         onScroll={onScroll}

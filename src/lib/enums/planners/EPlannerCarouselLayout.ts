@@ -1,4 +1,4 @@
-import { SMALL_MARGIN } from "../constants/miscLayout";
+import { SMALL_MARGIN } from "../../constants/layout";
 
 const CALENDAR_ICON_SIZE_CONST = 22;
 const DATESTAMP_ICON_SIZE_CONST = 42;

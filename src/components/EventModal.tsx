@@ -13,21 +13,21 @@ import Form from '@/components/Form/Form';
 import Modal from '@/components/modals/Modal';
 import usePermissions from '@/hooks/usePermissions';
 import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
-import { calendarIconMap } from '@/lib/constants/calendarIcons';
+import { calendarIconMap } from '@/lib/constants/calendarIconMap';
 import { NULL } from '@/lib/constants/generic';
 import { EAccess } from '@/lib/enums/EAccess';
-import { EDateFieldType } from '@/lib/enums/EDateFieldType';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { ECarryoverEventType, EEventType } from '@/lib/enums/plannerEventModalEnums';
-import {
-  TCarryoverEventMetadata,
-  TInitialEventMetadata,
-} from '@/lib/types/form/plannerEventMetadata';
+import { ECarryoverEventType } from '@/lib/enums/planners/modal/ECarryoverEventType';
+import { EEventType } from '@/lib/enums/planners/modal/EEventType';
 import { TFormField } from '@/lib/types/form/TFormField';
 import { IPlannerEvent, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import {
+  TCarryoverEventMetadata,
+} from '@/lib/types/planners/modal/TCarryoverEventMetadata';
+import { TInitialEventMetadata } from '@/lib/types/planners/modal/TInitialEventMetadata';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { TPopupAction } from '@/lib/types/TPopupAction';
 import {
   getDoesPlannerEventExist,
@@ -66,6 +66,11 @@ type TEventModalParams = {
 
   // Planner key that triggered the modal open. Not needed for view-mode
   triggerDatestamp: string
+}
+
+enum EDateFieldType {
+  START_DATE = 'START_DATE',
+  END_DATE = 'END_DATE'
 }
 
 type TFormData = {

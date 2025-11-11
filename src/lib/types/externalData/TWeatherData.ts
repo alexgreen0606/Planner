@@ -1,7 +1,5 @@
 import { SFSymbol } from 'expo-symbols';
 
-// ✅
-
 export type TWeatherData = {
   datestamp: string;
   condition: string;

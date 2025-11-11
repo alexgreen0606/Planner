@@ -4,7 +4,7 @@ import PopupList from '@/components/PopupList';
 import { NULL } from '@/lib/constants/generic';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import {
   deletePlannerEventFromStorageById,

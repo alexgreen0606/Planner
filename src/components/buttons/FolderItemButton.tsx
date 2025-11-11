@@ -3,9 +3,9 @@ import React from 'react';
 import { PlatformColor, TouchableOpacity } from 'react-native';
 
 import useBounceTrigger from '@/hooks/useBounceTrigger';
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
-import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 interface IFolderItemButtonProps {
   item: IFolderItem;

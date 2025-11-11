@@ -9,8 +9,8 @@ import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import FadeInView from '@/components/views/FadeInView';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
+import { EPlannerCarouselLayout } from '@/lib/enums/planners/EPlannerCarouselLayout';
 import { isTimeEarlier } from '@/utils/dateUtils';
-import { EPlannerCarouselLayout } from '@/lib/enums/EPlannerCarouselLayout';
 
 interface IPlannerDateIconProps {
   datestamp: string;

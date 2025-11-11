@@ -1,5 +1,3 @@
-// ✅
-
 export type TRecurringPlanner = {
   id: string;
   eventIds: string[];

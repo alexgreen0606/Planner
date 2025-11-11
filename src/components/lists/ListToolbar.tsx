@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
-import { TOOLBAR_HEIGHT } from '@/lib/constants/miscLayout';
+import { TOOLBAR_HEIGHT } from '@/lib/constants/layout';
 
 interface IListToolbarProps {
   iconSet: ReactNode[][];

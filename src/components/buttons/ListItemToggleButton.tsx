@@ -1,7 +1,8 @@
-import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { SymbolView } from 'expo-symbols';
 import React from 'react';
 import { PlatformColor, TouchableOpacity } from 'react-native';
+
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 interface IListItemToggleButtonProps {
   isDeleting: boolean;

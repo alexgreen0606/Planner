@@ -10,8 +10,8 @@ import {
 } from '@/atoms/planner/loadedDatestampsAtom';
 import { savePlannerChipDataAtom } from '@/atoms/planner/plannerChips';
 import useAppInitialization from '@/hooks/useAppInitialization';
-import { calendarIconMap } from '@/lib/constants/calendarIcons';
-import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
+import { calendarIconMap } from '@/lib/constants/calendarIconMap';
+import { TPlannerChip } from '@/lib/types/planners/TPlannerChip';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { extractNameFromBirthdayText, openMessageForContact } from '@/utils/birthdayUtils';
 import {
@@ -109,9 +109,7 @@ function mapCalendarEventToPlannerChip(
     title: event.title,
     id: event.id,
     color,
-    iconConfig: {
-      name: calendarIconMap[calendarTitle] ?? 'calendar'
-    }
+    iconName: calendarIconMap[calendarTitle] ?? 'calendar'
   };
 
   if (calendar.title === 'Birthdays' && hasContactsPermissions) {

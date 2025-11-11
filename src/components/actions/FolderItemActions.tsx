@@ -7,10 +7,10 @@ import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
 import PopupList from '@/components/PopupList';
-import { selectableColors } from '@/lib/constants/colors';
 import { NULL } from '@/lib/constants/generic';
-import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
+import { selectableColors } from '@/lib/constants/selectableColors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
+import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
@@ -59,7 +59,7 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
     let message = '';
     switch (action) {
       case EFolderAction.EDIT:
-        router.push(`${FOLDER_ITEM_MODAL_PATHNAME}/${NULL}/${folderItemId}`);
+        router.push(`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/${NULL}/${folderItemId}`);
         break;
       case EFolderAction.DELETE_ALL:
         const hasChildren = folderItem.itemIds.length > 0;

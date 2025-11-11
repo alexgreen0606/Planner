@@ -13,7 +13,7 @@ import { EDIT_EVENT_MODAL_PATHNAME, VIEW_EVENT_MODAL_PATHNAME } from '@/lib/cons
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import {
   deletePlannerEventFromStorageById,
   deletePlannerFromStorageByDatestamp,

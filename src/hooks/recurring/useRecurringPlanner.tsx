@@ -5,7 +5,7 @@ import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
-import { TRecurringPlanner } from '@/lib/types/planner/TRecurringPlanner';
+import { TRecurringPlanner } from '@/lib/types/planners/TRecurringPlanner';
 import {
   getRecurringEventFromStorageById,
   getRecurringPlannerFromStorageById

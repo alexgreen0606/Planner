@@ -1,9 +1,9 @@
 import { TouchableOpacity, View } from 'react-native';
 
+import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 
 import Icon from '../Icon';
-import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 
 interface IToggleFolderItemTypeButtonProps {
   currentType: EFolderItemType;

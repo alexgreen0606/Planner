@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { getPlannerEventFromStorageById } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp } from '@/utils/dateUtils';
 import {

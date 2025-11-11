@@ -7,7 +7,7 @@ import Animated from 'react-native-reanimated';
 
 import { getPlannerChipsByDatestampAtom } from '@/atoms/planner/plannerChips';
 import CustomText from '@/components/text/CustomText';
-import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/miscLayout';
+import { PLANNER_CHIP_HEIGHT } from '@/lib/constants/layout';
 
 import PlannerChip from './PlannerChip';
 

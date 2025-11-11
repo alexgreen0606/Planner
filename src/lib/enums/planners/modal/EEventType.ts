@@ -4,8 +4,3 @@ export enum EEventType {
   CALENDAR_MULTI_DAY = 'CALENDAR_MULTI_DAY',
   CALENDAR_ALL_DAY = 'CALENDAR_ALL_DAY'
 }
-
-export enum ECarryoverEventType {
-  START_EVENT = 'START_EVENT',
-  END_EVENT = 'END_EVENT'
-}

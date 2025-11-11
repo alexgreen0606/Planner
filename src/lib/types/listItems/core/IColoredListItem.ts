@@ -1,4 +1,4 @@
-import { TSelectableColor } from '@/lib/constants/colors';
+import { TSelectableColor } from '@/lib/constants/selectableColors';
 
 import { TListItem } from './TListItem';
 

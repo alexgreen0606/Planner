@@ -9,7 +9,7 @@ import FolderItemActions from '@/components/actions/FolderItemActions';
 import GlassIconButton from '@/components/buttons/GlassIconButton';
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
 import { NULL } from '@/lib/constants/generic';
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';

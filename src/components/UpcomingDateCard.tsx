@@ -7,9 +7,9 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { calendarMapAtom } from '@/atoms/planner/calendarAtoms';
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
-import { calendarIconMap } from '@/lib/constants/calendarIcons';
+import { calendarIconMap } from '@/lib/constants/calendarIconMap';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 

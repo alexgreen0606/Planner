@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import EmptyPageLabel from '@/components/EmptyLabel';
 import useAppTheme from '@/hooks/useAppTheme';
-import { LARGE_MARGIN } from '@/lib/constants/miscLayout';
+import { LARGE_MARGIN } from '@/lib/constants/layout';
 
 import GlassIconButton from './buttons/GlassIconButton';
 import ColorFadeView from './views/ColorFadeView';

@@ -1,18 +1,17 @@
 import * as Calendar from 'expo-calendar';
 
-import { ECarryoverEventType, EEventType } from '@/lib/enums/plannerEventModalEnums';
-import {
-  TCarryoverEventMetadata,
-  TInitialEventMetadata
-} from '@/lib/types/form/plannerEventMetadata';
+import { ECarryoverEventType } from '@/lib/enums/planners/modal/ECarryoverEventType';
+import { EEventType } from '@/lib/enums/planners/modal/EEventType';
 import { IPlannerEvent, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
-import { TPlanner } from '@/lib/types/planner/TPlanner';
+import {
+  TCarryoverEventMetadata
+} from '@/lib/types/planners/modal/TCarryoverEventMetadata';
+import { TInitialEventMetadata } from '@/lib/types/planners/modal/TInitialEventMetadata';
+import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { deletePlannerEventFromStorageById, savePlannerToStorage } from '@/storage/plannerStorage';
 
 import { isoToDatestamp } from './dateUtils';
 import { deletePlannerEventsFromStorageAndCalendar } from './plannerUtils';
-
-// ✅
 
 type TCarryoverEventMap = Partial<Record<ECarryoverEventType, TCarryoverEventMetadata>>;
 

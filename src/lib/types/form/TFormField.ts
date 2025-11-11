@@ -1,4 +1,3 @@
-import { SFSymbol } from 'expo-symbols';
 import { RegisterOptions } from 'react-hook-form';
 
 import { TCheckboxModalFieldProps } from '@/components/Form/microComponents/CheckboxModalField';
@@ -8,9 +7,7 @@ import { TPickerModalFieldProps } from '@/components/Form/microComponents/Picker
 import { TTextModalFieldProps } from '@/components/Form/microComponents/TextModalField';
 import { EFormFieldType } from '@/lib/enums/EFormFieldType';
 
-// ✅
-
-export type TFormFieldConfig = {
+type TFormFieldConfig = {
   name: string;
   rules?: RegisterOptions;
   invisible?: boolean;
@@ -18,11 +15,6 @@ export type TFormFieldConfig = {
 
   // Handles any side effects caused by setting the field with a new value.
   onHandleSideEffects?: (val: any) => void;
-};
-
-export type TFormFieldControl<T> = {
-  value: T;
-  onChange: (val: T) => void;
 };
 
 export type TFormField =

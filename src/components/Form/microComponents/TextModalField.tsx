@@ -4,7 +4,7 @@ import { PlatformColor, TextInput, View } from 'react-native';
 
 import Icon from '@/components/Icon';
 import useBounceTrigger from '@/hooks/useBounceTrigger';
-import { TFormFieldControl } from '@/lib/types/form/TFormField';
+import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
 
 export type TTextModalFieldProps = {
   label: string;

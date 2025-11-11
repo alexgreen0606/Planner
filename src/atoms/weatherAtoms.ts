@@ -1,6 +1,7 @@
-import { TWeatherData } from '@/lib/types/externalData/TWeatherData';
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
+
+import { TWeatherData } from '@/lib/types/externalData/TWeatherData';
 
 // Maps datestamps to weather data.
 type TWeatherDatatMap = Record<string, TWeatherData>;

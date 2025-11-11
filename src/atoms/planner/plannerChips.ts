@@ -1,6 +1,7 @@
-import { TPlannerChip } from '@/lib/types/planner/TPlannerChip';
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai/utils';
+
+import { TPlannerChip } from '@/lib/types/planners/TPlannerChip';
 
 // Chips for each given day are separated by their calendar of origin (2D array).
 type TPlannerChipMap = Record<string, TPlannerChip[][]>;
