@@ -2,7 +2,7 @@ import { Host, List } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { Pressable, useWindowDimensions } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,14 +50,20 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
     }
   }, [itemIds]);
 
+  function handleOpenNewItemModal() {
+    if (!folder) return;
+    router.push(`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/${folder.id}/${NULL}`);
+  }
+
   const contentInset = headerHeight - TOP_SPACER;
+  const listHeight = updatedList.length * EListLayout.ITEM_HEIGHT;
 
   return (
     <PageContainer
       emptyPageLabel="No contents"
       isPageEmpty={itemIds.length === 0}
       addButtonColor={folder?.platformColor}
-      onAddButtonClick={() => folder && router.push(`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/${folder.id}/${NULL}`)}
+      onAddButtonClick={handleOpenNewItemModal}
     >
       <Animated.ScrollView
         onScroll={onScroll}
@@ -67,12 +73,12 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
         contentOffset={{ x: 0, y: -contentInset }}
         scrollIndicatorInsets={{ top: contentInset, bottom: BOTTOM_NAV_HEIGHT }}
         contentContainerStyle={{
-          minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, updatedList.length * EListLayout.ITEM_HEIGHT + BOTTOM_NAV_HEIGHT),
+          minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + BOTTOM_NAV_HEIGHT),
         }}
         style={{ height: SCREEN_HEIGHT }}
         showsVerticalScrollIndicator
       >
-        <Host style={{ flex: 1 }}>
+        <Host style={{ height: listHeight, width: '100%' }}>
           <List
             moveEnabled
             scrollEnabled={false}
@@ -92,6 +98,7 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
             ))}
           </List>
         </Host>
+        <Pressable className='flex-1' onPress={handleOpenNewItemModal} />
       </Animated.ScrollView>
     </PageContainer>
   );

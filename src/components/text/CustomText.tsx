@@ -11,7 +11,6 @@ export const textStyles = {
   // --- Common Variants ---
   pageHeader: {
     fontSize: 28,
-    color: PlatformColor('label'),
     fontFamily: 'RoundHeavy'
   },
   pageSubHeader: {

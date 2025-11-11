@@ -3,7 +3,7 @@ import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 
 import GlassIconButton from '../buttons/GlassIconButton';
-import PopupList, { IPopupListProps } from '../PopupList';
+import ActionList, { IActionListProps } from '../ActionList';
 
 interface IModalProps {
   primaryButtonConfig: {
@@ -11,7 +11,7 @@ interface IModalProps {
     disabled?: boolean;
     onClick: () => void;
   };
-  deleteButtonConfig?: IPopupListProps;
+  deleteButtonConfig?: IActionListProps;
   isStaticMode?: boolean;
   children: ReactNode;
   onClose: () => void;
@@ -48,7 +48,7 @@ const Modal = ({
           {/* Delete Button */}
           {!isStaticMode && deleteButtonConfig && (
             <View className="w-full items-start pt-4">
-              <PopupList
+              <ActionList
                 {...deleteButtonConfig}
                 systemImage="trash"
                 iconPlatformColor="systemRed"

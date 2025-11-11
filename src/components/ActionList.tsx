@@ -8,73 +8,73 @@ import { TPopupAction } from '@/lib/types/TPopupAction';
 
 import GlassIconButton from './buttons/GlassIconButton';
 
-export interface IPopupListProps {
+export interface IActionListProps {
   actions: TPopupAction[];
   wrapButton?: boolean;
   systemImage?: SFSymbol;
   iconPlatformColor?: string;
 };
 
-const PopupList = ({
+const renderMenuAction = (option: TPopupAction, index: number): ReactNode | null => {
+  if (option.hidden) return null;
+
+  switch (option.type) {
+    case EPopupActionType.BUTTON:
+      return (
+        <Button
+          key={index}
+          systemImage={
+            option.systemImage ? option.systemImage : option.value ? 'checkmark' : undefined
+          }
+          role={option.destructive ? 'destructive' : undefined}
+          onPress={option.onPress}
+          color={option.color}
+        >
+          {option.title}
+        </Button>
+      );
+
+    case EPopupActionType.SWITCH:
+      return (
+        <Switch
+          key={index}
+          value={option.value}
+          label={option.title}
+          variant="checkbox"
+          onValueChange={option.onPress}
+        />
+      );
+
+    case EPopupActionType.SUBMENU:
+      if (option.items.some((i) => !i.hidden)) {
+        return (
+          <ContextMenu key={index}>
+            <ContextMenu.Items>
+              {option.items.map((sub, subIndex) => renderMenuAction(sub, subIndex))}
+            </ContextMenu.Items>
+            <ContextMenu.Trigger>
+              <Button systemImage={option.systemImage}>{option.title}</Button>
+            </ContextMenu.Trigger>
+          </ContextMenu>
+        );
+      }
+      return null;
+
+    default:
+      return null;
+  }
+};
+
+const ActionList = ({
   actions,
   wrapButton,
   systemImage = 'ellipsis',
   iconPlatformColor = 'label'
-}: IPopupListProps) => {
+}: IActionListProps) => {
   const actionTsx = useMemo(
     () => actions.map((option, index) => renderMenuAction(option, index)),
     [actions]
   );
-
-  const renderMenuAction = (option: TPopupAction, index: number): ReactNode | null => {
-    if (option.hidden) return null;
-
-    switch (option.type) {
-      case EPopupActionType.BUTTON:
-        return (
-          <Button
-            key={index}
-            systemImage={
-              option.systemImage ? option.systemImage : option.value ? 'checkmark' : undefined
-            }
-            role={option.destructive ? 'destructive' : undefined}
-            onPress={option.onPress}
-            color={option.color}
-          >
-            {option.title}
-          </Button>
-        );
-
-      case EPopupActionType.SWITCH:
-        return (
-          <Switch
-            key={index}
-            value={option.value}
-            label={option.title}
-            variant="checkbox"
-            onValueChange={option.onPress}
-          />
-        );
-
-      case EPopupActionType.SUBMENU:
-        if (option.items.some((i) => !i.hidden)) {
-          return (
-            <ContextMenu key={index}>
-              <ContextMenu.Items>
-                {option.items.map((sub, subIndex) => renderMenuAction(sub, subIndex))}
-              </ContextMenu.Items>
-              <ContextMenu.Trigger>
-                <Button systemImage={option.systemImage}>{option.title}</Button>
-              </ContextMenu.Trigger>
-            </ContextMenu>
-          );
-        }
-        return null;
-
-      default:
-        return null;
-    }
-  };
 
   if (!actionTsx.some(Boolean)) {
     return wrapButton ? (
@@ -110,4 +110,4 @@ const PopupList = ({
   );
 };
 
-export default PopupList;
+export default ActionList;

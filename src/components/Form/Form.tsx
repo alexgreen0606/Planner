@@ -25,11 +25,11 @@ const Form = ({ fieldSets, control }: IFormProps) => {
             if (field.floating) {
               return (
                 <MotiView
-                  key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
                   className="w-full items-center overflow-hidden"
                   animate={{
                     height: field.invisible ? 0 : MODAL_INPUT_HEIGHT,
                   }}
+                  key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
                 >
                   <Controller
                     name={field.name}
@@ -60,39 +60,42 @@ const Form = ({ fieldSets, control }: IFormProps) => {
 
             return (
               <MotiView
-                key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
                 animate={{
                   height: field.invisible ? 0 : MODAL_INPUT_HEIGHT,
                 }}
-                className="items-center w-full overflow-hidden"
-                style={{
-                  backgroundColor: modalInputField,
-                  borderTopWidth:
-                    !field.invisible && !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
-                  borderColor: PlatformColor('systemGray'),
-                  paddingHorizontal: 9,
-                  pointerEvents: field.invisible ? 'none' : undefined,
-                  borderTopLeftRadius: topEdgeRadius,
-                  borderTopRightRadius: topEdgeRadius,
-                  borderBottomLeftRadius: bottomEdgeRadius,
-                  borderBottomRightRadius: bottomEdgeRadius,
-                }}
+                className="w-full overflow-hidden"
+                key={`field-set-${fieldSetIndex}-field-${fieldIndex}`}
               >
-                <Controller
-                  name={field.name}
-                  control={control}
-                  rules={field.rules}
-                  render={({ field: { onChange, value } }) => (
-                    <FormField
-                      {...field}
-                      value={value}
-                      onChange={(val) => {
-                        onChange(val)
-                        field.onHandleSideEffects?.(val)
-                      }}
-                    />
-                  )}
-                />
+                <View
+                  style={{
+                    backgroundColor: modalInputField,
+                    borderTopWidth:
+                      !field.invisible && !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
+                    borderColor: PlatformColor('systemGray'),
+                    pointerEvents: field.invisible ? 'none' : undefined,
+                    borderTopLeftRadius: topEdgeRadius,
+                    borderTopRightRadius: topEdgeRadius,
+                    borderBottomLeftRadius: bottomEdgeRadius,
+                    borderBottomRightRadius: bottomEdgeRadius,
+                  }}
+                  className="items-center flex-1 px-2"
+                >
+                  <Controller
+                    name={field.name}
+                    control={control}
+                    rules={field.rules}
+                    render={({ field: { onChange, value } }) => (
+                      <FormField
+                        {...field}
+                        value={value}
+                        onChange={(val) => {
+                          onChange(val)
+                          field.onHandleSideEffects?.(val)
+                        }}
+                      />
+                    )}
+                  />
+                </View>
               </MotiView>
             )
           })}

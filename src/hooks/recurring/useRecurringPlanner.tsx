@@ -1,6 +1,6 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-import PopupList from '@/components/PopupList';
+import ActionList from '@/components/ActionList';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
@@ -74,7 +74,7 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
   // ==================
 
   const OverflowActionsIcon = () => (
-    <PopupList
+    <ActionList
       actions={[
         {
           type: EPopupActionType.SUBMENU,

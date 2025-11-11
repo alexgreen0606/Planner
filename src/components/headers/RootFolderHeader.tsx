@@ -1,5 +1,5 @@
 import { MotiText } from 'moti';
-import { View } from 'react-native';
+import { PlatformColor, Text, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,16 +27,18 @@ const RootFolderHeader = () => {
         >
             {/* Page Label */}
             <MotiText
-                style={[textStyles['pageHeader'], { color: getValidCssColor(rootFolder?.platformColor) }]}
+                style={textStyles['pageHeader']}
                 animate={{
                     // @ts-ignore
                     fontSize: isCollapsed ? 22 : 32
                 }}
             >
-                {rootFolder?.value}
+                <Text style={{ color: getValidCssColor(rootFolder?.platformColor) }}>
+                    {rootFolder?.value}
+                </Text>
             </MotiText>
 
-            {/* Filter Popup List */}
+            {/* Filter Actions List */}
             <FolderItemActions folderId={EStorageKey.ROOT_FOLDER_KEY} />
         </View>
     );

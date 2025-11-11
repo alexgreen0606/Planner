@@ -77,11 +77,11 @@ const ListItem = <T extends TListItem>({
   }
 
   function handleCreateUpperItem() {
-      onCreateItem(itemIndex);
+    onCreateItem(itemIndex);
   }
 
   function handleCreateLowerItem() {
-      onCreateItem(itemIndex + 1);
+    onCreateItem(itemIndex + 1);
   }
 
   if (!item) return null;
@@ -103,7 +103,7 @@ const ListItem = <T extends TListItem>({
       {/* Separator Line */}
       <Pressable onPress={handleCreateUpperItem} className='w-full' style={{ height: EListLayout.NEW_ITEM_TRIGGER_HEIGHT }} />
 
-      <View className="flex-row w-full items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22 }}>
+      <View className="flex-row w-full items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22, height: EListLayout.CONTENT_HEIGHT }}>
         {/* Left Icon */}
         {onGetLeftIcon?.(item)}
 

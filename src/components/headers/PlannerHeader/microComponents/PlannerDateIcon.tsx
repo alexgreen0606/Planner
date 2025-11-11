@@ -7,7 +7,7 @@ import { PlatformColor, TouchableOpacity } from 'react-native';
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
 import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
-import FadeInView from '@/components/views/FadeInView';
+import FadeTransitionView from '@/components/views/FadeTransitionView';
 import { PRESSABLE_OPACITY } from '@/lib/constants/generic';
 import { EPlannerCarouselLayout } from '@/lib/enums/planners/EPlannerCarouselLayout';
 import { isTimeEarlier } from '@/utils/dateUtils';
@@ -55,9 +55,9 @@ const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: IPlannerDateIconProp
       className="w-full h-full items-center pt-[0.3rem]"
     >
       {isCurrentDatestamp && (
-        <FadeInView className="absolute">
+        <FadeTransitionView className="absolute">
           <Icon name="note" color="systemBlue" size={EPlannerCarouselLayout.DATESTAMP_ICON_SIZE} />
-        </FadeInView>
+        </FadeTransitionView>
       )}
 
       <CustomText

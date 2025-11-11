@@ -2,7 +2,7 @@ import React from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import CustomText from './text/CustomText';
-import FadeInView from './views/FadeInView';
+import FadeTransitionView from './views/FadeTransitionView';
 
 interface IEmptyPageLabelProps {
   label: string;
@@ -11,12 +11,12 @@ interface IEmptyPageLabelProps {
 const EmptyPageLabel = ({ label }: IEmptyPageLabelProps) => {
   const { width, height } = useWindowDimensions();
   return (
-    <FadeInView
+    <FadeTransitionView
       className="flex-1 absolute bottom-0 left-0 pointer-events-none items-center justify-center gap-2"
       style={{ width, height }}
     >
       <CustomText variant="emptyLabel">{label}</CustomText>
-    </FadeInView>
+    </FadeTransitionView>
   );
 };
 

@@ -6,7 +6,7 @@ import { Alert, PlatformColor } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
 import { transferingFolderItemAtom } from '@/atoms/transferingFolderItem';
-import PopupList from '@/components/PopupList';
+import ActionList from '@/components/ActionList';
 import { NULL } from '@/lib/constants/generic';
 import { selectableColors } from '@/lib/constants/selectableColors';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
@@ -159,7 +159,7 @@ const FolderItemActions = ({ checklistId, folderId }: TChecklistsPageParams) => 
   const itemTypeName = folderItem?.type ? folderItem.type.charAt(0).toUpperCase() + folderItem.type.slice(1) : 'Item';
 
   return (
-    <PopupList
+    <ActionList
       actions={[
         {
           type: EPopupActionType.BUTTON,

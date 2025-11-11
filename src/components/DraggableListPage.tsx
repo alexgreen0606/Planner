@@ -3,7 +3,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { DraggableList } from "draggable-list";
 import { usePathname } from 'expo-router';
 import React, { ReactNode, useState } from 'react';
-import { KeyboardAvoidingView, RefreshControl, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -129,6 +129,8 @@ const DraggableListPage = <T extends TListItem, S>({
               </DraggableList>
             </Host>
           </View>
+
+          <Pressable className='flex-1' onPress={onToggleLowerListItem} />
 
           {/* Add Button Filler */}
           <FillerView style={{ paddingVertical: LARGE_MARGIN }}>

@@ -1,7 +1,7 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { MotiText, MotiView } from 'moti';
 import { useMemo } from 'react';
-import { View } from 'react-native';
+import { PlatformColor, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -17,7 +17,7 @@ import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { getRgbFromHex } from '@/utils/colorUtils';
 
 import IconButton from '../buttons/IconButton';
-import PopupList from '../PopupList';
+import ActionList from '../ActionList';
 import CustomText, { textStyles } from '../text/CustomText';
 import ShadowView from '../views/ShadowView';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/generic';
@@ -61,7 +61,9 @@ const UpcomingDatesHeader = () => {
               fontSize: isCollapsed ? 22 : 32
             }}
           >
-            Upcoming Dates
+            <Text style={{ color: PlatformColor('label') }}>
+              Upcoming Dates
+            </Text>
           </MotiText>
         </ShadowView>
 
@@ -96,7 +98,7 @@ const UpcomingDatesHeader = () => {
       </View>
 
       {/* Filter Popup List */}
-      <PopupList
+      <ActionList
         systemImage="line.3.horizontal.decrease"
         actions={calendars.map((calendar) => ({
           title: calendar.title,

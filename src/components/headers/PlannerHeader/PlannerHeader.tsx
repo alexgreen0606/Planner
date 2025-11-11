@@ -7,7 +7,7 @@ import { getWeatherByDatestampAtom } from '@/atoms/weatherAtoms';
 import PlannerActions from '@/components/actions/PlannerActions';
 import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
-import FadeInView from '@/components/views/FadeInView';
+import FadeTransitionView from '@/components/views/FadeTransitionView';
 import {
   getDayOfWeekFromDatestamp,
   getDaysUntilIso,
@@ -61,7 +61,12 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
 
       <View className="flex-row w-full justify-between">
         <View>
-          <CustomText variant="pageHeader">{dayOfWeek}</CustomText>
+          <CustomText
+            variant="pageHeader"
+            customStyle={{ color: PlatformColor('label') }}
+          >
+            {dayOfWeek}
+          </CustomText>
           <CustomText
             variant="pageSubHeader"
             customStyle={{
@@ -74,7 +79,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
 
         <View className='flex-row gap-1'>
           {weatherData && (
-            <FadeInView>
+            <FadeTransitionView>
               <View className="px-4 py-2 flex-row gap-2">
                 <View className="justify-center">
                   <Icon size={26} name={weatherData.symbol} type="multicolor" />
@@ -86,7 +91,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
                   </CustomText>
                 </View>
               </View>
-            </FadeInView>
+            </FadeTransitionView>
           )}
           <PlannerActions datestamp={activeDatestamp} />
         </View>

@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 import { calendarMapAtom } from '@/atoms/planner/calendarAtoms';
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
@@ -13,9 +12,11 @@ import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 
+import Animated, { FadeIn, FadeOut, FadingTransition } from 'react-native-reanimated';
 import Icon from './Icon';
 import CustomText, { textStyles } from './text/CustomText';
 import DateValue from './text/DateValue';
+import FadeTransitionView from './views/FadeTransitionView';
 
 interface IUpcomingDateCardProps {
   datestamp: string;
@@ -59,62 +60,62 @@ const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) 
   const minimumContainerHeight = textStyles['dateValue'].fontSize + LARGE_MARGIN * 2;
 
   return (
-    <Animated.View
-      entering={FadeIn}
-      exiting={FadeOut}
-      style={{
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderColor: PlatformColor('systemGray'),
-        borderTopWidth: index === 0 ? StyleSheet.hairlineWidth : 0,
-        minHeight: minimumContainerHeight
-      }}
-      className="flex-row gap-2"
-    >
-      {/* Date */}
-      <TouchableOpacity
-        onPress={handleOpenPlanner}
-        activeOpacity={PRESSABLE_OPACITY}
-        className="w-[80] justify-center"
-        style={{ height: minimumContainerHeight }}
-      >
-        <DateValue isoTimestamp={datestamp} platformColor="secondaryLabel" />
-      </TouchableOpacity>
-
-      {/* Events */}
+    <FadeTransitionView>
       <View
-        className="flex-1 gap-3 justify-center"
         style={{
-          minHeight: minimumContainerHeight,
-          paddingVertical: (minimumContainerHeight - 16) / 2
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderColor: PlatformColor('systemGray'),
+          borderTopWidth: index === 0 ? StyleSheet.hairlineWidth : 0,
+          minHeight: minimumContainerHeight
         }}
+        className="flex-row gap-2"
       >
-        {events.map((event) => {
-          const calendar = calendarMap[event.calendarId];
-          const calendarName = calendar?.title || 'Calendar';
-          const iconName = calendarIconMap[calendarName] || calendarIconMap['Calendar'];
-          const color = calendar?.color || '#000000';
-          return (
-            <TouchableOpacity
-              onPress={() => handleOpenEventModal(event, calendar)}
-              activeOpacity={PRESSABLE_OPACITY}
-              className="flex-row items-center gap-2"
-              key={`${event.id}-upcoming-event`}
-            >
-              <Icon name={iconName} color={color} size={16} />
-              <CustomText variant="upcomingEvent">{event.title}</CustomText>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+        {/* Date */}
+        <TouchableOpacity
+          onPress={handleOpenPlanner}
+          activeOpacity={PRESSABLE_OPACITY}
+          className="w-[80] justify-center"
+          style={{ height: minimumContainerHeight }}
+        >
+          <DateValue isoTimestamp={datestamp} platformColor="secondaryLabel" />
+        </TouchableOpacity>
 
-      {/* Countdown */}
-      <View
-        className="w-22 items-end justify-center"
-        style={{ height: minimumContainerHeight }}
-      >
-        <CustomText variant="pageSubHeader">{countdownLabel}</CustomText>
+        {/* Events */}
+        <View
+          className="flex-1 gap-3 justify-center"
+          style={{
+            minHeight: minimumContainerHeight,
+            paddingVertical: (minimumContainerHeight - 16) / 2
+          }}
+        >
+          {events.map((event) => {
+            const calendar = calendarMap[event.calendarId];
+            const calendarName = calendar?.title || 'Calendar';
+            const iconName = calendarIconMap[calendarName] || calendarIconMap['Calendar'];
+            const color = calendar?.color || '#000000';
+            return (
+              <TouchableOpacity
+                onPress={() => handleOpenEventModal(event, calendar)}
+                activeOpacity={PRESSABLE_OPACITY}
+                className="flex-row items-center gap-2"
+                key={`${event.id}-upcoming-event`}
+              >
+                <Icon name={iconName} color={color} size={16} />
+                <CustomText variant="upcomingEvent">{event.title}</CustomText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Countdown */}
+        <View
+          className="w-22 items-end justify-center"
+          style={{ height: minimumContainerHeight }}
+        >
+          <CustomText variant="pageSubHeader">{countdownLabel}</CustomText>
+        </View>
       </View>
-    </Animated.View>
+    </FadeTransitionView>
   );
 };
 

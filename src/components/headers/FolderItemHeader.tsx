@@ -16,7 +16,7 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
 import { getValidCssColor } from '@/utils/colorUtils';
 
-import { textStyles } from '../text/CustomText';
+import CustomText, { textStyles } from '../text/CustomText';
 
 interface IFolderItemHeaderProps {
     folderItemId: string;
@@ -78,15 +78,14 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
                 }}
                 style={{ width: expandedWidth, left: LARGE_MARGIN }}
             >
-                <MotiText
-                    style={[textStyles['pageHeader'], {
-                        color: getValidCssColor(item?.platformColor)
-                    }]}
+                <CustomText
+                    variant='pageHeader'
                     numberOfLines={1}
-                    ellipsizeMode="tail"
+                    ellipsizeMode='tail'
+                    customStyle={{ color: getValidCssColor(item?.platformColor) }}
                 >
                     {item?.value}
-                </MotiText>
+                </CustomText>
                 {breadcrumbPath && (
                     <Text
                         style={textStyles['pageSubHeader']}

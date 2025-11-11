@@ -1,6 +1,6 @@
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-import PopupList from '@/components/PopupList';
+import ActionList from '@/components/ActionList';
 import { NULL } from '@/lib/constants/generic';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { EStorageId } from '@/lib/enums/EStorageId';
@@ -75,7 +75,7 @@ const PlannerActions = ({ datestamp }: TPlannerPageParams) => {
   });
 
   return (
-    <PopupList
+    <ActionList
       wrapButton
       actions={[
         {

@@ -10,8 +10,8 @@ import { filteredUpcomingDateEntriesAtom } from '@/atoms/planner/calendarAtoms';
 import EmptyPageLabel from '@/components/EmptyLabel';
 import UpcomingDateCard from '@/components/UpcomingDateCard';
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
-import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
 import { useExternalDataContext } from '@/providers/ExternalDataProvider';
+import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/generic';
 
 const UpcomingDatesPage = () => {
   const filteredUpcomingDates = useAtomValue(filteredUpcomingDateEntriesAtom);
