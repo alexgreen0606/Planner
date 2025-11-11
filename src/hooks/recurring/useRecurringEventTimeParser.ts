@@ -1,6 +1,5 @@
 import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-import { usePageContext } from '@/components/DraggableListPage';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
 import { TRecurringPlanner } from '@/lib/types/planner/TRecurringPlanner';
@@ -10,25 +9,20 @@ import { updateRecurringEventIndexWithChronologicalCheck } from '@/utils/recurri
 
 import useTextfieldItemAs from '../useTextfieldItemAs';
 
-// ✅
-
 const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventStorage: MMKV) => {
-  const recurringStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
+  const { onSetTextfieldItem } =
+    useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
 
+  const recurringStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
   const [recurringPlanner, setRecurringPlanner] = useMMKVObject<TRecurringPlanner>(
     recurringPlannerId,
     recurringStorage
   );
 
-  const { onSetTextfieldItem: onSetFocusedEvent } =
-    useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
-
-  const { onFocusPlaceholder } = usePageContext();
-
   // Scan user input for an initial event time.
   // Delete weekday event and clone if needed.
   function handleUpdateRecurringEventValueWithTimeParsing(userInput: string) {
-    onSetFocusedEvent((prev) => {
+    onSetTextfieldItem((prev) => {
       if (!prev || !recurringPlanner) return prev;
 
       const newEvent = { ...prev, value: userInput };
@@ -60,7 +54,9 @@ const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventS
       }
 
       // Save the planner and event to storage.
-      onFocusPlaceholder();
+
+      // TODO: focus the placeholder here
+
       setRecurringPlanner(
         updateRecurringEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
       );
@@ -68,9 +64,7 @@ const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventS
     });
   }
 
-  return {
-    onUpdateRecurringEventValueWithTimeParsing: handleUpdateRecurringEventValueWithTimeParsing
-  };
+  return handleUpdateRecurringEventValueWithTimeParsing;
 };
 
 export default useRecurringEventTimeParser;

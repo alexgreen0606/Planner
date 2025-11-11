@@ -17,8 +17,6 @@ import {
   upsertWeekdayEventsToRecurringPlanner
 } from '@/utils/recurringPlannerUtils';
 
-// ✅
-
 enum ERecurringPlannerEditAction {
   RESET_WEEKDAY = 'RESET_WEEKDAY',
   DELETE_WEEKDAY = 'DELETE_WEEKDAY',
@@ -27,7 +25,6 @@ enum ERecurringPlannerEditAction {
 
 const useRecurringPlanner = (recurringPlannerId: string) => {
   const recurringStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
-
   const [recurringPlanner, setRecurringPlanner] = useMMKVObject<TRecurringPlanner>(
     recurringPlannerId,
     recurringStorage
@@ -43,7 +40,7 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
     });
   }
 
-  function handleAction(action: ERecurringPlannerEditAction) {
+  function executeAction(action: ERecurringPlannerEditAction) {
     if (!recurringPlanner) return;
 
     const allEvents = recurringPlanner.eventIds.map(getRecurringEventFromStorageById);
@@ -87,14 +84,14 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
           items: [
             {
               type: EPopupActionType.BUTTON,
-              onPress: () => handleAction(ERecurringPlannerEditAction.RESET_WEEKDAY),
+              onPress: () => executeAction(ERecurringPlannerEditAction.RESET_WEEKDAY),
               title: 'Reset Weekday',
               // subtitle: 'Customized weekday events will be reset.',
               systemImage: 'arrow.trianglehead.2.clockwise'
             },
             {
               type: EPopupActionType.BUTTON,
-              onPress: () => handleAction(ERecurringPlannerEditAction.DELETE_WEEKDAY),
+              onPress: () => executeAction(ERecurringPlannerEditAction.DELETE_WEEKDAY),
               title: 'Delete All Weekday',
               destructive: true,
               systemImage: 'trash'
@@ -103,7 +100,7 @@ const useRecurringPlanner = (recurringPlannerId: string) => {
         },
         {
           type: EPopupActionType.BUTTON,
-          onPress: () => handleAction(ERecurringPlannerEditAction.DELETE_ALL),
+          onPress: () => executeAction(ERecurringPlannerEditAction.DELETE_ALL),
           title: 'Delete All Events',
           destructive: true,
           hidden: recurringPlanner?.eventIds.length === 0,

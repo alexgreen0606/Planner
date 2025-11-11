@@ -9,7 +9,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import {
   createNewChecklistItemAndSaveToStorage,
   deleteChecklistItems,
-  updateListItemIndex
+  updateFolderOrChecklistItemIndex
 } from '@/utils/checklistUtils';
 
 type TChecklistPageParams = {
@@ -33,7 +33,7 @@ const ChecklistPage = () => {
       addButtonColor={platformColor}
       onCreateItem={createNewChecklistItemAndSaveToStorage}
       onDeleteItem={(item) => deleteChecklistItems([item])}
-      onIndexChange={updateListItemIndex}
+      onIndexChange={updateFolderOrChecklistItemIndex}
       onGetLeftIcon={useListItemToggle}
     />
   );

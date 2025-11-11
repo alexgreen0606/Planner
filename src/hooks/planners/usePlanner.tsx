@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
+import { getPlannerEventFromStorageById } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp } from '@/utils/dateUtils';
 import {
   createEmptyPlanner,
@@ -11,17 +11,8 @@ import {
   upsertRecurringEventsIntoPlanner
 } from '@/utils/plannerUtils';
 
-// ✅
-
-export type TUsePlannerData = {
-  planner: TPlanner;
-  onUpdatePlannerEventIndexWithChronologicalCheck: (index: number, event: IPlannerEvent) => void;
-};
-
-const usePlanner = (datestamp: string): TUsePlannerData => {
-  const recurringPlannerStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
+const usePlanner = (datestamp: string) => {
   const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
-
   const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
 
   // Build the initial planner with recurring data.
@@ -33,6 +24,7 @@ const usePlanner = (datestamp: string): TUsePlannerData => {
   }, [datestamp]);
 
   // Upsert recurring events every time the day of week's recurring planner changes.
+  const recurringPlannerStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
   useMMKVListener((key) => {
     if (key === getDayOfWeekFromDatestamp(datestamp)) {
       setPlanner((prev) => {
@@ -43,12 +35,14 @@ const usePlanner = (datestamp: string): TUsePlannerData => {
   }, recurringPlannerStorage);
 
   function handleUpdatePlannerEventIndexWithChronologicalCheck(
-    index: number,
-    event: IPlannerEvent
+    from: number,
+    to: number
   ) {
     setPlanner((prev) => {
-      const newPlanner = prev ?? createEmptyPlanner(datestamp);
-      return updatePlannerEventIndexWithChronologicalCheck(newPlanner, index, event);
+      const prevPlanner = prev ?? createEmptyPlanner(datestamp);
+      const eventId = prevPlanner.eventIds[from];
+      const event = getPlannerEventFromStorageById(eventId);
+      return updatePlannerEventIndexWithChronologicalCheck(prevPlanner, to, event);
     });
   }
 

@@ -33,21 +33,19 @@ const initialRootFolder: IFolderItem = {
 };
 
 const useAppInitialization = () => {
-  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
-
-  const {
-    permission: hasCalendarPermissions,
-    isLoaded: isCalendarPermissionsLoaded,
-    setPermission: setCalendarPermissions
-  } = usePermissions(EAccess.CALENDAR);
-  const { isLoaded: isContactsPermissionsLoaded, setPermission: setContactsPermissions } =
-    usePermissions(EAccess.CONTACTS);
-
   const [primaryCalendar, setPrimaryCalendar] = useAtom(primaryCalendarAtom);
   const [calendarMapInStore, setCalendarMapInStore] = useAtom(calendarMapAtom);
   const setUpcomingDatesMap = useSetAtom(upcomingDatesMapAtom);
   const plannerCarouselWeeks = useAtomValue(plannerCarouselDataAtom);
   const setTodayDatestamp = useSetAtom(todayDatestampAtom);
+
+  const {
+    permission: hasCalendarPermissions,
+    isLoaded: isCalendarPermissionsLoaded,
+    onSetPermission: setCalendarPermissions
+  } = usePermissions(EAccess.CALENDAR);
+  const { isLoaded: isContactsPermissionsLoaded, onSetPermission: setContactsPermissions } =
+    usePermissions(EAccess.CONTACTS);
 
   const [fontsLoaded] = useFonts({
     RoundHeavy: require('../../assets/fonts/SF-Compact-Rounded-Heavy.otf'),
@@ -56,6 +54,7 @@ const useAppInitialization = () => {
     Text: require('../../assets/fonts/SF-Pro-Text-Regular.otf')
   });
 
+  const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const [rootFolder, setRootFolder] = useMMKVObject<IFolderItem>(
     EStorageKey.ROOT_FOLDER_KEY,
     folderItemStorage
@@ -82,85 +81,16 @@ const useAppInitialization = () => {
 
   async function handleLoadBaseData() {
     // Get the calendar permissions.
-    const hasCalendarsPermissions = await handleCheckCalendarPermissions();
-    const hasContactsPermissions = await handleCheckContactsPermissions();
+    const hasCalendarsPermissions = await checkCalendarPermissions();
+    const hasContactsPermissions = await checkContactsPermissions();
 
     // Get the calendar map.
-    const calendarMap = await handleLoadCalendarsMap(hasCalendarsPermissions);
+    const calendarMap = await loadCalendarsMap(hasCalendarsPermissions);
 
     // Get the all-day events for the Upcoming Dates page.
     handleLoadAllDayEventsToStore(hasCalendarsPermissions, calendarMap);
 
     return { hasCalendarsPermissions, hasContactsPermissions, calendarMap };
-  }
-
-  async function handleLoadCalendarsMap(hasCalendarsPermissions: boolean) {
-    if (!hasCalendarsPermissions) {
-      // TODO; handle no access
-    }
-
-    const primaryCalendar = await Calendar.getDefaultCalendarAsync();
-    let calendarMap = await getCalendarsMap();
-
-    let importantCalendar = Object.values(calendarMap).find(
-      (calendar) => calendar.title === 'Important'
-    );
-    if (!importantCalendar) {
-      await Calendar.createCalendarAsync({
-        title: 'Important',
-        color: 'rgb(255,56,60)',
-        entityType: Calendar.EntityTypes.EVENT,
-        name: 'Important',
-        ownerAccount: 'PlannerApp'
-      });
-      calendarMap = await getCalendarsMap();
-      importantCalendar = Object.values(calendarMap).find(
-        (calendar) => calendar.title === 'Important'
-      )!;
-    }
-
-    if (Object.keys(calendarMapInStore).length === 0) {
-      setCalendarMapInStore(calendarMap);
-      setPrimaryCalendar(primaryCalendar);
-    }
-
-    return calendarMap;
-  }
-
-  async function handleCheckContactsPermissions(): Promise<boolean> {
-    try {
-      const { status } = await Contacts.getPermissionsAsync();
-      if (status === 'undetermined') {
-        const { status: newStatus } = await Contacts.requestPermissionsAsync();
-        setContactsPermissions(newStatus === 'granted');
-        return newStatus === 'granted';
-      } else {
-        setContactsPermissions(status === 'granted');
-        return status === 'granted';
-      }
-    } catch (error) {
-      console.error('Error requesting contacts permission:', error);
-      setContactsPermissions(false);
-      return false;
-    }
-  }
-
-  async function handleCheckCalendarPermissions(): Promise<boolean> {
-    try {
-      const { status } = await Calendar.requestCalendarPermissionsAsync();
-      if (status === 'undetermined') {
-        const { status: newStatus } = await Contacts.requestPermissionsAsync();
-        setCalendarPermissions(newStatus === 'granted');
-        return newStatus === 'granted';
-      } else {
-        setCalendarPermissions(status === 'granted');
-        return status === 'granted';
-      }
-    } catch (error) {
-      console.error('Error requesting calendars permission:', error);
-      setCalendarPermissions(false);
-      return false;
-    }
   }
 
   async function handleLoadAllDayEventsToStore(
@@ -210,13 +140,80 @@ const useAppInitialization = () => {
     }
   }
 
+  async function loadCalendarsMap(hasCalendarsPermissions: boolean) {
+    if (!hasCalendarsPermissions) {
+      // TODO; handle no access
+    }
+
+    const primaryCalendar = await Calendar.getDefaultCalendarAsync();
+    let calendarMap = await getCalendarsMap();
+
+    let importantCalendar = Object.values(calendarMap).find(
+      (calendar) => calendar.title === 'Important'
+    );
+    if (!importantCalendar) {
+      await Calendar.createCalendarAsync({
+        title: 'Important',
+        color: 'rgb(255,56,60)',
+        entityType: Calendar.EntityTypes.EVENT,
+        name: 'Important',
+        ownerAccount: 'PlannerApp'
+      });
+      calendarMap = await getCalendarsMap();
+      importantCalendar = Object.values(calendarMap).find(
+        (calendar) => calendar.title === 'Important'
+      )!;
+    }
+
+    if (Object.keys(calendarMapInStore).length === 0) {
+      setCalendarMapInStore(calendarMap);
+      setPrimaryCalendar(primaryCalendar);
+    }
+
+    return calendarMap;
+  }
+
+  async function checkContactsPermissions(): Promise<boolean> {
+    try {
+      const { status } = await Contacts.getPermissionsAsync();
+      if (status === 'undetermined') {
+        const { status: newStatus } = await Contacts.requestPermissionsAsync();
+        setContactsPermissions(newStatus === 'granted');
+        return newStatus === 'granted';
+      } else {
+        setContactsPermissions(status === 'granted');
+        return status === 'granted';
+      }
+    } catch (error) {
+      console.error('Error requesting contacts permission:', error);
+      setContactsPermissions(false);
+      return false;
+    }
+  }
+
+  async function checkCalendarPermissions(): Promise<boolean> {
+    try {
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+      if (status === 'undetermined') {
+        const { status: newStatus } = await Contacts.requestPermissionsAsync();
+        setCalendarPermissions(newStatus === 'granted');
+        return newStatus === 'granted';
+      } else {
+        setCalendarPermissions(status === 'granted');
+        return status === 'granted';
+      }
+    } catch (error) {
+      console.error('Error requesting calendars permission:', error);
+      setCalendarPermissions(false);
+      return false;
+    }
+  }
+
   function checkRootFolderExistence() {
     if (!rootFolder) {
       setRootFolder(initialRootFolder);
     }
   }
-
-  // HELPER FUNCTIONS
 
   function updateTodayDatestamp() {
     const todayDatestamp = getTodayDatestamp();

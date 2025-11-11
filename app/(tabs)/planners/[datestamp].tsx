@@ -19,7 +19,7 @@ const PlannerPage = () => {
   const { datestamp } = useLocalSearchParams<{ datestamp: string }>();
   const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
-  const { onUpdatePlannerEventValueWithTimeParsing } = usePlannerEventTimeParser(
+  const onUpdatePlannerEventValueWithTimeParsing = usePlannerEventTimeParser(
     datestamp,
     eventStorage
   );

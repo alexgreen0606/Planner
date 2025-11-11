@@ -5,9 +5,7 @@ import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 const useListItemToggle = <T extends TListItem>(item: T) => {
   const { onToggleScheduleItemDeleteCallback, onGetIsItemDeletingCallback } =
     useDeleteSchedulerContext<T>();
-
   const isDeleting = onGetIsItemDeletingCallback(item);
-
   return (
     <ListItemToggleButton
       isDeleting={isDeleting}

@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
-// ✅
-
 const useBounceTrigger = (dependencies: any[], cooldown = 200) => {
-  const isInitialMount = useRef(true);
   const cooldownRef = useRef(false);
+  const isInitialMount = useRef(true);
+
   const [bounceTrigger, setBounceTrigger] = useState(false);
 
   useEffect(() => {

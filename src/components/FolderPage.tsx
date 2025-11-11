@@ -14,7 +14,7 @@ import { SCROLL_THROTTLE } from '@/lib/constants/listConstants';
 import { FOLDER_ITEM_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { EStorageId } from '@/lib/enums/EStorageId';
-import { updateFolderItemIndex } from '@/utils/checklistUtils';
+import { updateFolderOrChecklistItemIndex } from '@/utils/checklistUtils';
 
 import FolderItem from './FolderItem';
 import PageContainer from './PageContainer';
@@ -35,7 +35,7 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
 
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const {
-    item: folder,
+    folderItem: folder,
     itemIds,
     isTransferMode,
     transferingItem,
@@ -52,7 +52,7 @@ const FolderPage = ({ folderId }: IFolderPageProps) => {
   }, [itemIds]);
 
   function handleMoveItem(from: number, to: number) {
-    updateFolderItemIndex(from, to, folderId);
+    updateFolderOrChecklistItemIndex(from, to, folderId);
   }
 
   const contentInset = headerHeight - TOP_SPACER;

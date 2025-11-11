@@ -79,32 +79,17 @@ export function createNewFolderItemAndSaveToStorage(parentFolderId: string, inde
 /**
  * Updates the position of an item within its folder or checklist.
  *
- * @param index - The index to place the item in.
- * @param item - The item to move.
- */
-export function updateListItemIndex<T extends TListItem>(index: number, item: T) {
-  const checklist = getFolderItemFromStorageById(item.listId);
-
-  checklist.itemIds = checklist.itemIds.filter((id) => id !== item.id);
-  checklist.itemIds.splice(index, 0, item.id);
-
-  saveFolderItemToStorage(checklist);
-}
-
-/**
- * Updates the position of an item within its folder.
- *
  * @param from - The initial index of the item.
  * @param to - The final index of the item.
  * @param parentFolderId - The ID of the folder where the item exists.
  */
-export function updateFolderItemIndex<T extends TListItem>(from: number, to: number, parentFolderId: string) {
-  const folder = getFolderItemFromStorageById(parentFolderId);
+export function updateFolderOrChecklistItemIndex(from: number, to: number, parentFolderId: string) {
+  const folderItem = getFolderItemFromStorageById(parentFolderId);
 
-  const [itemId] = folder.itemIds.splice(from, 1);
-  folder.itemIds.splice(to, 0, itemId);
+  const [itemId] = folderItem.itemIds.splice(from, 1);
+  folderItem.itemIds.splice(to, 0, itemId);
 
-  saveFolderItemToStorage(folder);
+  saveFolderItemToStorage(folderItem);
 }
 
 // ====================

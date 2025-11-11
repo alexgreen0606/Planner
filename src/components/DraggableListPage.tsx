@@ -33,7 +33,7 @@ interface IDraggableListPageProps<T extends TListItem, S> {
   onCreateItem: (listId: string, index: number) => void;
   onDeleteItem: (item: T) => void;
   onValueChange?: (newValue: string) => void;
-  onIndexChange?: (newIndex: number, prev: T) => void;
+  onIndexChange?: (from: number, to: number, listId: string) => void;
   onSaveToExternalStorage?: (item: T) => void;
   onContentClick?: (item: T) => void;
   onGetRowTextPlatformColor?: (item: T) => string;
@@ -71,7 +71,6 @@ const DraggableListPage = <T extends TListItem, S>({
       listId,
       onCreateItem,
       onDeleteItem,
-      onIndexChange,
       listItemProps
     );
 
@@ -125,7 +124,7 @@ const DraggableListPage = <T extends TListItem, S>({
 
               <DraggableList
                 moveEnabled
-              // onMoveItem={handleMoveItem}
+                onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}
               >
                 <ListItems />
               </DraggableList>

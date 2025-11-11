@@ -1,7 +1,5 @@
 import { ColorValue, PlatformColor, useColorScheme } from 'react-native';
 
-// ✅
-
 const useAppTheme = () => {
   const colorScheme = useColorScheme();
   const isLightMode = colorScheme === 'light';

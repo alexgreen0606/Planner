@@ -1,6 +1,5 @@
 import { MMKV, useMMKV, useMMKVObject } from 'react-native-mmkv';
 
-import { usePageContext } from '@/components/DraggableListPage';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planner/TPlanner';
@@ -12,17 +11,11 @@ import {
 
 import useTextfieldItemAs from '../useTextfieldItemAs';
 
-// ✅
-
 const usePlannerEventTimeParser = (datestamp: string, eventStorage: MMKV) => {
   const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
-
   const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
 
   const { onSetTextfieldItem: onSetFocusedEvent } = useTextfieldItemAs<IPlannerEvent>(eventStorage);
-
-  // const { onFocusPlaceholder } = usePageContext();
-
   function handleUpdatePlannerEventValueWithTimeParsing(userInput: string) {
     onSetFocusedEvent((prev) => {
       if (!prev || !planner) return prev;
@@ -59,14 +52,13 @@ const usePlannerEventTimeParser = (datestamp: string, eventStorage: MMKV) => {
       // Save the planner and the event to storage.
       // onFocusPlaceholder();
       // TODO: focus placeholder
+
       setPlanner(updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent));
       return newEvent;
     });
   }
 
-  return {
-    onUpdatePlannerEventValueWithTimeParsing: handleUpdatePlannerEventValueWithTimeParsing
-  };
+  return handleUpdatePlannerEventValueWithTimeParsing;
 };
 
 export default usePlannerEventTimeParser;

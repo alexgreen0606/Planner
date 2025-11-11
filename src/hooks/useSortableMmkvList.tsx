@@ -14,7 +14,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
   listId: string,
   onCreateItem: (listId: string, index: number) => void,
   onDeleteItem: (item: T) => void,
-  onIndexChange?: (newIndex: number, prev: T) => void,
   listItemProps?: {
     defaultStorageObject?: S | undefined;
     onValueChange?: ((newValue: string) => void) | undefined;
@@ -29,10 +28,7 @@ const useSortableMmkvList = <T extends TListItem, S>(
 ) => {
   const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-  // =======================
-  //  Placeholder Textfield
-  // =======================
-
+  // Placeholder textfield to keep the textfield focused when toggling between list items.
   const placeholderInputRef = useRef<TextInput>(null);
   const PlaceholderField = () => (
     <TextInput
@@ -43,32 +39,8 @@ const useSortableMmkvList = <T extends TListItem, S>(
     />
   );
 
-  function handleFocusPlaceholder() {
+  function focusPlaceholder() {
     placeholderInputRef.current?.focus();
-  }
-
-  function handleToggleLowerListItem() {
-    if (!textfieldItem) {
-      // Open a textfield at the bottom of the list.
-      onCreateItem(listId, itemIds.length);
-      return;
-    }
-
-    onCloseTextfield();
-
-    if (textfieldItem.value.trim() === '') {
-      onDeleteItem(textfieldItem);
-    }
-  }
-
-  function handleMoveItem(id: string, from: number, to: number) {
-    const itemString = storage.getString(id);
-    if (!itemString) return;
-
-    const draggedItem = JSON.parse(itemString) as T;
-    if (from !== to && onIndexChange) {
-      onIndexChange(to, draggedItem);
-    }
   }
 
   // Track the ordering of IDs to pass to the list function.
@@ -86,7 +58,7 @@ const useSortableMmkvList = <T extends TListItem, S>(
       listId={listId}
       itemId={itemId}
       storage={storage}
-      onFocusPlaceholderTextfield={handleFocusPlaceholder}
+      onFocusPlaceholderTextfield={focusPlaceholder}
       onCreateItem={onCreateItem}
       onDeleteItem={onDeleteItem}
       {...listItemProps}
@@ -94,8 +66,24 @@ const useSortableMmkvList = <T extends TListItem, S>(
     />
   ));
 
+  function handleToggleLowerListItem() {
+    if (!textfieldItem) {
+      // Open a textfield at the bottom of the list.
+      onCreateItem(listId, itemIds.length);
+      return;
+    }
+
+    onCloseTextfield();
+
+    if (textfieldItem.value.trim() === '') {
+      onDeleteItem(textfieldItem);
+    }
+  }
+
+  const isListEmpty = updatedList.length === 0;
+
   return {
-    isListEmpty: itemIds.length === 0,
+    isListEmpty,
     listHeight: EListLayout.ITEM_HEIGHT * updatedList.length,
     PlaceholderField,
     onToggleLowerListItem: handleToggleLowerListItem,

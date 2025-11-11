@@ -3,8 +3,6 @@ import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { getTodayDatestamp } from '@/utils/dateUtils';
 
-// ✅
-
 const useIsPlannerEventDeleting = (item?: IPlannerEvent) => {
   const { onGetDeletingItemsByStorageIdCallback: onGetDeletingItems } =
     useDeleteSchedulerContext<IPlannerEvent>();
