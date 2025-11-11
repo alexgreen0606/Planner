@@ -17,6 +17,8 @@ import { EAccess } from '@/lib/enums/EAccess';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
+import { TCalendarEventMap } from '@/lib/types/externalData/TCalendarEventMap';
+import { TCalendarMap } from '@/lib/types/externalData/TCalendarMap';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getDatestampOneYearFromToday, getTodayDatestamp } from '@/utils/dateUtils';
 
@@ -140,7 +142,7 @@ const useAppInitialization = () => {
     }
   }
 
-  async function loadCalendarsMap(hasCalendarsPermissions: boolean) {
+  async function loadCalendarsMap(hasCalendarsPermissions: boolean): Promise<TCalendarMap> {
     if (!hasCalendarsPermissions) {
       // TODO; handle no access
     }

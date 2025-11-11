@@ -11,6 +11,7 @@ import {
 import { savePlannerChipDataAtom } from '@/atoms/planner/plannerChips';
 import useAppInitialization from '@/hooks/useAppInitialization';
 import { calendarIconMap } from '@/lib/constants/calendarIconMap';
+import { TCalendarMap } from '@/lib/types/externalData/TCalendarMap';
 import { TPlannerChip } from '@/lib/types/planners/TPlannerChip';
 import { TPlannerPageParams } from '@/lib/types/routeParams/TPlannerPageParams';
 import { extractNameFromBirthdayText, openMessageForContact } from '@/utils/birthdayUtils';
@@ -27,9 +28,7 @@ import {
 } from '@/utils/plannerUtils';
 import { loadWeatherToStore } from '@/utils/weatherUtils';
 
-// ✅
-
-type ExternalDataContextType = {
+type TExternalData = {
   loadingPathnames: Set<string>;
   onReloadPage: () => Promise<void>;
 };
@@ -126,13 +125,12 @@ function mapCalendarEventToPlannerChip(
   return calendarEventChip;
 }
 
-const ExternalDataContext = createContext<ExternalDataContextType | undefined>(undefined);
+const ExternalDataContext = createContext<TExternalData | undefined>(undefined);
 
 export function ExternalDataProvider({ children }: { children: ReactNode }) {
+  const { appReady, onLoadAllDayEventsToStore, onLoadBaseData } = useAppInitialization();
   const { datestamp } = useGlobalSearchParams<TPlannerPageParams>();
   const pathname = usePathname();
-
-  const { appReady, onLoadAllDayEventsToStore, onLoadBaseData } = useAppInitialization();
 
   const loadedDatestamps = useAtomValue(loadedDatestampsAtom);
   const trackLoadedDatestamp = useSetAtom(trackLoadedDatestampAtom);
@@ -151,12 +149,42 @@ export function ExternalDataProvider({ children }: { children: ReactNode }) {
     handleLoadPage();
   }, [pathname, appReady, loadedDatestamps]);
 
-  // TODO: no any
+  async function handleLoadPage() {
+    setLoadingPathnames((prev) => {
+      const current = new Set(prev);
+      current.add(pathname);
+      return current;
+    });
+
+    // Load global app data.
+    const { hasCalendarsPermissions, hasContactsPermissions, calendarMap } = await onLoadBaseData();
+
+    // Load page-specific data.
+    if (pathname.includes('planners') && datestamp) {
+      await loadWeatherToStore(datestamp);
+      await loadCalendarData(
+        [datestamp],
+        hasCalendarsPermissions,
+        hasContactsPermissions,
+        calendarMap
+      );
+      trackLoadedDatestamp(datestamp);
+    } else if (pathname.includes('upcomingDates')) {
+      await onLoadAllDayEventsToStore(hasCalendarsPermissions, calendarMap);
+    }
+
+    setLoadingPathnames((prev) => {
+      const current = new Set(prev);
+      current.delete(pathname);
+      return current;
+    });
+  }
+
   async function loadCalendarData(
     datestamps: string[],
     hasCalendarsPermissions: boolean,
     hasContactsPermissions: boolean,
-    calendarMap: any
+    calendarMap: TCalendarMap
   ) {
     if (datestamps.length === 0) return;
 
@@ -213,37 +241,6 @@ export function ExternalDataProvider({ children }: { children: ReactNode }) {
     // Phase 4: Update all the planners linked to the calendar events.
     datestamps.forEach((datestamp) => {
       upsertCalendarEventsIntoPlanner(datestamp, calendarEventMap[datestamp]);
-    });
-  }
-
-  async function handleLoadPage() {
-    setLoadingPathnames((prev) => {
-      const current = new Set(prev);
-      current.add(pathname);
-      return current;
-    });
-
-    // Load global app data.
-    const { hasCalendarsPermissions, hasContactsPermissions, calendarMap } = await onLoadBaseData();
-
-    // Load page-specific data.
-    if (pathname.includes('planners') && datestamp) {
-      await loadWeatherToStore(datestamp);
-      await loadCalendarData(
-        [datestamp],
-        hasCalendarsPermissions,
-        hasContactsPermissions,
-        calendarMap
-      );
-      trackLoadedDatestamp(datestamp);
-    } else if (pathname.includes('upcomingDates')) {
-      await onLoadAllDayEventsToStore(hasCalendarsPermissions, calendarMap);
-    }
-
-    setLoadingPathnames((prev) => {
-      const current = new Set(prev);
-      current.delete(pathname);
-      return current;
     });
   }
 

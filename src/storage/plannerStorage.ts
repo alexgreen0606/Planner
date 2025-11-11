@@ -5,38 +5,38 @@ import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planners/TPlanner';
 import { createEmptyPlanner } from '@/utils/plannerUtils';
 
-// ✅
-
 const plannerStorage = new MMKV({ id: EStorageId.PLANNER });
-const eventStorage = new MMKV({ id: EStorageId.PLANNER_EVENT });
+const plannerEventStorage = new MMKV({ id: EStorageId.PLANNER_EVENT });
+
+// ================
+//  Save Functions
+// ================
 
 export function savePlannerToStorage(planner: TPlanner) {
   plannerStorage.set(planner.datestamp, JSON.stringify(planner));
 }
 
 export function savePlannerEventToStorage(event: IPlannerEvent) {
-  eventStorage.set(event.id, JSON.stringify(event));
+  plannerEventStorage.set(event.id, JSON.stringify(event));
 }
 
-// ==================
-// 2. Read Functions
-// ==================
+// ================
+//  Read Functions
+// ================
 
 export function getPlannerFromStorageByDatestamp(datestamp: string): TPlanner {
   const eventsString = plannerStorage.getString(datestamp);
   if (!eventsString) {
     return createEmptyPlanner(datestamp);
   }
-
   return JSON.parse(eventsString);
 }
 
 export function getPlannerEventFromStorageById(id: string): IPlannerEvent {
-  const eventsString = eventStorage.getString(id);
+  const eventsString = plannerEventStorage.getString(id);
   if (!eventsString) {
     throw new Error(`getPlannerEventFromStorageById: No event found in storage with ID ${id}`);
   }
-
   return JSON.parse(eventsString);
 }
 
@@ -49,17 +49,17 @@ export function getDoesPlannerExist(datestamp: string) {
 }
 
 export function getDoesPlannerEventExist(eventId: string) {
-  return eventStorage.contains(eventId);
+  return plannerEventStorage.contains(eventId);
 }
 
-// ====================
-// 3. Delete Functions
-// ====================
+// ==================
+//  Delete Functions
+// ==================
 
 export async function deletePlannerFromStorageByDatestamp(datestamp: string) {
-  eventStorage.delete(datestamp);
+  plannerEventStorage.delete(datestamp);
 }
 
 export async function deletePlannerEventFromStorageById(eventId: string) {
-  eventStorage.delete(eventId);
+  plannerEventStorage.delete(eventId);
 }

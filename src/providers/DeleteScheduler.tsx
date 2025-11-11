@@ -11,9 +11,7 @@ import { deleteChecklistItems } from '@/utils/checklistUtils';
 import { deletePlannerEventsFromStorageAndCalendar } from '@/utils/plannerUtils';
 import { deleteRecurringEventsFromStorageHideWeekday } from '@/utils/recurringPlannerUtils';
 
-// ✅
-
-type DeleteSchedulerContextType<T extends TListItem> = {
+type TDeleteScheduler<T extends TListItem> = {
   onGetDeletingItemsByStorageIdCallback: (deleteFunctionKey: EStorageId) => T[];
   onGetIsItemDeletingCallback: (item: T | undefined) => boolean;
   onToggleScheduleItemDeleteCallback: (item: T) => void;
@@ -25,7 +23,7 @@ const deletionMap: Partial<Record<EStorageId, (items: any[]) => Promise<void> | 
   [EStorageId.CHECKLIST_ITEM]: deleteChecklistItems
 };
 
-const DeleteSchedulerContext = createContext<DeleteSchedulerContextType<any> | undefined>(
+const DeleteSchedulerContext = createContext<TDeleteScheduler<any> | undefined>(
   undefined
 );
 
@@ -55,10 +53,6 @@ export function DeleteSchedulerProvider<T extends TListItem>({
       ),
     []
   );
-
-  // =====================
-  // 2. Exposed Functions
-  // =====================
 
   const handleGetDeletingItemsByStorageIdCallback = useCallback(
     (deleteFunctionKey: EStorageId): T[] => {
@@ -123,7 +117,7 @@ export function DeleteSchedulerProvider<T extends TListItem>({
   );
 }
 
-export function useDeleteSchedulerContext<T extends TListItem>(): DeleteSchedulerContextType<T> {
+export function useDeleteSchedulerContext<T extends TListItem>(): TDeleteScheduler<T> {
   const context = useContext(DeleteSchedulerContext);
   if (!context) {
     throw new Error('useDeleteScheduler must be used within a DeleteSchedulerProvider');
