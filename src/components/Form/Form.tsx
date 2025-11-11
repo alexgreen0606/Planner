@@ -15,7 +15,7 @@ interface IFormProps {
 
 const Form = ({ fieldSets, control }: IFormProps) => {
   const {
-    modal: { inputField },
+    CssColor: { modalInputField },
   } = useAppTheme()
   return (
     <View className="gap-4">
@@ -66,7 +66,7 @@ const Form = ({ fieldSets, control }: IFormProps) => {
                 }}
                 className="items-center w-full overflow-hidden"
                 style={{
-                  backgroundColor: PlatformColor(inputField),
+                  backgroundColor: modalInputField,
                   borderTopWidth:
                     !field.invisible && !isTopEdgeRounded ? StyleSheet.hairlineWidth : 0,
                   borderColor: PlatformColor('systemGray'),

@@ -28,7 +28,7 @@ const ShadowView = ({
   maxOpacity = 0.8,
   ...props
 }: IShadowViewProps) => {
-  const { shadowColor } = useAppTheme();
+  const { CssColor: {shadowColor} } = useAppTheme();
 
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 

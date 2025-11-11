@@ -34,7 +34,7 @@ const PageContainer = ({
     const { top: TOP_SPACER } = useSafeAreaInsets();
     const {
         ColorArray: {
-            Screen: { upper }
+            upperFade
         }
     } = useAppTheme();
     return (
@@ -45,7 +45,7 @@ const PageContainer = ({
             {stickyHeader && (
                 <>
                     <View className="absolute w-full left-0 top-0">
-                        <ColorFadeView colors={upper} solidHeight={TOP_SPACER} totalHeight={TOP_SPACER + 16} />
+                        <ColorFadeView colors={upperFade} solidHeight={TOP_SPACER} totalHeight={TOP_SPACER + 16} />
                     </View>
                     <View className="absolute left-0" style={{ top: TOP_SPACER }}>
                         {stickyHeader}

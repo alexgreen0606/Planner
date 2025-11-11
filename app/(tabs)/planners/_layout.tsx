@@ -12,7 +12,7 @@ const PlannersLayout = () => {
   const {
     CssColor: { background },
     ColorArray: {
-      Screen: { upper }
+      upperFade
     }
   } = useAppTheme();
   return (
@@ -24,7 +24,7 @@ const PlannersLayout = () => {
           return datestamp && <PlannerHeader activeDatestamp={datestamp} />;
         },
         headerBackground: () => (
-          <ColorFadeView totalHeight={TOP_SPACER + 32} solidHeight={TOP_SPACER} colors={upper} />
+          <ColorFadeView totalHeight={TOP_SPACER + 32} solidHeight={TOP_SPACER} colors={upperFade} />
         ),
         animation: 'fade',
         contentStyle: { backgroundColor: background },

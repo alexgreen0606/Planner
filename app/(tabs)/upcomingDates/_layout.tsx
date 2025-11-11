@@ -11,7 +11,7 @@ const UpcomingDatesLayout = () => {
   const {
     CssColor: { background },
     ColorArray: {
-      Screen: { upper }
+      upperFade
     }
   } = useAppTheme();
   return (
@@ -22,7 +22,7 @@ const UpcomingDatesLayout = () => {
           <ColorFadeView
             totalHeight={TOP_SPACER + EHeaderHeight.UPCOMING_DATES}
             solidHeight={TOP_SPACER}
-            colors={upper}
+            colors={upperFade}
           />
         ),
         contentStyle: { backgroundColor: background },
