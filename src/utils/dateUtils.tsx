@@ -1,10 +1,8 @@
 import { DateTime } from 'luxon';
 
-// ✅
-
-// ==============================
-// 1. Parse Time Value From Text
-// ==============================
+// ============================
+//  Parse Time Value From Text
+// ============================
 
 type ParsedTimeResult = {
   timeValue: string | null;
@@ -40,9 +38,9 @@ export function parseTimeValueFromText(text: string): ParsedTimeResult {
   return { timeValue, updatedText };
 }
 
-// ===========================================================
-// 1. Conversion Functions (Datestamp/JS Date/ISO/Time Value)
-// ===========================================================
+// =========================================================
+//  Conversion Functions (Datestamp/JS Date/ISO/Time Value)
+// =========================================================
 
 /**
  * Converts a datestamp and time value into a UTC formatted ISO timestamp.
@@ -86,9 +84,9 @@ export function datestampToMidnightJsDate(datestamp: string, dayOffset: number =
   return date.startOf('day').toJSDate();
 }
 
-// ==============================
-// 2. Datestamp Getter Functions
-// ===============================
+// ============================
+//  Datestamp Getter Functions
+// =============================
 
 /**
  * Gets the datestamp for yesterday's date.
@@ -157,9 +155,9 @@ export function getNextEightDayDatestamps(): string[] {
   return getDatestampRange(today, eightDaysAfterTomorrow);
 }
 
-// ====================
-// 3. Getter Functions
-// ====================
+// ==================
+//  Getter Functions
+// ==================
 
 /**
  * Gets a list of datestamps from the start date through the end date.
@@ -242,9 +240,9 @@ export function getIsoFromNowTimeRoundedDown5Minutes(datestamp?: string): string
   return combined.toUTC().toISO()!;
 }
 
-// ========================
-// 4. Validation Functions
-// ========================
+// ======================
+//  Validation Functions
+// ======================
 
 /**
  * Validates if one time is earlier than another.

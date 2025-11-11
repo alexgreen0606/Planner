@@ -6,10 +6,8 @@ import { ReactNode } from 'react';
 import { TouchableOpacity } from 'react-native';
 
 import { untrackLoadedDatestampsAtom } from '@/atoms/planner/loadedDatestampsAtom';
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import TimeValue from '@/components/text/TimeValue';
 import { NULL } from '@/lib/constants/generic';
-import { EDIT_EVENT_MODAL_PATHNAME, VIEW_EVENT_MODAL_PATHNAME } from '@/lib/constants/pathnames';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent, ITimeConfig } from '@/lib/types/listItems/IPlannerEvent';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
@@ -39,8 +37,7 @@ import {
   isTimeEarlierOrEqual,
   timeValueToIso
 } from './dateUtils';
-
-// ✅
+import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 
 // ==================
 //  Helper Functions
@@ -224,9 +221,9 @@ function mapRecurringEventToPlannerEvent(
   return plannerEvent;
 }
 
-// =============================
-// 2. Recurring Synchronization
-// =============================
+// ===========================
+//  Recurring Synchronization
+// ===========================
 
 /**
  * Upserts all recurring events into a planner for the planner's day of the week. Upserted events will be
@@ -307,9 +304,9 @@ export function upsertRecurringEventsIntoPlanner(planner: TPlanner): TPlanner {
   return planner;
 }
 
-// ============================
-// 3. Calendar Synchronization
-// ============================
+// ==========================
+//  Calendar Synchronization
+// ==========================
 
 /**
  * Upserts all device calendar events into a planner. The device calendar has final say on the state of events.
@@ -383,9 +380,9 @@ export function upsertCalendarEventsIntoPlanner(
   savePlannerToStorage(newPlanner);
 }
 
-// ====================
-// 4. Open Event Modal
-// ====================
+// ============================
+//  Open Event Modal Functions
+// ============================
 
 /**
  * Opens the edit modal for an event.
@@ -394,7 +391,7 @@ export function upsertCalendarEventsIntoPlanner(
  * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
  */
 export function openEditEventModal(eventId: string, triggerDatestamp: string) {
-  router.push(`${EDIT_EVENT_MODAL_PATHNAME}/${eventId}/${triggerDatestamp}`);
+  router.push(`${EModalBasePath.EDIT_EVENT_MODAL_PATHNAME}/${eventId}/${triggerDatestamp}`);
 }
 
 /**
@@ -404,37 +401,12 @@ export function openEditEventModal(eventId: string, triggerDatestamp: string) {
  * @param triggerDatestamp - The date of the planner where the modal trigger event occurred.
  */
 export function openViewEventModal(eventId: string) {
-  router.push(`${VIEW_EVENT_MODAL_PATHNAME}/${eventId}/${NULL}`);
+  router.push(`${EModalBasePath.VIEW_EVENT_MODAL_PATHNAME}/${eventId}/${NULL}`);
 }
 
-// ====================
-// 5. Create Functions
-// ====================
-
-/**
- * Creates a new planner event and focuses the textfield on it.
- *
- * @param datestamp - The date of the planner. (YYYY-MM-DD)
- * @param index - The index of the new item within its planner.
- */
-export function createPlannerEventInStorageAndFocusTextfield(datestamp: string, index: number) {
-  // Create the new planner event.
-  const plannerEvent: IPlannerEvent = {
-    id: uuid.v4(),
-    value: '',
-    listId: datestamp,
-    storageId: EStorageId.PLANNER_EVENT
-  };
-  savePlannerEventToStorage(plannerEvent);
-
-  // Add the event to its planner.
-  const planner = getPlannerFromStorageByDatestamp(datestamp);
-  planner.eventIds.splice(index, 0, plannerEvent.id);
-  savePlannerToStorage(planner);
-
-  // Focus the textifeld on the event.
-  jotaiStore.set(textfieldIdAtom, plannerEvent.id);
-}
+// ==================
+//  Create Functions
+// ==================
 
 /**
  * Creates an empty planner for the given datestamp.
@@ -487,9 +459,9 @@ export function createPlannerEventTimeConfig(datestamp: string, timeValue: strin
   };
 }
 
-// ==================
-// 6. Read Functions
-// ==================
+// ================
+//  Read Functions
+// ================
 
 /**
  * Fetches a planner event from storage by its calendar event ID.
@@ -507,9 +479,9 @@ export function getPlannerEventFromStorageByCalendarId(
   return storageEvents.find((e) => e.calendarEventId === calendarEventId)!;
 }
 
-// ====================
-// 7. Update Functions
-// ====================
+// ==================
+//  Update Functions
+// ==================
 
 /**
  * Updates an event in the device calendar using the data within its planner event.
@@ -563,9 +535,9 @@ export function updatePlannerEventIndexWithChronologicalCheck(
   return planner;
 }
 
-// ====================
-// 8. Delete Functions
-// ====================
+// ==================
+//  Delete Functions
+// ==================
 
 /**
  * Deletes a list of planner events from the calendar and storage. The calendar data will be reloaded

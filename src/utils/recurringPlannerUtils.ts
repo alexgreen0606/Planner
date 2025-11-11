@@ -16,11 +16,9 @@ import {
 import { jotaiStore } from '../../app/_layout';
 import { isTimeEarlierOrEqual } from './dateUtils';
 
-// ✅
-
-// ====================
-// 1. Helper Functions
-// ====================
+// ==================
+//  Helper Functions
+// ==================
 
 /**
  * Calculates a valid index for a recurring planner event that maintains chronological ordering within its planner.
@@ -143,9 +141,9 @@ function mapWeekdayEventToRecurringEvent(
   };
 }
 
-// =============================================
-// 2. Upsert Weekday Events To Weekday Planners
-// =============================================
+// ===========================================
+//  Upsert Weekday Events To Weekday Planners
+// ===========================================
 
 /**
  * Updates or inserts a list of weekday events into a recurring planner.
@@ -218,9 +216,9 @@ export function upsertWeekdayEventToRecurringPlanners(weekdayEvent: IRecurringEv
     );
 }
 
-// ====================
-// 3. Create Functions
-// ====================
+// ==================
+//  Create Functions
+// ==================
 
 /**
  * Creates a new recurring event for a given recurring planner. The new event will focus the textfield.
@@ -264,9 +262,9 @@ export function createEmptyRecurringPlanner(recurringPlannerId: string): TRecurr
   };
 }
 
-// ====================
-// 4. Update Functions
-// ====================
+// ==================
+//  Update Functions
+// ==================
 
 /**
  * Updates a recurring planner event's position within its recurring planner.
@@ -296,9 +294,9 @@ export function updateRecurringEventIndexWithChronologicalCheck(
   return planner;
 }
 
-// ===================
-// 5. Delete Function
-// ===================
+// =================
+//  Delete Function
+// =================
 
 /**
  * Deletes a list of recurring events from storage.

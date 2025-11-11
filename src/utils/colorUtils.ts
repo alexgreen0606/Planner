@@ -1,7 +1,11 @@
-// ✅
-
 import { PlatformColor } from 'react-native';
 
+/**
+ * Validates if the given color is an ios platform color.
+ *
+ * @param color - The color string to analyze.
+ * @returns True if the color is a valid platform color, otherwise false.
+ */
 export function isValidPlatformColor(color: string) {
   return [
     'systemBlue',
@@ -25,6 +29,12 @@ export function isValidPlatformColor(color: string) {
   ].includes(color);
 }
 
+/**
+ * Gets a valid CSS value representing the given color.
+ *
+ * @param color - The color string to analyze.
+ * @returns A platform, HEX, or rgb value to use in CSS styles.
+ */
 export function getValidCssColor(color?: string): string | undefined {
   return color
     ? isValidPlatformColor(color)
@@ -33,7 +43,14 @@ export function getValidCssColor(color?: string): string | undefined {
     : undefined;
 }
 
-export function hexToRgba(hex: string, opacity = 0.4): string {
+/**
+ * Converts a hex string into an rgb string with opacity.
+ *
+ * @param hex - The hex string to convert.
+ * @param opacity - The opacity for the new color value.
+ * @returns An rgba string matching the hex value.
+ */
+export function getRgbFromHex(hex: string, opacity = 0.4): string {
   let normalized = hex.trim().replace('#', '');
 
   if (normalized.length === 3) {

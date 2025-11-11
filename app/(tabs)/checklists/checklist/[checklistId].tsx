@@ -7,10 +7,13 @@ import useFolderItem from '@/hooks/useFolderItem';
 import useListItemToggle from '@/hooks/useListItemToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import {
-  createNewChecklistItemAndSaveToStorage,
   deleteChecklistItems,
   updateFolderOrChecklistItemIndex
 } from '@/utils/checklistUtils';
+import { getFolderItemFromStorageById, saveChecklistItemToStorage, saveFolderItemToStorage } from '@/storage/checklistsStorage';
+import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { uuid } from 'expo-modules-core';
+import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 
 type TChecklistPageParams = {
   checklistId: string;
@@ -18,10 +21,29 @@ type TChecklistPageParams = {
 
 const ChecklistPage = () => {
   const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
+
   const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
+  const { onSetTextfieldId } = useTextfieldItemAs<TListItem>(itemStorage);
 
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const { itemIds, platformColor } = useFolderItem(checklistId, folderItemStorage);
+
+  function handleCreateNewChecklistItemAndSaveToStorage(checklistId: string, index: number) {
+    const checklist = getFolderItemFromStorageById(checklistId);
+
+    const item: TListItem = {
+      id: uuid.v4(),
+      value: '',
+      listId: checklistId,
+      storageId: EStorageId.CHECKLIST_ITEM
+    };
+    saveChecklistItemToStorage(item);
+
+    checklist.itemIds.splice(index, 0, item.id);
+    saveFolderItemToStorage(checklist);
+
+    onSetTextfieldId(item.id);
+  }
 
   return (
     <DraggableListPage
@@ -31,7 +53,7 @@ const ChecklistPage = () => {
       storageId={EStorageId.CHECKLIST_ITEM}
       itemIds={itemIds}
       addButtonColor={platformColor}
-      onCreateItem={createNewChecklistItemAndSaveToStorage}
+      onCreateItem={handleCreateNewChecklistItemAndSaveToStorage}
       onDeleteItem={(item) => deleteChecklistItems([item])}
       onIndexChange={updateFolderOrChecklistItemIndex}
       onGetLeftIcon={useListItemToggle}

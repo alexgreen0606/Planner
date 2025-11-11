@@ -1,8 +1,6 @@
 import * as Contacts from 'expo-contacts';
 import * as SMS from 'expo-sms';
 
-// ✅
-
 /**
  * Opens the device's Messages app for a specific contact with a default message.
  *

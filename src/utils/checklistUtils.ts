@@ -1,9 +1,6 @@
-import { uuid } from 'expo-modules-core';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { NULL } from '@/lib/constants/generic';
 import { EFolderItemType } from '@/lib/enums/EFolderItemType';
-import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import {
@@ -11,70 +8,8 @@ import {
   deleteFolderItemFromStorage,
   getFolderItemFromStorageById,
   getListItemFromStorageById,
-  saveChecklistItemToStorage,
   saveFolderItemToStorage
 } from '@/storage/checklistsStorage';
-
-import { jotaiStore } from '../../app/_layout';
-
-// ✅
-
-// ====================
-// 1. Create Functions
-// ====================
-
-/**
- * Generates a new checklist item. The new item will focus the textfield.
- *
- * @param checklistId - The ID of the checklist.
- * @param index - The index of the new item within its list.
- */
-export function createNewChecklistItemAndSaveToStorage(checklistId: string, index: number) {
-  const checklist = getFolderItemFromStorageById(checklistId);
-
-  const item: TListItem = {
-    id: uuid.v4(),
-    value: '',
-    listId: checklistId,
-    storageId: EStorageId.CHECKLIST_ITEM
-  };
-  saveChecklistItemToStorage(item);
-
-  checklist.itemIds.splice(index, 0, item.id);
-  saveFolderItemToStorage(checklist);
-
-  jotaiStore.set(textfieldIdAtom, item.id);
-}
-
-/**
- * Generates a new folder item. The new item will focus the textfield.
- *
- * @param parentFolderId - The ID of the folder where the new item must be placed.
- * @param index - The index of the new item within its parent folder.
- */
-export function createNewFolderItemAndSaveToStorage(parentFolderId: string, index: number) {
-  const parentFolder = getFolderItemFromStorageById(parentFolderId);
-
-  const folderItem: IFolderItem = {
-    id: uuid.v4(),
-    value: '',
-    listId: parentFolderId,
-    storageId: EStorageId.FOLDER_ITEM,
-    platformColor: 'systemBrown',
-    type: EFolderItemType.FOLDER,
-    itemIds: []
-  };
-  saveFolderItemToStorage(folderItem);
-
-  parentFolder.itemIds.splice(index, 0, folderItem.id);
-  saveFolderItemToStorage(parentFolder);
-
-  jotaiStore.set(textfieldIdAtom, folderItem.id);
-}
-
-// ===================
-// 2. Update Function
-// ===================
 
 /**
  * Updates the position of an item within its folder or checklist.
@@ -91,10 +26,6 @@ export function updateFolderOrChecklistItemIndex(from: number, to: number, paren
 
   saveFolderItemToStorage(folderItem);
 }
-
-// ====================
-// 3. Delete Functions
-// ====================
 
 /**
  * Deletes a list of checklist items.

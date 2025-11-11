@@ -3,6 +3,8 @@ import { TWeatherData } from '@/lib/types/externalData/TWeatherData';
 
 import { jotaiStore } from '../../app/_layout';
 
+// TODO: use weatherkit from Apple Developer Program
+
 async function saveWeatherDataToStore(datestamp: string, data: TWeatherData) {
   jotaiStore.set(setWeatherForDatestampAtom, { datestamp, data });
 }

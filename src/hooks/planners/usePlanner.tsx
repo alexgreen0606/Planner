@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
+import { MMKV, useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TPlanner } from '@/lib/types/planners/TPlanner';
-import { getPlannerEventFromStorageById } from '@/storage/plannerStorage';
+import { getPlannerEventFromStorageById, savePlannerEventToStorage } from '@/storage/plannerStorage';
 import { getDayOfWeekFromDatestamp } from '@/utils/dateUtils';
 import {
   createEmptyPlanner,
@@ -11,7 +11,13 @@ import {
   upsertRecurringEventsIntoPlanner
 } from '@/utils/plannerUtils';
 
-const usePlanner = (datestamp: string) => {
+import { uuid } from 'expo-modules-core';
+import useTextfieldItemAs from '../useTextfieldItemAs';
+import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
+
+const usePlanner = (datestamp: string, plannerEventStorage: MMKV) => {
+  const { onSetTextfieldId } = useTextfieldItemAs<IPlannerEvent>(plannerEventStorage);
+
   const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
   const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
 
@@ -46,10 +52,32 @@ const usePlanner = (datestamp: string) => {
     });
   }
 
+  function handleCreateEventAndFocusTextfield(datestamp: string, index: number) {
+    // Create the new planner event.
+    const plannerEvent: IPlannerEvent = {
+      id: uuid.v4(),
+      value: '',
+      listId: datestamp,
+      storageId: EStorageId.PLANNER_EVENT
+    };
+    savePlannerEventToStorage(plannerEvent);
+
+    // Add the event to its planner.
+    setPlanner((prev) => {
+      const prevPlanner = prev ?? createEmptyPlanner(datestamp);
+      prevPlanner.eventIds.splice(index, 0, plannerEvent.id);
+      return prevPlanner
+    });
+
+    // Focus the textifeld on the event.
+    onSetTextfieldId(plannerEvent.id);
+  }
+
   return {
     planner: planner ?? createEmptyPlanner(datestamp),
     onUpdatePlannerEventIndexWithChronologicalCheck:
-      handleUpdatePlannerEventIndexWithChronologicalCheck
+      handleUpdatePlannerEventIndexWithChronologicalCheck,
+    onCreateEventAndFocusTextfield: handleCreateEventAndFocusTextfield
   };
 };
 

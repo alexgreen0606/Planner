@@ -13,8 +13,6 @@ import { deletePlannerEventFromStorageById, savePlannerToStorage } from '@/stora
 import { isoToDatestamp } from './dateUtils';
 import { deletePlannerEventsFromStorageAndCalendar } from './plannerUtils';
 
-type TCarryoverEventMap = Partial<Record<ECarryoverEventType, TCarryoverEventMetadata>>;
-
 // ==================
 //  Helper Functions
 // ==================
@@ -315,7 +313,7 @@ export async function transitionToMultiDayCalendarEvent(
   const { startIso, endIso } = newRange;
 
   const affectedDateRanges: TDateRange[] = [newRange];
-  const carryoverEventMetadata: TCarryoverEventMap = {};
+  const carryoverEventMetadata: Partial<Record<ECarryoverEventType, TCarryoverEventMetadata>> = {};
   let calendarEventId: string | undefined;
   let wasAllDayEvent = false;
 

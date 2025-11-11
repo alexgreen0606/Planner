@@ -15,7 +15,7 @@ import { calendarIconMap } from '@/lib/constants/calendarIconMap';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
-import { hexToRgba } from '@/utils/colorUtils';
+import { getRgbFromHex } from '@/utils/colorUtils';
 
 import IconButton from '../buttons/IconButton';
 import PopupList from '../PopupList';
@@ -104,7 +104,7 @@ const UpcomingDatesHeader = () => {
           systemImage: calendar.iconName,
           color: handleGetIsCalendarActive(calendar.id)
             ? calendar.color
-            : hexToRgba(calendar.color),
+            : getRgbFromHex(calendar.color),
           onPress: () => toggleCalendarFilter(calendar.id)
         }))}
         wrapButton

@@ -9,7 +9,6 @@ import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParse
 import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import {
-  createPlannerEventInStorageAndFocusTextfield,
   createPlannerEventTimeIcon,
   deletePlannerEventsFromStorageAndCalendar,
   updateDeviceCalendarEventByPlannerEvent
@@ -17,26 +16,27 @@ import {
 
 const PlannerPage = () => {
   const { datestamp } = useLocalSearchParams<{ datestamp: string }>();
-  const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
+  const plannerEventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT });
 
   const onUpdatePlannerEventValueWithTimeParsing = usePlannerEventTimeParser(
     datestamp,
-    eventStorage
+    plannerEventStorage
   );
   const {
     planner: { eventIds },
-    onUpdatePlannerEventIndexWithChronologicalCheck
-  } = usePlanner(datestamp);
+    onUpdatePlannerEventIndexWithChronologicalCheck,
+    onCreateEventAndFocusTextfield
+  } = usePlanner(datestamp, plannerEventStorage);
 
   return (
     <DraggableListPage
       listId={datestamp}
       itemIds={eventIds}
-      storage={eventStorage}
+      storage={plannerEventStorage}
       toolbar={<PlannerEventToolbar />}
       storageId={EStorageId.PLANNER_EVENT}
       emptyPageLabel='No plans'
-      onCreateItem={createPlannerEventInStorageAndFocusTextfield}
+      onCreateItem={onCreateEventAndFocusTextfield}
       onDeleteItem={(event) => deletePlannerEventsFromStorageAndCalendar([event])}
       onValueChange={onUpdatePlannerEventValueWithTimeParsing}
       onIndexChange={onUpdatePlannerEventIndexWithChronologicalCheck}
