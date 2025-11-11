@@ -33,7 +33,7 @@ const PlannerChipSets = ({ datestamp, label }: IPlannerChipSetsProps) => {
         >
           <View className="px-4 py-[0.375rem]">
             <CustomText
-              variant="plannerChipTitle"
+              variant="plannerChip"
               customStyle={{
                 color: PlatformColor('label')
               }}

@@ -27,7 +27,7 @@ const RootFolderHeader = () => {
         >
             {/* Page Label */}
             <MotiText
-                style={[textStyles['upcomingDatesHeader'], { color: getValidCssColor(rootFolder?.platformColor) }]}
+                style={[textStyles['pageHeader'], { color: getValidCssColor(rootFolder?.platformColor) }]}
                 animate={{
                     // @ts-ignore
                     fontSize: isCollapsed ? 22 : 32

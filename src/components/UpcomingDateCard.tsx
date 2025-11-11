@@ -56,7 +56,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) 
     }
   }
 
-  const minimumContainerHeight = textStyles['conciseDate'].fontSize + LARGE_MARGIN * 2;
+  const minimumContainerHeight = textStyles['dateValue'].fontSize + LARGE_MARGIN * 2;
 
   return (
     <Animated.View
@@ -112,7 +112,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) 
         className="w-22 items-end justify-center"
         style={{ height: minimumContainerHeight }}
       >
-        <CustomText variant="microDetail">{countdownLabel}</CustomText>
+        <CustomText variant="pageSubHeader">{countdownLabel}</CustomText>
       </View>
     </Animated.View>
   );

@@ -93,7 +93,7 @@ const PlannerCarousel = ({ activeDatestamp, isCollapsed }: IPlannerCarouselProps
             <View className="w-full py-2">
               {/* Week Info */}
               <View className="flex-row justify-between items-center px-4 h-[22]">
-                <CustomText variant="month">
+                <CustomText variant="plannerCarouselMonth">
                   {startMonth}
                   {startYear !== endYear && ` ${startYear}`}
                   {startMonth !== endMonth && ` / ${endMonth}`} {endYear}

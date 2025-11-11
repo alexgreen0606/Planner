@@ -25,7 +25,7 @@ const DateValue = ({ isoTimestamp, disabled, platformColor = 'label' }: IDateVal
   return (
     <View className="relative flex-row w-fit">
       <CustomText
-        variant="conciseDate"
+        variant="dateValue"
         customStyle={{
           color: disabled ? PlatformColor('tertiaryLabel') : PlatformColor(platformColor)
         }}
@@ -35,7 +35,7 @@ const DateValue = ({ isoTimestamp, disabled, platformColor = 'label' }: IDateVal
       {showYear && (
         <View className="absolute top-[80%]">
           <CustomText
-            variant="conciseDateYear"
+            variant="dateYear"
             customStyle={
               disabled
                 ? {

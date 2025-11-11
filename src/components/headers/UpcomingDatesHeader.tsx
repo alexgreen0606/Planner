@@ -12,7 +12,6 @@ import {
 } from '@/atoms/planner/calendarAtoms';
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
 import { calendarIconMap } from '@/lib/constants/calendarIconMap';
-import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/scrollRegistryKeys';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EPopupActionType } from '@/lib/enums/EPopupActionType';
 import { getRgbFromHex } from '@/utils/colorUtils';
@@ -21,6 +20,7 @@ import IconButton from '../buttons/IconButton';
 import PopupList from '../PopupList';
 import CustomText, { textStyles } from '../text/CustomText';
 import ShadowView from '../views/ShadowView';
+import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/generic';
 
 const UpcomingDatesHeader = () => {
   const { top: TOP_SPACER } = useSafeAreaInsets();
@@ -55,7 +55,7 @@ const UpcomingDatesHeader = () => {
         <ShadowView edgeSize={{ right: 200 }}>
           {/* Header */}
           <MotiText
-            style={textStyles['upcomingDatesHeader']}
+            style={textStyles['pageHeader']}
             animate={{
               // @ts-ignore
               fontSize: isCollapsed ? 22 : 32
@@ -72,7 +72,7 @@ const UpcomingDatesHeader = () => {
             height: isCollapsed ? 0 : 20
           }}
         >
-          <CustomText variant="upcomingDatesSubHeader">All-day calendar events</CustomText>
+          <CustomText variant="pageSubHeader">All-day calendar events</CustomText>
         </MotiView>
 
         {/* Calendar Filter Indicator */}

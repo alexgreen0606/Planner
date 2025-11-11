@@ -58,7 +58,7 @@ const PlannerChip = ({ title, id, iconName, color, onClick }: TPlannerChip) => {
             <View className="px-2 flex-row gap-1 items-center py-[0.375rem]">
               <Icon name={iconName} color={chipColor} size={14} />
               <CustomText
-                variant="plannerChipTitle"
+                variant="plannerChip"
                 customStyle={{
                   color: chipCssColor
                 }}

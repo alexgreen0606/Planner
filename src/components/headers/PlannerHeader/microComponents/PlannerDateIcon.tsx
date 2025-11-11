@@ -20,11 +20,11 @@ interface IPlannerDateIconProps {
 const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: IPlannerDateIconProps) => {
   const router = useRouter();
 
-  const { day, dayOfWeek, isWeekend } = useMemo(() => {
+  const { dayOfMonth, dayOfWeek, isWeekend } = useMemo(() => {
     const date = DateTime.fromISO(datestamp);
     const dayOfWeek = date.toFormat('ccc').toUpperCase();
     return {
-      day: date.toFormat('d'),
+      dayOfMonth: date.toFormat('d'),
       dayOfWeek,
       isWeekend: ['SAT', 'SUN'].includes(dayOfWeek)
     };
@@ -61,7 +61,7 @@ const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: IPlannerDateIconProp
       )}
 
       <CustomText
-        variant="dayOfWeek"
+        variant="plannerCarouselDayOfWeek"
         customStyle={{
           color: PlatformColor(
             isCurrentDatestamp
@@ -80,7 +80,7 @@ const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: IPlannerDateIconProp
         {dayOfWeek}
       </CustomText>
       <CustomText
-        variant="dayOfMonth"
+        variant="plannerCarouselDayOfMonth"
         customStyle={{
           color: PlatformColor(
             isCurrentDatestamp
@@ -96,7 +96,7 @@ const PlannerDateIcon = ({ datestamp, isCurrentDatestamp }: IPlannerDateIconProp
           opacity: isTodayDatestamp && !isCurrentDatestamp ? 0.8 : undefined
         }}
       >
-        {day}
+        {dayOfMonth}
       </CustomText>
     </TouchableOpacity>
   );

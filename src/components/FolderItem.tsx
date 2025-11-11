@@ -98,7 +98,7 @@ const FolderItem = ({
             </Pressable>
 
             {/* Child Count */}
-            <CustomText variant='microDetail'>
+            <CustomText variant='pageSubHeader'>
                 {String(item.itemIds.length)}
             </CustomText>
         </View>

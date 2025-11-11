@@ -57,7 +57,7 @@ const TimeValue = ({
   return (
     <View className="flex-row relative">
       <CustomText
-        variant="listTime"
+        variant="timeValue"
         customStyle={{
           color: PlatformColor(disabled ? 'tertiaryLabel' : platformColor)
         }}
@@ -66,13 +66,13 @@ const TimeValue = ({
         {minute}
       </CustomText>
       <CustomText
-        variant="listPmAmIndicator"
+        variant="timePmAmIndicator"
         customStyle={disabled ? { color: PlatformColor('tertiaryLabel') } : undefined}
       >
         {indicator}
       </CustomText>
       {(startEvent || endEvent) && (
-        <CustomText variant="listMultiDayIndicator" className="-translate-x-1/2">
+        <CustomText variant="timeMultiDayIndicator" className="-translate-x-1/2">
           {startEvent ? 'START' : 'END'}
         </CustomText>
       )}

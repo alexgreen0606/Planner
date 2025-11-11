@@ -1,38 +1,32 @@
 import React from 'react';
 import {
+  TextProps as NativeTextProps,
   PlatformColor,
   StyleSheet,
   Text,
-  TextProps as NativeTextProps,
   TextStyle
 } from 'react-native';
 
 export const textStyles = {
-  // --- Standard Text ---
-  pageLabel: {
-    fontSize: 24,
+  // --- Common Variants ---
+  pageHeader: {
+    fontSize: 28,
     color: PlatformColor('label'),
-    fontFamily: 'RoundMedium'
+    fontFamily: 'RoundHeavy'
   },
-  detail: {
-    color: PlatformColor('label'),
-    fontSize: 15,
-    fontFamily: 'RoundRegular'
-  },
-  softDetail: {
-    color: PlatformColor('secondaryLabel'),
-    fontSize: 14,
-    fontFamily: 'Text'
-  },
-  microDetail: {
+  pageSubHeader: {
     color: PlatformColor('secondaryLabel'),
     fontSize: 12,
     fontFamily: 'RoundMedium'
   },
-  standard: {
-    color: PlatformColor('label'),
+  // --- Empty Page Label ---
+  emptyLabel: {
+    color: PlatformColor('tertiaryLabel'),
+    flexWrap: 'wrap',
     fontSize: 16,
-    fontFamily: 'Text'
+    paddingHorizontal: 64,
+    textAlign: 'center',
+    fontFamily: 'RoundMedium'
   },
   // --- List Rows ---
   listRow: {
@@ -40,32 +34,8 @@ export const textStyles = {
     fontFamily: 'Text',
     color: PlatformColor('label')
   },
-  // --- Planner Card ---
-  plannerCardHeader: {
-    color: PlatformColor('label'),
-    fontSize: 22,
-    fontFamily: 'RoundRegular'
-  },
-  plannerCardDetail: {
-    color: PlatformColor('systemBlue'),
-    fontFamily: 'Text',
-    fontSize: 12
-  },
-  plannerCardSoftDetail: {
-    color: PlatformColor('secondaryLabel'),
-    fontFamily: 'Text',
-    fontSize: 12,
-    paddingRight: 12,
-    flex: 1
-  },
-  // --- Date Range Selector ---
-  timeModalDayOfWeek: {
-    color: PlatformColor('secondaryLabel'),
-    fontSize: 11,
-    fontFamily: 'Text'
-  },
-  // --- Event Chip ---
-  plannerChipTitle: {
+  // --- Planner Chip ---
+  plannerChip: {
     fontFamily: 'RoundMedium',
     fontSize: 12
   },
@@ -80,20 +50,20 @@ export const textStyles = {
     color: PlatformColor('secondaryLabel'),
     fontFamily: 'RoundMedium'
   },
-  // --- Concise Time ---
-  listTime: {
+  // --- Time Value ---
+  timeValue: {
     fontFamily: 'RoundHeavy',
     fontSize: 15,
     color: PlatformColor('systemBlue'),
     marginRight: 1
   },
-  listPmAmIndicator: {
+  timePmAmIndicator: {
     fontFamily: 'Text',
     fontSize: 9,
     color: PlatformColor('secondaryLabel'),
     marginTop: 2
   },
-  listMultiDayIndicator: {
+  timeMultiDayIndicator: {
     fontFamily: 'RoundMedium',
     fontSize: 8,
     color: PlatformColor('secondaryLabel'),
@@ -102,68 +72,42 @@ export const textStyles = {
     top: '100%',
     marginTop: -2
   },
-  // --- Concise Date ---
-  conciseDate: {
+  // --- Date Value ---
+  dateValue: {
     fontFamily: 'RoundHeavy',
     fontSize: 16,
     color: PlatformColor('systemBlue')
   },
-  conciseDateYear: {
+  dateYear: {
     fontFamily: 'RoundRegular',
     fontSize: 10,
     color: PlatformColor('secondaryLabel')
   },
   // --- Planner Carousel ---
-  month: {
+  plannerCarouselMonth: {
     fontSize: 14,
     fontFamily: 'RoundMedium',
     color: PlatformColor('label')
   },
-  dayOfWeek: {
+  plannerCarouselDayOfWeek: {
     fontSize: 8,
     fontFamily: 'RoundHeavy',
     letterSpacing: 1.2,
     paddingLeft: 1,
     color: PlatformColor('systemBackground')
   },
-  dayOfMonth: {
+  plannerCarouselDayOfMonth: {
     fontSize: 15,
     fontFamily: 'RoundHeavy',
     color: PlatformColor('label')
   },
-  // --- Calendar Filter ---
-  calendarFilter: {
-    fontSize: 14,
-    fontWeight: '500',
-    fontFamily: 'RoundMedium'
-  },
   // --- Upcoming Dates ---
-  upcomingDatesHeader: {
-    fontSize: 28,
-    color: PlatformColor('label'),
-    fontFamily: 'RoundHeavy'
-  },
-  upcomingDatesSubHeader: {
-    fontSize: 15,
-    color: PlatformColor('secondaryLabel'),
-    fontFamily: 'RoundMedium',
-    overflow: 'hidden'
-  },
   upcomingEvent: {
     color: PlatformColor('label'),
     flexShrink: 1,
     flexWrap: 'wrap',
     fontSize: 14
   },
-  // Empty Label
-  emptyLabel: {
-    color: PlatformColor('tertiaryLabel'),
-    flexWrap: 'wrap',
-    fontSize: 16,
-    paddingHorizontal: 64,
-    textAlign: 'center',
-    fontFamily: 'RoundMedium'
-  }
 } satisfies Record<string, TextStyle>;
 
 export type TTextVariant = keyof typeof textStyles;

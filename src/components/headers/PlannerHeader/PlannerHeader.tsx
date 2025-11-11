@@ -61,9 +61,9 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
 
       <View className="flex-row w-full justify-between">
         <View>
-          <CustomText variant="upcomingDatesHeader">{dayOfWeek}</CustomText>
+          <CustomText variant="pageHeader">{dayOfWeek}</CustomText>
           <CustomText
-            variant="detail"
+            variant="pageSubHeader"
             customStyle={{
               color: PlatformColor('secondaryLabel')
             }}

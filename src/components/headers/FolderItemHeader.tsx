@@ -79,7 +79,7 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
                 style={{ width: expandedWidth, left: LARGE_MARGIN }}
             >
                 <MotiText
-                    style={[textStyles['upcomingDatesHeader'], {
+                    style={[textStyles['pageHeader'], {
                         color: getValidCssColor(item?.platformColor)
                     }]}
                     numberOfLines={1}
@@ -89,7 +89,7 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
                 </MotiText>
                 {breadcrumbPath && (
                     <Text
-                        style={textStyles['microDetail']}
+                        style={textStyles['pageSubHeader']}
                         numberOfLines={1}
                         adjustsFontSizeToFit
                     >
