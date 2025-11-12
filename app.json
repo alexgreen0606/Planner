@@ -26,13 +26,6 @@
         "NSCalendarsUsageDescription": "This app requires access to the calendar to schedule events."
       }
     },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#000000"
-      },
-      "package": "com.anonymous.Assistant"
-    },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
