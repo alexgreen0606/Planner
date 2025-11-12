@@ -12,7 +12,6 @@ import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 
-import Animated, { FadeIn, FadeOut, FadingTransition } from 'react-native-reanimated';
 import Icon from './Icon';
 import CustomText, { textStyles } from './text/CustomText';
 import DateValue from './text/DateValue';

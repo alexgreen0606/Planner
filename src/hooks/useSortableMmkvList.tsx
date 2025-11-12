@@ -1,5 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { TextInput } from 'react-native';
+import { ReactNode, useEffect, useState } from 'react';
 import { MMKV } from 'react-native-mmkv';
 
 import ListItem from '@/components/lists/ListItem';
@@ -28,21 +27,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
 ) => {
   const { textfieldItem, onCloseTextfield } = useTextfieldItemAs<T>(storage);
 
-  // Placeholder textfield to keep the textfield focused when toggling between list items.
-  const placeholderInputRef = useRef<TextInput>(null);
-  const PlaceholderField = () => (
-    <TextInput
-      ref={placeholderInputRef}
-      returnKeyType="done"
-      className="absolute w-1 h-1 left-[9999]"
-      autoCorrect={false}
-    />
-  );
-
-  function focusPlaceholder() {
-    placeholderInputRef.current?.focus();
-  }
-
   // Track the ordering of IDs to pass to the list function.
   // This sort order will be out of sync with the UI and MMKV once a user drags items around.
   const [updatedList, setUpdatedList] = useState(itemIds);
@@ -58,7 +42,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
       listId={listId}
       itemId={itemId}
       storage={storage}
-      onFocusPlaceholderTextfield={focusPlaceholder}
       onCreateItem={onCreateItem}
       onDeleteItem={onDeleteItem}
       {...listItemProps}
@@ -66,6 +49,7 @@ const useSortableMmkvList = <T extends TListItem, S>(
     />
   ));
 
+  // TODO: simplify with new logic
   function handleToggleLowerListItem() {
     if (!textfieldItem) {
       // Open a textfield at the bottom of the list.
@@ -85,7 +69,6 @@ const useSortableMmkvList = <T extends TListItem, S>(
   return {
     isListEmpty,
     listHeight: EListLayout.ITEM_HEIGHT * updatedList.length,
-    PlaceholderField,
     onToggleLowerListItem: handleToggleLowerListItem,
     ListItems
   };

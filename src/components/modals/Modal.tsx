@@ -2,8 +2,8 @@ import { GlassEffectContainer, Host, VStack } from '@expo/ui/swift-ui';
 import React, { ReactNode } from 'react';
 import { View } from 'react-native';
 
-import GlassIconButton from '../buttons/GlassIconButton';
 import ActionList, { IActionListProps } from '../ActionList';
+import GlassIconButton from '../buttons/GlassIconButton';
 
 interface IModalProps {
   primaryButtonConfig: {

@@ -1,3 +1,4 @@
+import { uuid } from 'expo-modules-core';
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
@@ -12,7 +13,6 @@ import { saveChecklistItemToStorage } from '@/storage/checklistsStorage';
 import {
   deleteChecklistItems,
 } from '@/utils/checklistUtils';
-import { uuid } from 'expo-modules-core';
 
 type TChecklistPageParams = {
   checklistId: string;

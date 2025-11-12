@@ -1,9 +1,8 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { DraggableList } from "draggable-list";
-import { usePathname } from 'expo-router';
 import React, { ReactNode, useState } from 'react';
-import { KeyboardAvoidingView, Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
+import { Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -64,7 +63,7 @@ const DraggableListPage = <T extends TListItem, S>({
   const onScroll = useScrollTracker(listId);
   const headerHeight = useHeaderHeight();
   const { top: TOP_SPACER } = useSafeAreaInsets();
-  const { isListEmpty, listHeight, PlaceholderField, onToggleLowerListItem, ListItems } =
+  const { isListEmpty, listHeight, onToggleLowerListItem, ListItems } =
     useSortableMmkvList(
       itemIds,
       storage,
@@ -91,61 +90,56 @@ const DraggableListPage = <T extends TListItem, S>({
       isPageEmpty={isListEmpty}
       onAddButtonClick={onToggleLowerListItem}
     >
-      <KeyboardAvoidingView behavior='height'>
-        <Animated.ScrollView
-          onScroll={onScroll}
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardDismissMode='interactive'
-          keyboardShouldPersistTaps='always'
-          scrollEventThrottle={SCROLL_THROTTLE}
-          contentInset={{ top: contentInset }}
-          contentOffset={{ x: 0, y: -contentInset - TOP_SPACER }}
-          scrollIndicatorInsets={{ top: contentInset }}
-          contentContainerStyle={{
-            minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + BOTTOM_NAV_HEIGHT),
-          }}
-          style={{ height: SCREEN_HEIGHT }}
-          showsVerticalScrollIndicator
+      <Animated.ScrollView
+        onScroll={onScroll}
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardDismissMode='interactive'
+        keyboardShouldPersistTaps='always'
+        scrollEventThrottle={SCROLL_THROTTLE}
+        contentInset={{ top: contentInset }}
+        contentOffset={{ x: 0, y: -contentInset - TOP_SPACER }}
+        scrollIndicatorInsets={{ top: contentInset }}
+        contentContainerStyle={{
+          minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + BOTTOM_NAV_HEIGHT),
+        }}
+        style={{ height: SCREEN_HEIGHT }}
+        showsVerticalScrollIndicator
 
-          // TODO: create custom refresh logic
-          refreshControl={
-            hasExternalData ? (
-              <RefreshControl
-                refreshing={showLoadingSymbol && loadingPathnames.has(listId)}
-                onRefresh={handleReloadPage}
-              />
-            ) : undefined
-          }
-        >
-          {/* Content */}
-          <View className='w-full p-4' style={{ height: listHeight + LARGE_MARGIN * 2 }}>
-            <Host style={{ flex: 1 }}>
-
-              <DraggableList
-                moveEnabled
-                onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}
-              >
-                <ListItems />
-              </DraggableList>
-            </Host>
-          </View>
-
-          <Pressable className='flex-1' onPress={onToggleLowerListItem} />
-
-          {/* Add Button Filler */}
-          <FillerView style={{ paddingVertical: LARGE_MARGIN }}>
-            <GlassIconButton
-              systemImage="plus"
-              isPrimary
-              color={addButtonColor}
-              onPress={onToggleLowerListItem}
+        // TODO: create custom refresh logic
+        refreshControl={
+          hasExternalData ? (
+            <RefreshControl
+              refreshing={showLoadingSymbol && loadingPathnames.has(listId)}
+              onRefresh={handleReloadPage}
             />
-          </FillerView>
-        </Animated.ScrollView>
-      </KeyboardAvoidingView>
+          ) : undefined
+        }
+      >
+        {/* Content */}
+        <View className='w-full p-4' style={{ height: listHeight + LARGE_MARGIN * 2 }}>
+          <Host style={{ flex: 1 }}>
 
-      {/* Placeholder Field */}
-      <PlaceholderField />
+            <DraggableList
+              moveEnabled
+              onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}
+            >
+              <ListItems />
+            </DraggableList>
+          </Host>
+        </View>
+
+        <Pressable className='flex-1' onPress={onToggleLowerListItem} />
+
+        {/* Add Button Filler */}
+        <FillerView style={{ paddingVertical: LARGE_MARGIN }}>
+          <GlassIconButton
+            systemImage="plus"
+            isPrimary
+            color={addButtonColor}
+            onPress={onToggleLowerListItem}
+          />
+        </FillerView>
+      </Animated.ScrollView>
     </PageContainer>
   );
 };

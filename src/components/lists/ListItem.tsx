@@ -1,23 +1,21 @@
-import { useAtom } from 'jotai';
+import { Host } from '@expo/ui/swift-ui';
+import { NativeListRow } from "draggable-list";
 import React, { ReactNode, useMemo } from 'react';
 import { PlatformColor, Pressable, StyleSheet, TextStyle, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId';
-import CustomText from '@/components/text/CustomText';
 import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 
-import ListItemTextfield from './ListItemTextfield';
+// TODO: add debounced save handler to this file
 
 interface IListItemProps<T extends TListItem> {
   listId: string;
   itemId: string;
   itemIndex: number;
   storage: MMKV;
-  onFocusPlaceholderTextfield: () => void;
   onCreateItem: (index: number) => void;
   onDeleteItem: (item: T) => void;
   onValueChange?: (newValue: string) => void;
@@ -35,7 +33,6 @@ const ListItem = <T extends TListItem>({
   itemId,
   storage,
   itemIndex,
-  onFocusPlaceholderTextfield,
   onValueChange,
   onCreateItem,
   onDeleteItem,
@@ -47,7 +44,6 @@ const ListItem = <T extends TListItem>({
   onGetIsEditable,
   onGetIsItemDeletingCustom
 }: IListItemProps<T>) => {
-  const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
 
   const [item, setItem] = useMMKVObject<T>(itemId, storage);
@@ -57,24 +53,13 @@ const ListItem = <T extends TListItem>({
     [item, onGetRowTextPlatformColor]
   );
 
-  const isItemEditable = useMemo(() => (item ? (onGetIsEditable?.(item) ?? true) : true), [item]);
+  const isEditable = useMemo(() => (item ? (onGetIsEditable?.(item) ?? true) : true), [item]);
 
   // Track deletion status of the item.
   const { onGetIsItemDeletingCallback } = useDeleteSchedulerContext<T>();
   const isPendingDelete = item
     ? (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item))
     : false;
-
-  function handleContentPress() {
-    if (!item || isPendingDelete || !isItemEditable) return;
-
-    if (!onContentClick) {
-      onFocusPlaceholderTextfield();
-      setTextfieldId(itemId);
-      return;
-    }
-    onContentClick(item);
-  }
 
   function handleCreateUpperItem() {
     onCreateItem(itemIndex);
@@ -84,12 +69,19 @@ const ListItem = <T extends TListItem>({
     onCreateItem(itemIndex + 1);
   }
 
+  function handleValueChange(event: any) {
+    const { nativeEvent: { value } } = event;
+    setItem((prev) => {
+      if (!prev) return prev;
+      return { ...prev, value };
+    });
+  }
+
   if (!item) return null;
 
-  const isEditing = textfieldId === item?.id;
   const valueStyles: TextStyle = {
     color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
-    textDecorationLine: isPendingDelete ? 'line-through' : undefined
+    // textDecorationLine: isPendingDelete ? 'line-through' : undefined
   };
 
   return (
@@ -103,36 +95,18 @@ const ListItem = <T extends TListItem>({
       {/* Separator Line */}
       <Pressable onPress={handleCreateUpperItem} className='w-full' style={{ height: EListLayout.NEW_ITEM_TRIGGER_HEIGHT }} />
 
+      {/* Content */}
       <View className="flex-row w-full items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22, height: EListLayout.CONTENT_HEIGHT }}>
-        {/* Left Icon */}
         {onGetLeftIcon?.(item)}
-
-        {/* Content */}
-        {isEditing ? (
-          <ListItemTextfield<T>
-            item={item}
-            customStyle={valueStyles}
-            onFocusPlaceholderTextfield={onFocusPlaceholderTextfield}
-            onDeleteItem={onDeleteItem}
-            onSetItemInStorage={setItem}
-            onValueChange={onValueChange}
-            onSaveToExternalStorage={onSaveToExternalStorage}
-            onCreateChildTextfield={handleCreateLowerItem}
+        <Host style={{ flex: 1, height: EListLayout.ITEM_HEIGHT }}>
+          <NativeListRow
+            id={itemId}
+            value={item.value}
+            onValueChange={handleValueChange}
+            toolbarIcons={['calendar', 'clock']}
+            // TODO: isEditable : false when is deleting
           />
-        ) : (
-          <Pressable onPress={handleContentPress} className="flex-1">
-            <CustomText
-              variant="listRow"
-              customStyle={valueStyles}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {item.value}
-            </CustomText>
-          </Pressable>
-        )}
-
-        {/* Right Icon */}
+        </Host>
         {onGetRightIcon?.(item)}
       </View>
 

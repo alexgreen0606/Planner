@@ -3,7 +3,6 @@ import React from 'react';
 import { useMMKV } from 'react-native-mmkv';
 
 import DraggableListPage from '@/components/DraggableListPage';
-import PlannerEventToolbar from '@/components/toolbars/PlannerEventToolbar';
 import usePlanner from '@/hooks/planners/usePlanner';
 import usePlannerEventTimeParser from '@/hooks/planners/usePlannerEventTimeParser';
 import useGetPlannerEventToggle from '@/hooks/planners/usePlannerEventToggle';
@@ -33,7 +32,6 @@ const PlannerPage = () => {
       listId={datestamp}
       itemIds={eventIds}
       storage={plannerEventStorage}
-      toolbar={<PlannerEventToolbar />}
       storageId={EStorageId.PLANNER_EVENT}
       emptyPageLabel='No plans'
       onCreateItem={onCreateEventAndFocusTextfield}

@@ -8,6 +8,8 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
 import { textStyles } from '../text/CustomText';
 
+// TODO: collapse logic into ListItem file
+
 interface IListItemTextfieldProps<T extends TListItem> {
   item: T;
   toolbarIconSet?: ReactNode[][];

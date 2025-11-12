@@ -5,8 +5,8 @@ import { View } from 'react-native';
 
 import ModalDisplayValue from '@/components/modals/ModalDisplayValue';
 import { TFormFieldControl } from '@/lib/types/form/TFormFieldControl';
-import { getValidCssColor } from '@/utils/colorUtils';
 import { TPickerOption } from '@/lib/types/form/TPickerOption';
+import { getValidCssColor } from '@/utils/colorUtils';
 
 export interface IPickerModalFieldProps {
   options: TPickerOption[];

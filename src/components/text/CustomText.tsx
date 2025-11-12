@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  TextProps as NativeTextProps,
   PlatformColor,
   StyleSheet,
   Text,
+  TextProps as NativeTextProps,
   TextStyle
 } from 'react-native';
 
@@ -15,7 +15,7 @@ export const textStyles = {
   },
   pageSubHeader: {
     color: PlatformColor('secondaryLabel'),
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'RoundMedium'
   },
   // --- Empty Page Label ---
