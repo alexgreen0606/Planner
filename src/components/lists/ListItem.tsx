@@ -1,5 +1,5 @@
 import { Host } from '@expo/ui/swift-ui';
-import { NativeListRow } from "draggable-list";
+import { ListTextfield } from "sortable-list";
 import React, { ReactNode, useMemo } from 'react';
 import { PlatformColor, Pressable, StyleSheet, TextStyle, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
@@ -99,12 +99,12 @@ const ListItem = <T extends TListItem>({
       <View className="flex-row w-full items-center gap-4" style={{ width: SCREEN_WIDTH - LARGE_MARGIN - 22, height: EListLayout.CONTENT_HEIGHT }}>
         {onGetLeftIcon?.(item)}
         <Host style={{ flex: 1, height: EListLayout.ITEM_HEIGHT }}>
-          <NativeListRow
+          <ListTextfield
             id={itemId}
             value={item.value}
             onValueChange={handleValueChange}
             toolbarIcons={['calendar', 'clock']}
-            // TODO: isEditable : false when is deleting
+          // TODO: isEditable : false when is deleting
           />
         </Host>
         {onGetRightIcon?.(item)}

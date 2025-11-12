@@ -1,6 +1,6 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { DraggableList } from "draggable-list";
+import { SortableList } from "sortable-list";
 import React, { ReactNode, useState } from 'react';
 import { Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
@@ -118,13 +118,9 @@ const DraggableListPage = <T extends TListItem, S>({
         {/* Content */}
         <View className='w-full p-4' style={{ height: listHeight + LARGE_MARGIN * 2 }}>
           <Host style={{ flex: 1 }}>
-
-            <DraggableList
-              moveEnabled
-              onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}
-            >
+            <SortableList onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}>
               <ListItems />
-            </DraggableList>
+            </SortableList>
           </Host>
         </View>
 

@@ -12,6 +12,7 @@
     "lint": "eslint 'app/**/*.{js,jsx,ts,tsx}' 'src/**/*.{js,jsx,ts,tsx}' --fix"
   },
   "dependencies": {
+    "sortable-list": "file:modules/sortable-list",
     "@babel/runtime": "^7.28.4",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/ui": "^0.2.0-beta.7",
@@ -20,7 +21,6 @@
     "@react-navigation/elements": "^2.6.4",
     "@react-navigation/native": "^7.0.14",
     "@react-navigation/stack": "^7.1.1",
-    "draggable-list": "github:alexgreen0606/DraggableTextfieldList",
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "expo": "^54.0.20",
@@ -88,5 +88,6 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.46.3"
   },
-  "private": true
+  "private": true,
+  "workspaces": [".", "modules/*"]
 }
