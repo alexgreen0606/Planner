@@ -1,11 +1,11 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { SortableList } from "sortable-list";
 import React, { ReactNode, useState } from 'react';
 import { Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SortableList } from "sortable-list";
 
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import useSortableMmkvList from '@/hooks/useSortableMmkvList';
@@ -14,6 +14,7 @@ import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
+import { getValidCssColor } from '@/utils/colorUtils';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import GlassIconButton from './buttons/GlassIconButton';
 import PageContainer from './PageContainer';
@@ -27,7 +28,7 @@ interface IDraggableListPageProps<T extends TListItem, S> {
   storageId: EStorageId;
   storage: MMKV;
   defaultStorageObject?: S;
-  addButtonColor?: string;
+  primaryPlatformColor?: string;
   hasExternalData?: boolean;
   onCreateItem: (index: number) => void;
   onDeleteItem: (item: T) => void;
@@ -52,7 +53,7 @@ const DraggableListPage = <T extends TListItem, S>({
   emptyPageLabel,
   toolbar,
   hasExternalData,
-  addButtonColor = 'systemBlue',
+  primaryPlatformColor = 'systemBlue',
   onIndexChange,
   onCreateItem,
   onDeleteItem,
@@ -85,7 +86,7 @@ const DraggableListPage = <T extends TListItem, S>({
   return (
     <PageContainer
       emptyPageLabel={emptyPageLabel}
-      addButtonColor={addButtonColor}
+      addButtonColor={primaryPlatformColor}
       toolbar={toolbar}
       isPageEmpty={isListEmpty}
       onAddButtonClick={onToggleLowerListItem}
@@ -118,7 +119,11 @@ const DraggableListPage = <T extends TListItem, S>({
         {/* Content */}
         <View className='w-full p-4' style={{ height: listHeight + LARGE_MARGIN * 2 }}>
           <Host style={{ flex: 1 }}>
-            <SortableList onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}>
+            <SortableList
+              onMoveItem={({ from, to }) => onIndexChange?.(from, to, listId)}
+              toolbarIcons={['clock']}
+              primaryColor={getValidCssColor(primaryPlatformColor)}
+            >
               <ListItems />
             </SortableList>
           </Host>
@@ -131,7 +136,7 @@ const DraggableListPage = <T extends TListItem, S>({
           <GlassIconButton
             systemImage="plus"
             isPrimary
-            color={addButtonColor}
+            color={primaryPlatformColor}
             onPress={onToggleLowerListItem}
           />
         </FillerView>

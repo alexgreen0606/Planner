@@ -1,13 +1,14 @@
 import { Host } from '@expo/ui/swift-ui';
-import { ListTextfield } from "sortable-list";
 import React, { ReactNode, useMemo } from 'react';
-import { PlatformColor, Pressable, StyleSheet, TextStyle, useWindowDimensions, View } from 'react-native';
+import { NativeSyntheticEvent, PlatformColor, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
+import { ListTextfield } from "sortable-list";
 
 import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
+import { getValidCssColor } from '@/utils/colorUtils';
 
 // TODO: add debounced save handler to this file
 
@@ -45,13 +46,7 @@ const ListItem = <T extends TListItem>({
   onGetIsItemDeletingCustom
 }: IListItemProps<T>) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-
   const [item, setItem] = useMMKVObject<T>(itemId, storage);
-
-  const textPlatformColor = useMemo(
-    () => (item ? onGetRowTextPlatformColor?.(item) : 'label'),
-    [item, onGetRowTextPlatformColor]
-  );
 
   const isEditable = useMemo(() => (item ? (onGetIsEditable?.(item) ?? true) : true), [item]);
 
@@ -61,6 +56,16 @@ const ListItem = <T extends TListItem>({
     ? (onGetIsItemDeletingCustom?.(item) ?? onGetIsItemDeletingCallback(item))
     : false;
 
+  const textPlatformColor = useMemo(
+    () => {
+      if (onGetRowTextPlatformColor && item) {
+        return onGetRowTextPlatformColor(item);
+      }
+      return isPendingDelete ? 'tertiaryLabel' : 'label';
+    },
+    [item, isPendingDelete, onGetRowTextPlatformColor]
+  );
+
   function handleCreateUpperItem() {
     onCreateItem(itemIndex);
   }
@@ -69,8 +74,7 @@ const ListItem = <T extends TListItem>({
     onCreateItem(itemIndex + 1);
   }
 
-  function handleValueChange(event: any) {
-    const { nativeEvent: { value } } = event;
+  function handleValueChange({ nativeEvent: { value } }: NativeSyntheticEvent<{ value: string }>) {
     setItem((prev) => {
       if (!prev) return prev;
       return { ...prev, value };
@@ -78,11 +82,6 @@ const ListItem = <T extends TListItem>({
   }
 
   if (!item) return null;
-
-  const valueStyles: TextStyle = {
-    color: PlatformColor(textPlatformColor ?? (isPendingDelete ? 'tertiaryLabel' : 'label')),
-    // textDecorationLine: isPendingDelete ? 'line-through' : undefined
-  };
 
   return (
     <View className='w-full justify-between' style={{
@@ -103,7 +102,7 @@ const ListItem = <T extends TListItem>({
             id={itemId}
             value={item.value}
             onValueChange={handleValueChange}
-            toolbarIcons={['calendar', 'clock']}
+            textColor={getValidCssColor(textPlatformColor)}
           // TODO: isEditable : false when is deleting
           />
         </Host>

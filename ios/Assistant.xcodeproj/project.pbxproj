@@ -7,37 +7,37 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0779B98EBBFBF002C1C055A1 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7323C89618C7DEF6856D485 /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2E50B8AC010F40D396757678 /* SF-Compact-Rounded-Heavy.otf in Resources */ = {isa = PBXBuildFile; fileRef = CB1CE4A11BF1407DB296700B /* SF-Compact-Rounded-Heavy.otf */; };
+		217AA1E797ED44A9B890E1A1 /* SF-Compact-Rounded-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = E1667B25BBD142E4B1264D6B /* SF-Compact-Rounded-Medium.otf */; };
+		2D92CBE662EF49AE851D5F70 /* SF-Compact-Rounded-Heavy.otf in Resources */ = {isa = PBXBuildFile; fileRef = 8F6457F0EDF94E639F7D89DC /* SF-Compact-Rounded-Heavy.otf */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		64FA8DCCC68C3B456A2353CC /* libPods-Assistant.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E25E283D89B4091B52CB8FF4 /* libPods-Assistant.a */; };
-		7FC21664351A4189AE629E2C /* SF-Compact-Rounded-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = F0ABB4DCD9A04141A2146D10 /* SF-Compact-Rounded-Regular.otf */; };
-		A26F29B6DB2F4025A4E78AB9 /* SF-Compact-Rounded-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 3E83848F859040B987409B89 /* SF-Compact-Rounded-Medium.otf */; };
-		A35370909204E8DB0F177481 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 58804D110C0B0DF7AE584F35 /* PrivacyInfo.xcprivacy */; };
+		420C1CFA6721B69A39817F43 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E2C9B99FA61A903ABC2450 /* ExpoModulesProvider.swift */; };
+		482943F5E9A54A1EBB68F0D5 /* SF-Pro-Text-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 11FFA821854A4BCCB51BE45E /* SF-Pro-Text-Regular.otf */; };
+		4D81252A6E534F5088E72202 /* SF-Compact-Rounded-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 44333BBC53714CA18F50F386 /* SF-Compact-Rounded-Regular.otf */; };
+		8B7700E43AD274CD2A452484 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DA73BBF02F823D586AE8545D /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C84146D448D9417AAE74B872 /* SF-Pro-Text-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 8070E550FC1C45BF962E862C /* SF-Pro-Text-Regular.otf */; };
+		D9FDCDBAB818058A155C6DA9 /* libPods-Assistant.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A7A5E2ACEDA1D0CFE24C6DB /* libPods-Assistant.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		11FFA821854A4BCCB51BE45E /* SF-Pro-Text-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Pro-Text-Regular.otf"; path = "../assets/fonts/SF-Pro-Text-Regular.otf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Assistant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Assistant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Assistant/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Assistant/Info.plist; sourceTree = "<group>"; };
-		3E83848F859040B987409B89 /* SF-Compact-Rounded-Medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Compact-Rounded-Medium.otf"; path = "../assets/fonts/SF-Compact-Rounded-Medium.otf"; sourceTree = "<group>"; };
-		58804D110C0B0DF7AE584F35 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Assistant/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		6D97E54D6E8D829494A55509 /* Pods-Assistant.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Assistant.debug.xcconfig"; path = "Target Support Files/Pods-Assistant/Pods-Assistant.debug.xcconfig"; sourceTree = "<group>"; };
-		738C23B248786F72147847BF /* Pods-Assistant.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Assistant.release.xcconfig"; path = "Target Support Files/Pods-Assistant/Pods-Assistant.release.xcconfig"; sourceTree = "<group>"; };
-		8070E550FC1C45BF962E862C /* SF-Pro-Text-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Pro-Text-Regular.otf"; path = "../assets/fonts/SF-Pro-Text-Regular.otf"; sourceTree = "<group>"; };
+		30E2C9B99FA61A903ABC2450 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Assistant/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		44333BBC53714CA18F50F386 /* SF-Compact-Rounded-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Compact-Rounded-Regular.otf"; path = "../assets/fonts/SF-Compact-Rounded-Regular.otf"; sourceTree = "<group>"; };
+		8F6457F0EDF94E639F7D89DC /* SF-Compact-Rounded-Heavy.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Compact-Rounded-Heavy.otf"; path = "../assets/fonts/SF-Compact-Rounded-Heavy.otf"; sourceTree = "<group>"; };
+		9A7A5E2ACEDA1D0CFE24C6DB /* libPods-Assistant.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Assistant.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A149FAB590219048EDE23FB0 /* Pods-Assistant.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Assistant.release.xcconfig"; path = "Target Support Files/Pods-Assistant/Pods-Assistant.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Assistant/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CB1CE4A11BF1407DB296700B /* SF-Compact-Rounded-Heavy.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Compact-Rounded-Heavy.otf"; path = "../assets/fonts/SF-Compact-Rounded-Heavy.otf"; sourceTree = "<group>"; };
-		E25E283D89B4091B52CB8FF4 /* libPods-Assistant.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Assistant.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D725CADC11A92E06C232FA5F /* Pods-Assistant.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Assistant.debug.xcconfig"; path = "Target Support Files/Pods-Assistant/Pods-Assistant.debug.xcconfig"; sourceTree = "<group>"; };
+		DA73BBF02F823D586AE8545D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Assistant/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E1667B25BBD142E4B1264D6B /* SF-Compact-Rounded-Medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Compact-Rounded-Medium.otf"; path = "../assets/fonts/SF-Compact-Rounded-Medium.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F0ABB4DCD9A04141A2146D10 /* SF-Compact-Rounded-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = "SF-Compact-Rounded-Regular.otf"; path = "../assets/fonts/SF-Compact-Rounded-Regular.otf"; sourceTree = "<group>"; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Assistant/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Assistant-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Assistant-Bridging-Header.h"; path = "Assistant/Assistant-Bridging-Header.h"; sourceTree = "<group>"; };
-		F7323C89618C7DEF6856D485 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Assistant/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,35 +45,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				64FA8DCCC68C3B456A2353CC /* libPods-Assistant.a in Frameworks */,
+				D9FDCDBAB818058A155C6DA9 /* libPods-Assistant.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		08EEBBCC1E99DADFE1A19447 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				6D97E54D6E8D829494A55509 /* Pods-Assistant.debug.xcconfig */,
-				738C23B248786F72147847BF /* Pods-Assistant.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		0A1B90D4633F431FAD3CD62A /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				CB1CE4A11BF1407DB296700B /* SF-Compact-Rounded-Heavy.otf */,
-				3E83848F859040B987409B89 /* SF-Compact-Rounded-Medium.otf */,
-				8070E550FC1C45BF962E862C /* SF-Pro-Text-Regular.otf */,
-				F0ABB4DCD9A04141A2146D10 /* SF-Compact-Rounded-Regular.otf */,
-			);
-			name = Resources;
-			path = "";
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* Assistant */ = {
 			isa = PBXGroup;
 			children = (
@@ -83,7 +61,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				58804D110C0B0DF7AE584F35 /* PrivacyInfo.xcprivacy */,
+				DA73BBF02F823D586AE8545D /* PrivacyInfo.xcprivacy */,
 			);
 			name = Assistant;
 			sourceTree = "<group>";
@@ -92,17 +70,36 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				E25E283D89B4091B52CB8FF4 /* libPods-Assistant.a */,
+				9A7A5E2ACEDA1D0CFE24C6DB /* libPods-Assistant.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		6D49858E52F248642C99ECF0 /* Assistant */ = {
+		5EAB6DC0F49F3088EE8CA84E /* Assistant */ = {
 			isa = PBXGroup;
 			children = (
-				F7323C89618C7DEF6856D485 /* ExpoModulesProvider.swift */,
+				30E2C9B99FA61A903ABC2450 /* ExpoModulesProvider.swift */,
 			);
 			name = Assistant;
+			sourceTree = "<group>";
+		};
+		6208A96D11A2540DEF3E98EE /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				5EAB6DC0F49F3088EE8CA84E /* Assistant */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		7ABC5CE26B0F4CE6882228F3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8F6457F0EDF94E639F7D89DC /* SF-Compact-Rounded-Heavy.otf */,
+				E1667B25BBD142E4B1264D6B /* SF-Compact-Rounded-Medium.otf */,
+				11FFA821854A4BCCB51BE45E /* SF-Pro-Text-Regular.otf */,
+				44333BBC53714CA18F50F386 /* SF-Compact-Rounded-Regular.otf */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -119,9 +116,9 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				0A1B90D4633F431FAD3CD62A /* Resources */,
-				08EEBBCC1E99DADFE1A19447 /* Pods */,
-				D69264EB212E6CA022543442 /* ExpoModulesProviders */,
+				7ABC5CE26B0F4CE6882228F3 /* Resources */,
+				AD3C3FA26F18B110ECCB0F30 /* Pods */,
+				6208A96D11A2540DEF3E98EE /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -136,6 +133,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		AD3C3FA26F18B110ECCB0F30 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				D725CADC11A92E06C232FA5F /* Pods-Assistant.debug.xcconfig */,
+				A149FAB590219048EDE23FB0 /* Pods-Assistant.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -143,14 +149,6 @@
 			);
 			name = Supporting;
 			path = Assistant/Supporting;
-			sourceTree = "<group>";
-		};
-		D69264EB212E6CA022543442 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				6D49858E52F248642C99ECF0 /* Assistant */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -161,13 +159,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Assistant" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				C9306BE162C3442B7E9E8AE1 /* [Expo] Configure project */,
+				A87C78B52B170F1B4FD38C9F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				3638905FAF4688ACA7294D8A /* [CP] Embed Pods Frameworks */,
+				EE2856B059AAAF95D70BD778 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -217,11 +215,11 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				2E50B8AC010F40D396757678 /* SF-Compact-Rounded-Heavy.otf in Resources */,
-				A26F29B6DB2F4025A4E78AB9 /* SF-Compact-Rounded-Medium.otf in Resources */,
-				C84146D448D9417AAE74B872 /* SF-Pro-Text-Regular.otf in Resources */,
-				7FC21664351A4189AE629E2C /* SF-Compact-Rounded-Regular.otf in Resources */,
-				A35370909204E8DB0F177481 /* PrivacyInfo.xcprivacy in Resources */,
+				2D92CBE662EF49AE851D5F70 /* SF-Compact-Rounded-Heavy.otf in Resources */,
+				217AA1E797ED44A9B890E1A1 /* SF-Compact-Rounded-Medium.otf in Resources */,
+				482943F5E9A54A1EBB68F0D5 /* SF-Pro-Text-Regular.otf in Resources */,
+				4D81252A6E534F5088E72202 /* SF-Compact-Rounded-Regular.otf in Resources */,
+				8B7700E43AD274CD2A452484 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,28 +263,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		3638905FAF4688ACA7294D8A /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Assistant/Pods-Assistant-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Assistant/Pods-Assistant-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -359,7 +335,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Assistant/Pods-Assistant-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C9306BE162C3442B7E9E8AE1 /* [Expo] Configure project */ = {
+		A87C78B52B170F1B4FD38C9F /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -383,6 +359,28 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Assistant/expo-configure-project.sh\"\n";
 		};
+		EE2856B059AAAF95D70BD778 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Assistant/Pods-Assistant-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Assistant/Pods-Assistant-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -391,7 +389,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				0779B98EBBFBF002C1C055A1 /* ExpoModulesProvider.swift in Sources */,
+				420C1CFA6721B69A39817F43 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,7 +398,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6D97E54D6E8D829494A55509 /* Pods-Assistant.debug.xcconfig */;
+			baseConfigurationReference = D725CADC11A92E06C232FA5F /* Pods-Assistant.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -436,7 +434,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 738C23B248786F72147847BF /* Pods-Assistant.release.xcconfig */;
+			baseConfigurationReference = A149FAB590219048EDE23FB0 /* Pods-Assistant.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -511,7 +509,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -567,7 +565,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",

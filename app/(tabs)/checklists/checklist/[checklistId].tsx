@@ -55,11 +55,11 @@ const ChecklistPage = () => {
       storage={itemStorage}
       storageId={EStorageId.CHECKLIST_ITEM}
       itemIds={itemIds}
-      addButtonColor={platformColor}
+      primaryPlatformColor={platformColor}
       onCreateItem={handleCreateNewChecklistItemAndSaveToStorage}
       onDeleteItem={(item) => deleteChecklistItems([item])}
       onIndexChange={onUpdateItemIndex}
-      onGetLeftIcon={useListItemToggle}
+      onGetLeftIcon={(item) => useListItemToggle(item, platformColor)}
     />
   );
 };

@@ -22,6 +22,7 @@ import { EStorageId } from '@/lib/enums/EStorageId';
 import { ECarryoverEventType } from '@/lib/enums/planners/modal/ECarryoverEventType';
 import { EEventType } from '@/lib/enums/planners/modal/EEventType';
 import { TFormField } from '@/lib/types/form/TFormField';
+import { TPickerOption } from '@/lib/types/form/TPickerOption';
 import { IPlannerEvent, TDateRange } from '@/lib/types/listItems/IPlannerEvent';
 import {
   TCarryoverEventMetadata,
@@ -53,8 +54,6 @@ import {
   deletePlannerEventsFromStorageAndCalendar,
   updatePlannerEventIndexWithChronologicalCheck,
 } from '@/utils/plannerUtils';
-
-import { TPickerOption } from './Form/microComponents/PickerModalField';
 
 interface IEventModalProps {
   isViewMode?: boolean
