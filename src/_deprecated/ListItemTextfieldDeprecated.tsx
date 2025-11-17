@@ -1,12 +1,8 @@
-import { useSetAtom } from 'jotai';
 import debounce from 'lodash.debounce';
 import React, { ReactNode, useEffect, useMemo, useRef } from 'react';
 import { PlatformColor, TextInput, TextStyle } from 'react-native';
-
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-
-import { textStyles } from '../text/CustomText';
+import { textStyles } from '@/components/text/CustomText';
 
 // TODO: collapse logic into ListItem file
 
@@ -34,7 +30,6 @@ const ListItemTextfield = <T extends TListItem>({
   onCreateChildTextfield,
   onSaveToExternalStorage
 }: IListItemTextfieldProps<T>) => {
-  const setTextfieldId = useSetAtom(textfieldIdAtom);
   const inputRef = useRef<TextInput>(null);
 
   const handleSaveToExternalStorageDebounce = useMemo(
@@ -82,7 +77,7 @@ const ListItemTextfield = <T extends TListItem>({
       handleSaveToExternalStorageDebounce.flush();
     }
 
-    setTextfieldId((prev) => (prev === item.id ? null : prev));
+    // setTextfieldId((prev) => (prev === item.id ? null : prev));
   }
 
   return (

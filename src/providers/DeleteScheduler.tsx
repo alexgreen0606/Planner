@@ -3,7 +3,6 @@ import debounce from 'lodash.debounce';
 import React, { createContext, ReactNode, useCallback, useContext, useMemo } from 'react';
 
 import { pendingDeleteItemsAtom } from '@/atoms/pendingDeletes';
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { DELETE_ITEMS_DELAY_MS } from '@/lib/constants/generic';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
@@ -33,7 +32,6 @@ export function DeleteSchedulerProvider<T extends TListItem>({
   children: ReactNode;
 }) {
   const [pendingDeleteMap, setPendingDeleteMap] = useAtom(pendingDeleteItemsAtom);
-  const [textfieldId, setTextfieldId] = useAtom(textfieldIdAtom);
 
   const debouncedProcessDeletes = useMemo(
     () =>
@@ -73,16 +71,17 @@ export function DeleteSchedulerProvider<T extends TListItem>({
     async (item: T) => {
       const storageId = item.storageId;
 
-      if (item.id === textfieldId) {
-        setTextfieldId(null);
-        if (item.value.trim() === '') {
-          const deleteFunction = deletionMap[item.storageId];
-          if (deleteFunction) {
-            await deleteFunction([item]);
-          }
-          return;
-        }
-      }
+      // TODO: handle this case in Swift?
+      // if (item.id === textfieldId) {
+      //   setTextfieldId(null);
+      //   if (item.value.trim() === '') {
+      //     const deleteFunction = deletionMap[item.storageId];
+      //     if (deleteFunction) {
+      //       await deleteFunction([item]);
+      //     }
+      //     return;
+      //   }
+      // }
 
       setPendingDeleteMap((prev) => {
         const newMap = { ...prev };

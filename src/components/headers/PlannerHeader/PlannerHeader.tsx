@@ -4,7 +4,6 @@ import { PlatformColor, View } from 'react-native';
 
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
 import { getWeatherByDatestampAtom } from '@/atoms/weatherAtoms';
-import PlannerActions from '@/components/actions/PlannerActions';
 import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import FadeTransitionView from '@/components/views/FadeTransitionView';
@@ -56,10 +55,10 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
   }, [todayDatestamp, activeDatestamp]);
 
   return (
-    <View className="px-4 gap-2">
+    <View className="px-4 gap-2 pointer-events-box-none">
       <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} />
 
-      <View className="flex-row w-full justify-between">
+      <View className="flex-row w-full justify-between pointer-events-box-none">
         <View>
           <CustomText
             variant="pageHeader"
@@ -81,19 +80,19 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
           {weatherData && (
             <FadeTransitionView>
               <View className="px-4 py-2 flex-row gap-2">
-                <View className="justify-center">
-                  <Icon size={26} name={weatherData.symbol} type="multicolor" />
-                </View>
-                <View>
+                <View className='items-end'>
                   <CustomText variant="weatherCondition">{weatherData.condition}</CustomText>
                   <CustomText variant="weatherTemperature">
                     {weatherData.high}° | {weatherData.low}°
                   </CustomText>
                 </View>
+                <View className="justify-center">
+                  <Icon size={26} name={weatherData.symbol} type="multicolor" />
+                </View>
               </View>
             </FadeTransitionView>
           )}
-          <PlannerActions datestamp={activeDatestamp} />
+          {/* <PlannerActions datestamp={activeDatestamp} /> */}
         </View>
       </View>
 

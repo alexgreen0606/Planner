@@ -1,8 +1,8 @@
-import { requireNativeView } from 'expo';
-import { ListTextfieldProps } from '../types/ListTextfield.types';
+// import { requireNativeView } from 'expo';
+// import { ListTextfieldProps } from '../types/ListTextfield.types';
 
-const ListTextfieldView = requireNativeView('ListTextfield');
+// const ListTextfieldView = requireNativeView('ListTextfield');
 
-export default function ListTextfield(props: ListTextfieldProps) {
-    return <ListTextfieldView {...props} />;
-}
+// export default function ListTextfield(props: ListTextfieldProps) {
+//     return <ListTextfieldView {...props} />;
+// }

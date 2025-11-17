@@ -7,12 +7,7 @@ import { getRecurringPlannerFromStorageById } from '@/storage/recurringPlannerSt
 import { parseTimeValueFromText } from '@/utils/dateUtils';
 import { updateRecurringEventIndexWithChronologicalCheck } from '@/utils/recurringPlannerUtils';
 
-import useTextfieldItemAs from '../useTextfieldItemAs';
-
 const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventStorage: MMKV) => {
-  const { onSetTextfieldItem } =
-    useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
-
   const recurringStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER });
   const [recurringPlanner, setRecurringPlanner] = useMMKVObject<TRecurringPlanner>(
     recurringPlannerId,
@@ -22,46 +17,47 @@ const useRecurringEventTimeParser = (recurringPlannerId: string, recurringEventS
   // Scan user input for an initial event time.
   // Delete weekday event and clone if needed.
   function handleUpdateRecurringEventValueWithTimeParsing(userInput: string) {
-    onSetTextfieldItem((prev) => {
-      if (!prev || !recurringPlanner) return prev;
+    // TODO: how to do this now? Use directly in List component.
+    // onSetTextfieldItem((prev) => {
+    //   if (!prev || !recurringPlanner) return prev;
 
-      const newEvent = { ...prev, value: userInput };
-      const newPlanner = { ...recurringPlanner };
+    //   const newEvent = { ...prev, value: userInput };
+    //   const newPlanner = { ...recurringPlanner };
 
-      // Phase 1: If weekday recurring, delete the event so it can be customized.
-      if (newEvent.weekdayEventId) {
-        newPlanner.deletedWeekdayEventIds.push(newEvent.weekdayEventId);
-        delete newEvent.weekdayEventId;
-      }
+    //   // Phase 1: If weekday recurring, delete the event so it can be customized.
+    //   if (newEvent.weekdayEventId) {
+    //     newPlanner.deletedWeekdayEventIds.push(newEvent.weekdayEventId);
+    //     delete newEvent.weekdayEventId;
+    //   }
 
-      // Don't scan for time values if the event is already timed.
-      if (newEvent.startTime) return newEvent;
+    //   // Don't scan for time values if the event is already timed.
+    //   if (newEvent.startTime) return newEvent;
 
-      // Phase 2: Parse time from user input.
-      const { timeValue, updatedText } = parseTimeValueFromText(userInput);
-      if (!timeValue) return newEvent;
+    //   // Phase 2: Parse time from user input.
+    //   const { timeValue, updatedText } = parseTimeValueFromText(userInput);
+    //   if (!timeValue) return newEvent;
 
-      newEvent.value = updatedText;
-      newEvent.startTime = timeValue;
+    //   newEvent.value = updatedText;
+    //   newEvent.startTime = timeValue;
 
-      // Phase 4: Check chronological order and update index if needed.
-      const planner = getRecurringPlannerFromStorageById(newEvent.listId);
-      const currentIndex = planner.eventIds.findIndex((e) => e === newEvent.id);
-      if (currentIndex === -1) {
-        throw new Error(
-          `handleUpdateRecurringEventValueWithTimeParsing: No event exists in recurring planner ${newEvent.listId} with ID ${newEvent.id}`
-        );
-      }
+    //   // Phase 4: Check chronological order and update index if needed.
+    //   const planner = getRecurringPlannerFromStorageById(newEvent.listId);
+    //   const currentIndex = planner.eventIds.findIndex((e) => e === newEvent.id);
+    //   if (currentIndex === -1) {
+    //     throw new Error(
+    //       `handleUpdateRecurringEventValueWithTimeParsing: No event exists in recurring planner ${newEvent.listId} with ID ${newEvent.id}`
+    //     );
+    //   }
 
-      // Save the planner and event to storage.
+    //   // Save the planner and event to storage.
 
-      // TODO: focus the placeholder here
+    //   // TODO: focus the placeholder here
 
-      setRecurringPlanner(
-        updateRecurringEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
-      );
-      return newEvent;
-    });
+    //   setRecurringPlanner(
+    //     updateRecurringEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent)
+    //   );
+    //   return newEvent;
+    // });
   }
 
   return handleUpdateRecurringEventValueWithTimeParsing;

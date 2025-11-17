@@ -12,7 +12,6 @@ import { untrackLoadedDatestampsAtom } from '@/atoms/planner/loadedDatestampsAto
 import Form from '@/components/Form/Form';
 import Modal from '@/components/modals/Modal';
 import usePermissions from '@/hooks/usePermissions';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { calendarIconMap } from '@/lib/constants/calendarIconMap';
 import { NULL } from '@/lib/constants/generic';
 import { EAccess } from '@/lib/enums/EAccess';
@@ -112,9 +111,6 @@ const EventModal = ({ isViewMode }: IEventModalProps) => {
   const calendarId = watch('calendarId')
   const start = watch('start')
   const end = watch('end')
-
-  const eventStorage = useMMKV({ id: EStorageId.PLANNER_EVENT })
-  const { onCloseTextfield } = useTextfieldItemAs<IPlannerEvent>(eventStorage)
 
   const [initialEventState, setInitialEventState] = useState<TInitialEventMetadata | null>(null)
   const [isInitializingForm, setIsInitializingForm] = useState(true)
@@ -354,7 +350,6 @@ const EventModal = ({ isViewMode }: IEventModalProps) => {
       setIsInitializingForm(false)
     }
 
-    onCloseTextfield()
     buildFormData()
   }, [])
 

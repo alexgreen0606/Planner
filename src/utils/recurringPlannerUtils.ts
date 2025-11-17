@@ -1,6 +1,5 @@
 import { uuid } from 'expo-modules-core';
 
-import { textfieldIdAtom } from '@/atoms/textfieldId';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
@@ -243,9 +242,6 @@ export function createRecurringEventInStorageAndFocusTextfield(
   const recurringPlanner = getRecurringPlannerFromStorageById(recurringPlannerId);
   recurringPlanner.eventIds.splice(index, 0, recurringEvent.id);
   saveRecurringPlannerToStorage(recurringPlanner);
-
-  // Focus the textfield.
-  jotaiStore.set(textfieldIdAtom, recurringEvent.id);
 }
 
 /**

@@ -6,7 +6,6 @@ import { useMMKV } from 'react-native-mmkv';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 import { recurringTimeModalEventAtom } from '@/atoms/recurring/recurringTimeModalEvent';
-import useTextfieldItemAs from '@/hooks/useTextfieldItemAs';
 import { ERecurringPlannerId } from '@/lib/enums/ERecurringPlannerKey';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IRecurringEvent } from '@/lib/types/listItems/IRecurringEvent';
@@ -22,19 +21,12 @@ import {
 } from '@/utils/recurringPlannerUtils';
 
 import IconButton from '../buttons/IconButton';
-import ListToolbar from '../lists/ListToolbar';
+import ListToolbar from '../../_deprecated/ListToolbar';
 
 const RecurringEventToolbar = () => {
   const [recurringTimeModalEvent, setRecurringTimeModalEvent] = useAtom(
     recurringTimeModalEventAtom
   );
-
-  const recurringEventStorage = useMMKV({ id: EStorageId.RECURRING_PLANNER_EVENT });
-  const {
-    textfieldItem: focusedEvent,
-    onSetTextfieldItem: onSetFocusedEvent,
-    onCloseTextfield: onCloseFocusedEvent
-  } = useTextfieldItemAs<IRecurringEvent>(recurringEventStorage);
 
   const focusedDate = useMemo(() => {
     if (recurringTimeModalEvent?.startTime) {
@@ -86,31 +78,33 @@ const RecurringEventToolbar = () => {
     closeTimeModal();
   }
 
-  function openTimeModal() {
-    if (!focusedEvent) return;
+  // TODO: cant use textfield item here
+  // function openTimeModal() {
+  //   // if (!focusedEvent) return;
 
-    const modalEvent = { ...focusedEvent };
+  //   const modalEvent = { ...focusedEvent };
 
-    if (modalEvent.value.trim() === '') {
-      modalEvent.value = 'New Recurring Event';
-    }
+  //   if (modalEvent.value.trim() === '') {
+  //     modalEvent.value = 'New Recurring Event';
+  //   }
 
-    saveRecurringEventToStorage(modalEvent);
-    setRecurringTimeModalEvent(modalEvent);
-  }
+  //   saveRecurringEventToStorage(modalEvent);
+  //   setRecurringTimeModalEvent(modalEvent);
+  // }
 
   function closeTimeModal() {
     setRecurringTimeModalEvent(null);
   }
 
   function deleteFocusedEventTime() {
-    onSetFocusedEvent((prev) => {
-      if (!prev) return prev;
+    // TODO: figure out how to do this
+    // onSetFocusedEvent((prev) => {
+    //   if (!prev) return prev;
 
-      const newEvent = { ...prev };
-      delete newEvent.startTime;
-      return newEvent;
-    });
+    //   const newEvent = { ...prev };
+    //   delete newEvent.startTime;
+    //   return newEvent;
+    // });
   }
 
   return (
@@ -121,7 +115,6 @@ const RecurringEventToolbar = () => {
         isVisible={!!recurringTimeModalEvent}
         minuteInterval={5}
         date={focusedDate}
-        onLayout={onCloseFocusedEvent}
         onCancel={closeTimeModal}
         onConfirm={updateRecurringEventTimeWithChronologicalCheck}
         pickerStyleIOS={{
@@ -136,7 +129,7 @@ const RecurringEventToolbar = () => {
             <IconButton
               name="clock.badge.xmark"
               size={22}
-              disabled={!focusedEvent?.startTime}
+              // disabled={!focusedEvent?.startTime}
               color="label"
               onClick={deleteFocusedEventTime}
             />
@@ -144,7 +137,8 @@ const RecurringEventToolbar = () => {
           [
             <IconButton
               name="clock.arrow.trianglehead.2.counterclockwise.rotate.90"
-              onClick={openTimeModal}
+              // onClick={openTimeModal}
+              onClick={() => null}
               color="label"
               size={22}
             />

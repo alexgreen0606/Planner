@@ -14,7 +14,6 @@ interface IPageContainerProps {
     children: ReactNode;
     onAddButtonClick: () => void;
     isPageEmpty?: boolean;
-    toolbar?: ReactNode;
     stickyHeader?: ReactNode;
     addButtonColor?: string;
 };
@@ -24,7 +23,6 @@ const BOTTOM_NAV_HEIGHT = 86;
 
 const PageContainer = ({
     emptyPageLabel,
-    toolbar,
     isPageEmpty,
     stickyHeader,
     addButtonColor = 'systemBlue',
@@ -64,9 +62,6 @@ const PageContainer = ({
                     onPress={onAddButtonClick}
                 />
             </View>
-
-            {/* Toolbar */}
-            {toolbar}
         </>
     );
 };

@@ -1,6 +1,6 @@
 {
   "platforms": ["apple", "web"],
   "apple": {
-    "modules": ["SortableListModule", "ListTextfieldModule"]
+    "modules": ["SortableListModule"]
   }
 }
