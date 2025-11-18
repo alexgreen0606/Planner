@@ -1,11 +1,11 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
 import React, { useMemo, useState } from 'react';
-import { NativeSyntheticEvent, Pressable, RefreshControl, useWindowDimensions } from 'react-native';
+import { NativeSyntheticEvent, Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SortableList, SortableListMoveEvent } from "sortable-list";
+import { SortableList, SortableListMoveEvent, SortableListProps } from "sortable-list";
 
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import { NULL, SCROLL_THROTTLE } from '@/lib/constants/generic';
@@ -15,9 +15,7 @@ import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { getValidCssColor } from '@/utils/colorUtils';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
-import GlassIconButton from './buttons/GlassIconButton';
 import PageContainer from './PageContainer';
-import FillerView from './views/FillerView';
 
 interface IDraggableListPageProps<T extends TListItem> {
   emptyPageLabel: string;
@@ -26,6 +24,9 @@ interface IDraggableListPageProps<T extends TListItem> {
   storage: MMKV;
   accentPlatformColor?: string;
   hasExternalData?: boolean;
+  selectedItemIds: string[];
+  disabledItemIds?: string[];
+  listProps?: Partial<SortableListProps>;
   onGetItem: (itemId: string) => T;
   onCreateItem: (index: number) => void;
   onDeleteItem: (item: T) => void;
@@ -37,9 +38,6 @@ interface IDraggableListPageProps<T extends TListItem> {
 
   // TODO: get these working
   onSaveToExternalStorage?: (item: T) => void;
-
-  onGetIsItemSelectedCallback?: (item: T) => boolean;
-  onGetIsItemSelectDisabledCallback?: (item: T) => boolean;
   onGetItemTextPlatformColorCallback?: (item: T) => string;
 };
 
@@ -53,14 +51,15 @@ const DraggableListPage = <T extends TListItem>({
   emptyPageLabel,
   hasExternalData,
   accentPlatformColor = 'systemBlue',
+  selectedItemIds,
+  disabledItemIds,
+  listProps,
   onIndexChange,
   onGetItem,
   onToggleSelectItem,
   onCreateItem,
   onDeleteItem,
   onValueChange,
-  onGetIsItemSelectDisabledCallback,
-  onGetIsItemSelectedCallback,
   onGetItemTextPlatformColorCallback
 }: IDraggableListPageProps<T>) => {
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
@@ -84,22 +83,6 @@ const DraggableListPage = <T extends TListItem>({
       return [id, itemTextColor];
     }));
   }, [itemIds, onGetItemTextPlatformColorCallback]);
-
-  const selectedItemsMap = useMemo(() => {
-    return Object.fromEntries(itemIds.map((id) => {
-      const item = onGetItem(id);
-      const isSelected = onGetIsItemSelectedCallback?.(item) ?? false;
-      return [id, isSelected];
-    }));
-  }, [itemIds, onGetIsItemSelectedCallback]);
-
-  const disabledSelectItemsMap = useMemo(() => {
-    return Object.fromEntries(itemIds.map((id) => {
-      const item = onGetItem(id);
-      const isDisabled = onGetIsItemSelectDisabledCallback?.(item) ?? false;
-      return [id, isDisabled];
-    }));
-  }, [itemIds, onGetIsItemSelectDisabledCallback]);
 
   function handleReloadPage() {
     setShowLoadingSymbol(true);
@@ -143,7 +126,7 @@ const DraggableListPage = <T extends TListItem>({
   }
 
   const isListEmpty = itemIds.length === 0;
-  const listHeight = EListLayout.ITEM_HEIGHT * itemIds.length + EListLayout.NEW_ITEM_TRIGGER_HEIGHT;
+  const listHeight = EListLayout.ITEM_HEIGHT * itemIds.length + EListLayout.NEW_ITEM_TRIGGER_HEIGHT / 2;
   const contentInset = headerHeight - TOP_SPACER;
 
   return (
@@ -163,7 +146,7 @@ const DraggableListPage = <T extends TListItem>({
         contentOffset={{ x: 0, y: -contentInset - TOP_SPACER }}
         scrollIndicatorInsets={{ top: contentInset }}
         contentContainerStyle={{
-          minHeight: SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT // Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + LARGE_MARGIN * 2 + BOTTOM_NAV_HEIGHT),
+          minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + BOTTOM_NAV_HEIGHT),
         }}
         style={{ height: SCREEN_HEIGHT }}
         showsVerticalScrollIndicator
@@ -179,39 +162,35 @@ const DraggableListPage = <T extends TListItem>({
         }
       >
         {/* Content */}
-        {/* <View className='w-full p-4' style={{ height: listHeight + LARGE_MARGIN * 2 + EListLayout.NEW_ITEM_TRIGGER_HEIGHT }}
-        > */}
-        <Host style={{ flex: 1 }}>
-          <SortableList
-            focusedId={focusedId}
-            toolbarIcons={['clock']}
-            sortedItemIds={itemIds}
-            itemValueMap={itemValuesMap}
-            itemTextColorsMap={itemTextColorsMap}
-            selectedItemMap={selectedItemsMap}
-            disabledSelectItemMap={disabledSelectItemsMap}
-            onToggleItem={handleToggleItem}
-            onCreateItem={handleCreateItem}
-            onValueChange={handleValueChange}
-            onFocusChange={handleFocusChange}
-            onMoveItem={handleIndexChange}
-            accentColor={getValidCssColor(accentPlatformColor)!}
-            onDeleteItem={handleDeleteItem}
-          />
-        </Host>
-        {/* </View> */}
-
-        <Pressable className='flex-1' onPress={onCreateLowerListItem} />
-
-        {/* Add Button Filler */}
-        <FillerView style={{ paddingVertical: LARGE_MARGIN }}>
-          <GlassIconButton
-            systemImage="plus"
-            isPrimary
-            color={accentPlatformColor}
-            onPress={() => null}
-          />
-        </FillerView>
+        <View className='w-full px-4' style={{ height: listHeight }}>
+          <Host style={{ flex: 1 }}>
+            <SortableList
+              focusedId={focusedId}
+              toolbarIcons={['clock']}
+              sortedItemIds={itemIds}
+              itemValueMap={itemValuesMap}
+              itemTextColorsMap={itemTextColorsMap}
+              selectedItemIds={selectedItemIds}
+              disabledItemIds={disabledItemIds ?? []}
+              onToggleItem={handleToggleItem}
+              onCreateItem={handleCreateItem}
+              onValueChange={handleValueChange}
+              onFocusChange={handleFocusChange}
+              onMoveItem={handleIndexChange}
+              accentColor={getValidCssColor(accentPlatformColor)!}
+              onDeleteItem={handleDeleteItem}
+              {...listProps}
+            />
+          </Host>
+        </View>
+        <Pressable
+          onPress={onCreateLowerListItem}
+          style={{
+            // Minimum height must fill space behind the add button.
+            minHeight: 45 + LARGE_MARGIN * 2
+          }}
+          className='flex-1'
+        />
       </Animated.ScrollView>
     </PageContainer>
   );

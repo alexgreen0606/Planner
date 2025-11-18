@@ -1,5 +1,5 @@
 import { uuid } from 'expo-modules-core';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
@@ -22,23 +22,34 @@ const usePlanner = (datestamp: string) => {
   const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
   const todayDatestamp = useAtomValue(todayDatestampAtom);
 
+  // Track the item IDs that are pending deletion.
   const { onToggleScheduleItemDeleteCallback, onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
-  const handleGetIsEventDeletingCallback = useCallback((event: IPlannerEvent) => {
-    return onGetDeletingItemsByStorageIdCallback(EStorageId.PLANNER_EVENT).some(
-      (deleteItem) =>
-        // The deleting item's ID matches the item ID
-        (deleteItem.id === event.id || // OR the deleting item's calendar ID mathces the item's ID
-          (deleteItem.calendarEventId && deleteItem.calendarEventId === event.calendarEventId)) && // AND
-        // The item is from today
-        (event.listId === todayDatestamp ||
-          // OR the deleting item is NOT from today
-          deleteItem.listId !== todayDatestamp)
-    )
-  }, [onGetDeletingItemsByStorageIdCallback, todayDatestamp]);
+  const deletingEventIds = useMemo(() => {
+    if (!planner) return new Set<string>();
+
+    const allDeletingEvents = onGetDeletingItemsByStorageIdCallback(EStorageId.PLANNER_EVENT);
+
+    return planner.eventIds.reduce((acc, eventId) => {
+      const event = getPlannerEventFromStorageById(eventId);
+      const isDeleting = allDeletingEvents.some(
+        (deletingEvent) =>
+          // The events have matching IDs
+          (deletingEvent.id === event.id || // OR the events have matching calendar event IDs
+            (deletingEvent.calendarEventId && deletingEvent.calendarEventId === event.calendarEventId)) && // AND
+          // The item is from today
+          (event.listId === todayDatestamp ||
+            // OR the deleting item is NOT from today
+            deletingEvent.listId !== todayDatestamp)
+      );
+      if (isDeleting) acc.add(eventId);
+
+      return acc;
+    }, new Set<string>());
+  }, [planner?.eventIds, onGetDeletingItemsByStorageIdCallback, todayDatestamp]);
 
   const handleGetEventTextPlatformColorCallback = useCallback((event: IPlannerEvent) => {
-    return handleGetIsEventDeletingCallback(event) ? 'tertiaryLabel' : 'label';
-  }, [handleGetIsEventDeletingCallback]);
+    return deletingEventIds.has(event.id) ? 'tertiaryLabel' : 'label';
+  }, [deletingEventIds]);
 
   // Build the initial planner with recurring data.
   useEffect(() => {
@@ -126,11 +137,11 @@ const usePlanner = (datestamp: string) => {
 
   return {
     planner: planner ?? createEmptyPlanner(datestamp),
+    deletingEventIds,
     onUpdatePlannerEventIndexWithChronologicalCheck:
       handleUpdatePlannerEventIndexWithChronologicalCheck,
     onCreateEventAndFocusTextfield: handleCreateEventAndFocusTextfield,
     onUpdatePlannerEventValueWithTimeParsing: handleUpdatePlannerEventValueWithTimeParsing,
-    onGetIsEventDeletingCallback: handleGetIsEventDeletingCallback,
     onToggleScheduleEventDeletionCallback: onToggleScheduleItemDeleteCallback,
     onGetEventTextPlatformColorCallback: handleGetEventTextPlatformColorCallback
   };

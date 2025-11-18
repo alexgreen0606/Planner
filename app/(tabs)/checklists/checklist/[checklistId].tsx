@@ -1,6 +1,6 @@
 import { uuid } from 'expo-modules-core';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useMMKV } from 'react-native-mmkv';
 
 import DraggableListPage from '@/components/SortableListPage';
@@ -18,16 +18,26 @@ type TChecklistPageParams = {
 };
 
 const ChecklistPage = () => {
-  const { onToggleScheduleItemDeleteCallback, onGetIsItemDeletingCallback } = useDeleteSchedulerContext<TListItem>();
   const itemStorage = useMMKV({ id: EStorageId.CHECKLIST_ITEM });
   const { checklistId } = useLocalSearchParams<TChecklistPageParams>();
 
   const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
   const { itemIds, platformColor, onUpdateItemIndex, onSetFolderItem } = useFolderItem(checklistId, folderItemStorage);
+  
+  // Track the deleting item IDs.
+  const { onToggleScheduleItemDeleteCallback, onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<TListItem>();
+  const deletingItemIds = useMemo(() => {
+    const items = onGetDeletingItemsByStorageIdCallback(EStorageId.CHECKLIST_ITEM);
+    const ids = new Set<string>();
+    for (const item of items) {
+      ids.add(item.id);
+    }
+    return ids;
+  }, [onGetDeletingItemsByStorageIdCallback]);
 
   const handleGetItemTextPlatformColorCallback = useCallback((item: TListItem) => {
-      return onGetIsItemDeletingCallback(item) ? 'tertiaryLabel' : 'label';
-    }, [onGetIsItemDeletingCallback]);
+    return deletingItemIds.has(item.id) ? 'tertiaryLabel' : 'label';
+  }, [deletingItemIds]);
 
   function handleCreateNewChecklistItemAndSaveToStorage(index: number) {
     // Save the new item to storage.
@@ -55,8 +65,8 @@ const ChecklistPage = () => {
       storage={itemStorage}
       itemIds={itemIds}
       accentPlatformColor={platformColor}
+      selectedItemIds={Array.from(deletingItemIds)}
       onToggleSelectItem={onToggleScheduleItemDeleteCallback}
-      onGetIsItemSelectedCallback={onGetIsItemDeletingCallback}
       onGetItem={getListItemFromStorageById}
       onCreateItem={handleCreateNewChecklistItemAndSaveToStorage}
       onDeleteItem={(item) => deleteChecklistItems([item])}
