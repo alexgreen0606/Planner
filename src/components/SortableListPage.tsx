@@ -1,6 +1,6 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { NativeSyntheticEvent, Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
@@ -9,22 +9,23 @@ import { SortableList, SortableListMoveEvent, SortableListProps } from "sortable
 
 import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
 import { NULL, SCROLL_THROTTLE } from '@/lib/constants/generic';
-import { LARGE_MARGIN } from '@/lib/constants/layout';
+import { GLASS_BUTTON_SIZE, LARGE_MARGIN } from '@/lib/constants/layout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 
 import { EListLayout } from '@/lib/enums/EListLayout';
 import { getValidCssColor } from '@/utils/colorUtils';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import PageContainer from './PageContainer';
+import debounce from 'lodash.debounce';
 
 interface IDraggableListPageProps<T extends TListItem> {
   emptyPageLabel: string;
   itemIds: string[];
   listId: string;
   storage: MMKV;
+  selectedItemIds: string[];
   accentPlatformColor?: string;
   hasExternalData?: boolean;
-  selectedItemIds: string[];
   disabledItemIds?: string[];
   listProps?: Partial<SortableListProps>;
   onGetItem: (itemId: string) => T;
@@ -33,12 +34,12 @@ interface IDraggableListPageProps<T extends TListItem> {
   onValueChange?: (newValue: string, item: T) => T;
   onIndexChange: (from: number, to: number, listId: string) => void;
   onToggleSelectItem: (item: T) => void;
+  onGetItemTextPlatformColorCallback?: (item: T) => string;
 
   // toolbar?: ReactNode; TODO: migrate to new approach
 
   // TODO: get these working
   onSaveToExternalStorage?: (item: T) => void;
-  onGetItemTextPlatformColorCallback?: (item: T) => string;
 };
 
 // TODO: calculate this correctly in the future.
@@ -60,21 +61,23 @@ const DraggableListPage = <T extends TListItem>({
   onCreateItem,
   onDeleteItem,
   onValueChange,
+  onSaveToExternalStorage,
   onGetItemTextPlatformColorCallback
 }: IDraggableListPageProps<T>) => {
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const { top: TOP_SPACER } = useSafeAreaInsets();
   const onScroll = useScrollTracker(listId);
   const headerHeight = useHeaderHeight();
-  const { top: TOP_SPACER } = useSafeAreaInsets();
 
   const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
+
   const [focusedId, setFocusedId] = useState<string>(NULL);
-  const [item, setItem] = useMMKVObject<T>(focusedId, storage);
+  const [focusedItem, setFocusedItem] = useMMKVObject<T>(focusedId, storage);
 
   const itemValuesMap = useMemo(() => {
     return Object.fromEntries(itemIds.map((id) => [id, onGetItem(id).value]));
-  }, [itemIds, item?.value]);
+  }, [itemIds, focusedItem?.value]);
 
   const itemTextColorsMap = useMemo(() => {
     return Object.fromEntries(itemIds.map((id) => {
@@ -107,11 +110,24 @@ const DraggableListPage = <T extends TListItem>({
     onToggleSelectItem(item);
   }
 
+  // Debounced to call 1 second after key press, or immediately on blur.
   function handleValueChange({ nativeEvent: { value } }: NativeSyntheticEvent<{ value: string }>) {
-    setItem((prev) => {
+    console.info('external save', value)
+    setFocusedItem((prev) => {
       if (!prev) return prev;
-      if (onValueChange) return onValueChange(value, prev);
-      return { ...prev, value };
+
+      let newItem = { ...prev };
+      if (onValueChange) {
+        newItem = onValueChange(value, newItem);
+      } else {
+        newItem.value = value;
+      };
+
+      // External storage save.
+      onSaveToExternalStorage?.(newItem);
+
+      // Local storage save.
+      return newItem;
     });
   }
 
@@ -161,7 +177,7 @@ const DraggableListPage = <T extends TListItem>({
           ) : undefined
         }
       >
-        {/* Content */}
+        {/* List Content */}
         <View className='w-full px-4' style={{ height: listHeight }}>
           <Host style={{ flex: 1 }}>
             <SortableList
@@ -183,11 +199,13 @@ const DraggableListPage = <T extends TListItem>({
             />
           </Host>
         </View>
+
+        {/* Empty Trigger Space */}
         <Pressable
           onPress={onCreateLowerListItem}
           style={{
             // Minimum height must fill space behind the add button.
-            minHeight: 45 + LARGE_MARGIN * 2
+            minHeight: GLASS_BUTTON_SIZE + LARGE_MARGIN * 2
           }}
           className='flex-1'
         />

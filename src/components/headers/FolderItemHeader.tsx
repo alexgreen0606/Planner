@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { MotiText, MotiView } from 'moti';
+import { MotiView } from 'moti';
 import { useMemo } from 'react';
 import { Text, useWindowDimensions, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
@@ -9,7 +9,7 @@ import FolderItemActions from '@/components/actions/FolderItemActions';
 import GlassIconButton from '@/components/buttons/GlassIconButton';
 import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
 import { NULL } from '@/lib/constants/generic';
-import { LARGE_MARGIN } from '@/lib/constants/layout';
+import { GLASS_BUTTON_SIZE, LARGE_MARGIN } from '@/lib/constants/layout';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
@@ -45,10 +45,9 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
         return pathItems.join(' / ');
     }, [item?.listId]);
 
-    const buttonWidth = 45;
     const totalContainerPadding = LARGE_MARGIN * 2;
     const expandedWidth = SCREEN_WIDTH - totalContainerPadding;
-    const collapsedWidth = expandedWidth - (totalContainerPadding + (buttonWidth * 2));
+    const collapsedWidth = expandedWidth - (totalContainerPadding + (GLASS_BUTTON_SIZE * 2));
     const collapsedScale = collapsedWidth / expandedWidth;
 
     return (
@@ -65,7 +64,6 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
                     systemImage="chevron.left"
                     onPress={() => router.back()}
                 />
-
                 <FolderItemActions folderId={folderItemId} />
             </View>
 
@@ -73,7 +71,7 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
             <MotiView
                 className='absolute'
                 animate={{
-                    top: isCollapsed ? 0 : 45 + LARGE_MARGIN,
+                    top: isCollapsed ? 0 : GLASS_BUTTON_SIZE + LARGE_MARGIN,
                     transform: [{ scale: isCollapsed ? collapsedScale : 1 }]
                 }}
                 style={{ width: expandedWidth, left: LARGE_MARGIN }}

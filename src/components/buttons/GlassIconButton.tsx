@@ -3,6 +3,7 @@ import { frame } from '@expo/ui/swift-ui/modifiers';
 import { SFSymbol } from 'expo-symbols';
 import { PlatformColor } from 'react-native';
 
+import { GLASS_BUTTON_SIZE } from '@/lib/constants/layout';
 import { getValidCssColor } from '@/utils/colorUtils';
 
 interface IGlassIconButtonProps {
@@ -28,9 +29,9 @@ const GlassIconButton = ({
       color={getValidCssColor(color)}
       variant={isPrimary && color !== 'label' ? 'glassProminent' : 'glass'}
       disabled={disabled}
-      modifiers={[frame({ height: 45, width: 45 })]}
+      modifiers={[frame({ height: GLASS_BUTTON_SIZE, width: GLASS_BUTTON_SIZE })]}
     >
-      <Host style={{ height: 45, width: 45 }}>
+      <Host style={{ height: GLASS_BUTTON_SIZE, width: GLASS_BUTTON_SIZE }}>
         <Image
           systemName={systemImage}
           color={PlatformColor(disabled ? 'tertiaryLabel' : iconPlatformColor) as unknown as string}
