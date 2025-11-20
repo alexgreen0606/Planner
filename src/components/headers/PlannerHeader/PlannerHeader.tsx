@@ -79,7 +79,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
         <View className='flex-row gap-1'>
           {weatherData && (
             <FadeTransitionView>
-              <View className="px-4 py-2 flex-row gap-2">
+              <View className="flex-row gap-2">
                 <View className='items-end'>
                   <CustomText variant="weatherCondition">{weatherData.condition}</CustomText>
                   <CustomText variant="weatherTemperature">
@@ -92,7 +92,6 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
               </View>
             </FadeTransitionView>
           )}
-          {/* <PlannerActions datestamp={activeDatestamp} /> */}
         </View>
       </View>
 

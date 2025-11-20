@@ -17,7 +17,7 @@ export interface SortableListProps {
   selectedItemIds: string[];
   disabledItemIds: string[];
   onFocusChange: (event: NativeSyntheticEvent<{ id: string | null }>) => void;
-  onCreateItem: (event: NativeSyntheticEvent<{ index: number }>) => void;
+  onCreateItem: (event: NativeSyntheticEvent<{ baseId: string, offset?: number }>) => void;
   onMoveItem: (event: NativeSyntheticEvent<SortableListMoveEvent>) => void;
   onDeleteItem: (event: NativeSyntheticEvent<{ id: string }>) => void;
   onToggleItem: (event: NativeSyntheticEvent<{ id: string }>) => void;

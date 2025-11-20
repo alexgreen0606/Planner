@@ -44,64 +44,6 @@ import {
 // ==================
 
 /**
- * Calculates a valid index for a planner event that maintains chronological ordering within its planner.
- *
- * @param event - The event to place.
- * @param planner - The planner with the current ordering of events.
- * @returns A new index for the event that maintains chronological ordering within the planner.
- */
-function calculateChronologicalPlannerEventIndex(event: IPlannerEvent, planner: TPlanner): number {
-  const eventTime = getPlannerEventTime(event);
-  const prevIndex = planner.eventIds.findIndex((id) => id === event.id);
-
-  if (prevIndex === -1) {
-    throw new Error(
-      `calculateChronologicalPlannerEventIndex: No event exists in planner ${event.listId} with ID ${event.id}`
-    );
-  }
-
-  // Pre-Check 1: The event is unscheduled. Keep it at its current index.
-  if (!eventTime) return prevIndex;
-
-  const plannerEvents = planner.eventIds.map((id) => {
-    if (id === event.id) {
-      return event;
-    }
-    return getPlannerEventFromStorageById(id);
-  });
-
-  const plannerEventsWithoutEvent = plannerEvents.filter((e) => e.id !== event.id);
-  const timedPlanner = plannerEvents.filter((existingEvent) => getPlannerEventTime(existingEvent));
-
-  const timedPlannerIndex = timedPlanner.findIndex((e) => e.id === event.id);
-  const earlierTime = getPlannerEventTime(timedPlanner[timedPlannerIndex - 1]);
-  const laterTime = getPlannerEventTime(timedPlanner[timedPlannerIndex + 1]);
-
-  // Pre-Check 2: Check if the event conflicts at its current position.
-  if (
-    (!earlierTime || isTimeEarlierOrEqual(earlierTime, eventTime)) &&
-    (!laterTime || isTimeEarlierOrEqual(eventTime, laterTime))
-  )
-    return prevIndex;
-
-  // Traverse the list in reverse to find the last event that starts before or at the same time.
-  const earlierEventIndex = plannerEventsWithoutEvent.findLastIndex((e) => {
-    const existingTime = getPlannerEventTime(e);
-    if (!existingTime) return false;
-    return isTimeEarlierOrEqual(existingTime, eventTime);
-  });
-
-  if (earlierEventIndex !== -1) {
-    // Found an event that starts before or at the same time - place our event right after it.
-    return earlierEventIndex + 1;
-  }
-
-  // No event found that starts before or at the same time - this must be the earliest event.
-  // Place it at the front of the planner.
-  return 0;
-}
-
-/**
  * Parses a planner event and returns its time. If no time exists, null will be returned.
  *
  * @param event - The event to parse.
@@ -459,6 +401,68 @@ export function createPlannerEventTimeConfig(datestamp: string, timeValue: strin
   };
 }
 
+// =================
+//  Getter Function
+// =================
+
+/**
+ * Calculates a valid index for a planner event that maintains chronological ordering within its planner.
+ *
+ * @param event - The event to place.
+ * @param planner - The planner with the current ordering of events.
+ * @returns A new index for the event that maintains chronological ordering within the planner.
+ */
+export function getChronologicalPlannerEventIndex(event: IPlannerEvent, planner: TPlanner): number {
+  const eventTime = getPlannerEventTime(event);
+  const prevIndex = planner.eventIds.findIndex((id) => id === event.id);
+
+  if (prevIndex === -1) {
+    throw new Error(
+      `calculateChronologicalPlannerEventIndex: No event exists in planner ${event.listId} with ID ${event.id}`
+    );
+  }
+
+  // Pre-Check 1: The event is unscheduled. Keep it at its current index.
+  if (!eventTime) return prevIndex;
+
+  const plannerEvents = planner.eventIds.map((id) => {
+    if (id === event.id) {
+      return event;
+    }
+    return getPlannerEventFromStorageById(id);
+  });
+
+  const plannerEventsWithoutEvent = plannerEvents.filter((e) => e.id !== event.id);
+  const timedPlanner = plannerEvents.filter((existingEvent) => getPlannerEventTime(existingEvent));
+
+  const timedPlannerIndex = timedPlanner.findIndex((e) => e.id === event.id);
+  const earlierTime = getPlannerEventTime(timedPlanner[timedPlannerIndex - 1]);
+  const laterTime = getPlannerEventTime(timedPlanner[timedPlannerIndex + 1]);
+
+  // Pre-Check 2: Check if the event conflicts at its current position.
+  if (
+    (!earlierTime || isTimeEarlierOrEqual(earlierTime, eventTime)) &&
+    (!laterTime || isTimeEarlierOrEqual(eventTime, laterTime))
+  )
+    return prevIndex;
+
+  // Traverse the list in reverse to find the last event that starts before or at the same time.
+  const earlierEventIndex = plannerEventsWithoutEvent.findLastIndex((e) => {
+    const existingTime = getPlannerEventTime(e);
+    if (!existingTime) return false;
+    return isTimeEarlierOrEqual(existingTime, eventTime);
+  });
+
+  if (earlierEventIndex !== -1) {
+    // Found an event that starts before or at the same time - place our event right after it.
+    return earlierEventIndex + 1;
+  }
+
+  // No event found that starts before or at the same time - this must be the earliest event.
+  // Place it at the front of the planner.
+  return 0;
+}
+
 // ==================
 //  Update Functions
 // ==================
@@ -505,7 +509,7 @@ export function updatePlannerEventIndexWithChronologicalCheck(
   planner.eventIds.splice(index, 0, event.id);
 
   // Verify chronological order.
-  const newEventIndex = calculateChronologicalPlannerEventIndex(event, planner);
+  const newEventIndex = getChronologicalPlannerEventIndex(event, planner);
   if (newEventIndex !== index) {
     // Remove again and insert at corrected index.
     planner.eventIds = planner.eventIds.filter((id) => id !== event.id);

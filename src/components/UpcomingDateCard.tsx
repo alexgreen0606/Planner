@@ -12,10 +12,10 @@ import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 
+import Animated, { FadeIn, LinearTransition, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import Icon from './Icon';
 import CustomText, { textStyles } from './text/CustomText';
 import DateValue from './text/DateValue';
-import FadeTransitionView from './views/FadeTransitionView';
 
 interface IUpcomingDateCardProps {
   datestamp: string;
@@ -59,7 +59,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) 
   const minimumContainerHeight = textStyles['dateValue'].fontSize + LARGE_MARGIN * 2;
 
   return (
-    <FadeTransitionView>
+    <Animated.View entering={SlideInRight} layout={LinearTransition} exiting={SlideOutLeft}>
       <View
         style={{
           borderBottomWidth: StyleSheet.hairlineWidth,
@@ -114,7 +114,7 @@ const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) 
           <CustomText variant="pageSubHeader">{countdownLabel}</CustomText>
         </View>
       </View>
-    </FadeTransitionView>
+    </Animated.View>
   );
 };
 

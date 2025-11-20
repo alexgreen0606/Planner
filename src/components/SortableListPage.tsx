@@ -1,6 +1,6 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { NativeSyntheticEvent, Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
@@ -16,7 +16,6 @@ import { EListLayout } from '@/lib/enums/EListLayout';
 import { getValidCssColor } from '@/utils/colorUtils';
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import PageContainer from './PageContainer';
-import debounce from 'lodash.debounce';
 
 interface IDraggableListPageProps<T extends TListItem> {
   emptyPageLabel: string;
@@ -112,7 +111,6 @@ const DraggableListPage = <T extends TListItem>({
 
   // Debounced to call 1 second after key press, or immediately on blur.
   function handleValueChange({ nativeEvent: { value } }: NativeSyntheticEvent<{ value: string }>) {
-    console.info('external save', value)
     setFocusedItem((prev) => {
       if (!prev) return prev;
 
@@ -131,9 +129,11 @@ const DraggableListPage = <T extends TListItem>({
     });
   }
 
-  function handleCreateItem({ nativeEvent: { index } }: NativeSyntheticEvent<{ index: number }>) {
+  function handleCreateItem({ nativeEvent: { baseId, offset } }: NativeSyntheticEvent<{ baseId: string, offset?: number }>) {
     if (onCreateItem) {
-      onCreateItem(index);
+      const itemIndex = itemIds.indexOf(baseId);
+      if (itemIndex === -1) return;
+      onCreateItem(itemIndex + (offset ?? 0));
     }
   }
 

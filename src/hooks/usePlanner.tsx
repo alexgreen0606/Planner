@@ -1,8 +1,9 @@
 import { uuid } from 'expo-modules-core';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
+import { NULL } from '@/lib/constants/generic';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { IPlannerEvent } from '@/lib/types/listItems/IPlannerEvent';
 import { TPlanner } from '@/lib/types/planners/TPlanner';
@@ -12,10 +13,25 @@ import { getDayOfWeekFromDatestamp, parseTimeValueFromText } from '@/utils/dateU
 import {
   createEmptyPlanner,
   createPlannerEventTimeConfig,
+  getChronologicalPlannerEventIndex,
   updatePlannerEventIndexWithChronologicalCheck,
   upsertRecurringEventsIntoPlanner
 } from '@/utils/plannerUtils';
 import { useAtomValue } from 'jotai';
+import { DateTime } from 'luxon';
+
+/**
+ * Parses a planner event and returns its time. If no time exists, null will be returned.
+ *
+ * @param event - The event to parse.
+ * @returns The event's time value if one exists, else null.
+ */
+function getPlannerEventTime(event?: IPlannerEvent): string | null {
+  if (!event) return null;
+  return event.timeConfig?.endEventId === event.id
+    ? event.timeConfig.endIso
+    : (event.timeConfig?.startIso ?? null);
+}
 
 const usePlanner = (datestamp: string) => {
   const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
@@ -47,6 +63,48 @@ const usePlanner = (datestamp: string) => {
     }, new Set<string>());
   }, [planner?.eventIds, onGetDeletingItemsByStorageIdCallback, todayDatestamp]);
 
+  // Track the time values linked to each event.
+  const [timeRefreshKey, setTimeRefreshKey] = useState(NULL);
+  const eventTimeValuesMap = useMemo(() => {
+    return planner?.eventIds.reduce((acc, id) => {
+      const event = getPlannerEventFromStorageById(id);
+      const eventTime = getPlannerEventTime(event);
+
+      if (!eventTime) return acc;
+
+      const values: Record<string, string> = {};
+
+      const isEndEvent = event.timeConfig?.endEventId === event.id;
+      const isStartEvent = event.timeConfig?.startEventId === event.id;
+      const isoTimestamp = eventTime;
+
+      let date: DateTime | null = null;
+
+      if (isoTimestamp) {
+        date = DateTime.fromISO(isoTimestamp);
+      }
+
+      if (!date || !date.isValid) return acc;
+
+      const rawHour = date.hour;
+      const rawMinute = date.minute;
+      const isPM = rawHour >= 12;
+
+      const adjustedHour = rawHour % 12 === 0 ? 12 : rawHour % 12;
+      const paddedMinute = `:${String(rawMinute).padStart(2, '0')}`;
+
+      values["time"] = String(adjustedHour) + paddedMinute;
+      values["indicator"] = isPM ? 'PM' : 'AM';
+
+      if (isEndEvent || isStartEvent) {
+        values["detail"] = isEndEvent ? 'END' : 'START';
+      }
+
+      acc[id] = values;
+      return acc;
+    }, {} as Record<string, Record<string, string>>) ?? {}
+  }, [planner?.eventIds, timeRefreshKey]);
+
   const handleGetEventTextPlatformColorCallback = useCallback((event: IPlannerEvent) => {
     return deletingEventIds.has(event.id) ? 'tertiaryLabel' : 'label';
   }, [deletingEventIds]);
@@ -70,14 +128,29 @@ const usePlanner = (datestamp: string) => {
     }
   }, recurringPlannerStorage);
 
+  // TODO: need to know if the item "from" was deleted during drag
   function handleUpdatePlannerEventIndexWithChronologicalCheck(from: number, to: number) {
-    // TODO: need to know if the item "from" was deleted during drag
-    setPlanner((prev) => {
-      const prevPlanner = prev ?? createEmptyPlanner(datestamp);
-      const eventId = prevPlanner.eventIds[from];
-      const event = getPlannerEventFromStorageById(eventId);
-      return updatePlannerEventIndexWithChronologicalCheck(prevPlanner, to, event);
-    });
+    if (!planner) return;
+
+    const newPlanner = { ...planner };
+
+    // Sync the local storage with the Swift UI.
+    const eventId = newPlanner.eventIds[from];
+    newPlanner.eventIds = newPlanner.eventIds.filter((id) => id !== eventId);
+    newPlanner.eventIds.splice(to, 0, eventId);
+    setPlanner(newPlanner);
+
+    // Validate new position after 1 second to ensure Swift UI animation is settled.
+    setTimeout(() => {
+      const event = getPlannerEventFromStorageById(eventId)
+      const newEventIndex = getChronologicalPlannerEventIndex(event, newPlanner);
+      if (newEventIndex !== to) {
+        // Remove and insert at corrected index.
+        newPlanner.eventIds = newPlanner.eventIds.filter((id) => id !== event.id);
+        newPlanner.eventIds.splice(newEventIndex, 0, event.id);
+        setPlanner(newPlanner)
+      }
+    }, 1000)
   }
 
   function handleCreateEventAndFocusTextfield(index: number) {
@@ -132,12 +205,15 @@ const usePlanner = (datestamp: string) => {
 
     setPlanner(updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent));
 
+    setTimeout(() => setTimeRefreshKey((prev) => prev + '.'), 300);
+
     return newEvent;
   }
 
   return {
     planner: planner ?? createEmptyPlanner(datestamp),
     deletingEventIds,
+    eventTimeValuesMap,
     onUpdatePlannerEventIndexWithChronologicalCheck:
       handleUpdatePlannerEventIndexWithChronologicalCheck,
     onCreateEventAndFocusTextfield: handleCreateEventAndFocusTextfield,
