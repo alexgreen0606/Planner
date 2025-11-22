@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
+import { NativeSyntheticEvent } from 'react-native';
 import { useMMKV } from 'react-native-mmkv';
 
 import DraggableListPage from '@/components/SortableListPage';
@@ -12,7 +13,6 @@ import {
   openEditEventModal,
   updateDeviceCalendarEventByPlannerEvent
 } from '@/utils/plannerUtils';
-import { NativeSyntheticEvent } from 'react-native';
 
 const PlannerPage = () => {
   const { datestamp } = useLocalSearchParams<{ datestamp: string }>();

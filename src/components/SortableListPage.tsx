@@ -1,19 +1,17 @@
 import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
 import React, { useMemo, useState } from 'react';
-import { NativeSyntheticEvent, Pressable, RefreshControl, useWindowDimensions, View } from 'react-native';
+import { NativeSyntheticEvent } from 'react-native';
 import { MMKV, useMMKVObject } from 'react-native-mmkv';
-import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SortableList, SortableListMoveEvent, SortableListProps } from "sortable-list";
 
-import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
-import { NULL, SCROLL_THROTTLE } from '@/lib/constants/generic';
-import { GLASS_BUTTON_SIZE, LARGE_MARGIN } from '@/lib/constants/layout';
+import useCollapsedHeaderSwift from '@/hooks/scrollTracking/useCollapsedHeaderSwift';
+import { NULL } from '@/lib/constants/generic';
+import { GLASS_BUTTON_SIZE, LARGE_MARGIN, SMALL_MARGIN } from '@/lib/constants/layout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
-
-import { EListLayout } from '@/lib/enums/EListLayout';
 import { getValidCssColor } from '@/utils/colorUtils';
+
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import PageContainer from './PageContainer';
 
@@ -34,15 +32,10 @@ interface IDraggableListPageProps<T extends TListItem> {
   onIndexChange: (from: number, to: number, listId: string) => void;
   onToggleSelectItem: (item: T) => void;
   onGetItemTextPlatformColorCallback?: (item: T) => string;
+  onSaveToExternalStorage?: (item: T) => void;
 
   // toolbar?: ReactNode; TODO: migrate to new approach
-
-  // TODO: get these working
-  onSaveToExternalStorage?: (item: T) => void;
 };
-
-// TODO: calculate this correctly in the future.
-const BOTTOM_NAV_HEIGHT = 86;
 
 const DraggableListPage = <T extends TListItem>({
   itemIds,
@@ -64,12 +57,9 @@ const DraggableListPage = <T extends TListItem>({
   onGetItemTextPlatformColorCallback
 }: IDraggableListPageProps<T>) => {
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
-  const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const { onSetIsScrollingDown } = useCollapsedHeaderSwift(listId);
   const { top: TOP_SPACER } = useSafeAreaInsets();
-  const onScroll = useScrollTracker(listId);
   const headerHeight = useHeaderHeight();
-
-  const [showLoadingSymbol, setShowLoadingSymbol] = useState(false);
 
   const [focusedId, setFocusedId] = useState<string>(NULL);
   const [focusedItem, setFocusedItem] = useMMKVObject<T>(focusedId, storage);
@@ -86,17 +76,16 @@ const DraggableListPage = <T extends TListItem>({
     }));
   }, [itemIds, onGetItemTextPlatformColorCallback]);
 
-  function handleReloadPage() {
-    setShowLoadingSymbol(true);
-    onReloadPage();
-  }
-
   function handleIndexChange({ nativeEvent: { from, to } }: NativeSyntheticEvent<SortableListMoveEvent>) {
     onIndexChange(from, to, listId);
   }
 
   function handleFocusChange({ nativeEvent: { id } }: NativeSyntheticEvent<{ id: string | null }>) {
     setFocusedId(id ?? NULL);
+  }
+
+  function handleIsScrollingDown({ nativeEvent: { isScrollingDown } }: NativeSyntheticEvent<{ isScrollingDown: boolean }>) {
+    onSetIsScrollingDown(isScrollingDown);
   }
 
   function handleDeleteItem({ nativeEvent: { id } }: NativeSyntheticEvent<{ id: string }>) {
@@ -129,8 +118,12 @@ const DraggableListPage = <T extends TListItem>({
     });
   }
 
-  function handleCreateItem({ nativeEvent: { baseId, offset } }: NativeSyntheticEvent<{ baseId: string, offset?: number }>) {
+  function handleCreateItem({ nativeEvent: { baseId, offset } }: NativeSyntheticEvent<{ baseId?: string, offset?: number }>) {
     if (onCreateItem) {
+      if (!baseId) {
+        onCreateItem(0);
+        return;
+      }
       const itemIndex = itemIds.indexOf(baseId);
       if (itemIndex === -1) return;
       onCreateItem(itemIndex + (offset ?? 0));
@@ -142,8 +135,7 @@ const DraggableListPage = <T extends TListItem>({
   }
 
   const isListEmpty = itemIds.length === 0;
-  const listHeight = EListLayout.ITEM_HEIGHT * itemIds.length + EListLayout.NEW_ITEM_TRIGGER_HEIGHT / 2;
-  const contentInset = headerHeight - TOP_SPACER;
+  const contentInset = headerHeight - TOP_SPACER + SMALL_MARGIN;
 
   return (
     <PageContainer
@@ -152,64 +144,28 @@ const DraggableListPage = <T extends TListItem>({
       isPageEmpty={isListEmpty}
       onAddButtonClick={onCreateLowerListItem}
     >
-      <Animated.ScrollView
-        onScroll={onScroll}
-        contentInsetAdjustmentBehavior="automatic"
-        keyboardDismissMode='interactive'
-        keyboardShouldPersistTaps='always'
-        scrollEventThrottle={SCROLL_THROTTLE}
-        contentInset={{ top: contentInset }}
-        contentOffset={{ x: 0, y: -contentInset - TOP_SPACER }}
-        scrollIndicatorInsets={{ top: contentInset }}
-        contentContainerStyle={{
-          minHeight: Math.max(SCREEN_HEIGHT - headerHeight - BOTTOM_NAV_HEIGHT, listHeight + BOTTOM_NAV_HEIGHT),
-        }}
-        style={{ height: SCREEN_HEIGHT }}
-        showsVerticalScrollIndicator
-
-        // TODO: create custom refresh logic
-        refreshControl={
-          hasExternalData ? (
-            <RefreshControl
-              refreshing={showLoadingSymbol && loadingPathnames.has(listId)}
-              onRefresh={handleReloadPage}
-            />
-          ) : undefined
-        }
-      >
-        {/* List Content */}
-        <View className='w-full px-4' style={{ height: listHeight }}>
-          <Host style={{ flex: 1 }}>
-            <SortableList
-              focusedId={focusedId}
-              toolbarIcons={['clock']}
-              sortedItemIds={itemIds}
-              itemValueMap={itemValuesMap}
-              itemTextColorsMap={itemTextColorsMap}
-              selectedItemIds={selectedItemIds}
-              disabledItemIds={disabledItemIds ?? []}
-              onToggleItem={handleToggleItem}
-              onCreateItem={handleCreateItem}
-              onValueChange={handleValueChange}
-              onFocusChange={handleFocusChange}
-              onMoveItem={handleIndexChange}
-              accentColor={getValidCssColor(accentPlatformColor)!}
-              onDeleteItem={handleDeleteItem}
-              {...listProps}
-            />
-          </Host>
-        </View>
-
-        {/* Empty Trigger Space */}
-        <Pressable
-          onPress={onCreateLowerListItem}
-          style={{
-            // Minimum height must fill space behind the add button.
-            minHeight: GLASS_BUTTON_SIZE + LARGE_MARGIN * 2
-          }}
-          className='flex-1'
+      <Host style={{ flex: 1 }}>
+        <SortableList
+          focusedId={focusedId}
+          toolbarIcons={['clock']}
+          sortedItemIds={itemIds}
+          topInset={contentInset}
+          onScrollChange={handleIsScrollingDown}
+          bottomInset={GLASS_BUTTON_SIZE + LARGE_MARGIN * 2}
+          itemValueMap={itemValuesMap}
+          itemTextColorsMap={itemTextColorsMap}
+          selectedItemIds={selectedItemIds}
+          disabledItemIds={disabledItemIds ?? []}
+          onToggleItem={handleToggleItem}
+          onCreateItem={handleCreateItem}
+          onValueChange={handleValueChange}
+          onFocusChange={handleFocusChange}
+          onMoveItem={handleIndexChange}
+          accentColor={getValidCssColor(accentPlatformColor)!}
+          onDeleteItem={handleDeleteItem}
+          {...listProps}
         />
-      </Animated.ScrollView>
+      </Host>
     </PageContainer>
   );
 };

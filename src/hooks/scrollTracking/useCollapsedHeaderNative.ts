@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useAnimatedReaction } from 'react-native-reanimated';
 import { runOnJS } from 'react-native-worklets';
 
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
+import { useScrollOffsetRegistry } from '@/providers/ScrollOffsetRegistry';
 
-export const useCollapsibleHeader = (
+const useCollapsedHeaderNative = (
     key: string,
     headerHeight: number
 ) => {
-    const scrollRegistry = useScrollRegistry();
+    const scrollRegistry = useScrollOffsetRegistry();
     const scrollY = scrollRegistry.get(key) ?? { value: 0 };
 
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -27,3 +27,5 @@ export const useCollapsibleHeader = (
 
     return isCollapsed;
 };
+
+export default useCollapsedHeaderNative;

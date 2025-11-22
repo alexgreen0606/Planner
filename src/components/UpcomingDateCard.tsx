@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useAtomValue } from 'jotai';
 import React, { useMemo } from 'react';
 import { PlatformColor, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Animated, { LinearTransition, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 
 import { calendarMapAtom } from '@/atoms/planner/calendarAtoms';
 import { todayDatestampAtom } from '@/atoms/planner/todayDatestamp';
@@ -12,7 +13,6 @@ import { LARGE_MARGIN } from '@/lib/constants/layout';
 import { getDaysUntilIso, getTodayDatestamp, getTomorrowDatestamp } from '@/utils/dateUtils';
 import { openEditEventModal, openViewEventModal } from '@/utils/plannerUtils';
 
-import Animated, { FadeIn, LinearTransition, SlideInRight, SlideOutLeft } from 'react-native-reanimated';
 import Icon from './Icon';
 import CustomText, { textStyles } from './text/CustomText';
 import DateValue from './text/DateValue';
@@ -108,8 +108,8 @@ const UpcomingDateCard = ({ datestamp, events, index }: IUpcomingDateCardProps) 
 
         {/* Countdown */}
         <View
-          className="w-22 items-end justify-center"
           style={{ height: minimumContainerHeight }}
+          className="w-22 items-end justify-center"
         >
           <CustomText variant="pageSubHeader">{countdownLabel}</CustomText>
         </View>

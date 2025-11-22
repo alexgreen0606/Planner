@@ -8,7 +8,8 @@ import useAppTheme from '@/hooks/useAppTheme';
 import { EModalBasePath } from '@/lib/enums/EModalBasePath';
 import { DeleteSchedulerProvider } from '@/providers/DeleteScheduler';
 import { ExternalDataProvider } from '@/providers/ExternalDataProvider';
-import { ScrollRegistryProvider } from '@/providers/ScrollRegistry';
+import { ScrollDirectionRegistryProvider } from '@/providers/ScrollDirectionRegistry';
+import { ScrollOffsetRegistryProvider } from '@/providers/ScrollOffsetRegistry';
 
 export const jotaiStore = createStore();
 
@@ -20,54 +21,56 @@ const TabLayout = () => {
     <JotaiProvider store={jotaiStore}>
       <DeleteSchedulerProvider>
         <GestureHandlerRootView>
-          <ScrollRegistryProvider>
-            <ExternalDataProvider>
-              <Stack>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{
-                    headerShown: false,
-                    contentStyle: {
-                      backgroundColor: background
-                    }
-                  }}
-                />
-                <Stack.Screen
-                  name={`${EModalBasePath.EDIT_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
-                  options={{
-                    presentation: 'formSheet',
-                    sheetAllowedDetents: 'fitToContents',
-                    contentStyle: {
-                      backgroundColor: 'transparent'
-                    },
-                    headerShown: false
-                  }}
-                />
-                <Stack.Screen
-                  name={`${EModalBasePath.VIEW_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
-                  options={{
-                    presentation: 'formSheet',
-                    sheetAllowedDetents: 'fitToContents',
-                    contentStyle: {
-                      backgroundColor: 'transparent'
-                    },
-                    headerShown: false
-                  }}
-                />
-                <Stack.Screen
-                  name={`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/[parentFolderId]/[folderItemId]`}
-                  options={{
-                    presentation: 'formSheet',
-                    sheetAllowedDetents: 'fitToContents',
-                    contentStyle: {
-                      backgroundColor: 'transparent'
-                    },
-                    headerShown: false
-                  }}
-                />
-              </Stack>
-            </ExternalDataProvider>
-          </ScrollRegistryProvider>
+          <ScrollOffsetRegistryProvider>
+            <ScrollDirectionRegistryProvider>
+              <ExternalDataProvider>
+                <Stack>
+                  <Stack.Screen
+                    name="(tabs)"
+                    options={{
+                      headerShown: false,
+                      contentStyle: {
+                        backgroundColor: background
+                      }
+                    }}
+                  />
+                  <Stack.Screen
+                    name={`${EModalBasePath.EDIT_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
+                    options={{
+                      presentation: 'formSheet',
+                      sheetAllowedDetents: 'fitToContents',
+                      contentStyle: {
+                        backgroundColor: 'transparent'
+                      },
+                      headerShown: false
+                    }}
+                  />
+                  <Stack.Screen
+                    name={`${EModalBasePath.VIEW_EVENT_MODAL_PATHNAME}/[eventId]/[triggerDatestamp]`}
+                    options={{
+                      presentation: 'formSheet',
+                      sheetAllowedDetents: 'fitToContents',
+                      contentStyle: {
+                        backgroundColor: 'transparent'
+                      },
+                      headerShown: false
+                    }}
+                  />
+                  <Stack.Screen
+                    name={`${EModalBasePath.FOLDER_ITEM_MODAL_PATHNAME}/[parentFolderId]/[folderItemId]`}
+                    options={{
+                      presentation: 'formSheet',
+                      sheetAllowedDetents: 'fitToContents',
+                      contentStyle: {
+                        backgroundColor: 'transparent'
+                      },
+                      headerShown: false
+                    }}
+                  />
+                </Stack>
+              </ExternalDataProvider>
+            </ScrollDirectionRegistryProvider>
+          </ScrollOffsetRegistryProvider>
         </GestureHandlerRootView>
       </DeleteSchedulerProvider>
     </JotaiProvider>

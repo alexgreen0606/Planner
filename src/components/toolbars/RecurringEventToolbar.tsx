@@ -20,8 +20,8 @@ import {
   upsertWeekdayEventToRecurringPlanners
 } from '@/utils/recurringPlannerUtils';
 
-import IconButton from '../buttons/IconButton';
 import ListToolbar from '../../_deprecated/ListToolbar';
+import IconButton from '../buttons/IconButton';
 
 const RecurringEventToolbar = () => {
   const [recurringTimeModalEvent, setRecurringTimeModalEvent] = useAtom(

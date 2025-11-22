@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 
-import { useScrollRegistry } from '@/providers/ScrollRegistry';
+import { useScrollOffsetRegistry } from '@/providers/ScrollOffsetRegistry';
 
-export const useScrollTracker = (key: string) => {
-    const scrollRegistry = useScrollRegistry();
+const useScrollOffsetTracker = (key: string) => {
+    const scrollRegistry = useScrollOffsetRegistry();
     const scrollY = useSharedValue(0);
 
     const onScroll = useAnimatedScrollHandler({
@@ -20,3 +20,5 @@ export const useScrollTracker = (key: string) => {
 
     return onScroll;
 };
+
+export default useScrollOffsetTracker;

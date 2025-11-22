@@ -7,11 +7,11 @@ import DraggableListPage from '@/components/SortableListPage';
 import useFolderItem from '@/hooks/useFolderItem';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
+import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 import { getListItemFromStorageById, saveChecklistItemToStorage } from '@/storage/checklistsStorage';
 import {
   deleteChecklistItems,
 } from '@/utils/checklistUtils';
-import { useDeleteSchedulerContext } from '@/providers/DeleteScheduler';
 
 type TChecklistPageParams = {
   checklistId: string;

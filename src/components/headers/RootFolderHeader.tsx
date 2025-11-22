@@ -1,10 +1,10 @@
 import { MotiText } from 'moti';
-import { PlatformColor, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FolderItemActions from '@/components/actions/FolderItemActions';
-import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
+import useCollapsedHeaderNative from '@/hooks/scrollTracking/useCollapsedHeaderNative';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
 import { EStorageId } from '@/lib/enums/EStorageId';
 import { EStorageKey } from '@/lib/enums/EStorageKey';
@@ -14,7 +14,7 @@ import { getValidCssColor } from '@/utils/colorUtils';
 import { textStyles } from '../text/CustomText';
 
 const RootFolderHeader = () => {
-    const isCollapsed = useCollapsibleHeader(EStorageKey.ROOT_FOLDER_KEY, EHeaderHeight.ROOT_FOLDER);
+    const isCollapsed = useCollapsedHeaderNative(EStorageKey.ROOT_FOLDER_KEY, EHeaderHeight.ROOT_FOLDER);
     const { top: TOP_SPACER } = useSafeAreaInsets();
 
     const folderItemStorage = useMMKV({ id: EStorageId.FOLDER_ITEM });
@@ -25,7 +25,7 @@ const RootFolderHeader = () => {
             style={{ marginTop: TOP_SPACER, height: EHeaderHeight.ROOT_FOLDER }}
             className="flex-row justify-between items-start px-4"
         >
-            {/* Page Label */}
+            {/* Root Folder Title */}
             <MotiText
                 style={textStyles['pageHeader']}
                 animate={{
@@ -38,7 +38,7 @@ const RootFolderHeader = () => {
                 </Text>
             </MotiText>
 
-            {/* Filter Actions List */}
+            {/* Actions List */}
             <FolderItemActions folderId={EStorageKey.ROOT_FOLDER_KEY} />
         </View>
     );

@@ -10,7 +10,7 @@ import {
   primaryCalendarAtom,
   toggleCalendarFilterAtom
 } from '@/atoms/planner/calendarAtoms';
-import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
+import useCollapsedHeaderNative from '@/hooks/scrollTracking/useCollapsedHeaderNative';
 import { calendarIconMap } from '@/lib/constants/calendarIconMap';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/generic';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
@@ -23,9 +23,8 @@ import CustomText, { textStyles } from '../text/CustomText';
 import ShadowView from '../views/ShadowView';
 
 const UpcomingDatesHeader = () => {
+  const isCollapsed = useCollapsedHeaderNative(UPCOMING_DATES_SCROLL_KEY, EHeaderHeight.UPCOMING_DATES);
   const { top: TOP_SPACER } = useSafeAreaInsets();
-
-  const isCollapsed = useCollapsibleHeader(UPCOMING_DATES_SCROLL_KEY, EHeaderHeight.UPCOMING_DATES);
 
   const activeCalendarFilters = useAtomValue(activeCalendarFiltersAtom);
   const toggleCalendarFilter = useSetAtom(toggleCalendarFilterAtom);
@@ -77,7 +76,7 @@ const UpcomingDatesHeader = () => {
           <CustomText variant="pageSubHeader">All-day calendar events</CustomText>
         </MotiView>
 
-        {/* Calendar Filter Indicator */}
+        {/* Calendar Filter Spread */}
         <View className="flex-row gap-1 mt-1">
           {calendars.map(({ title, color, id }) => (
             <MotiView
@@ -97,7 +96,7 @@ const UpcomingDatesHeader = () => {
         </View>
       </View>
 
-      {/* Filter Popup List */}
+      {/* Calendar Filter Popup List */}
       <ActionList
         systemImage="line.3.horizontal.decrease"
         actions={calendars.map((calendar) => ({

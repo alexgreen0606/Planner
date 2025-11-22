@@ -9,14 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { filteredUpcomingDateEntriesAtom } from '@/atoms/planner/calendarAtoms';
 import EmptyPageLabel from '@/components/EmptyLabel';
 import UpcomingDateCard from '@/components/UpcomingDateCard';
-import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
+import useScrollOffsetTracker from '@/hooks/scrollTracking/useScrollOffsetTracker';
 import { UPCOMING_DATES_SCROLL_KEY } from '@/lib/constants/generic';
 import { useExternalDataContext } from '@/providers/ExternalDataProvider';
 
 const UpcomingDatesPage = () => {
   const filteredUpcomingDates = useAtomValue(filteredUpcomingDateEntriesAtom);
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
-  const onScroll = useScrollTracker(UPCOMING_DATES_SCROLL_KEY);
+  const onScroll = useScrollOffsetTracker(UPCOMING_DATES_SCROLL_KEY);
   const { top: TOP_SPACER } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const pathname = usePathname();

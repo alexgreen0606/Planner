@@ -7,7 +7,7 @@ import { useMMKV } from 'react-native-mmkv';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useScrollTracker } from '@/hooks/collapsibleHeaders/useScrollTracker';
+import useScrollOffsetTracker from '@/hooks/scrollTracking/useScrollOffsetTracker';
 import useFolderItem from '@/hooks/useFolderItem';
 import { NULL, SCROLL_THROTTLE } from '@/lib/constants/generic';
 import { EListLayout } from '@/lib/enums/EListLayout';
@@ -26,8 +26,8 @@ const BOTTOM_NAV_HEIGHT = 86;
 
 const FolderPage = ({ folderId }: IFolderPageProps) => {
   const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const onScroll = useScrollOffsetTracker(folderId);
   const { top: TOP_SPACER } = useSafeAreaInsets();
-  const onScroll = useScrollTracker(folderId);
   const headerHeight = useHeaderHeight();
   const router = useRouter();
 

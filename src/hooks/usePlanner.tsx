@@ -1,4 +1,6 @@
 import { uuid } from 'expo-modules-core';
+import { useAtomValue } from 'jotai';
+import { DateTime } from 'luxon';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMMKV, useMMKVListener, useMMKVObject } from 'react-native-mmkv';
 
@@ -17,8 +19,6 @@ import {
   updatePlannerEventIndexWithChronologicalCheck,
   upsertRecurringEventsIntoPlanner
 } from '@/utils/plannerUtils';
-import { useAtomValue } from 'jotai';
-import { DateTime } from 'luxon';
 
 /**
  * Parses a planner event and returns its time. If no time exists, null will be returned.

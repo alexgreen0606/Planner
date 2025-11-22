@@ -7,6 +7,7 @@ import { getWeatherByDatestampAtom } from '@/atoms/weatherAtoms';
 import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';
 import FadeTransitionView from '@/components/views/FadeTransitionView';
+import useCollapsedHeaderSwift from '@/hooks/scrollTracking/useCollapsedHeaderSwift';
 import {
   getDayOfWeekFromDatestamp,
   getDaysUntilIso,
@@ -25,9 +26,7 @@ interface IPlannerHeaderProps {
 
 const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
   const weatherData = useAtomValue(getWeatherByDatestampAtom(activeDatestamp));
-
-  // const isCollapsed = useCollapsibleHeader(datestamp, 60);
-  const isCollapsed = false
+  const { isCollapsed } = useCollapsedHeaderSwift(activeDatestamp)
 
   const todayDatestamp = useAtomValue(todayDatestampAtom);
   const { label, dayOfWeek, date } = useMemo(() => {
@@ -56,8 +55,10 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
 
   return (
     <View className="px-4 gap-2 pointer-events-box-none">
+      {/* Planner Carousel */}
       <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} />
 
+      {/* Date Info */}
       <View className="flex-row w-full justify-between pointer-events-box-none">
         <View>
           <CustomText
@@ -76,6 +77,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
           </CustomText>
         </View>
 
+        {/* Weather */}
         <View className='flex-row gap-1'>
           {weatherData && (
             <FadeTransitionView>
@@ -95,6 +97,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
         </View>
       </View>
 
+      {/* Planner Chips */}
       <PlannerChipSets label={label} datestamp={activeDatestamp} />
     </View>
   );

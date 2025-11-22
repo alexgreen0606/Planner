@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FolderItemActions from '@/components/actions/FolderItemActions';
 import GlassIconButton from '@/components/buttons/GlassIconButton';
-import { useCollapsibleHeader } from '@/hooks/collapsibleHeaders/useCollapsibleHeader';
+import useCollapsedHeaderSwift from '@/hooks/scrollTracking/useCollapsedHeaderSwift';
 import { NULL } from '@/lib/constants/generic';
 import { GLASS_BUTTON_SIZE, LARGE_MARGIN } from '@/lib/constants/layout';
 import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
@@ -23,7 +23,7 @@ interface IFolderItemHeaderProps {
 };
 
 const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
-    const isCollapsed = useCollapsibleHeader(folderItemId, EHeaderHeight.FOLDER_ITEM);
+    const { isCollapsed } = useCollapsedHeaderSwift(folderItemId);
     const { width: SCREEN_WIDTH } = useWindowDimensions();
     const { top: TOP_SPACER } = useSafeAreaInsets();
     const router = useRouter();
