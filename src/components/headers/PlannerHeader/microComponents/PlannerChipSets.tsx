@@ -3,7 +3,6 @@ import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import { useAtomValue } from 'jotai';
 import React from 'react';
 import { PlatformColor, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 
 import { getPlannerChipsByDatestampAtom } from '@/atoms/planner/plannerChips';
 import CustomText from '@/components/text/CustomText';
@@ -19,7 +18,7 @@ interface IPlannerChipSetsProps {
 const PlannerChipSets = ({ datestamp, label }: IPlannerChipSetsProps) => {
   const sets = useAtomValue(getPlannerChipsByDatestampAtom(datestamp));
   return (
-    <Animated.View className="flex-row flex-wrap gap-2">
+    <View className="flex-row flex-wrap gap-2">
       <Host style={{ height: PLANNER_CHIP_HEIGHT }}>
         <VStack
           modifiers={[
@@ -46,7 +45,7 @@ const PlannerChipSets = ({ datestamp, label }: IPlannerChipSetsProps) => {
       {sets.map((set, setIndex) =>
         set.map((chip) => <PlannerChip {...chip} key={`${datestamp}-${chip.title}-${setIndex}`} />)
       )}
-    </Animated.View>
+    </View>
   );
 };
 

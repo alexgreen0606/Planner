@@ -2,7 +2,7 @@ import { Host, VStack } from '@expo/ui/swift-ui';
 import { cornerRadius, frame, glassEffect } from '@expo/ui/swift-ui/modifiers';
 import React, { useMemo } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutDown, LinearTransition } from 'react-native-reanimated';
 
 import Icon from '@/components/Icon';
 import CustomText from '@/components/text/CustomText';

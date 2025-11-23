@@ -49,6 +49,7 @@ struct SortableListView: ExpoSwiftUI.View {
         }
         .listRowInsets(EdgeInsets())
         .listSectionSeparator(.hidden, edges: .top)
+        .listSectionSeparatorTint(Color(uiColor: .quaternaryLabel))
         Section {
           ForEach(props.sortedItemIds, id: \.self) { itemId in
             ListItem(
@@ -66,11 +67,6 @@ struct SortableListView: ExpoSwiftUI.View {
               onToggleItem: props.onToggleItem,
               onOpenTimeModal: props.onOpenTimeModal
             )
-            .id(itemId)
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .padding(.trailing, 16)
-            .padding(.leading, 16)
           }
           .onMove(perform: handleMove)
         } footer: {

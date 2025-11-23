@@ -10,7 +10,7 @@ struct ListItemToggle: View {
     var body: some View {
         let img = Image(systemName: isSelected ? "circle.inset.filled" : "circle")
             .onTapGesture(perform: onToggleItem)
-            .imageScale(.large)
+            .imageScale(.medium)
             .foregroundStyle(
                 isDisabled
                     ? Color(uiColor: .tertiaryLabel)

@@ -21,6 +21,9 @@ struct ListItem: View {
   let onToggleItem: EventDispatcher
   let onOpenTimeModal: EventDispatcher
 
+  // Will be updated dynamically within the NonBlurringTextfield
+  @State private var height: CGFloat = 0
+
   @StateObject private var debouncer = TextDebouncer()
 
   @State private var isFocused: Bool = false
@@ -34,24 +37,30 @@ struct ListItem: View {
       })
 
       // Row Content
-      let row = HStack(spacing: 12) {
+      let row = HStack(alignment: .top, spacing: 12) {
         // Item Toggle
-        ListItemToggle(
-          isSelected: isSelected, isDisabled: isSelectDisabled, accentColor: accentColor
-        ) {
-          onToggleItem(["id": id])
+        HStack(alignment: .center) {
+          ListItemToggle(
+            isSelected: isSelected, isDisabled: isSelectDisabled, accentColor: accentColor
+          ) {
+            onToggleItem(["id": id])
+          }
         }
+        .frame(height: 26)
 
         // Text
         ZStack(alignment: .leading) {
           Text(debouncer.text)
             .foregroundColor(textColor)
             .opacity(isFocused ? 0 : 1)
-            .font(.system(size: 16))
+            .font(.system(size: 14))
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
 
           NonBlurringTextField(
             text: $debouncer.text,
             isFocused: $isFocused,
+            height: $height
           ) {
             if !debouncer.text.isEmpty {
               onCreateItem(["baseId": id, "offset": 1])
@@ -59,30 +68,37 @@ struct ListItem: View {
               isFocused = false
             }
           }
+          .frame(height: height)
           .foregroundColor(textColor)
           .opacity(isFocused ? 1 : 0)
           .tint(accentColor)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .fixedSize(horizontal: false, vertical: true)
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-          if !isSelected {
-            isFocused = true
-          }
-        }
+        .padding(.vertical, 5)
 
         // Optional Time Value
         if let timeValues = timeValues {
-          TimeValue(
-            time: timeValues["time"] ?? "",
-            indicator: timeValues["indicator"] ?? "",
-            detail: timeValues["detail"] ?? "",
-            disabled: isSelected
-          ) {
-            onOpenTimeModal(["id": id])
+          HStack(alignment: .center) {
+            TimeValue(
+              time: timeValues["time"] ?? "",
+              indicator: timeValues["indicator"] ?? "",
+              detail: timeValues["detail"] ?? "",
+              disabled: isSelected
+            ) {
+              onOpenTimeModal(["id": id])
+            }
           }
+          .frame(height: 26)
         }
       }
-      .frame(height: 30)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .onTapGesture {
+        if !isSelected {
+          isFocused = true
+        }
+      }
       .onChange(of: debouncer.text) { newValue in
         guard newValue != value else { return }
 
@@ -137,6 +153,10 @@ struct ListItem: View {
         onCreateItem(["baseId": id, "offset": 1])
       })
     }
+    .frame(maxWidth: .infinity, alignment: .top)
     .listRowInsets(EdgeInsets())
+    .listRowSeparatorTint(Color(uiColor: .quaternaryLabel))
+    .listRowBackground(Color.clear)
+    .padding(.horizontal, 16)
   }
 }

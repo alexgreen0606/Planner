@@ -54,7 +54,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
   }, [todayDatestamp, activeDatestamp]);
 
   return (
-    <View className="px-4 gap-2 pointer-events-box-none">
+    <View className="px-4 gap-2 pointer-events-box-none" style={{height: 230}}>
       {/* Planner Carousel */}
       <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} />
 
