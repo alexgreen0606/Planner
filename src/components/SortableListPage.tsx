@@ -140,14 +140,14 @@ const DraggableListPage = <T extends TListItem>({
   return (
     <PageContainer
       emptyPageLabel={emptyPageLabel}
-      addButtonColor={accentPlatformColor}
+      // addButtonColor={accentPlatformColor}
       isPageEmpty={isListEmpty}
-      onAddButtonClick={onCreateLowerListItem}
+    // onAddButtonClick={onCreateLowerListItem}
     >
       <Host style={{ flex: 1 }}>
         <SortableList
           focusedId={focusedId}
-          toolbarIcons={['clock']}
+          toolbarIcons={['ellipsis']}
           sortedItemIds={itemIds}
           topInset={contentInset}
           onScrollChange={handleIsScrollingDown}

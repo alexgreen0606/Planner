@@ -23,6 +23,7 @@ struct ListItemToggle: View {
                         ? Color(uiColor: .secondaryLabel)
                         : accentColor
             )
+            .clipShape(Circle())
 
         if #available(iOS 17.0, *) {
             img

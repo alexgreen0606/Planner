@@ -12,7 +12,7 @@ import ColorFadeView from './views/ColorFadeView';
 interface IPageContainerProps {
     emptyPageLabel: string;
     children: ReactNode;
-    onAddButtonClick: () => void;
+    onAddButtonClick?: () => void;
     isPageEmpty?: boolean;
     stickyHeader?: ReactNode;
     addButtonColor?: string;
@@ -55,13 +55,13 @@ const PageContainer = ({
             {isPageEmpty && <EmptyPageLabel label={emptyPageLabel} />}
 
             {/* Add Button */}
-            <View style={{ bottom: BOTTOM_NAV_HEIGHT + LARGE_MARGIN }} className="absolute right-4">
+            {/* <View style={{ bottom: BOTTOM_NAV_HEIGHT + LARGE_MARGIN }} className="absolute right-4">
                 <GlassIconButton
                     systemImage="plus"
                     iconPlatformColor={addButtonColor}
                     onPress={onAddButtonClick}
                 />
-            </View>
+            </View> */}
         </>
     );
 };

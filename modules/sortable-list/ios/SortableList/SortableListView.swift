@@ -38,98 +38,123 @@ struct SortableListView: ExpoSwiftUI.View {
   }
 
   var body: some View {
-    VStack(spacing: 0) {
-      // List Rows
-      let list = List {
-        Section {
-          // Upper Item Trigger
-          NewItemTrigger(onCreateItem: {
-            props.onCreateItem(["baseId": props.sortedItemIds.first])
-          })
-        }
-        .listRowInsets(EdgeInsets())
-        .listSectionSeparator(.hidden, edges: .top)
-        .listSectionSeparatorTint(Color(uiColor: .quaternaryLabel))
-        Section {
-          ForEach(props.sortedItemIds, id: \.self) { itemId in
-            ListItem(
-              id: itemId,
-              value: props.itemValueMap[itemId] ?? "Error Loading Data",
-              isSelected: selectedIds.contains(itemId),
-              isSelectDisabled: disabledIds.contains(itemId),
-              accentColor: props.accentColor,
-              textColor: props.itemTextColorsMap[itemId] ?? Color(uiColor: .label),
-              timeValues: props.itemTimeValuesMap?[itemId],
-              onValueChange: props.onValueChange,
-              onDeleteItem: props.onDeleteItem,
-              onFocusChange: props.onFocusChange,
-              onCreateItem: props.onCreateItem,
-              onToggleItem: props.onToggleItem,
-              onOpenTimeModal: props.onOpenTimeModal
-            )
+    ZStack(alignment: .bottom) {
+
+      // Screen Content
+      VStack(spacing: 0) {
+        // List Rows
+        let list = List {
+          Section {
+            // Upper Item Trigger
+            NewItemTrigger(onCreateItem: {
+              props.onCreateItem(["baseId": props.sortedItemIds.first])
+            })
           }
-          .onMove(perform: handleMove)
-        } footer: {
-          // Lower Item Trigger
-          NewItemTrigger(onCreateItem: createLowerItem)
-            .listRowInsets(EdgeInsets())
-            .listRowSeparator(.hidden, edges: .bottom)
+          .listRowInsets(EdgeInsets())
+          .listSectionSeparator(.hidden, edges: .top)
+          .listSectionSeparatorTint(Color(uiColor: .quaternaryLabel))
+          Section {
+            ForEach(props.sortedItemIds, id: \.self) { itemId in
+              ListItem(
+                id: itemId,
+                value: props.itemValueMap[itemId] ?? "Error Loading Data",
+                isSelected: selectedIds.contains(itemId),
+                isSelectDisabled: disabledIds.contains(itemId),
+                accentColor: props.accentColor,
+                textColor: props.itemTextColorsMap[itemId] ?? Color(uiColor: .label),
+                timeValues: props.itemTimeValuesMap?[itemId],
+                onValueChange: props.onValueChange,
+                onDeleteItem: props.onDeleteItem,
+                onFocusChange: props.onFocusChange,
+                onCreateItem: props.onCreateItem,
+                onToggleItem: props.onToggleItem,
+                onOpenTimeModal: props.onOpenTimeModal
+              )
+            }
+            .onMove(perform: handleMove)
+          } footer: {
+            // Lower Item Trigger
+            NewItemTrigger(onCreateItem: handleCreateLowerItem)
+              .listRowInsets(EdgeInsets())
+              .listRowSeparator(.hidden, edges: .bottom)
+          }
+        }
+        .simultaneousGesture(
+          DragGesture()
+            .onChanged { value in
+              let currentY = value.location.y
+
+              if let lastDragY {
+                let diff = currentY - lastDragY
+
+                if diff < 0 {
+                  props.onScrollChange(["isScrollingDown": true])
+                } else if diff > 0 {
+                  props.onScrollChange(["isScrollingDown": false])
+                }
+              }
+
+              lastDragY = currentY
+            }
+            .onEnded { _ in
+              lastDragY = nil
+            }
+        )
+        .listStyle(.plain)
+        .environment(\.defaultMinListRowHeight, 0)
+        .animation(.default, value: props.sortedItemIds)
+
+        if #available(iOS 17.0, *) {
+          list
+            .safeAreaPadding(.top, props.topInset ?? 0)
+            .safeAreaPadding(.bottom, props.bottomInset ?? 0)
+        } else {
+          list
         }
       }
-      .simultaneousGesture(
-        DragGesture()
-          .onChanged { value in
-            let currentY = value.location.y
 
-            if let lastDragY {
-              let diff = currentY - lastDragY
-
-              if diff < 0 {
-                props.onScrollChange(["isScrollingDown": true])
-              } else if diff > 0 {
-                props.onScrollChange(["isScrollingDown": false])
+      // Toolbar
+      HStack {
+        if #available(iOS 26.0, *) {
+          GlassEffectContainer {
+            HStack(spacing: 16) {
+              ForEach(props.toolbarIcons, id: \.self) { icon in
+                Button {
+                  props.onToolbarPress([
+                    "icon": icon,
+                    "itemId": props.focusedId,
+                  ])
+                } label: {
+                  Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundColor(Color(uiColor: .label))
+                }
+                .frame(width: 22, height: 22)
               }
             }
+          }
+          .padding(12)
+          .glassEffect()
 
-            lastDragY = currentY
-          }
-          .onEnded { _ in
-            lastDragY = nil
-          }
-      )
-      .listStyle(.plain)
-      .environment(\.defaultMinListRowHeight, 0)
-      .animation(.default, value: props.sortedItemIds)
-      .toolbar {
-        ToolbarItemGroup(placement: .keyboard) {
-          ForEach(props.toolbarIcons, id: \.self) { iconName in
-            Button {
-              props.onToolbarPress([
-                "icon": iconName,
-                "itemId": props.focusedId,
-              ])
-            } label: {
-              Image(systemName: iconName)
-            }
-          }
           Spacer()
-          Button {
-            createLowerItem()
-          } label: {
-            Image(systemName: "checkmark")
-              .font(.system(size: 20))
-              .foregroundColor(props.accentColor)
+
+          GlassEffectContainer {
+            Button {
+              handleCreateLowerItem()
+            } label: {
+              Image(systemName: props.focusedId != nil ? "checkmark" : "plus")
+                .font(.system(size: 20))
+                .foregroundColor(props.accentColor)
+            }
+            .frame(width: 22, height: 22)
           }
+          .padding(12)
+          .glassEffect()
         }
       }
-
-      if #available(iOS 17.0, *) {
-        list
-          .safeAreaPadding(.top, props.topInset ?? 0)
-          .safeAreaPadding(.bottom, props.bottomInset ?? 0)
-      } else {
-        list
-      }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 12)
+      .frame(maxWidth: .infinity)
     }
   }
 
@@ -148,7 +173,7 @@ struct SortableListView: ExpoSwiftUI.View {
     }
   }
 
-  private func createLowerItem() {
+  private func handleCreateLowerItem() {
     let baseId = props.sortedItemIds.last
     props.onCreateItem([
       "baseId": baseId,

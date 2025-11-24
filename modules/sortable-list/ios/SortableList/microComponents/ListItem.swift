@@ -21,7 +21,7 @@ struct ListItem: View {
   let onToggleItem: EventDispatcher
   let onOpenTimeModal: EventDispatcher
 
-  // Will be updated dynamically within the NonBlurringTextfield
+  // Will be updated dynamically within the NonBlurringTextfield.
   @State private var height: CGFloat = 0
 
   @StateObject private var debouncer = TextDebouncer()
