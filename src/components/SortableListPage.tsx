@@ -130,19 +130,13 @@ const DraggableListPage = <T extends TListItem>({
     }
   }
 
-  function onCreateLowerListItem() {
-    onCreateItem(itemIds.length);
-  }
-
   const isListEmpty = itemIds.length === 0;
   const contentInset = headerHeight - TOP_SPACER + SMALL_MARGIN;
 
   return (
     <PageContainer
       emptyPageLabel={emptyPageLabel}
-      // addButtonColor={accentPlatformColor}
       isPageEmpty={isListEmpty}
-    // onAddButtonClick={onCreateLowerListItem}
     >
       <Host style={{ flex: 1 }}>
         <SortableList

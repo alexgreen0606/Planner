@@ -1,10 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
 import { useMemo, useState } from 'react';
 import { ColorValue, LayoutChangeEvent, ViewProps } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 interface IColorFadeViewProps extends ViewProps {
   colors: readonly [ColorValue, ColorValue, ...ColorValue[]];
-  totalHeight?: number;
+  totalHeight: number;
   solidHeight?: number;
 };
 
@@ -36,7 +38,7 @@ const ColorFadeView = ({
     }
 
     return [0, solidRatio, 1];
-  }, []);
+  }, [totalHeight, solidHeight]);
 
   function handleLayout(event: LayoutChangeEvent) {
     if (totalHeight === undefined) {
@@ -46,20 +48,52 @@ const ColorFadeView = ({
     onLayoutProp?.(event);
   }
 
+  const blurLayers = useMemo(() => {
+    const layers = [];
+    const blurCount = 10;
+    const remainingHeight = Math.max(0, effectiveHeight - solidHeight);
+    const step = remainingHeight / blurCount;
+
+
+    for (let i = 0; i < blurCount; i++) {
+      const layerHeight = solidHeight + step * (i + 1);
+      layers.push(
+        <BlurView
+          key={i}
+          intensity={2}
+          tint="default"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: layerHeight,
+          }}
+        />
+      );
+    }
+    return layers;
+  }, [effectiveHeight, solidHeight]);
+
   return (
-    <LinearGradient
-      {...restProps}
-      colors={colors}
-      locations={locations}
-      style={[
-        {
-          width: '100%',
-          ...(totalHeight !== undefined && { height: totalHeight })
-        },
-        style
-      ]}
-      onLayout={handleLayout}
-    />
+    <MotiView
+      animate={{ height: totalHeight }}
+      className='w-full'
+    >
+      <LinearGradient
+        {...restProps}
+        colors={colors}
+        locations={locations}
+        style={[
+          {
+            flex: 1
+          },
+          style
+        ]}
+        onLayout={handleLayout}
+      />
+      {blurLayers}
+    </MotiView>
   );
 };
 

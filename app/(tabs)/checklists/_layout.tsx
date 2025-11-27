@@ -31,7 +31,7 @@ const ChecklistsLayout = () => {
   const {
     CssColor: { background },
     ColorArray: {
-      upperFadeDark, upperFade
+      upperFade
     }
   } = useAppTheme();
 
@@ -50,7 +50,7 @@ const ChecklistsLayout = () => {
       <ColorFadeView
         totalHeight={TOP_SPACER + EHeaderHeight.FOLDER_ITEM}
         solidHeight={TOP_SPACER + EHeaderHeight.FOLDER_ITEM / 4}
-        colors={upperFadeDark}
+        colors={upperFade}
       />
     )
   }

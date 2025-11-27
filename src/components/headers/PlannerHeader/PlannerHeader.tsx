@@ -19,6 +19,9 @@ import {
 
 import PlannerCarousel from './microComponents/PlannerCarousel';
 import PlannerChipSets from './microComponents/PlannerChipSets';
+import { EHeaderHeight } from '@/lib/enums/EHeaderHeight';
+import ShadowView from '@/components/views/ShadowView';
+import PlannerActions from '@/components/actions/PlannerActions';
 
 interface IPlannerHeaderProps {
   activeDatestamp: string;
@@ -54,7 +57,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
   }, [todayDatestamp, activeDatestamp]);
 
   return (
-    <View className="px-4 gap-2 pointer-events-box-none" style={{height: 230}}>
+    <View className="px-4 gap-2 pointer-events-box-none" style={{ height: EHeaderHeight.PLANNER }}>
       {/* Planner Carousel */}
       <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} />
 
@@ -63,18 +66,20 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
         <View>
           <CustomText
             variant="pageHeader"
-            customStyle={{ color: PlatformColor('label') }}
+            customStyle={{ color: PlatformColor('label'), zIndex: 7 }}
           >
             {dayOfWeek}
           </CustomText>
-          <CustomText
-            variant="pageSubHeader"
-            customStyle={{
-              color: PlatformColor('secondaryLabel')
-            }}
-          >
-            {date}
-          </CustomText>
+          <ShadowView>
+            <CustomText
+              variant="pageSubHeader"
+              customStyle={{
+                color: PlatformColor('secondaryLabel')
+              }}
+            >
+              {date}
+            </CustomText>
+          </ShadowView>
         </View>
 
         {/* Weather */}
@@ -94,6 +99,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
               </View>
             </FadeTransitionView>
           )}
+          <PlannerActions datestamp={activeDatestamp} />
         </View>
       </View>
 

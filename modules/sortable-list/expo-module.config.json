@@ -1,6 +1,11 @@
 {
-  "platforms": ["apple", "web"],
+  "platforms": [
+    "apple",
+    "web"
+  ],
   "apple": {
-    "modules": ["SortableListModule"]
+    "modules": [
+      "SortableListModule"
+    ]
   }
 }

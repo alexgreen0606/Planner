@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 import { useMemo } from 'react';
-import { Text, useWindowDimensions, View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { useMMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,7 +16,8 @@ import { IFolderItem } from '@/lib/types/listItems/IFolderItem';
 import { getFolderItemFromStorageById } from '@/storage/checklistsStorage';
 import { getValidCssColor } from '@/utils/colorUtils';
 
-import CustomText, { textStyles } from '../text/CustomText';
+import CustomText from '../text/CustomText';
+import ShadowView from '../views/ShadowView';
 
 interface IFolderItemHeaderProps {
     folderItemId: string;
@@ -59,7 +60,7 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
             className="px-4 relative"
         >
             {/* Action Buttons */}
-            <View className="flex-row justify-between items-start mb-2">
+            <View className="flex-row justify-between items-start mb-2 z-[3]">
                 <GlassIconButton
                     systemImage="chevron.left"
                     onPress={() => router.back()}
@@ -80,18 +81,20 @@ const FolderItemHeader = ({ folderItemId }: IFolderItemHeaderProps) => {
                     variant='pageHeader'
                     numberOfLines={1}
                     ellipsizeMode='tail'
-                    customStyle={{ color: getValidCssColor(item?.platformColor) }}
+                    customStyle={{ color: getValidCssColor(item?.platformColor), zIndex: 7 }}
                 >
                     {item?.value}
                 </CustomText>
                 {breadcrumbPath && (
-                    <Text
-                        style={textStyles['pageSubHeader']}
-                        numberOfLines={1}
-                        adjustsFontSizeToFit
-                    >
-                        {breadcrumbPath}
-                    </Text>
+                    <ShadowView edgeSize={{ bottom: 16 }}>
+                        <CustomText
+                            variant='pageSubHeader'
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                        >
+                            {breadcrumbPath}
+                        </CustomText>
+                    </ShadowView>
                 )}
             </MotiView>
         </View>
