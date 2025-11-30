@@ -23,7 +23,8 @@ export function parseTimeValueFromText(text: string): ParsedTimeResult {
   if (!match) return { timeValue: null, updatedText: text };
 
   const timeText = match[0];
-  const updatedText = text.replace(timeText, '').trim();
+  const updatedText = text
+    .replace(new RegExp(`\\s*${timeText}\\s*`), ' ')
 
   // Convert to time value
   let hours = parseInt(match[1], 10);

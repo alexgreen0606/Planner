@@ -1,10 +1,5 @@
-import Combine
 import ExpoModulesCore
 import SwiftUI
-
-final class TextDebouncer: ObservableObject {
-  @Published var text: String = ""
-}
 
 struct ListItem: View {
   let id: String
@@ -16,7 +11,6 @@ struct ListItem: View {
   let timeValues: [String: String]?
   let onValueChange: EventDispatcher
   let onDeleteItem: EventDispatcher
-  let onFocusChange: EventDispatcher
   let onCreateItem: EventDispatcher
   let onToggleItem: EventDispatcher
   let onOpenTimeModal: EventDispatcher
@@ -24,8 +18,9 @@ struct ListItem: View {
   // Will be updated dynamically within the NonBlurringTextfield.
   @State private var height: CGFloat = 0
 
-  @StateObject private var debouncer = TextDebouncer()
+  @EnvironmentObject var focusController: FocusController
 
+  @State private var text: String = ""
   @State private var isFocused: Bool = false
   @State private var debounceTask: Task<Void, Never>? = nil
 
@@ -37,7 +32,7 @@ struct ListItem: View {
       })
 
       // Row Content
-      let row = HStack(alignment: .top, spacing: 12) {
+      HStack(alignment: .top, spacing: 12) {
         // Item Toggle
         HStack(alignment: .center) {
           ListItemToggle(
@@ -50,7 +45,7 @@ struct ListItem: View {
 
         // Text
         ZStack(alignment: .leading) {
-          Text(debouncer.text)
+          Text(text)
             .foregroundColor(textColor)
             .opacity(isFocused ? 0 : 1)
             .font(.system(size: 14))
@@ -58,14 +53,14 @@ struct ListItem: View {
             .fixedSize(horizontal: false, vertical: true)
 
           NonBlurringTextField(
-            text: $debouncer.text,
+            text: $text,
             isFocused: $isFocused,
             height: $height
           ) {
-            if !debouncer.text.isEmpty {
+            if !text.isEmpty {
               onCreateItem(["baseId": id, "offset": 1])
             } else {
-              isFocused = false
+              focusController.focusedId = nil
             }
           }
           .frame(height: height)
@@ -94,12 +89,25 @@ struct ListItem: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
+      .alignmentGuide(.listRowSeparatorTrailing) {
+        $0[.trailing]
+      }
       .onTapGesture {
         if !isSelected {
           isFocused = true
         }
       }
-      .onChange(of: debouncer.text) { newValue in
+      .onAppear {
+        text = value
+        if value.isEmpty {
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isFocused = true
+          }
+        }
+      }
+
+      // Debounce the external save each time the text changes.
+      .onChange(of: text) { newValue in
         guard newValue != value else { return }
 
         debounceTask?.cancel()
@@ -107,45 +115,50 @@ struct ListItem: View {
         debounceTask = Task {
           try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
           guard !Task.isCancelled else { return }
-          onValueChange(["value": newValue])
+          onValueChange(["value": newValue, "id": id])
         }
       }
-      .onAppear {
-        debouncer.text = value
-        if value.isEmpty { isFocused = true }
-      }
+
+      // Sync text when value changes externally.
       .onChange(of: value) { newValue in
-        if newValue != debouncer.text {
-          debouncer.text = newValue
+        if text != newValue {
+          text = newValue  // TODO: not working properly.
         }
       }
+
+      // Blur the textfield when this item has been selected.
       .onChange(of: isSelected) { selected in
         if selected == true {
           isFocused = false
         }
       }
+
+      // Handle focus side effects.
       .onChange(of: isFocused) { focused in
         if focused {
-          onFocusChange(["id": id])
+          // Mark the global focused ID so other fields are blurred.
+          focusController.focusedId = id
         } else {
+          // Immediately trigger the item save.
           debounceTask?.cancel()
 
-          let trimmed = debouncer.text.trimmingCharacters(in: .whitespacesAndNewlines)
+          let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
           if trimmed.isEmpty {
             onDeleteItem(["id": id])
           } else if trimmed != value {
-            onValueChange(["value": trimmed])
+            onValueChange(["value": trimmed, "id": id])
           }
         }
       }
 
-      if #available(iOS 16.0, *) {
-        row.alignmentGuide(.listRowSeparatorTrailing) {
-          $0[.trailing]
+      // Blur the textfield when a different field is focused.
+      .onChange(of: focusController.focusedId) { focusedId in
+        if focusedId != id,
+          isFocused == true
+        {
+          isFocused = false
         }
-      } else {
-        row
       }
 
       // Lower Item Trigger

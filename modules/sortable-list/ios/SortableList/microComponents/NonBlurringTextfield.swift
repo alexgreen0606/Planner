@@ -7,31 +7,6 @@ struct NonBlurringTextField: UIViewRepresentable {
     @Binding var height: CGFloat
     var onSubmit: () -> Void = {}
 
-    // func makeUIView(context: Context) -> UITextView {
-    //     let tv = UITextView()
-    //     tv.delegate = context.coordinator
-
-    //     tv.font = UIFont.systemFont(ofSize: 16)
-    //     tv.backgroundColor = .clear
-
-    //     tv.textContainer.lineBreakMode = .byWordWrapping
-    //     tv.textContainer.maximumNumberOfLines = 0
-    //     tv.textContainer.widthTracksTextView = true
-
-    //     tv.isScrollEnabled = false
-
-    //     tv.textContainerInset = .zero
-    //     tv.textContainer.lineFragmentPadding = 0
-
-    //     tv.autocorrectionType = .default
-    //     tv.autocapitalizationType = .sentences
-
-    //     tv.setContentHuggingPriority(.defaultLow, for: .horizontal)
-    //     tv.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
-    //     return tv
-    // }
-
     func makeUIView(context: Context) -> UITextView {
         let textField = UITextView()
         textField.delegate = context.coordinator

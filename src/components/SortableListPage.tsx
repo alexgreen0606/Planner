@@ -2,12 +2,10 @@ import { Host } from '@expo/ui/swift-ui';
 import { useHeaderHeight } from '@react-navigation/elements';
 import React, { useMemo, useState } from 'react';
 import { NativeSyntheticEvent } from 'react-native';
-import { MMKV, useMMKVObject } from 'react-native-mmkv';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SortableList, SortableListMoveEvent, SortableListProps } from "sortable-list";
+import { SortableList, SortableListCreateEvent, SortableListMoveEvent, SortableListProps } from "sortable-list";
 
 import useCollapsedHeaderSwift from '@/hooks/scrollTracking/useCollapsedHeaderSwift';
-import { NULL } from '@/lib/constants/generic';
 import { GLASS_BUTTON_SIZE, LARGE_MARGIN, SMALL_MARGIN } from '@/lib/constants/layout';
 import { TListItem } from '@/lib/types/listItems/core/TListItem';
 import { getValidCssColor } from '@/utils/colorUtils';
@@ -19,20 +17,20 @@ interface IDraggableListPageProps<T extends TListItem> {
   emptyPageLabel: string;
   itemIds: string[];
   listId: string;
-  storage: MMKV;
   selectedItemIds: string[];
   accentPlatformColor?: string;
   hasExternalData?: boolean;
   disabledItemIds?: string[];
   listProps?: Partial<SortableListProps>;
+  valueRefreshKey?: string;
+  snapToIdTrigger?: string;
   onGetItem: (itemId: string) => T;
-  onCreateItem: (index: number) => void;
+  onCreateItem: (index: number) => string; // Return the new ID of them item. TODO: needed?
   onDeleteItem: (item: T) => void;
-  onValueChange?: (newValue: string, item: T) => T;
+  onValueChange: (item: T, value: string) => void;
   onIndexChange: (from: number, to: number, listId: string) => void;
   onToggleSelectItem: (item: T) => void;
   onGetItemTextPlatformColorCallback?: (item: T) => string;
-  onSaveToExternalStorage?: (item: T) => void;
 
   // toolbar?: ReactNode; TODO: migrate to new approach
 };
@@ -40,20 +38,20 @@ interface IDraggableListPageProps<T extends TListItem> {
 const DraggableListPage = <T extends TListItem>({
   itemIds,
   listId,
-  storage,
   emptyPageLabel,
   hasExternalData,
   accentPlatformColor = 'systemBlue',
   selectedItemIds,
   disabledItemIds,
   listProps,
+  valueRefreshKey,
+  snapToIdTrigger,
   onIndexChange,
   onGetItem,
   onToggleSelectItem,
   onCreateItem,
   onDeleteItem,
   onValueChange,
-  onSaveToExternalStorage,
   onGetItemTextPlatformColorCallback
 }: IDraggableListPageProps<T>) => {
   const { onReloadPage, loadingPathnames } = useExternalDataContext();
@@ -61,12 +59,11 @@ const DraggableListPage = <T extends TListItem>({
   const { top: TOP_SPACER } = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
 
-  const [focusedId, setFocusedId] = useState<string>(NULL);
-  const [focusedItem, setFocusedItem] = useMMKVObject<T>(focusedId, storage);
+  const [slideToIdTrigger, setSlideToIdTrigger] = useState<string | undefined>();
 
   const itemValuesMap = useMemo(() => {
     return Object.fromEntries(itemIds.map((id) => [id, onGetItem(id).value]));
-  }, [itemIds, focusedItem?.value]);
+  }, [itemIds, valueRefreshKey]);
 
   const itemTextColorsMap = useMemo(() => {
     return Object.fromEntries(itemIds.map((id) => {
@@ -78,10 +75,6 @@ const DraggableListPage = <T extends TListItem>({
 
   function handleIndexChange({ nativeEvent: { from, to } }: NativeSyntheticEvent<SortableListMoveEvent>) {
     onIndexChange(from, to, listId);
-  }
-
-  function handleFocusChange({ nativeEvent: { id } }: NativeSyntheticEvent<{ id: string | null }>) {
-    setFocusedId(id ?? NULL);
   }
 
   function handleIsScrollingDown({ nativeEvent: { isScrollingDown } }: NativeSyntheticEvent<{ isScrollingDown: boolean }>) {
@@ -99,35 +92,21 @@ const DraggableListPage = <T extends TListItem>({
   }
 
   // Debounced to call 1 second after key press, or immediately on blur.
-  function handleValueChange({ nativeEvent: { value } }: NativeSyntheticEvent<{ value: string }>) {
-    setFocusedItem((prev) => {
-      if (!prev) return prev;
-
-      let newItem = { ...prev };
-      if (onValueChange) {
-        newItem = onValueChange(value, newItem);
-      } else {
-        newItem.value = value;
-      };
-
-      // External storage save.
-      onSaveToExternalStorage?.(newItem);
-
-      // Local storage save.
-      return newItem;
-    });
+  function handleValueChange({ nativeEvent: { value, id } }: NativeSyntheticEvent<{ value: string, id: string }>) {
+    const item = onGetItem(id);
+    onValueChange(item, value);
   }
 
-  function handleCreateItem({ nativeEvent: { baseId, offset } }: NativeSyntheticEvent<{ baseId?: string, offset?: number }>) {
-    if (onCreateItem) {
-      if (!baseId) {
-        onCreateItem(0);
-        return;
-      }
+  function handleCreateItem({ nativeEvent: { baseId, offset, shouldSlideTo } }: NativeSyntheticEvent<SortableListCreateEvent>) {
+    let newItemIndex = 0;
+    if (baseId) {
       const itemIndex = itemIds.indexOf(baseId);
       if (itemIndex === -1) return;
-      onCreateItem(itemIndex + (offset ?? 0));
+      newItemIndex = itemIndex + (offset ?? 0);
     }
+
+    const newItemId = onCreateItem(newItemIndex);
+    if (shouldSlideTo) setSlideToIdTrigger(newItemId);
   }
 
   const isListEmpty = itemIds.length === 0;
@@ -140,9 +119,10 @@ const DraggableListPage = <T extends TListItem>({
     >
       <Host style={{ flex: 1 }}>
         <SortableList
-          focusedId={focusedId}
-          toolbarIcons={['ellipsis']}
+          toolbarIcons={['clock']}
           sortedItemIds={itemIds}
+          slideToIdTrigger={slideToIdTrigger}
+          snapToIdTrigger={snapToIdTrigger}
           topInset={contentInset}
           onScrollChange={handleIsScrollingDown}
           bottomInset={GLASS_BUTTON_SIZE + LARGE_MARGIN * 2}
@@ -153,7 +133,6 @@ const DraggableListPage = <T extends TListItem>({
           onToggleItem={handleToggleItem}
           onCreateItem={handleCreateItem}
           onValueChange={handleValueChange}
-          onFocusChange={handleFocusChange}
           onMoveItem={handleIndexChange}
           accentColor={getValidCssColor(accentPlatformColor)!}
           onDeleteItem={handleDeleteItem}

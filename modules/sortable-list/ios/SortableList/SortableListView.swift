@@ -4,9 +4,10 @@ import SwiftUI
 final class SortableListProps: ExpoSwiftUI.ViewProps {
   @Field var toolbarIcons: [String] = []
   @Field var accentColor: Color = Color.blue
-  @Field var focusedId: String?
   @Field var topInset: CGFloat = 0
   @Field var bottomInset: CGFloat = 0
+  @Field var slideToIdTrigger: String? = nil
+  @Field var snapToIdTrigger: String? = nil
   @Field var sortedItemIds: [String] = []
   @Field var itemValueMap: [String: String] = [:]
   @Field var itemTextColorsMap: [String: Color] = [:]
@@ -15,7 +16,6 @@ final class SortableListProps: ExpoSwiftUI.ViewProps {
   @Field var disabledItemIds: [String] = []
   var onMoveItem = EventDispatcher()
   var onToolbarPress = EventDispatcher()
-  var onFocusChange = EventDispatcher()
   var onDeleteItem = EventDispatcher()
   var onValueChange = EventDispatcher()
   var onCreateItem = EventDispatcher()
@@ -24,27 +24,36 @@ final class SortableListProps: ExpoSwiftUI.ViewProps {
   var onScrollChange = EventDispatcher()
 }
 
+class FocusController: ObservableObject {
+  @Published var focusedId: String?
+}
+
 struct SortableListView: ExpoSwiftUI.View {
   typealias Props = SortableListProps
   @ObservedObject var props: SortableListProps
 
   @State private var lastDragY: CGFloat? = nil
 
+  @StateObject var focusController = FocusController()
+
   private var selectedIds: Set<String> { Set(props.selectedItemIds) }
   private var disabledIds: Set<String> { Set(props.disabledItemIds) }
+
+  @State private var scrollProxy: ScrollViewProxy?
 
   init(props: SortableListProps) {
     self.props = props
   }
 
   var body: some View {
-    ZStack(alignment: .bottom) {
+    // ZStack(alignment: .bottom) {
+    NavigationStack {
 
       // Screen Content
       VStack(spacing: 0) {
         // List Rows
-        GeometryReader { geometry in
-          let list = List {
+        ScrollViewReader { proxy in
+          List {
             Section {
               // Upper Item Trigger
               NewItemTrigger(onCreateItem: {
@@ -67,11 +76,12 @@ struct SortableListView: ExpoSwiftUI.View {
                   timeValues: props.itemTimeValuesMap?[itemId],
                   onValueChange: props.onValueChange,
                   onDeleteItem: props.onDeleteItem,
-                  onFocusChange: props.onFocusChange,
                   onCreateItem: props.onCreateItem,
                   onToggleItem: props.onToggleItem,
                   onOpenTimeModal: props.onOpenTimeModal
                 )
+                .id(itemId)
+                .environmentObject(focusController)
               }
               .onMove(perform: handleMove)
             } footer: {
@@ -80,6 +90,9 @@ struct SortableListView: ExpoSwiftUI.View {
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden, edges: .bottom)
             }
+          }
+          .onAppear {
+            scrollProxy = proxy
           }
           .listStyle(.plain)
           .environment(\.defaultMinListRowHeight, 0)
@@ -105,59 +118,95 @@ struct SortableListView: ExpoSwiftUI.View {
                 lastDragY = nil
               }
           )
+          .safeAreaPadding(.top, props.topInset ?? 0)
+          .safeAreaPadding(.bottom, props.bottomInset ?? 0)
 
-          if #available(iOS 26.0, *) {
-            list
-              .safeAreaPadding(.top, props.topInset ?? 0)
-              .safeAreaPadding(.bottom, props.bottomInset ?? 0)
-          } else {
-            list
+          // Snap to an item.
+          .onChange(of: props.slideToIdTrigger) { slideToIdTrigger in
+            guard let slideToIdTrigger,
+              let proxy = scrollProxy
+            else { return }
+            withAnimation(.easeInOut) {
+              proxy.scrollTo(slideToIdTrigger, anchor: .bottom)
+            }
+          }
+
+          // Slide to an item.
+          .onChange(of: props.snapToIdTrigger) { snapToIdTrigger in
+            guard let snapToIdTrigger,
+              let proxy = scrollProxy
+            else { return }
+            proxy.scrollTo(snapToIdTrigger, anchor: .bottom)
+          }
+
+          // .toolbar {
+          //   // --- Keyboard Toolbar ---
+          //   ToolbarItemGroup(placement: .keyboard) {
+          //     Button("Cancel") {}
+          //     Spacer()
+          //     Text("Title").bold()
+          //     Spacer()
+          //     Button("Done") {}
+          //   }
+          // }
+          .toolbar {
+            // --- Bottom Bar Toolbar ---
+            ToolbarItemGroup(placement: .topBarTrailing) {
+              Button("Cancel") {}
+              Spacer()
+              Text("Title").bold()
+              Spacer()
+              Button("Done") {}
+            }
           }
         }
       }
 
       // Toolbar
-      if #available(iOS 26.0, *) {
-        HStack {
-          GlassEffectContainer {
-            Button {
-              handleCreateLowerItem()
-            } label: {
-              Image(systemName: props.focusedId != nil ? "checkmark" : "plus")
-                .font(.system(size: 20))
-                .foregroundColor(props.accentColor)
-            }
-            .frame(width: 22, height: 22)
-          }
-          .padding(12)
-          .glassEffect()
+      // HStack {
+      //   let isItemFocused = focusController.focusedId != nil
+      //   Button {
+      //     if isItemFocused {
+      //       focusController.focusedId = nil
+      //     } else {
+      //       handleCreateLowerItem()
+      //     }
+      //   } label: {
+      //     Image(systemName: isItemFocused ? "checkmark" : "plus")
+      //       .font(.system(size: 24))
+      //       .fontWeight(.light)
+      //       .foregroundColor(props.accentColor)
+      //       .contentTransition(.symbolEffect(.replace))
+      //       .animation(.linear(duration: 0.2), value: isItemFocused)
+      //       .padding(4)
+      //   }
+      //   .buttonStyle(.glass)
+      //   .buttonBorderShape(.circle)
 
-          Spacer()
+      //   Spacer()
 
-          GlassEffectContainer {
-            HStack(spacing: 16) {
-              ForEach(props.toolbarIcons, id: \.self) { icon in
-                Button {
-                  props.onToolbarPress([
-                    "icon": icon,
-                    "itemId": props.focusedId,
-                  ])
-                } label: {
-                  Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(Color(uiColor: .label))
-                }
-                .frame(width: 22, height: 22)
-              }
-            }
-          }
-          .padding(12)
-          .glassEffect()
-        }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-      }
+      //   HStack(spacing: 16) {
+      //     ForEach(props.toolbarIcons, id: \.self) { icon in
+      //       Button {
+      //         props.onToolbarPress([
+      //           "icon": icon,
+      //           "itemId": focusController.focusedId,
+      //         ])
+      //       } label: {
+      //         Image(systemName: icon)
+      //           .font(.system(size: 24))
+      //           .foregroundColor(Color(uiColor: .label))
+      //           .fontWeight(.light)
+      //           .padding(4)
+      //       }
+      //       .buttonStyle(.glass)
+      //       .buttonBorderShape(.circle)
+      //     }
+      //   }
+      // }
+      // .padding(.horizontal, 24)
+      // .padding(.vertical, 8)
+      // .frame(maxWidth: .infinity)
     }
   }
 
@@ -181,6 +230,7 @@ struct SortableListView: ExpoSwiftUI.View {
     props.onCreateItem([
       "baseId": baseId,
       "offset": 1,
+      "shouldSlideTo": true,
     ])
   }
 

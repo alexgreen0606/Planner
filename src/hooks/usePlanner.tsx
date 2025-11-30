@@ -16,6 +16,7 @@ import {
   createEmptyPlanner,
   createPlannerEventTimeConfig,
   getChronologicalPlannerEventIndex,
+  updateDeviceCalendarEventByPlannerEvent,
   updatePlannerEventIndexWithChronologicalCheck,
   upsertRecurringEventsIntoPlanner
 } from '@/utils/plannerUtils';
@@ -37,6 +38,9 @@ const usePlanner = (datestamp: string) => {
   const plannerStorage = useMMKV({ id: EStorageId.PLANNER });
   const [planner, setPlanner] = useMMKVObject<TPlanner>(datestamp, plannerStorage);
   const todayDatestamp = useAtomValue(todayDatestampAtom);
+
+  // Refreshes the planner values and jumps to the given ID.
+  const [snapToIdTrigger, setSnapToIdTrigger] = useState<string | undefined>();
 
   // Track the item IDs that are pending deletion.
   const { onToggleScheduleItemDeleteCallback, onGetDeletingItemsByStorageIdCallback } = useDeleteSchedulerContext<IPlannerEvent>();
@@ -64,7 +68,6 @@ const usePlanner = (datestamp: string) => {
   }, [planner?.eventIds, onGetDeletingItemsByStorageIdCallback, todayDatestamp]);
 
   // Track the time values linked to each event.
-  const [timeRefreshKey, setTimeRefreshKey] = useState(NULL);
   const eventTimeValuesMap = useMemo(() => {
     return planner?.eventIds.reduce((acc, id) => {
       const event = getPlannerEventFromStorageById(id);
@@ -103,7 +106,7 @@ const usePlanner = (datestamp: string) => {
       acc[id] = values;
       return acc;
     }, {} as Record<string, Record<string, string>>) ?? {}
-  }, [planner?.eventIds, timeRefreshKey]);
+  }, [planner?.eventIds, snapToIdTrigger]);
 
   const handleGetEventTextPlatformColorCallback = useCallback((event: IPlannerEvent) => {
     return deletingEventIds.has(event.id) ? 'tertiaryLabel' : 'label';
@@ -154,9 +157,11 @@ const usePlanner = (datestamp: string) => {
   }
 
   function handleCreateEventAndFocusTextfield(index: number) {
+    let newItemId = uuid.v4();
+
     // Create the new planner event.
     const plannerEvent: IPlannerEvent = {
-      id: uuid.v4(),
+      id: newItemId,
       value: '',
       listId: datestamp,
       storageId: EStorageId.PLANNER_EVENT
@@ -169,9 +174,11 @@ const usePlanner = (datestamp: string) => {
       prevPlanner.eventIds.splice(index, 0, plannerEvent.id);
       return prevPlanner
     });
+
+    return newItemId;
   }
 
-  function handleUpdatePlannerEventValueWithTimeParsing(userInput: string, event: IPlannerEvent) {
+  function updatePlannerEventValueWithTimeParsing(event: IPlannerEvent, userInput: string) {
     if (!planner) return event;
 
     const newEvent = { ...event, value: userInput };
@@ -199,25 +206,32 @@ const usePlanner = (datestamp: string) => {
     const currentIndex = newPlanner.eventIds.findIndex((e) => e === newEvent.id);
     if (currentIndex === -1) {
       throw new Error(
-        `handleUpdatePlannerEventValueWithTimeParsing: No event exists in planner ${newEvent.listId} with ID ${newEvent.id}`
+        `updatePlannerEventValueWithTimeParsing: No event exists in planner ${newEvent.listId} with ID ${newEvent.id}`
       );
     }
 
     setPlanner(updatePlannerEventIndexWithChronologicalCheck(newPlanner, currentIndex, newEvent));
 
-    setTimeout(() => setTimeRefreshKey((prev) => prev + '.'), 300);
+    setTimeout(() => setSnapToIdTrigger(newEvent.id), 300);
 
     return newEvent;
+  }
+
+  function handleUpdatePlannerEvent(event: IPlannerEvent, userInput: string) {
+    const newEvent = updatePlannerEventValueWithTimeParsing(event, userInput);
+    updateDeviceCalendarEventByPlannerEvent(newEvent);
+    savePlannerEventToStorage(newEvent);
   }
 
   return {
     planner: planner ?? createEmptyPlanner(datestamp),
     deletingEventIds,
     eventTimeValuesMap,
+    snapToIdTrigger,
     onUpdatePlannerEventIndexWithChronologicalCheck:
       handleUpdatePlannerEventIndexWithChronologicalCheck,
     onCreateEventAndFocusTextfield: handleCreateEventAndFocusTextfield,
-    onUpdatePlannerEventValueWithTimeParsing: handleUpdatePlannerEventValueWithTimeParsing,
+    onUpdatePlannerEvent: handleUpdatePlannerEvent,
     onToggleScheduleEventDeletionCallback: onToggleScheduleItemDeleteCallback,
     onGetEventTextPlatformColorCallback: handleGetEventTextPlatformColorCallback
   };
