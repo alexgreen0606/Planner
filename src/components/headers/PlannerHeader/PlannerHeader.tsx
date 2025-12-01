@@ -59,7 +59,7 @@ const PlannerHeader = ({ activeDatestamp }: IPlannerHeaderProps) => {
   return (
     <View className="px-4 gap-2 pointer-events-box-none" style={{ height: EHeaderHeight.PLANNER }}>
       {/* Planner Carousel */}
-      <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} />
+      {/* <PlannerCarousel isCollapsed={isCollapsed} activeDatestamp={activeDatestamp} /> */}
 
       {/* Date Info */}
       <View className="flex-row w-full justify-between pointer-events-box-none">

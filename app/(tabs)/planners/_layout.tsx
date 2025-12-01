@@ -19,21 +19,21 @@ const PlannersLayout = () => {
   return (
     <Stack
       screenOptions={({ route: { params } }) => ({
-        header: () => {
-          // TODO: move this so it won't re-render each time the datestamp changes
-          const datestamp = (params as TPlannerPageParams)?.datestamp;
-          return datestamp && <PlannerHeader activeDatestamp={datestamp} />;
-        },
-        headerBackground: () => (
-          <ColorFadeView
-            totalHeight={TOP_SPACER + EHeaderHeight.PLANNER - 100} // Ignore height of carousel
-            solidHeight={TOP_SPACER}
-            colors={upperFade}
-          />
-        ),
+        // header: () => {
+        //   // TODO: move this so it won't re-render each time the datestamp changes
+        //   const datestamp = (params as TPlannerPageParams)?.datestamp;
+        //   return datestamp && <PlannerHeader activeDatestamp={datestamp} />;
+        // },
+        // headerBackground: () => (
+        //   <ColorFadeView
+        //     totalHeight={TOP_SPACER + EHeaderHeight.PLANNER - 100} // Ignore height of carousel
+        //     solidHeight={TOP_SPACER}
+        //     colors={upperFade}
+        //   />
+        // ),
         animation: 'fade',
         contentStyle: { backgroundColor: background },
-        headerShown: true,
+        headerShown: false,
         headerTransparent: true
       })}
     />

@@ -12,6 +12,7 @@ import { getValidCssColor } from '@/utils/colorUtils';
 
 import { useExternalDataContext } from '../providers/ExternalDataProvider';
 import PageContainer from './PageContainer';
+import PlannerChipSets from './headers/PlannerHeader/microComponents/PlannerChipSets';
 
 interface IDraggableListPageProps<T extends TListItem> {
   emptyPageLabel: string;

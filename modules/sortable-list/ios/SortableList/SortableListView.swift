@@ -43,7 +43,70 @@ struct SortableListView: ExpoSwiftUI.View {
 
   init(props: SortableListProps) {
     self.props = props
+
+    // Large Title (rounded, heavy, custom size)
+    if var descriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .largeTitle)
+      .withDesign(.rounded)
+    {
+      // Add heavy weight
+      descriptor = descriptor.addingAttributes([
+        .traits: [
+          UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+        ]
+      ])
+
+      let customSize: CGFloat = 32  // ← put your desired size here
+      let font = UIFont(descriptor: descriptor, size: customSize)
+
+      UINavigationBar.appearance().largeTitleTextAttributes = [
+        .font: font
+      ]
+    }
+
+    // Regular Title (rounded, heavy, custom size)
+    if var descriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
+      .withDesign(.rounded)
+    {
+      descriptor = descriptor.addingAttributes([
+        .traits: [
+          UIFontDescriptor.TraitKey.weight: UIFont.Weight.heavy
+        ]
+      ])
+
+      let customSize: CGFloat = 22  // ← your size
+      let font = UIFont(descriptor: descriptor, size: customSize)
+
+      UINavigationBar.appearance().titleTextAttributes = [
+        .font: font
+      ]
+    }
   }
+
+  // init(props: SortableListProps) {
+  //   self.props = props
+
+  //   // Large Title (system size, rounded)
+  //   if let descriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .largeTitle)
+  //     .withDesign(.rounded)
+  //   {
+
+  //     let font = UIFont(descriptor: descriptor, size: descriptor.pointSize)
+  //     UINavigationBar.appearance().largeTitleTextAttributes = [
+  //       .font: font
+  //     ]
+  //   }
+
+  //   // Regular Title (system size, rounded)
+  //   if let descriptor = UIFontDescriptor.preferredFontDescriptor(withTextStyle: .headline)
+  //     .withDesign(.rounded)
+  //   {
+
+  //     let font = UIFont(descriptor: descriptor, size: descriptor.pointSize)
+  //     UINavigationBar.appearance().titleTextAttributes = [
+  //       .font: font
+  //     ]
+  //   }
+  // }
 
   var body: some View {
     // ZStack(alignment: .bottom) {
@@ -54,6 +117,14 @@ struct SortableListView: ExpoSwiftUI.View {
         // List Rows
         ScrollViewReader { proxy in
           List {
+            Section {
+              HStack {
+                // TODO: add floating chips
+              }
+              .opacity(0)
+            }
+            .listRowInsets(EdgeInsets())
+            .listSectionSeparator(.hidden)
             Section {
               // Upper Item Trigger
               NewItemTrigger(onCreateItem: {
@@ -91,8 +162,12 @@ struct SortableListView: ExpoSwiftUI.View {
                 .listRowSeparator(.hidden, edges: .bottom)
             }
           }
+          .refreshable {}
           .onAppear {
             scrollProxy = proxy
+          }
+          .overlay(alignment: .top) {
+
           }
           .listStyle(.plain)
           .environment(\.defaultMinListRowHeight, 0)
@@ -139,6 +214,33 @@ struct SortableListView: ExpoSwiftUI.View {
             proxy.scrollTo(snapToIdTrigger, anchor: .bottom)
           }
 
+          .navigationBarTitle("Wednesday")
+          .navigationSubtitle("October 12, 2025")
+          .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+              Button("Calendar", systemImage: "calendar") {
+
+              }
+            }
+
+            ToolbarSpacer(.flexible)
+
+            ToolbarItem(id: "More") {
+              Button("More", systemImage: "ellipsis") {
+
+              }
+            }
+            if focusController.focusedId != nil {
+              ToolbarSpacer(.fixed)
+            }
+
+            ToolbarItem(id: "Add") {
+              Button("Add", systemImage: "plus") {
+                handleCreateLowerItem()
+              }
+            }
+          }
+
           // .toolbar {
           //   // --- Keyboard Toolbar ---
           //   ToolbarItemGroup(placement: .keyboard) {
@@ -149,16 +251,6 @@ struct SortableListView: ExpoSwiftUI.View {
           //     Button("Done") {}
           //   }
           // }
-          .toolbar {
-            // --- Bottom Bar Toolbar ---
-            ToolbarItemGroup(placement: .topBarTrailing) {
-              Button("Cancel") {}
-              Spacer()
-              Text("Title").bold()
-              Spacer()
-              Button("Done") {}
-            }
-          }
         }
       }
 
